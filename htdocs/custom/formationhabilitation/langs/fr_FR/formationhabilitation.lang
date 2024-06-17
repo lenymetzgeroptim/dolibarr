@@ -1,0 +1,97 @@
+# Copyright (C) 2022 METZGER Leny <l.metzger@optim-industries.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleFormationHabilitationName'
+ModuleFormationHabilitationName = Formation - Habilitation
+# Module description 'ModuleFormationHabilitationDesc'
+ModuleFormationHabilitationDesc = Permet la gestion des formation et des habilitations des collaborateurs. Gestion des périodes de recyclage avec envoi d'alertes.
+FormationHabilitationArea = Formation - Habilitation
+BoxTitleLatestModifiedHabilitation = Les dernières Habilitations modifiées
+BoxTitleLatestModifiedFormation = Les dernières Formation modifiées
+ListOfs = Liste des %s
+NewObj = Nouvelle %s
+
+
+#
+# Admin page
+#
+FormationHabilitationSetup = Paramètrage du module Formation - Habilitation
+Settings = Paramètre
+FormationHabilitationSetupPage = Paramètrage du module Formation - Habilitation
+FamilleFormation = Famille de formation
+
+#
+# About page
+#
+About = A propos
+FormationHabilitationAbout = A propos du module Formation - Habilitation
+FormationHabilitationAboutPage = A propos du module Formation - Habilitation
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
+
+
+#
+# Attribut Formation
+# 
+RefExterne = Réf. Externe 
+NombreHeure = Durée
+Cout = Coût 
+PeriodeRecyclage = Période de recyclage 
+PeriodeSouplesse = Période de souplesse
+PeriodeSouplesseBloquant = Période de souplesse bloquante
+CoutMobilisation = Coût mobilisation
+CoutPedagogique = Coût pédagogique
+CoutTotal = Coût total
+
+
+#
+# Attribut Habiliation
+# 
+ValiditeEmployeur = Durée de validité de l'employeur
+
+
+#
+# Attribut User Formation
+# 
+DateFormation = Date de la formation
+DateFinFormation = Date de fin de la formation
+
+
+#
+# Attribut User Habilitation
+# 
+DateHabilitation = Date d'obtention de l'habilitation
+DateFinHabilitation = Date de fin d'habilitation
+
+
+#
+# Page de confirmation
+#
+ValidateFormation = Valider la formation
+ValidateHabilitation = Valider l'habilitation
+ConfirmValidateFormation = Êtes-vous sûr de vouloir valider la formation ?
+ConfirmValidateHabilitation = Êtes-vous sûr de vouloir valider l'habilitation ?
+DeleteFormation = Supprimer la formation
+DeleteHabilitation = Supprimer l'habilitation
+ProgrammerFormation = Programmer la formation
+ConfirmProgrammerFormation = Êtes-vous sûr de vouloir programmer la formation ?

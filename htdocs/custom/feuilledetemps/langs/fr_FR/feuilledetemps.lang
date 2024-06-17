@@ -1,0 +1,384 @@
+# Copyright (C) 2021 METZGER Leny <l.metzger@optim-industries.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleFeuilleDeTempsName'
+ModuleFeuilleDeTempsName = Feuille de temps
+# Module description 'ModuleFeuilleDeTempsDesc'
+ModuleFeuilleDeTempsDesc = Permet la gestion des feuilles de temps
+ListOfValidate = Liste des %s à valider
+projectExport = Export
+timesheet_16@feuilledetemps = Feuille de temps
+FeuilleDeTempsExportCompta = Observations pour la compta
+ObservationComptas = Liste des observations pour la compta
+ActionsOnFeuilleDeTemps = Actions sur la feuille de temps
+
+#
+# Admin page
+#
+FeuilleDeTempsSetup = Paramètres Feuille de temps
+Settings = Settings
+FeuilleDeTempsSetupPage = Page de paramètrage des Feuille de temps
+HEURE_MAX_JOUR = Nombre d'heure max par jour
+FEUILLEDETEMPS_MYPARAM1Tooltip = My param 1 tooltip
+HEURE_MAX_SEMAINE = Nombre d'heure max par semaine
+FEUILLEDETEMPS_MYPARAM2Tooltip=My param 2 tooltip
+HEURE_JOUR = Nombre d'heure d'un jour de congé
+HEURE_SEMAINE = Nombre d'heure par semaine
+HEURE_SEMAINE_NO_RTT = Nombre d'heure par semaine pour les personnes n'ayant pas le droit aux RTT
+HEURE_SUP1 = Limite des heures sup n°1
+HEURE_SUP2 = Limite des heures sup n°2
+HOLIDAYTYPE_EXLUDED_EXPORT = Type de congés exclus de l'export
+HOLIDAY_DRAFT_COLOR = Couleur pour les congés en brouillon
+HOLIDAY_APPROBATION1_COLOR = Couleur pour les congés en approbation n°1
+HOLIDAY_APPROBATION2_COLOR = Couleur pour les congés en approbation n°2
+HOLIDAY_VALIDATED_COLOR = Couleur pour les congés validés
+JOUR_ANTICIPES = Nombre de jours anticipés
+Couleur = Paramètre des couleurs
+Congés = Paramètre des congés
+
+#
+# About page
+#
+About = About
+FeuilleDeTempsAbout = About FeuilleDeTemps
+FeuilleDeTempsAboutPage = FeuilleDeTemps about page
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
+FeuilleDeTemps = Feuille de temps
+FeuillesDeTemps = Feuilles de temps
+
+#
+# Warning & Error
+#
+ERR_HEURE_MAX_JOUR_DEPASSEMENT = Vous ne pouvez pas faire autant d'heures par jour
+ERR_HEURE_MAX_SEMAINE_DEPASSEMENT = Vous ne pouvez pas faire autant d'heures par semaine
+WRN_HEURE_JOUR_DEPASSEMENT = Vous entrez des heures supplémentaires
+WRN_35H_DEPASSEMENT = Vous avez dépassé le nombre d'heures prévu dans la semaine<br>Veuillez entrer vos heures sup en suivant les explications en haut de la page
+WRN_PUBLIC_HOLIDAY = Vous avez pointé des heures un jour ferié
+
+#
+# Attributs
+#
+UserValidation1 = 1ère validation
+UserValidation2 = 2ème validation
+Approbation1 = 1ère approbation en attente
+Approbation2 = 2ème approbation en attente
+PrimeAstreinte = Prime Astreinte
+PrimeExceptionnelle = Prime Exceptionnelle
+PrimeObjectif = Prime Objectif
+PrimeVariable = Prime Variable 
+PrimeAmplitude = Prime Amplitude
+
+
+
+#
+# Autres
+#
+ToApprove1 = En approbation n°1
+ToApprove2 = En approbation n°2
+ToVerification = En vérification
+FeuilleDeTempsToApprove1 = Feuille de temps en approbation n°1
+FeuilleDeTempsToApprove2 = Feuille de temps en approbation n°2
+FeuilleDeTempsToVerification = Feuille de temps en vérification
+
+#
+# Mail
+#
+EMailTextFDTApprobation = Bonjour, <br><br>Vous devez valider la feuille de temps : %s <br> %s
+EMailTextFDTApprobation2 = Bonjour, <br><br>Les responsables de tâche ont validé la feuille de temps %s, vous devez également la valider
+EMailTextFDTReApprobation = Bonjour, <br><br>Vous devez valider la feuille de temps : %s
+EMailTextFDTRefus = Bonjour, <br><br>Votre feuille de temps du mois de %s a été refusé pour le motif suivant : %s <br>Vous pouvez la modifier et la retransmettre %s
+EMailTextHSModification = Bonjour, <br><br>%s %s a modifié des heures sup sur le mois de %s.<br>Vous pouvez les consulter %s
+EMailTextFDTValidate = Bonjour, <br><br>Votre feuille de temps %s du mois de %s a été validée.
+EMailTextModifHeure = Bonjour, <br><br>La Feuille de temps %s a été modifié : %s
+EMailTextFDTWeeklySave = Bonjour, <br><br>Vous n'avez pas enregistré votre feuille de temps cette semaine (du %s au %s). Veuillez le faire %s s'il vous plaît.<br><br>Cordialement
+EMailTextFDTMonthlyTransfer = Bonjour, <br><br>Vous n'avez pas transmis votre feuille de temps ce mois-ci. Veuillez le faire %s s'il vous plaît.<br><br>Cordialement
+EMailTextModifSemaineAnticipe = Bonjour, <br><br>La semaine anticipée de la feuille de temps %s a été modifiée. Vous devez la revalider. Voici les changements effectués : %s
+EMailTextSendMail = Bonjour, <br><br>Mail envoyé depuis la feuille de temps %s :<br>%s<br><br>Cordialement
+EMailTextHS = Bonjour, <br><br>%s %s a réalisé des heures sup sur le mois de %s.<br>Vous pouvez les consulter %s<br><br>Cordialement
+EMailTextHSAndHM = Bonjour, <br><br>%s %s a réalisé des heures sup et des semaines à moins de 35h sur le mois de %s.<br>Vous pouvez les consulter %s<br><br>Cordialement
+EMailTextHM = Bonjour, <br><br>%s %s a réalisé des semaines à moins de 35h sur le mois de %s.<br>Vous pouvez les consulter %s<br>Cordialement
+
+#
+# Agenda
+#
+FEUILLEDETEMPS_CREATEInDolibarr = Creation %s effectuée
+FEUILLEDETEMPS_MODIFYInDolibarr = Feuille de temps %s modifiée
+FEUILLEDETEMPS_APPROBATION1InDolibarr = Transmission de la feuille de temps %s, passage en approbation n°1
+FEUILLEDETEMPS_APPROBATION1_RAInDolibarr = Transmission de la feuille de temps %s, passage en vérification (Responsable d'antenne)
+FEUILLEDETEMPS_REFUSInDolibarr = Refus de la feuille de temps %s
+FEUILLEDETEMPS_REFUSDetailInDolibarr = Pour le motif suivant : %s
+FEUILLEDETEMPS_APPROBATION2InDolibarr = Approbation n°1 de la feuille de temps %s réalisée, passage en approbation n°2
+FEUILLEDETEMPS_TASKVALIDATIONInDolibarr = Feuille de temps %s approuvée par l'utilisateur
+FEUILLEDETEMPS_VERIFICATIONInDolibarr = Approbation n°2 de la feuille de temps %s réalisée, passage en vérification
+FEUILLEDETEMPS_VALIDATEInDolibarr = Vérification de la feuille de temps %s réalisée, celle-ci est validée
+FEUILLEDETEMPS_VALIDATE12_NONOPTIMInDolibarr = Approbation n°1 et n°2 de la feuille de temps %s réalisée, feuille de temps validée (Non OPTIM)
+FEUILLEDETEMPS_VALIDATE_NONOPTIMInDolibarr = Approbation n°2 de la feuille de temps %s réalisée, feuille de temps validée (Non OPTIM)
+FEUILLEDETEMPS_EXPORTEDInDolibarr = Export de la feuille de temps %s réalisée
+FEUILLEDETEMPS_APPROBATION1ET2InDolibarr = Approbation n°1 et n°2 de la feuille de temps %s réalisée, passage en vérification
+SENDMAILInDolibarr = Contenu du message :<br>%s
+
+#
+# Récupération de l'ancien module
+#
+adddocs = Documents joints
+adddocsDesc = Permet d’ajouter des documents annexés à la feuille de temps
+addForOther = enregistrer le temps consommé par d'autres.
+addForOtherDesc = activer l’entrée de temps consommé pour les subordonnés.
+addholidaytime = Intégrer les congés
+addholidaytimeDesc = Inclure le temps de vacances dans la ligne totale
+Adminapproval = Accès administrateur
+AdminRightsDesc = Droit de consulter les pages d’administration de tables
+Advanced = Avancé
+AdvancedTabDesc = Configuration des approbations des feuilles de temps et des tâches favorites
+ApFlows = Flux d’approbation
+ApplovalFlow = Processus d’approbation
+Approval = Approbation
+approvalbyweek = Approbation par semaines.
+approvalbyweekDesc = Approbation par semaines au lieu de l'approbation utilisateurs.
+approved = Approuvé
+approvedColorDesc = Couleur pour les vacances et feuille de temps approuvée
+approvedOnly = Uniquement approuvées
+ApproveRightsDesc = Droit d’approuver les feuilles de temps
+Attendance = Chrono
+AttendanceAdmin = Administration des compteurs
+AttendanceDesc = Chrono comme page de feuille de temps par défaut
+blackWhiteList = Favoris
+blackWhiteListDesc = Activez le filtrage des favoris
+blackWhiteListMode = Filtrage des favoris
+blackWhiteListModeDesc = Choisir le comportement par défaut pour le filtrage des favoris
+BoxApproval = Approbations de feuille de temps
+cancelled = Annulé
+cancelledColorDesc = Couleur pour vacances et feuille de temps annulée
+challenged = Contesté
+Checkin = Entrée
+Checkout = Quitter
+ColumnToShow = Colonnes à afficher
+Company = Société
+CompanyColDesc = Indique le nom de l'entreprise associée au projet
+ConfigurationSaved = Configuration sauvegardée
+ConfirmDeleteTimesheetwhitelist = Êtes-vous certain de vouloir supprimer ce favoris ?
+Custom = Personnalisé
+customer = Client
+CustomerApprovalDesc = Les utilisateurs qui représentent un client devront approuver les feuilles de temps concernant leur client.
+customerSignature = Visa du client
+DateEndColDesc = Indique la date de fin de la tâche
+DateStartColDesc = Indique la date de départ de la tâche
+DefaultService = Service par défaut pour la facturation
+DeleteTimesheetwhitelist = Entrée supprimée.
+DiplayOptions = options d'affichage
+draft = Brouillon
+draftColorDesc = Couleur des brouillons de congés
+dropdownAjax = Désactiver l'Ajax des dropdown
+dropdownAjaxDesc = Désactiver l'ajax pour les listes déroulantes Dolibarr (en cas de problème pour entrer un nouveau favori)
+Employee = Collaborateur
+employeeSignature = Signature salarié(e)
+errMsgMaxHoursExceded = Vous ne pouvez pas faire autant d'heures supplémentaires par jour
+Eventlocationref = Emplacement de l'événement
+Eventtype = Type d’événement
+Existing = Existant
+exportfriendly = Compatible export
+feebackDesc = Si vous êtes confronté à un problème (comportement ou traduction), si vous avez une idée d'amélioration ou une nouvelle demande de fonctionnalités, contactez-moi.
+Feedback = Commentaire
+generalInvoiceProjectParam = Paramètres généraux pour la facture du projet
+GeneralOption = Options générales
+GeneralTabDesc = Configuration de la présentation de la page de saisie des temps consommés sous le Menu haut « Feuille de temps » puis Menu gauche « Feuille de temps »
+getReport = Obtenir le rapport
+GoTo = allez à
+Heartbeat = Battement de cœur
+hidedraft = Masquer les brouillons
+hideDraftDesc = Masquer les tâches des projets non validés (brouillon)
+hideref = Afficher les titres
+hideRefDesc = Afficher le libellé des tâches et le titre des projets
+hidezeros = Masquer les zéros
+hideZerosDesc = Masque la durée de la tâche quand elle est nulle (0 ou 00:00)
+Holiday = Congés
+HourPerDayNotNull = « Heure par jour » ne peut pas être null
+hours = heures
+hoursperdays = Nombres d'heures par jour
+hoursPerDaysDesc = Nombre d'heures d'un jour ouvré (utilisé pour afficher le temps en jours)
+InternalError = Erreur interne
+InvoicableOnly = Seules les tâches facturables
+Invoice = Facture
+Invoiceable = Facturable
+invoiced = Facturée(s)
+invoicedServiceSelectoin = Sélection des services à facturer
+invoiceMethod = méthode de facture
+invoiceMethodDesc = Méthode utilisée pour grouper le temps consommé par tâches pour la facture
+InvoiceMode = méthode de facturation
+invoiceService = Service par défaut
+invoiceServiceDesc = Service par défaut à utiliser pour facturer le temps consommé
+invoiceShowTask = Afficher le libellé de la tâche
+invoiceShowTaskDesc = Afficher le libellé de la tâche sur la facture
+invoiceShowUser = Afficher l'utilisateur sur la facture
+invoiceShowUserDesc = Indique le nom d'utilisateur sur la facture lorsque le mode de facturation est 'utilisateur' ou 'utilisateur et tâche'
+InvoiceTabDesc = Configuration de la facturation
+invoiceTaskTime = Feuilles de temps
+invoiceTaskTimeDesc = Facture toutes les feuilles de temps ou seulement celles approuvées.
+invoiceTimeType = Unité de temps passée sur la feuille de présence pdf
+invoiceTimeTypeDesc = Afficher la durée de la tâche par jour ou par heure sur la fiche de présence PDF
+invoicingMethod = Méthode de facturation
+managerSignature = Signature du chef d'équipe
+Manual = Manuel du module
+maxapproval = Approbations par page
+maxapprovalDesc = Nombre maximum de feuilles de temps par page d'approbation
+maxhoursperdays = Heures maximum par jour
+maxhoursPerDaysDesc = Définissez le nombre maximum d'heures à saisir par jour et par utilisateur via la feuille de temps
+modeBlackList = Tous sauf les favoris
+modeNone = Toutes les tâches
+modeWhiteList = Favoris
+nbTsToApprove = Nombre de feuilles de temps à  approuver
+NewTimesheetuser = Feuille de temps du nouvel utilisateur
+NextWeek = semaine suivante
+noIdPresent = Pas de référence (id) présente
+not2invoice = Ne pas facturer.
+NoTaskToUpdate = Pas de tâche pour cette semaine
+NoteDesc = Afficher une icône qui va ouvrir une ligne de remarque au-dessous de ligne de la tâche lorsque cliqué dessus.
+NoteOnPDF = Notes sur les rapports pdf
+NoteOnPDFDesc = Afficher la note timespent à la place du nom de la tâche ou en plus du nom de la tâche sur l'export pdf
+NoteUpdated = Le champ de note a été mis à jour
+NothingChanged = Rien n’a changé
+NothingToValidate = Rien à  valider
+notYourWhitelist = Ce favori ne vous concerne pas
+NumberOfErrors = Nombre d'erreurs :
+NumberOfTimesheetApproved = Nombre de feuille(s) de temps approuvée(s) :
+NumberOfTimesheetRejected = Nombre de feuille(s) de temps rejetée(s) :
+NumberOfTimeSpendCreated = Création(s) de temps consommé(s) :
+NumberOfTimeSpendDeleted = Suppression(s) de temps consommé(s) :
+NumberOfTimeSpendModified = Modification(s) de temps consommé(s) :
+OpenDays = Jours Ouverts
+other = Autre
+OtherTabDesc = Autres configurations
+planned = Plannifié
+pleaseFillAll = Merci de remplir tous les champs
+PreviousWeek = Semaine Précédente
+Progress = Progrès
+ProgressColDesc = Montre la progression de la tâche par rapport au temps estimé
+project = Projet
+ProjectApprovalDesc = Le chef de projet devra approuver les feuilles de temps concernant ses projets.
+ProjectColDesc = Montre la référence et le libellé du projet lié à la tâche
+projectInvoice = Facturer le temps
+projectReport = Rapport de projet
+Projecttasktimelist = Listes des tasktime id
+ProjectTimeReport = Relevé d'heures du projet
+ReadRighsDesc = Droit d'obtenir les exportations PDF
+Recall = Réouvrir
+RecordDeleted = Enregistrement supprimé
+RecordNotSucessfullyCreated = Enregistrement non créé
+RecordNotUpdated = Echec de la mise à  jour
+RecordSucessfullyCreated = Créé avec succès
+RecordUpdated = Mis à  jour avec succès
+rejected = Rejeté
+rejectedColorDesc = Couleur des congés et feuilles de temps rejetées
+Reminder = Rappel
+reminderEmailProcess = Vous pouvez activer un envoie d'email de rappel aux approbateurs en utilisant la fonction planificateur de tâche de dolibarr<br>Job type \= Call method of a Dolibarr Class<br>Module \= timesheet<br>Classes \= Task_timesheet.class.php<br>Instance/Object to create \= timesheet<br> Method \= sendApprovalReminders
+savedDuration = Durée enregistrée
+searchbox = Activer les boîtes de recherche
+searchboxDesc = Remplacez les listes déroulantes par des champs de recherche pour les Tâches. Nécessaire lorsque des centaines de tâches sont définies afin d'améliorer les performances. (Projet, contact, tiers, utilise la configuration définie dans un autre module)
+short = Version courte
+ShowTimespentNote = Notes par jour
+ShowTimespentNoteDesc = Activer la prise de notes par jour et par tâche
+splitedWeek = Semaine divisée
+Submit = Soumettre
+submitted = Envoyé
+submittedColorDesc = Couleur des congés et feuilles de temps envoyées pour validation
+Subtask = Tâche enfant
+supplier = Fournisseur
+SupplierApprovalDesc = Les utilisateurs qui représentent un fournisseur devront approuver les feuilles de temps concernant ce fournisseur.
+supplierSignature = Visa du fournisseur
+TaskParent = Tâche parente
+TaskParentColDesc = Affiche la référence de la tâche parent et son libellé, s'il existe une tâche parent.
+TasksColDesc = Contient la référence et le libellé de la tâche
+Team = Équipe
+TeamApprovalDesc = Le responsable hiérarchique des utilisateurs devra approuver toutes les feuilles de temps
+Timesheet = Feuille de temps
+Timesheetapproval = Approbation des feuilles de temps
+TimesheetNotInvoiced = Inclure uniquement la feuille de temps non facturée
+timesheetNotRecalled = Feuille de temps non réouverte
+TimesheetPDF = Feuille de présence des ressources du projet
+timesheetRecalled = Feuille de temps réouverte
+timesheetSetup = Configuration du module feuille de temps
+timesheetSubmitted = Envoyé pour approbation
+timesheetSumitted = Feuille de temps envoyée pour approbation
+TimesheetToInvoice = Feuille de temps à facturer
+Timesheetuser = Feuille de temps de l'utilisateur
+TimesheetView = Module pour avoir une meilleure vue de feuille de temps, pour générer un rapport sur les utilisateurs ou les projets et pour facturer le projet en fonction du temps passé.
+Timesheetwhitelist = Favoris
+timeSpan = Période
+timeSpanDesc = Durée pour les entrées de feuille de temps
+timeType = Affichage du temps
+timeTypeDesc = Afficher les durées sur les tâches en jours ou en heures
+Token = Jeton
+TotalDesc = Afficher le total de la ligne affichée (mise à jour en direct avec les entrées de temps)
+underapproval = En cours d'approbation
+unitDuration = Quantité par unité
+Userapproval = Approbation de
+userReport = Rapport d'utilisateur
+wngMsgHoursExceded = Vous entrez des heures supplémentaires
+Yearweekdate = Date de référence
+YouHaveApprovalPending = Feuilles de temps en attente de votre approbation
+YouHaveApprovalPendingMsg = Bonjour,<br><br>Vous avez __NB_TS__ feuilles de temps à approuver, veuillez vous connecter à Dolibarr pour les approuver.<br><br>Cordialement.<br><br>Votre administrateur Dolibarr.
+YouHaveTimesheetRejected = L'une de vos feuilles de temps soumises a été rejetée.
+YouHaveTimesheetRejectedMsg = Bonjour,<br><br>la feuille de temps de la semaine %s a été rejetée.<br><br>Veuillez vérifier vos entrées ici: <br>%s<br><br>Cordialement
+minSecondsPerEvent = Minimum en secondes
+maxHoursPerEvent = Heures maximum
+defaultHoursPerEvent = Heures par défaut
+defaultHoursPerEventDesc = Heures par événement par défaut, événement réglé sur cette durée si le maximum est atteint
+maxHoursPerEventDesc = Nombre maximum d'heures autorisées par événement
+minSecondsPerEventDesc = Minimum de secondes par événement, tout événement plus court sera réglé sur ce nombre
+pdfHideSignbox = Masquer PDF signbox
+pdfHideSignboxDesc = Masquer le signbox dans le PDF
+blockTimespent = Bloquer la création
+blockTimespentDesc = Ne génère pas une action quand un évènement est arrêté
+ThisWeek = Cette semaine
+thisMonth = Ce mois
+lastWeek = Semaine dernière
+lastMonth = Mois dernier
+thisWeek = Cette semaine
+ProgressDeclaredColDesc = Afficher les progrès déclarés
+frozen = Fermé
+frozenColorDesc = Couleur de fond pour les tâches ou les jours fermés
+value = Valeur
+valueColorDesc = Couleur de fond quand il y a une entrée
+pdfHideNameDesc = Masquer le nom de l'employé sur la feuille de présence
+pdfHideName = cacher le nom
+tsRoundDesc = Nombre de décimales affichées pour le mode "jours"
+tsRound = jours arrondis
+evalAddLineDesc = Ajout d'une ligne avec la fonction "eval" qui traite la page de la facture de base lors de la création de la feuille de temps. Cette option permet le support des autres taxes et la traduction mais c'est une mauvaise pratique de programmation (aucune autre solution disponible).
+evalAddLine = Ajouter une ligne avec "eval"
+AdvancedBehaviour = Comportement avancé
+exportFormat = Format d'exportation
+exportFormatDesc = Format d'exportation des rapports (csv, excel)
+unblockInvoiced = Autoriser facturé
+unblockInvoicedDesc = Permet d'éditer les temps de travail déjà facturés
+unblockClosed = Autoriser les jours de fermeture
+unblockClosedDesc = Permettre la saisie des heures de travail pendant les jours de fermeture
+adminTimeSpent = Administration du temps passé
+
+
+#
+# Autres
+#
+NoAssignedTasks = Aucune tâche assignée (assignez un projet/tâche à l'utilisateur pour pouvoir saisir du temps dessus)
+sendMail = Envoyer un mail
+sendMailContent = Veuillez renseigner le message envoyer à l\'emetteur de le feuille de temps

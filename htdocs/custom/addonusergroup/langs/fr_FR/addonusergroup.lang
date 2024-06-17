@@ -1,0 +1,44 @@
+# Copyright (C) 2023 METZGER Leny <l.metzger@optim-industries.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+#
+# Generic
+#
+# Module label 'ModuleAddOnUserGroupName'
+ModuleAddOnUserGroupName = Groupes Extension 
+# Module description 'ModuleAddOnUserGroupDesc'
+ModuleAddOnUserGroupDesc = Ajout de fonctionnalités au module de Groupes
+EMailTextAddUserGroup = Bonjour %s,<br><br>Vous avez été ajouté au groupe %s.<br><br>Cordialement
+
+#
+# Admin page
+#
+AddOnUserGroupSetup = Configuration Groupes Extension
+EMailTextAddUserGroupRSR = Mail lors de l'ajout d'un utilisateur au groupe RSR
+
+#
+# About page
+#
+AddOnUserGroupAbout = A propos de Groupes Extension
+
+
+#
+# Mail
+#
+EMailTextAddUserGroupToUser = Bonjour %s,<br><br>Vous avez été ajouté au groupe %s.<br><br>Cordialement
+EMailTextAddUserGroupToResp = Bonjour,<br><br>%s a été ajouté au groupe %s.<br><br>Cordialement
+EMailTextDeleteUserGroupToUser = Bonjour %s,<br><br>Vous avez été supprimé du groupe %s.<br><br>Cordialement
+EMailTextDeleteUserGroupToResp = Bonjour,<br><br>%s a été supprimé du groupe %s.<br><br>Cordialement
