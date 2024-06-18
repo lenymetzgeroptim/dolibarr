@@ -174,7 +174,7 @@ if($datatoexport == 'gpec_matrice_competence') {
 		"eu.matricule" => "Matricule",
 		"u.firstname" => "Prénom",
 		"u.lastname" => "Nom",
-		"ug.nom" => "Groupe Utilisateur",
+		"ug.nom" => "Groupe",
 		"g.status" => "Statut",
 		"eu.employeur" => "Employeur",
 		"u.dateemployment" => "Date d'entrée dans la société",
@@ -220,7 +220,7 @@ else {
 		"eu.matricule" => "Matricule",
 		"u.firstname" => "Prénom",
 		"u.lastname" => "Nom",
-		"ug.nom" => "Groupe Utilisateur",
+		"ug.nom" => "Groupe",
 		"g.status" => "Statut"
 	);
 }
@@ -1128,7 +1128,7 @@ if ($step == 4 && $datatoexport) {
 	print '<td>'.$list.'</td>';
 	print '</tr>';
 
-	// List of filtered fiels
+	// List of filtered fields
 	if (isset($array_export_TypeFields[0]) && is_array($array_export_TypeFields[0])) {
 		print '<tr><td>'.$langs->trans("FilteredFields").'</td>';
 		$list = '';

@@ -16,7 +16,7 @@ Other modules are available on [Dolistore.com](https://www.dolistore.com>).
 ## Translations
 
 Translations can be define manually by editing files into directories *langs*.
-Adminer is coming with 17 languages embeded
+Adminer is coming with 17 languages embedded
 
 
 ## Installation

@@ -99,10 +99,10 @@ if ($useFormSetup && (float) DOL_VERSION >= 15) {
 	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formsetup.class.php';
 	$formSetup = new FormSetup($db);
 
-	// you can use the param convertor
+	// you can use the param converter
 	$formSetup->addItemsFromParamsArray($arrayofparameters);
 
-	// or use the new system see exemple as follow (or use both because you can ;-) )
+	// or use the new system see example as follow (or use both because you can ;-) )
 
 	/*
 	// Hôte
@@ -121,7 +121,7 @@ if ($useFormSetup && (float) DOL_VERSION >= 15) {
 	$item = $formSetup->newItem('GPEC_MYPARAM3');
 	$item->setAsThirdpartyType();
 
-	// Setup conf GPEC_MYPARAM4 : exemple of quick define write style
+	// Setup conf GPEC_MYPARAM4 : example of quick define write style
 	$formSetup->newItem('GPEC_MYPARAM4')->setAsYesNo();
 
 	// Setup conf GPEC_MYPARAM5

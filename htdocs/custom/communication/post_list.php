@@ -127,7 +127,7 @@ $hookmanager->initHooks(array('postlist')); // Note that conf->hooks_modules con
 
 		$notif = new Notification($db);
 
-		//Ne pas faire de foreach ici car modifiera la notif pour tout le monde hors on ne veut modifer que la notif de ceux qui ont cliqué !
+		//Ne pas faire de foreach ici car modifiera la notif pour tout le monde hors on ne veut modifier que la notif de ceux qui ont cliqué !
 		$res = $notif->checkNotificationLine($user->id);
 		if ($res){
 			//Si elle possède déjà une ligne en base, update le statut d'activated à false
