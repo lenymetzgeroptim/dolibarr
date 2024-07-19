@@ -1,0 +1,430 @@
+<?php
+/* Copyright (C) 2011-2020 Laurent Destailleur  <eldy@users.sourceforge.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * or see https://www.gnu.org/
+ *
+ * $elementype must be defined.
+ */
+
+/**
+ *	\file			htdocs/core/actions_extrafields.inc.php
+ *  \brief			Code for actions on extrafields admin pages
+ */
+
+$maxsizestring = 255;
+$maxsizeint = 10;
+$mesg = array();
+
+$extrasize = GETPOST('size', 'intcomma');
+$type = GETPOST('type', 'alphanohtml');
+$param = GETPOST('param', 'alphanohtml');
+$css = GETPOST('css', 'alphanohtml');
+$cssview = GETPOST('cssview', 'alphanohtml');
+$csslist = GETPOST('csslist', 'alphanohtml');
+
+if ($type == 'double' && strpos($extrasize, ',') === false) {
+	$extrasize = '24,8';
+}
+if ($type == 'date') {
+	$extrasize = '';
+}
+if ($type == 'datetime') {
+	$extrasize = '';
+}
+if ($type == 'select') {
+	$extrasize = '';
+}
+
+
+// Add attribute
+if ($action == 'add_extrafield' && !empty($permissiontoaddfield)) {
+	if (GETPOST("button") != $langs->trans("Cancel")) {
+		// Check values
+		if (!$type) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Type"));
+			$action = 'create_extrafield';
+		}
+		if ($type == 'varchar' && $extrasize <= 0) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Size"));
+			$action = 'create_extrafield';
+		}
+		if ($type == 'varchar' && $extrasize > $maxsizestring) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorSizeTooLongForVarcharType", $maxsizestring);
+			$action = 'create_extrafield';
+		}
+		if ($type == 'int' && $extrasize > $maxsizeint) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorSizeTooLongForIntType", $maxsizeint);
+			$action = 'create_extrafield';
+		}
+		if ($type == 'select' && !$param) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorNoValueForSelectType");
+			$action = 'create_extrafield';
+		}
+		if ($type == 'sellist' && !$param) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorNoValueForSelectListType");
+			$action = 'create_extrafield';
+		}
+		if ($type == 'checkbox' && !$param) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorNoValueForCheckBoxType");
+			$action = 'create_extrafield';
+		}
+		if ($type == 'link' && !$param) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorNoValueForLinkType");
+			$action = 'create_extrafield';
+		}
+		if ($type == 'radio' && !$param) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorNoValueForRadioType");
+			$action = 'create_extrafield';
+		}
+		if ((($type == 'radio') || ($type == 'checkbox')) && $param) {
+			// Construct array for parameter (value of select list)
+			$parameters = $param;
+			$parameters_array = explode("\r\n", $parameters);
+			foreach ($parameters_array as $param_ligne) {
+				if (!empty($param_ligne)) {
+					if (preg_match_all('/,/', $param_ligne, $matches)) {
+						if (count($matches[0]) > 1) {
+							$error++;
+							$langs->load("errors");
+							$mesg[] = $langs->trans("ErrorBadFormatValueList", $param_ligne);
+							$action = 'create_extrafield';
+						}
+					} else {
+						$error++;
+						$langs->load("errors");
+						$mesg[] = $langs->trans("ErrorBadFormatValueList", $param_ligne);
+						$action = 'create_extrafield';
+					}
+				}
+			}
+		}
+
+		if (!$error) {
+			if (strlen(GETPOST('attrname', 'aZ09')) < 3) {
+				$error++;
+				$langs->load("errors");
+				$mesg[] = $langs->trans("ErrorValueLength", $langs->transnoentitiesnoconv("AttributeCode"), 3);
+				$action = 'create_extrafield';
+			}
+		}
+
+		// Check reserved keyword with more than 3 characters
+		if (!$error) {
+			if (in_array(GETPOST('attrname', 'aZ09'), array('and', 'keyword', 'table', 'index', 'int', 'integer', 'float', 'double', 'real', 'position'))) {
+				$error++;
+				$langs->load("errors");
+				$mesg[] = $langs->trans("ErrorReservedKeyword", GETPOST('attrname', 'aZ09'));
+				$action = 'create_extrafield';
+			}
+		}
+
+		if (!$error) {
+			// attrname must be alphabetical and lower case only
+			if (GETPOSTISSET("attrname") && preg_match("/^[a-z0-9_]+$/", GETPOST('attrname', 'aZ09')) && !is_numeric(GETPOST('attrname', 'aZ09'))) {
+				// Construct array for parameter (value of select list)
+				$default_value = GETPOST('default_value', 'alpha');
+				$parameters = $param;
+				$parameters_array = explode("\r\n", $parameters);
+				$params = array();
+				//In sellist we have only one line and it can have come to do SQL expression
+				if ($type == 'sellist' || $type == 'chkbxlst') {
+					foreach ($parameters_array as $param_ligne) {
+						$params['options'] = array($parameters=>null);
+					}
+				} else {
+					// Else it's separated key/value and coma list
+					foreach ($parameters_array as $param_ligne) {
+						list($key, $value) = explode(',', $param_ligne);
+						if (!array_key_exists('options', $params)) {
+							$params['options'] = array();
+						}
+						$params['options'][$key] = $value;
+					}
+				}
+
+				// Visibility: -1=not visible by default in list, 1=visible, 0=hidden
+				$visibility = GETPOST('list', 'alpha');
+				if ($type == 'separate') {
+					$visibility = 3;
+				}
+
+				$result = $extrafields->addExtraField(
+					GETPOST('attrname', 'aZ09'),
+					GETPOST('label', 'alpha'),
+					$type,
+					GETPOST('pos', 'int'),
+					$extrasize,
+					$elementtype,
+					(GETPOST('unique', 'alpha') ? 1 : 0),
+					(GETPOST('required', 'alpha') ? 1 : 0),
+					$default_value,
+					$params,
+					(GETPOST('alwayseditable', 'alpha') ? 1 : 0),
+					(GETPOST('perms', 'alpha') ? GETPOST('perms', 'alpha') : ''),
+					$visibility,
+					GETPOST('help', 'alpha'),
+					GETPOST('computed_value', 'alpha'),
+					(GETPOST('entitycurrentorall', 'alpha') ? 0 : ''),
+					GETPOST('langfile', 'alpha'),
+					1,
+					(GETPOST('totalizable', 'alpha') ? 1 : 0),
+					GETPOST('printable', 'alpha'),
+					array('css' => $css, 'cssview' => $cssview, 'csslist' => $csslist)
+				);
+
+				if ($result > 0 && $extrafields->db->lasterrno() != 'DB_ERROR_RECORD_ALREADY_EXISTS') {
+					setEventMessages($langs->trans('SetupSaved'), null, 'mesgs');
+					header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+					exit;
+				} elseif($extrafields->db->lasterrno() == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
+					$error++;
+					setEventMessages('DB_ERROR_RECORD_ALREADY_EXISTS', null, 'errors');
+				}
+				else {
+					$error++;
+					$mesg = $extrafields->error;
+					setEventMessages($mesg, null, 'errors');
+				}
+			} else {
+				$error++;
+				$langs->load("errors");
+				$mesg = $langs->trans("ErrorFieldCanNotContainSpecialNorUpperCharacters", $langs->transnoentities("AttributeCode"));
+				setEventMessages($mesg, null, 'errors');
+				$action = 'create_extrafield';
+			}
+		} else {
+			setEventMessages($mesg, null, 'errors');
+		}
+	}
+}
+
+// Rename field
+if ($action == 'update_extrafield' && !empty($permissiontoaddfield)) {
+	if (GETPOST("button") != $langs->trans("Cancel")) {
+		// Check values
+		if (!$type) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Type"));
+			$action = 'update_extrafield';
+		}
+		if ($type == 'varchar' && $extrasize <= 0) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Size"));
+			$action = 'update_extrafield';
+		}
+		if ($type == 'varchar' && $extrasize > $maxsizestring) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorSizeTooLongForVarcharType", $maxsizestring);
+			$action = 'update_extrafield';
+		}
+		if ($type == 'int' && $extrasize > $maxsizeint) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorSizeTooLongForIntType", $maxsizeint);
+			$action = 'update_extrafield';
+		}
+		if ($type == 'select' && !$param) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorNoValueForSelectType");
+			$action = 'update_extrafield';
+		}
+		if ($type == 'sellist' && !$param) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorNoValueForSelectListType");
+			$action = 'update_extrafield';
+		}
+		if ($type == 'checkbox' && !$param) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorNoValueForCheckBoxType");
+			$action = 'update_extrafield';
+		}
+		if ($type == 'radio' && !$param) {
+			$error++;
+			$langs->load("errors");
+			$mesg[] = $langs->trans("ErrorNoValueForRadioType");
+			$action = 'update_extrafield';
+		}
+		if ((($type == 'radio') || ($type == 'checkbox')) && $param) {
+			// Construct array for parameter (value of select list)
+			$parameters = $param;
+			$parameters_array = explode("\r\n", $parameters);
+			foreach ($parameters_array as $param_ligne) {
+				if (!empty($param_ligne)) {
+					if (preg_match_all('/,/', $param_ligne, $matches)) {
+						if (count($matches[0]) > 1) {
+							$error++;
+							$langs->load("errors");
+							$mesg[] = $langs->trans("ErrorBadFormatValueList", $param_ligne);
+							$action = 'update_extrafield';
+						}
+					} else {
+						$error++;
+						$langs->load("errors");
+						$mesg[] = $langs->trans("ErrorBadFormatValueList", $param_ligne);
+						$action = 'update_extrafield';
+					}
+				}
+			}
+		}
+
+		if (!$error) {
+			if (strlen(GETPOST('attrname', 'aZ09')) < 3 && empty($conf->global->MAIN_DISABLE_EXTRAFIELDS_CHECK_FOR_UPDATE)) {
+				$error++;
+				$langs->load("errors");
+				$mesg[] = $langs->trans("ErrorValueLength", $langs->transnoentitiesnoconv("AttributeCode"), 3);
+				$action = 'update_extrafield';
+			}
+		}
+
+		// Check reserved keyword with more than 3 characters
+		if (!$error) {
+			if (in_array(GETPOST('attrname', 'aZ09'), array('and', 'keyword', 'table', 'index', 'integer', 'float', 'double', 'position')) && empty($conf->global->MAIN_DISABLE_EXTRAFIELDS_CHECK_FOR_UPDATE)) {
+				$error++;
+				$langs->load("errors");
+				$mesg[] = $langs->trans("ErrorReservedKeyword", GETPOST('attrname', 'aZ09'));
+				$action = 'update_extrafield';
+			}
+		}
+
+		if (!$error) {
+			if (GETPOSTISSET("attrname") && preg_match("/^\w[a-zA-Z0-9-_]*$/", GETPOST('attrname', 'aZ09')) && !is_numeric(GETPOST('attrname', 'aZ09'))) {
+				$pos = GETPOST('pos', 'int');
+				// Construct array for parameter (value of select list)
+				$parameters = $param;
+				$parameters_array = explode("\r\n", $parameters);
+				$params = array();
+				//In sellist we have only one line and it can have come to do SQL expression
+				if ($type == 'sellist' || $type == 'chkbxlst') {
+					foreach ($parameters_array as $param_ligne) {
+						$params['options'] = array($parameters=>null);
+					}
+				} else {
+					//Esle it's separated key/value and coma list
+					foreach ($parameters_array as $param_ligne) {
+						list($key, $value) = explode(',', $param_ligne);
+						if (!array_key_exists('options', $params)) {
+							$params['options'] = array();
+						}
+						$params['options'][$key] = $value;
+					}
+				}
+
+				// Visibility: -1=not visible by default in list, 1=visible, 0=hidden
+				$visibility = GETPOST('list', 'alpha');
+				if ($type == 'separate') {
+					$visibility = 3;
+				}
+
+				// Example: is_object($object) ? ($object->id < 10 ? round($object->id / 2, 2) : (2 * $user->id) * (int) substr($mysoc->zip, 1, 2)) : 'objnotdefined'
+				$computedvalue = GETPOST('computed_value', 'nohtml');
+
+				if($result > 0) {
+					$newOnglet = new OngletDonneesRH($db);
+					// if(GETPOST('onglet', 'int') != $object->id) {
+					// 	$newOnglet->fetch(GETPOST('onglet', 'int')); 
+					// 	$element_type = 'donneesrh_'.$newOnglet->ref;
+					// }
+					// else {
+						$element_type = $elementtype;
+
+						$result = $extrafields->update(
+							GETPOST('attrname', 'aZ09'),
+							GETPOST('label', 'alpha'),
+							$type,
+							$extrasize,
+							$element_type,
+							(GETPOST('unique', 'alpha') ? 1 : 0),
+							(GETPOST('required', 'alpha') ? 1 : 0),
+							$pos,
+							$params,
+							(GETPOST('alwayseditable', 'alpha') ? 1 : 0),
+							(GETPOST('perms', 'alpha') ?GETPOST('perms', 'alpha') : ''),
+							$visibility,
+							GETPOST('help', 'alpha'),
+							GETPOST('default_value', 'alpha'),
+							$computedvalue,
+							(GETPOST('entitycurrentorall', 'alpha') ? 0 : ''),
+							GETPOST('langfile'),
+							GETPOST('enabled', 'nohtml'),
+							(GETPOST('totalizable', 'alpha') ? 1 : 0),
+							GETPOST('printable', 'alpha'),
+							array('css' => $css, 'cssview' => $cssview, 'csslist' => $csslist)
+						);
+					//}
+				}
+
+				if ($result > 0) {
+					setEventMessages($langs->trans('SetupSaved'), null, 'mesgs');
+					header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+					exit;
+				} else {
+					$error++;
+					$mesg = $extrafields->error;
+					setEventMessages($mesg, null, 'errors');
+				}
+			} else {
+				$error++;
+				$langs->load("errors");
+				$mesg = $langs->trans("ErrorFieldCanNotContainSpecialCharacters", $langs->transnoentities("AttributeCode"));
+				setEventMessages($mesg, null, 'errors');
+			}
+		} else {
+			setEventMessages($mesg, null, 'errors');
+		}
+	}
+}
+
+// Delete attribute
+if ($action == 'confirm_delete_extrafield' && $confirm == 'yes' && !empty($permissiontodeletefield)) {
+	if (GETPOSTISSET("attrname") && preg_match("/^\w[a-zA-Z0-9-_]*$/", GETPOST("attrname", 'aZ09'))) {
+		
+		$result = $extrafields->delete(GETPOST("attrname", 'aZ09'), 'donneesrh_'.$object->ref);
+
+		if ($result >= 0) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+			exit;
+		} else {
+			$mesg = $extrafields->error;
+		}
+	} else {
+		$error++;
+		$langs->load("errors");
+		$mesg = $langs->trans("ErrorFieldCanNotContainSpecialCharacters", $langs->transnoentities("AttributeCode"));
+	}
+}

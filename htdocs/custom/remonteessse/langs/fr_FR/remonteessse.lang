@@ -1,0 +1,92 @@
+# Copyright (C) 2022 METZGER Leny <l.metzger@optim-industries.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+# Module label 'ModuleRemonteesSSEName'
+ModuleRemonteesSSEName = Remontées Q3SE/RP
+# Module description 'ModuleRemonteesSSEDesc'
+ModuleRemonteesSSEDesc = Gestion des remontées Q3SE/RP
+RemonteesSSEArea = Remontées Q3SE/RP
+RemonteesSses = Remontées Q3SE/RP
+RemonteesSse = Remontée Q3SE/RP
+ListOfs = Liste des %s
+NewObject2 = Nouvelle %s
+
+#
+# Admin page
+#
+RemonteesSSESetup = Configuration du module Remontées Q3SE/RP
+Settings = Paramètres
+RemonteesSSESetupPage = Configuration du module Remontées Q3SE/RP
+SimpleNumRefRemonteesSSEDesc =  Renvoie le numéro sous la forme %syyyymmdd-theme où yyyy est l'année, mm le mois, dd le jour et theme, le thème de la remontée Q3SE/RP.
+
+#
+# About page
+#
+About = A propos
+RemonteesSSEAbout = À propos du module Remontées Q3SE/RP
+RemonteesSSEAboutPage = À propos du module Remontées Q3SE/RP
+
+
+#
+# Attributs 
+#
+UserRemontee = Utilisateur
+DateRemontee = Date
+Libelle = Intitulé
+Utilisateur = Emetteur
+LieuExact = Lieu d'exécution
+Description_ = Constat
+PropositionAmelioration = Eventuelles propositions d'amélioration 
+Theme = Thème 
+Miseenplace = Mise en place
+Numeroaction = Numéro action
+DetailTraitement = Détail du traitement
+DateTraitement = Date du traitement
+Site = Client
+
+
+#
+# Mails
+#
+EMailTextRemonteeSSEValidate = La remontée Q3SE/RP (%s) à été validé. Celle-ci doit maintenant être prise en compte.
+EMailTextRemonteeSSEPrisencompte = La remontée Q3SE/RP (%s) a été prise en compte. Celle-ci doit maintenant être traitée.
+EMailTextRemonteeSSEAnnulation = La remontée Q3SE/RP (%s) a été annulée.
+EMailTextRemonteeSSECloture = Votre remontée Q3SE/RP (%s) a été cloturée.
+EMailTextRemonteesSSE_RelanceCreateur = Vous devez valider votre remontées Q3SE %s
+
+#
+# Page de confirmation
+#
+ValidateRemonteesSse = Valider la remontée Q3SE/RP
+ConfirmValidateRemonteesSse = Êtes-vous sûr de vouloir valider la remontée Q3SE/RP ?
+PriseEnCompteRemonteesSse = Prise en compte de la remontée Q3SE/RP
+ConfirmPriseEnCompteRemonteesSse = Êtes-vous sûr de vouloir valider la prise en compte de la remontée Q3SE/RP ?
+CancelRemonteesSse = Annuler la remontée Q3SE/RP
+ConfirmCancelRemonteesSse = Êtes-vous sûr de vouloir valider l'annulation de la remontée Q3SE/RP ?
+ClotureRemonteesSse = Clôturer la remontée Q3SE/RP
+ConfirmClotureRemonteesSse = Êtes-vous sûr de vouloir clôturer la remontée Q3SE/RP ?
+DeleteRemonteesSse = Supprimer la remontée Q3SE/RP
+
+#
+# Evenement Action
+#
+REMONTEESSSE_CREATEInDolibarr = Remontée SSE %s créée
+REMONTEESSSE_CLOTUREInDolibarr = Remontée SSE %s cloturée
+REMONTEESSSE_PRISEENCOMPTEInDolibarr = Remontée SSE %s prise en compte
+REMONTEESSSE_VALIDATEInDolibarr = Remontée SSE %s validée
+REMONTEESSSE_ANNULATIONInDolibarr = Remontée SSE %s annulée

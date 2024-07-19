@@ -1,0 +1,229 @@
+# Copyright (C) 2021 Lény Metzger  
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see .
+
+#
+# Generic
+#
+
+# Module label 'ModuleFODName'
+ModuleFODName = FOD
+# Module description 'ModuleFODDesc'
+ModuleFODDesc = FOD description
+
+#
+# Admin page
+#
+FODSetup = Configuration du module Fod
+Settings = Paramètres
+FODSetupPage = FOD setup page
+FODOrange_PARAM1 = FOD Orange : DED moyen 
+FODOrange_PARAM1Tooltip = Si le débit de dose moyen est >= à cette valeur, la FOD sera orange
+FODOrange_PARAM2 = FOD Orange : DED max
+FODOrange_PARAM2Tooltip = Si le débit de dose max est >= à cette valeur, la FOD sera orange
+FODEnjeuRadiologique0_DED = Enjeu radiologique 0 : DED moyen
+FODEnjeuRadiologique0_DEDTooltip = Si le débit de dose moyen est < à cette valeur, la FOD peut être en enjeu 0
+FODEnjeuRadiologique0_DC = Enjeu radiologique 0 : Dose collective
+FODEnjeuRadiologique0_DCTooltip = Si la dose collective est < à cette valeur, la FOD peut être en enjeu 0
+FODEnjeuRadiologique0_prop_radiologique = Enjeu radiologique 0 : Propreté radiologique 
+FODEnjeuRadiologique0_prop_radiologiqueTooltip = Si la propreté radiologique est de ce niveau ou de niveau inferieur, la FOD peut être en enjeu 0
+FODEnjeuRadiologique1_DED = Enjeu radiologique 1 : DED moyen
+FODEnjeuRadiologique1_DEDTooltip = Si le débit de dose moyen est < à cette valeur, la FOD peut être en enjeu 1
+FODEnjeuRadiologique1_DC = Enjeu radiologique 1 : Dose collective
+FODEnjeuRadiologique1_DCTooltip = Si la dose collective est  à cette valeur, la FOD peut être en enjeu 3
+FODEnjeuRadiologique3_prop_radiologique = Enjeu radiologique 3 : Propreté radiologique 
+FODEnjeuRadiologique3_prop_radiologiqueTooltip = Si la propreté radiologique est de ce niveau ou de niveau inferieur, la FOD peut être en enjeu 3
+FOD_DIMax_PRORATATEMPORIS = DI Max (CDD/Interim/Alternant)
+FOD_DIMax_PRORATATEMPORISTooltip = Constante pour le calcul de la DI Max pour les CDD/Alternant et Interim
+
+
+
+#
+# About page
+#
+FODAbout = A propos du module FOD
+FODAboutPage = FOD about page
+
+#
+# Sample page
+#
+MyPageName = My page name
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
+
+
+#
+# Mail 
+#
+EMailTextFODValidatedRA = Validation création %s par RSR nécéssaire.
+EMailTextFODValidatedRSR = Validation création %s par RA nécéssaire.
+EMailTextFODValidatedRARSR = Validation création %s par PCR nécéssaire.
+EMailTextFODValidatedRARSR2 = Prise en compte %s par RSR.
+EMailTextFODValidated = La %s est à prendre en compte par les intervenants.
+EMailTextFODValidated2 = La %s a été validé par la PCR, elle est maintenant active.
+EMailTextFODModify = Etat de la prise en compte de la %s par les intervenants. 
+EMailText90DoseIndiv = <div style="color: red">Risque dépassement CdD sur %s par %s (PCR : %s)</div>
+EMailText100DoseIndivAnnuelle = <div style="color: red">Dépassement CdD annuelle par %s</div>
+EMailText90DoseIndivAnnuelle = <div style="color: red">Risque de dépassement de la CdD annuelle par %s</div>
+EMailText100DoseIndivMensuelle = <div style="color: red">Dépassement CdD mensuelle par %s</div>
+EMailText90DoseIndivMensuelle = <div style="color: red">Risque de dépassement de la CdD mensuelle par %s</div>
+EMailText100DoseIndiv = <div style="color: red">Dépassement CdD sur %s par %s (PCR : %s)</div>
+EMailText90DoseCol = <div style="color: red">Risque dépassement DC sur %s (PCR : %s)</div>
+EMailText100DoseCol = <div style="color: red">Dépassement DC sur %s (PCR : %s)</div>
+EMailTextFODAjoutIntervenant = Validation d'ajout d'intervenant sur la %s : %s %s a été ajouté à cette FOD alors qu'elle est active
+EMailTextFODBilan = Bilan de la %s en cours : veuillez ajouter vos dernières entrées en ZC et remplir le REX
+EMailTextFODBilanInter = Etablissement bilan %s par RSR nécéssaire.
+EMailTextFODBilanRSR = Contrôle bilan %s par RA nécéssaire.
+EMailTextFODBilanRSRRA = Vérification bilan %s par PCR nécéssaire.
+EMailTextFODBilanRSRRAPCR = Clôture bilan %s par RD nécéssaire.
+EMailTextFODRefusPCR = La %s a été refusé par la PCR.<br/>Raison : %s
+EMailTextFODRefusBilan = Le bilan de la %s a été refusé par le RD.<br/>Raison : %s
+EMailTextFODCreatePCR = Création %s par PCR : validation nécéssaire du RA
+EMailTextFOD_15J =  Fin de validité %s J-15 <br> Avez-vous besoin de prolonger la FOD ? si oui vous avez 10 jours pour le faire 
+EMailTextFOD_5J =  Fin de validité %s J-5 
+EMailTextFODdepassement_1J = Fin de validité de la %s : bilan en cours, fin des activités sur cette FOD
+EMailTextFODCloture = %s Clôturée, votre suivi dose Op 12 mois glissant est consultable sous %s
+EMailTextPortique = Déclenchement portique %s sur %s par %s
+EMailTextFODProlongation = Prolongation de la %s jusqu’au %s
+EMailText100DoseAnnuelleOPTIM = <div style="color: red">ATTENTION : Dépassement de la CdD annuelle d'OPTIM Industries</div>
+EMailText90DoseAnnuelleOPTIM = <div style="color: red">ATTENTION : Risque de dépassement de la CdD annuelle d'OPTIM Industries</div>
+
+
+#
+# Autres
+# 
+DebitDoseEstime = Débit de dose moyen poste de travail
+DureeIntervention = Durée d'intervention (collective)
+EffectifPrevisionnel = Nombre d'intervenant
+DebitDoseMax = Débit de dose maximal poste de travail ou trajet 
+DateDebut = Date de début
+DateFin = Date de fin
+CoefficientExposition = Coefficient d'exposition
+PropreteRadiologique = Propreté Radiologique
+FODArea = Fiche d'objectifs dosimétriques
+NewObject = Nouvelle FOD
+Fod = Fiche d'objectifs dosimétriques
+List_Fod = Liste Fod
+New_Fod = Nouvelle Fod
+CdD = Contrainte de dose
+New_CdD = Nouvelle Contrainte de dose
+ListOfIntervenantsInFOD = Liste des intervenants
+Liste de CdD_annees = Liste des contraintes de dose
+CategorieMedicale = Catégorie medicale
+ContrainteDeDose = Contrainte de dose
+CdDs = contraintes de dose
+ListDataIntervenantForFod = Liste des données de la FOD 
+NiveauContamination = Niveau de contamination
+ConfirmDeleteAdataintervenant = Êtes-vous sûr de vouloir supprimer cette donnée ?
+NivContamination = Niveau de contamination
+NewFod = Nouvelle fiche d'objectifs dosimétriques
+Risques = Risques/Coactivité 
+RI = RI en présence
+Rex = Rex OPTIM Industries
+Fods = Fiches d'objectifs dosimétriques
+fods = fiches d'objectifs dosimétriques
+FeuVert = Autorisé
+FeuRouge = Non Autorisé
+RemoveFromFod = Supprimer l'intervenant
+Stat = Statut
+RapportDataIntervenant = Rapport des données dosimétriques
+UserData = Utilisateur
+DeclenchementPortique = Déclenchement portique
+NonAffectedUsersFod = Intervenants 
+DEDOptimise = DED moyen optimisé 
+DEDMaxOptimise = DED max optimisé 
+DCOptimise = DC optimisée 
+CDDOptimise = CdD optimisée
+PropRadOptimise = Propreté radiologique optimisée
+ModifyAOA = Modifier AOA
+ModifyFOD = Modifier FOD
+ValidateAOA = Valider l'AOA et la FOD
+Q1DosesIndividuelles = Aucune dose individuelle est supérieure à la DI max (contrainte de dose)
+Q2DosesIndividuelles = La dose de prorata temporis pour les CCD et/ou ETT est respecté
+Q3DosesIndividuelles = La FOD a été révisée durant sa validité  afin de ne pas dépasser le prévisionnel 
+Q1DoseCollective = La dose collective réalisée est inférieure ou égale au prévisionnel 
+Q2DoseCollective = La FOD a été révisée durant sa validité  afin de ne pas dépasser les objectifs
+Q1Contamination = Les accès en zone se sont  faits dans des zones de NC conforme au prévisionnel 
+Q2Contamination = La FOD a été révisée durant sa validité  afin de ne pas dépasser les objectifs
+Q1Siseri = Rapprochement SISERI (PCR)
+RexIntervenant = Intervenants
+RexRSR = RSR
+RexRA = RA
+RexPCR = PCR 
+Q1Radioprotection = BVR
+ModifyBilan = Modifier Bilan
+ValiderBilan = Valider Bilan
+BilanInter = Bilan
+BilanRSR = Bilan
+BilanRSRRA = Bilan
+BilanRSRRAPCR = Bilan
+BilanRefus = Bilan
+DateFinProlong = Date prolongation
+ProlongerFOD = Prolongation de la FOD
+RefusFod = Refus de la FOD
+RefusBilanFod = Refus du bilan de la FOD
+ConfirmRefusObject = Raison du refus
+radiation@fod = Fiche d'objectifs dosimétriques
+PdfTitle = Fiche d'objectifs dosimétriques
+VALIDATEDRA = Validé par le RA
+TVXSousRayonnement = TVX sous rayonnement
+RefRex = Référence REX
+ObjectifProprete = Objectif propreté 
+ComObjectifProprete = Commentaires objectif propreté
+ConsignesRP = Consignes RP 
+EPIspecifique = EPI spécifique
+DebitDoseEstimeOptimise = DED moyen optimisé
+PropreteRadiologiqueOptimise = Propreté radiologique optimisée
+RefDocClient = Réf. document client (Numéro d’IZ....) 
+ValidationEnAttente = Validation en attente
+BoxTitleLatestModifiedMyObjects = Les dernières FOD modifiées
+List_Data = Suivi entrées
+ClientSite = Client-Site
+EtatInstallation = Etat installation
+Activite = Activité
+CommentaireRisque = Commentaire risque 
+CommentaireRI = Commentaire RI
+CommentaireFOD = Commentaire FOD
+CommentaireEtatInstallation = Commentaire etat installation
+EffectifOptimise = Effectif optimisé
+DureeOptimise = Durée optimisée
+DebitDoseMaxOptimise = DED max optimisé 
+UpdateFromFod = Modifier l'intervenant
+PriseEnCompte = Prise en compte
+ErrorFormat = Le champ '%s' n'est pas dans le bon format
+GenererDoc = Générer document
+PdfTitleHistorique = Historique fiche d'objectifs dosimétriques
+ErrorDateFod = La date doit être comprise entre la date de début et de fin de la FOD
+NumeroChrono = Numéro chrono
+RexRD = RD
+DureeContrat = Durée contrat
+BilanFod = Passage au bilan
+ConfirmBilan = Voulez vous passer la FOD au bilan ? (ATTENTION : Pensez à supprimer les intervenants qui n'ont pas pris en compte la FOD)
+ValidationBilanFOD = Validation du bilan
+ConfirmValidate = Voulez vous valider la FOD ?
+CommentaireAOA = Commentaire AOA
+FOD_Pourcentage_RisqueDepassement_total12mois = Limite risque dépassement CdD OPTIM Industries (Pourcentage)
+FOD_Pourcentage_RisqueDepassement = Limite risque dépassement (Pourcentage)
+fod_16@fod = FOD
+ChampVideAOA = Le champ %s ne peut pas être vide : remplir avec 'NA' si la valeur n'est pas optimisable
+
+PriseEnCompteImpossible = La prise en compte n'est pas possible car vous n'êtes pas autorisé sur cette FOD<br>Voir avec le RA pour trouver une solution
+
+ConfirmCancelFOD = Voulez vous annuler la FOD ?
+
+ModifyBilanOf = Modifier Bilan de %s %s

@@ -1,0 +1,113 @@
+# Copyright (C) 2021 METZGER Leny <l.metzger@optim-industries.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleFEPName'
+ModuleFEPName = FEP/QS
+fep_16@fep = FEP/QS
+# Module description 'ModuleFEPDesc'
+ModuleFEPDesc = FEP description
+
+#
+# Admin page
+#
+FEPSetup = FEP setup
+Settings = Settings
+FEPSetupPage = FEP setup page
+FEP_MYPARAM1 = My param 1
+FEP_MYPARAM1Tooltip = My param 1 tooltip
+FEP_MYPARAM2=My param 2
+FEP_MYPARAM2Tooltip=My param 2 tooltip
+
+
+#
+# About page
+#
+About = About
+FEPAbout = About FEP
+FEPAboutPage = FEP about page
+
+#
+# Sample page
+#
+MyPageName = My page name
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
+NonAffectedCommande = Commandes non affectées
+
+Question1_1 = Participation du fournisseur à la préparation de l'activité
+Question1_2 = Attitude et disponibilité du fournisseur dans le déroulement de l'activité. Participation à l'optimisation du planning et à la réduction des coûts (démarche 'partenariat-productivité')
+Question1_3 = Respect des exigences du contrat ou commande et autres contraintes (réglement intérieur, ...). Communication et transparence tout au long du contrat ou de la commande
+Question2_1 = Dimensionnement des ressources humaines du fournisseur par rapport au contrat ou commande. Respect des règles de déclaration des travailleurs détachés sur toute la chaîne de sous-traitance
+Question2_2 = Niveaux de compétences et habilitations des intervenants
+Question2_3 = Pilotage et présence de l'encadrement, notamment dans le cadre des PMI et PGAC. Pertinence et mise en oeuvre du Plan Directeur de Prestation Intégrée (pour les PMI) ou du Plan Directeur de Prestation Globale (pour les PGAC) et/ou du document d'organisation dans le cas d'un GME
+Question2_4 = Implication et investissement du fournisseur, nottament sur la qualité du planning contractualisé avec le CNPE
+Question2_5 = Dimensionnement, qualité et gestion de l'ensemble des outillages, matériels et appareils de mesure, y compris de sécurité, appartenant au fournisseur ou mis à disposition par EDF
+Question3_1 = Attitude et comportement vis-à-vis de la sûreté. Mise en oeuvre des PFI adaptées. Connaissance et respect des exigences spécifiques du site
+Question3_2 = Maîtrise par le fournisseur de la chaîne de sous-traitance
+Question3_3 = Elaboration, appropriation et respect des parades de l'analyse de risques (y compris le risque FME). Prise en compte du risque agressions en exploitation, en particulier le séisme-évènement
+Question3_4 = Respect des règles relatives à la prévention des risques incendie et/ou explosion 
+Question3_5 = Organisation qualité : Amélioration continue et capitalisation du REX. Gestion des non conformités et écarts
+Question3_6 = Maîtrise de la documentation technique
+Question3_7 = Adéquation et efficacité des mesures palliatives en cas de réserves sur la qualification ou si le fournisseur est au Plan d'Action National
+Question3_8 = L'activité a-t-elle donné lieu à un évenement significatif ou intéressant (domaines : Sûreté, Radioprotection, Environnement, Tansport, Sécurité ou Disponibilité) dont le fournisseur est responsable totalement ou partiellement ? Organisation et comportement vis-à-vis de l'évènement. Participation à l'analyse de l'évènement et capacité à produire un plan d'actions
+Question4_1 = Attitude et comportement des intervenants vis-à-vis de la sécurité. Respect des règles vitales
+Question4_2 = Maîtrise de la sécurité sur le chantier
+Question4_3 = Attitude et comportement des intervenants vis-à-vis de la radioprotection
+Question4_4 = Maîtrise et gestion des évaluations dosimétriques prévisionnelles
+Question5_1 = Attitude des intervenants vis-à-vis de l'environnement de travail. Propreté du chantier (tenue et repli), colisage de matériels (entrposage et stockage)
+Question5_2 = Protection de l'environnement : Maîtrise des déchets solides (conventionnel et radioactif), des effluents liquides et gazeux (collecte, tri, réduction, etc.). Maîtrise des produits et des matériaux utilisables en centrales nucléaire (PMUC) et des produits dangereux
+Question6_1 = Mise en oeuvre et traçabilité du contrôle technique réalisé par le fournissuur
+Question6_2 = Mise en oeuvre de la vérification réalisée par le fournisseur (intervenant en cas 1)
+Question6_3 = Maîtrise du geste technique et conformité du produit technique. Conformité de la documentation par rapport aux exigences liées à l'intervention (CSCT, réglementation de travail, codes et normes). Maîtrise et gestion des dispositifs et moyens particuliers (DMP/MTI) 
+Question6_4 = L'activité a-t-elle donné lieu à une NON Qualité de Maintenance ou d'exploitation (NQME) avec un impact sur la Sûreté et/ou la Disponibilité, et dont le fournisseur est responsable totalement ou partiellement ?
+Question6_5 = Conformité du produit technique. Conformité des livrables (données de sortie) par rapport aux exigences techniques liées à l'activité (CSCT, codes et normes)
+Question7_1 = Respect des délais du contrat ou commande. Respect du planning lissé contractualisé avec le CNPE en préparation modulaire. Respect des délais de transmission des documents contractuels  
+Question7_2 = Contexte particulier de l'intervention (sollicitation tardive, glissement de planning, période chargée, etc.)
+
+Unite = Unité
+DateDebutPrestation = Date de début de la prestation
+DateFinPrestation = Date de fin de la prestation
+DateTransmission = Date de transmission
+DateReponse = Date de réponse
+DatePublication = Date de publication
+DomaineActivite = Domaine d'activité
+IrregulariteCFSI = Irrégularité de type CFSI
+
+NoteTheme1 = Note Thème 1 : <strong>Relations technico-commerciales</strong>
+NoteTheme2 = Note Thème 2 : <strong>Moyens mis en oeuvre</strong>
+NoteTheme3 = Note Thème 3 : <strong>Organisation Sûreté & Qualité</strong>
+NoteTheme4 = Note Thème 4 : <strong>Organisation Sécurité & Radioprotection
+NoteTheme5 = Note Thème 5 : <strong>Organisation Environnement</strong>
+NoteTheme6 = Note Thème 6 : <strong>Qualité technique du produit</strong>
+NoteTheme7 = Note Thème 7 : <strong>Gestion des délais et planning</strong>
+NoteGlobale = Note globale
+
+EMailTextFEPReponseAEnvoyer = Le RA a saisi les commentaires, la FEP/QS (%s) est à envoyer
+EMailTextFEPCommentaireRA = Vous devez saisir les commentaires sur la FEP/QS %s
+EMailTextFEPdepassement_Publication = La FEP/QS %s n'a toujours pas été publié
+EMailTextFEPdepassement_Commentaire = Vous n'avez toujours pas saisis les commentaires sur La FEP/QS %s
+EMailTextFEPNoteThemeC = La FEP/QS (%s) a reçu des notes C et/ou D pour certain(s) thème(s)<br> %s
+EMailTextFEPModifyNoteThemeC = La FEP/QS (%s) a été modifiée et a reçu des notes C et/ou D pour certain(s) thème(s)<br> %s
+EMailTextFEPNoteGlobale = La FEP/QS (%s) a reçu une note globale de <strong>%s</strong>
+EMailTextFEPModifyNoteGlobale = La FEP/QS (%s) a été modifiée et a reçu une note globale de <strong>%s</strong>
+EMailTextFEPIrregulariteCFSI =  La FEP/QS (%s) relève une suspicion/détection d'une irrégularité de type CFSI
