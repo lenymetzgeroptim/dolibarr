@@ -2824,6 +2824,7 @@ class FeuilleDeTemps extends CommonObject
 				$msg = $langs->transnoentitiesnoconv("EMailTextFDTWeeklySave", dol_print_date($monday, '%d/%m/%Y'), dol_print_date($sunday, '%d/%m/%Y'), $link);
 				
 				while ($obj = $this->db->fetch_object($result)) {	
+					$user_static->fetch($obj->rowid);
 					if(!in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $user_static->getCategoriesCommon(Categorie::TYPE_USER))) {
 						$to = '';	
 						$nb_jour_ok = $obj->nb_jour_absence + $obj->nb_jour_pointage;
@@ -2838,7 +2839,7 @@ class FeuilleDeTemps extends CommonObject
 							$res = $mail->sendfile();
 						}
 
-						if(!$res) {
+						if(!empty($to) && !$res) {
 							$this->output .= $to.", ";
 						}
 					}
@@ -2881,11 +2882,11 @@ class FeuilleDeTemps extends CommonObject
 		if($day_now >= $jour) {
 			$sql = "SELECT DISTINCT u.rowid, u.email, f.rowid as fdt_id";
 			$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps as f";
-			$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."user as u";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u";
 			$sql .= " ON u.rowid = f.fk_user";
-			$sql .= " WHERE (('".substr($this->db->idate($now), 0, 10)."' BETWEEN f.date_debut AND f.date_fin)";
-			$sql .= " OR (f.date_debut IS NULL AND f.date_fin IS NULL))";
+			$sql .= " WHERE '".substr($this->db->idate($now), 0, 10)."' BETWEEN f.date_debut AND f.date_fin";
 			$sql .= " AND (f.status = 0 OR f.status IS NULL)";
+			$sql .= " AND u.statut = 1";
 
 			$result = $this->db->query($sql);
 			if ($result) {
