@@ -860,11 +860,18 @@ class FeuilleDeTemps extends CommonObject
 			}
 
 			if (!$error && !$notrigger) {
-				$this->actionmsg2 = $langs->transnoentities("FEUILLEDETEMPS_APPROBATION2InDolibarr", $this->ref);
-				$this->actionmsg = $langs->transnoentities("FEUILLEDETEMPS_APPROBATION2InDolibarr", $this->ref);
+				if($this->status == self::STATUS_APPROBATION1) {
+					$this->actionmsg2 = $langs->transnoentities("FEUILLEDETEMPS_APPROBATION2InDolibarr", $this->ref);
+					$this->actionmsg = $langs->transnoentities("FEUILLEDETEMPS_APPROBATION2InDolibarr", $this->ref);
+				}
+				else {
+					$this->actionmsg2 = $langs->transnoentities("FEUILLEDETEMPS_APPROBATION12InDolibarr", $this->ref);
+					$this->actionmsg = $langs->transnoentities("FEUILLEDETEMPS_APPROBATION12InDolibarr", $this->ref);
+				}
 
 				// Call trigger
 				$result = $this->call_trigger('FEUILLEDETEMPS_APPROBATION2', $user);
+				
 				if ($result < 0) {
 					$error++;
 				}

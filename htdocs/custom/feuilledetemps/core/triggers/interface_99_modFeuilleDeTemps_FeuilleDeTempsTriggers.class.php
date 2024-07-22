@@ -161,7 +161,12 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				$from = 'erp@optim-industries.fr';
 
 				$to = '';
-				$list_validation = $object->listApprover2;
+				if($object->status == FeuilleDeTemps::STATUS_APPROBATION1) {
+					$list_validation = $object->listApprover2;
+				}
+				else {
+					$list_validation = $object->listApprover1;
+				}
 				foreach($list_validation[2] as $id => $user_static){
 					if(!empty($user_static->email)){
 						$to .= $user_static->email.', ';
@@ -172,7 +177,12 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 				$link = '<a href="'.$urlwithroot.'/custom/feuilledetemps/feuilledetemps_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-				$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation2", $link);
+				if($object->status == FeuilleDeTemps::STATUS_APPROBATION1) {
+					$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation2", $link);
+				}
+				else {
+					$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation1", $link);
+				}
 				$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 				if (!empty($to)){
 					$res = $mail->sendfile();
