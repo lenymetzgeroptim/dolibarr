@@ -114,22 +114,22 @@ class UserAutorisation extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
-		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
-		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>20, 'notnull'=>1, 'visible'=>4, 'index'=>1, 'searchall'=>1, 'validate'=>'1', 'comment'=>"Reference of object"),
-		'note_public' => array('type'=>'html', 'label'=>'NotePublic', 'enabled'=>'1', 'position'=>61, 'notnull'=>0, 'visible'=>0, 'cssview'=>'wordbreak', 'validate'=>'1',),
-		'note_private' => array('type'=>'html', 'label'=>'NotePrivate', 'enabled'=>'1', 'position'=>62, 'notnull'=>0, 'visible'=>0, 'cssview'=>'wordbreak', 'validate'=>'1',),
-		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
-		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
-		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid',),
-		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2,),
-		'last_main_doc' => array('type'=>'varchar(255)', 'label'=>'LastMainDoc', 'enabled'=>'1', 'position'=>600, 'notnull'=>0, 'visible'=>0,),
-		'import_key' => array('type'=>'varchar(14)', 'label'=>'ImportId', 'enabled'=>'1', 'position'=>1000, 'notnull'=>-1, 'visible'=>-2,),
-		'model_pdf' => array('type'=>'varchar(255)', 'label'=>'Model pdf', 'enabled'=>'1', 'position'=>1010, 'notnull'=>-1, 'visible'=>0,),
-		'fk_autorisation' => array('type'=>'integer:Autorisation:custom/formationhabilitation/class/autorisation.class.php', 'label'=>'Autorisation', 'enabled'=>'1', 'position'=>30, 'notnull'=>1, 'visible'=>1,),
-		'fk_user' => array('type'=>'integer:User:user\class\user.class.php', 'label'=>'User', 'enabled'=>'1', 'position'=>31, 'notnull'=>1, 'visible'=>1,),
-		'date_autorisation' => array('type'=>'date', 'label'=>'DateAutorisation', 'enabled'=>'1', 'position'=>32, 'notnull'=>1, 'visible'=>1,),
-		'status' => array('type'=>'integer', 'label'=>'Status', 'enabled'=>'1', 'position'=>1000, 'notnull'=>1, 'visible'=>1, 'index'=>1, 'arrayofkeyval'=>array('1'=>'Autorisable', '2'=>'Habilité', '3'=>'Non Habilité'), 'validate'=>'1',),
-		'date_fin_autorisation' => array('type'=>'date', 'label'=>'DateFinAutorisation', 'enabled'=>'1', 'position'=>33, 'notnull'=>1, 'visible'=>1,),
+		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"4", "index"=>"1", "searchall"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
+		"note_public" => array("type"=>"html", "label"=>"NotePublic", "enabled"=>"1", 'position'=>61, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
+		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
+		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
+		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
+		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0",),
+		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
+		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
+		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
+		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
+		"fk_autorisation" => array("type"=>"integer:autorisation:custom/formationhabilitation/class/autorisation.class.php:0:(t.status:=:1)", "label"=>"Autorisation", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
+		"fk_user" => array("type"=>"integer:User:user\class\user.class.php", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
+		"date_autorisation" => array("type"=>"date", "label"=>"DateAutorisation", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Autorisable", "2" => "Autorisé", "3" => "Non Autorisé"), "validate"=>"1",),
+		"date_fin_autorisation" => array("type"=>"date", "label"=>"DateFinAutorisation", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -286,7 +286,7 @@ class UserAutorisation extends CommonObject
 			$object->label = empty($this->fields['label']['default']) ? $langs->trans("CopyOf")." ".$object->label : $this->fields['label']['default'];
 		}
 		if (property_exists($object, 'status')) {
-			$object->status = self::STATUS_DRAFT;
+			$object->status = self::STATUS_AUTORISABLE;
 		}
 		if (property_exists($object, 'date_creation')) {
 			$object->date_creation = dol_now();
@@ -512,7 +512,7 @@ class UserAutorisation extends CommonObject
 		$error = 0;
 
 		// Protection
-		if ($this->status == self::STATUS_VALIDATED) {
+		if ($this->status == self::STATUS_AUTORISE) {
 			dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
 			return 0;
 		}
@@ -541,7 +541,7 @@ class UserAutorisation extends CommonObject
 			// Validate
 			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
 			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_VALIDATED;
+			$sql .= " status = ".self::STATUS_AUTORISE;
 			if (!empty($this->fields['date_validation'])) {
 				$sql .= ", date_validation = '".$this->db->idate($now)."'";
 			}
@@ -614,7 +614,7 @@ class UserAutorisation extends CommonObject
 		// Set new ref and current status
 		if (!$error) {
 			$this->ref = $num;
-			$this->status = self::STATUS_VALIDATED;
+			$this->status = self::STATUS_AUTORISE;
 		}
 
 		if (!$error) {
@@ -637,7 +637,7 @@ class UserAutorisation extends CommonObject
 	public function setDraft($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status <= self::STATUS_DRAFT) {
+		if ($this->status <= self::STATUS_AUTORISABLE) {
 			return 0;
 		}
 
@@ -648,7 +648,7 @@ class UserAutorisation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
+		return $this->setStatusCommon($user, self::STATUS_AUTORISABLE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
 	}
 
 	/**
@@ -661,7 +661,7 @@ class UserAutorisation extends CommonObject
 	public function cancel($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status != self::STATUS_VALIDATED) {
+		if ($this->status != self::STATUS_AUTORISE) {
 			return 0;
 		}
 
@@ -672,7 +672,7 @@ class UserAutorisation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_NONAUTORISE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
 	}
 
 	/**
@@ -685,7 +685,7 @@ class UserAutorisation extends CommonObject
 	public function reopen($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status == self::STATUS_VALIDATED) {
+		if ($this->status == self::STATUS_AUTORISE) {
 			return 0;
 		}
 
@@ -696,7 +696,7 @@ class UserAutorisation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
+		return $this->setStatusCommon($user, self::STATUS_AUTORISE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
 	}
 
 	/**
@@ -928,9 +928,9 @@ class UserAutorisation extends CommonObject
 			$this->labelStatus[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Autorisable');
 			$this->labelStatus[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Autorisé');
 			$this->labelStatus[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Autorisé');
-			$this->labelStatusShort[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Habilitable');
-			$this->labelStatusShort[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Habilité');
-			$this->labelStatusShort[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Habilité');
+			$this->labelStatusShort[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Autorisable');
+			$this->labelStatusShort[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Autorisé');
+			$this->labelStatusShort[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Autorisé');
 		}
 
 		$statusType = 'status'.$status;

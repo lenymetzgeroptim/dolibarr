@@ -125,9 +125,9 @@ class Autorisation extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Active", "5" => "Cloturée"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Actif", "5" => "Cloturée"), "validate"=>"1",),
 		"formation" => array("type"=>"integer:Formation:custom/formationhabilitation/class/formation.class.php", "label"=>"Formation", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1",),
-		"validite_employeur" => array("type"=>"integer", "label"=>"ValiditeEmployeur", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1", "help"=>"en mois",),
+		"validite_employeur" => array("type"=>"integer", "label"=>"ValiditeEmployeur", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1",),
 		"volet" => array("type"=>"sellist:c_volets:numero|label:numero::(active:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
@@ -154,17 +154,17 @@ class Autorisation extends CommonObject
 	// /**
 	//  * @var string    Name of subtable line
 	//  */
-	public $table_element_line = 'formationhabilitation_userautorisation';
+	// public $table_element_line = 'formationhabilitation_autorisationline';
 
 	// /**
 	//  * @var string    Field with ID of parent key if this object has a parent
 	//  */
-	public $fk_element = 'fk_autorisation';
+	// public $fk_element = 'fk_autorisation';
 
 	// /**
 	//  * @var string    Name of subtable class that manage subtable lines
 	//  */
-	public $class_element_line = 'UserAutorisation';
+	// public $class_element_line = 'Autorisationline';
 
 	// /**
 	//  * @var array	List of child tables. To test if we can delete object.
@@ -176,7 +176,7 @@ class Autorisation extends CommonObject
 	//  *               If name matches '@ClassNAme:FilePathClass;ParentFkFieldName' it will
 	//  *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object
 	//  */
-	protected $childtablesoncascade = array('formationhabilitation_userautorisation');
+	// protected $childtablesoncascade = array('formationhabilitation_autorisationdet');
 
 	// /**
 	//  * @var AutorisationLine[]     Array of subtable lines
@@ -364,50 +364,12 @@ class Autorisation extends CommonObject
 	 *
 	 * @return int         <0 if KO, 0 if not found, >0 if OK
 	 */
-	public function fetchLines($morewhere = '')
+	public function fetchLines()
 	{
 		$this->lines = array();
 
-		$objectlineclassname = 'UserAutorisation';
-
-		if (!class_exists($objectlineclassname)) {
-			$this->error = 'Error, class '.$objectlineclassname.' not found during call of fetchLinesCommon';
-			return -1;
-		}
- 
-		$objectline = new $objectlineclassname($this->db);
- 
-		$sql = "SELECT ".$objectline->getFieldList('l');
-		$sql .= " FROM ".$this->db->prefix()."formationhabilitation_userautorisation as l";
-		$sql .= " WHERE l.fk_".$this->db->escape($this->element)." = ".((int) $this->id);
-		if ($morewhere) {
-			$sql .= $morewhere;
-		}
-		if (isset($objectline->fields['position'])) {
-			$sql .= $this->db->order('position', 'ASC');
-		}
- 
-		$resql = $this->db->query($sql);
-		if ($resql) {
-			$num_rows = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num_rows) {
-				$obj = $this->db->fetch_object($resql);
-				if ($obj) {
-					$newline = new $objectlineclassname($this->db);
-					$newline->setVarsFromFetchObj($obj);
- 
-					$this->lines[] = $newline;
-				}
-				$i++;
-			}
- 
-			return 1;
-		} else {
-			$this->error = $this->db->lasterror();
-			$this->errors[] = $this->error;
-			return -1;
-		}
+		$result = $this->fetchLinesCommon();
+		return $result;
 	}
 
 
@@ -1078,10 +1040,10 @@ class Autorisation extends CommonObject
 			global $langs;
 			//$langs->load("formationhabilitation@formationhabilitation");
 			$this->labelStatus[self::STATUS_CONSTRUCTION] = $langs->transnoentitiesnoconv('En construction');
-			$this->labelStatus[self::STATUS_OUVERTE] = 'Active';
+			$this->labelStatus[self::STATUS_OUVERTE] = $langs->transnoentitiesnoconv('Active');
 			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Clôturée');
 			$this->labelStatusShort[self::STATUS_CONSTRUCTION] = $langs->transnoentitiesnoconv('En construction');
-			$this->labelStatusShort[self::STATUS_OUVERTE] = 'Active';
+			$this->labelStatusShort[self::STATUS_OUVERTE] = $langs->transnoentitiesnoconv('Active');
 			$this->labelStatusShort[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Clôturée');
 		}
 
@@ -1156,8 +1118,8 @@ class Autorisation extends CommonObject
 	{
 		$this->lines = array();
 
-		$objectline = new UserAutorisation($this->db);
-		$result = $objectline->fetchAll('ASC', 'date_autorisation', 0, 0, array('customsql'=>'fk_autorisation = '.((int) $this->id)));
+		$objectline = new AutorisationLine($this->db);
+		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_autorisation = '.((int) $this->id)));
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);

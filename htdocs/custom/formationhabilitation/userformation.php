@@ -53,6 +53,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userhabilita
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userautorisation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/extendedUser3.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 
 // Translations
@@ -441,32 +442,48 @@ if($onglet == 'autorisation'){
 }
 
 // Action pour générer un document
-if ($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline) {
-	if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
-		if (method_exists($object, 'generateDocument')) {
-			$outputlangs = $langs;
-			$newlang = '';
-			if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-				$newlang = GETPOST('lang_id', 'aZ09');
-			}
-			if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
-				$newlang = $object->thirdparty->default_lang;
-			}
-			if (!empty($newlang)) {
-				$outputlangs = new Translate("", $conf);
-				$outputlangs->setDefaultLang($newlang);
-			}
+if ($onglet == 'volet') {
+    if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline) {
+        if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+            if (method_exists($formation, 'generateDocument')) {
+                $outputlangs = $langs;
+                $newlang = '';
+                if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+                    $newlang = GETPOST('lang_id', 'aZ09');
+                }
+                if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
+                    $newlang = $formation->thirdparty->default_lang;
+                }
+                if (!empty($newlang)) {
+                    $outputlangs = new Translate("", $conf);
+                    $outputlangs->setDefaultLang($newlang);
+                }
 
-			$ret = $object->fetch($id); // Reload to get new records
+                //$ret = $object->fetch($id); // Reload to get new records
 
-			$model = 'userformationhabilitation';
+                $model = 'userformationhabilitation';
 
-			$retgen = $object->generateDocument_formationhabilitation($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-			if ($retgen < 0) {
-				setEventMessages($object->error, $object->errors, 'warnings');
-			}
-		}
-	}
+                $retgen = $formation->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+                if ($retgen < 0) {
+                    setEventMessages($formation->error, $formation->errors, 'warnings');
+                }
+            }
+        }
+    }
+
+    // Delete file
+    if ($action == 'confirm_deletefile' && $confirm == 'yes') {
+        $file = $conf->formationhabilitation->dir_output.'/'.$object->id."/".GETPOST('file'); // Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
+
+        $ret = dol_delete_file($file);
+        if ($ret) {
+            setEventMessages($langs->trans("FileWasRemoved", GETPOST('file')), null, 'mesgs');
+        } else {
+            setEventMessages($langs->trans("ErrorFailToDeleteFile", GETPOST('file')), null, 'errors');
+        }
+        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet=volet');
+        exit;
+    }
 }
 
 /*
@@ -507,6 +524,9 @@ if ($id == $user->id){
 	// Confirmation to delete line
 	if ($action == 'deleteline') {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid.'&onglet='.$onglet, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
+	}
+    if ($action == 'remove_file') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&file='.urlencode(GETPOST("file")).'&onglet='.$onglet, $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
 	}
 	// Print form confirm
 	print $formconfirm;
@@ -682,12 +702,6 @@ if ($id == $user->id){
         $upload_dir = $conf->export->dir_temp.'/'.$user->id;
 
         print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
-
-        print '<div class="tabsAction">'."\n";
-        // Generer PDF
-        print dolGetButtonAction($langs->trans('GenererDoc'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet&action=confirm_genererPdf&confirm=yes&token='.newToken(), '', $permissiontoaddline);
-        print '</div>'."\n";
-
         
         print '<div class="fichecenter">';
             // print '<div class="fichethirdleft">';
@@ -700,16 +714,22 @@ if ($id == $user->id){
             // print '</tr>';
             // print '<tr>';
             // print '<td align="center" colspan="2">';
-            $urlsource = $_SERVER['PHP_SELF'].'?onglet=volet';
+            $urlsource = $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet';
         
-            $filedir = $conf->formationhabilitation->dir_output.'/volet/'.$object->id;
-            $genallowed = 1; // TO DO
-            $delallowed = 1; // TO DO
+            $filedir = $conf->formationhabilitation->dir_output.'/'.$object->id;
+            $genallowed = 1; // LENYTODO
+            $delallowed = 1; // LENYTODO
         
-            print $formfile->showdocuments('formationhabilitation', '', $filedir, $urlsource, 0, $delallowed, '', 1, 0, 0, 0, 1, '', 'test');
+            include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/modules/formationhabilitation/modules_formationhabilitation_user.php';
+            print $formfile->showdocuments('formationhabilitation_user', '', $filedir, $urlsource, $genallowed, $delallowed, '', 1, 0, 0, 0, 1, '', 'Volets');
             // print '</td>';
             // print '</tr>';
             // print '</table></div></div>';
+
+            print '<div class="tabsAction">'."\n";
+            // Generer PDF
+            print dolGetButtonAction($langs->trans('GenererDoc'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet&action=confirm_genererPdf&confirm=yes&token='.newToken(), '', $permissiontoaddline);
+            print '</div>'."\n";
         print '</div>';
     }
 

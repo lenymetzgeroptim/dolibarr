@@ -114,7 +114,7 @@ class Formation extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"5", "default"=>"0", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Actif", "2" => "Cloturée"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"5", "default"=>"0", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Active", "2" => "Cloturée"), "validate"=>"1",),
 		"type" => array("type"=>"integer", "label"=>"Type", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Formation Habilitante", "2" => "Formation qui donne une autorisation"),),
 		"ref_externe" => array("type"=>"varchar(128)", "label"=>"RefExterne", "enabled"=>"1", 'position'=>21, 'notnull'=>0, "visible"=>"1",),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
@@ -861,10 +861,10 @@ class Formation extends CommonObject
 			global $langs;
 			//$langs->load("formationhabilitation@formationhabilitation");
 			$this->labelStatus[self::STATUS_CONSTRUCTION] = $langs->transnoentitiesnoconv('En construction');
-			$this->labelStatus[self::STATUS_OUVERTE] = $langs->transnoentitiesnoconv('Active');
+			$this->labelStatus[self::STATUS_OUVERTE] = 'Active';
 			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Clôturée');
 			$this->labelStatusShort[self::STATUS_CONSTRUCTION] = $langs->transnoentitiesnoconv('En construction');
-			$this->labelStatusShort[self::STATUS_OUVERTE] = $langs->transnoentitiesnoconv('Active');
+			$this->labelStatusShort[self::STATUS_OUVERTE] = 'Active';
 			$this->labelStatusShort[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Clôturée');
 		}
 
@@ -1031,7 +1031,7 @@ class Formation extends CommonObject
 		global $conf, $langs;
 
 		$result = 0;
-		$includedocgeneration = 0;
+		$includedocgeneration = 1;
 
 		$langs->load("formationhabilitation@formationhabilitation");
 

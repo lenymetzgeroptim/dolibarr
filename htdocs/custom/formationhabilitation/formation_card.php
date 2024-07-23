@@ -233,7 +233,12 @@ if (empty($reshook)) {
 			}
 
 			if (!$error) {
+				$user_static = new User($db);
+				$user_static->fetch(GETPOST('fk_user'));
+
+				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
 				$objectline->date_formation = $date;
+				$objectline->date_fin_formation = ($object->periode_recyclage > 0 ? dol_time_plus_duree($date, $object->periode_recyclage, 'd') : '');
 				$objectline->status = GETPOST('status');
 
 				$result = $objectline->update($user);
@@ -286,6 +291,7 @@ if (empty($reshook)) {
 				$objectline->fk_formation = $id;
 				$objectline->fk_user = GETPOST('fk_user');
 				$objectline->date_formation = $date;
+				$objectline->date_fin_formation = ($object->periode_recyclage > 0 ? dol_time_plus_duree($date, $object->periode_recyclage, 'd') : '');
 				$objectline->status = GETPOST('status');
 				$objectline->cout_pedagogique = $object->cout;
                 $objectline->cout_mobilisation = $user_static->thm * ($object->nombre_heure / 3600);

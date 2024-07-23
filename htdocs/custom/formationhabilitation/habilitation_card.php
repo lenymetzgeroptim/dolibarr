@@ -139,6 +139,7 @@ if ($enablepermissioncheck) {
 	$permissiontodelete = 1;
 	$permissionnote = 1;
 	$permissiondellink = 1;
+	$permissiontoaddline = 1;
 }
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/habilitation';
@@ -230,7 +231,12 @@ if (empty($reshook)) {
 			}
 
 			if (!$error) {
+				$user_static = new User($db);
+				$user_static->fetch(GETPOST('fk_user'));
+
+				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
 				$objectline->date_habilitation = $date;
+				$objectline->date_fin_habilitation = dol_time_plus_duree($date, $object->validite_employeur, 'd');
 				$objectline->status = GETPOST('status');
 
 				$result = $objectline->update($user);
@@ -277,12 +283,13 @@ if (empty($reshook)) {
 			if (!$error) {
 				$user_static = new User($db);
 				$user_static->fetch(GETPOST('fk_user'));
-				$mois = (strlen(GETPOST("date_formationmonth", 'int')) < 2 ? '0'.GETPOST("date_formationmonth", 'int') : GETPOST("date_formationmonth", 'int'));
+				$mois = (strlen(GETPOST("date_habilitationmonth", 'int')) < 2 ? '0'.GETPOST("date_habilitationmonth", 'int') : GETPOST("date_habilitationmonth", 'int'));
 
-				$objectline->ref = $object->ref.'_'.GETPOST("date_formationyear", 'int').$mois.'_'.$user_static->array_options['options_matricule'];
+				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
 				$objectline->fk_habilitation = $id;
 				$objectline->fk_user = GETPOST('fk_user');
 				$objectline->date_habilitation = $date;
+				$objectline->date_fin_habilitation = dol_time_plus_duree($date, $object->validite_employeur, 'd');
 				$objectline->status = GETPOST('status');
 
 				$result = $objectline->create($user);
@@ -465,7 +472,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Common attributes
-	//$keyforbreak='';	// We change column just before this field
+	$keyforbreak='validite_employeur';	// We change column just before this field
 	//unset($object->fields['fk_project']);				// Hide field already shown in banner
 	//unset($object->fields['fk_soc']);					// Hide field already shown in banner
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_view.tpl.php';
@@ -482,7 +489,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print dol_get_fiche_end();
 
 	// Buttons for actions
-
 	if ($action != 'presend' && $action != 'editline') {
 		print '<div class="tabsAction">'."\n";
 		$parameters = array();

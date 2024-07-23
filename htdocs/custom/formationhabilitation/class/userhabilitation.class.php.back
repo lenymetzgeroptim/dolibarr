@@ -17,9 +17,9 @@
  */
 
 /**
- * \file        class/habilitation.class.php
+ * \file        class/userhabilitation.class.php
  * \ingroup     formationhabilitation
- * \brief       This file is a CRUD class file for Habilitation (Create/Read/Update/Delete)
+ * \brief       This file is a CRUD class file for UserHabilitation (Create/Read/Update/Delete)
  */
 
 // Put here all includes required by your class file
@@ -28,9 +28,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 
 /**
- * Class for Habilitation
+ * Class for UserHabilitation
  */
-class Habilitation extends CommonObject
+class UserHabilitation extends CommonObject
 {
 	/**
 	 * @var string ID of module.
@@ -40,12 +40,12 @@ class Habilitation extends CommonObject
 	/**
 	 * @var string ID to identify managed object.
 	 */
-	public $element = 'habilitation';
+	public $element = 'userhabilitation';
 
 	/**
 	 * @var string Name of table without prefix where object is stored. This is also the key used for extrafields management.
 	 */
-	public $table_element = 'formationhabilitation_habilitation';
+	public $table_element = 'formationhabilitation_userhabilitation';
 
 	/**
 	 * @var int  Does this object support multicompany module ?
@@ -59,14 +59,14 @@ class Habilitation extends CommonObject
 	public $isextrafieldmanaged = 0;
 
 	/**
-	 * @var string String with name of icon for habilitation. Must be the part after the 'object_' into object_habilitation.png
+	 * @var string String with name of icon for userhabilitation. Must be the part after the 'object_' into object_userhabilitation.png
 	 */
-	public $picto = 'fa-cog_fa_#c46c0e';
+	public $picto = 'fa-user-gear_fas_#c46c0e';
 
 
-	const STATUS_CONSTRUCTION = 0;
-	const STATUS_OUVERTE = 1;
-	const STATUS_CLOTURE = 5;
+	const STATUS_HABILITABLE = 1;
+	const STATUS_HABILITE = 2;
+	const STATUS_NONHABILITE = 3;
 
 
 	/**
@@ -102,26 +102,25 @@ class Habilitation extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
-		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "index"=>"1", "searchall"=>"1", "validate"=>"1",),
-		"label" => array("type"=>"varchar(255)", "label"=>"Label", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "validate"=>"1",),
-		"note_public" => array("type"=>"html", "label"=>"NotePublic", "enabled"=>"1", 'position'=>61, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
-		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
-		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
-		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
-		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2",),
-		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
-		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
-		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
-		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"5", "default"=>"0", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Active", "5" => "Cloturée"), "validate"=>"1",),
-		"formation" => array("type"=>"integer:Formation:custom/formationhabilitation/class/formation.class.php", "label"=>"Formation", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1",),
-		"validite_employeur" => array("type"=>"integer", "label"=>"ValiditeEmployeur", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1", "help"=>"en mois",),
-		"volet" => array("type"=>"sellist:c_volets:numero|label:numero::(active:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
+		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
+		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>20, 'notnull'=>1, 'visible'=>4, 'index'=>1, 'searchall'=>1, 'validate'=>'1', 'comment'=>"Reference of object"),
+		'note_public' => array('type'=>'html', 'label'=>'NotePublic', 'enabled'=>'1', 'position'=>61, 'notnull'=>0, 'visible'=>0, 'cssview'=>'wordbreak', 'validate'=>'1',),
+		'note_private' => array('type'=>'html', 'label'=>'NotePrivate', 'enabled'=>'1', 'position'=>62, 'notnull'=>0, 'visible'=>0, 'cssview'=>'wordbreak', 'validate'=>'1',),
+		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
+		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
+		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid',),
+		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2,),
+		'last_main_doc' => array('type'=>'varchar(255)', 'label'=>'LastMainDoc', 'enabled'=>'1', 'position'=>600, 'notnull'=>0, 'visible'=>0,),
+		'import_key' => array('type'=>'varchar(14)', 'label'=>'ImportId', 'enabled'=>'1', 'position'=>1000, 'notnull'=>-1, 'visible'=>-2,),
+		'model_pdf' => array('type'=>'varchar(255)', 'label'=>'Model pdf', 'enabled'=>'1', 'position'=>1010, 'notnull'=>-1, 'visible'=>0,),
+		'fk_habilitation' => array('type'=>'integer:Habilitation:custom/formationhabilitation/class/habilitation.class.php', 'label'=>'Habilitation', 'enabled'=>'1', 'position'=>30, 'notnull'=>1, 'visible'=>1,),
+		'fk_user' => array('type'=>'integer:User:user\class\user.class.php', 'label'=>'User', 'enabled'=>'1', 'position'=>31, 'notnull'=>1, 'visible'=>1,),
+		'date_habilitation' => array('type'=>'date', 'label'=>'DateHabilitation', 'enabled'=>'1', 'position'=>32, 'notnull'=>1, 'visible'=>1,),
+		'status' => array('type'=>'integer', 'label'=>'Status', 'enabled'=>'1', 'position'=>1000, 'notnull'=>1, 'visible'=>1, 'index'=>1, 'arrayofkeyval'=>array('1'=>'Habilitable', '2'=>'Habilité', '3'=>'Non Habilité'), 'validate'=>'1',),
+		'date_fin_habilitation' => array('type'=>'date', 'label'=>'DateFinHabilitation', 'enabled'=>'1', 'position'=>33, 'notnull'=>1, 'visible'=>1,),
 	);
 	public $rowid;
 	public $ref;
-	public $label;
 	public $note_public;
 	public $note_private;
 	public $date_creation;
@@ -131,46 +130,47 @@ class Habilitation extends CommonObject
 	public $last_main_doc;
 	public $import_key;
 	public $model_pdf;
+	public $fk_habilitation;
+	public $fk_user;
+	public $date_habilitation;
 	public $status;
-	public $formation;
-	public $validite_employeur;
-	public $volet;
+	public $date_fin_habilitation;
 	// END MODULEBUILDER PROPERTIES
 
 
 	// If this object has a subtable with lines
 
-	/**
-	 * @var string    Name of subtable line
-	 */
-	public $table_element_line = 'formationhabilitation_userhabilitation';
+	// /**
+	//  * @var string    Name of subtable line
+	//  */
+	// public $table_element_line = 'formationhabilitation_userhabilitationline';
 
-	/**
-	 * @var string    Field with ID of parent key if this object has a parent
-	 */
-	public $fk_element = 'fk_habilitation';
+	// /**
+	//  * @var string    Field with ID of parent key if this object has a parent
+	//  */
+	// public $fk_element = 'fk_userhabilitation';
 
-	/**
-	 * @var string    Name of subtable class that manage subtable lines
-	 */
-	public $class_element_line = 'UserHabilitation';
+	// /**
+	//  * @var string    Name of subtable class that manage subtable lines
+	//  */
+	// public $class_element_line = 'UserHabilitationline';
 
-	/**
-	 * @var array	List of child tables. To test if we can delete object.
-	 */
-	//protected $childtables = array('formationhabilitation_userhabilitation');
+	// /**
+	//  * @var array	List of child tables. To test if we can delete object.
+	//  */
+	// protected $childtables = array();
 
-	/**
-	 * @var array    List of child tables. To know object to delete on cascade.
-	 *               If name matches '@ClassNAme:FilePathClass;ParentFkFieldName' it will
-	 *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object
-	 */
-	protected $childtablesoncascade = array('formationhabilitation_userhabilitation');
+	// /**
+	//  * @var array    List of child tables. To know object to delete on cascade.
+	//  *               If name matches '@ClassNAme:FilePathClass;ParentFkFieldName' it will
+	//  *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object
+	//  */
+	// protected $childtablesoncascade = array('formationhabilitation_userhabilitationdet');
 
-	/**
-	 * @var FormationLine[]     Array of subtable lines
-	 */
-	public $lines = array();
+	// /**
+	//  * @var UserHabilitationLine[]     Array of subtable lines
+	//  */
+	// public $lines = array();
 
 
 
@@ -193,7 +193,7 @@ class Habilitation extends CommonObject
 		}
 
 		// Example to show how to set values of fields definition dynamically
-		/*if ($user->rights->formationhabilitation->habilitation->read) {
+		/*if ($user->rights->formationhabilitation->userhabilitation->read) {
 			$this->fields['myfield']['visible'] = 1;
 			$this->fields['myfield']['noteditable'] = 0;
 		}*/
@@ -273,9 +273,9 @@ class Habilitation extends CommonObject
 		if (property_exists($object, 'label')) {
 			$object->label = empty($this->fields['label']['default']) ? $langs->trans("CopyOf")." ".$object->label : $this->fields['label']['default'];
 		}
-		if (property_exists($object, 'status')) {
-			$object->status = self::STATUS_CONSTRUCTION;
-		}
+		/*if (property_exists($object, 'status')) {
+			$object->status = self::STATUS_DRAFT;
+		}*/
 		if (property_exists($object, 'date_creation')) {
 			$object->date_creation = dol_now();
 		}
@@ -353,50 +353,12 @@ class Habilitation extends CommonObject
 	 *
 	 * @return int         <0 if KO, 0 if not found, >0 if OK
 	 */
-	public function fetchLines($morewhere = '')
+	public function fetchLines()
 	{
 		$this->lines = array();
 
-		$objectlineclassname = 'UserHabilitation';
-
-		if (!class_exists($objectlineclassname)) {
-			$this->error = 'Error, class '.$objectlineclassname.' not found during call of fetchLinesCommon';
-			return -1;
-		}
- 
-		$objectline = new $objectlineclassname($this->db);
- 
-		$sql = "SELECT ".$objectline->getFieldList('l');
-		$sql .= " FROM ".$this->db->prefix()."formationhabilitation_userhabilitation as l";
-		$sql .= " WHERE l.fk_".$this->db->escape($this->element)." = ".((int) $this->id);
-		if ($morewhere) {
-			$sql .= $morewhere;
-		}
-		if (isset($objectline->fields['position'])) {
-			$sql .= $this->db->order('position', 'ASC');
-		}
- 
-		$resql = $this->db->query($sql);
-		if ($resql) {
-			$num_rows = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num_rows) {
-				$obj = $this->db->fetch_object($resql);
-				if ($obj) {
-					$newline = new $objectlineclassname($this->db);
-					$newline->setVarsFromFetchObj($obj);
- 
-					$this->lines[] = $newline;
-				}
-				$i++;
-			}
- 
-			return 1;
-		} else {
-			$this->error = $this->db->lasterror();
-			$this->errors[] = $this->error;
-			return -1;
-		}
+		$result = $this->fetchLinesCommon();
+		return $result;
 	}
 
 
@@ -524,272 +486,7 @@ class Habilitation extends CommonObject
 	}
 
 
-	/**
-	 *	Validate object
-	 *
-	 *	@param		User	$user     		User making status change
-	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
-	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
-	 */
-	public function validate($user, $notrigger = 0)
-	{
-		global $conf, $langs;
 
-		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-
-		$error = 0;
-
-		// Protection
-		if ($this->status == self::STATUS_OUVERTE) {
-			dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
-			return 0;
-		}
-
-		$now = dol_now();
-
-		$this->db->begin();
-
-		// Define new ref
-		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
-			$num = $this->getNextNumRef();
-		} else {
-			$num = $this->ref;
-		}
-		$this->newref = $num;
-
-		if (!empty($num)) {
-			// Validate
-			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_OUVERTE;
-			if (!empty($this->fields['date_validation'])) {
-				$sql .= ", date_validation = '".$this->db->idate($now)."'";
-			}
-			if (!empty($this->fields['fk_user_valid'])) {
-				$sql .= ", fk_user_valid = ".((int) $user->id);
-			}
-			$sql .= " WHERE rowid = ".((int) $this->id);
-
-			dol_syslog(get_class($this)."::validate()", LOG_DEBUG);
-			$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
-
-			if (!$error && !$notrigger) {
-				// Call trigger
-				$result = $this->call_trigger('HABILITATION_VALIDATE', $user);
-				if ($result < 0) {
-					$error++;
-				}
-				// End call triggers
-			}
-		}
-
-		if (!$error) {
-			$this->oldref = $this->ref;
-
-			// Rename directory if dir was a temporary ref
-			if (preg_match('/^[\(]?PROV/i', $this->ref)) {
-				// Now we rename also files into index
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'habilitation/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'habilitation/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
-				$resql = $this->db->query($sql);
-				if (!$resql) {
-					$error++; $this->error = $this->db->lasterror();
-				}
-
-				// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
-				$oldref = dol_sanitizeFileName($this->ref);
-				$newref = dol_sanitizeFileName($num);
-				$dirsource = $conf->formationhabilitation->dir_output.'/habilitation/'.$oldref;
-				$dirdest = $conf->formationhabilitation->dir_output.'/habilitation/'.$newref;
-				if (!$error && file_exists($dirsource)) {
-					dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
-
-					if (@rename($dirsource, $dirdest)) {
-						dol_syslog("Rename ok");
-						// Rename docs starting with $oldref with $newref
-						$listoffiles = dol_dir_list($conf->formationhabilitation->dir_output.'/habilitation/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
-						foreach ($listoffiles as $fileentry) {
-							$dirsource = $fileentry['name'];
-							$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
-							$dirsource = $fileentry['path'].'/'.$dirsource;
-							$dirdest = $fileentry['path'].'/'.$dirdest;
-							@rename($dirsource, $dirdest);
-						}
-					}
-				}
-			}
-		}
-
-		// Set new ref and current status
-		if (!$error) {
-			$this->ref = $num;
-			$this->status = self::STATUS_OUVERTE;
-		}
-
-		if (!$error) {
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-	}
-
-	/**
-	 *	Cloture object
-	 *
-	 *	@param		User	$user     		User making status change
-	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
-	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
-	 */
-	public function cloture($user, $notrigger = 0)
-	{
-		global $conf, $langs;
-
-		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-
-		$error = 0;
-
-		// Protection
-		if ($this->status == self::STATUS_CLOTURE) {
-			dol_syslog(get_class($this)."::cloture action abandonned: already clotured", LOG_WARNING);
-			return 0;
-		}
-
-		$now = dol_now();
-
-		$this->db->begin();
-
-		// Define new ref
-		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
-			$num = $this->getNextNumRef();
-		} else {
-			$num = $this->ref;
-		}
-		$this->newref = $num;
-
-		if (!empty($num)) {
-			// Validate
-			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_OUVERTE;
-			if (!empty($this->fields['date_validation'])) {
-				$sql .= ", date_validation = '".$this->db->idate($now)."'";
-			}
-			if (!empty($this->fields['fk_user_valid'])) {
-				$sql .= ", fk_user_valid = ".((int) $user->id);
-			}
-			$sql .= " WHERE rowid = ".((int) $this->id);
-
-			dol_syslog(get_class($this)."::cloture()", LOG_DEBUG);
-			$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
-
-			if (!$error && !$notrigger) {
-				// Call trigger
-				$result = $this->call_trigger('HABILITATION_CLOTURE', $user);
-				if ($result < 0) {
-					$error++;
-				}
-				// End call triggers
-			}
-		}
-
-		if (!$error) {
-			$this->oldref = $this->ref;
-
-			// Rename directory if dir was a temporary ref
-			if (preg_match('/^[\(]?PROV/i', $this->ref)) {
-				// Now we rename also files into index
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'habilitation/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'habilitation/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
-				$resql = $this->db->query($sql);
-				if (!$resql) {
-					$error++; $this->error = $this->db->lasterror();
-				}
-
-				// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
-				$oldref = dol_sanitizeFileName($this->ref);
-				$newref = dol_sanitizeFileName($num);
-				$dirsource = $conf->formationhabilitation->dir_output.'/habilitation/'.$oldref;
-				$dirdest = $conf->formationhabilitation->dir_output.'/habilitation/'.$newref;
-				if (!$error && file_exists($dirsource)) {
-					dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
-
-					if (@rename($dirsource, $dirdest)) {
-						dol_syslog("Rename ok");
-						// Rename docs starting with $oldref with $newref
-						$listoffiles = dol_dir_list($conf->formationhabilitation->dir_output.'/habilitation/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
-						foreach ($listoffiles as $fileentry) {
-							$dirsource = $fileentry['name'];
-							$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
-							$dirsource = $fileentry['path'].'/'.$dirsource;
-							$dirdest = $fileentry['path'].'/'.$dirdest;
-							@rename($dirsource, $dirdest);
-						}
-					}
-				}
-			}
-		}
-
-		// Set new ref and current status
-		if (!$error) {
-			$this->ref = $num;
-			$this->status = self::STATUS_CLOTURE;
-		}
-
-		if (!$error) {
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-	}
-
-
-	/**
-	 *	Set draft status
-	 *
-	 *	@param	User	$user			Object user that modify
-	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
-	 *	@return	int						<0 if KO, >0 if OK
-	 */
-	public function setDraft($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status <= self::STATUS_CONSTRUCTION) {
-			return 0;
-		}
-
-		return $this->setStatusCommon($user, self::STATUS_CONSTRUCTION, $notrigger, 'HABILITATION_UNVALIDATE');
-	}
-
-	/**
-	 *	Set back to validated status
-	 *
-	 *	@param	User	$user			Object user that modify
-	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
-	 *	@return	int						<0 if KO, 0=Nothing done, >0 if OK
-	 */
-	public function reopen($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status != self::STATUS_CLOTURE) {
-			return 0;
-		}
-
-		return $this->setStatusCommon($user, self::STATUS_OUVERTE, $notrigger, 'HABILITATION_REOPEN');
-	}
 
 	/**
 	 *  Return a link to the object card (with optionaly the picto)
@@ -811,14 +508,14 @@ class Habilitation extends CommonObject
 
 		$result = '';
 
-		$label = img_picto('', $this->picto).' <u>'.$langs->trans("Habilitation").'</u>';
+		$label = img_picto('', $this->picto).' <u>'.$langs->trans("UserHabilitation").'</u>';
 		if (isset($this->status)) {
 			$label .= ' '.$this->getLibStatut(5);
 		}
 		$label .= '<br>';
 		$label .= '<b>'.$langs->trans('Ref').':</b> '.$this->ref;
 
-		$url = dol_buildpath('/formationhabilitation/habilitation_card.php', 1).'?id='.$this->id;
+		$url = dol_buildpath('/formationhabilitation/userhabilitation_card.php', 1).'?id='.$this->id;
 
 		if ($option != 'nolink') {
 			// Add param to save lastsearch_values or not
@@ -834,7 +531,7 @@ class Habilitation extends CommonObject
 		$linkclose = '';
 		if (empty($notooltip)) {
 			if (!empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) {
-				$label = $langs->trans("ShowHabilitation");
+				$label = $langs->trans("ShowUserHabilitation");
 				$linkclose .= ' alt="'.dol_escape_htmltag($label, 1).'"';
 			}
 			$linkclose .= ' title="'.dol_escape_htmltag($label, 1).'"';
@@ -859,7 +556,7 @@ class Habilitation extends CommonObject
 
 		if (empty($this->showphoto_on_popup)) {
 			if ($withpicto) {
-				$result .= img_object(($notooltip ? '' : $label), 'habilitation_16@formationhabilitation', ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="'.(($withpicto != 2) ? 'paddingright ' : '').'classfortooltip"'), 0, 0, $notooltip ? 0 : 1);
+				$result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="'.(($withpicto != 2) ? 'paddingright ' : '').'classfortooltip"'), 0, 0, $notooltip ? 0 : 1);
 			}
 		} else {
 			if ($withpicto) {
@@ -894,7 +591,7 @@ class Habilitation extends CommonObject
 		//if ($withpicto != 2) $result.=(($addlabel && $this->label) ? $sep . dol_trunc($this->label, ($addlabel > 1 ? $addlabel : 0)) : '');
 
 		global $action, $hookmanager;
-		$hookmanager->initHooks(array('habilitationdao'));
+		$hookmanager->initHooks(array('userhabilitationdao'));
 		$parameters = array('id'=>$this->id, 'getnomurl'=>$result);
 		$reshook = $hookmanager->executeHooks('getNomUrl', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
 		if ($reshook > 0) {
@@ -942,18 +639,18 @@ class Habilitation extends CommonObject
 		if (empty($this->labelStatus) || empty($this->labelStatusShort)) {
 			global $langs;
 			//$langs->load("formationhabilitation@formationhabilitation");
-			$this->labelStatus[self::STATUS_CONSTRUCTION] = $langs->transnoentitiesnoconv('En construction');
-			$this->labelStatus[self::STATUS_OUVERTE] = 'Active';
-			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Clôturée');
-			$this->labelStatusShort[self::STATUS_CONSTRUCTION] = $langs->transnoentitiesnoconv('En construction');
-			$this->labelStatusShort[self::STATUS_OUVERTE] = 'Active';
-			$this->labelStatusShort[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Clôturée');
+			$this->labelStatus[self::STATUS_HABILITABLE] = $langs->transnoentitiesnoconv('Habilitable');
+			$this->labelStatus[self::STATUS_HABILITE] = $langs->transnoentitiesnoconv('Habilité');
+			$this->labelStatus[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Non Habilité');
+			$this->labelStatusShort[self::STATUS_HABILITABLE] = $langs->transnoentitiesnoconv('Habilitable');
+			$this->labelStatusShort[self::STATUS_HABILITE] = $langs->transnoentitiesnoconv('Habilité');
+			$this->labelStatusShort[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Non Habilité');
 		}
 
 		$statusType = 'status'.$status;
-		if ($status == self::STATUS_OUVERTE) $statusType = 'status4';
-		if ($status == self::STATUS_CONSTRUCTION) $statusType = 'status1';
-		if ($status == self::STATUS_CLOTURE) $statusType = 'status6';
+		if ($status == self::STATUS_HABILITABLE) $statusType = 'status7';
+		if ($status == self::STATUS_HABILITE) $statusType = 'status4';
+		if ($status == self::STATUS_NONHABILITE) $statusType = 'status8';
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
 	}
@@ -1029,8 +726,8 @@ class Habilitation extends CommonObject
 	{
 		$this->lines = array();
 
-		$objectline = new UserHabilitation($this->db);
-		$result = $objectline->fetchAll('ASC', 'date_habilitation', 0, 0, array('customsql'=>'fk_habilitation = '.((int) $this->id)));
+		$objectline = new UserHabilitationLine($this->db);
+		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_userhabilitation = '.((int) $this->id)));
 
 		if (is_numeric($result)) {
 			$this->error = $objectline->error;
@@ -1052,15 +749,15 @@ class Habilitation extends CommonObject
 		global $langs, $conf;
 		$langs->load("formationhabilitation@formationhabilitation");
 
-		if (empty($conf->global->FORMATIONHABILITATION_HABILITATION_ADDON)) {
-			$conf->global->FORMATIONHABILITATION_HABILITATION_ADDON = 'mod_habilitation_standard';
+		if (empty($conf->global->FORMATIONHABILITATION_USERHABILITATION_ADDON)) {
+			$conf->global->FORMATIONHABILITATION_USERHABILITATION_ADDON = 'mod_userhabilitation_standard';
 		}
 
-		if (!empty($conf->global->FORMATIONHABILITATION_HABILITATION_ADDON)) {
+		if (!empty($conf->global->FORMATIONHABILITATION_USERHABILITATION_ADDON)) {
 			$mybool = false;
 
-			$file = $conf->global->FORMATIONHABILITATION_HABILITATION_ADDON.".php";
-			$classname = $conf->global->FORMATIONHABILITATION_HABILITATION_ADDON;
+			$file = $conf->global->FORMATIONHABILITATION_USERHABILITATION_ADDON.".php";
+			$classname = $conf->global->FORMATIONHABILITATION_USERHABILITATION_ADDON;
 
 			// Include file with class
 			$dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
@@ -1118,12 +815,12 @@ class Habilitation extends CommonObject
 		$langs->load("formationhabilitation@formationhabilitation");
 
 		if (!dol_strlen($modele)) {
-			$modele = 'standard_habilitation';
+			$modele = 'standard_userhabilitation';
 
 			if (!empty($this->model_pdf)) {
 				$modele = $this->model_pdf;
-			} elseif (!empty($conf->global->HABILITATION_ADDON_PDF)) {
-				$modele = $conf->global->HABILITATION_ADDON_PDF;
+			} elseif (!empty($conf->global->USERHABILITATION_ADDON_PDF)) {
+				$modele = $conf->global->USERHABILITATION_ADDON_PDF;
 			}
 		}
 
@@ -1165,31 +862,42 @@ class Habilitation extends CommonObject
 
 		return $error;
 	}
-}
-
-
-require_once DOL_DOCUMENT_ROOT.'/core/class/commonobjectline.class.php';
-
-/**
- * Class HabilitationLine. You can also remove this and generate a CRUD class for lines objects.
- */
-class HabilitationLine extends CommonObjectLine
-{
-	// To complete with content of an object HabilitationLine
-	// We should have a field rowid, fk_habilitation and position
 
 	/**
-	 * @var int  Does object support extrafields ? 0=No, 1=Yes
-	 */
-	public $isextrafieldmanaged = 0;
-
-	/**
-	 * Constructor
+	 * 	Return l'id de userhabilitation à partir de l'id de l(habilitation) et de l'utilisateur
 	 *
-	 * @param DoliDb $db Database handler
+	 * 	@param	int		$id_habilitation	Id de l'habilitation
+	 * 	@param	int		$id_user			Id de l'utilisateur
+	 * 	@return	int							Id de userformation 
 	 */
-	public function __construct(DoliDB $db)
+	public function getId($id_habilitation, $id_user)
 	{
-		$this->db = $db;
+		global $conf, $user;
+
+		$sql = "SELECT uf.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uf";
+		$sql .= " WHERE uf.fk_user =". $id_user;
+		$sql .= " AND uf.fk_habilitation =". $id_habilitation;
+
+
+		dol_syslog(get_class($this)."::getId", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$obj = $this->db->fetch_object($resql);
+			$num = $this->db->num_rows($resql);
+			$this->db->free($resql);
+
+			if($num > 0){
+				return $obj->rowid;
+			}
+			else {
+				return 0;
+			}
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
 	}
 }
+
+

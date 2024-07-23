@@ -287,14 +287,14 @@ class pdf_userformationhabilitation extends ModelePDFFormation
 		if ($conf->user->dir_output) {
 			$object->fetch_thirdparty();
 
-			// Definition of $dir and $file
+			// Definition of $dir and $file : // LENYTODO
 			if ($object->specimen) {
-				$dir = $conf->user->dir_output;
+				$dir = $conf->formationhabilitation->dir_output;
 				$file = $dir."/SPECIMEN.pdf";
 			} else {
 				$objectref = dol_sanitizeFileName($object->ref);
-				$dir = $conf->user->dir_output.'/'.$objectref;
-				$file = $dir."/".$objectref.".pdf";
+				$dir = $conf->formationhabilitation->dir_output.'/334';
+				$file = $dir."/volet.pdf";
 			}
 			if (!file_exists($dir)) {
 				if (dol_mkdir($dir) < 0) {

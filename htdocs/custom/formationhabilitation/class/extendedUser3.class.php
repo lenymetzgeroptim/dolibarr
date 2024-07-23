@@ -228,26 +228,4 @@ class ExtendedUser3 extends User {
             }
         }
     }
-
-
-    public function generateDocument_formationhabilitation($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
-     {
-         global $conf, $user, $langs;
-  
-         $langs->load("user");
-  
-         // Positionne le modele sur le nom du modele a utiliser
-         if (!dol_strlen($modele)) {
-             if (!empty($conf->global->USER_ADDON_PDF)) {
-                 $modele = $conf->global->USER_ADDON_PDF;
-             } else {
-                 $modele = 'bluesky';
-             }
-         }
-  
-         $modelpath = "custom/formationhabilitation/core/modules/formationhabilitation/doc/";
-  
-         return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
-     }
-  
 }
