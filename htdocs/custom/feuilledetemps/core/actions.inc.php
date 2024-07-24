@@ -70,8 +70,10 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $userIsResp && $resp_
 			$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 			for ($idw = 0; $idw < $nb_jour; $idw++) { 
 				$silae = new Silae($db);
+				$deplacement = new Deplacement($db);
 				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
 				$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
+				$deplacement->fetchDeplacementWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
 
 				$silae->date = $dayinloopfromfirstdaytoshow;
 				$silae->fk_user = $object->fk_user;
@@ -114,10 +116,10 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $userIsResp && $resp_
 
 				$silae->heure_nuit = $otherTime['heure_nuit'][$dayinloopfromfirstdaytoshow];
 				if($object->getHeureDay($dayinloopfromfirstdaytoshow, $object->fk_user) > 0) {
-					if($userRepas == 1) { 
+					if($userRepas == 1 && $deplacement->type_deplacement != 7) { 
 						$silae->repas = 1;
 					}
-					elseif($userRepas == 2) { 
+					elseif($userRepas == 2 && $deplacement->type_deplacement != 7) { 
 						$silae->repas = 2;
 					}
 				}
@@ -232,8 +234,10 @@ if ($action == 'confirm_validate2' && $confirm == 'yes' && $userIsRespProjet) {
 			$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 			for ($idw = 0; $idw < $nb_jour; $idw++) { 
 				$silae = new Silae($db);
+				$deplacement = new Deplacement($db);
 				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
 				$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
+				$deplacement->fetchDeplacementWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
 
 				$silae->date = $dayinloopfromfirstdaytoshow;
 				$silae->fk_user = $object->fk_user;
@@ -276,10 +280,10 @@ if ($action == 'confirm_validate2' && $confirm == 'yes' && $userIsRespProjet) {
 
 				$silae->heure_nuit = $otherTime['heure_nuit'][$dayinloopfromfirstdaytoshow];
 				if($object->getHeureDay($dayinloopfromfirstdaytoshow, $object->fk_user) > 0) {
-					if($userRepas == 1) { 
+					if($userRepas == 1 && $deplacement->type_deplacement != 7) { 
 						$silae->repas = 1;
 					}
-					elseif($userRepas == 2) { 
+					elseif($userRepas == 2 && $deplacement->type_deplacement != 7) { 
 						$silae->repas = 2;
 					}
 				}
