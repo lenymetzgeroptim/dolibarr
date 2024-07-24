@@ -953,28 +953,23 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	$morewherefilter = ' AND (t.dateo <= "'.$db->idate($lastdaytoshow).'" OR t.dateo IS NULL) AND (t.datee >= "'.$db->idate($firstdaytoshow).'" OR t.datee IS NULL)';
 
-	$tasksarray = $taskstatic->getTasksArray(0, 0, ($project->id ? $project->id : 0), $socid, 0, $search_project_ref, $onlyopenedproject, $morewherefilter, ($object->fk_user ? $object->fk_user : 0), 0, $extrafields); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
+	$tasksarray = $taskstatic->getTasksArray(0, 0, 0, $socid, 0, $search_project_ref, $onlyopenedproject, $morewherefilter, 0, 0, $extrafields); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
 	if ($morewherefilter) {	// Get all task without any filter, so we can show total of time spent for not visible tasks
-		$tasksarraywithoutfilter = $taskstatic->getTasksArray(0, 0, ($project->id ? $project->id : 0), $socid, 0, '', $onlyopenedproject, '', ($object->fk_user ? $object->fk_user : 0)); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
+		$tasksarraywithoutfilter = $taskstatic->getTasksArray(0, 0, 0, $socid, 0, '', $onlyopenedproject, '', 0); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
 	}
-	$projectsrole = $taskstatic->getUserRolesForProjectsOrTasks($usertoprocess, 0, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
-	$tasksrole = $taskstatic->getUserRolesForProjectsOrTasks(0, $usertoprocess, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
+	$projectsrole = $taskstatic->getUserRolesForProjectsOrTasks($usertoprocess, 0, 0, 0, $onlyopenedproject);
+	$tasksrole = $taskstatic->getUserRolesForProjectsOrTasks(0, $usertoprocess, 0, 0, $onlyopenedproject);
+
+	print '<form id="feuilleDeTempsForm" name="addtime" method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
+	print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
+	print '<input type="hidden" name="mode" value="'.$mode.'">';
 
 	if($modifier && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
-		print '<form id="feuilleDeTempsForm" name="addtime" method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
-		print '<input type="hidden" name="token" value="'.newToken().'">';
 		print '<input type="hidden" name="action" value="addtime">';
-		print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
-		print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
-		print '<input type="hidden" name="mode" value="'.$mode.'">';
 	}
 	elseif(($action == 'ediths00' || $action == 'ediths25' || $action == 'ediths50') && $permissionToVerification) {
-		print '<form id="feuilleDeTempsForm" name="addtime" method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
-		print '<input type="hidden" name="token" value="'.newToken().'">';
-		print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
-		print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
-		print '<input type="hidden" name="mode" value="'.$mode.'">';
-
 		if($action == 'ediths00') {
 			print '<input type="hidden" name="action" value="savehs00">';
 		}
@@ -1171,6 +1166,25 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print '<th class="liste_total center fixed total_holiday"></th>';
 	print '</tr></thead>';
 
+	// Calculate total for all tasks
+	$listofdistinctprojectid = array(); // List of all distinct projects
+	if (is_array($tasksarraywithoutfilter) && count($tasksarraywithoutfilter)) {
+		foreach ($tasksarraywithoutfilter as $tmptask) {
+			$listofdistinctprojectid[$tmptask->fk_project] = $tmptask->fk_project;
+		}
+	}
+	$totalforeachday = array();
+	$timeSpentMonth = array();
+	foreach ($listofdistinctprojectid as $tmpprojectid) {
+		$projectstatic->id = $tmpprojectid;
+		$projectstatic->loadTimeSpent_month($firstdaytoshow, 0, $usertoprocess->id); // Load time spent from table projet_task_time for the project into this->weekWorkLoad and this->weekWorkLoadPerTask for all days of a week
+		$timeSpentMonth[$projectstatic->id]['weekWorkLoad'] = $projectstatic->weekWorkLoad;
+		$timeSpentMonth[$projectstatic->id]['weekWorkLoadPerTask'] = $projectstatic->weekWorkLoadPerTask;
+		for ($idw = 0; $idw < $nb_jour; $idw++) {
+			$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
+			$totalforeachday[$tmpday] += $projectstatic->weekWorkLoad[$tmpday];
+		}
+	}
 
 	// By default, we can edit only tasks we are assigned to
 	$restrictviewformytask = ((!isset($conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED)) ? 2 : $conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED);
@@ -1193,95 +1207,75 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$projet_task_time_other = New Projet_task_time_other($db);
 		$otherTime = $projet_task_time_other->getOtherTime($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 
-		// Calculate total for all tasks
-		$listofdistinctprojectid = array(); // List of all distinct projects
-		if (is_array($tasksarraywithoutfilter) && count($tasksarraywithoutfilter)) {
-			foreach ($tasksarraywithoutfilter as $tmptask) {
-				$listofdistinctprojectid[$tmptask->fk_project] = $tmptask->fk_project;
-			}
-		}
-		$totalforeachday = array();
-		$timeSpentMonth = array();
-		foreach ($listofdistinctprojectid as $tmpprojectid) {
-			$projectstatic->id = $tmpprojectid;
-			$projectstatic->loadTimeSpent_month($firstdaytoshow, 0, $usertoprocess->id); // Load time spent from table projet_task_time for the project into this->weekWorkLoad and this->weekWorkLoadPerTask for all days of a week
-			$timeSpentMonth[$projectstatic->id]['weekWorkLoad'] = $projectstatic->weekWorkLoad;
-			$timeSpentMonth[$projectstatic->id]['weekWorkLoadPerTask'] = $projectstatic->weekWorkLoadPerTask;
-			for ($idw = 0; $idw < $nb_jour; $idw++) {
-				$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-				$totalforeachday[$tmpday] += $projectstatic->weekWorkLoad[$tmpday];
-			}
-		}
 
 		// Affichage de l'interieur du tableau
 		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek($j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
 															$nb_jour, $modifier, $css, $ecart_jour, $typeDeplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
 															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $month_now, $timeHoliday, $heure_semaine, $heure_semaine_hs, $usertoprocess);
-
-		// Is there a diff between selected/filtered tasks and all tasks ?
-		$isdiff = 0;
-		if (count($totalforeachday)) {
-			for ($idw = 0; $idw < $nb_jour; $idw++) {
-				$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-				$timeonothertasks = ($totalforeachday[$tmpday] - $totalforvisibletasks[$tmpday]);
-				if ($timeonothertasks) {
-					$isdiff = 1;
-					break;
-				}
-			}
-		}
-
-		// There is a diff between total shown on screen and total spent by user, so we add a line with all other cumulated time of user
-		if ($isdiff) {
-			print '<tr class="oddeven othertaskwithtime">';
-			print '<td class="nowrap fixed" colspan="'.(2 + $addcolspan).'">'.$langs->trans("OtherFilteredTasks").'</td>';
-
-			for ($idw = 0; $idw < $nb_jour; $idw++) {
-				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-
-				if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-					print '<td></td>';
-				}
-
-				print '<td class="center hide'.$idw.' '.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-				$timeonothertasks = ($totalforeachday[$dayinloopfromfirstdaytoshow] - $totalforvisibletasks[$dayinloopfromfirstdaytoshow]);
-				if ($timeonothertasks) {
-					print '<span class="timesheetalreadyrecorded" title="texttoreplace"><input type="text" class="center smallpadd time_'.$idw.'" size="2" disabled id="timespent[-1]['.$idw.']" name="task[-1]['.$idw.']" value="';
-					print convertSecondToTime($timeonothertasks, 'allhourmin');
-					print '"></span>';
-				}
-				print '</td>';
-			}
-
-			print ' <td class="liste_total fixed"></td>';
-			print '</tr>';
-		}
-
-		// Affichage du total
-		if ($conf->use_javascript_ajax) {
-			print '<tr class="trforbreak">';
-			print '<td class="fixed" colspan="'.(2 + $addcolspan).'">';
-			print $langs->trans("Total");
-			print '<span class="opacitymediumbycolor">  - '.$langs->trans("ExpectedWorkedHours").': <strong>'.price($usertoprocess->weeklyhours, 1, $langs, 0, 0).'</strong></span>';
-			print '</td>';
-
-
-			for ($idw = 0; $idw < $nb_jour; $idw++) {
-				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-
-				if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-					print '<td style="border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;"></td>';
-				}
-
-				$total = (convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') != '0' ? convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') : '00:00');
-				print '<td class="liste_total hide'.$idw.($total != '00:00' ? ' bold' : '').'" align="center"><div class="totalDay'.$idw.'" '.(!empty($style) ? $style : '').'>'.$total.'</div></td>';
-			}
-			print '<td class="liste_total center fixed"><div class="totalDayAll">&nbsp;</div></td>';
-			print '</tr>';
-		}
-
 	} else {
 		print '<tr><td colspan="'.(4 + $addcolspan + $nb_jour).'"><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
+	}
+
+	// Is there a diff between selected/filtered tasks and all tasks ?
+	$isdiff = 0;
+	if (count($totalforeachday)) {
+		for ($idw = 0; $idw < $nb_jour; $idw++) {
+			$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
+			$timeonothertasks = ($totalforeachday[$tmpday] - $totalforvisibletasks[$tmpday]);
+			if ($timeonothertasks) {
+				$isdiff = 1;
+				break;
+			}
+		}
+	}
+
+	// There is a diff between total shown on screen and total spent by user, so we add a line with all other cumulated time of user
+	if ($isdiff) {
+		print '<tr class="oddeven othertaskwithtime">';
+		print '<td class="nowrap fixed" colspan="'.(2 + $addcolspan).'">'.$langs->trans("OtherFilteredTasks").'</td>';
+
+		for ($idw = 0; $idw < $nb_jour; $idw++) {
+			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+
+			if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
+				print '<td></td>';
+			}
+
+			print '<td class="center hide'.$idw.' '.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+			$timeonothertasks = ($totalforeachday[$dayinloopfromfirstdaytoshow] - $totalforvisibletasks[$dayinloopfromfirstdaytoshow]);
+			if ($timeonothertasks) {
+				print '<span class="timesheetalreadyrecorded" title="texttoreplace"><input type="text" class="center smallpadd time_'.$idw.'" size="2" disabled id="timespent[-1]['.$idw.']" name="task[-1]['.$idw.']" value="';
+				print convertSecondToTime($timeonothertasks, 'allhourmin');
+				print '"></span>';
+			}
+			print '</td>';
+		}
+
+		print ' <td class="liste_total fixed"></td>';
+		print '</tr>';
+	}
+
+	// Affichage du total
+	if ($conf->use_javascript_ajax) {
+		print '<tr class="trforbreak">';
+		print '<td class="fixed" colspan="'.(2 + $addcolspan).'">';
+		print $langs->trans("Total");
+		print '<span class="opacitymediumbycolor">  - '.$langs->trans("ExpectedWorkedHours").': <strong>'.price($usertoprocess->weeklyhours, 1, $langs, 0, 0).'</strong></span>';
+		print '</td>';
+
+
+		for ($idw = 0; $idw < $nb_jour; $idw++) {
+			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+
+			if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
+				print '<td style="border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;"></td>';
+			}
+
+			$total = (convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') != '0' ? convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') : '00:00');
+			print '<td class="liste_total hide'.$idw.($total != '00:00' ? ' bold' : '').'" align="center"><div class="totalDay'.$idw.'" '.(!empty($style) ? $style : '').'>'.$total.'</div></td>';
+		}
+		print '<td class="liste_total center fixed"><div class="totalDayAll">&nbsp;</div></td>';
+		print '</tr>';
 	}
 
 	if($displayVerification) {
@@ -1308,14 +1302,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	if($modifier && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
 		print '<input type="hidden" id="numberOfLines" name="numberOfLines" value="'.count($tasksarray).'"/>'."\n";
-		print '</form>'."\n\n";
 	}
-	elseif($permissionToVerification && ($action == 'ediths00' || $action == 'ediths25' || $action == 'ediths50')) {
-		print '</form>'."\n\n";
-	}
-	elseif($action == 'savevalidator1') {
-		print '</form>'."\n\n";
-	}
+
+	print '</form>'."\n\n";
 
 
 	$modeinput = 'hours';

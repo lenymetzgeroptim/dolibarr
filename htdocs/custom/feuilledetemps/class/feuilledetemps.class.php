@@ -3813,6 +3813,46 @@ class FeuilleDeTemps extends CommonObject
 		return $formconfirm;
 	}
 
+	public function getTaskWithTimespent($firstdaytoshow, $lastdaytoshow, $userid)
+  	{
+		$arrayres = array();
+	
+		$sql = "SELECT DISTINCT";
+		$sql .= " pt.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."element_time as ptt";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_task as pt ON pt.rowid = ptt.fk_element";
+		$sql .= " WHERE ptt.elementtype = 'task'";
+		$sql .= " AND ptt.fk_user = ".((int) $userid);
+		$sql .= " AND ptt.element_date BETWEEN '".$this->db->idate($firstdaytoshow)."' AND '".$this->db->idate($lastdaytoshow)."'";
+		// if ($morewherefilter) {
+		// 	$sql .= $morewherefilter;
+		// }
+	
+		dol_syslog(get_class($this)."::getTaskWithTimespent", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				$task = new Task($this->db);
+				$task->fetch($obj->rowid);
+
+				$arrayres[] = $task;
+
+				$i++;
+			}
+		
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
+			$this->error = "Error ".$this->db->lasterror();
+			return -1;
+		}
+	
+		return $arrayres;
+	}
+
 }
 
 
