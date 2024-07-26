@@ -366,7 +366,7 @@ class ExtendedExportFDT extends Export
 								$obj->valeur = '';
 							}
 	
-							if(empty($obj->drh_pasdroitrtt)) {
+							if(empty($obj->drh_pasdroitrtt) && empty($obj->ht_droit_rtt)) {
 								$date_debut = dol_mktime(-1, -1, -1, substr($obj->h_date_debut, 3, 2), substr($obj->h_date_debut, 0, 2), substr($obj->h_date_debut, 6, 4));
 								$nb_jour = num_between_day($date_debut, dol_mktime(-1, -1, -1, substr($obj->h_date_fin, 3, 2), substr($obj->h_date_fin, 0, 2), substr($obj->h_date_fin, 6, 4)) + 3600, 1); 
 								$heure = $obj->valeur;
@@ -613,6 +613,7 @@ class ExtendedExportFDT extends Export
 			$sql .= ", h.rowid as id_holiday";
 			$sql .= ", ht.code as ht_code";
 			$sql .= ", drh.pasdroitrtt as drh_pasdroitrtt";
+			$sql .= ", ht.droit_rtt as ht_droit_rtt";
 		}
 		elseif($datatoexport == 'heure_sup') {
 			$sql .= ", SUM(s.heure_sup00) as s_heure_sup00";

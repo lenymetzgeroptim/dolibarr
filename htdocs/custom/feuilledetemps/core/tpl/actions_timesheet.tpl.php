@@ -1165,17 +1165,52 @@ if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafte
 			$holiday->fetch($holiday_id[$idw]);
 			
 			if($holiday->fk_type != $holiday_type[$idw]) {
-				$holiday->fk_type = $holiday_type[$idw];
-				$result = $holiday->updateExtended($user);
+				$needHour = $holiday->holidayTypeNeedHour($holiday_type[$idw]);
 
-				if ($result < 0) {
-					setEventMessages($holiday->error, $holiday->errors, 'errors');
+				if($needHour && date("W", $holiday->date_debut) != date("W", $holiday->date_fin)) {
+					setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
 					$error++;
 					break;
 				}
+
+				if($needHour && $holiday->date_debut != $holiday->date_fin && $holiday->halfday != 0) {
+					setEventMessages($langs->trans("ErrorHalfdayHoliday"), null, 'errors');
+					$error++;
+					break;
+				}
+
+				// If no hour and hour is required
+				if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
+					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
+					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+					if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+						$duration_hour += 3.5 * 3600;
+					}
+					elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+						$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
+					}
+					elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+						$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
+					}
+					$holiday->array_options['options_hour'] = $duration_hour;
+				}
+				elseif(!empty($holiday->array_options['options_hour']) && !$needHour) {
+					$holiday->array_options['options_hour'] = null;
+				}
+
+				if(!$error) {
+					$holiday->fk_type = $holiday_type[$idw];
+					$result = $holiday->updateExtended($user);
+
+					if ($result < 0) {
+						setEventMessages($holiday->error, $holiday->errors, 'errors');
+						$error++;
+						break;
+					}
+				}
 			}
 
-			if($holiday_valide[$idw] && $holiday->array_options['options_statutfdt'] == 1) {
+			if($holiday_valide[$idw] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
 				$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
 				if(in_array($holiday->fk_type, $exclude_type)) {
 					$holiday->array_options['options_statutfdt'] = 3;
@@ -1186,7 +1221,7 @@ if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafte
 				$result = $holiday->updateExtended($user);
 			}
 
-			if(empty($holiday_valide[$idw]) && $holiday->array_options['options_statutfdt'] == 2) {
+			if(empty($holiday_valide[$idw]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
 				$holiday->array_options['options_statutfdt'] = 1;
 				$result = $holiday->updateExtended($user);
 			}
