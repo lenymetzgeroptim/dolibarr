@@ -70,6 +70,7 @@ $sortorder = GETPOST('sortorder', 'aZ09comma');
 $id = GETPOST('id', 'integer');
 $lineid   = GETPOST('lineid', 'int');
 $onglet = GETPOST('onglet', 'aZ09');
+$voletid   = GETPOST('voletid', 'int');
 
 $permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
 $permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
@@ -444,8 +445,13 @@ if($onglet == 'autorisation'){
 // Action pour générer un document
 if ($onglet == 'volet') {
     if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline) {
+        if ($voletid < 1) {
+            setEventMessages("Vous devez sélectionner un volet", null, 'errors');
+            $error++;
+        }
+
         if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
-            if (method_exists($formation, 'generateDocument')) {
+            if (method_exists($formation, 'generateDocument') && !$error) {
                 $outputlangs = $langs;
                 $newlang = '';
                 if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
@@ -704,32 +710,29 @@ if ($id == $user->id){
         print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
         
         print '<div class="fichecenter">';
-            // print '<div class="fichethirdleft">';
-            // print '<div class="div-table-responsive-no-min">';
-            // print '<table class="noborder centpercent">';
-            // print '<tr class="liste_titre">';
-            // print '<th colspan="2">';
-            // print $langs->trans("Volets");
-            // print '</th>';
-            // print '</tr>';
-            // print '<tr>';
-            // print '<td align="center" colspan="2">';
-            $urlsource = $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet';
-        
-            $filedir = $conf->formationhabilitation->dir_output.'/'.$object->id;
-            $genallowed = 1; // LENYTODO
-            $delallowed = 1; // LENYTODO
-        
-            include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/modules/formationhabilitation/modules_formationhabilitation_user.php';
-            print $formfile->showdocuments('formationhabilitation_user', '', $filedir, $urlsource, $genallowed, $delallowed, '', 1, 0, 0, 0, 1, '', 'Volets');
-            // print '</td>';
-            // print '</tr>';
-            // print '</table></div></div>';
+            print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?action=confirm_genererPdf">';
+                print '<input type="hidden" name="confirm" value="yes">';
+                print '<input type="hidden" name="onglet" value="volet">';
+                print '<input type="hidden" name="id" value="'.$object->id.'">';
 
-            print '<div class="tabsAction">'."\n";
-            // Generer PDF
-            print dolGetButtonAction($langs->trans('GenererDoc'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet&action=confirm_genererPdf&confirm=yes&token='.newToken(), '', $permissiontoaddline);
-            print '</div>'."\n";
+                $urlsource = $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet';
+            
+                $filedir = $conf->formationhabilitation->dir_output.'/'.$object->id;
+                $genallowed = 1; // LENYTODO
+                $delallowed = 1; // LENYTODO
+            
+                include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/modules/formationhabilitation/modules_formationhabilitation_user.php';
+                print $formfile->showdocuments('formationhabilitation_user', '', $filedir, $urlsource, $genallowed, $delallowed, '', 1, 0, 0, 0, 1, '', 'Volets');
+
+                print '<div class="tabsAction">'."\n";
+                // Generer PDF
+                $voletarray = $formation->getallVolet();
+                print $form->selectarray('voletid', $voletarray, $voletid, 1);
+                if($permissiontoaddline) {
+                    print '<input type="submit" value="'.$langs->trans("GenererDoc").'" class="button"/>';
+                }
+                print '</div>'."\n";
+            print '</form>';
         print '</div>';
     }
 

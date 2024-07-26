@@ -1083,6 +1083,67 @@ class Formation extends CommonObject
 
 		return $error;
 	}
+
+	/**
+	 * 	Return tous les volets à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllVolet()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT v.rowid, v.numero, v.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_volets as v";
+		$sql .= " WHERE v.active = 1";
+		$sql .= " ORDER BY v.numero";
+
+		dol_syslog(get_class($this)."::getAllVolet", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->numero] = $obj->numero." - ".$obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return tous les volets à partir du dictionnaire
+	 *
+	 * 	@param  int		$voletid       Id of Volet
+	 * 	@return	array						
+	 */
+	public function getVoletInfo($voletid)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT v.numero, v.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_volets as v";
+		$sql .= " WHERE v.rowid = $voletid";
+
+		dol_syslog(get_class($this)."::getVoletInfo", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$obj = $this->db->fetch_object($resql);
+			$res['label'] = $obj->label;
+			$res['long_label'] = $obj->long_label;
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
 }
 
 
