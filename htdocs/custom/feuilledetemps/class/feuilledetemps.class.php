@@ -2163,10 +2163,10 @@ class FeuilleDeTemps extends CommonObject
 
 				if($test) { // Jour feriés
 					if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
-						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (1 * $conf->global->HEURE_JOUR) : (1 * $conf->global->HEURE_JOUR));
+						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (1 * 7) : (1 * 7));
 					} 
 					else {
-						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (1 * $conf->global->HEURE_JOUR) : (1 * 7));
+						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (1 * $conf->global->HEURE_JOUR) : (1 * $conf->global->HEURE_JOUR));
 					}
 				}
 				elseif(($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) && $isavailablefordayanduser['hour'] > 0){ // Congés en heure
