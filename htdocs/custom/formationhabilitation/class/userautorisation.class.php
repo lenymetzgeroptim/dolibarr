@@ -1156,7 +1156,6 @@ class UserAutorisation extends CommonObject
 		$sql .= " WHERE uf.fk_user =". $id_user;
 		$sql .= " AND uf.fk_habilitation =". $id_autorisation;
 
-
 		dol_syslog(get_class($this)."::getId", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
@@ -1170,6 +1169,44 @@ class UserAutorisation extends CommonObject
 			else {
 				return 0;
 			}
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return les autorisations en cours qui correspondent à un utilisateur
+	 *
+	 * 	@param  int		$userid       	Id of User
+	 * 	@param  int		$voletid       	Id of Volet
+	 * 	@return	array						
+	 */
+	public function getAutorisationsByUser($userid, $voletid)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT ua.date_autorisation, ua.date_fin_autorisation, a.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userautorisation as ua";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_autorisation as a ON a.rowid = ua.fk_autorisation";
+		$sql .= " WHERE ua.fk_user = $userid";
+		$sql .= " AND a.volet = $voletid";
+		$sql .= " ORDER BY ua.date_fin_autorisation ASC";
+
+		dol_syslog(get_class($this)."::getAutorisationsByUser", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			for ($i = 0; $i < $num; $i++) {
+				$obj = $this->db->fetch_object($resql);
+				$res[$i]['nom'] = $obj->label;
+				$res[$i]['date_autorisation'] = $obj->date_autorisation;
+				$res[$i]['date_fin_autorisation'] = $obj->date_fin_autorisation;
+			}
+
+			$this->db->free($resql);
+			return $res;
 		} else {
 			$this->error = $this->db->lasterror();
 			return -1;

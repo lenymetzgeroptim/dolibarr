@@ -53,6 +53,15 @@ MyWidgetDescription = My widget description
 
 
 #
+# Attribut Volet
+# 
+Long_label = Libellé long
+Nb_initial = Nombre d'initial
+Nb_recyclage = Nombre de recyclage
+Nb_passerelle = Nombre de passerelle
+
+
+#
 # Attribut Formation
 # 
 RefExterne = Réf. Externe 

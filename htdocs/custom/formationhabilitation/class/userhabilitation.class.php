@@ -898,6 +898,44 @@ class UserHabilitation extends CommonObject
 			return -1;
 		}
 	}
+
+	/**
+	 * 	Return les habilitations en cours qui correspondent à un utilisateur
+	 *
+	 * 	@param  int		$userid       	Id of User
+	 * 	@param  int		$voletid       	Id of Volet
+	 * 	@return	array						
+	 */
+	public function getHabilitationsByUser($userid, $voletid)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT uh.date_habilitation, uh.date_fin_habilitation, h.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uh";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as h ON h.rowid = uh.fk_habilitation";
+		$sql .= " WHERE uh.fk_user = $userid";
+		$sql .= " AND h.volet = $voletid";
+		$sql .= " ORDER BY uh.date_fin_habilitation ASC";
+
+		dol_syslog(get_class($this)."::getHabilitationsByUser", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			for ($i = 0; $i < $num; $i++) {
+				$obj = $this->db->fetch_object($resql);
+				$res[$i]['nom'] = $obj->label;
+				$res[$i]['date_habilitation'] = $obj->date_habilitation;
+				$res[$i]['date_fin_habilitation'] = $obj->date_fin_habilitation;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

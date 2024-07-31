@@ -19,6 +19,9 @@ CREATE TABLE llx_c_volets(
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
 	numero integer NOT NULL, 
 	label varchar(128) COLLATE utf8_unicode_ci NOT NULL,
+	nb_initial integer NOT NULL, 
+	nb_recyclage integer NOT NULL, 
+	nb_passerelle integer NOT NULL, 
 	active int(11) DEFAULT 1
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

@@ -121,6 +121,26 @@ if($onglet == 'formation' || empty($onglet)){
                 $error++;
             }
 
+            if($objectline->getID(GETPOST('fk_formation'), $object->id, 1) > 0 && GETPOST('type') == 1){
+                setEventMessages("Impossible de modifier cette formation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
+                $error++;
+            }
+
+            if($objectline->getID(GETPOST('fk_formation'), $object->id, 3) > 0 && GETPOST('type') == 3){
+                setEventMessages("Impossible de modifier cette formation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
+                $error++;
+            }
+
+            if(GETPOST('type') == -1 || empty(GETPOST('type'))){
+                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Type")), null, 'errors');
+                $error++;
+            }
+
+            if(GETPOST('fk_societe') == -1 || empty(GETPOST('fk_societe'))){
+                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Organisme")), null, 'errors');
+                $error++;
+            }
+
             if (!$error) {
                 $formation_static = new Formation($db);
                 $formation_static->fetch($objectline->fk_formation);
@@ -128,6 +148,9 @@ if($onglet == 'formation' || empty($onglet)){
 				$objectline->ref = $object->login."-".$formation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
                 $objectline->date_formation = $date;
                 $objectline->date_fin_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date, $formation_static->periode_recyclage, 'd') : '');
+                $objectline->fk_societe = GETPOST('fk_societe');
+                $objectline->type = GETPOST('type');
+                $objectline->numero_certificat = GETPOST('numero_certificat');
 
                 //$date_limite = dol_time_plus_duree($date, $object->periode_recyclage, 'm');
                 //$date_limite = dol_print_date($date_limite, '%d/%m/%Y');
@@ -139,14 +162,18 @@ if($onglet == 'formation' || empty($onglet)){
                    $objectline->status = GETPOST('status');
                 //}
 
-                $result = $objectline->update($user);
+                $resultupdate = $objectline->update($user);
             }
 
-            if(!$error && $result){
+            if(!$error && $resultupdate){
                 setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
             }
-            elseif(!$result){
+            elseif(!$error && !$resultupdate){
                 setEventMessages($langs->trans($object->error), null, 'errors');
+            }
+            elseif($error) {
+                header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&onglet='.$onglet.'&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int'));
+                exit;
             }
         }
         else {
@@ -175,8 +202,23 @@ if($onglet == 'formation' || empty($onglet)){
                 $error++;
             }
 
-            if($objectline->getID(GETPOST('fk_formation'), $object->id) > 0){
+            if($objectline->getID(GETPOST('fk_formation'), $object->id, 1) > 0 && GETPOST('type') == 1){
                 setEventMessages("Impossible d'ajouter cette formation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
+                $error++;
+            }
+
+            if($objectline->getID(GETPOST('fk_formation'), $object->id, 3) > 0 && GETPOST('type') == 3){
+                setEventMessages("Impossible d'ajouter cette formation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
+                $error++;
+            }
+
+            if(GETPOST('type') == -1 || empty(GETPOST('type'))){
+                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Type")), null, 'errors');
+                $error++;
+            }
+
+            if(GETPOST('fk_societe') == -1 || empty(GETPOST('fk_societe'))){
+                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Organisme")), null, 'errors');
                 $error++;
             }
 
@@ -193,14 +235,17 @@ if($onglet == 'formation' || empty($onglet)){
                 $objectline->cout_pedagogique = $formation_static->cout;
                 $objectline->cout_mobilisation = $object->thm * ($formation_static->nombre_heure / 3600);
                 $objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+                $objectline->fk_societe = GETPOST('fk_societe');
+                $objectline->type = GETPOST('type');
+                $objectline->numero_certificat = GETPOST('numero_certificat');
 
-                $result = $objectline->create($user);
+                $resultcreate = $objectline->create($user);
             }
 
-            if(!$error && $result){
+            if(!$error && $resultcreate){
                 setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
             }
-            elseif(!$result){
+            elseif(!$error && !$resultcreate){
                 setEventMessages($langs->trans($object->error), null, 'errors');
             }
         }
@@ -211,8 +256,8 @@ if($onglet == 'formation' || empty($onglet)){
     }
 
     if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) {
-        $result = $object->deleteLine($user, $lineid);
-        if ($result > 0) {
+        $resultdelete = $object->deleteLine($user, $lineid);
+        if ($resultdelete > 0) {
             setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
             header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
             exit;
@@ -251,13 +296,13 @@ if($onglet == 'habilitation'){
                 $objectline->date_fin_habilitation = dol_time_plus_duree($date, $habilitation_static->validite_employeur, 'd');
                 $objectline->status = GETPOST('status');
 
-                $result = $objectline->update($user);
+                $resultupdate = $objectline->update($user);
             }
 
-            if(!$error && $result){
+            if(!$error && $resultupdate){
                 setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
             }
-            elseif(!$result){
+            elseif(!$error && !$resultupdate){
                 setEventMessages($langs->trans($object->error), null, 'errors');
             }
         }
@@ -303,13 +348,13 @@ if($onglet == 'habilitation'){
                 $objectline->fk_user = $id;
                 $objectline->status = GETPOST('status');
 
-                $result = $objectline->create($user);
+                $resultcreate = $objectline->create($user);
             }
 
-            if(!$error && $result){
+            if(!$error && $resultcreate){
                 setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
             }
-            elseif(!$result){
+            elseif(!$error && !$resultcreate){
                 setEventMessages($langs->trans($object->error), null, 'errors');
             }
         }
@@ -320,8 +365,8 @@ if($onglet == 'habilitation'){
     }
 
     if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) {
-        $result = $object->deleteLine($user, $lineid);
-        if ($result > 0) {
+        $resultdelete = $object->deleteLine($user, $lineid);
+        if ($resultdelete > 0) {
             setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
             header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet);
             exit;
@@ -360,13 +405,13 @@ if($onglet == 'autorisation'){
                 $objectline->date_fin_autorisation = dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd');
                 $objectline->status = GETPOST('status');
 
-                $result = $objectline->update($user);
+                $resultupdate = $objectline->update($user);
             }
 
-            if(!$error && $result){
+            if(!$error && $resultupdate){
                 setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
             }
-            elseif(!$result){
+            elseif(!$error && !$resultupdate){
                 setEventMessages($langs->trans($object->error), null, 'errors');
             }
         }
@@ -412,13 +457,13 @@ if($onglet == 'autorisation'){
                 $objectline->fk_user = $id;
                 $objectline->status = GETPOST('status');
 
-                $result = $objectline->create($user);
+                $resultcreate = $objectline->create($user);
             }
 
-            if(!$error && $result){
+            if(!$error && $resultcreate){
                 setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
             }
-            elseif(!$result){
+            elseif(!$error && !$resultcreate){
                 setEventMessages($langs->trans($object->error), null, 'errors');
             }
         }
@@ -429,8 +474,8 @@ if($onglet == 'autorisation'){
     }
 
     if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) {
-        $result = $object->deleteLine($user, $lineid);
-        if ($result > 0) {
+        $resultdelete = $object->deleteLine($user, $lineid);
+        if ($resultdelete > 0) {
             setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
             header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet);
             exit;

@@ -33,7 +33,7 @@
  * $inputalsopricewithtax (0 by default, 1 to also show column with unit price including tax)
  */
 
- global $permissiontoreadCout;
+ global $permissiontoreadCout, $action, $resultcreate, $cancel, $resultupdate;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -148,6 +148,10 @@ foreach($objectline->fields as $key => $val){
 		$value = GETPOST($key, 'aZ09');
 	} else {
 		$value = GETPOST($key, 'alphanohtml');
+	}
+
+	if(($action == 'addline' && $resultcreate) || ($action == 'updateline' && $resultupdate) || $cancel) {
+		$value = '';
 	}
 
 	print '<td class="center nobottom linecol'.$key.'">'.$objectline->showInputField($val, $key, $value).'</td>';

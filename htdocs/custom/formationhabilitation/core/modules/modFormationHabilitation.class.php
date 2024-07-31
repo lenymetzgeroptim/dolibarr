@@ -111,7 +111,7 @@ class modFormationHabilitation extends DolibarrModules
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
-				//   '/formationhabilitation/js/formationhabilitation.js.php',
+				'/formationhabilitation/js/formationhabilitation.js.php',
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
@@ -210,15 +210,15 @@ class modFormationHabilitation extends DolibarrModules
 			// Label of tables
 			'tablib'=>array("FamilleFormation", "Volets"),
 			// Request to select fields
-			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT v.rowid as rowid, v.numero, v.label, v.active FROM '.MAIN_DB_PREFIX.'c_volets as v'),
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT v.rowid as rowid, v.numero, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle, v.active FROM '.MAIN_DB_PREFIX.'c_volets as v'),
 			// Sort order
 			'tabsqlsort'=>array("label ASC", "numero ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("label", "numero,label"),
+			'tabfield'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("label", "numero,label"),
+			'tabfieldvalue'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("label", "numero,label"),
+			'tabfieldinsert'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle"),
 			// Name of columns with primary key (try to always name it 'rowid')
 			'tabrowid'=>array("rowid", "rowid"),
 			// Condition to show each dictionary

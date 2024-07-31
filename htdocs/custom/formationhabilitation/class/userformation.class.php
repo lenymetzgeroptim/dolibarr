@@ -110,19 +110,22 @@ class UserFormation extends CommonObject
 		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
-		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0",),
+		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2",),
 		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"fk_formation" => array("type"=>"integer:formation:custom/formationhabilitation/class/formation.class.php:0:(t.status:=:1)", "label"=>"Formation", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
 		"fk_user" => array("type"=>"integer:User:user\class\user.class.php:0:(statut:=:1)", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
-		"date_formation" => array("type"=>"date", "label"=>"DateFormation", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1",),
+		"date_formation" => array("type"=>"date", "label"=>"DateFormation", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Expirée", "9" => "Cloturée"), "validate"=>"1",),
-		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"4",),
-		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>36, 'notnull'=>1, "visible"=>"4",),
-		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>37, 'notnull'=>1, "visible"=>"4",),
-		"date_fin_formation" => array("type"=>"date", "label"=>"DateFinFormation", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
+		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"4",),
+		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>41, 'notnull'=>1, "visible"=>"4",),
+		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>42, 'notnull'=>1, "visible"=>"4",),
+		"date_fin_formation" => array("type"=>"date", "label"=>"DateFinFormation", "enabled"=>"1", 'position'=>39, 'notnull'=>0, "visible"=>"1",),
+		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"Organisme", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1",),
+		"numero_certificat" => array("type"=>"varchar(20)", "label"=>"Numéro Certificat", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
+		"type" => array("type"=>"integer", "label"=>"Type", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Inital", "2" => "Recyclage", "3" => "Passerelle"),),
 	);
 	public $rowid;
 	public $ref;
@@ -143,6 +146,9 @@ class UserFormation extends CommonObject
 	public $cout_mobilisation;
 	public $cout_total;
 	public $date_fin_formation;
+	public $fk_societe;
+	public $numero_certificat;
+	public $type;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -783,7 +789,7 @@ class UserFormation extends CommonObject
 	 * 	@param	int		$id_user		Id de l'utilisateur
 	 * 	@return	int						Id de userformation 
 	 */
-	public function getId($id_formation, $id_user)
+	public function getId($id_formation, $id_user, $type)
 	{
 		global $conf, $user;
 
@@ -791,7 +797,7 @@ class UserFormation extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " WHERE uf.fk_user =". $id_user;
 		$sql .= " AND uf.fk_formation =". $id_formation;
-
+		$sql .= " AND uf.type =". $type;
 
 		dol_syslog(get_class($this)."::getId", LOG_DEBUG);
 		$resql = $this->db->query($sql);
@@ -1050,6 +1056,62 @@ class UserFormation extends CommonObject
 		}
 		else {
 			return 1;
+		}
+	}
+
+	/**
+	 * 	Return les dernières formations qui correspondent à un utilisateur
+	 *
+	 * 	@param  int		$voletid       Id of Volet
+	 * 	@return	array						
+	 */
+	public function getFormationsByUser($userid, $formationid, $nb_initial, $nb_recyclage, $nb_passerelle)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT * FROM ((SELECT uf.type, uf.date_formation, uf.numero_certificat, uf.fk_societe";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND uf.fk_formation = $formationid";
+		$sql .= " AND uf.type = 1";
+		$sql .= " ORDER BY date_formation DESC";
+		$sql .= " LIMIT $nb_initial)";
+
+		$sql .= " UNION";
+		$sql .= " (SELECT uf.type, uf.date_formation, uf.numero_certificat, uf.fk_societe";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND uf.fk_formation = $formationid";
+		$sql .= " AND uf.type = 2";
+		$sql .= " ORDER BY date_formation DESC";
+		$sql .= " LIMIT $nb_recyclage)";
+
+		$sql .= " UNION";
+		$sql .= " (SELECT uf.type, uf.date_formation, uf.numero_certificat, uf.fk_societe";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND uf.fk_formation = $formationid";
+		$sql .= " AND uf.type = 3";
+		$sql .= " ORDER BY date_formation DESC";
+		$sql .= " LIMIT $nb_passerelle))";
+
+		$sql .= " as t ORDER BY date_formation ASC";
+
+		dol_syslog(get_class($this)."::getFormationsByUser", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->type]['date'][] = $obj->date_formation;
+				$res[$obj->type]['certificat'][] = $obj->numero_certificat;
+				$res[$obj->type]['fk_societe'][] = $obj->fk_societe;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
 		}
 	}
 

@@ -1165,6 +1165,38 @@ class Habilitation extends CommonObject
 
 		return $error;
 	}
+
+	/**
+	 * 	Return toutes les habilitations qui correspondent à un volet
+	 *
+	 * 	@param  int		$voletid       Id of Volet
+	 * 	@return	array						
+	 */
+	public function getHabilitationsByVolet($voletid)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT f.rowid, f.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_habilitation as f";
+		$sql .= " WHERE f.volet = $voletid";
+		$sql .= " ORDER BY f.label";
+
+		dol_syslog(get_class($this)."::getHabilitationsByVolet", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid]['id'] = $obj->rowid;
+				$res[$obj->rowid]['label'] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

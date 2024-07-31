@@ -17,7 +17,6 @@
 -- BEGIN MODULEBUILDER INDEXES
 ALTER TABLE llx_formationhabilitation_userformation ADD INDEX idx_formationhabilitation_userformation_rowid (rowid);
 ALTER TABLE llx_formationhabilitation_userformation ADD INDEX idx_formationhabilitation_userformation_ref (ref);
-ALTER TABLE llx_formationhabilitation_userformation ADD CONSTRAINT llx_formationhabilitation_userformation_fk_user_creat FOREIGN KEY (fk_user_creat) REFERENCES llx_user(rowid);
 ALTER TABLE llx_formationhabilitation_userformation ADD INDEX idx_formationhabilitation_userformation_status (status);
 -- END MODULEBUILDER INDEXES
 
