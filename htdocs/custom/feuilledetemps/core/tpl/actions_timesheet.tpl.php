@@ -1063,6 +1063,7 @@ if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafte
 	$repas = $_POST['repas'];
 	$kilometres = $_POST['kilometres'];
 	$indemnite_tt = $_POST['indemnite_tt'];
+
 	$holiday_type = $_POST['holiday_type'];
 	$holiday_id = $_POST['holiday_id'];
 	$holiday_valide = $_POST['holiday_valide'];
@@ -1127,6 +1128,74 @@ if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafte
 
 	$modification_silae = '<ul>';
 
+	// Gestion des congés 
+	foreach($holiday_type as $key => $type) {
+		$holiday->fetch($holiday_id[$key]);
+		
+		if($holiday->fk_type != $type) {
+			$needHour = $holiday->holidayTypeNeedHour($type);
+
+			if($needHour && date("W", $holiday->date_debut) != date("W", $holiday->date_fin)) {
+				setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
+				$error++;
+				break;
+			}
+
+			if($needHour && $holiday->date_debut != $holiday->date_fin && $holiday->halfday != 0) {
+				setEventMessages($langs->trans("ErrorHalfdayHoliday"), null, 'errors');
+				$error++;
+				break;
+			}
+
+			// If no hour and hour is required
+			if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
+				$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
+				$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+				if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+					$duration_hour += 3.5 * 3600;
+				}
+				elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+					$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
+				}
+				elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+					$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
+				}
+				$holiday->array_options['options_hour'] = $duration_hour;
+			}
+			elseif(!empty($holiday->array_options['options_hour']) && !$needHour) {
+				$holiday->array_options['options_hour'] = null;
+			}
+
+			if(!$error) {
+				$holiday->fk_type = $type;
+				$result = $holiday->updateExtended($user);
+
+				if ($result < 0) {
+					setEventMessages($holiday->error, $holiday->errors, 'errors');
+					$error++;
+					break;
+				}
+			}
+		}
+
+		if($holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
+			$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
+			if(in_array($holiday->fk_type, $exclude_type)) {
+				$holiday->array_options['options_statutfdt'] = 3;
+			}
+			else {
+				$holiday->array_options['options_statutfdt'] = 2;
+			}
+			$result = $holiday->updateExtended($user);
+		}
+
+		if(empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
+			$holiday->array_options['options_statutfdt'] = 1;
+			$result = $holiday->updateExtended($user);
+		}
+	}
+
+
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 
 		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
@@ -1160,75 +1229,8 @@ if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafte
 		}
 
 
-		// Gestion des congés 
-		if(!empty($holiday_type[$idw])) {
-			$holiday->fetch($holiday_id[$idw]);
-			
-			if($holiday->fk_type != $holiday_type[$idw]) {
-				$needHour = $holiday->holidayTypeNeedHour($holiday_type[$idw]);
-
-				if($needHour && date("W", $holiday->date_debut) != date("W", $holiday->date_fin)) {
-					setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
-					$error++;
-					break;
-				}
-
-				if($needHour && $holiday->date_debut != $holiday->date_fin && $holiday->halfday != 0) {
-					setEventMessages($langs->trans("ErrorHalfdayHoliday"), null, 'errors');
-					$error++;
-					break;
-				}
-
-				// If no hour and hour is required
-				if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
-					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-					if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-						$duration_hour += 3.5 * 3600;
-					}
-					elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-						$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-					}
-					elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-						$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-					}
-					$holiday->array_options['options_hour'] = $duration_hour;
-				}
-				elseif(!empty($holiday->array_options['options_hour']) && !$needHour) {
-					$holiday->array_options['options_hour'] = null;
-				}
-
-				if(!$error) {
-					$holiday->fk_type = $holiday_type[$idw];
-					$result = $holiday->updateExtended($user);
-
-					if ($result < 0) {
-						setEventMessages($holiday->error, $holiday->errors, 'errors');
-						$error++;
-						break;
-					}
-				}
-			}
-
-			if($holiday_valide[$idw] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
-				$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
-				if(in_array($holiday->fk_type, $exclude_type)) {
-					$holiday->array_options['options_statutfdt'] = 3;
-				}
-				else {
-					$holiday->array_options['options_statutfdt'] = 2;
-				}
-				$result = $holiday->updateExtended($user);
-			}
-
-			if(empty($holiday_valide[$idw]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
-				$holiday->array_options['options_statutfdt'] = 1;
-				$result = $holiday->updateExtended($user);
-			}
-		}
-
 		// Calcul auto des heures sup
-		if((!empty($_POST['task']) || !empty($holiday_type[$idw])) && dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
+		if((!empty($_POST['task']) || !empty($holiday_type)) && dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
 			$silae = new Silae($db);
 			$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
 			$heure_sup00_before = $silae->heure_sup00;

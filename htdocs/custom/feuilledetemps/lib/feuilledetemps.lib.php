@@ -381,7 +381,7 @@ $temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, 
 
 						// Est-ce qu'on désactive l'input ou non ?
 						$disabled = 0;
-						if(!$modify || $disabledtask || ($user_conges && !$modifier_jour_conges)) {
+						if(!$modify || $disabledtask || ($user_conges && !$modifier_jour_conges && empty($alreadyspent))) {
 							$disabled = 1;
 						}
 
