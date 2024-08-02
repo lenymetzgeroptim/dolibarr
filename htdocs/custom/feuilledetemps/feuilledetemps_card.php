@@ -297,6 +297,7 @@ $heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? 
 
 // Gestion des congés et des jours feriés
 $all_holiday_validate = 1;
+$multiple_holiday = 0;
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
 	$dayinloopfromfirstdaytoshowgmt = dol_time_plus_duree($firstdaytoshowgmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
@@ -304,7 +305,14 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$isavailable[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, Holiday::STATUS_APPROVED2, array(4));
 	$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
 
-	if (!$isavailable[$dayinloopfromfirstdaytoshow]['morning'] && !$isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] && !$holiday->holidayTypeNeedHour($isavailable[$dayinloopfromfirstdaytoshow]['code'])) {
+	$holidayTypeNeedHour = 1;
+	for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['code']); $i++) {
+		if(!$holiday->holidayTypeNeedHour($isavailable[$dayinloopfromfirstdaytoshow]['code'][$i])) {
+			$holidayTypeNeedHour = 0;
+		}
+	}
+
+	if (!$isavailable[$dayinloopfromfirstdaytoshow]['morning'] && !$isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] && !$holidayTypeNeedHour) {
 		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';
 	} elseif(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim'){
 		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';
@@ -314,16 +322,28 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayafternoon';
 	} 
 
-	if (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['morning'] && !$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['afternoon']) {
-		$css_holiday[$dayinloopfromfirstdaytoshow] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'].'allday';
-	} elseif (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['morning']) {
-		$css_holiday[$dayinloopfromfirstdaytoshow] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'].'morning';
-	} elseif (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['afternoon']) {
-		$css_holiday[$dayinloopfromfirstdaytoshow] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'].'afternoon';
+	if(!$multiple_holiday && sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid']) > 1) {
+		$multiple_holiday = 1;
 	}
 
-	if($all_holiday_validate && $holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statutfdt'] == 1) {
-		$all_holiday_validate = 0;
+	if (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['morning'] && !$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['afternoon']) {
+		for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut']); $i++) {
+			$css_holiday[$dayinloopfromfirstdaytoshow][$i] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'][$i].'allday';
+		}
+	} elseif (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['morning']) {
+		for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut']); $i++) {
+			$css_holiday[$dayinloopfromfirstdaytoshow][$i] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'][$i].'morning';
+		}
+	} elseif (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['afternoon']) {
+		for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut']); $i++) {
+			$css_holiday[$dayinloopfromfirstdaytoshow][$i] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'][$i].'afternoon';
+		}	
+	}
+
+	for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statutfdt']); $i++) {
+		if($all_holiday_validate && $holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statutfdt'][$i] == 1) {
+			$all_holiday_validate = 0;
+		}
 	}
 
 	if (dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Sam' || dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {	// This is a day is not inside the setup of working days, so we use a week-end css.
@@ -1101,9 +1121,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}	
 		
 	$conges_texte = $holiday->getArrayHoliday($usertoprocess->id, 0, 1);
+	$cpt = 0; 
 
 	print '<tr class="nostrong liste_titre fixed conges">';
-		print '<th colspan="2" class="fixed">';
+		print '<th colspan="2" '.($multiple_holiday ? 'rowspan="2"' : '').' class="fixed">';
 		if($displayVerification) {
 			print '<input type="checkbox"'.(!$modifier ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
 		}
@@ -1118,8 +1139,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
 			}
 
-			if(!empty($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'])) {
-				$holiday->fetch((int)$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid']);
+			if(!empty($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][0])) {
+				$holiday->fetch((int)$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
 				$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
 				$droit_rtt = $holiday->holidayTypeDroitRTT();
 				
@@ -1145,26 +1166,91 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					$numberDay = $nb_jour - $idw;
 				}
 
-				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow] ? $css_holiday[$dayinloopfromfirstdaytoshow] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
-
+				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+				
 				if($displayVerification) {
-					print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modifier ? ' disabled' : '').' name="holiday_valide['.$idw.']" id="holiday_valide['.$idw.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+					print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modifier ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 				}
 				print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
-				print ' '.$form->selectarray('holiday_type['.$idw.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$idw.']"'.(!$modifier  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+				print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modifier  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
 				if($modifier && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
-					print '<input type="hidden" name="holiday_id['.$idw.']"  id="holiday_id['.$idw.']" value="'.$holiday->id.'">';
+					print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
 				}
+
 				$idw += $numberDay - 1;
+				$cpt++;
 			}
 			else {
-				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow] : '').'">';
+				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
 			}
 
 			print '</th>';
 		}
 		print '<th class="liste_total center fixed total_holiday"></th>';
-	print '</tr></thead>';
+	print '</tr>';
+
+	if($multiple_holiday) {
+		print '<tr class="nostrong liste_titre conges">';
+		for ($idw = 0; $idw < $nb_jour; $idw++) {
+			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+			$keysuffix = '['.$idw.']';
+
+			if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
+				print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
+			}
+
+			if(!empty($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][1])) {
+				$holiday->fetch((int)$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][1]);
+				$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
+				$droit_rtt = $holiday->holidayTypeDroitRTT();
+				
+				if(!empty($holiday->array_options['options_hour'])) {
+					$durationHoliday = $holiday->array_options['options_hour'];
+				}
+				else {
+					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
+					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+					if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+						$duration_hour += 3.5 * 3600;
+					}
+					elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+						$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
+					}
+					elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+						$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
+					}
+					$durationHoliday = $duration_hour;
+				}
+
+				if($idw + $numberDay > $nb_jour) {
+					$numberDay = $nb_jour - $idw;
+				}
+
+
+				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+				
+				if($displayVerification) {
+					print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modifier ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+				}
+				print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
+				print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modifier  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+				if($modifier && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
+					print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
+				}
+
+				$idw += $numberDay - 1;
+				$cpt++;
+			}
+			else {
+				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'">';
+			}
+
+			print '</th>';
+		}
+		print '<th class="liste_total center fixed total_holiday"></th>';
+		print '</tr>';
+	}
+	print '</thead>';
 
 	// Calculate total for all tasks
 	$listofdistinctprojectid = array(); // List of all distinct projects

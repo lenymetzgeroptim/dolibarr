@@ -168,9 +168,16 @@ class extendedHoliday extends Holiday
 		$isavailablemorning = true;
 		$isavailableafternoon = true;
         $statut = '';
+		$rowid_array = array();
+		$statut_array = array();
+		$code_array = array();
+		$hour = 0;
+		$statutfdt_array = array();
+		$droitrtt_array = array();
+		$inhour_array = array();
 
 		// Check into leave requests
-		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, he.statutfdt";
+		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, he.statutfdt, ht.in_hour";
 		$sql .= " FROM ".MAIN_DB_PREFIX."holiday as cp";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = cp.fk_type";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as he ON he.fk_object = cp.rowid";
@@ -197,7 +204,15 @@ class extendedHoliday extends Holiday
 					$obj = $this->db->fetch_object($resql);
 
 					// Note: $obj->halfday is  0:Full days, 2:Sart afternoon end morning, -1:Start afternoon, 1:End morning
-					$arrayofrecord[$obj->rowid] = array('date_start'=>$this->db->jdate($obj->date_start), 'date_end'=>$this->db->jdate($obj->date_end), 'halfday'=>$obj->halfday, 'statut'=>$obj->statut, 'code'=>$obj->code, 'rowid'=>$obj->rowid, 'hour'=>$obj->hour, 'statutfdt'=>$obj->statutfdt, 'droit_rtt'=>$obj->droit_rtt);
+					$arrayofrecord[$obj->rowid] = array('date_start'=>$this->db->jdate($obj->date_start), 'date_end'=>$this->db->jdate($obj->date_end), 'halfday'=>$obj->halfday);
+					$rowid_array[] = $obj->rowid;
+					$statut_array[] = $obj->statut;
+					$code_array[] = $obj->code;
+					$hour += $obj->hour;
+					$statutfdt_array[] = $obj->statutfdt;
+					$droitrtt_array[] = $obj->droit_rtt;
+					$in_hour_array[] = $obj->in_hour;
+
 					$i++;
 				}
 
@@ -211,12 +226,6 @@ class extendedHoliday extends Holiday
 						continue;
 					}
 					$isavailablemorning = false;
-                    $statut = $record['statut'];
-					$code = $record['code'];
-					$rowid = $record['rowid'];
-					$hour = $record['hour'];
-					$statutfdt = $record['statutfdt'];
-					$droit_rtt = $record['droit_rtt'];
 					break;
 				}
 				$isavailableafternoon = true;
@@ -228,12 +237,6 @@ class extendedHoliday extends Holiday
 						continue;
 					}
 					$isavailableafternoon = false;
-                    $statut = $record['statut'];
-					$code = $record['code'];
-					$rowid = $record['rowid'];
-					$hour = $record['hour'];
-					$statutfdt = $record['statutfdt'];
-					$droit_rtt = $record['droit_rtt'];
 					break;
 				}
 			}
@@ -241,7 +244,7 @@ class extendedHoliday extends Holiday
 			dol_print_error($this->db);
 		}
 
-		$result = array('morning'=>$isavailablemorning, 'afternoon'=>$isavailableafternoon, 'statut'=>$statut, 'code'=>$code, 'rowid'=>$rowid, 'hour'=>$hour, 'statutfdt'=>$statutfdt, 'droit_rtt'=>$obj->droit_rtt);
+		$result = array('morning'=>$isavailablemorning, 'afternoon'=>$isavailableafternoon, 'statut'=>$statut_array, 'code'=>$code_array, 'rowid'=>$rowid_array, 'hour'=>$hour, 'statutfdt'=>$statutfdt_array, 'droit_rtt'=>$droitrtt_array, 'in_hour'=>$in_hour_array);
 		if (!$isavailablemorning) {
 			$result['morning_reason'] = 'leave_request';
 		}

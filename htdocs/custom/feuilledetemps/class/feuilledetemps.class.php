@@ -2169,6 +2169,30 @@ class FeuilleDeTemps extends CommonObject
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (1 * $conf->global->HEURE_JOUR) : (1 * $conf->global->HEURE_JOUR));
 					}
 				}
+				elseif(sizeof($isavailablefordayanduser['rowid']) > 1) {
+					if($isavailablefordayanduser['hour'] > 0){ // Congés en heure
+						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'] / 3600) : ($isavailablefordayanduser['hour'] / 3600));
+					}
+
+					for($i = 0; $i < sizeof($isavailablefordayanduser['rowid']); $i++) {
+						if($isavailablefordayanduser['in_hour'][$i]) {
+							continue;
+						}
+
+						if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
+							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * 7) : (0.5 * 7));
+						}
+						else {
+							if($isavailablefordayanduser['droit_rtt'][$i]) {
+								$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
+							}
+							else {
+								var_dump('tesr');
+								$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
+							}
+						}
+					}
+				}
 				elseif(($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) && $isavailablefordayanduser['hour'] > 0){ // Congés en heure
 					$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'] / 3600) : ($isavailablefordayanduser['hour'] / 3600));
 				}
@@ -2185,10 +2209,11 @@ class FeuilleDeTemps extends CommonObject
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * 7) : (0.5 * 7));
 					}
 					else {
-						if($isavailablefordayanduser['droit_rtt']) {
+						if($isavailablefordayanduser['droit_rtt'][$i]) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
 						}
 						else {
+							var_dump('tesr');
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
 						}
 					}
