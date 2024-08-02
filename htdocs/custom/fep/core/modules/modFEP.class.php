@@ -302,7 +302,7 @@ class modFEP extends DolibarrModules
 		$r = 0;
 		// Add here entries to declare new menus
 		/* BEGIN MODULEBUILDER TOPMENU */
-		$this->menu[$r++] = array(
+		/*$this->menu[$r++] = array(
 			'fk_menu'=>'', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'top', // This is a Top menu entry
 			'titre'=>'ModuleFEPName',
@@ -316,15 +316,15 @@ class modFEP extends DolibarrModules
 			'perms'=>'$user->rights->fep->fep->read', // Use 'perms'=>'$user->rights->fep->fep->read' if you want your menu with a permission rules
 			'target'=>'',
 			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
-		);
+		);*/
 		/* END MODULEBUILDER TOPMENU */
 		/* BEGIN MODULEBUILDER LEFTMENU FEP */
 		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=fep',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'fk_menu'=>'fk_mainmenu=q3serp',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',                          // This is a Top menu entry
 			'titre'=>'FEP/QS',
-			'mainmenu'=>'fep',
-			'leftmenu'=>'fep',
+			'mainmenu'=>'q3serp',
+			'leftmenu'=>'fep_list',
 			'url'=>'/fep/fepindex.php',
 			'langs'=>'fep@fep',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1000+$r,
@@ -334,10 +334,10 @@ class modFEP extends DolibarrModules
 			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
 		);
 		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=fep,fk_leftmenu=fep',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'fk_menu'=>'fk_mainmenu=q3serp,fk_leftmenu=fep_list',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',			                // This is a Left menu entry
 			'titre'=>'Liste FEP/QS',
-			'mainmenu'=>'fep',
+			'mainmenu'=>'q3serp',
 			'leftmenu'=>'fep_fep_list',
 			'url'=>'/fep/fep_list.php',
 			'langs'=>'fep@fep',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
@@ -348,10 +348,10 @@ class modFEP extends DolibarrModules
 			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
 		);
 		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=fep,fk_leftmenu=fep',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'fk_menu'=>'fk_mainmenu=q3serp,fk_leftmenu=fep_list',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',			                // This is a Left menu entry
 			'titre'=>'Nouvelle FEP/QS',
-			'mainmenu'=>'fep',
+			'mainmenu'=>'q3serp',
 			'leftmenu'=>'fep_fep_new',
 			'url'=>'/fep/fep_card.php?action=create',
 			'langs'=>'fep@fep',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.

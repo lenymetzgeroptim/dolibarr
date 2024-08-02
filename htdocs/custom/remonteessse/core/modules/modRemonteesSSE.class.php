@@ -318,13 +318,13 @@ class modRemonteesSSE extends DolibarrModules
 		$r = 0;
 		// Add here entries to declare new menus
 		/* BEGIN MODULEBUILDER TOPMENU */
-		$this->menu[$r++] = array(
-			'fk_menu'=>'', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+	/*	$this->menu[$r++] = array(
+			'fk_menu'=>'fk_mainmenu=q3serp', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'top', // This is a Top menu entry
 			'titre'=>'ModuleRemonteesSSEName',
 			'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
-			'mainmenu'=>'remonteessse',
-			'leftmenu'=>'',
+			'mainmenu'=>'q3serp',
+			'leftmenu'=>'remonteessse_remontees_sse',
 			'url'=>'/remonteessse/remonteessse_list.php',
 			'langs'=>'remonteessse@remonteessse', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1000 + $r,
@@ -332,16 +332,16 @@ class modRemonteesSSE extends DolibarrModules
 			'perms'=>'($user->rights->remonteessse->remonteessse->read_all || $user->rights->remonteessse->remonteessse->read)', // Use 'perms'=>'$user->rights->remonteessse->remonteessse->read' if you want your menu with a permission rules
 			'target'=>'',
 			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
-		);
+		);*/
 		/* END MODULEBUILDER TOPMENU */
 
         $this->menu[$r++]=array(
             // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=remonteessse',
+            'fk_menu'=>'fk_mainmenu=q3serp',
             // This is a Left menu entry
             'type'=>'left',
             'titre'=>'Liste des Remontées Q3SE/RP',
-            'mainmenu'=>'remonteessse',
+            'mainmenu'=>'q3serp',
             'leftmenu'=>'remonteessse_remonteessse',
             'url'=>'/remonteessse/remonteessse_list.php',
             // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
@@ -357,11 +357,11 @@ class modRemonteesSSE extends DolibarrModules
         );
         $this->menu[$r++]=array(
             // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=remonteessse,fk_leftmenu=remonteessse_remonteessse',
+            'fk_menu'=>'fk_mainmenu=q3serp,fk_leftmenu=remonteessse_remonteessse',
             // This is a Left menu entry
             'type'=>'left',
             'titre'=>'Nouvelle Remontées Q3SE/RP',
-            'mainmenu'=>'remonteessse',
+            'mainmenu'=>'q3serp',
             'leftmenu'=>'remonteessse_remonteessse',
             'url'=>'/remonteessse/remonteessse_card.php?action=create',
             // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
