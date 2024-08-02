@@ -2272,6 +2272,51 @@ class FeuilleDeTemps extends CommonObject
 		return $result;
 	}
 
+	function timeDoneByDay($user_id, $firstdate = '', $lastdate = ''){
+		global $conf; 
+
+		$result = array();
+		
+		if(empty($firstdate)) {
+			$firstdate = dol_time_plus_duree($this->date_debut, -$conf->global->JOUR_ANTICIPES, 'd');
+			$firstdate = dol_get_first_day_week(dol_print_date($firstdate, '%d'), dol_print_date($firstdate, '%m'), dol_print_date($firstdate, '%Y'));
+			$firstdate =  dol_mktime(-1, -1, -1, $firstdate['first_month'], $firstdate['first_day'], $firstdate['first_year']);  
+		}
+		if(empty($lastdate)) {
+			$lastdate = $this->date_fin;
+			if(dol_print_date($lastdate, '%a') != 'Dim'){
+				$lastdate = dol_time_plus_duree($lastdate, 1, 'w');
+				$lastdate = dol_get_first_day_week(dol_print_date($lastdate, '%d'), dol_print_date($lastdate, '%m'), dol_print_date($lastdate, '%Y'));
+				$lastdate = dol_mktime(-1, -1, -1, $lastdate['first_month'], $lastdate['first_day'], $lastdate['first_year']);  
+			}
+		}
+		
+		$sql = "SELECT DATE_FORMAT(element_date, '%d/%m/%Y') as date, SUM(element_duration)/3600 as temps";
+		$sql .= " FROM ".MAIN_DB_PREFIX."element_time";
+		$sql .= " WHERE element_date >= '".$this->db->idate($firstdate)."'";
+		$sql .= " AND element_date < '".$this->db->idate($lastdate)."'";
+		$sql .= " AND fk_user = ".$user_id;
+		$sql .= " AND elementtype = 'task'";
+		$sql .= " GROUP BY DATE_FORMAT(element_date, '%d/%m/%Y')";
+
+		dol_syslog(get_class($this)."::timeDoneByDay()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$result[$obj->date] = $obj->temps;
+			}
+			$this->db->free($resql);
+		} else {
+			$this->errors[] = 'Error '.$this->db->lasterror();
+			dol_syslog(__METHOD__.' '.join(',', $this->errors), LOG_ERR);
+			return -1;
+		}
+
+		return $result;
+	}
+
+
 	/**
 	 * 	Return les nombre de Temps consommés sur un projet
 	 *
