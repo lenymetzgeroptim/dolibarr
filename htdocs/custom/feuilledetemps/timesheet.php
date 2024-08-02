@@ -302,80 +302,10 @@ include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/tpl/actions_timesheet.tpl
 
 include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/actions.inc.php';
 
-/*
- * View
- */
-
-$title = $langs->trans("FeuilleDeTemps");
-
-if ($morewherefilter) {	// Get all task without any filter, so we can show total of time spent for not visible tasks
-	$tasksarraywithoutfilter = $taskstatic->getTasksArray(0, 0, 0, $socid, 0, '', $onlyopenedproject, '', 0); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
-}
-$projectsrole = $taskstatic->getUserRolesForProjectsOrTasks($usertoprocess, 0, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
-$tasksrole = $taskstatic->getUserRolesForProjectsOrTasks(0, $usertoprocess, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
-
-$array_js = array('/core/js/timesheet.js', '/custom/feuilledetemps/core/js/timesheet.js', '/custom/feuilledetemps/core/js/parameters.php');
-llxHeader("", $title, "", '', '', '', $array_js, '', '', 'classforhorizontalscrolloftabs feuilledetemps timesheet');
-//print '<body onresize="redimenssion()">';
-
-print_barre_liste($title, $page, $_SERVER["PHP_SELF"], "", $sortfield, $sortorder, "", $num, '', 'object_timesheet_32@feuilledetemps');
-
-// Affichage des fenêtres de confirmation
-$formconfirm = '';
-if ($massaction == 'transmettre') {
-	$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?'.$param, $langs->trans('Transmission'), 'Voulez vous transmettre votre feuille de temps pour validation ?', 'confirm_transmettre', '', 0, 1);
-}
-print $formconfirm;
-
-// Show description of content
-print '<div class="toggled-off">';
-print '<div class="toggle-title">';
-print '<i class="fa fa-angle-down fa-fw close-intro"></i>';
-print '<i class="fa fa-angle-up fa-fw open-intro" style="display: none;"></i> ';
-print 'Fonctionnement';
-print '</div>';
-print '<div id="fonctionnement">';
-print '<span class="hideonsmartphone opacitymedium">';
-print 'Cette vue est restreinte aux projets ou tâches pour lesquels vous êtes un contact affecté.. Seuls les projets ouverts sont visibles (les projets à l\'état brouillon ou fermé ne sont pas visibles).<br>';
-print 'Seules les tâches qui vous sont assignées sont visibles.<br>';
-print '<strong>Temps de travail :</strong> Veuillez renseigner vos horaires pour chaque jour du mois (max : 10h par jour et 48h par semaine).<br>';
-print '<strong>Heure sup :</strong> Si vous entrez + de '.$heure_semaine_hs.'h, 2 nouvelles cases apparaissent. Dans la case <span class="txt_hs25">bleue</span>, entrez les heures entre '.$heure_semaine_hs.'h et '.$conf->global->HEURE_SUP1.'h. Dans la case <span class="txt_hs50">orange</span>, entrez les heures entre '.$conf->global->HEURE_SUP1.'h et '.$conf->global->HEURE_MAX_SEMAINE.'h.<br>';
-print '<strong>Autres :</strong> Vous pouvez également renseigner les autres types d\'heures en cochant la case correspondante sur la tache. (max : temps de travail du jour concerné).<br>';
-print '<strong>Code couleur : ';
-print '</span>';
-print '<span class="txt_before">Jours anticipés</span> - <span class="txt_ferie">Jours feriés</span> - <span class="txt_conges_brouillon">Absence en brouillon</span> - <span class="txt_conges_valide">Absence en Approbation n°1</span> - <span class="txt_conges_approuve1">Absence en Approbation n°2</span> - <span class="txt_conges_approuve2">Absence approuvée</span></strong>';
-print '<span class="hideonsmartphone opacitymedium info_fdt">';
-if($userInDeplacement) {
-	print '<br>D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
-}
-if($userInGrandDeplacement) {
-	print '<br>GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
-}	
-print '<br>Les heures de route ne doivent pas être pointées';
-print '</span><br><br>';
-print '</div></div>';
-
-$nav = '<a class="inline-block valignmiddle" href="?year='.$prev_year."&month=".$prev_month.$paramwithoutdate.'">'.img_previous($langs->trans("Previous"))."</a>\n";
-$nav .= " <span id=\"month_name\">".dol_print_date(dol_mktime(0, 0, 0, $month, 1, $year), "%Y").", ".dol_print_date(dol_mktime(0, 0, 0, $month, 1, $year), "%B")." </span>\n";
-$nav .= '<a class="inline-block valignmiddle" href="?year='.$next_year."&month=".$next_month.$paramwithoutdate.'">'.img_next($langs->trans("Next"))."</a>\n";
-$nav .= ' '.$form->selectDate(-1, '', 0, 0, 2, "addtime", 1, 1).' ';
-$nav .= ' <button type="submit" name="submitdateselect" value="x" class="bordertransp"><span class="fa fa-search"></span></button>';
-
-print '<form name="addtime" method="POST" action="'.$_SERVER["PHP_SELF"].'?'.$param.'">';
-print '<input type="hidden" name="token" value="'.newToken().'">';
-print '<input type="hidden" name="action" value="addtime">';
-print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
-print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
-print '<input type="hidden" name="mode" value="'.$mode.'">';
-print '<input type="hidden" name="day" value="'.$day.'">';
-print '<input type="hidden" name="month" value="'.$month.'">';
-print '<input type="hidden" name="year" value="'.$year.'">';
-print '<div class="floatleft right'.($conf->dol_optimize_smallscreen ? ' centpercent' : '').'">'.$nav.'</div>'; // We move this before the assign to components so, the default submit button is not the assign to.
-print '<div class="clearboth" style="padding-bottom: 20px;"></div>';
-
-
 // Gestion des congés et des jours feriés
+$timeSpentDay = $object->timeDoneByDay($usertoprocess->id);
 $multiple_holiday = 0;
+$uncompleted_fdt = 0;
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
 	$dayinloopfromfirstdaytoshowgmt = dol_time_plus_duree($firstdaytoshowgmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
@@ -431,7 +361,84 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$isavailable[$dayinloopfromfirstdaytoshow] = array('morning'=>false, 'afternoon'=>false, 'morning_reason'=>'public_holiday', 'afternoon_reason'=>'public_holiday');
 		$css[$dayinloopfromfirstdaytoshow] .= ' public_holiday'; 
 	}
+
+	if(!$uncompleted_fdt && empty($css[$dayinloopfromfirstdaytoshow]) && empty($css_holiday[$dayinloopfromfirstdaytoshow]) && empty($timeSpentDay[dol_print_date($dayinloopfromfirstdaytoshow, "%d/%m/%Y")])) {
+		$uncompleted_fdt = 1;
+	}
 }
+
+/*
+ * View
+ */
+
+$title = $langs->trans("FeuilleDeTemps");
+
+if ($morewherefilter) {	// Get all task without any filter, so we can show total of time spent for not visible tasks
+	$tasksarraywithoutfilter = $taskstatic->getTasksArray(0, 0, 0, $socid, 0, '', $onlyopenedproject, '', 0); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
+}
+$projectsrole = $taskstatic->getUserRolesForProjectsOrTasks($usertoprocess, 0, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
+$tasksrole = $taskstatic->getUserRolesForProjectsOrTasks(0, $usertoprocess, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
+
+$array_js = array('/core/js/timesheet.js', '/custom/feuilledetemps/core/js/timesheet.js', '/custom/feuilledetemps/core/js/parameters.php');
+llxHeader("", $title, "", '', '', '', $array_js, '', '', 'classforhorizontalscrolloftabs feuilledetemps timesheet');
+//print '<body onresize="redimenssion()">';
+
+print_barre_liste($title, $page, $_SERVER["PHP_SELF"], "", $sortfield, $sortorder, "", $num, '', 'object_timesheet_32@feuilledetemps');
+
+// Affichage des fenêtres de confirmation
+$formconfirm = '';
+if ($massaction == 'transmettre') {
+	$question = 'Voulez vous transmettre votre feuille de temps pour validation ?';
+	$question .= ($uncompleted_fdt ? '<br><span style="color: #be0000; font-size: initial;"><strong>⚠ Le pointage n\'a pas été renseigné en totalité</strong></span>' : '');
+	$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?'.$param, $langs->trans('Transmission'), $question, 'confirm_transmettre', '', 0, 1);
+}
+print $formconfirm;
+
+// Show description of content
+print '<div class="toggled-off">';
+print '<div class="toggle-title">';
+print '<i class="fa fa-angle-down fa-fw close-intro"></i>';
+print '<i class="fa fa-angle-up fa-fw open-intro" style="display: none;"></i> ';
+print 'Fonctionnement';
+print '</div>';
+print '<div id="fonctionnement">';
+print '<span class="hideonsmartphone opacitymedium">';
+print 'Cette vue est restreinte aux projets ou tâches pour lesquels vous êtes un contact affecté.. Seuls les projets ouverts sont visibles (les projets à l\'état brouillon ou fermé ne sont pas visibles).<br>';
+print 'Seules les tâches qui vous sont assignées sont visibles.<br>';
+print '<strong>Temps de travail :</strong> Veuillez renseigner vos horaires pour chaque jour du mois (max : 10h par jour et 48h par semaine).<br>';
+print '<strong>Heure sup :</strong> Si vous entrez + de '.$heure_semaine_hs.'h, 2 nouvelles cases apparaissent. Dans la case <span class="txt_hs25">bleue</span>, entrez les heures entre '.$heure_semaine_hs.'h et '.$conf->global->HEURE_SUP1.'h. Dans la case <span class="txt_hs50">orange</span>, entrez les heures entre '.$conf->global->HEURE_SUP1.'h et '.$conf->global->HEURE_MAX_SEMAINE.'h.<br>';
+print '<strong>Autres :</strong> Vous pouvez également renseigner les autres types d\'heures en cochant la case correspondante sur la tache. (max : temps de travail du jour concerné).<br>';
+print '<strong>Code couleur : ';
+print '</span>';
+print '<span class="txt_before">Jours anticipés</span> - <span class="txt_ferie">Jours feriés</span> - <span class="txt_conges_brouillon">Absence en brouillon</span> - <span class="txt_conges_valide">Absence en Approbation n°1</span> - <span class="txt_conges_approuve1">Absence en Approbation n°2</span> - <span class="txt_conges_approuve2">Absence approuvée</span></strong>';
+print '<span class="hideonsmartphone opacitymedium info_fdt">';
+if($userInDeplacement) {
+	print '<br>D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
+}
+if($userInGrandDeplacement) {
+	print '<br>GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
+}	
+print '<br>Les heures de route ne doivent pas être pointées';
+print '</span><br><br>';
+print '</div></div>';
+
+$nav = '<a class="inline-block valignmiddle" href="?year='.$prev_year."&month=".$prev_month.$paramwithoutdate.'">'.img_previous($langs->trans("Previous"))."</a>\n";
+$nav .= " <span id=\"month_name\">".dol_print_date(dol_mktime(0, 0, 0, $month, 1, $year), "%Y").", ".dol_print_date(dol_mktime(0, 0, 0, $month, 1, $year), "%B")." </span>\n";
+$nav .= '<a class="inline-block valignmiddle" href="?year='.$next_year."&month=".$next_month.$paramwithoutdate.'">'.img_next($langs->trans("Next"))."</a>\n";
+$nav .= ' '.$form->selectDate(-1, '', 0, 0, 2, "addtime", 1, 1).' ';
+$nav .= ' <button type="submit" name="submitdateselect" value="x" class="bordertransp"><span class="fa fa-search"></span></button>';
+
+print '<form name="addtime" method="POST" action="'.$_SERVER["PHP_SELF"].'?'.$param.'">';
+print '<input type="hidden" name="token" value="'.newToken().'">';
+print '<input type="hidden" name="action" value="addtime">';
+print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
+print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
+print '<input type="hidden" name="mode" value="'.$mode.'">';
+print '<input type="hidden" name="day" value="'.$day.'">';
+print '<input type="hidden" name="month" value="'.$month.'">';
+print '<input type="hidden" name="year" value="'.$year.'">';
+print '<div class="floatleft right'.($conf->dol_optimize_smallscreen ? ' centpercent' : '').'">'.$nav.'</div>'; // We move this before the assign to components so, the default submit button is not the assign to.
+print '<div class="clearboth" style="padding-bottom: 20px;"></div>';
 
 $tmpvar = "MAIN_SELECTEDFIELDS_".$varpage;
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
