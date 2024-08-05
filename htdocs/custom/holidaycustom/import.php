@@ -67,7 +67,7 @@ if(GETPOST('sendit', 'alpha') && !empty($user->rights->holidaycustom->import) &&
 		setEventMessages("Import réalisé avec succés", null);
 	}
 }
-elseif(!str_contains($_FILES['userfile']['name'], '.xlsx') && !str_contains($_FILES['userfile']['name'], '.XLSX')) {
+elseif(GETPOST('sendit', 'alpha') && !empty($user->rights->holidaycustom->import) && !empty($_FILES['userfile']['tmp_name'][0]) && !str_contains($_FILES['userfile']['name'], '.xlsx') && !str_contains($_FILES['userfile']['name'], '.XLSX')) {
 	setEventMessages("Le fichier doit être au format xlsx", null, 'errors');
 }
 
