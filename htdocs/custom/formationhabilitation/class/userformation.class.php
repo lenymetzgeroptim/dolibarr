@@ -831,7 +831,7 @@ class UserFormation extends CommonObject
 
 		$error = 0;
 		$now = dol_now();
-		//$tab_id = array();
+		$tab_id = array();
 
 		$this->db->begin();
 
@@ -840,18 +840,18 @@ class UserFormation extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
-		//$sql .= " AND f.periode_souplesse IS NULL";
-		$sql .= " AND uf.status = ".self::STATUS_VALIDE;
-		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
+		$sql .= " AND f.periode_souplesse IS NULL";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
+		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY) <= '".$this->db->idate($now)."'";
 
 		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour + 6 mois => A programmer
 		$sql2 = "SELECT uf.rowid";
 		$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
-		//$sql2 .= " AND f.periode_souplesse IS NULL";
-		$sql2 .= " AND uf.status = ".self::STATUS_VALIDE;
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL -6 MONTH) <= '".$this->db->idate($now)."'";
+		$sql2 .= " AND f.periode_souplesse IS NULL";
+		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
+		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY), INTERVAL -6 MONTH) <= '".$this->db->idate($now)."'";
 
 		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
 
@@ -920,14 +920,14 @@ class UserFormation extends CommonObject
 		}
 
 		// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
-		/*$sql = "SELECT uf.rowid";
+		$sql = "SELECT uf.rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
 		$sql .= " AND f.periode_souplesse IS NOT NULL";
-		$sql .= " AND (f.bloquant = 2 OR f.bloquant = 0)";
-		$sql .= " AND uf.status = ".self::STATUS_VALIDE;
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) <= '".$this->db->idate($now)."'";
+		$sql .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
+		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY), INTERVAL f.periode_souplesse DAY) <= '".$this->db->idate($now)."'";
 
 		// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => A programmer
 		$sql2 = "SELECT uf.rowid";
@@ -935,10 +935,10 @@ class UserFormation extends CommonObject
 		$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
 		$sql2 .= " AND f.periode_souplesse IS NOT NULL";
-		$sql2 .= " AND (f.bloquant = 2 OR f.bloquant = 0)";
-		$sql2 .= " AND uf.status = ".self::STATUS_VALIDE;
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) > '".$this->db->idate($now)."'";
-		$sql2 .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
+		$sql2 .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
+		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
+		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY), INTERVAL f.periode_souplesse DAY) > '".$this->db->idate($now)."'";
+		$sql2 .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY) <= '".$this->db->idate($now)."'";
 
 		$resql = $this->db->query($sql);
 		$resql2 = $this->db->query($sql2);
@@ -1011,10 +1011,10 @@ class UserFormation extends CommonObject
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
 		$sql .= " AND f.periode_souplesse IS NOT NULL";
-		$sql .= " AND f.bloquant = 1";
-		$sql .= " AND uf.status = ".self::STATUS_VALIDE;
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) > '".$this->db->idate($now)."'";
-		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
+		$sql .= " AND f.periode_souplesse_bloquant = 1";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
+		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY), INTERVAL f.periode_souplesse DAY) > '".$this->db->idate($now)."'";
+		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY) <= '".$this->db->idate($now)."'";
 
 		$resql = $this->db->query($sql);
 
@@ -1048,7 +1048,7 @@ class UserFormation extends CommonObject
 		} else {
 			$this->error = $this->db->lasterror();
 			return -1;
-		}*/
+		}
 
 
 		if($error == 0) {
