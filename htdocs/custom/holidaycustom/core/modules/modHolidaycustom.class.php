@@ -107,7 +107,7 @@ class modHolidaycustom extends DolibarrModules
 			'theme' => 0,
 			// Set this to relative path of css file if module has its own css file
 			'css' => array(
-				//    '/holidaycustom/css/holidaycustom.css.php',
+				'/holidaycustom/css/holidaycustom.css.php',
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
@@ -298,21 +298,21 @@ class modHolidaycustom extends DolibarrModules
 				'test' => '$conf->holidaycustom->enabled',
 				'datestart' => $datestart
 			),
-			1 => array(
-				'label' => 'Import des congés',
-				'jobtype' => 'method',
-				'class' => '/custom/holidaycustom/class/holiday.class.php',
-				'objectname' => 'Holiday',
-				'method' => 'import_conges',
-				'parameters' => '',
-				'comment' => "Permet d'importer le nombre de congés à partir d'un fichier excel",
-				'frequency' => 1,
-				'unitfrequency' => 3600 * 24 * 31,
-				'priority' => 50,
-				'status' => 1,
-				'test' => '$conf->holidaycustom->enabled',
-				'datestop' => $datestart
-			),
+			// 1 => array(
+			// 	'label' => 'Import des congés',
+			// 	'jobtype' => 'method',
+			// 	'class' => '/custom/holidaycustom/class/holiday.class.php',
+			// 	'objectname' => 'Holiday',
+			// 	'method' => 'import_conges',
+			// 	'parameters' => '',
+			// 	'comment' => "Permet d'importer le nombre de congés à partir d'un fichier excel",
+			// 	'frequency' => 1,
+			// 	'unitfrequency' => 3600 * 24 * 31,
+			// 	'priority' => 50,
+			// 	'status' => 1,
+			// 	'test' => '$conf->holidaycustom->enabled',
+			// 	'datestop' => $datestart
+			// ),
 			2 => array(
 				'label' => 'Vérification congés >= 2 semaines',
 				'jobtype' => 'method',
@@ -397,6 +397,13 @@ class modHolidaycustom extends DolibarrModules
 		$this->rights[$r][1] = 'Modifier les approbateurs des congés'; // Permission label
 		$this->rights[$r][3] = 0; // Permission by default for new user (0/1)
 		$this->rights[$r][4] = 'changeappro'; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
+		$this->rights[$r][5] = ''; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
+		$r++;
+
+		$this->rights[$r][0] = 20010; // Permission id (must not be already used)
+		$this->rights[$r][1] = 'Réaliser l\'import des congés'; // Permission label
+		$this->rights[$r][3] = 0; // Permission by default for new user (0/1)
+		$this->rights[$r][4] = 'import'; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$this->rights[$r][5] = ''; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
 		/* END MODULEBUILDER PERMISSIONS */
@@ -492,6 +499,21 @@ class modHolidaycustom extends DolibarrModules
 			'position'=>$r,
 			'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
 			'perms'=> '$user->rights->holidaycustom->define_holiday',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+			'target'=>'',
+			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+		);
+
+		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'type'=>'left',                          // This is a Top menu entry
+			'titre'=>  "Import des congés",
+			'mainmenu'=>'hrm',
+			'leftmenu'=>'holiday_import',
+			'url'=>'/holidaycustom/import.php',
+			'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+			'position'=>$r,
+			'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+			'perms'=> '$user->rights->holidaycustom->import',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
 			'target'=>'',
 			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
 		);
