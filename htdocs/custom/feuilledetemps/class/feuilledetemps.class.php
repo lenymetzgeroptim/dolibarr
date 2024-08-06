@@ -2187,7 +2187,6 @@ class FeuilleDeTemps extends CommonObject
 								$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
 							}
 							else {
-								var_dump('tesr');
 								$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
 							}
 						}
@@ -2213,7 +2212,6 @@ class FeuilleDeTemps extends CommonObject
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
 						}
 						else {
-							var_dump('tesr');
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
 						}
 					}
