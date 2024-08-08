@@ -67,7 +67,7 @@ $cancel = GETPOST('cancel', 'aZ09');
 $sortfield = GETPOST('sortfield', 'aZ09comma');
 $sortorder = GETPOST('sortorder', 'aZ09comma');
 
-$id = GETPOST('id', 'integer');
+$userid = GETPOST('id', 'integer');
 $lineid   = GETPOST('lineid', 'int');
 $onglet = GETPOST('onglet', 'aZ09');
 $voletid   = GETPOST('voletid', 'int');
@@ -77,9 +77,9 @@ $permissiontoreadCout = $user->rights->formationhabilitation->formation->readCou
 
 if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 
-if($id > 0){
+if($userid > 0){
     $object = New ExtendedUser3($db);
-    $object->fetch($id);
+    $object->fetch($userid);
 }
 
 $formation = new Formation($db);
@@ -104,169 +104,19 @@ if (!$sortorder) {
 //include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
 if($onglet == 'formation' || empty($onglet)){
-    if($action == 'updateline' && !$cancel && $permissiontoaddline){
-        if($lineid > 0 && $id > 0){
-            $objectline = new UserFormation($db);
-            $objectline->fetch($lineid);
-
-
-            if (empty(GETPOST("date_formationmonth", 'int')) || empty(GETPOST("date_formationday", 'int')) || empty(GETPOST("date_formationyear", 'int'))) {
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFormation")), null, 'errors');
-                $error++;
-            }
-            $date = dol_mktime(-1, -1, -1, GETPOST("date_formationmonth", 'int'), GETPOST("date_formationday", 'int'), GETPOST("date_formationyear", 'int'));
-
-            if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-                $error++;
-            }
-
-            if($objectline->getID(GETPOST('fk_formation'), $object->id, 1) > 0 && GETPOST('type') == 1){
-                setEventMessages("Impossible de modifier cette formation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
-                $error++;
-            }
-
-            if($objectline->getID(GETPOST('fk_formation'), $object->id, 3) > 0 && GETPOST('type') == 3){
-                setEventMessages("Impossible de modifier cette formation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
-                $error++;
-            }
-
-            if(GETPOST('type') == -1 || empty(GETPOST('type'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Type")), null, 'errors');
-                $error++;
-            }
-
-            if(GETPOST('fk_societe') == -1 || empty(GETPOST('fk_societe'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Organisme")), null, 'errors');
-                $error++;
-            }
-
-            if (!$error) {
-                $formation_static = new Formation($db);
-                $formation_static->fetch($objectline->fk_formation);
-
-				$objectline->ref = $object->login."-".$formation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
-                $objectline->date_formation = $date;
-                $objectline->date_fin_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date, $formation_static->periode_recyclage, 'd') : '');
-                $objectline->fk_societe = GETPOST('fk_societe');
-                $objectline->type = GETPOST('type');
-                $objectline->numero_certificat = GETPOST('numero_certificat');
-
-                //$date_limite = dol_time_plus_duree($date, $object->periode_recyclage, 'm');
-                //$date_limite = dol_print_date($date_limite, '%d/%m/%Y');
-                //$now = dol_print_date(dol_now(), '%d/%m/%Y');
-                /*if($date_limite > $now && GETPOST('status') == $objectline::STATUS_FINECHEANCE && $objectline->status == $objectline::STATUS_FINECHEANCE){
-                    $objectline->status = $objectline::STATUS_PLANIFIEE;
-                }
-                else {*/
-                   $objectline->status = GETPOST('status');
-                //}
-
-                $resultupdate = $objectline->update($user);
-            }
-
-            if(!$error && $resultupdate){
-                setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-            }
-            elseif(!$error && !$resultupdate){
-                setEventMessages($langs->trans($object->error), null, 'errors');
-            }
-            elseif($error) {
-                header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&onglet='.$onglet.'&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int'));
-                exit;
-            }
-        }
-        else {
-            $langs->load("errors");
-            setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-        }
+    $objectline = new UserFormation($db);
+	
+    if(GETPOST('fk_formation') > 0) {
+        $formation_static = new Formation($db);
+        $formation_static->fetch(GETPOST('fk_formation'));
     }
 
-    if($action == 'addline' && $permissiontoaddline){
-        if($id > 0){
-            $objectline = new UserFormation($db);
-
-            if(!(GETPOST('fk_formation') > 0)){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Formation")), null, 'errors');
-                $error++;
-            }
-
-            if (empty(GETPOST("date_formationmonth", 'int')) || empty(GETPOST("date_formationday", 'int')) || empty(GETPOST("date_formationyear", 'int'))) {
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFormation")), null, 'errors');
-                $error++;
-            }
-            $date = dol_mktime(-1, -1, -1, GETPOST("date_formationmonth", 'int'), GETPOST("date_formationday", 'int'), GETPOST("date_formationyear", 'int'));
-
-            if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-                $error++;
-            }
-
-            if($objectline->getID(GETPOST('fk_formation'), $object->id, 1) > 0 && GETPOST('type') == 1){
-                setEventMessages("Impossible d'ajouter cette formation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
-                $error++;
-            }
-
-            if($objectline->getID(GETPOST('fk_formation'), $object->id, 3) > 0 && GETPOST('type') == 3){
-                setEventMessages("Impossible d'ajouter cette formation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
-                $error++;
-            }
-
-            if(GETPOST('type') == -1 || empty(GETPOST('type'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Type")), null, 'errors');
-                $error++;
-            }
-
-            if(GETPOST('fk_societe') == -1 || empty(GETPOST('fk_societe'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Organisme")), null, 'errors');
-                $error++;
-            }
-
-            if (!$error) {
-                $formation_static = new Formation($db);
-                $formation_static->fetch(GETPOST('fk_formation'));
-
-				$objectline->ref = $object->login."-".$formation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
-                $objectline->fk_formation = GETPOST('fk_formation');
-                $objectline->fk_user = $id;
-                $objectline->date_formation = $date;
-                $objectline->date_fin_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date, $formation_static->periode_recyclage, 'd') : '');
-                $objectline->status = GETPOST('status');
-                $objectline->cout_pedagogique = $formation_static->cout;
-                $objectline->cout_mobilisation = $object->thm * ($formation_static->nombre_heure / 3600);
-                $objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
-                $objectline->fk_societe = GETPOST('fk_societe');
-                $objectline->type = GETPOST('type');
-                $objectline->numero_certificat = GETPOST('numero_certificat');
-
-                $resultcreate = $objectline->create($user);
-            }
-
-            if(!$error && $resultcreate){
-                setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-            }
-            elseif(!$error && !$resultcreate){
-                setEventMessages($langs->trans($object->error), null, 'errors');
-            }
-        }
-        else {
-            $langs->load("errors");
-            setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-        }
+    if(GETPOST('fk_user') > 0) {
+        $user_static = new User($db);
+        $user_static->fetch(GETPOST('fk_user'));
     }
 
-    if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) {
-        $resultdelete = $object->deleteLine($user, $lineid);
-        if ($resultdelete > 0) {
-            setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
-            header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-            exit;
-        } else {
-            $error++;
-            setEventMessages($object->error, $object->errors, 'errors');
-        }
-        $action = '';
-    }
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userformation.inc.php';
 }
 
 if($onglet == 'habilitation'){
@@ -541,256 +391,254 @@ if ($onglet == 'volet') {
  * View
  */
 
-if ($id == $user->id){
+$form = new Form($db);
 
-	$form = new Form($db);
+$help_url = '';
+$page_name = "Formation - Habilitation";
 
-	$help_url = '';
-	$page_name = "Formation - Habilitation";
+llxHeader('', $page_name, $help_url);
 
-	llxHeader('', $page_name, $help_url);
+$res = $object->fetch($userid, '', '', 1);
+if ($res < 0) {
+    dol_print_error($db, $object->error);
+    exit;
+}
+$res = $object->fetch_optionals();
 
-	$res = $object->fetch($id, '', '', 1);
-	if ($res < 0) {
-		dol_print_error($db, $object->error);
-		exit;
-	}
-	$res = $object->fetch_optionals();
+// Check if user has rights
+if (empty($conf->global->MULTICOMPANY_TRANSVERSE_MODE)) {
+    $object->getrights();
+    if (empty($object->nb_rights) && $object->statut != 0 && empty($object->admin)) {
+        setEventMessages($langs->trans('UserHasNoPermissions'), null, 'warnings');
+    }
+}
 
-	// Check if user has rights
-	if (empty($conf->global->MULTICOMPANY_TRANSVERSE_MODE)) {
-		$object->getrights();
-		if (empty($object->nb_rights) && $object->statut != 0 && empty($object->admin)) {
-			setEventMessages($langs->trans('UserHasNoPermissions'), null, 'warnings');
-		}
-	}
+$head = user_prepare_head($object);
 
-	$head = user_prepare_head($object);
-
-	print dol_get_fiche_head($head, 'userformation', $title, -1, 'user');
+print dol_get_fiche_head($head, 'userformation', $title, -1, 'user');
 
 
 
-    $formconfirm = '';
-	// Confirmation to delete line
-	if ($action == 'deleteline') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid.'&onglet='.$onglet, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
-	}
-    if ($action == 'remove_file') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&file='.urlencode(GETPOST("file")).'&onglet='.$onglet, $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
-	}
-	// Print form confirm
-	print $formconfirm;
+$formconfirm = '';
+// Confirmation to delete line
+if ($action == 'deleteline') {
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid.'&onglet='.$onglet, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
+}
+if ($action == 'remove_file') {
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&file='.urlencode(GETPOST("file")).'&onglet='.$onglet, $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
+}
+// Print form confirm
+print $formconfirm;
 
 
-	dol_banner_tab($object, 'id', $linkback, $user->rights->user->user->lire || $user->admin);
+dol_banner_tab($object, 'id', $linkback, $user->rights->user->user->lire || $user->admin);
 
-	print '<div class="fichecenter"><div class="underbanner clearboth"></div><br>';
+print '<div class="fichecenter"><div class="underbanner clearboth"></div><br>';
 
-	$h = 0;
-    $head2 = array();
+$h = 0;
+$head2 = array();
 
-	$head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=formation';
-	$head2[$h][1] = $langs->trans("Formations");
-	$head2[$h][2] = 'formation';
-	$h++;
+$head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=formation';
+$head2[$h][1] = $langs->trans("Formations");
+$head2[$h][2] = 'formation';
+$h++;
 
-    $head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=habilitation';
-	$head2[$h][1] = $langs->trans("Habilitations");
-	$head2[$h][2] = 'habilitation';
-	$h++;
+$head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=habilitation';
+$head2[$h][1] = $langs->trans("Habilitations");
+$head2[$h][2] = 'habilitation';
+$h++;
 
-    $head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=autorisation';
-	$head2[$h][1] = $langs->trans("Autorisations");
-	$head2[$h][2] = 'autorisation';
-	$h++;
+$head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=autorisation';
+$head2[$h][1] = $langs->trans("Autorisations");
+$head2[$h][2] = 'autorisation';
+$h++;
 
-    $head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=volet';
-	$head2[$h][1] = $langs->trans("Volets");
-	$head2[$h][2] = 'volet';
-	$h++;
+$head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=volet';
+$head2[$h][1] = $langs->trans("Volets");
+$head2[$h][2] = 'volet';
+$h++;
 
-    if(empty($onglet) || $onglet == 'formation'){
-        print dol_get_fiche_head($head2, 'formation', $title, -1, 'user');
+if(empty($onglet) || $onglet == 'formation'){
+    print dol_get_fiche_head($head2, 'formation', $title, -1, 'user');
 
-        // Show Formation lines
-        $result = $object->getLinesArrayFormationHabilitation('formation');
-        $object->table_element_line = 'formationhabilitation_userformation';
+    // Show Formation lines
+    $result = $object->getLinesArrayFormationHabilitation('formation');
+    $object->table_element_line = 'formationhabilitation_userformation';
 
-        print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-        <input type="hidden" name="token" value="' . newToken().'">
-        <input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
-        <input type="hidden" name="mode" value="">
-        <input type="hidden" name="page_y" value="">
-        <input type="hidden" name="id" value="' . $object->id.'">
-        <input type="hidden" name="onglet" value="' .$onglet.'">
-        ';
+    print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+    <input type="hidden" name="token" value="' . newToken().'">
+    <input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
+    <input type="hidden" name="mode" value="">
+    <input type="hidden" name="page_y" value="">
+    <input type="hidden" name="id" value="' . $object->id.'">
+    <input type="hidden" name="fk_user" value="' . $object->id.'">
+    <input type="hidden" name="onglet" value="' .$onglet.'">
+    ';
 
 
-        print '<div class="div-table-responsive-no-min">';
-        if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-            print '<table id="tablelines" class="noborder noshadow" width="100%">';
-        }
+    print '<div class="div-table-responsive-no-min">';
+    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
+        print '<table id="tablelines" class="noborder noshadow" width="100%">';
+    }
 
-        if (!empty($object->lines)) {
-            $object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-        }
+    if (!empty($object->lines)) {
+        $object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
+    }
 
-        // Form to add new line
-        if ($permissiontoaddline && $action != 'selectlines') {
-            if ($action != 'editline') {
-                // Add products/services form
-                $parameters = array();
-                $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-                if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-                if (empty($reshook)){
-                    $object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-                }
+    // Form to add new line
+    if ($permissiontoaddline && $action != 'selectlines') {
+        if ($action != 'editline') {
+            // Add products/services form
+            $parameters = array();
+            $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
+            if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+            if (empty($reshook)){
+                $object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
             }
         }
-
-        if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-            print '</table>';
-        }
-        print '</div>';
-
-        print "</form>\n";
     }
-    elseif($onglet == 'habilitation'){
-        print dol_get_fiche_head($head2, 'habilitation', $title, -1, 'user');
 
-        // Show Formation lines
-        $result = $object->getLinesArrayFormationHabilitation('habilitation');
-        $object->table_element_line = 'formationhabilitation_userhabilitation';
+    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
+        print '</table>';
+    }
+    print '</div>';
 
-        print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-        <input type="hidden" name="token" value="' . newToken().'">
-        <input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
-        <input type="hidden" name="mode" value="">
-        <input type="hidden" name="page_y" value="">
-        <input type="hidden" name="id" value="' . $object->id.'">
-        <input type="hidden" name="onglet" value="' .$onglet.'">
-        ';
+    print "</form>\n";
+}
+elseif($onglet == 'habilitation'){
+    print dol_get_fiche_head($head2, 'habilitation', $title, -1, 'user');
+
+    // Show Formation lines
+    $result = $object->getLinesArrayFormationHabilitation('habilitation');
+    $object->table_element_line = 'formationhabilitation_userhabilitation';
+
+    print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+    <input type="hidden" name="token" value="' . newToken().'">
+    <input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
+    <input type="hidden" name="mode" value="">
+    <input type="hidden" name="page_y" value="">
+    <input type="hidden" name="id" value="' . $object->id.'">
+    <input type="hidden" name="fk_user" value="' . $object->id.'">
+    <input type="hidden" name="onglet" value="' .$onglet.'">
+    ';
 
 
-        print '<div class="div-table-responsive-no-min">';
-        if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-            print '<table id="tablelines" class="noborder noshadow" width="100%">';
-        }
+    print '<div class="div-table-responsive-no-min">';
+    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
+        print '<table id="tablelines" class="noborder noshadow" width="100%">';
+    }
 
-        if (!empty($object->lines)) {
-            $object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-        }
+    if (!empty($object->lines)) {
+        $object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
+    }
 
-        // Form to add new line
-        if ($permissiontoaddline && $action != 'selectlines') {
-            if ($action != 'editline') {
-                // Add products/services form
-                $parameters = array();
-                $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-                if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-                if (empty($reshook)){
-                    $object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-                }
+    // Form to add new line
+    if ($permissiontoaddline && $action != 'selectlines') {
+        if ($action != 'editline') {
+            // Add products/services form
+            $parameters = array();
+            $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
+            if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+            if (empty($reshook)){
+                $object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
             }
         }
-
-        if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-            print '</table>';
-        }
-        print '</div>';
-
-        print "</form>\n";
     }
-    elseif($onglet == 'autorisation'){
-        print dol_get_fiche_head($head2, 'autorisation', $title, -1, 'user');
 
-        // Show Formation lines
-        $result = $object->getLinesArrayFormationHabilitation('autorisation');
-        $object->table_element_line = 'formationhabilitation_userautorisation';
+    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
+        print '</table>';
+    }
+    print '</div>';
 
-        print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-        <input type="hidden" name="token" value="' . newToken().'">
-        <input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
-        <input type="hidden" name="mode" value="">
-        <input type="hidden" name="page_y" value="">
-        <input type="hidden" name="id" value="' . $object->id.'">
-        <input type="hidden" name="onglet" value="' .$onglet.'">
-        ';
+    print "</form>\n";
+}
+elseif($onglet == 'autorisation'){
+    print dol_get_fiche_head($head2, 'autorisation', $title, -1, 'user');
+
+    // Show Formation lines
+    $result = $object->getLinesArrayFormationHabilitation('autorisation');
+    $object->table_element_line = 'formationhabilitation_userautorisation';
+
+    print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+    <input type="hidden" name="token" value="' . newToken().'">
+    <input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
+    <input type="hidden" name="mode" value="">
+    <input type="hidden" name="page_y" value="">
+    <input type="hidden" name="id" value="' . $object->id.'">
+    <input type="hidden" name="fk_user" value="' . $object->id.'">
+    <input type="hidden" name="onglet" value="' .$onglet.'">
+    ';
 
 
-        print '<div class="div-table-responsive-no-min">';
-        if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-            print '<table id="tablelines" class="noborder noshadow" width="100%">';
-        }
+    print '<div class="div-table-responsive-no-min">';
+    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
+        print '<table id="tablelines" class="noborder noshadow" width="100%">';
+    }
 
-        if (!empty($object->lines)) {
-            $object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-        }
+    if (!empty($object->lines)) {
+        $object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
+    }
 
-        // Form to add new line
-        if ($permissiontoaddline && $action != 'selectlines') {
-            if ($action != 'editline') {
-                // Add products/services form
-                $parameters = array();
-                $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-                if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-                if (empty($reshook)){
-                    $object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-                }
+    // Form to add new line
+    if ($permissiontoaddline && $action != 'selectlines') {
+        if ($action != 'editline') {
+            // Add products/services form
+            $parameters = array();
+            $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
+            if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+            if (empty($reshook)){
+                $object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
             }
         }
-
-        if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-            print '</table>';
-        }
-        print '</div>';
-
-        print "</form>\n";
     }
-    elseif($onglet == 'volet') {
-        $formfile = new FormFile($db);
-        $upload_dir = $conf->export->dir_temp.'/'.$user->id;
 
-        print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
+    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
+        print '</table>';
+    }
+    print '</div>';
+
+    print "</form>\n";
+}
+elseif($onglet == 'volet') {
+    $formfile = new FormFile($db);
+    $upload_dir = $conf->export->dir_temp.'/'.$user->id;
+
+    print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
+    
+    print '<div class="fichecenter">';
+        print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?action=confirm_genererPdf">';
+            print '<input type="hidden" name="confirm" value="yes">';
+            print '<input type="hidden" name="onglet" value="volet">';
+            print '<input type="hidden" name="id" value="'.$object->id.'">';
+            print '<input type="hidden" name="fk_user" value="'.$object->id.'">';
+
+
+            $urlsource = $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet';
         
-        print '<div class="fichecenter">';
-            print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?action=confirm_genererPdf">';
-                print '<input type="hidden" name="confirm" value="yes">';
-                print '<input type="hidden" name="onglet" value="volet">';
-                print '<input type="hidden" name="id" value="'.$object->id.'">';
+            $filedir = $conf->formationhabilitation->dir_output.'/'.$object->id;
+            $genallowed = 1; // LENYTODO
+            $delallowed = 1; // LENYTODO
+        
+            include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/modules/formationhabilitation/modules_formationhabilitation_user.php';
+            print $formfile->showdocuments('formationhabilitation_user', '', $filedir, $urlsource, $genallowed, $delallowed, '', 1, 0, 0, 0, 1, '', 'Volets');
 
-                $urlsource = $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet';
-            
-                $filedir = $conf->formationhabilitation->dir_output.'/'.$object->id;
-                $genallowed = 1; // LENYTODO
-                $delallowed = 1; // LENYTODO
-            
-                include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/modules/formationhabilitation/modules_formationhabilitation_user.php';
-                print $formfile->showdocuments('formationhabilitation_user', '', $filedir, $urlsource, $genallowed, $delallowed, '', 1, 0, 0, 0, 1, '', 'Volets');
-
-                print '<div class="tabsAction">'."\n";
-                // Generer PDF
-                $voletarray = $formation->getallVolet();
-                print $form->selectarray('voletid', $voletarray, $voletid, 1);
-                if($permissiontoaddline) {
-                    print '<input type="submit" value="'.$langs->trans("GenererDoc").'" class="button"/>';
-                }
-                print '</div>'."\n";
-            print '</form>';
-        print '</div>';
-    }
-
-	print '</div>';
-
-	// Page end
-	print dol_get_fiche_end();
-
-	llxFooter();
-	$db->close();
+            print '<div class="tabsAction">'."\n";
+            // Generer PDF
+            $voletarray = $formation->getallVolet();
+            print $form->selectarray('voletid', $voletarray, $voletid, 1);
+            if($permissiontoaddline) {
+                print '<input type="submit" value="'.$langs->trans("GenererDoc").'" class="button"/>';
+            }
+            print '</div>'."\n";
+        print '</form>';
+    print '</div>';
 }
-else {
-	$urltogo = dol_buildpath('/user/card.php?id='.$id, 1);
-	header("Location: ".$urltogo);
-	exit;
-}
+
+print '</div>';
+
+// Page end
+print dol_get_fiche_end();
+
+llxFooter();
+$db->close();
+
