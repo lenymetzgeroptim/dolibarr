@@ -37,8 +37,11 @@ CREATE TABLE llx_formationhabilitation_formation(
 	fournisseur varchar(255) NOT NULL, 
 	famille integer NOT NULL, 
 	periode_souplesse integer, 
-	periode_souplesse_bloquant tinyint(1), 
+	periode_souplesse_bloquant boolean, 
 	prerequis varchar(255), 
-	volet integer
+	volet integer, 
+	formationssuperieurs varchar(255), 
+	delaisprogrammation integer, 
+	sousdomaine integer NOT NULL
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

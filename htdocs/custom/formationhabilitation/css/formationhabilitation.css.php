@@ -106,8 +106,8 @@ div.mainmenu.formationhabilitation {
   content: "\f4fe"; 
 }
 
-.myclasscss {
-	/* ... */
+.linecolfk_societe span,
+.linecolformateur span {
+	max-width: 200px;
 }
-
 

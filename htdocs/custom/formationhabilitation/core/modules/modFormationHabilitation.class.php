@@ -206,23 +206,23 @@ class modFormationHabilitation extends DolibarrModules
 			'langs'=>'formationhabilitation@formationhabilitation',
 			'picto'=>'user',
 			// List of tables we want to see into dictonnary editor
-			'tabname'=>array(MAIN_DB_PREFIX."c_famille_formation", MAIN_DB_PREFIX."c_volets"),
+			'tabname'=>array(MAIN_DB_PREFIX."c_famille_formation", MAIN_DB_PREFIX."c_volets", MAIN_DB_PREFIX."c_sousdomaine_formation"),
 			// Label of tables
-			'tablib'=>array("FamilleFormation", "Volets"),
+			'tablib'=>array("FamilleFormation", "Volets", "SousDomaineFormation"),
 			// Request to select fields
-			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT v.rowid as rowid, v.numero, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle, v.active FROM '.MAIN_DB_PREFIX.'c_volets as v'),
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT v.rowid as rowid, v.numero, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle, v.active FROM '.MAIN_DB_PREFIX.'c_volets as v', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_sousdomaine_formation as f'),
 			// Sort order
-			'tabsqlsort'=>array("label ASC", "numero ASC"),
+			'tabsqlsort'=>array("label ASC", "numero ASC", "label ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle"),
+			'tabfield'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle"),
+			'tabfieldvalue'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle"),
+			'tabfieldinsert'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label"),
 			// Name of columns with primary key (try to always name it 'rowid')
-			'tabrowid'=>array("rowid", "rowid"),
+			'tabrowid'=>array("rowid", "rowid", "rowid"),
 			// Condition to show each dictionary
-			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled)
+			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled)
 		);
 		
 

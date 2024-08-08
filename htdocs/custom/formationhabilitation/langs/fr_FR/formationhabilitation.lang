@@ -28,7 +28,7 @@ BoxTitleLatestModifiedFormation = Les dernières autorisations modifiées
 
 ListOfs = Liste des %s
 NewObj = Nouvelle %s
-
+UserFormation = formations d'un collaborateur
 
 #
 # Admin page
@@ -37,6 +37,8 @@ FormationHabilitationSetup = Paramètrage du module Formation - Habilitation
 Settings = Paramètre
 FormationHabilitationSetupPage = Paramètrage du module Formation - Habilitation
 FamilleFormation = Famille de formation
+SousDomaineFormation = Domaine de formation
+
 
 #
 # About page
@@ -73,6 +75,10 @@ PeriodeSouplesseBloquant = Période de souplesse bloquante
 CoutMobilisation = Coût mobilisation
 CoutPedagogique = Coût pédagogique
 CoutTotal = Coût total
+Prerequis = Prérequis
+FormationsSuperieur = Formations supérieures
+SousDomaine = Sous domaine
+DelaisProgrammation = Délais programmation
 
 
 #
@@ -84,14 +90,18 @@ ValiditeEmployeur = Durée de validité de l'employeur
 #
 # Attribut User Formation
 # 
-DateFormation = Date de la formation
-DateFinFormation = Date de fin de la formation
+DateDebutFormation = Date début
+DateFinFormation = Date de fin
+DateFinValiditeFormation = Fin de validité
+InterneExterne = Effectuée en
+Organisme = Organisme / Formatteur
+Formateur = Organisme / Formateur
 
 
 #
 # Attribut User Habilitation
 # 
-DateHabilitation = Date d'obtention de l'habilitation
+DateDebutFormation = Date d'obtention de l'habilitation
 DateFinHabilitation = Date de fin d'habilitation
 
 

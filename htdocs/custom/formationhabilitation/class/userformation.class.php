@@ -117,15 +117,18 @@ class UserFormation extends CommonObject
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"fk_formation" => array("type"=>"integer:formation:custom/formationhabilitation/class/formation.class.php:0:(t.status:=:1)", "label"=>"Formation", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
 		"fk_user" => array("type"=>"integer:User:user\class\user.class.php:0:(statut:=:1)", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
-		"date_formation" => array("type"=>"date", "label"=>"DateFormation", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1",),
+		"date_debut_formation" => array("type"=>"date", "label"=>"DateDebutFormation", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1",),
+		"date_fin_formation" => array("type"=>"date", "label"=>"DateFinFormation", "enabled"=>"1", 'position'=>39, 'notnull'=>1, "visible"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Expirée", "9" => "Cloturée"), "validate"=>"1",),
-		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"4",),
-		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>41, 'notnull'=>1, "visible"=>"4",),
+		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"4",),
+		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>46, 'notnull'=>1, "visible"=>"4",),
 		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>42, 'notnull'=>1, "visible"=>"4",),
-		"date_fin_formation" => array("type"=>"date", "label"=>"DateFinFormation", "enabled"=>"1", 'position'=>39, 'notnull'=>0, "visible"=>"1",),
-		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"Organisme", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1",),
+		"date_finvalidite_formation" => array("type"=>"date", "label"=>"DateFinValiditeFormation", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
+		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"Organisme", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"numero_certificat" => array("type"=>"varchar(20)", "label"=>"Numéro Certificat", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
-		"type" => array("type"=>"integer", "label"=>"Type", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Inital", "2" => "Recyclage", "3" => "Passerelle"),),
+		"formateur" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Formateur", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
+		"interne_externe" => array("type"=>"integer", "label"=>"InterneExterne", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "default"=>"1", "arrayofkeyval"=>array("1" => "Externe", "2" => "Interne"),),
+		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>1, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -140,15 +143,18 @@ class UserFormation extends CommonObject
 	public $model_pdf;
 	public $fk_formation;
 	public $fk_user;
-	public $date_formation;
+	public $date_debut_formation;
+	public $date_fin_formation;
 	public $status;
 	public $cout_pedagogique;
 	public $cout_mobilisation;
 	public $cout_total;
-	public $date_fin_formation;
+	public $date_finvalidite_formation;
 	public $fk_societe;
 	public $numero_certificat;
-	public $type;
+	public $formateur;
+	public $interne_externe;
+	public $nombre_heure;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -308,16 +314,18 @@ class UserFormation extends CommonObject
 		$sqlwhere = array();
 		if (count($filter) > 0) {
 			foreach ($filter as $key => $value) {
-				if ($key == 't.rowid') {
-					$sqlwhere[] = $key." = ".((int) $value);
-				} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
-					$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
-				} elseif ($key == 'customsql') {
-					$sqlwhere[] = $value;
-				} elseif (strpos($value, '%') === false) {
-					$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
-				} else {
-					$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
+				if($value) {
+					if ($key == 't.rowid') {
+						$sqlwhere[] = $key." = ".((int) $value);
+					} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+						$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
+					} elseif ($key == 'customsql') {
+						$sqlwhere[] = $value;
+					} elseif (strpos($value, '%') === false) {
+						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
+					} else {
+						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
+					}
 				}
 			}
 		}
@@ -842,7 +850,7 @@ class UserFormation extends CommonObject
 		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
 		$sql .= " AND f.periode_souplesse IS NULL";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
-		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY) <= '".$this->db->idate($now)."'";
+		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
 
 		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour + 6 mois => A programmer
 		$sql2 = "SELECT uf.rowid";
@@ -851,7 +859,7 @@ class UserFormation extends CommonObject
 		$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
 		$sql2 .= " AND f.periode_souplesse IS NULL";
 		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY), INTERVAL -6 MONTH) <= '".$this->db->idate($now)."'";
+		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL -6 MONTH) <= '".$this->db->idate($now)."'";
 
 		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
 
@@ -927,7 +935,7 @@ class UserFormation extends CommonObject
 		$sql .= " AND f.periode_souplesse IS NOT NULL";
 		$sql .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY), INTERVAL f.periode_souplesse DAY) <= '".$this->db->idate($now)."'";
+		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse DAY) <= '".$this->db->idate($now)."'";
 
 		// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => A programmer
 		$sql2 = "SELECT uf.rowid";
@@ -937,8 +945,8 @@ class UserFormation extends CommonObject
 		$sql2 .= " AND f.periode_souplesse IS NOT NULL";
 		$sql2 .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
 		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY), INTERVAL f.periode_souplesse DAY) > '".$this->db->idate($now)."'";
-		$sql2 .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY) <= '".$this->db->idate($now)."'";
+		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse DAY) > '".$this->db->idate($now)."'";
+		$sql2 .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
 
 		$resql = $this->db->query($sql);
 		$resql2 = $this->db->query($sql2);
@@ -1013,8 +1021,8 @@ class UserFormation extends CommonObject
 		$sql .= " AND f.periode_souplesse IS NOT NULL";
 		$sql .= " AND f.periode_souplesse_bloquant = 1";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY), INTERVAL f.periode_souplesse DAY) > '".$this->db->idate($now)."'";
-		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage DAY) <= '".$this->db->idate($now)."'";
+		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse DAY) > '".$this->db->idate($now)."'";
+		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
 
 		$resql = $this->db->query($sql);
 
