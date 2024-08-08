@@ -96,29 +96,58 @@ if (empty($dolibarr_nocache)) {
 ?>
 
 $(document).ready(function() {
-	$('#fk_formation').change(function() {
-		var formationId = $(this).val();
-		loadOrganisme(formationId);
+	// Sélectionne tous les inputs dans la table avec l'ID 'tablelinesaddline'
+	$("#tablelinesaddline input, #tablelines tr.tredited input").each(function() {
+		// Vérifie si l'input n'a pas l'attribut 'form'
+		if (!$(this).attr("form")) {
+			// Ajoute l'attribut 'form' avec la valeur 'addline'
+			$(this).attr("form", "addline");
+		}
 	});
 
-	console.log('<?= $action ?>')
+	$('#fk_formation').change(function() {
+		var formationId = $(this).val();
+		loadOrganismeAndDuration(formationId);
+	});
+
+	$('#interne_externe').change(function() {
+		if($('#interne_externe').val() == 2) {
+			$('#formateur').parent().css('display', '');
+			$('#fk_societe').parent().css('display', 'none');
+		}
+		else {
+			$('#fk_societe').parent().css('display', '');
+			$('#formateur').parent().css('display', 'none');
+		}
+	});
+
     var initialFormationId = $('#fk_formation').val();	
+	console.log(initialFormationId);
 	var initialOrganismeId = $('#fk_societe').val();	
-	loadOrganisme(initialFormationId, initialOrganismeId);
+	loadOrganismeAndDuration(initialFormationId, initialOrganismeId, 1);
 });
 
-function loadOrganisme(formationId, organismeId) {
+function loadOrganismeAndDuration(formationId, organismeId, firstLoad) {
 	if (formationId > 0) {
 		$.ajax({
 			type: 'POST',
 			url: '/custom/formationhabilitation/script/getSocieteByFormation.php',
 			data: { formationId: formationId, organismeId: organismeId },
-			success: function(html) {
-				$('#fk_societe').html(html);
+			success: function(response) {
+				var data = JSON.parse(response);
+                $('#fk_societe').html(data.fk_societe);
+				if(!firstLoad) {
+					$('input[name="nombre_heurehour"]').val(data.hour);
+					$('input[name="nombre_heuremin"]').val(data.min);
+				}
 			}
 		});
 	} else {
 		$('#fk_societe').html('<option value="">Sélectionnez une formation</option>');
+		if(!firstLoad) {
+			$('input[name="nombre_heurehour"]').val('');
+			$('input[name="nombre_heuremin"]').val('');
+		}
 	}
 }
 

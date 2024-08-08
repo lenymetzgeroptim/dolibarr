@@ -29,13 +29,18 @@ if (!$res) {
 }
 
 global $langs, $user;
+
 $formationId = $_POST['formationId'];
 $organismeId = $_POST['organismeId'];
+
 $societe = new Societe($db);
+$fk_societe = '';
+$hour = '';
+$min = '';
 
 if ($formationId > 0) {
     // Récupérer les sous-catégories
-    $sql = "SELECT f.fournisseur";
+    $sql = "SELECT f.fournisseur, f.nombre_heure";
     $sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_formation as f";
     $sql .= " WHERE f.rowid = $formationId";
 
@@ -44,16 +49,28 @@ if ($formationId > 0) {
     if ($resql) {
         $obj = $db->fetch_object($resql);
         $fournisseurs = explode(",", $obj->fournisseur);
+        $time = explode(':', convertSecondToTime($obj->nombre_heure, 'allhourmin'));
+        $hour = $time[0];
+        $min = $time[1];
+
         foreach($fournisseurs as $fournisseur_id) {
             $societe->fetch($fournisseur_id);
-            var_dump($formationId);
-            var_dump($organismeId);
-            echo '<option'.($fournisseur_id == $organismeId ? ' selected' : '').' value="' . $societe->id . '">' . $societe->name . '</option>';
+            $fk_societe .= '<option'.($fournisseur_id == $organismeId ? ' selected' : '').' value="' . $societe->id . '">' . $societe->name . '</option>';
         }
     } else {
-        echo '<option value="">Aucun organisme de formation</option>';
+        $fk_societe .= '<option value="">Aucun organisme de formation</option>';
     }
 } else {
-    echo '<option value="">Sélectionnez une formation</option>';
+    $fk_societe .= '<option value="">Sélectionnez une formation</option>';
 }
+
+// Préparer la réponse
+$response = [
+    'fk_societe' => $fk_societe,
+    'hour' => $hour,
+    'min' => $min
+];
+
+echo json_encode($response);
+
 ?>
