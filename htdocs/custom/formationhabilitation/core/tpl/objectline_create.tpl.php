@@ -53,7 +53,7 @@ if ($this->table_element_line == 'formationhabilitation_userautorisation') {
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
-if(count($this->lines) == 0){
+//if(count($this->lines) == 0){
 	print '<tr class="liste_titre nodrag nodrop">';
 	foreach($objectline->fields as $key => $val){
 		if($this->element == 'formation' && $key == 'fk_formation'){
@@ -74,13 +74,16 @@ if(count($this->lines) == 0){
 		if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 			continue;
 		}
+		if($key == 'formateur') {
+			continue;
+		}
 
 		print '<td class="center linecol'.$key.'">'.$langs->trans($val['label']).'</td>';
 	}
 
 	print '<td class=""></td>';
 	print '</tr>';
-}
+//}
 
 if(count($this->lines) == 0){
 	print '<tr class="pair nodrag nodrop nohoverpair">';
@@ -111,7 +114,7 @@ foreach($objectline->fields as $key => $val){
 	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 		continue;
 	}
-	if($key == 'date_fin_formation' || $key == 'date_fin_habilitation' || $key == 'date_fin_autorisation') {
+	if($key == 'date_finvalidite_formation' || $key == 'date_finvalidite_habilitation' || $key == 'date_finvalidite_autorisation') {
 		print '<td class="nobottom linecol'.$key.'">&nbsp;</td>';
 		continue;
 	}
@@ -140,6 +143,8 @@ foreach($objectline->fields as $key => $val){
 		$value = dol_mktime(12, 0, 0, GETPOST($key.'month', 'int'), GETPOST($key.'day', 'int'), GETPOST($key.'year', 'int'));
 	} elseif ($val['type'] == 'datetime') {
 		$value = dol_mktime(GETPOST($key.'hour', 'int'), GETPOST($key.'min', 'int'), 0, GETPOST($key.'month', 'int'), GETPOST($key.'day', 'int'), GETPOST($key.'year', 'int'));
+	} elseif ($val['type'] == 'duration') {
+		$value = convertTime2Seconds(GETPOST($key.'hour', 'int'), GETPOST($key.'min', 'int'), 0);
 	} elseif ($val['type'] == 'boolean') {
 		$value = (GETPOST($key) == 'on' ? 1 : 0);
 	} elseif ($val['type'] == 'price') {
@@ -154,9 +159,14 @@ foreach($objectline->fields as $key => $val){
 		$value = '';
 	}
 
-	print '<td class="center nobottom linecol'.$key.'">'.$objectline->showInputField($val, $key, $value).'</td>';
+	if(($key == 'fk_societe' && GETPOST('interne_externe') == 2) || ($key == 'formateur' && GETPOST('interne_externe') != 2)) {
+		print '<td style="display: none;" class="center nobottom linecol'.$key.'">'.$objectline->showInputField($val, $key, $value, 'form="addline"').'</td>';
+		continue;
+	}
+
+	print '<td class="center nobottom linecol'.$key.'">'.$objectline->showInputField($val, $key, $value, 'form="addline"').'</td>';
 }
 
 print '<td class="nobottom linecoledit center valignmiddle" colspan="3">';
-print '<input type="submit" class="button reposition" value="'.$langs->trans('Add').'" name="addline" id="addline"></td>';
+print '<input type="submit" class="button reposition" value="'.$langs->trans('Add').'" name="addline" id="addline" form="addline"></td>';
 print '</tr>';

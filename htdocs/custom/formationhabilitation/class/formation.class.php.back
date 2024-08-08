@@ -114,7 +114,7 @@ class Formation extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"5", "default"=>"0", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Actif", "2" => "Cloturée"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"5", "default"=>"0", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Active", "2" => "Cloturée"), "validate"=>"1",),
 		"type" => array("type"=>"integer", "label"=>"Type", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Formation Habilitante", "2" => "Formation qui donne une autorisation"),),
 		"ref_externe" => array("type"=>"varchar(128)", "label"=>"RefExterne", "enabled"=>"1", 'position'=>21, 'notnull'=>0, "visible"=>"1",),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
@@ -951,24 +951,10 @@ class Formation extends CommonObject
 	 */
 	public function getLinesArray()
 	{
-		global $sortorder, $sortfield, $search, $limit, $offset;
-		$objectline = new UserFormation($this->db);
-
-		$filters = array_merge(array('fk_formation' => $this->id), $search);
-		foreach($objectline as $key => $val) {
-			if ($key == 'status' && $filters[$key] == -1) {
-				unset($filters[$key]);
-			}
-			if ((strpos($objectline->fields[$key]['type'], 'integer:') === 0) || (strpos($objectline->fields[$key]['type'], 'sellist:') === 0) || !empty($objectline->fields[$key]['arrayofkeyval'])) {
-				if ($search[$key] == '-1' || ($search[$key] === '0' && (empty($objectline->fields[$key]['arrayofkeyval']) || !array_key_exists('0', $objectline->fields[$key]['arrayofkeyval'])))) {
-					unset($filters[$key]);
-				}
-			}
-		}
-
 		$this->lines = array();
 
-		$result = $objectline->fetchAll($sortorder, $sortfield, $limit + 1, $offset, $filters);
+		$objectline = new UserFormation($this->db);
+		$result = $objectline->fetchAll('ASC', 'rowid', 0, 0, array('customsql'=>'fk_formation = '.((int) $this->id)));
 
 		if (is_numeric($result)) {
 			$this->error = $objectline->error;

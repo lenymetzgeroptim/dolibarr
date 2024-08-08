@@ -96,9 +96,26 @@ $backtopage = GETPOST('backtopage', 'alpha');
 $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');
 $lineid   = GETPOST('lineid', 'int');
 
+// Load variable for pagination
+$limit = GETPOST('limit', 'int') ? GETPOST('limit', 'int') : $conf->liste_limit;
+$sortfield = GETPOST('sortfield', 'aZ09comma');
+$sortorder = GETPOST('sortorder', 'aZ09comma');
+$page = GETPOSTISSET('pageplusone') ? (GETPOST('pageplusone') - 1) : GETPOST("page", 'int');
+if (empty($page) || $page < 0 || GETPOST('button_search', 'alpha') || GETPOST('button_removefilter', 'alpha')) {
+	// If $page is not defined, or '' or -1 or if we click on clear filters
+	$page = 0;
+}
+$offset = $limit * $page;
+$pageprev = $page - 1;
+$pagenext = $page + 1;
+
 // Initialize technical objects
 $object = new Formation($db);
+$objectline = new UserFormation($db);
 $extrafields = new ExtraFields($db);
+$form = new Form($db);
+$formfile = new FormFile($db);
+$formproject = new FormProjets($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array('formationcard', 'globalcard')); // Note that conf->hooks_modules contains array
 
@@ -107,14 +124,90 @@ $extrafields->fetch_name_optionals_label($object->table_element);
 
 $search_array_options = $extrafields->getOptionalsFromPost($object->table_element, '', 'search_');
 
+// Default sort order (if not yet defined by previous GETPOST)
+if (!$sortfield) {
+	reset($object->fields);					// Reset is required to avoid key() to return null.
+	$sortfield = "t.".key($object->fields); // Set here default search field. By default 1st field in definition.
+}
+if (!$sortorder) {
+	$sortorder = "ASC";
+}
+
 // Initialize array of search criterias
-$search_all = GETPOST("search_all", 'alpha');
+$search_all = GETPOST('search_all', 'alphanohtml');
 $search = array();
-foreach ($object->fields as $key => $val) {
-	if (GETPOST('search_'.$key, 'alpha')) {
+foreach ($objectline->fields as $key => $val) {
+	if (GETPOST('search_'.$key, 'alpha') !== '') {
 		$search[$key] = GETPOST('search_'.$key, 'alpha');
 	}
+	if (preg_match('/^(date|timestamp|datetime)/', $val['type'])) {
+		$search[$key.'_dtstart'] = dol_mktime(0, 0, 0, GETPOST('search_'.$key.'_dtstartmonth', 'int'), GETPOST('search_'.$key.'_dtstartday', 'int'), GETPOST('search_'.$key.'_dtstartyear', 'int'));
+		$search[$key.'_dtend'] = dol_mktime(23, 59, 59, GETPOST('search_'.$key.'_dtendmonth', 'int'), GETPOST('search_'.$key.'_dtendday', 'int'), GETPOST('search_'.$key.'_dtendyear', 'int'));
+	}
 }
+
+foreach($objectline as $key => $val) {
+	if ($key == 'status' && $filters[$key] == -1) {
+		$search[$key] = '';
+	}
+	if ((strpos($objectline->fields[$key]['type'], 'integer:') === 0) || (strpos($objectline->fields[$key]['type'], 'sellist:') === 0) || !empty($objectline->fields[$key]['arrayofkeyval'])) {
+		if ($search[$key] == '-1' || ($search[$key] === '0' && (empty($objectline->fields[$key]['arrayofkeyval']) || !array_key_exists('0', $objectline->fields[$key]['arrayofkeyval'])))) {
+			$search[$key] = '';
+		}
+	}
+}
+
+// List of fields to search into when doing a "search in all"
+$fieldstosearchall = array();
+foreach ($objectline->fields as $key => $val) {
+	if (!empty($val['searchall'])) {
+		$fieldstosearchall['t.'.$key] = $val['label'];
+	}
+}
+
+// Definition of array of fields for columns
+$arrayfields = array();
+foreach ($objectline->fields as $key => $val) {
+	// If $val['visible']==0, then we never show the field
+	if (!empty($val['visible'])) {
+		$visible = (int) dol_eval($val['visible'], 1);
+		$arrayfields['t.'.$key] = array(
+			'label'=>$val['label'],
+			'checked'=>(($visible < 0) ? 0 : 1),
+			'enabled'=>($visible != 3 && dol_eval($val['enabled'], 1)),
+			'position'=>$val['position'],
+			'help'=> isset($val['help']) ? $val['help'] : ''
+		);
+	}
+}
+// Extra fields
+include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
+
+// Param
+$param = '';
+if (!empty($id)) {
+	$param .= '&id='.urlencode($id);
+}
+if (!empty($contextpage) && $contextpage != $_SERVER["PHP_SELF"]) {
+	$param .= '&contextpage='.urlencode($contextpage);
+}
+if ($limit > 0 && $limit != $conf->liste_limit) {
+	$param .= '&limit='.urlencode($limit);
+}
+foreach ($search as $key => $val) {
+	if (is_array($search[$key]) && count($search[$key])) {
+		foreach ($search[$key] as $skey) {
+			if ($skey != '') {
+				$param .= '&search_'.$key.'[]='.urlencode($skey);
+			}
+		}
+	} elseif ($search[$key] != '') {
+		$param .= '&search_'.$key.'='.urlencode($search[$key]);
+	}
+}
+// Add $param from extra fields
+include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
+
 
 if (empty($action) && empty($id) && empty($ref)) {
 	$action = 'view';
@@ -159,6 +252,16 @@ if (!$permissiontoread) accessforbidden();
  * Actions
  */
 
+if(GETPOST('fk_formation') > 0) {
+	$formation_static = new Formation($db);
+	$formation_static->fetch(GETPOST('fk_formation'));
+}
+
+if(GETPOST('fk_user') > 0) {
+	$user_static = new User($db);
+	$user_static->fetch(GETPOST('fk_user'));
+}
+
 $parameters = array();
 $reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
 if ($reshook < 0) {
@@ -180,7 +283,26 @@ if (empty($reshook)) {
 		}
 	}
 
+	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) { // All tests are required to be compatible with all browsers
+		foreach ($objectline->fields as $key => $val) {
+			$search[$key] = '';
+			if (preg_match('/^(date|timestamp|datetime)/', $val['type'])) {
+				$search[$key.'_dtstart'] = '';
+				$search[$key.'_dtend'] = '';
+			}
+		}
+		$toselect = array();
+		$search_array_options = array();
+	}
+	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')
+		|| GETPOST('button_search_x', 'alpha') || GETPOST('button_search.x', 'alpha') || GETPOST('button_search', 'alpha')) {
+		$massaction = ''; // Protection to avoid mass action if we force a new search during a mass action confirmation
+	}
+
 	$triggermodname = 'FORMATIONHABILITATION_FORMATION_MODIFY'; // Name of trigger action code to execute when we modify record
+
+	// Selection of new fields
+	include DOL_DOCUMENT_ROOT.'/core/actions_changeselectedfields.inc.php';
 
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
@@ -196,6 +318,8 @@ if (empty($reshook)) {
 
 	// Action to build doc
 	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
+
+	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userformation.inc.php';
 
 	if ($action == 'set_thirdparty' && $permissiontoadd) {
 		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
@@ -215,147 +339,49 @@ if (empty($reshook)) {
 		$action = '';
 	}
 
-	if($action == 'updateline' && !$cancel && $permissiontoaddline){
-		if($lineid > 0 && $id > 0){
-			$objectline = new UserFormation($db);
-			$objectline->fetch($lineid);
+	// if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permissiontoaddline){
+	// 	if($lineid > 0 && $id > 0){
+	// 		$objectline = new UserFormation($db);
 
+	// 		if (empty(GETPOST("date_formation_programmermonth", 'int')) || empty(GETPOST("date_formation_programmerday", 'int')) || empty(GETPOST("date_formation_programmeryear", 'int'))) {
+	// 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFormation")), null, 'errors');
+	// 			$error++;
+	// 		}
+	// 		$date = dol_mktime(-1, -1, -1, GETPOST("date_formation_programmermonth", 'int'), GETPOST("date_formation_programmerday", 'int'), GETPOST("date_formation_programmeryear", 'int'));
 
-			if (empty(GETPOST("date_formationmonth", 'int')) || empty(GETPOST("date_formationday", 'int')) || empty(GETPOST("date_formationyear", 'int'))) {
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFormation")), null, 'errors');
-				$error++;
-			}
-			$date = dol_mktime(-1, -1, -1, GETPOST("date_formationmonth", 'int'), GETPOST("date_formationday", 'int'), GETPOST("date_formationyear", 'int'));
+	// 		if (!$error) {
+	// 			$objectline->fetch($lineid);
+	// 			$objectline->status = UserFormation::STATUS_CLOTUREE;
+	// 			$result == $objectline->update($user);
+	// 			$userid = $objectline->fk_user; 
 
-			if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-				$error++;
-			}
+	// 			$user_static = new User($db);
+	// 			$user_static->fetch($userid);
 
-			if (!$error) {
-				$user_static = new User($db);
-				$user_static->fetch(GETPOST('fk_user'));
+	// 			$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
+	// 			$objectline->fk_formation = $id;
+	// 			$objectline->fk_user = $userid;
+	// 			$objectline->date_formation = $date;
+	// 			$objectline->status = UserFormation::STATUS_PROGRAMMEE;
+	// 			$objectline->cout_pedagogique = $object->cout;
+    //             $objectline->cout_mobilisation = $user_static->thm * ($object->nombre_heure / 3600);
+    //             $objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
 
-				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
-				$objectline->date_formation = $date;
-				$objectline->date_fin_formation = ($object->periode_recyclage > 0 ? dol_time_plus_duree($date, $object->periode_recyclage, 'd') : '');
-				$objectline->status = GETPOST('status');
+	// 			$result = $objectline->create($user);
+	// 		}
 
-				$result = $objectline->update($user);
-			}
-
-			if(!$error && $result){
-				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			}
-			elseif(!$result){
-				setEventMessages($langs->trans($object->error), null, 'errors');
-			}
-		}
-		else {
-			$langs->load("errors");
-			setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-		}
-	}
-
-	if($action == 'addline' && $permissiontoaddline){
-		if($id > 0){
-			$objectline = new UserFormation($db);
-
-			if(!(GETPOST('fk_user') > 0)){
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("User")), null, 'errors');
-				$error++;
-			}
-
-			if (empty(GETPOST("date_formationmonth", 'int')) || empty(GETPOST("date_formationday", 'int')) || empty(GETPOST("date_formationyear", 'int'))) {
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFormation")), null, 'errors');
-				$error++;
-			}
-			$date = dol_mktime(-1, -1, -1, GETPOST("date_formationmonth", 'int'), GETPOST("date_formationday", 'int'), GETPOST("date_formationyear", 'int'));
-
-			if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-				$error++;
-			}
-
-			if($objectline->getID($object->id, GETPOST('fk_user')) > 0){
-				setEventMessages("Impossible d'ajouter cet utilisateur car il est déja affecté à la formation", null, 'errors');
-				$error++;
-			}
-
-			if (!$error) {
-				$user_static = new User($db);
-				$user_static->fetch(GETPOST('fk_user'));
-				$mois = (strlen(GETPOST("date_formationmonth", 'int')) < 2 ? '0'.GETPOST("date_formationmonth", 'int') : GETPOST("date_formationmonth", 'int'));
-
-				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
-				$objectline->fk_formation = $id;
-				$objectline->fk_user = GETPOST('fk_user');
-				$objectline->date_formation = $date;
-				$objectline->date_fin_formation = ($object->periode_recyclage > 0 ? dol_time_plus_duree($date, $object->periode_recyclage, 'd') : '');
-				$objectline->status = GETPOST('status');
-				$objectline->cout_pedagogique = $object->cout;
-                $objectline->cout_mobilisation = $user_static->thm * ($object->nombre_heure / 3600);
-                $objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
-
-				$result = $objectline->create($user);
-			}
-
-			if(!$error && $result){
-				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			}
-			elseif(!$result){
-				setEventMessages($langs->trans($object->error), null, 'errors');
-			}
-		}
-		else {
-			$langs->load("errors");
-			setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-		}
-	}
-
-	if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permissiontoaddline){
-		if($lineid > 0 && $id > 0){
-			$objectline = new UserFormation($db);
-
-			if (empty(GETPOST("date_formation_programmermonth", 'int')) || empty(GETPOST("date_formation_programmerday", 'int')) || empty(GETPOST("date_formation_programmeryear", 'int'))) {
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFormation")), null, 'errors');
-				$error++;
-			}
-			$date = dol_mktime(-1, -1, -1, GETPOST("date_formation_programmermonth", 'int'), GETPOST("date_formation_programmerday", 'int'), GETPOST("date_formation_programmeryear", 'int'));
-
-			if (!$error) {
-				$objectline->fetch($lineid);
-				$objectline->status = UserFormation::STATUS_CLOTUREE;
-				$result == $objectline->update($user);
-				$userid = $objectline->fk_user; 
-
-				$user_static = new User($db);
-				$user_static->fetch($userid);
-
-				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
-				$objectline->fk_formation = $id;
-				$objectline->fk_user = $userid;
-				$objectline->date_formation = $date;
-				$objectline->status = UserFormation::STATUS_PROGRAMMEE;
-				$objectline->cout_pedagogique = $object->cout;
-                $objectline->cout_mobilisation = $user_static->thm * ($object->nombre_heure / 3600);
-                $objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
-
-				$result = $objectline->create($user);
-			}
-
-			if(!$error && $result){
-				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			}
-			elseif(!$result){
-				setEventMessages($langs->trans($object->error), null, 'errors');
-			}
-		}
-		else {
-			$langs->load("errors");
-			setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-		}
-	}
+	// 		if(!$error && $result){
+	// 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+	// 		}
+	// 		elseif(!$result){
+	// 			setEventMessages($langs->trans($object->error), null, 'errors');
+	// 		}
+	// 	}
+	// 	else {
+	// 		$langs->load("errors");
+	// 		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+	// 	}
+	// }
 
 	// Actions to send emails
 	$triggersendname = 'FORMATIONHABILITATION_FORMATION_SENTBYMAIL';
@@ -365,16 +391,11 @@ if (empty($reshook)) {
 }
 
 
-
 /*
  * View
  *
  * Put here all code to build page
  */
-
-$form = new Form($db);
-$formfile = new FormFile($db);
-$formproject = new FormProjets($db);
 
 $title = $langs->trans("Formation");
 $help_url = '';
@@ -586,49 +607,88 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// Show object lines
 		$result = $object->getLinesArray();
 
+		$varpage = empty($contextpage) ? $_SERVER["PHP_SELF"] : $contextpage;
+		$selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
+		$selectedfields .= $form->showCheckAddButtons('checkforselect', 1);
+
+		// Count total nb of records
+		$nbtotalofrecords = '';
+		if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
+			$sqlforcount = 'SELECT COUNT(*) as nbtotalofrecords FROM '.MAIN_DB_PREFIX.'formationhabilitation_userformation WHERE fk_formation = '.$object->id;
+			$resql = $db->query($sqlforcount);
+			$objforcount = $db->fetch_object($resql);
+			$nbtotalofrecords = $objforcount->nbtotalofrecords;
+			if (($page * $limit) > $nbtotalofrecords) {	// if total of record found is smaller than page * limit, goto and load page 0
+				$page = 0;
+				$offset = 0;
+			}
+			$db->free($resql);
+		}
+
 		if ($action == 'editline') {
 			print '<br><br><br>';
 		}
 
-		print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+		// Formulaire pour créer une ligne. Il est avant le contenu car impossible de mettre un form dans un autre form => Permet de gérer la recherche et la création sur la même page
+		print '<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
 		<input type="hidden" name="token" value="' . newToken().'">
-		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
 		<input type="hidden" name="mode" value="">
 		<input type="hidden" name="page_y" value="">
+		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
+		<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">
+		<input type="hidden" name="id" value="' . $object->id.'">
+		<input type="hidden" id="fk_formation" name="fk_formation" value="' . $object->id.'">';
+		print "</form>\n";
+
+		// Formulaire pour la recherche
+		print '	<form name="searchline" id="searchline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+		<input type="hidden" name="token" value="' . newToken().'">
+		<input type="hidden" name="mode" value="">
+		<input type="hidden" name="page_y" value="">
+		<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">
 		<input type="hidden" name="id" value="' . $object->id.'">';
 
-		if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
-			include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
-		}
+		$title = $langs->trans('ListOfs', $langs->transnoentitiesnoconv("UserFormation"));
+		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', sizeof($object->lines), $nbtotalofrecords, 'fa-graduation-cap_fas_#1f3d89', 0, '', '', $limit, 0, 0, 1);
 
 		print '<div class="div-table-responsive-no-min">';
+
+			print '<table id="tablelinesaddline" class="noborder noshadow" width="100%">';
+			// Form to add new line
+			if ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines') {
+				if ($action != 'editline') {
+					// Add products/services form
+					$parameters = array();
+					$reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
+					if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+					if (empty($reshook)){
+						$object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
+					}
+				}
+			}
+			print '</table>';
+
 		if (!empty($object->lines) || ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
 			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 		}
 
-		if (!empty($object->lines)) {
-			$nbline = 0;
-			$object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-		}
+			print "<thead>";
+				include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_filter.tpl.php';
+			print "</thead>\n";
 
-		// Form to add new line
-		if ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines') {
-			if ($action != 'editline') {
-				// Add products/services form
-				$parameters = array();
-				$reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-				if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-				if (empty($reshook)){
-					$object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-				}
+			if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
+				include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
 			}
-		}
+			
+			if (!empty($object->lines)) {
+				$nbline = 0;
+				$object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
+			}
 
 		if (!empty($object->lines) || ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
 			print '</table>';
 		}
 		print '</div>';
-
 		print "</form>\n";
 	}
 

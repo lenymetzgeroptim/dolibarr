@@ -33,7 +33,7 @@
  * $type, $text, $description, $line
  */
 
-global $sortfield, $sortorder, $permissiontoreadCout;
+global $sortfield, $sortorder, $permissiontoreadCout, $selectedfields, $arrayfields;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -56,7 +56,6 @@ $objectline->fields = dol_sort_array($objectline->fields, 'position');
 print "<!-- BEGIN PHP TEMPLATE objectline_title.tpl.php -->\n";
 
 // Title line
-print "<thead>\n";
 print '<tr class="liste_titre nodrag nodrop">';
 
 foreach($objectline->fields as $key => $val){
@@ -78,18 +77,22 @@ foreach($objectline->fields as $key => $val){
 	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 		continue;
 	}
+	if($key == 'formateur') {
+		continue;
+	}
 
 	//print '<td class="linecol'.$key.'">'.$langs->trans($val['label']).'</td>';
-	$cssforfield = "center";
-	print getTitleFieldOfList($val['label'], 0, $_SERVER['PHP_SELF'], $key, '', 'id='.$this->id, ($cssforfield ? 'class="'.$cssforfield.'"' : ''), $sortfield, $sortorder, ($cssforfield ? $cssforfield.' ' : ''))."\n";
-
+	if (!empty($arrayfields['t.'.$key]['checked']) || $action == 'editline') {
+		$cssforfield = "center";
+		print getTitleFieldOfList($val['label'], 0, $_SERVER['PHP_SELF'], $key, '', 'id='.$this->id, ($cssforfield ? 'class="'.$cssforfield.'"' : ''), $sortfield, $sortorder, ($cssforfield ? $cssforfield.' ' : ''))."\n";
+	}
 }
 
 // print '<th class="linecolmove" style="width: 10px"></th>';
-print '<th class="linecoledit"></th>'; 
-print '<th class="linecoldelete"></th>';
+// print '<th class="liste_titre linecoledit"></th>'; 
+print '<th class="liste_titre linecoldelete"></th>';
+print getTitleFieldOfList($selectedfields, 0, $_SERVER["PHP_SELF"], '', '', '', 'class="center"', $sortfield, $sortorder, 'center maxwidthsearch ')."\n";
 
 print "</tr>\n";
-print "</thead>\n";
 
 print "<!-- END PHP TEMPLATE objectline_title.tpl.php -->\n";

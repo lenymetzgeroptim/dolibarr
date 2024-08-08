@@ -75,6 +75,11 @@ foreach($objectline->fields as $key => $val){
 	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 		continue;
 	}
+
+	if(($key == 'fk_societe' && $line->interne_externe == 2) || ($key == 'formateur' &&$line->interne_externe != 2)) {
+		print '<td style="display: none;" class="center linecol'.$key.' nowrap">'.$objectline->showInputField($val, $key, $line->$key, 'form="addline"').'</td>';
+		continue;
+	}
 	
 	print '<td class="center linecol'.$key.' nowrap">';
 	if($key == 'ref'){
@@ -82,22 +87,23 @@ foreach($objectline->fields as $key => $val){
 	}
 	elseif($this->element == 'formation' && $key == 'fk_user'){
 		print $line->showOutputField($val, $key, $line->$key);
+		print '<input type="hidden" id="'.$key.'" name="'.$key.'" value="'.$line->$key.'"></input>';
 	}
 	elseif($this->element == 'user' && ($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation')){
 		print $line->showOutputField($val, $key, $line->$key);
 		print '<input type="hidden" id="'.$key.'" name="'.$key.'" value="'.$line->$key.'"></input>';
 	}
-	elseif($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total' || $key == 'date_fin_formation' || $key == 'date_fin_habilitation' || $key == 'date_fin_autorisation'){
+	elseif($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total' || $key == 'date_finvalidite_formation' || $key == 'date_fin_habilitation' || $key == 'date_fin_autorisation'){
 		print $line->showOutputField($val, $key, $line->$key);
 	}
 	else {
-		print $line->showInputField($val, $key, $line->$key);
+		print $line->showInputField($val, $key, $line->$key, 'form="addline"');
 	}
 	print '</td>';
 }
 
 print '<td class="center valignmiddle" colspan="2">';
-print '<input type="submit" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save" value="'.$langs->trans("Save").'">';
+print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save" value="'.$langs->trans("Save").'">';
 print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
 print '</td>';
 

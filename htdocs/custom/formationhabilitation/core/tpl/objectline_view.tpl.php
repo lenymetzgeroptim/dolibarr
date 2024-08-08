@@ -38,7 +38,7 @@
  * $text, $description, $line
  */
 
-global $permissiontoreadCout, $permissiontoaddline;
+global $permissiontoreadCout, $permissiontoaddline, $arrayfields;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -85,21 +85,31 @@ foreach($objectline->fields as $key => $val){
 	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 		continue;
 	}
+	if($key == 'formateur') {
+		continue;
+	}
 
-	print '<td class="center linecol'.$key.' nowrap">';
-	if($key == 'status'){
-		print $line->getLibStatut(2);
-		// if($line->status == UserFormation::STATUS_A_PROGRAMMER) {
-		// 	print dolGetButtonAction($langs->trans('Programmer'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=programmer_formation&token='.newToken().'&lineid='.$line->id, '', $permissiontoaddline);
+	if (!empty($arrayfields['t.'.$key]['checked']) || $action == 'editline') {
+		print '<td class="center linecol'.$key.' nowrap">';
+		if($key == 'fk_societe' && $line->interne_externe == 2){
+			$key = 'formateur';
+			$val = $objectline->fields[$key];
+			print $line->showOutputField($val, $key, $line->$key);
+		}
+		elseif($key == 'status'){
+			print $line->getLibStatut(2);
+			// if($line->status == UserFormation::STATUS_A_PROGRAMMER) {
+			// 	print dolGetButtonAction($langs->trans('Programmer'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=programmer_formation&token='.newToken().'&lineid='.$line->id, '', $permissiontoaddline);
+			// }
+		}
+		// elseif($key == 'ref'){
+		// 	print $line->getNomUrl(0, 'nolink', 1);
 		// }
+		else {
+			print $line->showOutputField($val, $key, $line->$key);
+		}
+		print '</td>';
 	}
-	// elseif($key == 'ref'){
-	// 	print $line->getNomUrl(0, 'nolink', 1);
-	// }
-	else {
-		print $line->showOutputField($val, $key, $line->$key);
-	}
-	print '</td>';
 }
 
 if(($this->element == 'user' && (empty(GETPOST('onglet', 'aZ09')) || GETPOST('onglet', 'aZ09') == 'formation')) || $this->element == 'formation'){
