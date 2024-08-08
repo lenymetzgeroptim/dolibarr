@@ -172,7 +172,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 			setEventMessages($langs->trans($objectline->error), null, 'errors');
 		}
 		elseif($error) {
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&onglet='.$onglet.'&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int'));
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int'));
 			exit;
 		}
 	}

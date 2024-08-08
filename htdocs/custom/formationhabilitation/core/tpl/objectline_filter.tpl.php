@@ -103,7 +103,7 @@ foreach($objectline->fields as $key => $val){
 	}
 }
 
-print '<td colspan="2" class="liste_titre center maxwidthsearch">';
+print '<td colspan="3" class="liste_titre center maxwidthsearch">';
 	$searchpicto = $form->showFilterButtons();
 	print $searchpicto;
 print '</td>';

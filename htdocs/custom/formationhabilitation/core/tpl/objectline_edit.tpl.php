@@ -102,7 +102,7 @@ foreach($objectline->fields as $key => $val){
 	print '</td>';
 }
 
-print '<td class="center valignmiddle" colspan="2">';
+print '<td class="center valignmiddle" colspan="3">';
 print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save" value="'.$langs->trans("Save").'">';
 print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
 print '</td>';

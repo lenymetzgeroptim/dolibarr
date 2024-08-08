@@ -38,7 +38,7 @@
  * $text, $description, $line
  */
 
-global $permissiontoreadCout, $permissiontoaddline, $arrayfields;
+global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -124,7 +124,7 @@ if(($this->element == 'user' && (empty(GETPOST('onglet', 'aZ09')) || GETPOST('on
 
 print '</td>';
 
-print '<td class="linecoledit right">';
+print '<td class="linecoledit center">';
 if (empty($disableedit)) {
 	if($this->element == 'user'){
 		$url = $_SERVER["PHP_SELF"].'?id='.$this->id.'&action=editline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
@@ -137,7 +137,7 @@ if (empty($disableedit)) {
 }
 print '</td>';
 
-print '<td class="linecoldelete left">';
+print '<td class="linecoldelete center">';
 if (empty($disableremove)) { 
 	if($this->element == 'user'){
 		$url = $_SERVER["PHP_SELF"].'?id='.$this->id.'&action=deleteline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id;
@@ -148,6 +148,16 @@ if (empty($disableremove)) {
 	print '<a class="reposition" href="'.$url.'">';
 	print img_delete();
 	print '</a>';
+}
+print '</td>';
+
+print '<td class="nowrap center">';
+if ($massactionbutton || $massaction) { // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
+	$selected = 0;
+	if (in_array($line->id, $arrayofselected)) {
+		$selected = 1;
+	}
+	print '<input id="cb'.$line->id.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$line->id.'"'.($selected ? ' checked="checked"' : '').'>';
 }
 print '</td>';
 

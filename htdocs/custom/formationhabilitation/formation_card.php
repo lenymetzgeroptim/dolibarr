@@ -89,12 +89,14 @@ $langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"))
 $id = GETPOST('id', 'int');
 $ref = GETPOST('ref', 'alpha');
 $action = GETPOST('action', 'aZ09');
+$massaction = GETPOST('massaction', 'alpha'); // The bulk action (combo box choice into lists)
 $confirm = GETPOST('confirm', 'alpha');
 $cancel = GETPOST('cancel', 'aZ09');
 $contextpage = GETPOST('contextpage', 'aZ') ? GETPOST('contextpage', 'aZ') : 'formationcard'; // To manage different context of search
 $backtopage = GETPOST('backtopage', 'alpha');
 $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');
 $lineid   = GETPOST('lineid', 'int');
+$toselect   = GETPOST('toselect', 'array'); // Array of ids of elements selected into a list
 
 // Load variable for pagination
 $limit = GETPOST('limit', 'int') ? GETPOST('limit', 'int') : $conf->liste_limit;
@@ -252,6 +254,14 @@ if (!$permissiontoread) accessforbidden();
  * Actions
  */
 
+if (GETPOST('cancel', 'alpha')) {
+$action = 'list';
+$massaction = '';
+}
+if (!GETPOST('confirmmassaction', 'alpha') && $massaction != 'presend' && $massaction != 'confirm_presend') {
+$massaction = '';
+}
+
 if(GETPOST('fk_formation') > 0) {
 	$formation_static = new Formation($db);
 	$formation_static->fetch(GETPOST('fk_formation'));
@@ -388,6 +398,12 @@ if (empty($reshook)) {
 	$autocopy = 'MAIN_MAIL_AUTOCOPY_FORMATION_TO';
 	$trackid = 'formation'.$object->id;
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
+
+	// Mass actions
+	$objectclass = 'UserFormation';
+	$objectlabel = 'UserFormation';
+	$uploaddir = $conf->formationhabilitation->dir_output;
+	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/actions_massactions.inc.php';
 }
 
 
@@ -603,13 +619,30 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	 * Lines
 	 */
 
-	if (!empty($object->table_element_line)) {
+	if (!empty($object->table_element_line) && $object->status != $object::STATUS_CONSTRUCTION) {
 		// Show object lines
 		$result = $object->getLinesArray();
 
+		// List of mass actions available
+		$arrayofmassactions = array(
+			//'validate'=>img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("Validate"),
+			//'generate_doc'=>img_picto('', 'pdf', 'class="pictofixedwidth"').$langs->trans("ReGeneratePDF"),
+			//'builddoc'=>img_picto('', 'pdf', 'class="pictofixedwidth"').$langs->trans("PDFMerge"),
+			//'presend'=>img_picto('', 'email', 'class="pictofixedwidth"').$langs->trans("SendByMail"),
+		);
+		if ($permissiontodelete) {
+			$arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"').$langs->trans("Delete");
+		}
+		if (GETPOST('nomassaction', 'int') || in_array($massaction, array('presend', 'predelete'))) {
+			$arrayofmassactions = array();
+		}
+		$massactionbutton = $form->selectMassAction('', $arrayofmassactions);
+
+		$arrayofselected = is_array($toselect) ? $toselect : array();
+
 		$varpage = empty($contextpage) ? $_SERVER["PHP_SELF"] : $contextpage;
 		$selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
-		$selectedfields .= $form->showCheckAddButtons('checkforselect', 1);
+		$selectedfields .= (count($arrayofmassactions) ? $form->showCheckAddButtons('checkforselect', 1) : '');
 
 		// Count total nb of records
 		$nbtotalofrecords = '';
@@ -648,29 +681,35 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">
 		<input type="hidden" name="id" value="' . $object->id.'">';
 
+		// Add code for pre mass action (confirmation or email presend form)
+		$topicmail = "SendUserFormationRef";
+		$modelmail = "UserFormation";
+		$objecttmp = new UserFormation($db);
+		$trackid = 'xxxx'.$object->id;
+		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/massactions_pre.tpl.php';
+
 		$title = $langs->trans('ListOfs', $langs->transnoentitiesnoconv("UserFormation"));
-		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', sizeof($object->lines), $nbtotalofrecords, 'fa-graduation-cap_fas_#1f3d89', 0, '', '', $limit, 0, 0, 1);
+		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($object->lines), $nbtotalofrecords, 'fa-graduation-cap_fas_#1f3d89', 0, '', '', $limit, 0, 0, 1);
 
 		print '<div class="div-table-responsive-no-min">';
 
-			print '<table id="tablelinesaddline" class="noborder noshadow" width="100%">';
-			// Form to add new line
-			if ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines') {
-				if ($action != 'editline') {
-					// Add products/services form
-					$parameters = array();
-					$reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-					if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-					if (empty($reshook)){
-						$object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-					}
+		print '<table id="tablelinesaddline" class="noborder noshadow" width="100%">';
+		// Form to add new line
+		if ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines') {
+			if ($action != 'editline') {
+				// Add products/services form
+				$parameters = array();
+				$reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
+				if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+				if (empty($reshook)){
+					$object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
 				}
 			}
-			print '</table>';
-
-		if (!empty($object->lines) || ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 		}
+		print '</table>';
+
+		if (!empty($object->lines)) {
+			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 
 			print "<thead>";
 				include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_filter.tpl.php';
@@ -685,9 +724,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				$object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
 			}
 
-		if (!empty($object->lines) || ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
 			print '</table>';
 		}
+
 		print '</div>';
 		print "</form>\n";
 	}

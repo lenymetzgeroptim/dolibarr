@@ -90,8 +90,8 @@ foreach($objectline->fields as $key => $val){
 
 // print '<th class="linecolmove" style="width: 10px"></th>';
 // print '<th class="liste_titre linecoledit"></th>'; 
-print '<th class="liste_titre linecoldelete"></th>';
-print getTitleFieldOfList($selectedfields, 0, $_SERVER["PHP_SELF"], '', '', '', 'class="center"', $sortfield, $sortorder, 'center maxwidthsearch ')."\n";
+// print '<th class="liste_titre linecoldelete"></th>';
+print getTitleFieldOfList($selectedfields, 0, $_SERVER["PHP_SELF"], '', '', '', 'class="center" colspan="3"', $sortfield, $sortorder, 'center maxwidthsearch ')."\n";
 
 print "</tr>\n";
 
