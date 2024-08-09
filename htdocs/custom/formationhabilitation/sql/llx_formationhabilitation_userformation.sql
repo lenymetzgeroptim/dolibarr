@@ -40,6 +40,7 @@ CREATE TABLE llx_formationhabilitation_userformation(
 	numero_certificat varchar(20), 
 	formateur integer, 
 	interne_externe integer DEFAULT 1 NOT NULL, 
-	nombre_heure integer NOT NULL
+	nombre_heure integer NOT NULL, 
+	resultat integer NOT NULL
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

@@ -129,6 +129,7 @@ class UserFormation extends CommonObject
 		"formateur" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Formateur", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"interne_externe" => array("type"=>"integer", "label"=>"InterneExterne", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "default"=>"1", "arrayofkeyval"=>array("1" => "Externe", "2" => "Interne"),),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>1, "visible"=>"1",),
+		"resultat" => array("type"=>"integer", "label"=>"Résultat", "enabled"=>"1", 'position'=>55, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Non défini", "2" => "Satisfaisant", "3" => "Non satisfaisant"),),
 	);
 	public $rowid;
 	public $ref;
@@ -155,6 +156,7 @@ class UserFormation extends CommonObject
 	public $formateur;
 	public $interne_externe;
 	public $nombre_heure;
+	public $resultat;
 	// END MODULEBUILDER PROPERTIES
 
 
