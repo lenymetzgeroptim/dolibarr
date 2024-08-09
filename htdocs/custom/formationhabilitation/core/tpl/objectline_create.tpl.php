@@ -33,7 +33,7 @@
  * $inputalsopricewithtax (0 by default, 1 to also show column with unit price including tax)
  */
 
- global $permissiontoreadCout, $action, $resultcreate, $cancel, $resultupdate;
+ global $permissiontoreadCout, $action, $resultcreate, $cancel, $resultupdate, $object;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -56,16 +56,16 @@ $objectline->fields = dol_sort_array($objectline->fields, 'position');
 //if(count($this->lines) == 0){
 	print '<tr class="liste_titre nodrag nodrop">';
 	foreach($objectline->fields as $key => $val){
-		if($this->element == 'formation' && $key == 'fk_formation'){
+		if($object->element == 'formation' && $key == 'fk_formation'){
 			continue;
 		}
-		if($this->element == 'habilitation' && $key == 'fk_habilitation'){
+		if($object->element == 'habilitation' && $key == 'fk_habilitation'){
 			continue;
 		}
-		if($this->element == 'autorisation' && $key == 'fk_autorisation'){
+		if($object->element == 'autorisation' && $key == 'fk_autorisation'){
 			continue;
 		}
-		if($this->element == 'user' && $key == 'fk_user'){
+		if($object->element == 'user' && $key == 'fk_user'){
 			continue;
 		}
 		if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
@@ -93,16 +93,16 @@ else {
 }
 
 foreach($objectline->fields as $key => $val){
-	if($this->element == 'formation' && $key == 'fk_formation'){
+	if($object->element == 'formation' && $key == 'fk_formation'){
 		continue;
 	}
-	if($this->element == 'habilitation' && $key == 'fk_habilitation'){
+	if($object->element == 'habilitation' && $key == 'fk_habilitation'){
 		continue;
 	}
-	if($this->element == 'autorisation' && $key == 'fk_autorisation'){
+	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
 		continue;
 	}
-	if($this->element == 'user' && $key == 'fk_user'){
+	if($object->element == 'user' && $key == 'fk_user'){
 		continue;
 	}
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3) {

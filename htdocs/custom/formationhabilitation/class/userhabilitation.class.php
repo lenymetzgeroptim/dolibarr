@@ -936,6 +936,16 @@ class UserHabilitation extends CommonObject
 			return -1;
 		}
 	}
+
+	public function getArrayStatut() {
+		global $langs; 
+
+		$labelStatus[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Non Habilité');
+		$labelStatus[self::STATUS_HABILITABLE] = $langs->transnoentitiesnoconv('Habilitable');
+		$labelStatus[self::STATUS_HABILITE] = $langs->transnoentitiesnoconv('Habilité');
+		
+		return $labelStatus;
+	}
 }
 
 

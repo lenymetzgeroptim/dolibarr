@@ -38,7 +38,7 @@
  * $text, $description, $line
  */
 
-global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected;
+global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -67,16 +67,16 @@ $domData = ' data-id="'.$line->id.'"';
 
 print '<tr class="drag drop oddeven"'.$domData.'>';
 foreach($objectline->fields as $key => $val){
-	if($this->element == 'formation' && $key == 'fk_formation'){
+	if($object->element == 'formation' && $key == 'fk_formation'){
 		continue;
 	}
-	if($this->element == 'habilitation' && $key == 'fk_habilitation'){
+	if($object->element == 'habilitation' && $key == 'fk_habilitation'){
 		continue;
 	}
-	if($this->element == 'autorisation' && $key == 'fk_autorisation'){
+	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
 		continue;
 	}
-	if($this->element == 'user' && $key == 'fk_user'){
+	if($object->element == 'user' && $key == 'fk_user'){
 		continue;
 	}
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
@@ -112,7 +112,7 @@ foreach($objectline->fields as $key => $val){
 	}
 }
 
-if(($this->element == 'user' && (empty(GETPOST('onglet', 'aZ09')) || GETPOST('onglet', 'aZ09') == 'formation')) || $this->element == 'formation'){
+if(($object->element == 'user' && (empty(GETPOST('onglet', 'aZ09')) || GETPOST('onglet', 'aZ09') == 'formation')) || $object->element == 'formation'){
 	/*print '<td class="center linecolcout_total nowrap">';
 	$value3 = $value + $value2;
 	print '<span class="amount" title="'.$langs->trans("CoutTot").' : '.price($value3, 1, $langs, 1, -1, -1, $conf->currency).'">';
@@ -126,11 +126,11 @@ print '</td>';
 
 print '<td class="linecoledit center">';
 if (empty($disableedit)) {
-	if($this->element == 'user'){
-		$url = $_SERVER["PHP_SELF"].'?id='.$this->id.'&action=editline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
+	if($object->element == 'user'){
+		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
 	}
 	else {
-		$url = $_SERVER["PHP_SELF"].'?id='.$this->id.'&action=editline&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
+		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
 	}
 	print '<a class="editfielda reposition" href="'.$url.'">';
 	print img_edit().'</a>';
@@ -139,11 +139,11 @@ print '</td>';
 
 print '<td class="linecoldelete center">';
 if (empty($disableremove)) { 
-	if($this->element == 'user'){
-		$url = $_SERVER["PHP_SELF"].'?id='.$this->id.'&action=deleteline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id;
+	if($object->element == 'user'){
+		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=deleteline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id;
 	}
 	else {
-		$url = $_SERVER["PHP_SELF"].'?id='.$this->id.'&action=deleteline&token='.newToken().'&lineid='.$line->id;
+		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=deleteline&token='.newToken().'&lineid='.$line->id;
 	}
 	print '<a class="reposition" href="'.$url.'">';
 	print img_delete();

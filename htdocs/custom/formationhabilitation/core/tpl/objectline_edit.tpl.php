@@ -32,7 +32,7 @@
  * $canchangeproduct (0 by default, 1 to allow to change the product if it is a predefined product)
  */
 
- global $permissiontoreadCout;
+ global $permissiontoreadCout, $object;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -57,16 +57,16 @@ print "<!-- BEGIN PHP TEMPLATE objectline_edit.tpl.php -->\n";
 print '<tr class="oddeven tredited">';
 print '<input type="hidden" name="lineid" value="'.$line->id.'">';
 foreach($objectline->fields as $key => $val){
-	if($this->element == 'formation' && $key == 'fk_formation'){
+	if($object->element == 'formation' && $key == 'fk_formation'){
 		continue;
 	}
-	if($this->element == 'habilitation' && $key == 'fk_habilitation'){
+	if($object->element == 'habilitation' && $key == 'fk_habilitation'){
 		continue;
 	}
-	if($this->element == 'autorisation' && $key == 'fk_autorisation'){
+	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
 		continue;
 	}
-	if($this->element == 'user' && $key == 'fk_user'){
+	if($object->element == 'user' && $key == 'fk_user'){
 		continue;
 	}
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
@@ -85,11 +85,11 @@ foreach($objectline->fields as $key => $val){
 	if($key == 'ref'){
 		print $line->getNomUrl(0, 'nolink', 1);
 	}
-	elseif($this->element == 'formation' && $key == 'fk_user'){
+	elseif($object->element == 'formation' && $key == 'fk_user'){
 		print $line->showOutputField($val, $key, $line->$key);
 		print '<input type="hidden" id="'.$key.'" name="'.$key.'" value="'.$line->$key.'"></input>';
 	}
-	elseif($this->element == 'user' && ($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation')){
+	elseif($object->element == 'user' && ($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation')){
 		print $line->showOutputField($val, $key, $line->$key);
 		print '<input type="hidden" id="'.$key.'" name="'.$key.'" value="'.$line->$key.'"></input>';
 	}

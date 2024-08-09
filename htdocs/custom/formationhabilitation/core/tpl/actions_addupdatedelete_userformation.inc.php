@@ -94,7 +94,7 @@ if($action == 'addline' && $permissiontoaddline) {
 
 	if(!$error && $resultcreate){
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 		exit;
 	}
 	elseif(!$error && !$resultcreate){
@@ -165,14 +165,14 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 
 		if(!$error && $resultupdate){
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 			exit;
 		}
 		elseif(!$error && !$resultupdate){
 			setEventMessages($langs->trans($objectline->error), null, 'errors');
 		}
 		elseif($error) {
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int'));
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int').(!empty($onglet) ? "&onglet=$onglet" : ''));
 			exit;
 		}
 	}
@@ -186,7 +186,7 @@ if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline
     $resultdelete = $object->deleteLine($user, $lineid);
     if ($resultdelete > 0) {
         setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
-        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
         exit;
     } else {
         $error++;

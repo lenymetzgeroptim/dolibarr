@@ -1123,5 +1123,16 @@ class UserFormation extends CommonObject
 		}
 	}
 
+	public function getArrayStatut() {
+		global $langs; 
+
+		$labelStatus[self::STATUS_VALIDE] = $langs->transnoentitiesnoconv('Valide');
+		$labelStatus[self::STATUS_A_PROGRAMMER] = $langs->transnoentitiesnoconv('A programmer');
+		$labelStatus[self::STATUS_PROGRAMMEE] = $langs->transnoentitiesnoconv('Programmée');
+		$labelStatus[self::STATUS_EXPIREE] = $langs->transnoentitiesnoconv('Expirée');
+		$labelStatus[self::STATUS_CLOTUREE] = $langs->transnoentitiesnoconv('Cloturée');
+		
+		return $labelStatus;
+	}
 }
 

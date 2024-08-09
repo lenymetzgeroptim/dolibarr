@@ -951,24 +951,13 @@ class Formation extends CommonObject
 	 */
 	public function getLinesArray()
 	{
-		global $sortorder, $sortfield, $search, $limit, $offset;
-		$objectline = new UserFormation($this->db);
+		global $sortorder, $sortfield, $search, $limit, $offset, $id;
 
-		$filters = array_merge(array('fk_formation' => $this->id), $search);
-		foreach($objectline as $key => $val) {
-			if ($key == 'status' && $filters[$key] == -1) {
-				unset($filters[$key]);
-			}
-			if ((strpos($objectline->fields[$key]['type'], 'integer:') === 0) || (strpos($objectline->fields[$key]['type'], 'sellist:') === 0) || !empty($objectline->fields[$key]['arrayofkeyval'])) {
-				if ($search[$key] == '-1' || ($search[$key] === '0' && (empty($objectline->fields[$key]['arrayofkeyval']) || !array_key_exists('0', $objectline->fields[$key]['arrayofkeyval'])))) {
-					unset($filters[$key]);
-				}
-			}
-		}
+		$objectline = new UserFormation($this->db);		
 
 		$this->lines = array();
 
-		$result = $objectline->fetchAll($sortorder, $sortfield, $limit + 1, $offset, $filters);
+		$result = $objectline->fetchAll($sortorder, $sortfield, $limit + 1, $offset, $search);
 
 		if (is_numeric($result)) {
 			$this->error = $objectline->error;

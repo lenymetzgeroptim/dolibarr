@@ -33,7 +33,7 @@
  * $type, $text, $description, $line
  */
 
-global $sortfield, $sortorder, $permissiontoreadCout, $selectedfields, $arrayfields;
+global $sortfield, $sortorder, $permissiontoreadCout, $selectedfields, $arrayfields, $object;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -59,16 +59,16 @@ print "<!-- BEGIN PHP TEMPLATE objectline_title.tpl.php -->\n";
 print '<tr class="liste_titre nodrag nodrop">';
 
 foreach($objectline->fields as $key => $val){
-	if($this->element == 'formation' && $key == 'fk_formation'){
+	if($object->element == 'formation' && $key == 'fk_formation'){
 		continue;
 	}
-	if($this->element == 'habilitation' && $key == 'fk_habilitation'){
+	if($object->element == 'habilitation' && $key == 'fk_habilitation'){
 		continue;
 	}
-	if($this->element == 'autorisation' && $key == 'fk_autorisation'){
+	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
 		continue;
 	}
-	if($this->element == 'user' && $key == 'fk_user'){
+	if($object->element == 'user' && $key == 'fk_user'){
 		continue;
 	}
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
@@ -84,7 +84,7 @@ foreach($objectline->fields as $key => $val){
 	//print '<td class="linecol'.$key.'">'.$langs->trans($val['label']).'</td>';
 	if (!empty($arrayfields['t.'.$key]['checked']) || $action == 'editline') {
 		$cssforfield = "center";
-		print getTitleFieldOfList($val['label'], 0, $_SERVER['PHP_SELF'], $key, '', 'id='.$this->id, ($cssforfield ? 'class="'.$cssforfield.'"' : ''), $sortfield, $sortorder, ($cssforfield ? $cssforfield.' ' : ''))."\n";
+		print getTitleFieldOfList($val['label'], 0, $_SERVER['PHP_SELF'], $key, '', 'id='.$object->id, ($cssforfield ? 'class="'.$cssforfield.'"' : ''), $sortfield, $sortorder, ($cssforfield ? $cssforfield.' ' : ''))."\n";
 	}
 }
 

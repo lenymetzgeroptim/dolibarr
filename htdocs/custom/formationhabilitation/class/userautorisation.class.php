@@ -1212,6 +1212,16 @@ class UserAutorisation extends CommonObject
 			return -1;
 		}
 	}
+
+	public function getArrayStatut() {
+		global $langs; 
+
+		$labelStatus[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Autorisable');
+		$labelStatus[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Autorisé');
+		$labelStatus[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Autorisé');
+		
+		return $labelStatus;
+	}
 }
 
 

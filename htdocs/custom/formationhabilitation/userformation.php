@@ -64,8 +64,6 @@ $action = GETPOST('action', 'aZ09');
 $backtopage = GETPOST('backtopage', 'alpha');
 $confirm = GETPOST('confirm', 'alpha');
 $cancel = GETPOST('cancel', 'aZ09');
-$sortfield = GETPOST('sortfield', 'aZ09comma');
-$sortorder = GETPOST('sortorder', 'aZ09comma');
 
 $userid = GETPOST('id', 'integer');
 $lineid   = GETPOST('lineid', 'int');
@@ -77,14 +75,27 @@ $permissiontoreadCout = $user->rights->formationhabilitation->formation->readCou
 
 if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 
+$object = New ExtendedUser3($db);
 if($userid > 0){
-    $object = New ExtendedUser3($db);
     $object->fetch($userid);
 }
+$form = new Form($db);
 
-$formation = new Formation($db);
-$habilitation = new Habilitation($db);
-$autorisation = new Autorisation($db);
+if($onglet == 'formation' || empty($onglet)){
+    $objectline = new UserFormation($db);
+    $objectparentline = new Formation($db);
+}
+elseif($onglet == 'habilitation'){
+    $objectline = new UserHabilitation($db);
+    $objectparentline = new Habilitation($db);
+}
+elseif($onglet == 'autorisation'){
+    $objectline = new UserAutorisation($db);
+    $objectparentline = new Autorisation($db);
+}
+elseif($onglet == 'volet'){
+    $objectparentline = new Formation($db);
+}
 
 // Default sort order (if not yet defined by previous GETPOST)
 if (!$sortfield) {
@@ -95,13 +106,13 @@ if (!$sortorder) {
 	$sortorder = "ASC";
 }
 
+$search = array();
+$search['fk_user'] = $object->id;
+
 /*
  * Actions
  */
 
- 
-// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
-//include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
 if($onglet == 'formation' || empty($onglet)){
     $objectline = new UserFormation($db);
@@ -346,14 +357,14 @@ if ($onglet == 'volet') {
         }
 
         if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
-            if (method_exists($formation, 'generateDocument') && !$error) {
+            if (method_exists($objectparentline, 'generateDocument') && !$error) {
                 $outputlangs = $langs;
                 $newlang = '';
                 if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
                     $newlang = GETPOST('lang_id', 'aZ09');
                 }
                 if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
-                    $newlang = $formation->thirdparty->default_lang;
+                    $newlang = $objectparentline->thirdparty->default_lang;
                 }
                 if (!empty($newlang)) {
                     $outputlangs = new Translate("", $conf);
@@ -364,9 +375,9 @@ if ($onglet == 'volet') {
 
                 $model = 'userformationhabilitation';
 
-                $retgen = $formation->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+                $retgen = $objectparentline->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
                 if ($retgen < 0) {
-                    setEventMessages($formation->error, $formation->errors, 'warnings');
+                    setEventMessages($objectparentline->error, $objectparentline->errors, 'warnings');
                 }
             }
         }
@@ -387,11 +398,11 @@ if ($onglet == 'volet') {
     }
 }
 
+
+
 /*
  * View
  */
-
-$form = new Form($db);
 
 $help_url = '';
 $page_name = "Formation - Habilitation";
@@ -461,49 +472,9 @@ $h++;
 if(empty($onglet) || $onglet == 'formation'){
     print dol_get_fiche_head($head2, 'formation', $title, -1, 'user');
 
-    // Show Formation lines
-    $result = $object->getLinesArrayFormationHabilitation('formation');
-    $object->table_element_line = 'formationhabilitation_userformation';
-
-    print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-    <input type="hidden" name="token" value="' . newToken().'">
-    <input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
-    <input type="hidden" name="mode" value="">
-    <input type="hidden" name="page_y" value="">
-    <input type="hidden" name="id" value="' . $object->id.'">
-    <input type="hidden" name="fk_user" value="' . $object->id.'">
-    <input type="hidden" name="onglet" value="' .$onglet.'">
-    ';
-
-
-    print '<div class="div-table-responsive-no-min">';
-    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-        print '<table id="tablelines" class="noborder noshadow" width="100%">';
-    }
-
-    if (!empty($object->lines)) {
-        $object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-    }
-
-    // Form to add new line
-    if ($permissiontoaddline && $action != 'selectlines') {
-        if ($action != 'editline') {
-            // Add products/services form
-            $parameters = array();
-            $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-            if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-            if (empty($reshook)){
-                $object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-            }
-        }
-    }
-
-    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-        print '</table>';
-    }
-    print '</div>';
-
-    print "</form>\n";
+    $css_div = 'min-height: 520px;';
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+    print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
 elseif($onglet == 'habilitation'){
     print dol_get_fiche_head($head2, 'habilitation', $title, -1, 'user');
@@ -624,7 +595,7 @@ elseif($onglet == 'volet') {
 
             print '<div class="tabsAction">'."\n";
             // Generer PDF
-            $voletarray = $formation->getallVolet();
+            $voletarray = $objectparentline->getallVolet();
             print $form->selectarray('voletid', $voletarray, $voletid, 1);
             if($permissiontoaddline) {
                 print '<input type="submit" value="'.$langs->trans("GenererDoc").'" class="button"/>';
