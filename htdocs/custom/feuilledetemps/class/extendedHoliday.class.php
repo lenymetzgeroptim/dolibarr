@@ -171,10 +171,10 @@ class extendedHoliday extends Holiday
 		$rowid_array = array();
 		$statut_array = array();
 		$code_array = array();
-		$hour = 0;
+		$hour_array = array();
 		$statutfdt_array = array();
 		$droitrtt_array = array();
-		$inhour_array = array();
+		$in_hour_array = array();
 
 		// Check into leave requests
 		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, he.statutfdt, ht.in_hour";
@@ -208,7 +208,7 @@ class extendedHoliday extends Holiday
 					$rowid_array[] = $obj->rowid;
 					$statut_array[] = $obj->statut;
 					$code_array[] = $obj->code;
-					$hour += $obj->hour;
+					$hour_array[] = $obj->hour;
 					$statutfdt_array[] = $obj->statutfdt;
 					$droitrtt_array[] = $obj->droit_rtt;
 					$in_hour_array[] = $obj->in_hour;
@@ -244,13 +244,117 @@ class extendedHoliday extends Holiday
 			dol_print_error($this->db);
 		}
 
-		$result = array('morning'=>$isavailablemorning, 'afternoon'=>$isavailableafternoon, 'statut'=>$statut_array, 'code'=>$code_array, 'rowid'=>$rowid_array, 'hour'=>$hour, 'statutfdt'=>$statutfdt_array, 'droit_rtt'=>$droitrtt_array, 'in_hour'=>$in_hour_array);
+		$result = array('morning'=>$isavailablemorning, 'afternoon'=>$isavailableafternoon, 'statut'=>$statut_array, 'code'=>$code_array, 'rowid'=>$rowid_array, 'hour'=>$hour_array, 'statutfdt'=>$statutfdt_array, 'droit_rtt'=>$droitrtt_array, 'in_hour'=>$in_hour_array);
 		if (!$isavailablemorning) {
 			$result['morning_reason'] = 'leave_request';
 		}
 		if (!$isavailableafternoon) {
 			$result['afternoon_reason'] = 'leave_request';
 		}
+		return $result;
+	}
+
+	/**
+	 *	Check that a user is not on holiday for a particular timestamp. Can check approved leave requests and not into public holidays of company.
+	 *
+	 * 	@param 	int			$fk_user				Id user
+	 *  @param	integer	    $timestamp				Time stamp date for a day (YYYY-MM-DD) without hours  (= 12:00AM in english and not 12:00PM that is 12:00)
+	 *  @param	string		$status					Filter on holiday status. '-1' = no filter.
+	 *  @param	array		$excluded_types			Array of excluded types of holiday
+	 * 	@return array								array('morning'=> ,'afternoon'=> ), Boolean is true if user is available for day timestamp.
+	 *  @see verifDateHolidayCP()
+	 */
+	public function verifDateHolidayForTimestampForAllUser($timestamp, $status = '-1', $excluded_types = array())
+	{
+		global $langs, $conf;
+
+		$isavailablemorning = array();
+		$isavailableafternoon = array();
+        $statut = '';
+		$rowid_array = array();
+		$statut_array = array();
+		$code_array = array();
+		$hour_array = array();
+		$statutfdt_array = array();
+		$droitrtt_array = array();
+		$in_hour_array = array();
+		$user_id_array = array();
+
+		// Check into leave requests
+		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, he.statutfdt, ht.in_hour, cp.fk_user";
+		$sql .= " FROM ".MAIN_DB_PREFIX."holiday as cp";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = cp.fk_type";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as he ON he.fk_object = cp.rowid";
+		$sql .= " WHERE cp.entity IN (".getEntity('holiday').")";
+		$sql .= " AND cp.date_debut <= '".$this->db->idate($timestamp)."' AND cp.date_fin >= '".$this->db->idate($timestamp)."'";
+		if ($status != '-1' && gettype($status) != "array") {
+			$sql .= " AND cp.statut IN (".$this->db->sanitize($status).")";
+		}
+		elseif ($status != '-1') {
+			$sql .= " AND cp.statut IN (".$this->db->sanitize(implode(',', $status)).")";
+		}
+		if(!empty($excluded_types)) {
+			$sql .= " AND cp.fk_type NOT IN (".$this->db->sanitize(implode(',', $excluded_types)).")";
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num_rows = $this->db->num_rows($resql); // Note, we can have 2 records if on is morning and the other one is afternoon
+			if ($num_rows > 0) {
+				$arrayofrecord = array();
+				$i = 0;
+				while ($i < $num_rows) {
+					$obj = $this->db->fetch_object($resql);
+
+					// Note: $obj->halfday is  0:Full days, 2:Sart afternoon end morning, -1:Start afternoon, 1:End morning
+					$arrayofrecord[$obj->fk_user][$obj->rowid] = array('date_start'=>$this->db->jdate($obj->date_start), 'date_end'=>$this->db->jdate($obj->date_end), 'halfday'=>$obj->halfday, 'fk_user'=>$obj->fk_user);
+					$rowid_array[$obj->fk_user][] = $obj->rowid;
+					$statut_array[$obj->fk_user][] = $obj->statut;
+					$code_array[$obj->fk_user][] = $obj->code;
+					$hour_array[$obj->fk_user][] = $obj->hour;
+					$statutfdt_array[$obj->fk_user][] = $obj->statutfdt;
+					$droitrtt_array[$obj->fk_user][] = $obj->droit_rtt;
+					$in_hour_array[$obj->fk_user][] = $obj->in_hour;
+					$user_id_array[] = $obj->fk_user;
+
+					$i++;
+				}
+
+				// We found a record, user is on holiday by default, so is not available is true.
+				foreach($user_id_array as $user_id) {
+					$isavailablemorning[$user_id] = true;
+					foreach ($arrayofrecord[$user_id] as $record) {
+						if ($timestamp == $record['date_end'] && $record['halfday'] == 2) {
+							continue;
+						}
+						if ($timestamp == $record['date_end'] && $record['halfday'] == -1) {
+							continue;
+						}
+						$isavailablemorning[$user_id] = false;
+						break;
+					}
+				}
+
+				foreach($user_id_array as $user_id) {
+					$isavailableafternoon[$user_id] = true;
+					foreach ($arrayofrecord[$user_id] as $record) {
+						if ($timestamp == $record['date_end'] && $record['halfday'] == 2) {
+							continue;
+						}
+						if ($timestamp == $record['date_end'] && $record['halfday'] == 1) {
+							continue;
+						}
+						$isavailableafternoon[$user_id] = false;
+						break;
+					}
+				}
+			}
+		} else {
+			dol_print_error($this->db);
+		}
+
+		$result = array('morning'=>$isavailablemorning, 'afternoon'=>$isavailableafternoon, 'statut'=>$statut_array, 'code'=>$code_array, 'rowid'=>$rowid_array, 'hour'=>$hour_array, 'statutfdt'=>$statutfdt_array, 'droit_rtt'=>$droitrtt_array, 'in_hour'=>$in_hour_array, 'user_id'=>$user_id_array);
+
 		return $result;
 	}
 
