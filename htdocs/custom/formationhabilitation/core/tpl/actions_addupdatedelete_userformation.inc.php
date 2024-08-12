@@ -103,7 +103,7 @@ if($action == 'addline' && $permissiontoaddline) {
 
 }
 
-if($action == 'updateline' && !$cancel && $permissiontoaddline){
+if($action == 'updateline' && !GETPOSTISSET('save_datefinvalidite') && !$cancel && $permissiontoaddline){
 	if($lineid > 0){
 		$objectline->fetch($lineid);
 
@@ -193,4 +193,39 @@ if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline
         setEventMessages($object->error, $object->errors, 'errors');
     }
     $action = '';
+}
+
+if ($action == 'updateline' && GETPOSTISSET('save_datefinvalidite') && !$cancel && $permissiontoaddline) {
+	$db->begin();
+
+	if($lineid > 0){
+		$objectline->fetch($lineid);
+		if (empty(GETPOST("date_finvalidite_formationmonth", 'int')) || empty(GETPOST("date_finvalidite_formationday", 'int')) || empty(GETPOST("date_finvalidite_formationyear", 'int'))) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFinValiditeFormation")), null, 'errors');
+			$error++;
+		}
+		$date_finvalidite = dol_mktime(-1, -1, -1, GETPOST("date_finvalidite_formationmonth", 'int'), GETPOST("date_finvalidite_formationday", 'int'), GETPOST("date_finvalidite_formationyear", 'int'));
+
+
+
+		if(!$error) {
+			$objectline->date_finvalidite_formation = $date_finvalidite; 
+			$objectline->update($user);
+		}
+		
+		if (!$error) {
+			$db->commit();
+			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			exit;
+		} else {
+			$db->rollback();
+			setEventMessages($objectline->error, $objectline->errors, 'warnings');
+			$action = 'edit_datefinvalidite';
+		}
+	}
+	else {
+		$langs->load("errors");
+		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+	}
 }

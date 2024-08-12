@@ -97,7 +97,7 @@ if (empty($dolibarr_nocache)) {
 
 $(document).ready(function() {
 	// Sélectionne tous les inputs dans la table avec l'ID 'tablelinesaddline'
-	$("#tablelinesaddline input, #tablelines tr.tredited input").each(function() {
+	$("#tablelinesaddline input, #tablelines tr input").each(function() {
 		// Vérifie si l'input n'a pas l'attribut 'form'
 		if (!$(this).attr("form")) {
 			// Ajoute l'attribut 'form' avec la valeur 'addline'

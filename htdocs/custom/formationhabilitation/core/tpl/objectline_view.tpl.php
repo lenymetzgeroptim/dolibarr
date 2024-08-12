@@ -38,7 +38,7 @@
  * $text, $description, $line
  */
 
-global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object;
+global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -105,9 +105,20 @@ foreach($objectline->fields as $key => $val){
 		// elseif($key == 'ref'){
 		// 	print $line->getNomUrl(0, 'nolink', 1);
 		// }
+		elseif($key == 'date_finvalidite_formation' && $permissiontoaddline && $action == 'edit_datefinvalidite' && $line->id == $lineid) {
+			print $line->showInputField($val, $key, $line->$key, 'form="addline"');
+			print '<input type="hidden" form="addline" name="lineid" value="'.$line->id.'">';
+		}
 		else {
 			print $line->showOutputField($val, $key, $line->$key);
 		}
+
+		if($key == 'date_finvalidite_formation') {
+			if($permissiontoaddline && $action != 'edit_datefinvalidite') {
+				print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit_datefinvalidite&token='.newToken().(!empty($onglet) ? "&onglet=$onglet" : '').'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+			}
+		}
+
 		print '</td>';
 	}
 }
@@ -124,42 +135,50 @@ if(($object->element == 'user' && (empty(GETPOST('onglet', 'aZ09')) || GETPOST('
 
 print '</td>';
 
-print '<td class="linecoledit center">';
-if (empty($disableedit)) {
-	if($object->element == 'user'){
-		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
-	}
-	else {
-		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
-	}
-	print '<a class="editfielda reposition" href="'.$url.'">';
-	print img_edit().'</a>';
+if ($action == 'edit_datefinvalidite') {
+	print '<td class="center valignmiddle" colspan="3">';
+	print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save_datefinvalidite" value="'.$langs->trans("Save").'">';
+	print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</td>';
 }
-print '</td>';
+else {
+	print '<td class="linecoledit center">';
+	if (empty($disableedit)) {
+		if($object->element == 'user'){
+			$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
+		}
+		else {
+			$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
+		}
+		print '<a class="editfielda reposition" href="'.$url.'">';
+		print img_edit().'</a>';
+	}
+	print '</td>';
 
-print '<td class="linecoldelete center">';
-if (empty($disableremove)) { 
-	if($object->element == 'user'){
-		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=deleteline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id;
+	print '<td class="linecoldelete center">';
+	if (empty($disableremove)) { 
+		if($object->element == 'user'){
+			$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=deleteline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id;
+		}
+		else {
+			$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=deleteline&token='.newToken().'&lineid='.$line->id;
+		}
+		print '<a class="reposition" href="'.$url.'">';
+		print img_delete();
+		print '</a>';
 	}
-	else {
-		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=deleteline&token='.newToken().'&lineid='.$line->id;
-	}
-	print '<a class="reposition" href="'.$url.'">';
-	print img_delete();
-	print '</a>';
-}
-print '</td>';
+	print '</td>';
 
-print '<td class="nowrap center">';
-if ($massactionbutton || $massaction) { // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
-	$selected = 0;
-	if (in_array($line->id, $arrayofselected)) {
-		$selected = 1;
+	print '<td class="nowrap center">';
+	if ($massactionbutton || $massaction) { // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
+		$selected = 0;
+		if (in_array($line->id, $arrayofselected)) {
+			$selected = 1;
+		}
+		print '<input id="cb'.$line->id.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$line->id.'"'.($selected ? ' checked="checked"' : '').'>';
 	}
-	print '<input id="cb'.$line->id.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$line->id.'"'.($selected ? ' checked="checked"' : '').'>';
+	print '</td>';
 }
-print '</td>';
 
 print '</tr>';
 
