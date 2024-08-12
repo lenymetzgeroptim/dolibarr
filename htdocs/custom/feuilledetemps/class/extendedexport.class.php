@@ -52,7 +52,7 @@ class ExtendedExportFDT extends Export
 		require_once $dir.$file;
 		$objmodel = new $classname($this->db);
 
-		if($datatoexport == "total_hour_week" || $datatoexport == "total_hour_month") {
+		if($datatoexport == "total_hour_week") {
 			if (!empty($conf->global->EXPORT_PREFIX_SPEC)) {
 				$filename = $conf->global->EXPORT_PREFIX_SPEC."_".$datatoexport;
 			} else {
@@ -99,14 +99,14 @@ class ExtendedExportFDT extends Export
 				$filter["t.statut"] = "1";
 
 				if($datatoexport == "total_hour_week") {
-					$date_debut =  dol_get_first_day(substr($array_filterValue["week"], 0, 4), substr($array_filterValue["week"], 4, 2));
+					$date_debut = dol_get_first_day(substr($array_filterValue["week"], 0, 4), substr($array_filterValue["week"], 4, 2));
 					$date_debut = dol_time_plus_duree($date_debut, -$conf->global->JOUR_ANTICIPES, 'd');
 					$date_debut = dol_get_first_day_week(dol_print_date($date_debut, '%d'), dol_print_date($date_debut, '%m'), dol_print_date($date_debut, '%Y'));
-					$date_debut =  dol_mktime(-1, -1, -1, $date_debut['first_month'], $date_debut['first_day'], $date_debut['first_year']);  
+					$date_debut = dol_mktime(-1, -1, -1, $date_debut['first_month'], $date_debut['first_day'], $date_debut['first_year']);  
 				}
-				else {
-					$date_debut =  dol_get_first_day(substr($array_filterValue["month"], 0, 4), substr($array_filterValue["month"], 4, 2));
-				}
+				// else {
+				// 	$date_debut =  dol_get_first_day(substr($array_filterValue["month"], 0, 4), substr($array_filterValue["month"], 4, 2));
+				// }
 			
 				if($datatoexport == "total_hour_week") {
 					$date_fin =  dol_get_last_day(substr($array_filterValue["week"], 0, 4), substr($array_filterValue["week"], 4, 2));
@@ -116,9 +116,9 @@ class ExtendedExportFDT extends Export
 						$date_fin = dol_mktime(-1, -1, -1, $date_fin['first_month'], $date_fin['first_day'], $date_fin['first_year']);  
 					}
 				}
-				else {
-					$date_fin =  dol_get_last_day(substr($array_filterValue["month"], 0, 4), substr($array_filterValue["month"], 4, 2));
-				}
+				// else {
+				// 	$date_fin =  dol_get_last_day(substr($array_filterValue["month"], 0, 4), substr($array_filterValue["month"], 4, 2));
+				// }
 
 				$userstatic->fetchAll('', 't.lastname', 0, 0, $filter);
 				foreach($userstatic->users as $id => $user_obj) {
@@ -145,23 +145,111 @@ class ExtendedExportFDT extends Export
 								$dayinloop = dol_time_plus_duree($dayinloop, 1, 'w');
 							}	
 						}
-						else {
-							$total_work = 0;
-							$total_holiday = 0;
-							$total_hour = 0;
-							while ($dayinloop <= $date_fin) {							
-								$total_work += $timeSpentWeek[date("W", $dayinloop)];
-								$total_holiday += $timeHoliday[date("W", $dayinloop)];
-								$total_hour += ($timeHoliday[date("W", $dayinloop)] + $timeSpentWeek[date("W", $dayinloop)]);
+						// else {
+						// 	$total_work = 0;
+						// 	$total_holiday = 0;
+						// 	$total_hour = 0;
+						// 	while ($dayinloop <= $date_fin) {							
+						// 		$total_work += $timeSpentWeek[date("W", $dayinloop)];
+						// 		$total_holiday += $timeHoliday[date("W", $dayinloop)];
+						// 		$total_hour += ($timeHoliday[date("W", $dayinloop)] + $timeSpentWeek[date("W", $dayinloop)]);
 
-								$dayinloop = dol_time_plus_duree($dayinloop, 1, 'w');
-							}	
-							$obj->month = date("Y-m", $date_fin);
-							$obj->total_work = $total_work;
-							$obj->total_holiday = $total_holiday;
-							$obj->total_hour = $total_hour;
-							$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-						}
+						// 		$dayinloop = dol_time_plus_duree($dayinloop, 1, 'w');
+						// 	}	
+						// 	$obj->month = date("Y-m", $date_fin);
+						// 	$obj->total_work = $total_work;
+						// 	$obj->total_holiday = $total_holiday;
+						// 	$obj->total_hour = $total_hour;
+						// 	$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+						// }
+					}
+				}
+
+				// Genere en-tete
+				$objmodel->write_footer($outputlangs);
+
+				// Close file
+				$objmodel->close_file();
+
+				return 1;
+			} else {
+				$this->error = $objmodel->error;
+				dol_syslog("Export::build_file Error: ".$this->error, LOG_ERR);
+				return -1;
+			}
+		}
+		if($datatoexport == "total_holiday") {
+			if (!empty($conf->global->EXPORT_PREFIX_SPEC)) {
+				$filename = $conf->global->EXPORT_PREFIX_SPEC."_".$datatoexport;
+			} else {
+				$filename = "export_".$datatoexport;
+				if(GETPOST('action', 'aZ09') == 'buildalldoc') {
+					$filename .= '_'.dol_print_date(dol_now(), '%Y%m%d_%H%M%S');
+				}
+			}
+			if (!empty($conf->global->EXPORT_NAME_WITH_DT)) {
+				$filename .= dol_print_date(dol_now(), '%Y%m%d%_%H%M');
+			}
+
+			$filename .= '.'.$objmodel->getDriverExtension();
+			$dirname = $conf->export->dir_temp.'/'.$user->id;
+
+			$outputlangs = clone $langs; // We clone to have an object we can modify (for example to change output charset by csv handler) without changing original value
+
+			// Open file
+			dol_mkdir($dirname);
+			$result = $objmodel->open_file($dirname."/".$filename, $outputlangs);
+
+			if ($result >= 0) {
+				// Genere en-tete
+				$objmodel->write_header($outputlangs);
+
+				foreach($array_selected as $key => $val) {
+					if(!isset($array_export_TypeFields[$indice][$key])) {
+						$array_export_TypeFields[$indice][$key] = "Text";
+					}
+				}
+
+				// Genere ligne de titre
+				$objmodel->write_title($array_export_fields[$indice], $array_selected, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+
+				$userstatic = new User($this->db);
+				$object = new FeuilleDeTemps($this->db);
+				$holiday = new extendedHoliday($this->db);
+				$typesHoliday = $holiday->getTypesNoCP();
+
+				if($array_filterValue["u.firstname"]) {
+					$filter["t.firstname"] = $array_filterValue["u.firstname"];
+				}
+				if($array_filterValue["u.lastname"]) {
+					$filter["t.lastname"] = $array_filterValue["u.lastname"];
+				}
+
+				$filter["t.statut"] = "1";
+
+				$date_debut = dol_mktime(-1, -1, -1, substr($array_filterValue["date_debut"], 4, 2), substr($array_filterValue["date_debut"], 6, 2), substr($array_filterValue["date_debut"], 0, 4));
+				$date_fin = dol_mktime(-1, -1, -1, substr($array_filterValue["date_fin"], 4, 2), substr($array_filterValue["date_fin"], 6, 2), substr($array_filterValue["date_fin"], 0, 4));
+				$timeHoliday = $object->timeHolidayForExport($date_debut, $date_fin);
+
+				$userstatic->fetchAll('', 't.lastname', 0, 0, $filter);
+				foreach($userstatic->users as $id => $user_obj) {
+					if($user_obj->array_options['options_employeur'] == 1) {
+						$societe = new Societe($this->db);
+						$societe->fetch($user_obj->array_options['options_antenne']);
+
+						$obj->eu_matricule = $user_obj->array_options['options_matricule'];
+						$obj->u_firstname = $user_obj->firstname;
+						$obj->u_lastname = $user_obj->lastname;
+						$obj->eu_antenne = $societe->name_alias;
+						$obj->date_debut = $array_filterValue["date_debut"];
+						$obj->date_fin = $array_filterValue["date_fin"];
+
+						foreach($typesHoliday as $type) {		
+							$code = $type['code'];				
+							$obj->$code = ($timeHoliday[$id][$type['code']] > 0 ? $timeHoliday[$id][$type['code']] : 0);
+						}	
+
+						$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
 					}
 				}
 
@@ -185,7 +273,10 @@ class ExtendedExportFDT extends Export
 				if($datatoexport == 'ObservationCompta') {
 					$sql = $this->build_sql_observationCompta($indice, $array_selected, $array_filterValue, $array_export_fields, $array_export_TypeFields, $datatoexport);
 				}
-				elseif($datatoexport != 'ObservationCompta') {
+				elseif($datatoexport == 'total_hour') {
+					$sql = $this->build_sql_TotalHour($indice, $array_selected, $array_filterValue, $array_export_fields, $array_export_TypeFields, $datatoexport);
+				}
+				else {
 					$sql = $this->build_sql_bis($indice, $array_selected, $array_filterValue, $array_export_fields, $array_export_TypeFields, $datatoexport);
 				}
 			}
@@ -884,6 +975,81 @@ class ExtendedExportFDT extends Export
 			}
 			}
 		}
+	
+		return $sql;
+	}
+
+	public function build_sql_totalHour($indice, $array_selected, $array_filterValue, $array_export_fields, $array_export_TypeFields, $datatoexport)
+	{
+		// phpcs:enable
+		// Build the sql request
+		$sql = "SELECT DISTINCT u.rowid, ";
+		$i = 0;
+	
+		foreach ($array_export_fields[$indice] as $key => $value) {
+			if (!array_key_exists($key, $array_selected)) {
+				continue; // Field not selected
+			}
+			if (preg_match('/^none\./', $key)) {
+				continue; // A field that must not appears into SQL
+			}
+
+			if($key == 'u.rowid') {
+				continue;
+			}
+
+			if ($i > 0) {
+				$sql .= ', ';
+			} else {
+				$i++;
+			}
+	
+			if (strpos($key, ' as ') === false) {
+				$newfield = $key.' as '.str_replace(array('.', '-', '(', ')'), '_', $key);
+			} else {
+				$newfield = $key;
+			}
+	
+			$sql .= $newfield;
+		}
+		$sql .= " FROM ".MAIN_DB_PREFIX."element_time AS et";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user AS u ON et.fk_user = u.rowid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields AS eu ON u.rowid = eu.fk_object";
+		$sql .= " WHERE 1 = 1";
+
+		// Add the WHERE part. Filtering into sql if a filtering array is provided
+		if (is_array($array_filterValue) && !empty($array_filterValue)) {
+			$sqlWhere = '';
+			// Loop on each condition to add
+			foreach ($array_filterValue as $key => $value) {
+				if($key == 't.date_start' || $key == 't.date_end') {
+					continue;
+				}
+				if (preg_match('/GROUP_CONCAT/i', $key)) {
+					continue;
+				}
+				if ($value != '') {
+					$sqlWhere .= " AND ".$this->build_filterQuery($array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
+				}
+			}
+			$sql .= $sqlWhere;
+		}
+	
+		$sql .= " GROUP BY u.rowid";
+		$sql .= " HAVING total_hour > 0";
+
+		// Add the HAVING part.
+		if (is_array($array_filterValue) && !empty($array_filterValue)) {
+			// Loop on each condition to add
+			foreach ($array_filterValue as $key => $value) {
+			if (preg_match('/GROUP_CONCAT/i', $key) and $value != '') {
+				$sql .= " HAVING ".$this->build_filterQuery($this->array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
+			}
+			}
+		}
+
+		// Add the order
+		$sql .= " ORDER BY eu.matricule";
 	
 		return $sql;
 	}

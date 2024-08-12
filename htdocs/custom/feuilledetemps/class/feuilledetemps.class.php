@@ -2170,16 +2170,11 @@ class FeuilleDeTemps extends CommonObject
 					}
 				}
 				elseif(sizeof($isavailablefordayanduser['rowid']) > 1) {
-					if($isavailablefordayanduser['hour'] > 0){ // Congés en heure
-						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'] / 3600) : ($isavailablefordayanduser['hour'] / 3600));
-					}
-
 					for($i = 0; $i < sizeof($isavailablefordayanduser['rowid']); $i++) {
-						if($isavailablefordayanduser['in_hour'][$i]) {
-							continue;
+						if($isavailablefordayanduser['hour'][$i] > 0){ // Congés en heure
+							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][$i] / 3600) : ($isavailablefordayanduser['hour'][$i] / 3600));
 						}
-
-						if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
+						elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * 7) : (0.5 * 7));
 						}
 						else {
@@ -2192,8 +2187,8 @@ class FeuilleDeTemps extends CommonObject
 						}
 					}
 				}
-				elseif(($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) && $isavailablefordayanduser['hour'] > 0){ // Congés en heure
-					$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'] / 3600) : ($isavailablefordayanduser['hour'] / 3600));
+				elseif(($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) && $isavailablefordayanduser['hour'][0] > 0){ // Congés en heure
+					$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / 3600));
 				}
 				elseif($isavailablefordayanduser['morning'] == false && $isavailablefordayanduser['afternoon'] == false) { // Congés journées entières
 					if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
@@ -2213,6 +2208,91 @@ class FeuilleDeTemps extends CommonObject
 						}
 						else {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
+						}
+					}
+				}
+			}
+		}
+
+		return $result;
+	}
+
+	function timeHolidayForExport($firstdate, $lastdate) {
+		global $conf, $langs, $mysoc;
+
+		$result = array();
+		
+		$holiday = new extendedHoliday($this->db);
+
+		$nb_jour = num_between_day($firstdate, $lastdate+3600); 
+		$firstdaygmt = dol_mktime(0, 0, 0, dol_print_date($firstdate, '%m'), dol_print_date($firstdate, '%d'), dol_print_date($firstdate, '%Y'), 'gmt');
+
+		$extrafields = new ExtraFields($this->db);
+		$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+		$userField = new UserField($this->db);
+		$userField->table_element = 'donneesrh_Positionetcoefficient';
+		$userField->fetch_optionals();
+
+		$userfield_load = array();
+		$userfield_pasdroitrtt = array();
+
+		for ($idw = 0; $idw < $nb_jour; $idw++) { 
+			$tmpday = dol_time_plus_duree($firstdate, $idw, 'd');
+			$tmpdaygmt = dol_time_plus_duree($firstdaygmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
+
+			if (dol_print_date($tmpday, '%a') != 'Sam' && dol_print_date($tmpday, '%a') != 'Dim') {
+				$statusofholidaytocheck =  array(Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1);
+				$isavailablefordayanduser = $holiday->verifDateHolidayForTimestampForAllUser($tmpday, $statusofholidaytocheck, array(4));
+
+				foreach($isavailablefordayanduser['user_id'] as $user_id) {
+					if(!$userfield_load[$user_id]) {
+						$userField->id = $user_id;
+						$userField->fetch_optionals();
+
+						$userfield_load[$user_id] = 1;
+						$userfield_pasdroitrtt[$user_id] = $userField->array_options['options_pasdroitrtt'];
+					}
+
+					if(sizeof($isavailablefordayanduser['rowid'][$user_id]) > 1) {
+						for($i = 0; $i < sizeof($isavailablefordayanduser['rowid'][$user_id]); $i++) {
+							if($isavailablefordayanduser['hour'][$user_id][$i] > 0){ // Congés en heure
+								$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + ($isavailablefordayanduser['hour'][$user_id][$i] / 3600) : ($isavailablefordayanduser['hour'][$user_id][$i] / 3600));
+							}
+							elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userfield_pasdroitrtt[$user_id])) {
+								$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + (0.5 * 7) : (0.5 * 7));
+							}
+							else {
+								if($isavailablefordayanduser['droit_rtt'][$user_id][$i]) {
+									$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
+								}
+								else {
+									$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
+								}
+							}
+						}
+					}
+					elseif(($isavailablefordayanduser['morning'][$user_id] == false || $isavailablefordayanduser['afternoon'][$user_id] == false) && $isavailablefordayanduser['hour'][$user_id][0] > 0){ // Congés en heure
+						$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + ($isavailablefordayanduser['hour'][$user_id][0] / 3600) : ($isavailablefordayanduser['hour'][$user_id][0] / 3600));
+					}
+					elseif($isavailablefordayanduser['morning'][$user_id] == false && $isavailablefordayanduser['afternoon'][$user_id] == false) { // Congés journées entières
+						if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userfield_pasdroitrtt[$user_id])) {
+							$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (1 * 7) : (1 * 7));
+						}
+						else {
+							$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (1 * $conf->global->HEURE_JOUR) : (1 * $conf->global->HEURE_JOUR));
+						}
+					}
+					elseif($isavailablefordayanduser['morning'][$user_id] == false || $isavailablefordayanduser['afternoon'][$user_id] == false) { // Congés demi journées
+						if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userfield_pasdroitrtt[$user_id])) {
+							$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (0.5 * 7) : (0.5 * 7));
+						}
+						else {
+							if($isavailablefordayanduser['droit_rtt'][$user_id][$i]) {
+								$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
+							}
+							else {
+								$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
+							}
 						}
 					}
 				}
