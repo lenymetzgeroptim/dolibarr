@@ -265,49 +265,48 @@ class modFormationHabilitation extends DolibarrModules
 		$r = 0;
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Lire les Formations'; // Permission label
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 1);
+		$this->rights[$r][1] = 'Lire les Formations';
 		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->formationhabilitation->formation->read)
+		$this->rights[$r][5] = 'read';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Créer/Modifier les Formations'; // Permission label
+		
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Formations';
 		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->formationhabilitation->formation->write)
+		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Supprimer les Formations'; // Permission label
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Supprimer les Formations';
 		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->formationhabilitation->formation->delete)
+		$this->rights[$r][5] = 'delete';
 		$r++;
-
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Lire les Habilitations'; // Permission label
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
+		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des collaborateurs';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'readCout';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
+		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des Utilisateurs liés à une formation';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'addline';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 0 + 1);
+		$this->rights[$r][1] = 'Lire les Habilitations';
 		$this->rights[$r][4] = 'habilitation';
-		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->formationhabilitation->habilitation->read)
+		$this->rights[$r][5] = 'read';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Créer/Modifier les Habilitations'; // Permission label
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Habilitations';
 		$this->rights[$r][4] = 'habilitation';
-		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->formationhabilitation->habilitation->write)
+		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Supprimer les Habilitations'; // Permission label
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Supprimer les Habilitations';
 		$this->rights[$r][4] = 'habilitation';
-		$this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->formationhabilitation->habilitation->delete)
+		$this->rights[$r][5] = 'delete';
 		$r++;
-
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des Utilisateurs liés à une formation'; // Permission label
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'addline'; // In php code, permission will be checked by test if ($user->rights->formationhabilitation->habilitation->delete)
-		$r++;
-
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des collaborateurs'; // Permission label
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'readCout'; // In php code, permission will be checked by test if ($user->rights->formationhabilitation->habilitation->delete)
-		$r++;
+		
 		/* END MODULEBUILDER PERMISSIONS */
 
 		// Main menu entries to add
@@ -331,137 +330,149 @@ class modFormationHabilitation extends DolibarrModules
 			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
 		);
 		/* END MODULEBUILDER TOPMENU */
-		/* BEGIN MODULEBUILDER LEFTMENU FORMATION */
-	
-        $this->menu[$r++]=array(
-            // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=formationhabilitation',
-            // This is a Left menu entry
-            'type'=>'left',
-            'titre'=>'Liste Formation',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_formation',
-            'url'=>'/formationhabilitation/formation_list.php',
-            // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1100+$r,
-            // Define condition to show or hide menu entry. Use '$conf->formationhabilitation->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'enabled'=>'$conf->formationhabilitation->enabled',
-            // Use 'perms'=>'$user->rights->formationhabilitation->level1->level2' if you want your menu with a permission rules
-            'perms'=>'1',
-            'target'=>'',
-            // 0=Menu for internal users, 1=external users, 2=both
-            'user'=>2,
-        );
-        $this->menu[$r++]=array(
-            // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=formationhabilitation_formation',
-            // This is a Left menu entry
-            'type'=>'left',
-            'titre'=>'Nouvelle Formation',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_formation',
-            'url'=>'/formationhabilitation/formation_card.php?action=create',
-            // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1100+$r,
-            // Define condition to show or hide menu entry. Use '$conf->formationhabilitation->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'enabled'=>'$conf->formationhabilitation->enabled',
-            // Use 'perms'=>'$user->rights->formationhabilitation->level1->level2' if you want your menu with a permission rules
-            'perms'=>'1',
-            'target'=>'',
-            // 0=Menu for internal users, 1=external users, 2=both
-            'user'=>2
-        );
-
-
-
-
+		/* BEGIN MODULEBUILDER LEFTMENU MYOBJECT */
+		/* LEFTMENU LISTE FORMATION */
 		$this->menu[$r++]=array(
-            // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=formationhabilitation',
-            // This is a Left menu entry
-            'type'=>'left',
-            'titre'=>'Liste Habilitation',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_habilitation',
-            'url'=>'/formationhabilitation/habilitation_list.php',
-            // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1100+$r,
-            // Define condition to show or hide menu entry. Use '$conf->formationhabilitation->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'enabled'=>'$conf->formationhabilitation->enabled',
-            // Use 'perms'=>'$user->rights->formationhabilitation->level1->level2' if you want your menu with a permission rules
-            'perms'=>'1',
-            'target'=>'',
-            // 0=Menu for internal users, 1=external users, 2=both
-            'user'=>2,
-        );
-        $this->menu[$r++]=array(
-            // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=formationhabilitation_habilitation',
-            // This is a Left menu entry
-            'type'=>'left',
-            'titre'=>'Nouvelle Habilitation',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_habilitation',
-            'url'=>'/formationhabilitation/habilitation_card.php?action=create',
-            // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1100+$r,
-            // Define condition to show or hide menu entry. Use '$conf->formationhabilitation->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'enabled'=>'$conf->formationhabilitation->enabled',
-            // Use 'perms'=>'$user->rights->formationhabilitation->level1->level2' if you want your menu with a permission rules
-            'perms'=>'1',
-            'target'=>'',
-            // 0=Menu for internal users, 1=external users, 2=both
-            'user'=>2
-        );
-
-
-
+			 'fk_menu' => 'fk_mainmenu=formationhabilitation',
+			 'type' => 'left',
+			 'titre' => 'Liste Formation',
+			 'mainmenu' => 'formationhabilitation',
+			 'leftmenu' => 'formationhabilitation_formation',
+			 'url' => '/formationhabilitation/formation_list.php',
+			 'langs' => 'formationhabilitation@formationhabilitation',
+			 'position' => 1000,
+			 'enabled' => '$conf->formationhabilitation->enabled',
+			 'perms' => '1',
+			 'target' => '',
+			 'user' => 2,
+		);
+		/* LEFTMENU NOUVELLE FORMATION */
 		$this->menu[$r++]=array(
-            // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=formationhabilitation',
-            // This is a Left menu entry
+			 'fk_menu' => 'fk_mainmenu=formationhabilitation,fk_leftmenu=formationhabilitation_formation',
+			 'type' => 'left',
+			 'titre' => 'Nouvelle Formation',
+			 'mainmenu' => 'formationhabilitation',
+			 'leftmenu' => 'formationhabilitation_formation',
+			 'url' => '/formationhabilitation/formation_card.php?action=create',
+			 'langs' => 'formationhabilitation@formationhabilitation',
+			 'position' => 1000,
+			 'enabled' => '$conf->formationhabilitation->enabled',
+			 'perms' => '1',
+			 'target' => '',
+			 'user' => 2,
+		);
+		/* END LEFTMENU NOUVELLE FORMATION */
+		/* LEFTMENU LISTE HABILITATION */
+		$this->menu[$r++]=array(
+			 'fk_menu' => 'fk_mainmenu=formationhabilitation',
+			 'type' => 'left',
+			 'titre' => 'Liste Habilitation',
+			 'mainmenu' => 'formationhabilitation',
+			 'leftmenu' => 'formationhabilitation_habilitation',
+			 'url' => '/formationhabilitation/habilitation_list.php',
+			 'langs' => 'formationhabilitation@formationhabilitation',
+			 'position' => 1000,
+			 'enabled' => '$conf->formationhabilitation->enabled',
+			 'perms' => '1',
+			 'target' => '',
+			 'user' => 2,
+		);
+		/* LEFTMENU NOUVELLE HABILITATION */
+		$this->menu[$r++]=array(
+			 'fk_menu' => 'fk_mainmenu=formationhabilitation,fk_leftmenu=formationhabilitation_habilitation',
+			 'type' => 'left',
+			 'titre' => 'Nouvelle Habilitation',
+			 'mainmenu' => 'formationhabilitation',
+			 'leftmenu' => 'formationhabilitation_habilitation',
+			 'url' => '/formationhabilitation/habilitation_card.php?action=create',
+			 'langs' => 'formationhabilitation@formationhabilitation',
+			 'position' => 1000,
+			 'enabled' => '$conf->formationhabilitation->enabled',
+			 'perms' => '1',
+			 'target' => '',
+			 'user' => 2,
+		);
+		/* END LEFTMENU NOUVELLE HABILITATION */
+		/* LEFTMENU LISTE AUTORISATION */
+		$this->menu[$r++]=array(
+			 'fk_menu' => 'fk_mainmenu=formationhabilitation',
+			 'type' => 'left',
+			 'titre' => 'Liste Autorisation',
+			 'mainmenu' => 'formationhabilitation',
+			 'leftmenu' => 'formationhabilitation_autorisation',
+			 'url' => '/formationhabilitation/autorisation_list.php',
+			 'langs' => 'formationhabilitation@formationhabilitation',
+			 'position' => 1000,
+			 'enabled' => '$conf->formationhabilitation->enabled',
+			 'perms' => '1',
+			 'target' => '',
+			 'user' => 2,
+		);
+		/* LEFTMENU NOUVELLE AUTORISATION */
+		$this->menu[$r++]=array(
+			 'fk_menu' => 'fk_mainmenu=formationhabilitation,fk_leftmenu=formationhabilitation_autorisation',
+			 'type' => 'left',
+			 'titre' => 'Nouvelle Autorisation',
+			 'mainmenu' => 'formationhabilitation',
+			 'leftmenu' => 'formationhabilitation_autorisation',
+			 'url' => '/formationhabilitation/autorisation_card.php?action=create',
+			 'langs' => 'formationhabilitation@formationhabilitation',
+			 'position' => 1000,
+			 'enabled' => '$conf->formationhabilitation->enabled',
+			 'perms' => '1',
+			 'target' => '',
+			 'user' => 2,
+		);
+		/* END LEFTMENU NOUVELLE AUTORISATION */
+
+
+		/*LEFTMENU VOLET*/
+		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=formationhabilitation',
+			'type'=>'left',
+			'titre'=>'Volet',
+			'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
+			'mainmenu'=>'formationhabilitation',
+			'leftmenu'=>'volet',
+			'url'=>'/formationhabilitation/volet_list.php',
+			'langs'=>'formationhabilitation@formationhabilitation',
+			'position'=>1000+$r,
+			'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "volet", "read")',
+			'target'=>'',
+			'user'=>2,
+		);
+        $this->menu[$r++]=array(
+            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
             'type'=>'left',
-            'titre'=>'Liste Autorisation',
+            'titre'=>'List Volet',
             'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_autorisation',
-            'url'=>'/formationhabilitation/autorisation_list.php',
-            // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'leftmenu'=>'formationhabilitation_volet_list',
+            'url'=>'/formationhabilitation/volet_list.php',
             'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1100+$r,
-            // Define condition to show or hide menu entry. Use '$conf->formationhabilitation->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'enabled'=>'$conf->formationhabilitation->enabled',
-            // Use 'perms'=>'$user->rights->formationhabilitation->level1->level2' if you want your menu with a permission rules
-            'perms'=>'1',
+            'position'=>1000+$r,
+            'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "volet", "read")',
             'target'=>'',
-            // 0=Menu for internal users, 1=external users, 2=both
             'user'=>2,
         );
         $this->menu[$r++]=array(
-            // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=formationhabilitation_autorisation',
-            // This is a Left menu entry
+            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
             'type'=>'left',
-            'titre'=>'Nouvelle Autorisation',
+            'titre'=>'New Volet',
             'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_autorisation',
-            'url'=>'/formationhabilitation/autorisation_card.php?action=create',
-            // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'leftmenu'=>'formationhabilitation_volet_new',
+            'url'=>'/formationhabilitation/volet_card.php?action=create',
             'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1100+$r,
-            // Define condition to show or hide menu entry. Use '$conf->formationhabilitation->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'enabled'=>'$conf->formationhabilitation->enabled',
-            // Use 'perms'=>'$user->rights->formationhabilitation->level1->level2' if you want your menu with a permission rules
-            'perms'=>'1',
+            'position'=>1000+$r,
+            'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "volet", "write")',
             'target'=>'',
-            // 0=Menu for internal users, 1=external users, 2=both
             'user'=>2
         );
 
-		/* END MODULEBUILDER LEFTMENU FORMATION */
+		/*END LEFTMENU VOLET*/
+		/* END MODULEBUILDER LEFTMENU MYOBJECT */
 
 
 
