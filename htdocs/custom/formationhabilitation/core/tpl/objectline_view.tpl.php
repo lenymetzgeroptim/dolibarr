@@ -105,7 +105,8 @@ foreach($objectline->fields as $key => $val){
 		// elseif($key == 'ref'){
 		// 	print $line->getNomUrl(0, 'nolink', 1);
 		// }
-		elseif($key == 'date_finvalidite_formation' && $permissiontoaddline && $action == 'edit_datefinvalidite' && $line->id == $lineid) {
+		elseif((($key == 'date_finvalidite_formation' && $action == 'edit_datefinvalidite') || ($key == 'cout_pedagogique' && $action == 'edit_coutpedagogique') 
+		|| ($key == 'cout_mobilisation' && $action == 'edit_coutmobilisation')) && $permissiontoaddline && $line->id == $lineid) {
 			print $line->showInputField($val, $key, $line->$key, 'form="addline"');
 			print '<input type="hidden" form="addline" name="lineid" value="'.$line->id.'">';
 		}
@@ -113,10 +114,14 @@ foreach($objectline->fields as $key => $val){
 			print $line->showOutputField($val, $key, $line->$key);
 		}
 
-		if($key == 'date_finvalidite_formation') {
-			if($permissiontoaddline && $action != 'edit_datefinvalidite') {
-				print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit_datefinvalidite&token='.newToken().(!empty($onglet) ? "&onglet=$onglet" : '').'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
-			}
+		if($key == 'date_finvalidite_formation' && $permissiontoaddline && $action != 'edit_datefinvalidite') {
+			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit_datefinvalidite&token='.newToken().(!empty($onglet) ? "&onglet=$onglet" : '').'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+		}
+		elseif($key == 'cout_pedagogique' && $permissiontoaddline && $action != 'edit_coutpedagogique') {
+			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit_coutpedagogique&token='.newToken().(!empty($onglet) ? "&onglet=$onglet" : '').'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+		}
+		elseif($key == 'cout_mobilisation' && $permissiontoaddline && $action != 'edit_coutmobilisation') {
+			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit_coutmobilisation&token='.newToken().(!empty($onglet) ? "&onglet=$onglet" : '').'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
 
 		print '</td>';
@@ -138,6 +143,18 @@ print '</td>';
 if ($action == 'edit_datefinvalidite') {
 	print '<td class="center valignmiddle" colspan="3">';
 	print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save_datefinvalidite" value="'.$langs->trans("Save").'">';
+	print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</td>';
+}
+elseif ($action == 'edit_coutpedagogique') {
+	print '<td class="center valignmiddle" colspan="3">';
+	print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save_coutpedagogique" value="'.$langs->trans("Save").'">';
+	print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</td>';
+}
+elseif ($action == 'edit_coutmobilisation') {
+	print '<td class="center valignmiddle" colspan="3">';
+	print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save_coutmobilisation" value="'.$langs->trans("Save").'">';
 	print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
 	print '</td>';
 }

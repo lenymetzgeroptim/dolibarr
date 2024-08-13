@@ -87,6 +87,7 @@ if($action == 'addline' && $permissiontoaddline) {
 		$objectline->fk_societe = GETPOST('fk_societe');
 		$objectline->formateur = GETPOST('formateur');
 		$objectline->numero_certificat = GETPOST('numero_certificat');
+		$objectline->resultat = GETPOST('resultat');
 		$objectline->status = GETPOST('status');
 
 		$resultcreate = $objectline->create($user);
@@ -103,7 +104,7 @@ if($action == 'addline' && $permissiontoaddline) {
 
 }
 
-if($action == 'updateline' && !GETPOSTISSET('save_datefinvalidite') && !$cancel && $permissiontoaddline){
+if($action == 'updateline' && !$cancel && $permissiontoaddline){
 	if($lineid > 0){
 		$objectline->fetch($lineid);
 
@@ -148,6 +149,7 @@ if($action == 'updateline' && !GETPOSTISSET('save_datefinvalidite') && !$cancel 
 			$objectline->fk_societe = (GETPOST('interne_externe') != 2 ? GETPOST('fk_societe') : '');
 			$objectline->formateur = (GETPOST('interne_externe') == 2 ? GETPOST('formateur') : '');
 			$objectline->numero_certificat = GETPOST('numero_certificat');
+			$objectline->resultat = GETPOST('resultat');
 			$objectline->status = GETPOST('status');
 
 			//$date_limite = dol_time_plus_duree($date, $object->periode_recyclage, 'm');
@@ -195,7 +197,7 @@ if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline
     $action = '';
 }
 
-if ($action == 'updateline' && GETPOSTISSET('save_datefinvalidite') && !$cancel && $permissiontoaddline) {
+if ($action == 'updatedatefinvalidite' && !$cancel && $permissiontoaddline) {
 	$db->begin();
 
 	if($lineid > 0){
@@ -222,6 +224,64 @@ if ($action == 'updateline' && GETPOSTISSET('save_datefinvalidite') && !$cancel 
 			$db->rollback();
 			setEventMessages($objectline->error, $objectline->errors, 'warnings');
 			$action = 'edit_datefinvalidite';
+		}
+	}
+	else {
+		$langs->load("errors");
+		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+	}
+}
+
+if ($action == 'updatecoutpedagogique' && !$cancel && $permissiontoaddline) {
+	$db->begin();
+
+	if($lineid > 0){
+		$objectline->fetch($lineid);
+
+		if(!$error) {
+			$objectline->cout_pedagogique = GETPOST('cout_pedagogique');
+			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+			$objectline->update($user);
+		}
+		
+		if (!$error) {
+			$db->commit();
+			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			exit;
+		} else {
+			$db->rollback();
+			setEventMessages($objectline->error, $objectline->errors, 'warnings');
+			$action = 'edit_coutpedagogique';
+		}
+	}
+	else {
+		$langs->load("errors");
+		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+	}
+}
+
+if ($action == 'updatecoutmobilisation' && !$cancel && $permissiontoaddline) {
+	$db->begin();
+
+	if($lineid > 0){
+		$objectline->fetch($lineid);
+
+		if(!$error) {
+			$objectline->cout_mobilisation = GETPOST('cout_mobilisation');
+			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+			$objectline->update($user);
+		}
+		
+		if (!$error) {
+			$db->commit();
+			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			exit;
+		} else {
+			$db->rollback();
+			setEventMessages($objectline->error, $objectline->errors, 'warnings');
+			$action = 'edit_coutmobilisation';
 		}
 	}
 	else {
