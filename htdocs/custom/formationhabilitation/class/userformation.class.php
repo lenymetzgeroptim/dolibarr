@@ -380,6 +380,67 @@ class UserFormation extends CommonObject
 	}
 
 	/**
+	 *	Cloture object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function cloture($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_CLOTUREE) {
+			dol_syslog(get_class($this)."::cloture action abandonned: already cloture", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_CLOTUREE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::cloture()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERFORMATION_CLOTURE', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_CLOTUREE;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
 	 * Delete object in database
 	 *
 	 * @param User $user       User that deletes
@@ -1135,6 +1196,41 @@ class UserFormation extends CommonObject
 		$labelStatus[self::STATUS_CLOTUREE] = $langs->transnoentitiesnoconv('Cloturée');
 		
 		return $labelStatus;
+	}
+
+	/**
+	 * 	Est-ce que l'utilisateur $userid possède la formation $formationid
+	 *
+	 * 	@param  int		$userid       	Id of User
+	 *  @param  int		$formationid    Id of Formation
+	 * 	@return	bool						
+	 */
+	public function userAsFormation($userid, $formationid)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT uf.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND uf.fk_formation = $formationid";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_PROGRAMMEE. " OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
+
+		dol_syslog(get_class($this)."::userAsFormation", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			if($this->db->num_rows($resql)) {
+				$this->db->free($resql);
+				return 1;
+			}
+			else {
+				$this->db->free($resql);
+				return 0;
+			}
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
 	}
 }
 

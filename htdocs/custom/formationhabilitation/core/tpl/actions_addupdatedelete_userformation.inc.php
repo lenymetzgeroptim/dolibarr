@@ -33,7 +33,11 @@
 // 	$action = '';
 // }
 
-if($action == 'addline' && $permissiontoaddline) {
+if($action == 'confirm_addline' && $confirm == 'yes' && $permissiontoaddline) {
+	$formation = new Formation($db);
+	$userFormation = new UserFormation($db);
+	$db->begin();
+
 	if(!(GETPOST('fk_formation') > 0)){
 		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Formation")), null, 'errors');
 		$error++;
@@ -72,6 +76,30 @@ if($action == 'addline' && $permissiontoaddline) {
 		$error++;
 	}
 
+	if(!$error) { // Gestion des prérequis 
+		$formation->fetch(GETPOST('fk_formation'));
+		$prerequis = explode(',', $formation->prerequis);
+		foreach($prerequis as $formationid) {
+			if(!$userFormation->userAsFormation(GETPOST('fk_user'), $formationid)) {
+				$formation->fetch($formationid);
+				setEventMessages($langs->trans('ErrorPrerequis', $formation->label), null, 'errors');
+				$error++;
+			}
+		}
+	}
+
+	if(!$error) { // Gestion de la cloture des formations de niveau inferieur
+		$formationToClose = $formation->getFormationToClose(GETPOST('fk_user'), GETPOST('fk_formation'));
+		foreach($formationToClose as $userformation_id => $userformation_ref) {
+            $userFormation->fetch($userformation_id);
+			$res = $userFormation->cloture($user);
+
+			if(!$res) {
+				$error++;
+			}
+        }
+	}
+
 	if (!$error) {
 		$objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date_fin, "%Y%m%d");
 		$objectline->fk_user = GETPOST('fk_user');
@@ -94,11 +122,13 @@ if($action == 'addline' && $permissiontoaddline) {
 	}
 
 	if(!$error && $resultcreate){
+		$db->commit();
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 		exit;
 	}
 	elseif(!$error && !$resultcreate){
+		$db->rollback();
 		setEventMessages($langs->trans($objectline->error), null, 'errors');
 	}
 

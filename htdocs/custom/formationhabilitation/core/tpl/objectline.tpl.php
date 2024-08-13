@@ -159,6 +159,25 @@ if (!GETPOST('confirmmassaction', 'alpha') && $massaction != 'presend' && $massa
 //include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) { // All tests are required to be compatible with all browsers
     foreach ($objectline->fields as $key => $val) {
+        if($key == 'status') {
+            if($objectline->element == 'userformation'){
+                $search[$key] =  implode(',', array($objectline::STATUS_VALIDE, $objectline::STATUS_A_PROGRAMMER, $objectline::STATUS_PROGRAMMEE, $objectline::STATUS_EXPIREE));
+            }
+            elseif($objectline->element == 'userhabilitation'){
+                $search[$key] =  implode(',', array($objectline::STATUS_NONHABILITE, $objectline::STATUS_HABILITABLE, $objectline::STATUS_HABILITE));
+            }
+            elseif($objectline->element == 'userautorisation'){
+                $search[$key] =  implode(',', array($objectline::STATUS_AUTORISABLE, $objectline::STATUS_AUTORISE, $objectline::STATUS_NONAUTORISE));
+            }
+            continue;
+        }
+        elseif($object->element == 'user' && $key == 'fk_user'){
+            continue;
+        }
+        elseif($object->element == 'formation' && $key == 'fk_formation'){
+            continue;
+        }
+
         $search[$key] = '';
         if (preg_match('/^(date|timestamp|datetime)/', $val['type'])) {
             $search[$key.'_dtstart'] = '';
@@ -221,25 +240,31 @@ $selectedfields .= (count($arrayofmassactions) ? $form->showCheckAddButtons('che
 // Count total nb of records
 $nbtotalofrecords = '';
 if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
-    if($object->element == 'formation'){
-        $sqlforcount = 'SELECT COUNT(*) as nbtotalofrecords FROM '.MAIN_DB_PREFIX.'formationhabilitation_userformation WHERE fk_formation = '.$object->id;
-    }
-    elseif($object->element == 'habilitation'){
-        $sqlforcount = 'SELECT COUNT(*) as nbtotalofrecords FROM '.MAIN_DB_PREFIX.'formationhabilitation_userhabilitation WHERE fk_habilitation = '.$object->id;
-    }
-    elseif($object->element == 'autorisation'){
-        $sqlforcount = 'SELECT COUNT(*) as nbtotalofrecords FROM '.MAIN_DB_PREFIX.'formationhabilitation_userautorisation WHERE fk_autorisation = '.$object->id;
-    }
-    elseif($object->element == 'user'){
-        if($objectline->element == 'userformation'){
-            $sqlforcount = 'SELECT COUNT(*) as nbtotalofrecords FROM '.MAIN_DB_PREFIX.'formationhabilitation_userformation WHERE fk_user = '.$object->id;
+    $sqlforcount = 'SELECT COUNT(*) as nbtotalofrecords FROM '.MAIN_DB_PREFIX.$objectline->table_element;
+
+    // Manage filter
+    $sqlforcount .= " WHERE 1 = 1";
+
+    $sqlwhere = array();
+    if (count($search) > 0) {
+        foreach ($search as $key => $value) {
+            if($value) {
+                if ($key == 't.rowid') {
+                    $sqlwhere[] = $key." = ".((int) $value);
+                } elseif (in_array($objectline->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+                    $sqlwhere[] = $key." = '".$db->idate($value)."'";
+                } elseif ($key == 'customsql') {
+                    $sqlwhere[] = $value;
+                } elseif (strpos($value, '%') === false) {
+                    $sqlwhere[] = $key." IN (".$db->sanitize($db->escape($value)).")";
+                } else {
+                    $sqlwhere[] = $key." LIKE '%".$db->escape($value)."%'";
+                }
+            }
         }
-        elseif($objectline->element == 'userhabilitation'){
-            $sqlforcount = 'SELECT COUNT(*) as nbtotalofrecords FROM '.MAIN_DB_PREFIX.'formationhabilitation_userhabilitation WHERE fk_user = '.$object->id;
-        }
-        elseif($objectline->element == 'userautorisation'){
-            $sqlforcount = 'SELECT COUNT(*) as nbtotalofrecords FROM '.MAIN_DB_PREFIX.'formationhabilitation_userautorisation WHERE fk_user = '.$object->id;
-        }
+    }
+    if (count($sqlwhere) > 0) {
+        $sqlforcount .= " AND (".implode(" AND ", $sqlwhere).")";
     }
 
     $resql = $db->query($sqlforcount);
@@ -281,6 +306,40 @@ elseif($action == 'edit_coutmobilisation') {
 else {
     print '<input type="hidden" name="action" value="addline">';
 }
+
+// Confirmation
+if ($action == 'addline' && $objectparentline->element == 'formation') {
+    $param = '';
+    $param .= (GETPOST('fk_formation') ? '&fk_formation='.urlencode(GETPOST('fk_formation')) : '');
+    $param .= (GETPOST('fk_user') ? '&fk_user='.urlencode(GETPOST('fk_user')) : '');
+    $param .= (GETPOST('date_debut_formationmonth') ? '&date_debut_formationmonth='.urlencode(GETPOST('date_debut_formationmonth')) : '');
+    $param .= (GETPOST('date_debut_formationday') ? '&date_debut_formationday='.urlencode(GETPOST('date_debut_formationday')) : '');
+    $param .= (GETPOST('date_debut_formationyear') ? '&date_debut_formationyear='.urlencode(GETPOST('date_debut_formationyear')) : '');
+    $param .= (GETPOST('date_fin_formationmonth') ? '&date_fin_formationmonth='.urlencode(GETPOST('date_fin_formationmonth')) : '');
+    $param .= (GETPOST('date_fin_formationday') ? '&date_fin_formationday='.urlencode(GETPOST('date_fin_formationday')) : '');
+    $param .= (GETPOST('date_fin_formationyear') ? '&date_fin_formationyear='.urlencode(GETPOST('date_fin_formationyear')) : '');
+    $param .= (GETPOST('nombre_heurehour') ? '&nombre_heurehour='.urlencode(GETPOST('nombre_heurehour')) : '');
+    $param .= (GETPOST('nombre_heuremin') ? '&nombre_heuremin='.urlencode(GETPOST('nombre_heuremin')) : '');
+    $param .= (GETPOST('fk_societe') ? '&fk_societe='.urlencode(GETPOST('fk_societe')) : '');
+    $param .= (GETPOST('status') ? '&status='.urlencode(GETPOST('status')) : '');
+    $param .= (GETPOST('interne_externe') ? '&interne_externe='.urlencode(GETPOST('interne_externe')) : '');
+    $param .= (GETPOST('formateur') ? '&formateur='.urlencode(GETPOST('formateur')) : '');
+    $param .= (GETPOST('numero_certificat') ? '&numero_certificat='.urlencode(GETPOST('numero_certificat')) : '');
+    $param .= (GETPOST('resultat') ? '&resultat='.urlencode(GETPOST('resultat')) : '');
+
+    if(GETPOST('fk_formation') > 0 && GETPOST('fk_user') > 0) { // Formation inferieur
+        $formationToClose = $objectparentline->getFormationToClose(GETPOST('fk_user'), GETPOST('fk_formation'));
+        $txt_formationToClose = '';
+		foreach($formationToClose as $idformation => $refformation) {
+            $txt_formationToClose .= $refformation.', ';
+        }
+        $txt_formationToClose = rtrim($txt_formationToClose, ', ');
+    }
+
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$param, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLine2', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', '', 0, 1);
+    print $formconfirm;
+}
+
 print "</form>\n";
 
 // Formulaire pour la recherche

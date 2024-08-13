@@ -53,16 +53,10 @@ print "<!-- BEGIN PHP TEMPLATE objectline_filter.tpl.php -->\n";
 print '<tr class="liste_titre nodrag nodrop">';
 
 foreach($objectline->fields as $key => $val){
-	if($object->element == 'formation' && $key == 'fk_formation'){
-		continue;
-	}
 	if($object->element == 'habilitation' && $key == 'fk_habilitation'){
 		continue;
 	}
 	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
-		continue;
-	}
-	if($object->element == 'user' && $key == 'fk_user'){
 		continue;
 	}
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
@@ -72,6 +66,15 @@ foreach($objectline->fields as $key => $val){
 		continue;
 	}
 	if($key == 'formateur') {
+		continue;
+	}
+
+	if($object->element == 'formation' && $key == 'fk_formation'){
+		print '<input type="hidden" name="search_'.$key.'" value="'.dol_escape_htmltag(isset($object->id) ? $object->id : '').'">';
+		continue;
+	}
+	elseif($object->element == 'user' && $key == 'fk_user'){
+		print '<input type="hidden" name="search_'.$key.'" value="'.dol_escape_htmltag(isset($object->id) ? $object->id : '').'">';
 		continue;
 	}
 
@@ -86,7 +89,9 @@ foreach($objectline->fields as $key => $val){
 			$value = $objectline->getArrayStatut();
 			print $form->multiselectarray('search_status', $value, explode(',', $search[$key]));
 		} elseif (!empty($val['arrayofkeyval']) && is_array($val['arrayofkeyval'])) {
-			print $form->selectarray('search_'.$key, $val['arrayofkeyval'], (isset($search[$key]) ? $search[$key] : ''), $val['notnull'], 0, 0, '', 1, 0, 0, '', 'maxwidth100', 1);
+			//print $form->selectarray('search_'.$key, $val['arrayofkeyval'], (isset($search[$key]) ? $search[$key] : ''), $val['notnull'], 0, 0, '', 1, 0, 0, '', 'maxwidth100', 1);
+			print $form->selectarray('search_'.$key, $val['arrayofkeyval'], (isset($search[$key]) ? $search[$key] : ''), 1, 0, 0, '', 1, 0, 0, '', 'maxwidth100', 1);
+
 		} elseif ((strpos($val['type'], 'integer:') === 0) || (strpos($val['type'], 'sellist:') === 0)) {
 			print $objectline->showInputField($val, $key, (isset($search[$key]) ? $search[$key] : ''), '', '', 'search_', 'maxwidth125', 1);
 		} elseif (preg_match('/^(date|timestamp|datetime)/', $val['type'])) {

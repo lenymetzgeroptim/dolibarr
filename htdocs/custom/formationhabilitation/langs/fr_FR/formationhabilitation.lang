@@ -126,3 +126,12 @@ DeleteHabilitation = Supprimer l'habilitation
 DeleteAutorisation = Supprimer l'autorisation
 ProgrammerFormation = Programmer la formation
 ConfirmProgrammerFormation = Êtes-vous sûr de vouloir programmer la formation ?
+AddLine = Ajout d'une formation au collaborateur
+ConfirmAddLine = Êtes-vous sûr de vouloir ajouter cette formation ?
+ConfirmAddLine2 = Êtes-vous sûr de vouloir ajouter cette formation ? Cela clôturera les formations %s
+
+
+#
+# Erreur
+#
+ErrorPrerequis = Le collaborateur ne possède pas la formation %s qui est requise

@@ -65,7 +65,13 @@ $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
 $domData = ' data-id="'.$line->id.'"';
 
-print '<tr class="drag drop oddeven"'.$domData.'>';
+if(($action == 'edit_datefinvalidite' || $action == 'edit_coutpedagogique' || $action == 'edit_coutmobilisation') && $line->id == $lineid && $permissiontoaddline) {
+	print '<tr class="tredited drag drop oddeven"'.$domData.'>';
+} 
+else {
+	print '<tr class="drag drop oddeven"'.$domData.'>';
+}
+
 foreach($objectline->fields as $key => $val){
 	if($object->element == 'formation' && $key == 'fk_formation'){
 		continue;

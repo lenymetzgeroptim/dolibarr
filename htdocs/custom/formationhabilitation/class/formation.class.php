@@ -1188,6 +1188,41 @@ class Formation extends CommonObject
 		}
 	}
 
+	/**
+	 * 	Return les formations à cloturée lors de la création d'une nouvelle ligne de formation
+	 *
+	 * 	@param  int		$userid       	Id of User
+	 *  @param  int		$formationid    Id of Formation
+	 * 	@return	array						
+	 */
+	public function getFormationToClose($userid, $formationid)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT uf.rowid, uf.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND (f.formationssuperieurs = '$formationid' OR f.formationssuperieurs LIKE '$formationid,%' OR f.formationssuperieurs LIKE '%,$formationid,%' OR f.formationssuperieurs LIKE '%,$formationid')";
+		$sql .= " AND (uf.status = ".UserFormation::STATUS_VALIDE." OR uf.status = ".UserFormation::STATUS_PROGRAMMEE. " OR uf.status = ".UserFormation::STATUS_A_PROGRAMMER.")";
+		$sql .= " ORDER BY uf.ref";
+
+		dol_syslog(get_class($this)."::getFormationToClose", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->ref;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
 }
 
 
