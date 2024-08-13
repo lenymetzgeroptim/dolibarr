@@ -88,7 +88,7 @@ if($action == 'confirm_addline' && $confirm == 'yes' && $permissiontoaddline) {
 		}
 	}
 
-	if(!$error && GETPOST('status') == $objectline::STATUS_VALIDATED) { // Gestion de la cloture des formations de niveau inferieur
+	if(!$error && GETPOST('status') == $objectline::STATUS_VALIDE) { // Gestion de la cloture des formations de niveau inferieur
 		$formationToClose = $formation->getFormationToClose(GETPOST('fk_user'), GETPOST('fk_formation'));
 		foreach($formationToClose as $userformation_id => $userformation_ref) {
             $userFormation->fetch($userformation_id);
