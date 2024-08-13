@@ -88,7 +88,7 @@ if($action == 'confirm_addline' && $confirm == 'yes' && $permissiontoaddline) {
 		}
 	}
 
-	if(!$error) { // Gestion de la cloture des formations de niveau inferieur
+	if(!$error && GETPOST('status') == $objectline::STATUS_VALIDATED) { // Gestion de la cloture des formations de niveau inferieur
 		$formationToClose = $formation->getFormationToClose(GETPOST('fk_user'), GETPOST('fk_formation'));
 		foreach($formationToClose as $userformation_id => $userformation_ref) {
             $userFormation->fetch($userformation_id);
@@ -312,6 +312,137 @@ if ($action == 'updatecoutmobilisation' && !$cancel && $permissiontoaddline) {
 			$db->rollback();
 			setEventMessages($objectline->error, $objectline->errors, 'warnings');
 			$action = 'edit_coutmobilisation';
+		}
+	}
+	else {
+		$langs->load("errors");
+		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+	}
+}
+
+if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permissiontoaddline){
+	if($lineid > 0){
+		if (empty(GETPOST("date_debut_formation_programmermonth", 'int')) || empty(GETPOST("date_debut_formation_programmerday", 'int')) || empty(GETPOST("date_debut_formation_programmeryear", 'int'))) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateDebutFormation")), null, 'errors');
+			$error++;
+		}
+		$date_debut = dol_mktime(-1, -1, -1, GETPOST("date_debut_formation_programmermonth", 'int'), GETPOST("date_debut_formation_programmerday", 'int'), GETPOST("date_debut_formation_programmeryear", 'int'));
+
+		if (empty(GETPOST("date_fin_formation_programmermonth", 'int')) || empty(GETPOST("date_fin_formation_programmerday", 'int')) || empty(GETPOST("date_fin_formation_programmeryear", 'int'))) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFinFormation")), null, 'errors');
+			$error++;
+		}
+		$date_fin = dol_mktime(-1, -1, -1, GETPOST("date_fin_formation_programmermonth", 'int'), GETPOST("date_fin_formation_programmerday", 'int'), GETPOST("date_fin_formation_programmeryear", 'int'));
+
+		if (!$error) {
+			// Changement status de l'ancienne ligne
+			$objectline->fetch($lineid);
+			$objectline->status = UserFormation::STATUS_REPROGRAMMEE;
+			$result == $objectline->update($user);
+			$userid = $objectline->fk_user; 
+			$formationid = $objectline->fk_formation;
+
+			$user_static = new User($db);
+			$user_static->fetch($userid);
+			$formation_static = new Formation($db);
+			$formation_static->fetch($formationid);
+
+			$objectline = New UserFormation($db);
+			$objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date_fin, "%Y%m%d");
+			$objectline->fk_formation = $formationid;
+			$objectline->fk_user = $userid;
+			// $objectline->interne_externe = GETPOST('interne_externe');
+			$objectline->date_debut_formation = $date_debut;
+			$objectline->date_fin_formation = $date_fin;
+			$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm') : '');
+			$objectline->nombre_heure = $formation_static->nombre_heure;
+			$objectline->cout_pedagogique = $formation_static->cout;
+			$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
+			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+			// $objectline->fk_societe = GETPOST('fk_societe');
+			// $objectline->formateur = GETPOST('formateur');
+			$objectline->status = UserFormation::STATUS_PROGRAMMEE;
+
+			$result = $objectline->create($user);
+		}
+
+		if(!$error && $result){
+			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+		}
+		elseif(!$result){
+			setEventMessages($langs->trans($object->error), null, 'errors');
+		}
+	}
+	else {
+		$langs->load("errors");
+		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+	}
+}
+
+if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoaddline){
+	$formation = new Formation($db);
+	$userFormation = new UserFormation($db);
+	$db->begin();
+
+	if($lineid > 0){
+		if(empty(GETPOST('numero_certificat_valider'))){
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("NumeroCertificat")), null, 'errors');
+			$error++;
+		}
+		
+		if(!(GETPOST('resultat_valider') > 0)){
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Resultat")), null, 'errors');
+			$error++;
+		}
+
+		if (!$error) {
+			$objectline->fetch($lineid);
+			$userid = $objectline->fk_user; 
+			$formationid = $objectline->fk_formation;
+
+			$user_static = new User($db);
+			$user_static->fetch($userid);
+			$formation_static = new Formation($db);
+			$formation_static->fetch($formationid);
+
+			// Changement status des anciennes lignes
+			$formationToClose = $formation->getFormationToClose($userid, $formationid, $lineid);
+			foreach($formationToClose as $userformation_id => $userformation_ref) {
+				$userFormation->fetch($userformation_id);
+				$res = $userFormation->cloture($user);
+	
+				if(!$res) {
+					$error++;
+				}
+			}
+
+			// $objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
+			// $objectline->fk_formation = $formationid;
+			// $objectline->fk_user = $userid;
+			// $objectline->interne_externe = GETPOST('interne_externe');
+			// $objectline->date_debut_formation = $date_debut;
+			// $objectline->date_fin_formation = $date_fin;
+			// $objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm') : '');
+			// $objectline->nombre_heure = $formation_static->nombre_heure;
+			// $objectline->cout_pedagogique = $formation_static->cout;
+			// $objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
+			// $objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+			// $objectline->fk_societe = GETPOST('fk_societe');
+			// $objectline->formateur = GETPOST('formateur');
+			$objectline->numero_certificat = GETPOST('numero_certificat_valider');
+			$objectline->resultat = GETPOST('resultat_valider');
+			$objectline->status = UserFormation::STATUS_VALIDE;
+
+			$result = $objectline->update($user);
+		}
+
+		if(!$error && $result){
+			$db->commit();
+			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+		}
+		elseif(!$result){
+			$db->rollback();
+			setEventMessages($langs->trans($object->error), null, 'errors');
 		}
 	}
 	else {

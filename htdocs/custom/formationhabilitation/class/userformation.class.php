@@ -66,8 +66,9 @@ class UserFormation extends CommonObject
 
 	const STATUS_VALIDE = 1;
 	const STATUS_A_PROGRAMMER = 2;
-	const STATUS_PROGRAMMEE = 3;
-	const STATUS_EXPIREE = 4;
+	const STATUS_PROGRAMMEE = 3; // Equivaut à draft
+	const STATUS_REPROGRAMMEE = 4;
+	const STATUS_EXPIREE = 5;
 	const STATUS_CLOTUREE = 9;
 
 
@@ -119,7 +120,7 @@ class UserFormation extends CommonObject
 		"fk_user" => array("type"=>"integer:User:user\class\user.class.php:0:(statut:=:1)", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 		"date_debut_formation" => array("type"=>"date", "label"=>"DateDebutFormation", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1",),
 		"date_fin_formation" => array("type"=>"date", "label"=>"DateFinFormation", "enabled"=>"1", 'position'=>39, 'notnull'=>1, "visible"=>"1",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Expirée", "9" => "Cloturée"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "9" => "Cloturée"), "validate"=>"1",),
 		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"4",),
 		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>46, 'notnull'=>1, "visible"=>"4",),
 		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>47, 'notnull'=>1, "visible"=>"4",),
@@ -626,11 +627,13 @@ class UserFormation extends CommonObject
 			$this->labelStatus[self::STATUS_VALIDE] = $langs->transnoentitiesnoconv('Valide');
 			$this->labelStatus[self::STATUS_A_PROGRAMMER] = $langs->transnoentitiesnoconv("A programmer");
 			$this->labelStatus[self::STATUS_PROGRAMMEE] = $langs->transnoentitiesnoconv('Programmée');
+			$this->labelStatus[self::STATUS_REPROGRAMMEE] = $langs->transnoentitiesnoconv('Reprogrammée');
 			$this->labelStatus[self::STATUS_EXPIREE] = $langs->transnoentitiesnoconv('Expirée');
 			$this->labelStatus[self::STATUS_CLOTUREE] = $langs->transnoentitiesnoconv('Cloturée');
 			$this->labelStatusShort[self::STATUS_VALIDE] = $langs->transnoentitiesnoconv('Valide');
 			$this->labelStatusShort[self::STATUS_A_PROGRAMMER] = $langs->transnoentitiesnoconv("A programmer");
 			$this->labelStatusShort[self::STATUS_PROGRAMMEE] = $langs->transnoentitiesnoconv('Programmée');
+			$this->labelStatusShort[self::STATUS_REPROGRAMMEE] = $langs->transnoentitiesnoconv('Reprogrammée');
 			$this->labelStatusShort[self::STATUS_EXPIREE] = $langs->transnoentitiesnoconv('Expirée');
 			$this->labelStatusShort[self::STATUS_CLOTUREE] = $langs->transnoentitiesnoconv('Cloturée');
 		}
@@ -638,7 +641,8 @@ class UserFormation extends CommonObject
 		$statusType = 'status'.$status;
 		if ($status == self::STATUS_VALIDE) $statusType = 'status4';
 		if ($status == self::STATUS_A_PROGRAMMER) $statusType = 'status1';
-		if ($status == self::STATUS_PROGRAMMEE) $statusType = 'status2';
+		if ($status == self::STATUS_PROGRAMMEE) $statusType = 'status7';
+		if ($status == self::STATUS_REPROGRAMMEE) $statusType = 'status2';
 		if ($status == self::STATUS_EXPIREE) $statusType = 'status8';
 		if ($status == self::STATUS_CLOTUREE) $statusType = 'status6';
 
@@ -912,7 +916,7 @@ class UserFormation extends CommonObject
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
 		$sql .= " AND f.periode_souplesse IS NULL";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
 		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
 
 		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour + 6 mois => A programmer
@@ -922,7 +926,7 @@ class UserFormation extends CommonObject
 		$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
 		$sql2 .= " AND f.periode_souplesse IS NULL";
 		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL -6 MONTH) <= '".$this->db->idate($now)."'";
+		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.delaisprogrammation MONTH) <= '".$this->db->idate($now)."'";
 
 		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
 
@@ -997,8 +1001,8 @@ class UserFormation extends CommonObject
 		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
 		$sql .= " AND f.periode_souplesse IS NOT NULL";
 		$sql .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse DAY) <= '".$this->db->idate($now)."'";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
+		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) <= '".$this->db->idate($now)."'";
 
 		// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => A programmer
 		$sql2 = "SELECT uf.rowid";
@@ -1008,7 +1012,7 @@ class UserFormation extends CommonObject
 		$sql2 .= " AND f.periode_souplesse IS NOT NULL";
 		$sql2 .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
 		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse DAY) > '".$this->db->idate($now)."'";
+		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) > '".$this->db->idate($now)."'";
 		$sql2 .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
 
 		$resql = $this->db->query($sql);
@@ -1083,8 +1087,8 @@ class UserFormation extends CommonObject
 		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
 		$sql .= " AND f.periode_souplesse IS NOT NULL";
 		$sql .= " AND f.periode_souplesse_bloquant = 1";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse DAY) > '".$this->db->idate($now)."'";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
+		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) > '".$this->db->idate($now)."'";
 		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
 
 		$resql = $this->db->query($sql);
@@ -1191,6 +1195,7 @@ class UserFormation extends CommonObject
 
 		$labelStatus[self::STATUS_VALIDE] = $langs->transnoentitiesnoconv('Valide');
 		$labelStatus[self::STATUS_A_PROGRAMMER] = $langs->transnoentitiesnoconv('A programmer');
+		$labelStatus[self::STATUS_REPROGRAMMEE] = $langs->transnoentitiesnoconv('Reprogrammée');
 		$labelStatus[self::STATUS_PROGRAMMEE] = $langs->transnoentitiesnoconv('Programmée');
 		$labelStatus[self::STATUS_EXPIREE] = $langs->transnoentitiesnoconv('Expirée');
 		$labelStatus[self::STATUS_CLOTUREE] = $langs->transnoentitiesnoconv('Cloturée');
@@ -1214,7 +1219,7 @@ class UserFormation extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND uf.fk_formation = $formationid";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_PROGRAMMEE. " OR uf.status = ".self::STATUS_A_PROGRAMMER.")";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
 
 		dol_syslog(get_class($this)."::userAsFormation", LOG_DEBUG);
 		$resql = $this->db->query($sql);

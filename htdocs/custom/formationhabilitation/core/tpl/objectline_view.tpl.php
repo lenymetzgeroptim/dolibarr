@@ -104,13 +104,16 @@ foreach($objectline->fields as $key => $val){
 		}
 		elseif($key == 'status'){
 			print $line->getLibStatut(2);
-			// if($line->status == UserFormation::STATUS_A_PROGRAMMER) {
-			// 	print dolGetButtonAction($langs->trans('Programmer'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=programmer_formation&token='.newToken().'&lineid='.$line->id, '', $permissiontoaddline);
-			// }
+			if($objectline->element == 'userformation' && $line->status == UserFormation::STATUS_A_PROGRAMMER) {
+				print dolGetButtonAction($langs->trans('Programmer'), $langs->trans('Programmer'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=programmer_formation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id, '', $permissiontoaddline);
+			}
+			elseif($objectline->element == 'userformation' && $line->status == UserFormation::STATUS_PROGRAMMEE) {
+				print dolGetButtonAction($langs->trans('Valider'), $langs->trans('Valider'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=valider_formation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id, '', $permissiontoaddline);
+			}
 		}
-		// elseif($key == 'ref'){
-		// 	print $line->getNomUrl(0, 'nolink', 1);
-		// }
+		elseif($key == 'ref'){
+			print $line->getNomUrl(0, 'nolink', 1);
+		}
 		elseif((($key == 'date_finvalidite_formation' && $action == 'edit_datefinvalidite') || ($key == 'cout_pedagogique' && $action == 'edit_coutpedagogique') 
 		|| ($key == 'cout_mobilisation' && $action == 'edit_coutmobilisation')) && $permissiontoaddline && $line->id == $lineid) {
 			print $line->showInputField($val, $key, $line->$key, 'form="addline"');

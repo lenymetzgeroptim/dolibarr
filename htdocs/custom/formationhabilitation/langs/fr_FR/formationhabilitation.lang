@@ -28,7 +28,7 @@ BoxTitleLatestModifiedFormation = Les dernières autorisations modifiées
 
 ListOfs = Liste des %s
 NewObj = Nouvelle %s
-UserFormation = formations d'un collaborateur
+UserFormation = formations du collaborateur
 
 #
 # Admin page
@@ -129,7 +129,9 @@ ConfirmProgrammerFormation = Êtes-vous sûr de vouloir programmer la formation 
 AddLine = Ajout d'une formation au collaborateur
 ConfirmAddLine = Êtes-vous sûr de vouloir ajouter cette formation ?
 ConfirmAddLine2 = Êtes-vous sûr de vouloir ajouter cette formation ? Cela clôturera les formations %s
-
+ValiderFormation = Valider la formation
+ConfirmValiderFormation = Êtes-vous sûr de vouloir valider la formation ?
+ConfirmValiderFormation2 = Êtes-vous sûr de vouloir valider la formation ? Cela clôturera les formations %s
 
 #
 # Erreur

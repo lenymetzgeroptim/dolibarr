@@ -111,3 +111,6 @@ div.mainmenu.formationhabilitation {
 	max-width: 200px;
 }
 
+td.linecolstatus a[aria-label="Programmer"] {
+	padding: 0.3em 0.35em;
+}

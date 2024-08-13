@@ -235,50 +235,6 @@ if (empty($reshook)) {
 		$action = '';
 	}
 
-	// if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permissiontoaddline){
-	// 	if($lineid > 0 && $id > 0){
-	// 		$objectline = new UserFormation($db);
-
-	// 		if (empty(GETPOST("date_formation_programmermonth", 'int')) || empty(GETPOST("date_formation_programmerday", 'int')) || empty(GETPOST("date_formation_programmeryear", 'int'))) {
-	// 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFormation")), null, 'errors');
-	// 			$error++;
-	// 		}
-	// 		$date = dol_mktime(-1, -1, -1, GETPOST("date_formation_programmermonth", 'int'), GETPOST("date_formation_programmerday", 'int'), GETPOST("date_formation_programmeryear", 'int'));
-
-	// 		if (!$error) {
-	// 			$objectline->fetch($lineid);
-	// 			$objectline->status = UserFormation::STATUS_CLOTUREE;
-	// 			$result == $objectline->update($user);
-	// 			$userid = $objectline->fk_user; 
-
-	// 			$user_static = new User($db);
-	// 			$user_static->fetch($userid);
-
-	// 			$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
-	// 			$objectline->fk_formation = $id;
-	// 			$objectline->fk_user = $userid;
-	// 			$objectline->date_formation = $date;
-	// 			$objectline->status = UserFormation::STATUS_PROGRAMMEE;
-	// 			$objectline->cout_pedagogique = $object->cout;
-    //             $objectline->cout_mobilisation = $user_static->thm * ($object->nombre_heure / 3600);
-    //             $objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
-
-	// 			$result = $objectline->create($user);
-	// 		}
-
-	// 		if(!$error && $result){
-	// 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-	// 		}
-	// 		elseif(!$result){
-	// 			setEventMessages($langs->trans($object->error), null, 'errors');
-	// 		}
-	// 	}
-	// 	else {
-	// 		$langs->load("errors");
-	// 		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-	// 	}
-	// }
-
 	// Actions to send emails
 	$triggersendname = 'FORMATIONHABILITATION_FORMATION_SENTBYMAIL';
 	$autocopy = 'MAIN_MAIL_AUTOCOPY_FORMATION_TO';
@@ -404,11 +360,28 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// Create an array for form
 		$formquestion = array();
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
-	}
-	// Confirmation to programmer
+	}// Confirmation to programmer
 	if ($action == 'programmer_formation') {
-		$formquestion = array(array('label'=>'Date de formation' ,'type'=>'date', 'name'=>'date_formation_programmer'));
+		$objectline->fetch($lineid);
+		$formquestion = array(array('label'=>'Date début formation' ,'type'=>'date', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
+							  array('label'=>'Date fin formation' ,'type'=>'date', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation));
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ProgrammerFormation'), $langs->trans('ConfirmProgrammerFormation'), 'confirm_programmer_formation', $formquestion, 0, 2);
+	}
+	if ($action == 'valider_formation') {
+		$objectline->fetch($lineid);
+	
+		if($objectline->fk_formation > 0 && $objectline->fk_user > 0) { // Formation inferieur
+			$formationToClose = $objectparentline->getFormationToClose($objectline->fk_user, $objectline->fk_formation, $lineid);
+			$txt_formationToClose = '';
+			foreach($formationToClose as $idformation => $refformation) {
+				$txt_formationToClose .= $refformation.', ';
+			}
+			$txt_formationToClose = rtrim($txt_formationToClose, ', ');
+		}
+	
+		$formquestion = array(array('label'=>'Résultat' ,'type'=>'select', 'name'=>'resultat_valider', 'value'=>$objectline->resultat, 'values' => $objectline->fields['resultat']['arrayofkeyval']),
+							  array('label'=>'Numéro Certificat' ,'type'=>'text', 'name'=>'numero_certificat_valider', 'value'=>$objectline->numero_certificat));
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ValiderFormation'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmValiderFormation2', $txt_formationToClose) : $langs->trans('ConfirmValiderFormation')), 'confirm_valider_formation', $formquestion, 0, 2);
 	}
 
 	// Call Hook formConfirm

@@ -122,7 +122,7 @@ class Formation extends CommonObject
 		"periode_recyclage" => array("type"=>"integer", "label"=>"PeriodeRecyclage", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1", "help"=>"en mois",),
 		"fournisseur" => array("type"=>"chkbxlst:societe:nom:rowid::fournisseur=1", "label"=>"Fournisseur", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1",),
 		"famille" => array("type"=>"sellist:c_famille_formation:label:rowid::(active:=:1)", "label"=>"Famille", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1",),
-		"periode_souplesse" => array("type"=>"integer", "label"=>"PeriodeSouplesse", "enabled"=>"1", 'position'=>36, 'notnull'=>0, "visible"=>"-1", "help"=>"en jour",),
+		"periode_souplesse" => array("type"=>"integer", "label"=>"PeriodeSouplesse", "enabled"=>"1", 'position'=>36, 'notnull'=>0, "visible"=>"-1", "help"=>"en mois",),
 		"periode_souplesse_bloquant" => array("type"=>"boolean", "label"=>"PeriodeSouplesseBloquant", "enabled"=>"1", 'position'=>37, 'notnull'=>0, "visible"=>"1",),
 		"prerequis" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"Prerequis", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"volet" => array("type"=>"sellist:c_volets:numero|label:numero::(active:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
@@ -1191,11 +1191,12 @@ class Formation extends CommonObject
 	/**
 	 * 	Return les formations à cloturée lors de la création d'une nouvelle ligne de formation
 	 *
-	 * 	@param  int		$userid       	Id of User
-	 *  @param  int		$formationid    Id of Formation
+	 * 	@param  int		$userid       				Id of User
+	 *  @param  int		$formationid    			Id of Formation
+ 	 *  @param  int		$userformation_exclude      Id of UserFormation not cloture
 	 * 	@return	array						
 	 */
-	public function getFormationToClose($userid, $formationid)
+	public function getFormationToClose($userid, $formationid, $userformation_exclude = '')
 	{
 		global $conf, $user;
 		$res = array();
@@ -1205,7 +1206,10 @@ class Formation extends CommonObject
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND (f.formationssuperieurs = '$formationid' OR f.formationssuperieurs LIKE '$formationid,%' OR f.formationssuperieurs LIKE '%,$formationid,%' OR f.formationssuperieurs LIKE '%,$formationid')";
-		$sql .= " AND (uf.status = ".UserFormation::STATUS_VALIDE." OR uf.status = ".UserFormation::STATUS_PROGRAMMEE. " OR uf.status = ".UserFormation::STATUS_A_PROGRAMMER.")";
+		$sql .= " AND (uf.status != ".UserFormation::STATUS_CLOTUREE.")";
+		if($userformation_exclude) {
+			$sql .= " AND uf.rowid != $userformation_exclude";
+		}
 		$sql .= " ORDER BY uf.ref";
 
 		dol_syslog(get_class($this)."::getFormationToClose", LOG_DEBUG);

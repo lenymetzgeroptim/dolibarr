@@ -51,7 +51,7 @@ foreach ($objectline->fields as $key => $val) {
         }
         else {
             if($objectline->element == 'userformation'){
-                $search[$key] =  implode(',', array($objectline::STATUS_VALIDE, $objectline::STATUS_A_PROGRAMMER, $objectline::STATUS_PROGRAMMEE, $objectline::STATUS_EXPIREE));
+                $search[$key] =  implode(',', array($objectline::STATUS_VALIDE, $objectline::STATUS_A_PROGRAMMER, $objectline::STATUS_REPROGRAMMEE, $objectline::STATUS_PROGRAMMEE, $objectline::STATUS_EXPIREE));
             }
             elseif($objectline->element == 'userhabilitation'){
                 $search[$key] =  implode(',', array($objectline::STATUS_NONHABILITE, $objectline::STATUS_HABILITABLE, $objectline::STATUS_HABILITE));
@@ -161,7 +161,7 @@ if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x'
     foreach ($objectline->fields as $key => $val) {
         if($key == 'status') {
             if($objectline->element == 'userformation'){
-                $search[$key] =  implode(',', array($objectline::STATUS_VALIDE, $objectline::STATUS_A_PROGRAMMER, $objectline::STATUS_PROGRAMMEE, $objectline::STATUS_EXPIREE));
+                $search[$key] =  implode(',', array($objectline::STATUS_VALIDE, $objectline::STATUS_A_PROGRAMMER, $objectline::STATUS_REPROGRAMMEE, $objectline::STATUS_PROGRAMMEE, $objectline::STATUS_EXPIREE));
             }
             elseif($objectline->element == 'userhabilitation'){
                 $search[$key] =  implode(',', array($objectline::STATUS_NONHABILITE, $objectline::STATUS_HABILITABLE, $objectline::STATUS_HABILITE));
@@ -327,7 +327,7 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
     $param .= (GETPOST('numero_certificat') ? '&numero_certificat='.urlencode(GETPOST('numero_certificat')) : '');
     $param .= (GETPOST('resultat') ? '&resultat='.urlencode(GETPOST('resultat')) : '');
 
-    if(GETPOST('fk_formation') > 0 && GETPOST('fk_user') > 0) { // Formation inferieur
+    if(GETPOST('fk_formation') > 0 && GETPOST('fk_user') > 0 && GETPOST('status') == $objectline::STATUS_VALIDE) { // Formation inferieur
         $formationToClose = $objectparentline->getFormationToClose(GETPOST('fk_user'), GETPOST('fk_formation'));
         $txt_formationToClose = '';
 		foreach($formationToClose as $idformation => $refformation) {
@@ -373,7 +373,7 @@ $trackid = 'xxxx'.$object->id;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/massactions_pre.tpl.php';
 
 $title = $langs->trans('ListOfs', $langs->transnoentitiesnoconv("UserFormation"));
-print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, 'fa-graduation-cap_fas_#1f3d89', 0, '', '', $limit, 0, 0, 1);
+print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', $limit, 0, 0, 1);
 
 print '<div class="div-table-responsive-no-min" style="'.($css_div ? $css_div : '').'">';
 

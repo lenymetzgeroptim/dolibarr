@@ -438,6 +438,28 @@ if ($action == 'deleteline') {
 if ($action == 'remove_file') {
     $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&file='.urlencode(GETPOST("file")).'&onglet='.$onglet, $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
 }
+if ($action == 'programmer_formation') {
+    $objectline->fetch($lineid);
+    $formquestion = array(array('label'=>'Date début formation' ,'type'=>'date', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
+                          array('label'=>'Date fin formation' ,'type'=>'date', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation));
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ProgrammerFormation'), $langs->trans('ConfirmProgrammerFormation'), 'confirm_programmer_formation', $formquestion, 0, 2);
+}
+if ($action == 'valider_formation') {
+    $objectline->fetch($lineid);
+
+    if($objectline->fk_formation > 0 && $objectline->fk_user > 0) { // Formation inferieur
+        $formationToClose = $objectparentline->getFormationToClose($objectline->fk_user, $objectline->fk_formation, $lineid);
+        $txt_formationToClose = '';
+		foreach($formationToClose as $idformation => $refformation) {
+            $txt_formationToClose .= $refformation.', ';
+        }
+        $txt_formationToClose = rtrim($txt_formationToClose, ', ');
+    }
+
+    $formquestion = array(array('label'=>'Résultat' ,'type'=>'select', 'name'=>'resultat_valider', 'value'=>$objectline->resultat, 'values' => $objectline->fields['resultat']['arrayofkeyval']),
+                          array('label'=>'Numéro Certificat' ,'type'=>'text', 'name'=>'numero_certificat_valider', 'value'=>$objectline->numero_certificat));
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ValiderFormation'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmValiderFormation2', $txt_formationToClose) : $langs->trans('ConfirmValiderFormation')), 'confirm_valider_formation', $formquestion, 0, 2);
+}
 // Print form confirm
 print $formconfirm;
 
