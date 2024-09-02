@@ -175,6 +175,7 @@ class extendedHoliday extends Holiday
 		$statutfdt_array = array();
 		$droitrtt_array = array();
 		$in_hour_array = array();
+		$nb_jour_array = array();
 
 		// Check into leave requests
 		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, he.statutfdt, ht.in_hour";
@@ -203,6 +204,9 @@ class extendedHoliday extends Holiday
 				while ($i < $num_rows) {
 					$obj = $this->db->fetch_object($resql);
 
+					$date_debut_gmt = $this->db->jdate($obj->date_start, 1);
+					$date_fin_gmt = $this->db->jdate($obj->date_end, 1);
+
 					// Note: $obj->halfday is  0:Full days, 2:Sart afternoon end morning, -1:Start afternoon, 1:End morning
 					$arrayofrecord[$obj->rowid] = array('date_start'=>$this->db->jdate($obj->date_start), 'date_end'=>$this->db->jdate($obj->date_end), 'halfday'=>$obj->halfday);
 					$rowid_array[] = $obj->rowid;
@@ -212,6 +216,7 @@ class extendedHoliday extends Holiday
 					$statutfdt_array[] = $obj->statutfdt;
 					$droitrtt_array[] = $obj->droit_rtt;
 					$in_hour_array[] = $obj->in_hour;
+					$nb_jour_array[] = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
 
 					$i++;
 				}
@@ -244,7 +249,7 @@ class extendedHoliday extends Holiday
 			dol_print_error($this->db);
 		}
 
-		$result = array('morning'=>$isavailablemorning, 'afternoon'=>$isavailableafternoon, 'statut'=>$statut_array, 'code'=>$code_array, 'rowid'=>$rowid_array, 'hour'=>$hour_array, 'statutfdt'=>$statutfdt_array, 'droit_rtt'=>$droitrtt_array, 'in_hour'=>$in_hour_array);
+		$result = array('morning'=>$isavailablemorning, 'afternoon'=>$isavailableafternoon, 'statut'=>$statut_array, 'code'=>$code_array, 'rowid'=>$rowid_array, 'hour'=>$hour_array, 'statutfdt'=>$statutfdt_array, 'droit_rtt'=>$droitrtt_array, 'in_hour'=>$in_hour_array, 'nb_jour'=>$nb_jour_array);
 		if (!$isavailablemorning) {
 			$result['morning_reason'] = 'leave_request';
 		}

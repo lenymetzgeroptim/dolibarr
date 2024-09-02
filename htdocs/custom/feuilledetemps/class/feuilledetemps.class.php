@@ -2172,7 +2172,7 @@ class FeuilleDeTemps extends CommonObject
 				elseif(sizeof($isavailablefordayanduser['rowid']) > 1) {
 					for($i = 0; $i < sizeof($isavailablefordayanduser['rowid']); $i++) {
 						if($isavailablefordayanduser['hour'][$i] > 0){ // Congés en heure
-							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][$i] / 3600) : ($isavailablefordayanduser['hour'][$i] / 3600));
+							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][$i] / $isavailablefordayanduser['nb_jour'][$i] / 3600) : ($isavailablefordayanduser['hour'][$i] / $isavailablefordayanduser['nb_jour'][$i] / 3600));
 						}
 						elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * 7) : (0.5 * 7));
@@ -2188,7 +2188,7 @@ class FeuilleDeTemps extends CommonObject
 					}
 				}
 				elseif(($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) && $isavailablefordayanduser['hour'][0] > 0){ // Congés en heure
-					$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / 3600));
+					$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600));
 				}
 				elseif($isavailablefordayanduser['morning'] == false && $isavailablefordayanduser['afternoon'] == false) { // Congés journées entières
 					if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
@@ -2256,7 +2256,7 @@ class FeuilleDeTemps extends CommonObject
 					if(sizeof($isavailablefordayanduser['rowid'][$user_id]) > 1) {
 						for($i = 0; $i < sizeof($isavailablefordayanduser['rowid'][$user_id]); $i++) {
 							if($isavailablefordayanduser['hour'][$user_id][$i] > 0){ // Congés en heure
-								$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + ($isavailablefordayanduser['hour'][$user_id][$i] / 3600) : ($isavailablefordayanduser['hour'][$user_id][$i] / 3600));
+								$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + ($isavailablefordayanduser['hour'][$user_id][$i] / $isavailablefordayanduser['nb_jour'][$user_id][$i] / 3600) : ($isavailablefordayanduser['hour'][$user_id][$i] / $isavailablefordayanduser['nb_jour'][$user_id][$i] / 3600));
 							}
 							elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userfield_pasdroitrtt[$user_id])) {
 								$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + (0.5 * 7) : (0.5 * 7));
@@ -2272,7 +2272,7 @@ class FeuilleDeTemps extends CommonObject
 						}
 					}
 					elseif(($isavailablefordayanduser['morning'][$user_id] == false || $isavailablefordayanduser['afternoon'][$user_id] == false) && $isavailablefordayanduser['hour'][$user_id][0] > 0){ // Congés en heure
-						$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + ($isavailablefordayanduser['hour'][$user_id][0] / 3600) : ($isavailablefordayanduser['hour'][$user_id][0] / 3600));
+						$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + ($isavailablefordayanduser['hour'][$user_id][0] / $isavailablefordayanduser['nb_jour'][$user_id][0] / 3600) : ($isavailablefordayanduser['hour'][$user_id][0] / $isavailablefordayanduser['nb_jour'][$user_id][0] / 3600));
 					}
 					elseif($isavailablefordayanduser['morning'][$user_id] == false && $isavailablefordayanduser['afternoon'][$user_id] == false) { // Congés journées entières
 						if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userfield_pasdroitrtt[$user_id])) {
