@@ -263,7 +263,7 @@ $temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, 
 					print '<tr class="oddeven task'.(in_array($taskstatic->id, $favoris) ? ' favoris' : '').'" data-taskid="'.$lines[$i]->id.'">'."\n";
 
 					// Ref
-					print '<td class="fixed" colspan="2"';
+					print '<td class="fixed" colspan="2">';
 					print '<!-- Task id = '.$lines[$i]->id.' -->';
 					for ($k = 0; $k < $level; $k++) {
 						print '<div class="marginleftonly">';
@@ -280,8 +280,8 @@ $temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, 
 
 					// Colonne avec les cases à cocher
 					print '<div id="div_otherhour">';
-					print '<input type="checkbox" '.($has_heure_nuit ? 'checked ' : '').'id="heure_nuit_'.$lines[$i]->id.'" name="heure_nuit"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="heure_nuit_'.$lines[$i]->id.'"> dont Heures de nuit (21h/6h)</label></span>';
-					print '<input type="checkbox" '.($has_port_epi ? 'checked ' : '').'id="port_epi_'.$lines[$i]->id.'" name="port_epi"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="port_epi_'.$lines[$i]->id.'"> dont Port EPI respiratoire</label></span>';
+					print '<input type="checkbox" '.($has_heure_nuit ? 'checked ' : '').'id="heure_nuit_chkb_'.$lines[$i]->id.'" name="heure_nuit_chkb"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="heure_nuit_chkb_'.$lines[$i]->id.'"> dont Heures de nuit (21h/6h)</label></span>';
+					print '<input type="checkbox" '.($has_port_epi ? 'checked ' : '').'id="port_epi_chkb_'.$lines[$i]->id.'" name="port_epi_chkb"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="port_epi_chkb_'.$lines[$i]->id.'"> dont Port EPI respiratoire</label></span>';
 					print '</div></td>';
 
 					for ($k = 0; $k < $level; $k++) {
@@ -1256,8 +1256,8 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 			}
 
 			print '<td class="center hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-			print '<input type="text" style="border: 1px solid grey;" class="center smallpadd heure_nuit_'.$idw.'" size="2" id="heure_nuit['.$idw.']" 
-			name="heure_nuit['.$idw.']" value="'.$heure_nuit.'" cols="2"  maxlength="5" 
+			print '<input type="text" style="border: 1px solid grey;" class="center smallpadd heure_nuit_verif_'.$idw.'" size="2" id="heure_nuit_verif['.$idw.']" 
+			name="heure_nuit_verif['.$idw.']" value="'.$heure_nuit.'" cols="2"  maxlength="5" 
 			onkeypress="return regexEvent_TS(this,event,\'timeChar\')" 
 			onblur="ValidateTimeDecimal(this);" 
 			onchange="updateTotal_HeureNuit('.$nb_jour.', '.$num_first_day.');"'.($disabled ? ' disabled' : '').'/>';
