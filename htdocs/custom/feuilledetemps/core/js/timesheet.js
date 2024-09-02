@@ -1055,17 +1055,17 @@ function updateTotal_OtherHours(nb_jour, num_task, num_first_day, id_task) {
 // Permet d'ajouter / supprimes les cases correspondantes lorsqu'on coche une checkbox
 function CheckboxHeureChange(checkbox, task_id, nb_jour_mois, ligne_id, num_first_day) {
     if (checkbox.checked == true) {
-        if (checkbox.name == "heure_nuit") {
+        if (checkbox.name == "heure_nuit_chkb") {
             AjouterCaseHeureNuit(0, nb_jour_mois, task_id, ligne_id, num_first_day);
         }
-        else if (checkbox.name == "port_epi") {
+        else if (checkbox.name == "port_epi_chkb") {
             AjouterCaseEPI(0, nb_jour_mois, task_id, ligne_id, num_first_day);
         }
     } else {
-        if (checkbox.name == "heure_nuit") {
+        if (checkbox.name == "heure_nuit_chkb") {
             SupprimerCaseHeureNuit(0, nb_jour_mois, task_id, ligne_id);
         }
-        else if (checkbox.name == "port_epi") {
+        else if (checkbox.name == "port_epi_chkb") {
             SupprimerCaseEPI(0, nb_jour_mois, task_id, ligne_id);
         }
     }
@@ -1112,7 +1112,9 @@ function AjouterCaseHeureNuit(debut, fin, task_id, ligne_id, num_first_day) {
 function SupprimerCaseHeureNuit(debut, fin, task_id, ligne_id) {
     for (var a = debut; a < fin; a++) {
         var time_heure_nuit = document.getElementById('time_heure_nuit_' + task_id + '_' + a);
-        time_heure_nuit.remove();
+        if(time_heure_nuit) {
+            time_heure_nuit.remove();
+        }
     }
 
     var total_heureNuit = document.getElementById('total_heureNuit[' + ligne_id + ']');
@@ -1127,6 +1129,7 @@ function SupprimerCaseHeureNuit(debut, fin, task_id, ligne_id) {
 function validateTime_HeureNuit(object, num_ligne, idw) {
     nb_heure = 0;
     nb_heure_nuit = 0;
+    total = 0; 
 
     var heure = document.getElementById('timeadded[' + num_ligne + '][' + idw + ']');
     if (heure.value) {
@@ -1207,7 +1210,9 @@ function AjouterCaseEPI(debut, fin, task_id, ligne_id, num_first_day) {
 function SupprimerCaseEPI(debut, fin, task_id, ligne_id) {
     for (var a = debut; a < fin; a++) {
         var time_epi = document.getElementById('time_epi_' + task_id + '_' + a);
-        time_epi.remove();
+        if(time_epi) {
+            time_epi.remove();
+        }
     }
 
     var total_heureEPI = document.getElementById('total_heureEPI[' + ligne_id + ']');
@@ -1222,6 +1227,7 @@ function SupprimerCaseEPI(debut, fin, task_id, ligne_id) {
 function validateTime_EPI(object, num_ligne, idw) {
     nb_heure = 0;
     nb_heure_epi = 0;
+    total = 0;
 
     var heure = document.getElementById('timeadded[' + num_ligne + '][' + idw + ']');
     if (heure.value) {
@@ -1519,8 +1525,8 @@ function updateTotal_HeureNuit(nb_jour, num_first_day) {
 
     if (totalHeureNuit !== null) {
         for (i = num_first_day; i < nb_jour; i++) {
-            if (parseFloat(document.getElementById('heure_nuit[' + i + ']').value) > 0)
-                heure += parseFloat(document.getElementById('heure_nuit[' + i + ']').value.replace(',', '.'));
+            if (parseFloat(document.getElementById('heure_nuit_verif[' + i + ']').value) > 0)
+                heure += parseFloat(document.getElementById('heure_nuit_verif[' + i + ']').value.replace(',', '.'));
         }
     }
 

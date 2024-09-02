@@ -319,11 +319,11 @@ td > div > input.heure_epi {
 	background-color: white;
 }
 
-#div_otherhour > input[name="heure_nuit"]:checked {
+#div_otherhour > input[name="heure_nuit_chkb"]:checked {
 	accent-color: black;
 }
 
-#div_otherhour > input[name="port_epi"]:checked {
+#div_otherhour > input[name="port_epi_chkb"]:checked {
 	accent-color: green;
 }
 

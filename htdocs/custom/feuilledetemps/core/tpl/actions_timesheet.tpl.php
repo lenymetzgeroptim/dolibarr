@@ -1057,7 +1057,7 @@ if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafte
 	// $heure_sup25 = $_POST['heure_sup25'];
 	// $heure_sup50 = $_POST['heure_sup50'];
 	$heure_route = $_POST['heure_route'];
-	$heure_nuit = $_POST['heure_nuit'];
+	$heure_nuit = $_POST['heure_nuit_verif'];
 	$petit_deplacement = $_POST['petit_deplacement'];
 	$grand_deplacement = $_POST['grand_deplacement'];
 	$repas = $_POST['repas'];
