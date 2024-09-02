@@ -3221,7 +3221,7 @@ class Holiday extends CommonObject
 							$error++;
 						}
 						else {
-							$this->output .= '<span style="color: green;">Import réalisé avec succés pour '.$user->firstname." ".$user->lastname." (".$matricule.')</sapn><br>';
+							$this->output .= '<span style="color: green;">Import réalisé avec succés pour '.$obj_user->firstname." ".$obj_user->lastname." (".$matricule.')</sapn><br>';
 						}
 
 
