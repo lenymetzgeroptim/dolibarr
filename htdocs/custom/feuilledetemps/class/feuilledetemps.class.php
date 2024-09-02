@@ -2203,7 +2203,7 @@ class FeuilleDeTemps extends CommonObject
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * 7) : (0.5 * 7));
 					}
 					else {
-						if($isavailablefordayanduser['droit_rtt'][$i]) {
+						if($isavailablefordayanduser['droit_rtt'][0]) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
 						}
 						else {
@@ -2287,7 +2287,7 @@ class FeuilleDeTemps extends CommonObject
 							$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (0.5 * 7) : (0.5 * 7));
 						}
 						else {
-							if($isavailablefordayanduser['droit_rtt'][$user_id][$i]) {
+							if($isavailablefordayanduser['droit_rtt'][$user_id][0]) {
 								$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
 							}
 							else {
