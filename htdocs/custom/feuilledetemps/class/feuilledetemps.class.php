@@ -2215,7 +2215,7 @@ class FeuilleDeTemps extends CommonObject
 		}
 
 		foreach($result as $week => $time) {
-			if($time > $userField->array_options['options_horairehebdomadaire']) {
+			if($userField->array_options['options_horairehebdomadaire'] > 0 && $time > $userField->array_options['options_horairehebdomadaire']) {
 				$result[$week] = $userField->array_options['options_horairehebdomadaire'];
 			}
 		}
