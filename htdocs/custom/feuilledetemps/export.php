@@ -147,7 +147,9 @@ $objmodelexport = new ModeleExports($db);
 $form = new Form($db);
 $htmlother = new FormOther($db);
 $formfile = new ExtendedFormFile($db);
+$holiday = new extendedHoliday($db);
 $sqlusedforexport = '';
+$typesHoliday = $holiday->getTypesNoCP();
 
 $head = array();
 $upload_dir = $conf->export->dir_temp.'/'.$user->id;
@@ -171,7 +173,10 @@ if(empty($datatoexport) && $export_code >= 0) {
 		$datatoexport = 'total_hour_week';
 	}
 	elseif($export_code == '5') {
-		$datatoexport = 'total_hour_month';
+		$datatoexport = 'total_hour';
+	}
+	elseif($export_code == '6') {
+		$datatoexport = 'total_holiday';
 	}
 	else {
 		$datatoexport = array(
@@ -180,7 +185,8 @@ if(empty($datatoexport) && $export_code >= 0) {
 			2 => "absences",
 			3 => "heure_sup",
 			4 => "total_hour_week",
-			4 => "total_hour_month",
+			5 => "total_hour",
+			6 => "total_holiday"
 		);
 	}
 }
@@ -191,17 +197,6 @@ if (!$user->rights->feuilledetemps->feuilledetemps->export) {
 }
 
 if($datatoexport == 'analytique_pourcentage') {
-	// $array_export_fields[0] = array(
-	// 	"eu.matricule" => "Matricule",
-	// 	"u.firstname" => "Prénom",
-	// 	"u.lastname" => "Nom",
-	// 	//"code" => "Code",
-	// 	"tt.element_duration" => "Heure",
-	// 	"tt.element_date" => "Jour",
-	// 	"affectation" => "Affectation",
-	// 	"hdebut" => "hdebut",
-	// 	"hfin" => "hfin"
-	// );
 	$array_export_fields[0] = array(
 		"eu.matricule" => "MATRICULE",
 		"u.firstname" => "PRENOM",
@@ -286,17 +281,28 @@ elseif($datatoexport == 'total_hour_week') {
 		"total_hour" => "Total",
 	);
 }
-elseif($datatoexport == 'total_hour_month') {
+elseif($datatoexport == 'total_hour') {
 	$array_export_fields[0] = array(
 		"eu.matricule" => "Matricule",
 		"u.firstname" => "Prénom",
 		"u.lastname" => "Nom",
 		"eu.antenne" => "Antenne",
-		"month" => "Mois",
-		"total_work" => "Heures travaillées",
-		"total_holiday" => "Heures en congés",
-		"total_hour" => "Total",
+		"et.element_date" => "Date",
+		"SUM(et.element_duration)/3600 as total_hour" => "Total Heure",
 	);
+}
+elseif($datatoexport == 'total_holiday') {
+	$array_export_fields[0] = array(
+		"eu.matricule" => "Matricule",
+		"u.firstname" => "Prénom",
+		"u.lastname" => "Nom",
+		"eu.antenne" => "Antenne",
+		"date_debut" => "Date début",
+		"date_fin" => "Date fin",
+	);
+	foreach($typesHoliday as $type) {
+		$array_export_fields[0][$type['code']] = $type['label'];
+	}
 }
 else {
 	$array_export_fields[0][0] = array(
@@ -379,11 +385,20 @@ else {
 		"u.firstname" => "Prénom",
 		"u.lastname" => "Nom",
 		"eu.antenne" => "Antenne",
-		"month" => "Mois",
-		"total_work" => "Heures travaillées",
-		"total_holiday" => "Heures en congés",
-		"total_hour" => "Total",
+		"et.element_date" => "Date",
+		"SUM(et.element_duration)/3600 as total_hour" => "Total Heure",
 	);
+	$array_export_fields[6][0] = array(
+		"eu.matricule" => "Matricule",
+		"u.firstname" => "Prénom",
+		"u.lastname" => "Nom",
+		"eu.antenne" => "Antenne",
+		"date_debut" => "Date début",
+		"date_fin" => "Date fin",
+	);
+	foreach($typesHoliday as $type) {
+		$array_export_fields[6][0][$type['code']] = $type['label'];
+	}
 }
 
 
@@ -473,17 +488,28 @@ elseif($datatoexport == 'total_hour_week') {
 		"total_hour" => "timesheet_16@feuilledetemps",
 	);
 }
-elseif($datatoexport == 'total_hour_month') {
+elseif($datatoexport == 'total_hour') {
 	$array_export_entities[0] = array(
 		"eu.matricule" => "user",
 		"u.firstname" => "user",
 		"u.lastname" => "user",
 		"eu.antenne" => "user",
-		"month" => "timesheet_16@feuilledetemps",
-		"total_work" => "timesheet_16@feuilledetemps",
-		"total_holiday" => "timesheet_16@feuilledetemps",
-		"total_hour" => "timesheet_16@feuilledetemps",
+		"et.element_date" => "timesheet_16@feuilledetemps",
+		"SUM(et.element_duration)/3600 as total_hour" => "timesheet_16@feuilledetemps",
 	);
+}
+elseif($datatoexport == 'total_holiday') {
+	$array_export_entities[0] = array(
+		"eu.matricule" => "user",
+		"u.firstname" => "user",
+		"u.lastname" => "user",
+		"eu.antenne" => "user",
+		"date_debut" => "holiday",
+		"date_fin" => "holiday",
+	);
+	foreach($typesHoliday as $type) {
+		$array_export_entities[0][$type['code']] = 'holiday';
+	}
 }
 else {
 	$array_export_entities[0][0] = array(
@@ -565,11 +591,20 @@ else {
 		"u.firstname" => "user",
 		"u.lastname" => "user",
 		"eu.antenne" => "user",
-		"month" => "timesheet_16@feuilledetemps",
-		"total_work" => "timesheet_16@feuilledetemps",
-		"total_holiday" => "timesheet_16@feuilledetemps",
-		"total_hour" => "timesheet_16@feuilledetemps",
+		"et.element_date" => "timesheet_16@feuilledetemps",
+		"SUM(et.element_duration)/3600 as total_hour" => "timesheet_16@feuilledetemps",
 	);
+	$array_export_entities[6][0] = array(
+		"eu.matricule" => "user",
+		"u.firstname" => "user",
+		"u.lastname" => "user",
+		"eu.antenne" => "user",
+		"date_debut" => "holiday",
+		"date_fin" => "holiday",
+	);
+	foreach($typesHoliday as $type) {
+		$array_export_entities[6][0][$type['code']] = 'holiday';
+	}
 }
 
 
@@ -648,27 +683,38 @@ elseif($datatoexport == 'heure_sup') {
 }
 elseif($datatoexport == 'total_hour_week') {
 	$array_export_TypeFields[0] = array(
-		"eu.matricule" => "",
+		"eu.matricule" => "Numeric",
 		"u.firstname" => "Text",
 		"u.lastname" => "Text",
 		"eu.antenne" => "Text",
 		"week" => "Date",
-		"total_work" => "",
-		"total_holiday" => "",
-		"total_hour" => "",
+		"total_work" => "Numeric",
+		"total_holiday" => "Numeric",
+		"total_hour" => "Numeric",
 	);
 }
-elseif($datatoexport == 'total_hour_month') {
+elseif($datatoexport == 'total_hour') {
 	$array_export_TypeFields[0] = array(
-		"eu.matricule" => "",
+		"eu.matricule" => "Numeric",
 		"u.firstname" => "Text",
 		"u.lastname" => "Text",
 		"eu.antenne" => "Text",
-		"month" => "Date",
-		"total_work" => "",
-		"total_holiday" => "",
-		"total_hour" => "",
+		"et.element_date" => "Date",
+		"SUM(et.element_duration)/3600 as total_hour" => "Numeric",
 	);
+}
+elseif($datatoexport == 'total_holiday') {
+	$array_export_TypeFields[0] = array(
+		"eu.matricule" => "Numeric",
+		"u.firstname" => "Text",
+		"u.lastname" => "Text",
+		"eu.antenne" => "Text",
+		"date_debut" => "Date",
+		"date_fin" => "Date",
+	);
+	foreach($typesHoliday as $type) {
+		$array_export_TypeFields[0][$type['code']] = 'Numeric';
+	}
 }
 else {
 	$array_export_TypeFields[0][0] = array(
@@ -752,15 +798,24 @@ else {
 		"total_hour" => "",
 	);
 	$array_export_TypeFields[5][0] = array(
-		"eu.matricule" => "",
+		"eu.matricule" => "Numeric",
 		"u.firstname" => "Text",
 		"u.lastname" => "Text",
 		"eu.antenne" => "Text",
-		"month" => "Date",
-		"total_work" => "",
-		"total_holiday" => "",
-		"total_hour" => "",
+		"et.element_date" => "Date",
+		"SUM(et.element_duration)/3600 as total_hour" => "Numeric",
 	);
+	$array_export_TypeFields[6][0] = array(
+		"eu.matricule" => "Numeric",
+		"u.firstname" => "Text",
+		"u.lastname" => "Text",
+		"eu.antenne" => "Text",
+		"date_debut" => "Date",
+		"date_fin" => "Date",
+	);
+	foreach($typesHoliday as $type) {
+		$array_export_TypeFields[6][0][$type['code']] = 'Numeric';
+	}
 }
 
 
@@ -847,16 +902,28 @@ elseif($datatoexport == 'total_hour_week') {
 		"total_hour" => "",
 	);
 }
-elseif($datatoexport == 'total_hour_month') {
+elseif($datatoexport == 'total_hour') {
 	$array_tablename[0] = array(
 		"eu.matricule" => "llx_user_extrafields",
 		"u.firstname" => "llx_user",
 		"u.lastname" => "llx_user",
-		"month" => "",
-		"total_work" => "",
-		"total_holiday" => "",
-		"total_hour" => "",
+		"eu.antenne" => "llx_user_extrafields",
+		"et.element_date" => "llx_element_time",
+		"SUM(et.element_duration)/3600 as total_hour" => "llx_element_time",
 	);
+}
+elseif($datatoexport == 'total_holiday') {
+	$array_tablename[0] = array(
+		"eu.matricule" => "llx_user_extrafields",
+		"u.firstname" => "llx_user",
+		"u.lastname" => "llx_user",
+		"eu.antenne" => "llx_user_extrafields",
+		"date_debut" => "llx_holiday",
+		"date_fin" => "llx_holiday",
+	);
+	foreach($typesHoliday as $type) {
+		$array_tablename[0][$type['code']] = 'llx_holiday';
+	}
 }
 else {
 	$array_tablename[0][0] = array(
@@ -936,11 +1003,21 @@ else {
 		"eu.matricule" => "llx_user_extrafields",
 		"u.firstname" => "llx_user",
 		"u.lastname" => "llx_user",
-		"month" => "",
-		"total_work" => "",
-		"total_holiday" => "",
-		"total_hour" => "",
+		"eu.antenne" => "llx_user_extrafields",
+		"et.element_date" => "llx_element_time",
+		"SUM(et.element_duration)/3600 as total_hour" => "llx_element_time",
 	);
+	$array_tablename[6][0] = array(
+		"eu.matricule" => "llx_user_extrafields",
+		"u.firstname" => "llx_user",
+		"u.lastname" => "llx_user",
+		"eu.antenne" => "llx_user_extrafields",
+		"date_debut" => "llx_holiday",
+		"date_fin" => "llx_holiday",
+	);
+	foreach($typesHoliday as $type) {
+		$array_tablename[6][0][$type['code']] = 'llx_holiday';
+	}
 }
 
 
@@ -961,8 +1038,11 @@ elseif($datatoexport == 'heure_sup')  {
 elseif($datatoexport == 'total_hour_week')  {
 	$array_export_label[0] = "Total des heures hebdomadaires par collaborateur";
 }
-elseif($datatoexport == 'total_hour_month')  {
-	$array_export_label[0] = "Total des heures mensuelles par collaborateur";
+elseif($datatoexport == 'total_hour')  {
+	$array_export_label[0] = "Total des heures travaillées par collaborateur";
+}
+elseif($datatoexport == 'total_holiday')  {
+	$array_export_label[0] = "Total des heures de congés par collaborateur";
 }
 else {
 	$array_export_label[0] = "Activité journalière des utilisateurs";
@@ -970,7 +1050,8 @@ else {
 	$array_export_label[2] = "Absences";
 	$array_export_label[3] = "Heures Sup";
 	$array_export_label[4] = "Total des heures hebdomadaires par collaborateur";
-	$array_export_label[5] = "Total des heures mensuelles par collaborateur";
+	$array_export_label[5] = "Total des heures travaillées par collaborateur";
+	$array_export_label[6] = "Total des heures de congés par collaborateur";
 }
 
 
@@ -1443,9 +1524,9 @@ if ($step == 4 && $datatoexport == "total_hour_week") {
 	}
 }
 
-if ($step == 4 && $datatoexport == "total_hour_month") {
-	if(empty($array_filtervalue['month']) || strlen($array_filtervalue['month']) != 6) {	
-		setEventMessages("Veuillez entrer un filtre pour 'Month' sous la forme YYYYMM", null, 'errors');
+if ($step == 4 && $datatoexport == "total_holiday") {
+	if(empty($array_filtervalue['date_debut']) || strlen($array_filtervalue['date_debut']) != 8 || empty($array_filtervalue['date_fin']) || strlen($array_filtervalue['date_fin']) != 8) {	
+		setEventMessages("Veuillez entrer un filtre pour 'Date début' et 'Date fin' sous la forme AAAAMMJJ", null, 'errors');
 		header("Location: ".$_SERVER["PHP_SELF"].'?step=3&datatoexport='.$datatoexport);
 		exit;
 	}

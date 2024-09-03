@@ -126,6 +126,7 @@ EMailTextHM = Bonjour, <br><br>%s %s a réalisé des semaines à moins de 35h su
 FEUILLEDETEMPS_CREATEInDolibarr = Creation %s effectuée
 FEUILLEDETEMPS_MODIFYInDolibarr = Feuille de temps %s modifiée
 FEUILLEDETEMPS_APPROBATION1InDolibarr = Transmission de la feuille de temps %s, passage en approbation n°1
+FEUILLEDETEMPS_APPROBATION12InDolibarr = Transmission de la feuille de temps %s, passage en approbation n°2 car aucun approbateur n°1
 FEUILLEDETEMPS_APPROBATION1_RAInDolibarr = Transmission de la feuille de temps %s, passage en vérification (Responsable d'antenne)
 FEUILLEDETEMPS_REFUSInDolibarr = Refus de la feuille de temps %s
 FEUILLEDETEMPS_REFUSDetailInDolibarr = Pour le motif suivant : %s

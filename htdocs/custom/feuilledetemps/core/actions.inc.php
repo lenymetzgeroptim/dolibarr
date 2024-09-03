@@ -40,6 +40,11 @@ if ($cancel) {
 }
 
 if ($action == 'confirm_validate1' && $confirm == 'yes' && $userIsResp && $resp_pas_valide) {
+	$modification = '<ul>';
+	$regulHeureSup00 = ($regul->heure_sup00 != 0 ? (double)$regul->heure_sup00 : 0);
+	$regulHeureSup25 = ($regul->heure_sup25 != 0 ? (double)$regul->heure_sup25 : 0);
+	$regulHeureSup50 = ($regul->heure_sup50 != 0 ? (double)$regul->heure_sup50 : 0);
+
 	$result = $object->updateTaskValidation($user->id, 0, 1, 1);
 
 	$list_valideur = $object->listApprover1;
@@ -65,20 +70,56 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $userIsResp && $resp_
 			$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 			for ($idw = 0; $idw < $nb_jour; $idw++) { 
 				$silae = new Silae($db);
+				$deplacement = new Deplacement($db);
 				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
 				$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
+				$deplacement->fetchDeplacementWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
 
 				$silae->date = $dayinloopfromfirstdaytoshow;
 				$silae->fk_user = $object->fk_user;
+				
 				if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
+					$heure_sup00_before = $silae->heure_sup00;
+					$heure_sup25_before = $silae->heure_sup25;
+					$heure_sup50_before = $silae->heure_sup50;
 					$silae->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
+					
+					if($heure_sup00_before != $silae->heure_sup00) {
+						$new_value = formatValueForAgenda('double', $silae->heure_sup00 / 3600);
+						$old_value = formatValueForAgenda('double', $heure_sup00_before / 3600);
+		
+						$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+					}
+		
+					// Agenda Heure Sup 25%
+					if($heure_sup25_before != $silae->heure_sup25) {
+						$new_value = formatValueForAgenda('double', $silae->heure_sup25 / 3600);
+						$old_value = formatValueForAgenda('double', $heure_sup25_before / 3600);
+		
+						$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+					}
+		
+					// Agenda Heure Sup 50%
+					if($heure_sup50_before != $silae->heure_sup50) {
+						$new_value = formatValueForAgenda('double', $silae->heure_sup50 / 3600);
+						$old_value = formatValueForAgenda('double', $heure_sup50_before / 3600);
+		
+						$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+					}
+
+					if($dayinloopfromfirstdaytoshow < $first_day_month) {
+						$regulHeureSup00 += ((double)$silae->heure_sup00 - (double)$heure_sup00_before);
+						$regulHeureSup25 += ((double)$silae->heure_sup25 - (double)$heure_sup25_before);
+						$regulHeureSup50 += ((double)$silae->heure_sup50 - (double)$heure_sup50_before);
+					}
 				}
+
 				$silae->heure_nuit = $otherTime['heure_nuit'][$dayinloopfromfirstdaytoshow];
 				if($object->getHeureDay($dayinloopfromfirstdaytoshow, $object->fk_user) > 0) {
-					if($userRepas == 1) { 
+					if($userRepas == 1 && $deplacement->type_deplacement != 7) { 
 						$silae->repas = 1;
 					}
-					elseif($userRepas == 2) { 
+					elseif($userRepas == 2 && $deplacement->type_deplacement != 7) { 
 						$silae->repas = 2;
 					}
 				}
@@ -91,6 +132,54 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $userIsResp && $resp_
 				}
 				else {
 					$result = -1;
+				}
+			}
+
+			if($result) {
+				$regul = new Regul($db);
+				$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
+
+				if($regulHeureSup00 != $regul->heure_sup00 || $regulHeureSup25 != $regul->heure_sup25 || $regulHeureSup50 != $regul->heure_sup50) {
+					// Agenda Heure Sup 0%
+					if($regulHeureSup00 != $regul->heure_sup00) {
+						$new_value = formatValueForAgenda('double', $regulHeureSup00 / 3600);
+						$old_value = formatValueForAgenda('double', $regul->heure_sup00 / 3600);
+
+						$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 0%</strong> : $old_value ➔ $new_value</li>" : '');
+					}
+
+					// Agenda Heure Sup 25%
+					if($regulHeureSup25 != $regul->heure_sup25) {
+						$new_value = formatValueForAgenda('double', $regulHeureSup25 / 3600);
+						$old_value = formatValueForAgenda('double', $regul->heure_sup25 / 3600);
+
+						$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 25%</strong> : $old_value ➔ $new_value</li>" : '');
+					}
+
+					// Agenda Heure Sup 50%
+					if($regulHeureSup50 != $regul->heure_sup50) {
+						$new_value = formatValueForAgenda('double', $regulHeureSup50 / 3600);
+						$old_value = formatValueForAgenda('double', $regul->heure_sup50 / 3600);
+
+						$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 50%</strong> : $old_value ➔ $new_value</li>" : '');
+					}
+
+					if($resregul > 0) {
+						$regul->heure_sup00 = $regulHeureSup00;
+						$regul->heure_sup25 = $regulHeureSup25;
+						$regul->heure_sup50 = $regulHeureSup50;
+			
+						$result = $regul->update($user);
+					}
+					elseif($resregul == 0) {
+						$regul->date = $first_day_month;
+						$regul->fk_user = $usertoprocess->id;
+						$regul->heure_sup00 = $regulHeureSup00;
+						$regul->heure_sup25 = $regulHeureSup25;
+						$regul->heure_sup50 = $regulHeureSup50;
+			
+						$result = $regul->create($user);
+					}
 				}
 			}
 		}
@@ -106,12 +195,28 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $userIsResp && $resp_
 		setEventMessages('Impossible de valider', null, 'errors');
 	}
 	else {
+		if($modification != '<ul>'){
+			$modification .= '</ul>';
+
+			if($modification != '<ul></ul>') {
+				$object->actiontypecode = 'AC_FDT_VERIF';
+				$object->actionmsg2 = "Mise à jour des données de vérification de la feuille de temps $object->ref";
+				$object->actionmsg = $modification;
+				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
+			}
+		}
+
 		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
 		exit;
 	}
 }
 
 if ($action == 'confirm_validate2' && $confirm == 'yes' && $userIsRespProjet) {
+	$modification = '<ul>';
+	$regulHeureSup00 = ($regul->heure_sup00 != 0 ? (double)$regul->heure_sup00 : 0);
+	$regulHeureSup25 = ($regul->heure_sup25 != 0 ? (double)$regul->heure_sup25 : 0);
+	$regulHeureSup50 = ($regul->heure_sup50 != 0 ? (double)$regul->heure_sup50 : 0);
+
 	$result = $object->updateTaskValidation($user->id, 0, 1, 2);
 
 	$list_valideur = $object->listApprover2;
@@ -129,20 +234,56 @@ if ($action == 'confirm_validate2' && $confirm == 'yes' && $userIsRespProjet) {
 			$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 			for ($idw = 0; $idw < $nb_jour; $idw++) { 
 				$silae = new Silae($db);
+				$deplacement = new Deplacement($db);
 				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
 				$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
+				$deplacement->fetchDeplacementWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
 
 				$silae->date = $dayinloopfromfirstdaytoshow;
 				$silae->fk_user = $object->fk_user;
+
 				if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') { 
+					$heure_sup00_before = $silae->heure_sup00;
+					$heure_sup25_before = $silae->heure_sup25;
+					$heure_sup50_before = $silae->heure_sup50;
 					$silae->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
+
+					if($heure_sup00_before != $silae->heure_sup00) {
+						$new_value = formatValueForAgenda('double', $silae->heure_sup00 / 3600);
+						$old_value = formatValueForAgenda('double', $heure_sup00_before / 3600);
+		
+						$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+					}
+		
+					// Agenda Heure Sup 25%
+					if($heure_sup25_before != $silae->heure_sup25) {
+						$new_value = formatValueForAgenda('double', $silae->heure_sup25 / 3600);
+						$old_value = formatValueForAgenda('double', $heure_sup25_before / 3600);
+		
+						$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+					}
+		
+					// Agenda Heure Sup 50%
+					if($heure_sup50_before != $silae->heure_sup50) {
+						$new_value = formatValueForAgenda('double', $silae->heure_sup50 / 3600);
+						$old_value = formatValueForAgenda('double', $heure_sup50_before / 3600);
+		
+						$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+					}
+
+					if($dayinloopfromfirstdaytoshow < $first_day_month) {
+						$regulHeureSup00 += ((double)$silae->heure_sup00 - (double)$heure_sup00_before);
+						$regulHeureSup25 += ((double)$silae->heure_sup25 - (double)$heure_sup25_before);
+						$regulHeureSup50 += ((double)$silae->heure_sup50 - (double)$heure_sup50_before);
+					}
 				}
+
 				$silae->heure_nuit = $otherTime['heure_nuit'][$dayinloopfromfirstdaytoshow];
 				if($object->getHeureDay($dayinloopfromfirstdaytoshow, $object->fk_user) > 0) {
-					if($userRepas == 1) { 
+					if($userRepas == 1 && $deplacement->type_deplacement != 7) { 
 						$silae->repas = 1;
 					}
-					elseif($userRepas == 2) { 
+					elseif($userRepas == 2 && $deplacement->type_deplacement != 7) { 
 						$silae->repas = 2;
 					}
 				}
@@ -155,6 +296,54 @@ if ($action == 'confirm_validate2' && $confirm == 'yes' && $userIsRespProjet) {
 				}
 				else {
 					$result = -1;
+				}
+			}
+
+			if($result) {
+				$regul = new Regul($db);
+				$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
+
+				if($regulHeureSup00 != $regul->heure_sup00 || $regulHeureSup25 != $regul->heure_sup25 || $regulHeureSup50 != $regul->heure_sup50) {
+					// Agenda Heure Sup 0%
+					if($regulHeureSup00 != $regul->heure_sup00) {
+						$new_value = formatValueForAgenda('double', $regulHeureSup00 / 3600);
+						$old_value = formatValueForAgenda('double', $regul->heure_sup00 / 3600);
+
+						$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 0%</strong> : $old_value ➔ $new_value</li>" : '');
+					}
+
+					// Agenda Heure Sup 25%
+					if($regulHeureSup25 != $regul->heure_sup25) {
+						$new_value = formatValueForAgenda('double', $regulHeureSup25 / 3600);
+						$old_value = formatValueForAgenda('double', $regul->heure_sup25 / 3600);
+
+						$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 25%</strong> : $old_value ➔ $new_value</li>" : '');
+					}
+
+					// Agenda Heure Sup 50%
+					if($regulHeureSup50 != $regul->heure_sup50) {
+						$new_value = formatValueForAgenda('double', $regulHeureSup50 / 3600);
+						$old_value = formatValueForAgenda('double', $regul->heure_sup50 / 3600);
+
+						$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 50%</strong> : $old_value ➔ $new_value</li>" : '');
+					}
+
+					if($resregul > 0) {
+						$regul->heure_sup00 = $regulHeureSup00;
+						$regul->heure_sup25 = $regulHeureSup25;
+						$regul->heure_sup50 = $regulHeureSup50;
+			
+						$result = $regul->update($user);
+					}
+					elseif($resregul == 0) {
+						$regul->date = $first_day_month;
+						$regul->fk_user = $usertoprocess->id;
+						$regul->heure_sup00 = $regulHeureSup00;
+						$regul->heure_sup25 = $regulHeureSup25;
+						$regul->heure_sup50 = $regulHeureSup50;
+			
+						$result = $regul->create($user);
+					}
 				}
 			}
 		}
@@ -170,6 +359,17 @@ if ($action == 'confirm_validate2' && $confirm == 'yes' && $userIsRespProjet) {
 		setEventMessages('Impossible de valider', null, 'errors');
 	}
 	else {
+		if($modification != '<ul>'){
+			$modification .= '</ul>';
+
+			if($modification != '<ul></ul>') {
+				$object->actiontypecode = 'AC_FDT_VERIF';
+				$object->actionmsg2 = "Mise à jour des données de vérification de la feuille de temps $object->ref";
+				$object->actionmsg = $modification;
+				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
+			}
+		}
+
 		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
 		exit;
 	}

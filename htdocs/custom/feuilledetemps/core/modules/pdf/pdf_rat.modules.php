@@ -144,6 +144,7 @@ public function writeFile($object, $outputlangs)
             }
             //get data
             $tasktimearray=$object->getReportArray();
+         
             $TotalLines=array();
             $userTaskArray=array();
             //order data per user id and calc total per user
@@ -245,6 +246,7 @@ public function writeFile($object, $outputlangs)
         $nblignes=count($tasktimearray['lines']);
         // Loop on each lines but total
         for ($i = 0 ;$i < $nblignes ;$i++) {
+          
             // move the cusor to add space between records
             $curY = ($i == 0)? $nexY:$nexY+2;
             $pageposbefore=$pdf->getPage();
@@ -253,6 +255,7 @@ public function writeFile($object, $outputlangs)
             $tasktimearray['lines'][$i]['ref']=$i;
             $pdf->startTransaction();
             $posyafter=$this->writeLine($pdf, $tasktimearray['lines'][$i], $curY, $outputlangs);
+          
             $pageposafter=$pdf->getPage();
             // looks if the record fit int he current page
             $addpagebreak=false;
@@ -355,7 +358,8 @@ public function writeFile($object, $outputlangs)
 public function writeLine(&$pdf, $line, $curY, $outputlangs)
 {
     global $conf;
-    $ref=$line['ref'];
+    $ref=$line['ref'] +1;
+   
     $libelleline="";
     switch($this->noteISOtask) {
         case 2: // show task and Note
@@ -448,6 +452,7 @@ public function tableau(&$pdf, $tab_top, $tab_height, $heightoftitleline, $outpu
             default:
                 $libelleline=$outputlangs->transnoentities("Task");
         }
+     
         $pdf->MultiCell($this->posxduration-$this->posxlabel, 3, $libelleline, 0, 'L');
         //duration title
         $pdf->SetXY($this->posxduration, $tab_top+1);

@@ -319,11 +319,11 @@ td > div > input.heure_epi {
 	background-color: white;
 }
 
-#div_otherhour > input[name="heure_nuit"]:checked {
+#div_otherhour > input[name="heure_nuit_chkb"]:checked {
 	accent-color: black;
 }
 
-#div_otherhour > input[name="port_epi"]:checked {
+#div_otherhour > input[name="port_epi_chkb"]:checked {
 	accent-color: green;
 }
 
@@ -645,7 +645,7 @@ tr > th:last-child.fixed {
 	height: 30px;
 }
 
-.ui-widget.ui-widget-content {
+body.feuilledetemps .ui-widget.ui-widget-content {
 	z-index: 10 !important;
 }
 
