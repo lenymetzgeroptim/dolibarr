@@ -1197,6 +1197,39 @@ class Habilitation extends CommonObject
 			return -1;
 		}
 	}
+
+	/**
+	 * 	Return toutes les habilitations qui correspondent à une formation
+	 *
+	 * 	@param  int		$formationId       Id of Formation
+	 * 	@return	array						
+	 */
+	public function getHabilitationsByFormation($formationId)
+	{
+		global $conf, $user;
+		$habilitation = new self($this->db);
+		$res = array();
+
+		$sql = "SELECT f.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_habilitation as f";
+		$sql .= " WHERE f.formation = $formationId";
+
+		dol_syslog(get_class($this)."::getHabilitationsByFormation", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$habilitation->
+				$res[$obj->rowid]['id'] = $obj->rowid;
+				$res[$obj->rowid]['label'] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

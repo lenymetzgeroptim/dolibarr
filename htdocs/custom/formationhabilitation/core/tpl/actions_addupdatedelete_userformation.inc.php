@@ -436,6 +436,28 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 			$result = $objectline->update($user);
 		}
 
+		// Création des habilitations 
+		if($result && $formation_static->type == 1) {
+			$habilitationStatic = new Habilitation($db);
+			$userHabilitation = new UserHabilitation($db);
+			
+			$listHabilitation = $habilitationStatic->getHabilitationsByFormation($formationStatic->id); 
+			$userHabilitation->fk_user = $userid;
+			$userHabilitation->status = UserHabilitation::STATUS_HABILITABLE;
+			$userHabilitation->date_habilitation = $objectline->date_fin_formation;
+
+			foreach($listHabilitation as $habilitation) {
+                $userHabilitation->ref = $user_static->login."-".$habilitation->ref.'-'.dol_print_date($objectline->date_fin_formation, "%Y%m%d");
+                $userHabilitation->fk_habilitation = $habilitation->id;
+                $userHabilitation->date_fin_habilitation = dol_time_plus_duree($objectline->date_fin_formation, $habilitation_static->validite_employeur, 'd');
+
+				$resultcreateline = $userHabilitation->create($user);
+				if(!$resultcreateline) {
+					$error++;
+				}
+			}
+		}
+
 		if(!$error && $result){
 			$db->commit();
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
