@@ -273,6 +273,104 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 			default:
 				dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
 				break;
+
+				case 'TASK_TIMESPENT_CREATE':
+					$error = 0;
+					// select user if alternant and update alternant for each timespent line creation 
+					$sql = "INSERT INTO ".MAIN_DB_PREFIX."element_time_extrafields (fk_object, alternant)";
+					$sql .= " SELECT '.$object->timespent_id.', ue.isalternant";
+					$sql .= " FROM ".MAIN_DB_PREFIX."user_extrafields as ue";
+					$sql .= ' WHERE  ue.fk_object = '.$object->timespent_fk_user.'';
+					$res = $this->db->query($sql);
+					if ($res) {
+							if (!$error) {
+								$this->db->commit();
+								return 1;
+							} else {
+								$this->db->rollback();
+								return -3;
+							}
+						
+					} else {
+						$error = $this->db->error();
+						$this->db->rollback();
+						return -1;
+					}
+				break;
+				
+				case 'TASK_TIMESPENT_DELETE' :
+					//Delete timespent line fk_object from element_time_extrafields
+					$sql = "DELETE FROM ".MAIN_DB_PREFIX."element_time_extrafields WHERE fk_object = ".((int) $object->timespent_id);
+					$res = $this->db->query($sql);
+					if ($res) {
+							if (!$error) {
+								$this->db->commit();
+								return 1;
+							} else {
+								$this->db->rollback();
+								return -3;
+							}
+						
+					} else {
+						$error = $this->db->error();
+						$this->db->rollback();
+						return -1;
+					}
+				break;
+
+				//Lancer une seule fois
+				// case 'USER_MODIFY' :
+				// 	// select user if alternant and update alternant for each timespent line creation 
+				// 	$sql = "INSERT INTO ".MAIN_DB_PREFIX."element_time_extrafields (fk_object, alternant)";
+				// 	$sql .= " SELECT e.rowid, ue.isalternant";
+				// 	$sql .= " FROM ".MAIN_DB_PREFIX."user_extrafields as ue";
+				// 	// $sql .= " LEFT JOIN".MAIN_DB_PREFIX."user as u on u.rowid = ue.fk_object";
+				// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_time as e on ue.fk_object = e.fk_user";
+				// 	$sql .= " WHERE  e.datec > '2024-01-01'";
+				// 	$sql .= ' AND ue.fk_object = '.$object->id.'';
+				// 	$res = $this->db->query($sql);
+			
+				// 	if ($res) {
+				// 			if (!$error) {
+				// 				$this->db->commit();
+				// 				return 1;
+				// 			} else {
+				// 				$this->db->rollback();
+				// 				return -3;
+				// 			}
+						
+				// 	} else {
+				// 		$error = $this->db->error();
+				// 		$this->db->rollback();
+				// 		return -1;
+				// 	}
+				// break; 
+				// case 'USER_CREATE' :
+				// 	// select user if alternant and update alternant for each timespent line creation 
+				// 	$sql = "INSERT INTO ".MAIN_DB_PREFIX."element_time_extrafields (fk_object, alternant)";
+				// 	$sql .= " SELECT e.rowid, ue.isalternant";
+				// 	$sql .= " FROM ".MAIN_DB_PREFIX."user_extrafields as ue";
+				// 	// $sql .= " LEFT JOIN".MAIN_DB_PREFIX."user as u on u.rowid = ue.fk_object";
+				// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_time as e on ue.fk_object = e.fk_user";
+				// 	$sql .= " WHERE  e.datec > '2024-01-01'";
+				// 	$sql .= ' AND ue.fk_object = '.$object->id.'';
+				// 	$res = $this->db->query($sql);
+	
+				// 	if ($res) {
+				// 			if (!$error) {
+				// 				$this->db->commit();
+				// 				return 1;
+				// 			} else {
+				// 				$this->db->rollback();
+				// 				return -3;
+				// 			}
+						
+				// 	} else {
+				// 		$error = $this->db->error();
+				// 		$this->db->rollback();
+				// 		return -1;
+				// 	}
+				// break; 
 		}
 
 		return 0;

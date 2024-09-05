@@ -79,6 +79,7 @@ else {
 	$search_user = $user->id;
 }
 $search_valuebilled = GETPOST('search_valuebilled', 'int');
+$search_alternant = GETPOST('search_alternant', 'int');
 
 // Security check
 $socid = 0;
@@ -163,6 +164,7 @@ if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x'
 	$search_task_ref = '';
 	$search_task_label = '';
 	$search_user = 0;
+	$search_alternant = '';
 	$search_valuebilled = '';
 	$toselect = '';
 	$search_array_options = array();
@@ -330,6 +332,39 @@ if (($action == 'updateline' || $action == 'updatesplitline') && !$cancel && $us
 
 						$result2 = $hs->update($user);
 					}
+				}
+			}
+
+			if($result >= 0) {
+				//query to update islaternant in element_time_alternant (where condition if $object->timespent_id is equal to fk_object to update)
+				$sql = " UPDATE ".MAIN_DB_PREFIX."element_time_extrafields";
+				if(GETPOST('alternant_line') == 'on') {
+					$sql .= " SET alternant = 1";
+				}elseif(GETPOST('alternant_line') == ''){
+					$sql .= " SET alternant = 0";
+				}
+				
+				$sql .= " WHERE fk_object = ".((int) $object->timespent_id);
+			
+				$db->begin();
+				if ($db->query($sql)) {
+					$db->commit();
+				} else {
+					$db->rollback();
+				}
+
+				//deletion of the removed values from element_time
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX."element_time_extrafields";
+				$sql .= " WHERE NOT EXISTS (";
+				$sql .= " SELECT 1 FROM ".MAIN_DB_PREFIX."element_time";
+				$sql .= " WHERE element_time.rowid = element_time_extrafields.fk_object";
+				$sql .= ")";
+
+				$db->begin();
+				if ($db->query($sql)) {
+					$db->commit();
+				} else {
+					$db->rollback();
 				}
 			}
 
@@ -1030,6 +1065,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 			$arrayfields['t.task_label'] = array('label'=>$langs->trans("LabelTask"), 'checked'=>1);
 		}
 		$arrayfields['author'] = array('label'=>$langs->trans("By"), 'checked'=>1);
+		$arrayfields['alternant'] = array('label'=>$langs->trans("Alternant"), 'checked'=>1);
 		$arrayfields['t.note'] = array('label'=>$langs->trans("Note"), 'checked'=>1);
 		$arrayfields['t.element_duration'] = array('label'=>$langs->trans("Duration"), 'checked'=>1);
 		$arrayfields['hs_25'] = array('label'=>'HS à 25%', 'checked'=>1);
@@ -1058,6 +1094,9 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 		if ($search_user > 0) {
 			$param .= '&search_user='.urlencode($search_user);
 		}
+		if ($search_alternant > 0) {
+			$param .= '&search_alternant='.urlencode($search_alternant);
+		}
 		if ($search_task_ref != '') {
 			$param .= '&search_task_ref='.urlencode($search_task_ref);
 		}
@@ -1073,6 +1112,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 		if ($optioncss != '') {
 			$param .= '&optioncss='.urlencode($optioncss);
 		}
+
 		/*
 		 // Add $param from extra fields
 		 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
@@ -1191,11 +1231,12 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 		$tasks = array();
 
 		$sql = "SELECT t.rowid, t.fk_element, t.element_date, t.element_datehour, t.element_date_withhour, t.element_duration, t.fk_user, t.note, t.thm,";
-		$sql .= " pt.ref, pt.label,";
+		$sql .= " pt.ref, pt.label, te.alternant,";
 		$sql .= " u.lastname, u.firstname, u.login, u.photo, u.statut as user_status,";
 		$sql .= " il.fk_facture as invoice_id, inv.fk_statut,";
 		$sql .= " hs.heure_sup_25_duration as hs25, hs.heure_sup_50_duration as hs50";
 		$sql .= " FROM ".MAIN_DB_PREFIX."element_time as t";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_time_extrafields as te ON t.rowid = te.fk_object";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_projet_task_time_heure_sup as hs ON hs.fk_projet_task_time = t.rowid";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."facturedet as il ON il.rowid = t.invoice_line_id";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."facture as inv ON inv.rowid = il.fk_facture,";
@@ -1219,12 +1260,19 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 		if ($search_user > 0) {
 			$sql .= natural_search('t.fk_user', $search_user);
 		}
+		if ($search_alternant == 1) {
+			$sql .= natural_search('te.alternant', $search_alternant);
+		}
+		if ($search_alternant == 2) {
+			$sql .= 'AND (te.alternant = 0 OR te.alternant IS NULL)';
+		}
 		if ($search_valuebilled == '1') {
 			$sql .= ' AND t.invoice_id > 0';
 		}
 		if ($search_valuebilled == '0') {
 			$sql .= ' AND (t.invoice_id = 0 OR t.invoice_id IS NULL)';
 		}
+	
 		$sql .= dolSqlDateFilter('t.element_datehour', $search_day, $search_month, $search_year);
 		$sql .= $db->order($sortfield, $sortorder);
 
@@ -1297,6 +1345,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 				print '<td>'.$langs->trans("Task").'</td>';
 			}
 			print '<td>'.$langs->trans("By").'</td>';
+			// print '<td>'.$langs->trans("Alternant").'</td>';
 			print '<td>'.$langs->trans("Note").'</td>';
 			print '<td>'.$langs->trans("NewTimeSpent").'</td>';
 			print '<td>'.'HS à 25%'.'</td>';
@@ -1399,6 +1448,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 
 			print '<br>';
 		}
+		
 
 		$moreforfilter = '';
 
@@ -1446,6 +1496,18 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 		// Author
 		if (!empty($arrayfields['author']['checked'])) {
 			print '<td class="liste_titre">'.$form->select_dolusers(($search_user > 0 ? $search_user : -1), 'search_user', 1, null, 0, '', '', 0, 0, 0, '', 0, '', 'maxwidth250').'</td>';
+		}
+		// Alternant 
+		if (!empty($arrayfields['alternant']['checked'])) {
+			print '<td class="liste_titre">';
+			$isalter = $search_alternant == 1 ? 'checked' : '';
+			$isnotalter = $search_alternant == 2 ? 'checked' : '';
+			// "'.$ischecked.'"
+			print '<input class="flat width25" type="radio" name="search_alternant" '.$isalter.' id="search_alternant" value="1">';
+			print '<label for="search_alternant_1">Oui</label><br>';
+			print '<input class="flat width25" type="radio" name="search_alternant" '.$isnotalter.' id="search_alternant" value="2">';
+			print '<label for="search_alternant_0">Non</label>';
+			print '</td>';
 		}
 		// Note
 		if (!empty($arrayfields['t.note']['checked'])) {
@@ -1505,6 +1567,9 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 		}
 		if (!empty($arrayfields['author']['checked'])) {
 			print_liste_field_titre($arrayfields['author']['label'], $_SERVER['PHP_SELF'], '', '', $param, '', $sortfield, $sortorder);
+		}
+		if (!empty($arrayfields['alternant']['checked'])) {
+			print_liste_field_titre($arrayfields['alternant']['label'], $_SERVER['PHP_SELF'], '', '', $param, '', $sortfield, $sortorder);
 		}
 		if (!empty($arrayfields['t.note']['checked'])) {
 			print_liste_field_titre($arrayfields['t.note']['label'], $_SERVER['PHP_SELF'], 't.note', '', $param, '', $sortfield, $sortorder);
@@ -1632,8 +1697,38 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 					$userstatic->firstname = $task_time->firstname;
 					$userstatic->photo = $task_time->photo;
 					$userstatic->statut = $task_time->user_status;
+					$userstatic->alternant = $task_time->alternant;
 					print $userstatic->getNomUrl(-1);
 				}
+				print '</td>';
+				if (!$i) {
+					$totalarray['nbfield']++;
+				}
+			}
+
+			// Alternant
+			if (!empty($arrayfields['alternant']['checked'])) {
+				print '<td class="tdoverflowmax100">';
+				$sql = "SELECT t.rowid, t.fk_user,ue.isalternant";
+				$sql .= " FROM ".MAIN_DB_PREFIX."element_time as t";
+				$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue ON t.fk_user = ue.fk_object";
+				$sql .= " WHERE ue.isalternant = 1";
+				$sql .= ' AND t.fk_user = '.$task_time->fk_user.'';
+				$result = $db->query($sql);
+				if ($result) {
+					$obj = $db->fetch_object($result);
+					if($obj->isalternant == 1) {
+						if ($action == 'editline' && $_GET['lineid'] == $task_time->rowid) {
+							print '<input type="checkbox" class="flat valignmiddle maxwidthonsmartphone" name="alternant_line">';
+						} else {
+							$ischecked = $task_time->alternant == 1 ?  'checked=""'  : "";
+							print '<input type="checkbox" '.$ischecked.'  readonly="" disabled="">';
+						}
+					}
+				} else {
+					dol_print_error($db);
+				}
+				
 				print '</td>';
 				if (!$i) {
 					$totalarray['nbfield']++;
@@ -2052,6 +2147,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0) {
 					}
 					print '</td>';
 				}
+
 
 				// Note
 				if (!empty($arrayfields['t.note']['checked'])) {
