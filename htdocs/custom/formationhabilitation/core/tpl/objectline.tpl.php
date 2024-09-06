@@ -27,122 +27,6 @@
  * $type, $text, $description, $line
  */
 
-// Load variable for pagination
-$toselect   = GETPOST('toselect', 'array'); // Array of ids of elements selected into a list
-$massaction = GETPOST('massaction', 'alpha'); // The bulk action (combo box choice into lists)
-$limit = GETPOST('limit', 'int') ? GETPOST('limit', 'int') : $conf->liste_limit;
-$sortfield = GETPOST('sortfield', 'aZ09comma');
-$sortorder = GETPOST('sortorder', 'aZ09comma');
-$page = GETPOSTISSET('pageplusone') ? (GETPOST('pageplusone') - 1) : GETPOST("page", 'int');
-if (empty($page) || $page < 0 || GETPOST('button_search', 'alpha') || GETPOST('button_removefilter', 'alpha')) {
-	// If $page is not defined, or '' or -1 or if we click on clear filters
-	$page = 0;
-}
-$offset = $limit * $page;
-$pageprev = $page - 1;
-$pagenext = $page + 1;
-
- // Initialize array of search criterias
-$search_all = GETPOST('search_all', 'alphanohtml');
-foreach ($objectline->fields as $key => $val) {
-	if($key == 'status') {
-        if(!empty(GETPOST('search_'.$key, 'alpha'))) {
-            $search[$key] = implode(',', GETPOST('search_'.$key, 'alpha'));
-        }
-        else {
-            if($objectline->element == 'userformation'){
-                $search[$key] =  implode(',', array($objectline::STATUS_VALIDE, $objectline::STATUS_A_PROGRAMMER, $objectline::STATUS_REPROGRAMMEE, $objectline::STATUS_PROGRAMMEE, $objectline::STATUS_EXPIREE));
-            }
-            elseif($objectline->element == 'userhabilitation'){
-                $search[$key] =  implode(',', array($objectline::STATUS_NONHABILITE, $objectline::STATUS_HABILITABLE, $objectline::STATUS_HABILITE));
-            }
-            elseif($objectline->element == 'userautorisation'){
-                $search[$key] =  implode(',', array($objectline::STATUS_AUTORISABLE, $objectline::STATUS_AUTORISE, $objectline::STATUS_NONAUTORISE));
-            }
-        }
-    }
-    elseif (GETPOST('search_'.$key, 'alpha') !== '') {
-		$search[$key] = GETPOST('search_'.$key, 'alpha');
-	}
-	elseif (preg_match('/^(date|timestamp|datetime)/', $val['type'])) {
-		$search[$key.'_dtstart'] = dol_mktime(0, 0, 0, GETPOST('search_'.$key.'_dtstartmonth', 'int'), GETPOST('search_'.$key.'_dtstartday', 'int'), GETPOST('search_'.$key.'_dtstartyear', 'int'));
-		$search[$key.'_dtend'] = dol_mktime(23, 59, 59, GETPOST('search_'.$key.'_dtendmonth', 'int'), GETPOST('search_'.$key.'_dtendday', 'int'), GETPOST('search_'.$key.'_dtendyear', 'int'));
-	}
-}
-
-foreach($objectline as $key => $val) {
-	if ($key == 'status' && $filters[$key] == -1) {
-		$search[$key] = '';
-	}
-	if ((strpos($objectline->fields[$key]['type'], 'integer:') === 0) || (strpos($objectline->fields[$key]['type'], 'sellist:') === 0) || !empty($objectline->fields[$key]['arrayofkeyval'])) {
-		if ($search[$key] == '-1' || ($search[$key] === '0' && (empty($objectline->fields[$key]['arrayofkeyval']) || !array_key_exists('0', $objectline->fields[$key]['arrayofkeyval'])))) {
-			$search[$key] = '';
-		}
-	}
-}
-
-// List of fields to search into when doing a "search in all"
-$fieldstosearchall = array();
-foreach ($objectline->fields as $key => $val) {
-	if (!empty($val['searchall'])) {
-		$fieldstosearchall['t.'.$key] = $val['label'];
-	}
-}
-
-foreach($objectline as $key => $val) {
-    if ($key == 'status' && $search[$key] == -1) {
-        unset($search[$key]);
-    }
-    if ((strpos($objectline->fields[$key]['type'], 'integer:') === 0) || (strpos($objectline->fields[$key]['type'], 'sellist:') === 0) || !empty($objectline->fields[$key]['arrayofkeyval'])) {
-        if ($search[$key] == '-1' || ($search[$key] === '0' && (empty($objectline->fields[$key]['arrayofkeyval']) || !array_key_exists('0', $objectline->fields[$key]['arrayofkeyval'])))) {
-            unset($search[$key]);
-        }
-    }
-}
-
-// Definition of array of fields for columns
-$arrayfields = array();
-foreach ($objectline->fields as $key => $val) {
-	// If $val['visible']==0, then we never show the field
-	if (!empty($val['visible'])) {
-		$visible = (int) dol_eval($val['visible'], 1);
-		$arrayfields['t.'.$key] = array(
-			'label'=>$val['label'],
-			'checked'=>(($visible < 0) ? 0 : 1),
-			'enabled'=>($visible != 3 && dol_eval($val['enabled'], 1)),
-			'position'=>$val['position'],
-			'help'=> isset($val['help']) ? $val['help'] : ''
-		);
-	}
-}
-// Extra fields
-include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
-
-// Param
-$param = '';
-if (!empty($object->id)) {
-	$param .= '&id='.urlencode($object->id);
-}
-if (!empty($contextpage) && $contextpage != $_SERVER["PHP_SELF"]) {
-	$param .= '&contextpage='.urlencode($contextpage);
-}
-if ($limit > 0 && $limit != $conf->liste_limit) {
-	$param .= '&limit='.urlencode($limit);
-}
-foreach ($search as $key => $val) {
-	if (is_array($search[$key]) && count($search[$key])) {
-		foreach ($search[$key] as $skey) {
-			if ($skey != '') {
-				$param .= '&search_'.$key.'[]='.urlencode($skey);
-			}
-		}
-	} elseif ($search[$key] != '') {
-		$param .= '&search_'.$key.'='.urlencode($search[$key]);
-	}
-}
-// Add $param from extra fields
-include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
-
 /*
  * Actions
  */
@@ -154,7 +38,7 @@ if (GETPOST('cancel', 'alpha')) {
 if (!GETPOST('confirmmassaction', 'alpha') && $massaction != 'presend' && $massaction != 'confirm_presend') {
     $massaction = '';
 }
- 
+
 // Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 //include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) { // All tests are required to be compatible with all browsers
@@ -175,6 +59,12 @@ if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x'
             continue;
         }
         elseif($object->element == 'formation' && $key == 'fk_formation'){
+            continue;
+        }
+        elseif($object->element == 'habilitation' && $key == 'fk_habilitation'){
+            continue;
+        }
+        elseif($object->element == 'autorisation' && $key == 'fk_autorisation'){
             continue;
         }
 
@@ -253,6 +143,16 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
                     $sqlwhere[] = $key." = ".((int) $value);
                 } elseif (in_array($objectline->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
                     $sqlwhere[] = $key." = '".$db->idate($value)."'";
+                } elseif (preg_match('/(_dtstart|_dtend)$/', $key)) {
+                    $columnName = preg_replace('/(_dtstart|_dtend)$/', '', $key);
+                    if (preg_match('/^(date|timestamp|datetime)/', $objectline->fields[$columnName]['type'])) {
+                        if (preg_match('/_dtstart$/', $key)) {
+                            $sqlwhere[] = $db->escape($columnName)." >= '".$db->idate($value)."'";
+                        }
+                        if (preg_match('/_dtend$/', $key)) {
+                            $sqlwhere[] = $db->escape($columnName)." <= '".$db->idate($value)."'";
+                        }
+                    }
                 } elseif ($key == 'customsql') {
                     $sqlwhere[] = $value;
                 } elseif (strpos($value, '%') === false) {

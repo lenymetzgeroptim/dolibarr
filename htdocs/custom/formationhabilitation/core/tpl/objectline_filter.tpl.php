@@ -78,7 +78,7 @@ foreach($objectline->fields as $key => $val){
 		continue;
 	}
 
-	$cssforfield .= ($cssforfield ? ' ' : '').'center';
+	$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');
 	if (in_array($val['type'], array('timestamp'))) {
 		$cssforfield .= ($cssforfield ? ' ' : '').'nowrap';
 	} 

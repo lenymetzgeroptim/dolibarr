@@ -109,6 +109,8 @@ if (!$sortorder) {
 $search = array();
 $search['fk_user'] = $object->id;
 
+include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
+
 /*
  * Actions
  */
@@ -131,112 +133,19 @@ if($onglet == 'formation' || empty($onglet)){
 }
 
 if($onglet == 'habilitation'){
-    if($action == 'updateline' && !$cancel && $permissiontoaddline){
-        if($lineid > 0 && $id > 0){
-            $objectline = new UserHabilitation($db);
-            $objectline->fetch($lineid);
-
-            if (empty(GETPOST("date_habilitationmonth", 'int')) || empty(GETPOST("date_habilitationday", 'int')) || empty(GETPOST("date_habilitationyear", 'int'))) {
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateHabilitation")), null, 'errors');
-                $error++;
-            }
-            $date = dol_mktime(-1, -1, -1, GETPOST("date_habilitationmonth", 'int'), GETPOST("date_habilitationday", 'int'), GETPOST("date_habilitationyear", 'int'));
-
-
-            if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-                $error++;
-            }
-
-            if (!$error) {
-                $habilitation_static = new Habilitation($db);
-                $habilitation_static->fetch($objectline->fk_habilitation);
-
-				$objectline->ref = $object->login."-".$habilitation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
-                $objectline->date_habilitation = $date;
-                $objectline->date_fin_habilitation = dol_time_plus_duree($date, $habilitation_static->validite_employeur, 'd');
-                $objectline->status = GETPOST('status');
-
-                $resultupdate = $objectline->update($user);
-            }
-
-            if(!$error && $resultupdate){
-                setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-            }
-            elseif(!$error && !$resultupdate){
-                setEventMessages($langs->trans($object->error), null, 'errors');
-            }
-        }
-        else {
-            $langs->load("errors");
-            setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-        }
+    $objectline = new UserHabilitation($db);
+	
+    if(GETPOST('fk_habilitation') > 0) {
+        $habilitation_static = new Habilitation($db);
+        $habilitation_static->fetch(GETPOST('fk_habilitation'));
     }
 
-    if($action == 'addline' && $permissiontoaddline){
-        if($id > 0){
-            $objectline = new UserHabilitation($db);
-
-            if (empty(GETPOST("date_habilitationmonth", 'int')) || empty(GETPOST("date_habilitationday", 'int')) || empty(GETPOST("date_habilitationyear", 'int'))) {
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateHabilitation")), null, 'errors');
-                $error++;
-            }
-            $date = dol_mktime(-1, -1, -1, GETPOST("date_habilitationmonth", 'int'), GETPOST("date_habilitationday", 'int'), GETPOST("date_habilitationyear", 'int'));
-
-            if(!(GETPOST('fk_habilitation') > 0)){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Habilitation")), null, 'errors');
-                $error++;
-            }
-
-            if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-                $error++;
-            }
-
-            if($objectline->getID(GETPOST('fk_habilitation'), $object->id) > 0){
-                setEventMessages("Impossible d'ajouter cette habilitation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
-                $error++;
-            }
-
-            if (!$error) {
-                $habilitation_static = new Habilitation($db);
-                $habilitation_static->fetch(GETPOST('fk_habilitation'));
-
-                $objectline->ref = $object->login."-".$habilitation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
-                $objectline->fk_habilitation = GETPOST('fk_habilitation');
-                $objectline->date_habilitation = $date;
-                $objectline->date_fin_habilitation = dol_time_plus_duree($date, $habilitation_static->validite_employeur, 'd');
-                $objectline->fk_user = $id;
-                $objectline->status = GETPOST('status');
-
-                $resultcreate = $objectline->create($user);
-            }
-
-            if(!$error && $resultcreate){
-                setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-            }
-            elseif(!$error && !$resultcreate){
-                setEventMessages($langs->trans($object->error), null, 'errors');
-            }
-        }
-        else {
-            $langs->load("errors");
-            setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-        }
+    if(GETPOST('fk_user') > 0) {
+        $user_static = new User($db);
+        $user_static->fetch(GETPOST('fk_user'));
     }
 
-    if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) {
-        $resultdelete = $object->deleteLine($user, $lineid);
-        if ($resultdelete > 0) {
-            setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
-            header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet);
-            exit;
-        } else {
-            $error++;
-            setEventMessages($object->error, $object->errors, 'errors');
-        }
-        $action = '';
-    }
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userhabilitation.inc.php';
 }
 
 if($onglet == 'autorisation'){
@@ -494,6 +403,7 @@ $h++;
 if(empty($onglet) || $onglet == 'formation'){
     print dol_get_fiche_head($head2, 'formation', $title, -1, 'user');
 
+    $contextpage = 'userformation';
     $css_div = 'min-height: 520px;';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
@@ -501,96 +411,18 @@ if(empty($onglet) || $onglet == 'formation'){
 elseif($onglet == 'habilitation'){
     print dol_get_fiche_head($head2, 'habilitation', $title, -1, 'user');
 
-    // Show Formation lines
-    $result = $object->getLinesArrayFormationHabilitation('habilitation');
-    $object->table_element_line = 'formationhabilitation_userhabilitation';
-
-    print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-    <input type="hidden" name="token" value="' . newToken().'">
-    <input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
-    <input type="hidden" name="mode" value="">
-    <input type="hidden" name="page_y" value="">
-    <input type="hidden" name="id" value="' . $object->id.'">
-    <input type="hidden" name="fk_user" value="' . $object->id.'">
-    <input type="hidden" name="onglet" value="' .$onglet.'">
-    ';
-
-
-    print '<div class="div-table-responsive-no-min">';
-    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-        print '<table id="tablelines" class="noborder noshadow" width="100%">';
-    }
-
-    if (!empty($object->lines)) {
-        $object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-    }
-
-    // Form to add new line
-    if ($permissiontoaddline && $action != 'selectlines') {
-        if ($action != 'editline') {
-            // Add products/services form
-            $parameters = array();
-            $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-            if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-            if (empty($reshook)){
-                $object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-            }
-        }
-    }
-
-    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-        print '</table>';
-    }
-    print '</div>';
-
-    print "</form>\n";
+    $contextpage = 'userhabilitation';
+    //$css_div = 'min-height: 520px;';
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+    print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
 elseif($onglet == 'autorisation'){
     print dol_get_fiche_head($head2, 'autorisation', $title, -1, 'user');
 
-    // Show Formation lines
-    $result = $object->getLinesArrayFormationHabilitation('autorisation');
-    $object->table_element_line = 'formationhabilitation_userautorisation';
-
-    print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-    <input type="hidden" name="token" value="' . newToken().'">
-    <input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
-    <input type="hidden" name="mode" value="">
-    <input type="hidden" name="page_y" value="">
-    <input type="hidden" name="id" value="' . $object->id.'">
-    <input type="hidden" name="fk_user" value="' . $object->id.'">
-    <input type="hidden" name="onglet" value="' .$onglet.'">
-    ';
-
-
-    print '<div class="div-table-responsive-no-min">';
-    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-        print '<table id="tablelines" class="noborder noshadow" width="100%">';
-    }
-
-    if (!empty($object->lines)) {
-        $object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-    }
-
-    // Form to add new line
-    if ($permissiontoaddline && $action != 'selectlines') {
-        if ($action != 'editline') {
-            // Add products/services form
-            $parameters = array();
-            $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-            if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-            if (empty($reshook)){
-                $object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-            }
-        }
-    }
-
-    if (!empty($object->lines) || ($permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-        print '</table>';
-    }
-    print '</div>';
-
-    print "</form>\n";
+    $contextpage = 'userautorisation';
+   //$css_div = 'min-height: 520px;';
+   include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+   print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
 elseif($onglet == 'volet') {
     $formfile = new FormFile($db);

@@ -101,15 +101,15 @@ Formateur = Organisme / Formateur
 #
 # Attribut User Habilitation
 # 
-DateDebutFormation = Date d'obtention de l'habilitation
-DateFinHabilitation = Date de fin d'habilitation
+DateHabilitation = Date d'obtention de l'habilitation
+DateFinHabilitation = Date de fin de validité de l'habilitation
 
 
 #
 # Attribut User Autorisation
 # 
 DateAutorisation = Date d'obtention de l'autorisation
-DateFinAutorisation = Date de fin de l'autorisation
+DateFinAutorisation = Date de fin de validité de l'autorisation
 
 
 #

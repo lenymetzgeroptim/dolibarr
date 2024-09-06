@@ -79,6 +79,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userhabilitation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userformation.class.php';
 dol_include_once('/formationhabilitation/class/habilitation.class.php');
 dol_include_once('/formationhabilitation/lib/formationhabilitation_habilitation.lib.php');
 
@@ -98,7 +99,11 @@ $lineid   = GETPOST('lineid', 'int');
 
 // Initialize technical objects
 $object = new Habilitation($db);
+$objectline = new UserHabilitation($db);
 $extrafields = new ExtraFields($db);
+$form = new Form($db);
+$formfile = new FormFile($db);
+$formproject = new FormProjets($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array('habilitationcard', 'globalcard')); // Note that conf->hooks_modules contains array
 
@@ -107,13 +112,13 @@ $extrafields->fetch_name_optionals_label($object->table_element);
 
 $search_array_options = $extrafields->getOptionalsFromPost($object->table_element, '', 'search_');
 
-// Initialize array of search criterias
-$search_all = GETPOST("search_all", 'alpha');
-$search = array();
-foreach ($object->fields as $key => $val) {
-	if (GETPOST('search_'.$key, 'alpha')) {
-		$search[$key] = GETPOST('search_'.$key, 'alpha');
-	}
+// Default sort order (if not yet defined by previous GETPOST)
+if (!$sortfield) {
+	reset($object->fields);					// Reset is required to avoid key() to return null.
+	$sortfield = "t.".key($object->fields); // Set here default search field. By default 1st field in definition.
+}
+if (!$sortorder) {
+	$sortorder = "ASC";
 }
 
 if (empty($action) && empty($id) && empty($ref)) {
@@ -122,6 +127,10 @@ if (empty($action) && empty($id) && empty($ref)) {
 
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
+
+$search = array();
+$search['fk_habilitation'] = $object->id;
+$objectparentline = $object;
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
@@ -152,10 +161,21 @@ $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entit
 if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 if (!$permissiontoread) accessforbidden();
 
+include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
 
 /*
  * Actions
  */
+
+if(GETPOST('fk_habilitation') > 0) {
+	$habilitation_static = new Habilitation($db);
+	$habilitation_static->fetch(GETPOST('fk_habilitation'));
+}
+
+if(GETPOST('fk_user') > 0) {
+	$user_static = new User($db);
+	$user_static->fetch(GETPOST('fk_user'));
+}
 
 $parameters = array();
 $reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
@@ -195,6 +215,8 @@ if (empty($reshook)) {
 	// Action to build doc
 	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
 
+	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userhabilitation.inc.php';
+
 	if ($action == 'set_thirdparty' && $permissiontoadd) {
 		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
 	}
@@ -213,102 +235,6 @@ if (empty($reshook)) {
 		$action = '';
 	}
 
-	if($action == 'updateline' && !$cancel && $permissiontoaddline){
-		if($lineid > 0 && $id > 0){
-			$objectline = new UserHabilitation($db);
-			$objectline->fetch($lineid);
-
-			
-			if (empty(GETPOST("date_habilitationmonth", 'int')) || empty(GETPOST("date_habilitationday", 'int')) || empty(GETPOST("date_habilitationyear", 'int'))) {
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateHabilitation")), null, 'errors');
-				$error++;
-			}
-			$date = dol_mktime(-1, -1, -1, GETPOST("date_habilitationmonth", 'int'), GETPOST("date_habilitationday", 'int'), GETPOST("date_habilitationyear", 'int'));
-
-			if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-				$error++;
-			}
-
-			if (!$error) {
-				$user_static = new User($db);
-				$user_static->fetch(GETPOST('fk_user'));
-
-				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
-				$objectline->date_habilitation = $date;
-				$objectline->date_fin_habilitation = dol_time_plus_duree($date, $object->validite_employeur, 'd');
-				$objectline->status = GETPOST('status');
-
-				$result = $objectline->update($user);
-			}
-
-			if(!$error && $result){
-				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			}
-			elseif(!$result){
-				setEventMessages($langs->trans($object->error), null, 'errors');
-			}
-		}
-		else {
-			$langs->load("errors");
-			setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-		}
-	}
-
-	if($action == 'addline' && $permissiontoaddline){
-		if($id > 0){
-			$objectline = new UserHabilitation($db);
-
-			if(!(GETPOST('fk_user') > 0)){
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("User")), null, 'errors');
-				$error++;
-			}
-
-			if (empty(GETPOST("date_habilitationmonth", 'int')) || empty(GETPOST("date_habilitationday", 'int')) || empty(GETPOST("date_habilitationyear", 'int'))) {
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateHabilitation")), null, 'errors');
-				$error++;
-			}
-			$date = dol_mktime(-1, -1, -1, GETPOST("date_habilitationmonth", 'int'), GETPOST("date_habilitationday", 'int'), GETPOST("date_habilitationyear", 'int'));
-
-			if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-				$error++;
-			}
-
-			if($objectline->getID($object->id, GETPOST('fk_user')) > 0){
-				setEventMessages("Impossible d'ajouter cet utilisateur car il est déja affecté à cette habilitation", null, 'errors');
-				$error++;
-			}
-
-			if (!$error) {
-				$user_static = new User($db);
-				$user_static->fetch(GETPOST('fk_user'));
-				$mois = (strlen(GETPOST("date_habilitationmonth", 'int')) < 2 ? '0'.GETPOST("date_habilitationmonth", 'int') : GETPOST("date_habilitationmonth", 'int'));
-
-				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
-				$objectline->fk_habilitation = $id;
-				$objectline->fk_user = GETPOST('fk_user');
-				$objectline->date_habilitation = $date;
-				$objectline->date_fin_habilitation = dol_time_plus_duree($date, $object->validite_employeur, 'd');
-				$objectline->status = GETPOST('status');
-
-				$result = $objectline->create($user);
-			}
-
-			if(!$error && $result){
-				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			}
-			elseif(!$result){
-				setEventMessages($langs->trans($object->error), null, 'errors');
-			}
-		}
-		else {
-			$langs->load("errors");
-			setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-		}
-	}
-
-
 	// Actions to send emails
 	$triggersendname = 'FORMATIONHABILITATION_HABILITATION_SENTBYMAIL';
 	$autocopy = 'MAIN_MAIL_AUTOCOPY_HABILITATION_TO';
@@ -324,10 +250,6 @@ if (empty($reshook)) {
  *
  * Put here all code to build page
  */
-
-$form = new Form($db);
-$formfile = new FormFile($db);
-$formproject = new FormProjets($db);
 
 $title = $langs->trans("Habilitation");
 $help_url = '';
@@ -530,55 +452,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	 * Lines
 	 */
 
-	if (!empty($object->table_element_line)) {
-		// Show object lines
-		$result = $object->getLinesArray();
-
-		if ($action == 'editline') {
-			print '<br><br><br>';
-		}
-
-		print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-		<input type="hidden" name="token" value="' . newToken().'">
-		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
-		<input type="hidden" name="mode" value="">
-		<input type="hidden" name="page_y" value="">
-		<input type="hidden" name="id" value="' . $object->id.'">';
-
-		if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
-			include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
-		}
-
-		print '<div class="div-table-responsive-no-min">';
-		if (!empty($object->lines) || ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-			print '<table id="tablelines" class="noborder noshadow" width="100%">';
-		}
-
-		if (!empty($object->lines)) {
-			$nbline = 0;
-			$object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-		}
-
-		// Form to add new line
-		if ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines') {
-			if ($action != 'editline') {
-				// Add products/services form
-
-				$parameters = array();
-				$reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-				if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-				if (empty($reshook)){
-					$object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-				}
-			}
-		}
-
-		if (!empty($object->lines) || ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-			print '</table>';
-		}
-		print '</div>';
-
-		print "</form>\n";
+	if (!empty($object->table_element_line)  && $object->status != $object::STATUS_CONSTRUCTION) {
+		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+		print '<input type="hidden" form="addline" id="fk_habilitation" name="fk_habilitation" value="' . $object->id.'">';
 	}
 }
 

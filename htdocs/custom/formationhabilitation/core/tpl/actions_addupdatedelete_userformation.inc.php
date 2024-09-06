@@ -368,6 +368,8 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 
 		if(!$error && $result){
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			exit;
 		}
 		elseif(!$result){
 			setEventMessages($langs->trans($object->error), null, 'errors');
@@ -437,11 +439,12 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 		}
 
 		// Création des habilitations 
+		$resultcreateline = 1;
 		if($result && $formation_static->type == 1) {
 			$habilitationStatic = new Habilitation($db);
 			$userHabilitation = new UserHabilitation($db);
 			
-			$listHabilitation = $habilitationStatic->getHabilitationsByFormation($formationStatic->id); 
+			$listHabilitation = $habilitationStatic->getHabilitationsByFormation($formationid); 
 			$userHabilitation->fk_user = $userid;
 			$userHabilitation->status = UserHabilitation::STATUS_HABILITABLE;
 			$userHabilitation->date_habilitation = $objectline->date_fin_formation;
@@ -449,22 +452,28 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 			foreach($listHabilitation as $habilitation) {
                 $userHabilitation->ref = $user_static->login."-".$habilitation->ref.'-'.dol_print_date($objectline->date_fin_formation, "%Y%m%d");
                 $userHabilitation->fk_habilitation = $habilitation->id;
-                $userHabilitation->date_fin_habilitation = dol_time_plus_duree($objectline->date_fin_formation, $habilitation_static->validite_employeur, 'd');
+                $userHabilitation->date_fin_habilitation = dol_time_plus_duree($objectline->date_fin_formation, $habilitationStatic->validite_employeur, 'd');
 
 				$resultcreateline = $userHabilitation->create($user);
-				if(!$resultcreateline) {
-					$error++;
+				if($resultcreateline <= 0) {
+					break;
 				}
 			}
 		}
 
-		if(!$error && $result){
+		if(!$error && $result > 0 && $resultcreateline > 0){
 			$db->commit();
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			exit;
 		}
-		elseif(!$result){
+		elseif($result <= 0){
 			$db->rollback();
-			setEventMessages($langs->trans($object->error), null, 'errors');
+			setEventMessages('Erreur lors de la validation de la formation', null, 'errors');
+		}
+		elseif($resultcreateline <= 0){
+			$db->rollback();
+			setEventMessages('Erreur lors de la création des habilitations', null, 'errors');
 		}
 	}
 	else {

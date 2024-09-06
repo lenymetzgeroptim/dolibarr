@@ -81,7 +81,8 @@ foreach($objectline->fields as $key => $val){
 		continue;
 	}
 	
-	print '<td class="center linecol'.$key.' nowrap">';
+	$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');
+	print '<td class="linecol'.$key.' nowrap '.$cssforfield.'">';
 	if($key == 'ref'){
 		print $line->getNomUrl(0, 'nolink', 1);
 	}

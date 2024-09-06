@@ -115,7 +115,7 @@ class Habilitation extends CommonObject
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"5", "default"=>"0", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Active", "5" => "Cloturée"), "validate"=>"1",),
-		"formation" => array("type"=>"integer:Formation:custom/formationhabilitation/class/formation.class.php", "label"=>"Formation", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1",),
+		"formation" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid::(type=1)", "label"=>"Formation", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1",),
 		"validite_employeur" => array("type"=>"integer", "label"=>"ValiditeEmployeur", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1", "help"=>"en mois",),
 		"volet" => array("type"=>"sellist:c_volets:numero|label:numero::(active:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 	);
@@ -1027,10 +1027,12 @@ class Habilitation extends CommonObject
 	 */
 	public function getLinesArray()
 	{
-		$this->lines = array();
+		global $sortorder, $sortfield, $search, $limit, $offset, $id;
 
 		$objectline = new UserHabilitation($this->db);
-		$result = $objectline->fetchAll('ASC', 'date_habilitation', 0, 0, array('customsql'=>'fk_habilitation = '.((int) $this->id)));
+		$this->lines = array();
+
+		$result = $objectline->fetchAll($sortorder, $sortfield, $limit + 1, $offset, $search);
 
 		if (is_numeric($result)) {
 			$this->error = $objectline->error;
@@ -1207,7 +1209,6 @@ class Habilitation extends CommonObject
 	public function getHabilitationsByFormation($formationId)
 	{
 		global $conf, $user;
-		$habilitation = new self($this->db);
 		$res = array();
 
 		$sql = "SELECT f.rowid";
@@ -1218,9 +1219,9 @@ class Habilitation extends CommonObject
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while($obj = $this->db->fetch_object($resql)) {
-				$habilitation->
-				$res[$obj->rowid]['id'] = $obj->rowid;
-				$res[$obj->rowid]['label'] = $obj->label;
+				$habilitation = new self($this->db);
+				$habilitation->fetch($obj->rowid);
+				$res[$obj->rowid] = $habilitation;
 			}
 
 			$this->db->free($resql);

@@ -954,7 +954,6 @@ class Formation extends CommonObject
 		global $sortorder, $sortfield, $search, $limit, $offset, $id;
 
 		$objectline = new UserFormation($this->db);		
-
 		$this->lines = array();
 
 		$result = $objectline->fetchAll($sortorder, $sortfield, $limit + 1, $offset, $search);

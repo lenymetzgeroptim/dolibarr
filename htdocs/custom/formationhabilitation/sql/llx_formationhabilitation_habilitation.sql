@@ -29,7 +29,7 @@ CREATE TABLE llx_formationhabilitation_habilitation(
 	import_key varchar(14), 
 	model_pdf varchar(255), 
 	status integer NOT NULL, 
-	formation integer, 
+	formation varchar(255), 
 	validite_employeur integer NOT NULL, 
 	volet integer
 	-- END MODULEBUILDER FIELDS

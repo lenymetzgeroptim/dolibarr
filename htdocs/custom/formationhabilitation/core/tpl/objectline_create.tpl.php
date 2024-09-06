@@ -78,7 +78,8 @@ $objectline->fields = dol_sort_array($objectline->fields, 'position');
 			continue;
 		}
 
-		print '<td class="center linecol'.$key.'">'.$langs->trans($val['label']).'</td>';
+		$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');
+		print '<td class="linecol'.$key.' '.$cssforfield.'">'.$langs->trans($val['label']).'</td>';
 	}
 
 	print '<td class=""></td>';
@@ -114,7 +115,7 @@ foreach($objectline->fields as $key => $val){
 	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 		continue;
 	}
-	if($key == 'date_finvalidite_formation' || $key == 'date_finvalidite_habilitation' || $key == 'date_finvalidite_autorisation') {
+	if($key == 'date_finvalidite_formation' || $key == 'date_fin_habilitation' || $key == 'date_fin_autorisation') {
 		print '<td class="nobottom linecol'.$key.'">&nbsp;</td>';
 		continue;
 	}
@@ -164,7 +165,8 @@ foreach($objectline->fields as $key => $val){
 		continue;
 	}
 
-	print '<td class="center nobottom linecol'.$key.'">'.$objectline->showInputField($val, $key, $value, 'form="addline"').'</td>';
+	$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');
+	print '<td class="nobottom linecol'.$key.' '.$cssforfield.'">'.$objectline->showInputField($val, $key, $value, 'form="addline"').'</td>';
 }
 
 print '<td class="nobottom linecoledit center valignmiddle" colspan="3">';

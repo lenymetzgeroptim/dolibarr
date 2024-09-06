@@ -114,3 +114,7 @@ div.mainmenu.formationhabilitation {
 td.linecolstatus a[aria-label="Programmer"] {
 	padding: 0.3em 0.35em;
 }
+
+.width30 {
+	width: 30px;
+}
