@@ -983,7 +983,7 @@ class ExtendedExportFDT extends Export
 	{
 		// phpcs:enable
 		// Build the sql request
-		$sql = "SELECT DISTINCT u.rowid, ";
+		$sql = "SELECT DISTINCT ";
 		$i = 0;
 	
 		foreach ($array_export_fields[$indice] as $key => $value) {
@@ -1012,9 +1012,18 @@ class ExtendedExportFDT extends Export
 	
 			$sql .= $newfield;
 		}
-		$sql .= " FROM ".MAIN_DB_PREFIX."element_time AS et";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user AS u ON et.fk_user = u.rowid";
+		$sql .= " FROM (
+						SELECT et.fk_user as user_id, et.element_date as element_date, et.element_duration as element_duration, null as s_heure_sup00, null as s_heure_sup25, null as s_heure_sup50, null as s_heure_route, null as r_heure_sup00, null as r_heure_sup25, null as r_heure_sup50, null as r_heure_nuit_50, null as r_heure_nuit_75, null as r_heure_nuit_100, null as r_heure_route, null as deplacement FROM llx_element_time AS et
+						UNION
+						SELECT s.fk_user, s.date, null, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_route, null, null, null, null, null, null, null, null FROM llx_feuilledetemps_silae AS s
+						UNION 
+						SELECT r.fk_user, r.date, null, null, null, null, null, r.heure_sup00, r.heure_sup25, r.heure_sup50, r.heure_nuit_50, r.heure_nuit_75, r.heure_nuit_100, r.heure_route, null FROM llx_feuilledetemps_regul AS r
+						UNION 
+						SELECT d.fk_user, d.date, null, null, null, null, null, null, null, null, null, null, null, null, d.type_deplacement FROM llx_feuilledetemps_deplacement AS d
+					) AS t1";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user AS u ON user_id = u.rowid";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields AS eu ON u.rowid = eu.fk_object";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_Deplacement_extrafields AS dd ON u.rowid = dd.fk_object";
 		$sql .= " WHERE 1 = 1";
 
 		// Add the WHERE part. Filtering into sql if a filtering array is provided
@@ -1036,7 +1045,6 @@ class ExtendedExportFDT extends Export
 		}
 	
 		$sql .= " GROUP BY u.rowid";
-		$sql .= " HAVING total_hour > 0";
 
 		// Add the HAVING part.
 		if (is_array($array_filterValue) && !empty($array_filterValue)) {

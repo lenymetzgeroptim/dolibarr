@@ -645,7 +645,7 @@ tr > th:last-child.fixed {
 	height: 30px;
 }
 
-.ui-widget.ui-widget-content {
+body.feuilledetemps .ui-widget.ui-widget-content {
 	z-index: 10 !important;
 }
 
