@@ -33,7 +33,7 @@ function autorisationPrepareHead($object)
 
 	$langs->load("formationhabilitation@formationhabilitation");
 
-	$showtabofpagecontact = 1;
+	$showtabofpagecontact = 0;
 	$showtabofpagenote = 1;
 	$showtabofpagedocument = 1;
 	$showtabofpageagenda = 1;

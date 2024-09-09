@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2017 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2024 METZGER Leny <test@optim-industries.fr>
+ * Copyright (C) ---Put here your own copyright and developer email---
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  */
 
 /**
- *  \file       userautorisation_agenda.php
- *  \ingroup    formationhabilitation
- *  \brief      Tab of events on UserAutorisation
+ *  \file       htdocs/modulebuilder/template/myobject_agenda.php
+ *  \ingroup    mymodule
+ *  \brief      Tab of events on MyObject
  */
 
 //if (! defined('NOREQUIREDB'))              define('NOREQUIREDB', '1');				// Do not create database handler $db
@@ -50,7 +50,8 @@ if (!$res && !empty($_SERVER["CONTEXT_DOCUMENT_ROOT"])) {
 // Try main.inc.php into web root detected using web root calculated from SCRIPT_FILENAME
 $tmp = empty($_SERVER['SCRIPT_FILENAME']) ? '' : $_SERVER['SCRIPT_FILENAME']; $tmp2 = realpath(__FILE__); $i = strlen($tmp) - 1; $j = strlen($tmp2) - 1;
 while ($i > 0 && $j > 0 && isset($tmp[$i]) && isset($tmp2[$j]) && $tmp[$i] == $tmp2[$j]) {
-	$i--; $j--;
+	$i--;
+	$j--;
 }
 if (!$res && $i > 0 && file_exists(substr($tmp, 0, ($i + 1))."/main.inc.php")) {
 	$res = @include substr($tmp, 0, ($i + 1))."/main.inc.php";
@@ -75,11 +76,19 @@ if (!$res) {
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
+dol_include_once('/formationhabilitation/class/autorisation.class.php');
+dol_include_once('/formationhabilitation/class/formation.class.php');
+dol_include_once('/formationhabilitation/class/habilitation.class.php');
+dol_include_once('/formationhabilitation/class/test.class.php');
+dol_include_once('/formationhabilitation/class/theme.class.php');
 dol_include_once('/formationhabilitation/class/userautorisation.class.php');
-dol_include_once('/formationhabilitation/lib/formationhabilitation_userautorisation.lib.php');
+dol_include_once('/formationhabilitation/class/userformation.class.php');
+dol_include_once('/formationhabilitation/class/userhabilitation.class.php');
+dol_include_once('/formationhabilitation/class/volet.class.php');
+dol_include_once('/mymodule/lib/mymodule_myobject.lib.php');
 
 // Load translation files required by the page
-$langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"));
+$langs->loadLangs(array("mymodule@mymodule", "other"));
 
 // Get parameters
 $id = GETPOST('id', 'int');
@@ -118,25 +127,25 @@ if (!$sortorder) {
 }
 
 // Initialize technical objects
-$object = new UserAutorisation($db);
+$object = new MyObject($db);
 $extrafields = new ExtraFields($db);
-$diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
-$hookmanager->initHooks(array('userautorisationagenda', 'globalcard')); // Note that conf->hooks_modules contains array
+$diroutputmassaction = $conf->mymodule->dir_output.'/temp/massgeneration/'.$user->id;
+$hookmanager->initHooks(array($object->element.'agenda', 'globalcard')); // Note that conf->hooks_modules contains array
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
 
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once  // Must be include, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
 if ($id > 0 || !empty($ref)) {
-	$upload_dir = $conf->formationhabilitation->multidir_output[!empty($object->entity) ? $object->entity : $conf->entity]."/".$object->id;
+	$upload_dir = $conf->mymodule->multidir_output[!empty($object->entity) ? $object->entity : $conf->entity]."/".$object->id;
 }
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 0;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->formationhabilitation->userautorisation->read;
-	$permissiontoadd = $user->rights->formationhabilitation->userautorisation->write;
+	$permissiontoread = $user->hasRight('mymodule', 'myobject', 'read');
+	$permissiontoadd = $user->hasRight('mymodule', 'myobject', 'write');
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;
@@ -147,10 +156,12 @@ if ($enablepermissioncheck) {
 //if ($user->socid > 0) $socid = $user->socid;
 //$isdraft = (($object->status == $object::STATUS_DRAFT) ? 1 : 0);
 //restrictedArea($user, $object->module, $object->id, $object->table_element, $object->element, 'fk_soc', 'rowid', $isdraft);
-if (!isModEnabled("formationhabilitation")) {
+if (!isModEnabled("mymodule")) {
 	accessforbidden();
 }
-if (!$permissiontoread) accessforbidden();
+if (!$permissiontoread) {
+	accessforbidden();
+}
 
 
 /*
@@ -186,23 +197,23 @@ if (empty($reshook)) {
 $form = new Form($db);
 
 if ($object->id > 0) {
-	$title = $langs->trans("Agenda");
-	//if (getDolGlobalString('MAIN_HTML_TITLE') && preg_match('/thirdpartynameonly/',getDolGlobalString('MAIN_HTML_TITLE')) && $object->name) $title=$object->name." - ".$title;
+	$title = $langs->trans("MyObject")." - ".$langs->trans('Agenda');
+	//$title = $object->ref." - ".$langs->trans("Agenda");
 	$help_url = 'EN:Module_Agenda_En|DE:Modul_Terminplanung';
 
-	llxHeader('', $title, $help_url);
+	llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-mymodule page-card_agenda');
 
 	if (isModEnabled('notification')) {
 		$langs->load("mails");
 	}
-	$head = userautorisationPrepareHead($object);
+	$head = myobjectPrepareHead($object);
 
 
-	print dol_get_fiche_head($head, 'agenda', $langs->trans("UserAutorisation"), -1, $object->picto);
+	print dol_get_fiche_head($head, 'agenda', $langs->trans("MyObject"), -1, $object->picto);
 
 	// Object card
 	// ------------------------------------------------------------
-	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/userautorisation_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.dol_buildpath('/mymodule/myobject_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*
@@ -306,13 +317,13 @@ if ($object->id > 0) {
 		}
 
 		// Try to know count of actioncomm from cache
-		/*require_once DOL_DOCUMENT_ROOT.'/core/lib/memory.lib.php';
-		$cachekey = 'count_events_userautorisation_'.$object->id;
-		$nbEvent = dol_getcache($cachekey);
+		$nbEvent = 0;
+		//require_once DOL_DOCUMENT_ROOT.'/core/lib/memory.lib.php';
+		//$cachekey = 'count_events_myobject_'.$object->id;
+		//$nbEvent = dol_getcache($cachekey);
+		$titlelist = $langs->trans("Actions").(is_numeric($nbEvent) ? '<span class="opacitymedium colorblack paddingleft">('.$nbEvent.')</span>' : '');
 
-		print_barre_liste($langs->trans("ActionsOnUserAutorisation").(is_numeric($nbEvent) ? '<span class="opacitymedium colorblack paddingleft">('.$nbEvent.')</span>': ''), 0, $_SERVER["PHP_SELF"], '', $sortfield, $sortorder, '', 0, -1, '', 0, $morehtmlright, '', 0, 1, 1);
-		*/
-		print_barre_liste($langs->trans("ActionsOnUserAutorisation"), 0, $_SERVER["PHP_SELF"], '', $sortfield, $sortorder, '', 0, -1, '', 0, $morehtmlright, '', 0, 1, 0);
+		print_barre_liste($titlelist, 0, $_SERVER["PHP_SELF"], '', $sortfield, $sortorder, '', 0, -1, '', 0, $morehtmlright, '', 0, 1, 0);
 
 		// List of all actions
 		$filters = array();
