@@ -67,10 +67,10 @@ foreach ($objectline->fields as $key => $val) {
     elseif (GETPOST('search_'.$key, 'alpha') !== '') {
 		$search[$key] = GETPOST('search_'.$key, 'alpha');
 	}
-	elseif (GETPOST('search_'.$key.'_dtstart', 'alpha') !== '') {
+	elseif (GETPOST('search_'.$key.'_dtstart', 'alpha') !== '' && empty(GETPOST('search_'.$key.'_dtstartday', 'alpha'))) {
 		$search[$key.'_dtstart'] = GETPOST('search_'.$key.'_dtstart', 'alpha');
 	}
-	elseif (GETPOST('search_'.$key.'_dtend', 'alpha') !== '') {
+	elseif (GETPOST('search_'.$key.'_dtend', 'alpha') !== '' && empty(GETPOST('search_'.$key.'_dtendday', 'alpha'))) {
 		$search[$key.'_dtend'] = GETPOST('search_'.$key.'_dtend', 'alpha');
 	}
 	elseif (preg_match('/^(date|timestamp|datetime)/', $val['type'])) {

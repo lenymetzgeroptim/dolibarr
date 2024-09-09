@@ -124,7 +124,8 @@ if($action == 'confirm_addline' && $confirm == 'yes' && $permissiontoaddline) {
 	if(!$error && $resultcreate){
 		$db->commit();
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+		// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 		exit;
 	}
 	elseif(!$error && !$resultcreate){
@@ -197,14 +198,15 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 
 		if(!$error && $resultupdate){
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		}
 		elseif(!$error && !$resultupdate){
 			setEventMessages($langs->trans($objectline->error), null, 'errors');
 		}
 		elseif($error) {
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int').(!empty($onglet) ? "&onglet=$onglet" : ''));
+			header('Location: '.$_SERVER["PHP_SELF"].'?'.($param ? $param : '').'&action=editline&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int'));
 			exit;
 		}
 	}
@@ -218,7 +220,7 @@ if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline
     $resultdelete = $object->deleteLine($user, $lineid);
     if ($resultdelete > 0) {
         setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
-        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
         exit;
     } else {
         $error++;
@@ -248,7 +250,7 @@ if ($action == 'updatedatefinvalidite' && !$cancel && $permissiontoaddline) {
 		if (!$error) {
 			$db->commit();
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		} else {
 			$db->rollback();
@@ -277,7 +279,7 @@ if ($action == 'updatecoutpedagogique' && !$cancel && $permissiontoaddline) {
 		if (!$error) {
 			$db->commit();
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		} else {
 			$db->rollback();
@@ -306,7 +308,7 @@ if ($action == 'updatecoutmobilisation' && !$cancel && $permissiontoaddline) {
 		if (!$error) {
 			$db->commit();
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		} else {
 			$db->rollback();
@@ -368,7 +370,7 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 
 		if(!$error && $result){
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		}
 		elseif(!$result){
@@ -464,7 +466,7 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 		if(!$error && $result > 0 && $resultcreateline > 0){
 			$db->commit();
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		}
 		elseif($result <= 0){

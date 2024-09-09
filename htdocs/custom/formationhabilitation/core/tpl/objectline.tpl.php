@@ -182,7 +182,7 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
 $result = $objectparentline->getLinesArray();
 
 // Formulaire pour créer une ligne. Il est avant le contenu car impossible de mettre un form dans un autre form => Permet de gérer la recherche et la création sur la même page
-print '<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'" method="POST">
+print '<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?'.$param.'" method="POST">
 <input type="hidden" name="token" value="' . newToken().'">
 <input type="hidden" name="mode" value="">
 <input type="hidden" name="page_y" value="">

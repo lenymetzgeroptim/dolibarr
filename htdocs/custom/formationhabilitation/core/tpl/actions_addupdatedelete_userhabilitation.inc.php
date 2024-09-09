@@ -89,7 +89,8 @@ if($action == 'addline' && $permissiontoaddline) {
 	if(!$error && $resultcreate){
 		$db->commit();
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+		// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 		exit;
 	}
 	elseif(!$error && !$resultcreate){
@@ -126,14 +127,15 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 
 		if(!$error && $resultupdate){
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		}
 		elseif(!$error && !$resultupdate){
 			setEventMessages($langs->trans($objectline->error), null, 'errors');
 		}
 		elseif($error) {
-			header('Location: '.$_SERVER["PHP_SELF"].$param);
+			header('Location: '.$_SERVER["PHP_SELF"].'?'.($param ? $param : '').'&action=editline&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int'));
 			exit;
 		}
 	}
@@ -147,8 +149,9 @@ if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline
     $resultdelete = $object->deleteLine($user, $lineid);
     if ($resultdelete > 0) {
         setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
-        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
-        exit;
+        // header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
+		exit;
     } else {
         $error++;
         setEventMessages($object->error, $object->errors, 'errors');
