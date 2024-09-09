@@ -131,7 +131,7 @@ function loadOrganismeAndDuration(formationId, organismeId, firstLoad) {
 	if (formationId > 0) {
 		$.ajax({
 			type: 'POST',
-			url: '/custom/formationhabilitation/script/getSocieteByFormation.php',
+			url: '/custom/formationhabilitation/ajax/getSocieteByFormation.php',
 			data: { formationId: formationId, organismeId: organismeId },
 			success: function(response) {
 				var data = JSON.parse(response);

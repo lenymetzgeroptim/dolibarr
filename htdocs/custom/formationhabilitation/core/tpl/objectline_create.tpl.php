@@ -170,5 +170,6 @@ foreach($objectline->fields as $key => $val){
 }
 
 print '<td class="nobottom linecoledit center valignmiddle" colspan="3">';
+print '<input type="checkbox" class="margin5" name="forcecreation" id="forcecreation" form="addline"/><label for="forcecreation">'.$langs->trans('ForceCreation').'</label>';
 print '<input type="submit" class="button reposition" value="'.$langs->trans('Add').'" name="addline" id="addline" form="addline"></td>';
 print '</tr>';

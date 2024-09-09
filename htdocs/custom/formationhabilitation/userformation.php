@@ -64,6 +64,8 @@ $action = GETPOST('action', 'aZ09');
 $backtopage = GETPOST('backtopage', 'alpha');
 $confirm = GETPOST('confirm', 'alpha');
 $cancel = GETPOST('cancel', 'aZ09');
+$sortfield = GETPOST('sortfield', 'aZ09comma');
+$sortorder = GETPOST('sortorder', 'aZ09comma');
 
 $userid = GETPOST('id', 'integer');
 $lineid   = GETPOST('lineid', 'int');
@@ -149,112 +151,19 @@ if($onglet == 'habilitation'){
 }
 
 if($onglet == 'autorisation'){
-    if($action == 'updateline' && !$cancel && $permissiontoaddline){
-        if($lineid > 0 && $id > 0){
-            $objectline = new UserAutorisation($db);
-            $objectline->fetch($lineid);
-
-            if (empty(GETPOST("date_autorisationmonth", 'int')) || empty(GETPOST("date_autorisationday", 'int')) || empty(GETPOST("date_autorisationyear", 'int'))) {
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateAutorisation")), null, 'errors');
-                $error++;
-            }
-            $date = dol_mktime(-1, -1, -1, GETPOST("date_autorisationmonth", 'int'), GETPOST("date_autorisationday", 'int'), GETPOST("date_autorisationyear", 'int'));
-
-
-            if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-                $error++;
-            }
-
-            if (!$error) {
-                $autorisation_static = new Autorisation($db);
-                $autorisation_static->fetch($objectline->fk_autorisation);
-
-                $objectline->ref = $object->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
-                $objectline->date_autorisation = $date;
-                $objectline->date_fin_autorisation = dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd');
-                $objectline->status = GETPOST('status');
-
-                $resultupdate = $objectline->update($user);
-            }
-
-            if(!$error && $resultupdate){
-                setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-            }
-            elseif(!$error && !$resultupdate){
-                setEventMessages($langs->trans($object->error), null, 'errors');
-            }
-        }
-        else {
-            $langs->load("errors");
-            setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-        }
+    $objectline = new UserAutorisation($db);
+	
+    if(GETPOST('fk_autorisation') > 0) {
+        $autorisation_static = new Autorisation($db);
+        $autorisation_static->fetch(GETPOST('fk_autorisation'));
     }
 
-    if($action == 'addline' && $permissiontoaddline){
-        if($id > 0){
-            $objectline = new UserAutorisation($db);
-
-            if (empty(GETPOST("date_autorisationmonth", 'int')) || empty(GETPOST("date_autorisationday", 'int')) || empty(GETPOST("date_autorisationyear", 'int'))) {
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateAutorisation")), null, 'errors');
-                $error++;
-            }
-            $date = dol_mktime(-1, -1, -1, GETPOST("date_autorisationmonth", 'int'), GETPOST("date_autorisationday", 'int'), GETPOST("date_autorisationyear", 'int'));
-
-            if(!(GETPOST('fk_autorisation') > 0)){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Autorisation")), null, 'errors');
-                $error++;
-            }
-
-            if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-                $error++;
-            }
-
-            if($objectline->getID(GETPOST('fk_autorisation'), $object->id) > 0){
-                setEventMessages("Impossible d'ajouter cette autorisation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
-                $error++;
-            }
-
-            if (!$error) {
-                $autorisation_static = new Autorisation($db);
-                $autorisation_static->fetch(GETPOST('fk_autorisation'));
-
-                $objectline->ref = $object->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
-                $objectline->fk_autorisation = GETPOST('fk_autorisation');
-                $objectline->date_autorisation = $date;
-                $objectline->date_fin_autorisation = dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd');
-                $objectline->fk_user = $id;
-                $objectline->status = GETPOST('status');
-
-                $resultcreate = $objectline->create($user);
-            }
-
-            if(!$error && $resultcreate){
-                setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-            }
-            elseif(!$error && !$resultcreate){
-                setEventMessages($langs->trans($object->error), null, 'errors');
-            }
-        }
-        else {
-            $langs->load("errors");
-            setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-        }
+    if(GETPOST('fk_user') > 0) {
+        $user_static = new User($db);
+        $user_static->fetch(GETPOST('fk_user'));
     }
 
-    if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) {
-        $resultdelete = $object->deleteLine($user, $lineid);
-        if ($resultdelete > 0) {
-            setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
-            header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet);
-            exit;
-        } else {
-            $error++;
-            setEventMessages($object->error, $object->errors, 'errors');
-        }
-        $action = '';
-    }
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userautorisation.inc.php';
 }
 
 // Action pour générer un document

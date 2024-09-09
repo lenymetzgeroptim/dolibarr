@@ -17,7 +17,7 @@
  */
 
 /**
- *	\file			htdocs/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userhabilitation.inc.php
+ *	\file			htdocs/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userautorisation.inc.php
  *  \brief			Code for common actions delete / add / update
  */
 
@@ -34,38 +34,38 @@
 // }
 
 if($action == 'addline' && $permissiontoaddline) {
-	$userHabilitation = new UserHabilitation($db);
+	$userAutorisation = new UserAutorisation($db);
 	$userFormation = new UserFormation($db);
 	$db->begin();
 
-	if(!(GETPOST('fk_habilitation') > 0)){
-		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Habilitation")), null, 'errors');
+	if(!(GETPOST('fk_autorisation') > 0)){
+		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Autorisation")), null, 'errors');
 		$error++;
 	}
 
-	if($objectline->getID(GETPOST('fk_habilitation'), $object->id) > 0){
-		setEventMessages("Impossible d'ajouter cette habilitation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
+	if($objectline->getID(GETPOST('fk_autorisation'), $object->id) > 0){
+		setEventMessages("Impossible d'ajouter cette autorisation car l'utilisateur est déja affecté à celle-ci", null, 'errors');
 		$error++;
 	}
+
+	if (empty(GETPOST("date_autorisationmonth", 'int')) || empty(GETPOST("date_autorisationday", 'int')) || empty(GETPOST("date_autorisationyear", 'int'))) {
+		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateAutorisation")), null, 'errors');
+		$error++;
+	}
+	$date = dol_mktime(-1, -1, -1, GETPOST("date_autorisationmonth", 'int'), GETPOST("date_autorisationday", 'int'), GETPOST("date_autorisationyear", 'int'));
 
 	if(!(GETPOST('fk_user') > 0)){
 		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("User")), null, 'errors');
 		$error++;
 	}
 
-	if (empty(GETPOST("date_habilitationmonth", 'int')) || empty(GETPOST("date_habilitationday", 'int')) || empty(GETPOST("date_habilitationyear", 'int'))) {
-		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateHabilitation")), null, 'errors');
-		$error++;
-	}
-	$date = dol_mktime(-1, -1, -1, GETPOST("date_habilitationmonth", 'int'), GETPOST("date_habilitationday", 'int'), GETPOST("date_habilitationyear", 'int'));
-
 	if(GETPOST('status') == -1 || empty(GETPOST('status'))){
 		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
 		$error++;
 	}
 
-	if(!$error && !GETPOST('forcecreation')) { // Gestion des prérequis : TODOL -> aptitude medicale
-		$prerequis = explode(',', $habilitation_static->formation);
+	if(!$error && GETPOST('forcecreation') == 0) { // Gestion des prérequis : TODOL -> aptitude medicale
+		$prerequis = explode(',', $autorisation_static->formation);
 		$formation = new Formation($db);
 		foreach($prerequis as $formationid) {
 			if(!$userFormation->userAsFormation(GETPOST('fk_user'), $formationid)) {
@@ -77,10 +77,10 @@ if($action == 'addline' && $permissiontoaddline) {
 	}
 
 	if (!$error) {
-		$objectline->ref = $user_static->login."-".$habilitation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
-		$objectline->fk_habilitation = GETPOST('fk_habilitation');
-		$objectline->date_habilitation = $date;
-		$objectline->date_fin_habilitation = dol_time_plus_duree($date, $habilitation_static->validite_employeur, 'd');
+		$objectline->ref = $user_static->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
+		$objectline->fk_autorisation = GETPOST('fk_autorisation');
+		$objectline->date_autorisation = $date;
+		$objectline->date_fin_autorisation = dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd');
 		$objectline->fk_user = GETPOST('fk_user');
 		$objectline->status = GETPOST('status');
 
@@ -105,11 +105,11 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 	if($lineid > 0){
 		$objectline->fetch($lineid);
 
-		if (empty(GETPOST("date_habilitationmonth", 'int')) || empty(GETPOST("date_habilitationday", 'int')) || empty(GETPOST("date_habilitationyear", 'int'))) {
-			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateHabilitation")), null, 'errors');
+		if (empty(GETPOST("date_autorisationmonth", 'int')) || empty(GETPOST("date_autorisationday", 'int')) || empty(GETPOST("date_autorisationyear", 'int'))) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateAutorisation")), null, 'errors');
 			$error++;
 		}
-		$date = dol_mktime(-1, -1, -1, GETPOST("date_habilitationmonth", 'int'), GETPOST("date_habilitationday", 'int'), GETPOST("date_habilitationyear", 'int'));
+		$date = dol_mktime(-1, -1, -1, GETPOST("date_autorisationmonth", 'int'), GETPOST("date_autorisationday", 'int'), GETPOST("date_autorisationyear", 'int'));
 
 
 		if(GETPOST('status') == -1 || empty(GETPOST('status'))){
@@ -118,9 +118,9 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 		}
 
 		if (!$error) {
-			$objectline->ref = $user_static->login."-".$habilitation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
-			$objectline->date_habilitation = $date;
-			$objectline->date_fin_habilitation = dol_time_plus_duree($date, $habilitation_static->validite_employeur, 'd');
+			$objectline->ref = $user_static->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
+			$objectline->date_autorisation = $date;
+			$objectline->date_fin_autorisation = dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd');
 			$objectline->status = GETPOST('status');
 
 			$resultupdate = $objectline->update($user);

@@ -80,6 +80,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userhabilitation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userformation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/formation.class.php';
 dol_include_once('/formationhabilitation/class/habilitation.class.php');
 dol_include_once('/formationhabilitation/lib/formationhabilitation_habilitation.lib.php');
 
@@ -96,6 +97,8 @@ $contextpage = GETPOST('contextpage', 'aZ') ? GETPOST('contextpage', 'aZ') : 'ha
 $backtopage = GETPOST('backtopage', 'alpha');
 $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');
 $lineid   = GETPOST('lineid', 'int');
+$sortfield = GETPOST('sortfield', 'aZ09comma');
+$sortorder = GETPOST('sortorder', 'aZ09comma');
 
 // Initialize technical objects
 $object = new Habilitation($db);

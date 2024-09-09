@@ -29,6 +29,11 @@ BoxTitleLatestModifiedFormation = Les dernières autorisations modifiées
 ListOfs = Liste des %s
 NewObj = Nouvelle %s
 UserFormation = formations du collaborateur
+UserHabilitation = habilitations du collaborateur
+UserAutorisation = autorisations du collaborateur
+UserFormationuser = collaborateurs possèdant la formation
+UserHabilitationuser = collaborateurs possèdant l'habilitation
+UserAutorisationuser = collaborateurs possèdant l'autorisation
 
 #
 # Admin page
@@ -133,7 +138,14 @@ ValiderFormation = Valider la formation
 ConfirmValiderFormation = Êtes-vous sûr de vouloir valider la formation ?
 ConfirmValiderFormation2 = Êtes-vous sûr de vouloir valider la formation ? Cela clôturera les formations %s
 
+
 #
 # Erreur
 #
 ErrorPrerequis = Le collaborateur ne possède pas la formation %s qui est requise
+
+
+#
+# Autres
+#
+ForceCreation = Forcer la création

@@ -118,3 +118,7 @@ td.linecolstatus a[aria-label="Programmer"] {
 .width30 {
 	width: 30px;
 }
+
+.margin5 {
+	margin: 5px !important;
+}

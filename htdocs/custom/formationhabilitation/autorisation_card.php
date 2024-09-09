@@ -77,6 +77,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userautorisation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userformation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/formation.class.php';
 dol_include_once('/formationhabilitation/class/autorisation.class.php');
 dol_include_once('/formationhabilitation/lib/formationhabilitation_autorisation.lib.php');
 
@@ -96,6 +98,8 @@ $backtopage = GETPOST('backtopage', 'alpha');					// if not set, a default page 
 $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');	// if not set, $backtopage will be used
 $backtopagejsfields = GETPOST('backtopagejsfields', 'alpha');
 $dol_openinpopup = GETPOST('dol_openinpopup', 'aZ09');
+$sortfield = GETPOST('sortfield', 'aZ09comma');
+$sortorder = GETPOST('sortorder', 'aZ09comma');
 
 if (!empty($backtopagejsfields)) {
 	$tmpbacktopagejsfields = explode(':', $backtopagejsfields);
@@ -104,7 +108,11 @@ if (!empty($backtopagejsfields)) {
 
 // Initialize technical objects
 $object = new Autorisation($db);
+$objectline = new UserAutorisation($db);
 $extrafields = new ExtraFields($db);
+$form = new Form($db);
+$formfile = new FormFile($db);
+$formproject = new FormProjets($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array('autorisationcard', 'globalcard')); // Note that conf->hooks_modules contains array
 
@@ -113,13 +121,13 @@ $extrafields->fetch_name_optionals_label($object->table_element);
 
 $search_array_options = $extrafields->getOptionalsFromPost($object->table_element, '', 'search_');
 
-// Initialize array of search criterias
-$search_all = GETPOST("search_all", 'alpha');
-$search = array();
-foreach ($object->fields as $key => $val) {
-	if (GETPOST('search_'.$key, 'alpha')) {
-		$search[$key] = GETPOST('search_'.$key, 'alpha');
-	}
+// Default sort order (if not yet defined by previous GETPOST)
+if (!$sortfield) {
+	reset($object->fields);					// Reset is required to avoid key() to return null.
+	$sortfield = "t.".key($object->fields); // Set here default search field. By default 1st field in definition.
+}
+if (!$sortorder) {
+	$sortorder = "ASC";
 }
 
 if (empty($action) && empty($id) && empty($ref)) {
@@ -128,6 +136,10 @@ if (empty($action) && empty($id) && empty($ref)) {
 
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
+
+$search = array();
+$search['fk_autorisation'] = $object->id;
+$objectparentline = $object;
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
@@ -162,10 +174,21 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
+include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
 
 /*
  * Actions
  */
+
+if(GETPOST('fk_autorisation') > 0) {
+	$autorisation_static = new Autorisation($db);
+	$autorisation_static->fetch(GETPOST('fk_autorisation'));
+}
+
+if(GETPOST('fk_user') > 0) {
+	$user_static = new User($db);
+	$user_static->fetch(GETPOST('fk_user'));
+}
 
 $parameters = array();
 $reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
@@ -178,15 +201,15 @@ if (empty($reshook)) {
 
 	$backurlforlist = dol_buildpath('/formationhabilitation/autorisation_list.php', 1);
 
-	if (empty($backtopage) || ($cancel && empty($id))) {
-		if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
-			if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
-				$backtopage = $backurlforlist;
-			} else {
-				$backtopage = dol_buildpath('/formationhabilitation/autorisation_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
-			}
-		}
-	}
+	// if (empty($backtopage) || ($cancel && empty($id))) {
+	// 	if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
+	// 		if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
+	// 			$backtopage = $backurlforlist;
+	// 		} else {
+	// 			$backtopage = dol_buildpath('/formationhabilitation/autorisation_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
+	// 		}
+	// 	}
+	// }
 
 	$triggermodname = 'FORMATIONHABILITATION_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
 
@@ -204,6 +227,8 @@ if (empty($reshook)) {
 
 	// Action to build doc
 	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
+
+	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userautorisation.inc.php';
 
 	if ($action == 'set_thirdparty' && $permissiontoadd) {
 		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
@@ -223,101 +248,6 @@ if (empty($reshook)) {
 		$action = '';
 	}
 
-	if($action == 'updateline' && !$cancel && $permissiontoaddline){
-		if($lineid > 0 && $id > 0){
-			$objectline = new UserAutorisation($db);
-			$objectline->fetch($lineid);
-
-			
-			if (empty(GETPOST("date_autorisationmonth", 'int')) || empty(GETPOST("date_autorisationday", 'int')) || empty(GETPOST("date_autorisationyear", 'int'))) {
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateAutorisation")), null, 'errors');
-				$error++;
-			}
-			$date = dol_mktime(-1, -1, -1, GETPOST("date_autorisationmonth", 'int'), GETPOST("date_autorisationday", 'int'), GETPOST("date_autorisationyear", 'int'));
-
-			if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-				$error++;
-			}
-
-			if (!$error) {
-				$user_static = new User($db);
-				$user_static->fetch(GETPOST('fk_user'));
-
-				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
-				$objectline->date_autorisation = $date;
-				$objectline->date_fin_autorisation = dol_time_plus_duree($date, $object->validite_employeur, 'd');
-				$objectline->status = GETPOST('status');
-
-				$result = $objectline->update($user);
-			}
-
-			if(!$error && $result){
-				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			}
-			elseif(!$result){
-				setEventMessages($langs->trans($object->error), null, 'errors');
-			}
-		}
-		else {
-			$langs->load("errors");
-			setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-		}
-	}
-
-	if($action == 'addline' && $permissiontoaddline){
-		if($id > 0){
-			$objectline = new UserAutorisation($db);
-
-			if(!(GETPOST('fk_user') > 0)){
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("User")), null, 'errors');
-				$error++;
-			}
-
-			if (empty(GETPOST("date_autorisationmonth", 'int')) || empty(GETPOST("date_autorisationday", 'int')) || empty(GETPOST("date_autorisationyear", 'int'))) {
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateAutorisation")), null, 'errors');
-				$error++;
-			}
-			$date = dol_mktime(-1, -1, -1, GETPOST("date_autorisationmonth", 'int'), GETPOST("date_autorisationday", 'int'), GETPOST("date_autorisationyear", 'int'));
-
-			if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-				$error++;
-			}
-
-			if($objectline->getID($object->id, GETPOST('fk_user')) > 0){
-				setEventMessages("Impossible d'ajouter cet utilisateur car il est déja affecté à cette autorisation", null, 'errors');
-				$error++;
-			}
-
-			if (!$error) {
-				$user_static = new User($db);
-				$user_static->fetch(GETPOST('fk_user'));
-				$mois = (strlen(GETPOST("date_autorisationmonth", 'int')) < 2 ? '0'.GETPOST("date_autorisationmonth", 'int') : GETPOST("date_autorisationmonth", 'int'));
-
-				$objectline->ref = $user_static->login."-".$object->ref.'-'.dol_print_date($date, "%Y%m%d");
-				$objectline->fk_autorisation = $id;
-				$objectline->fk_user = GETPOST('fk_user');
-				$objectline->date_autorisation = $date;
-				$objectline->date_fin_autorisation = dol_time_plus_duree($date, $object->validite_employeur, 'd');
-				$objectline->status = GETPOST('status');
-
-				$result = $objectline->create($user);
-			}
-
-			if(!$error && $result){
-				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			}
-			elseif(!$result){
-				setEventMessages($langs->trans($object->error), null, 'errors');
-			}
-		}
-		else {
-			$langs->load("errors");
-			setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-		}
-	}
-
 	// Actions to send emails
 	$triggersendname = 'FORMATIONHABILITATION_MYOBJECT_SENTBYMAIL';
 	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
@@ -331,10 +261,6 @@ if (empty($reshook)) {
 /*
  * View
  */
-
-$form = new Form($db);
-$formfile = new FormFile($db);
-$formproject = new FormProjets($db);
 
 $title = $langs->trans("Autorisation");
 $help_url = '';
@@ -586,55 +512,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	/*
 	* Lines
 	*/
-	if (!empty($object->table_element_line)) {
-		// Show object lines
-		$result = $object->getLinesArray();
-
-		if ($action == 'editline') {
-			print '<br><br><br>';
-		}
-
-		print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-		<input type="hidden" name="token" value="' . newToken().'">
-		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
-		<input type="hidden" name="mode" value="">
-		<input type="hidden" name="page_y" value="">
-		<input type="hidden" name="id" value="' . $object->id.'">';
-
-		if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
-			include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
-		}
-
-		print '<div class="div-table-responsive-no-min">';
-		if (!empty($object->lines) || ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-			print '<table id="tablelines" class="noborder noshadow" width="100%">';
-		}
-
-		if (!empty($object->lines)) {
-			$nbline = 0;
-			$object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-		}
-
-		// Form to add new line
-		if ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines') {
-			if ($action != 'editline') {
-				// Add products/services form
-
-				$parameters = array();
-				$reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-				if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-				if (empty($reshook)){
-					$object->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
-				}
-			}
-		}
-
-		if (!empty($object->lines) || ($object->status == $object::STATUS_OUVERTE && $permissiontoaddline && $action != 'selectlines' && $action != 'editline')) {
-			print '</table>';
-		}
-		print '</div>';
-
-		print "</form>\n";
+	if (!empty($object->table_element_line)  && $object->status != $object::STATUS_CONSTRUCTION) {
+		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+		print '<input type="hidden" form="addline" id="fk_autorisation" name="fk_autorisation" value="' . $object->id.'">';
 	}
 }
 

@@ -76,7 +76,7 @@ if($action == 'confirm_addline' && $confirm == 'yes' && $permissiontoaddline) {
 		$error++;
 	}
 
-	if(!$error) { // Gestion des prérequis 
+	if(!$error && GETPOST('forcecreation') == 0) { // Gestion des prérequis 
 		$formation->fetch(GETPOST('fk_formation'));
 		$prerequis = explode(',', $formation->prerequis);
 		foreach($prerequis as $formationid) {

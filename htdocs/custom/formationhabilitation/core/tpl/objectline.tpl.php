@@ -272,7 +272,12 @@ elseif($objectline->element == 'userautorisation'){
 $trackid = 'xxxx'.$object->id;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/massactions_pre.tpl.php';
 
-$title = $langs->trans('ListOfs', $langs->transnoentitiesnoconv("UserFormation"));
+if(strpos($_SERVER["PHP_SELF"], 'card') === false) {
+    $title = $langs->trans('ListOfs', $langs->transnoentitiesnoconv($objectlabel));
+}
+else {
+    $title = $langs->trans('ListOfs', $langs->transnoentitiesnoconv($objectlabel.'user'));
+}
 print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', $limit, 0, 0, 1);
 
 print '<div class="div-table-responsive-no-min" style="'.($css_div ? $css_div : '').'">';
