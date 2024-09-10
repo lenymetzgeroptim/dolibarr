@@ -270,26 +270,25 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'read';
 		$r++;
-		
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 1);
+		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des collaborateurs';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'readCout';
+		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Créer/Modifier les Formations';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'write';
 		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des Utilisateurs liés à une formation';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'addline';
+		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Supprimer les Formations';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'delete';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
-		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des collaborateurs';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'readCout';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
-		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des Utilisateurs liés à une formation';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'addline';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Lire les Habilitations';
@@ -304,6 +303,21 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Supprimer les Habilitations';
 		$this->rights[$r][4] = 'habilitation';
+		$this->rights[$r][5] = 'delete';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 0 + 1);
+		$this->rights[$r][1] = 'Read VisiteMedical object of FormationHabilitation';
+		$this->rights[$r][4] = 'visitemedical';
+		$this->rights[$r][5] = 'read';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Create/Update VisiteMedical object of FormationHabilitation';
+		$this->rights[$r][4] = 'visitemedical';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Delete VisiteMedical object of FormationHabilitation';
+		$this->rights[$r][4] = 'visitemedical';
 		$this->rights[$r][5] = 'delete';
 		$r++;
 		
@@ -472,6 +486,52 @@ class modFormationHabilitation extends DolibarrModules
         );
 
 		/*END LEFTMENU VOLET*/
+		/*LEFTMENU VISITEMEDICAL*/
+		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=formationhabilitation',
+			'type'=>'left',
+			'titre'=>'VisiteMedical',
+			'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
+			'mainmenu'=>'formationhabilitation',
+			'leftmenu'=>'visitemedical',
+			'url'=>'/formationhabilitation/visitemedical_list.php',
+			'langs'=>'formationhabilitation@formationhabilitation',
+			'position'=>1000+$r,
+			'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "visitemedical", "read")',
+			'target'=>'',
+			'user'=>2,
+		);
+        $this->menu[$r++]=array(
+            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=visitemedical',
+            'type'=>'left',
+            'titre'=>'List VisiteMedical',
+            'mainmenu'=>'formationhabilitation',
+            'leftmenu'=>'formationhabilitation_visitemedical_list',
+            'url'=>'/formationhabilitation/visitemedical_list.php',
+            'langs'=>'formationhabilitation@formationhabilitation',
+            'position'=>1000+$r,
+            'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "visitemedical", "read")',
+            'target'=>'',
+            'user'=>2,
+        );
+        $this->menu[$r++]=array(
+            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=visitemedical',
+            'type'=>'left',
+            'titre'=>'New VisiteMedical',
+            'mainmenu'=>'formationhabilitation',
+            'leftmenu'=>'formationhabilitation_visitemedical_new',
+            'url'=>'/formationhabilitation/visitemedical_card.php?action=create',
+            'langs'=>'formationhabilitation@formationhabilitation',
+            'position'=>1000+$r,
+            'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "visitemedical", "write")',
+            'target'=>'',
+            'user'=>2
+        );
+
+		/*END LEFTMENU VISITEMEDICAL*/
 		/* END MODULEBUILDER LEFTMENU MYOBJECT */
 
 
