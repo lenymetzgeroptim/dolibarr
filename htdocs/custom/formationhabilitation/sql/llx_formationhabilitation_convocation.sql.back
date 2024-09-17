@@ -1,4 +1,4 @@
--- Copyright (C) 2024 METZGER Leny <l.metzger@optim-industries.fr>
+-- Copyright (C) 2024 METZGER Leny 
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-CREATE TABLE llx_formationhabilitation_visitemedical(
+CREATE TABLE llx_formationhabilitation_convocation(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
 	ref varchar(128) NOT NULL, 
@@ -28,15 +28,17 @@ CREATE TABLE llx_formationhabilitation_visitemedical(
 	import_key varchar(14), 
 	model_pdf varchar(255), 
 	status integer NOT NULL, 
+	datedebut datetime NOT NULL, 
+	datefin datetime, 
+	nature integer NOT NULL, 
+	type integer DEFAULT 1, 
+	fk_user integer NOT NULL, 
+	fk_societe integer, 
+	fk_contact integer, 
 	commentaire text, 
-	fk_contact integer NOT NULL, 
-	objetvisite varchar(128) NOT NULL, 
-	caractereponctuelvisite integer NOT NULL, 
-	demandeurvisite integer NOT NULL, 
-	datevisite date NOT NULL, 
-	datefinvalidite date NOT NULL, 
-	coutvisite double, 
-	naturevisite integer NOT NULL, 
-	fk_user integer NOT NULL
+	naturevisite integer, 
+	centremedecine integer, 
+	examenrealiser chkbxlst, 
+	fk_formation integer
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

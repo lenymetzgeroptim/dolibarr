@@ -105,26 +105,58 @@ $(document).ready(function() {
 		}
 	});
 
-	$('#fk_formation').change(function() {
+	// Sauvegarde et exécution au chargement de la page
+	if ($("#visitemedicaleform").length) {
+		var initialNatureInput = $('#naturevisite').html();	
+		var initialUserId = $('#visitemedicaleform #fk_user').val();	
+		loadDoctorAndNature(initialUserId, initialNatureInput);
+	}
+	else if ($("#tablelinesaddline").length) {
+		var initialFormationId = $('#tablelinesaddline #fk_formation').val();	
+		var initialOrganismeId = $('#tablelinesaddline #fk_societe').val();	
+		loadOrganismeAndDuration(initialFormationId, initialOrganismeId, 1);
+	}
+	else if ($("#convocationform").length) {
+		var initialNatureConvoc = $('#convocationform #nature').val();	
+		hideConvocationInput(initialNatureConvoc);
+		var initialNatureInput = $('#naturevisite').html();	
+
+		if(initialNatureConvoc == 2) {
+			var initialUserId = $('#convocationform #fk_user').val();	
+			loadDoctorAndNature(initialUserId, initialNatureInput);
+		}
+	}
+
+	$('#tablelinesaddline #fk_formation').change(function() {
 		var formationId = $(this).val();
 		loadOrganismeAndDuration(formationId);
 	});
 
-	$('#interne_externe').change(function() {
-		if($('#interne_externe').val() == 2) {
-			$('#formateur').parent().css('display', '');
-			$('#fk_societe').parent().css('display', 'none');
-		}
-		else {
-			$('#fk_societe').parent().css('display', '');
-			$('#formateur').parent().css('display', 'none');
-		}
+	$('#visitemedicaleform #fk_user').change(function() {
+		var userId = $(this).val();
+		loadDoctorAndNature(userId, initialNatureInput);
 	});
 
-    var initialFormationId = $('#fk_formation').val();	
-	console.log(initialFormationId);
-	var initialOrganismeId = $('#fk_societe').val();	
-	loadOrganismeAndDuration(initialFormationId, initialOrganismeId, 1);
+	$('#convocationform #fk_user').change(function() {
+		var userId = $(this).val();
+		loadDoctorAndNature(userId, initialNatureInput);
+	});
+
+	$('#convocationform #nature').change(function() {
+		var NatureConvoc = $('#convocationform #nature').val();	
+		hideConvocationInput(NatureConvoc);
+	});
+
+	$('#tablelinesaddline #interne_externe').change(function() {
+		if($('#tablelinesaddline #interne_externe').val() == 2) {
+			$('#tablelinesaddline #formateur').parent().css('display', '');
+			$('#tablelinesaddline #fk_societe').parent().css('display', 'none');
+		}
+		else {
+			$('#tablelinesaddline #fk_societe').parent().css('display', '');
+			$('#tablelinesaddline #formateur').parent().css('display', 'none');
+		}
+	});
 });
 
 function loadOrganismeAndDuration(formationId, organismeId, firstLoad) {
@@ -151,4 +183,136 @@ function loadOrganismeAndDuration(formationId, organismeId, firstLoad) {
 	}
 }
 
+function loadDoctorAndNature(userId, initialNatureInput) {
+	if (userId > 0) {
+		$.ajax({
+			type: 'POST',
+			url: '/custom/formationhabilitation/ajax/getDoctorByUser.php',
+			data: { userId: userId },
+			success: function(response) {
+				var data = JSON.parse(response);
 
+				if(data.fk_contact) {
+                	$('#fk_contact').val(data.fk_contact).trigger('change');
+				}
+				else {
+					$('#fk_contact').val('').trigger('change');
+				}
+
+				if(data.naturevisite) {
+					listNatures = data.naturevisite.split(',')
+
+					$('#naturevisite option').each(function() {
+						var optionValue = $(this).val();
+						
+						if (!listNatures.includes(optionValue)) {
+							$(this).remove();
+						}
+					});
+
+					$('#naturevisite').trigger('change');
+
+					if(listNatures.length == 1) {
+						$('#naturevisite').val(listNatures[0]).trigger('change');
+					}
+				}
+				else {
+					$('#naturevisite').html(initialNatureInput);
+					$('#naturevisite').val('').trigger('change');
+				}
+			}
+		});
+	} else {
+		$('#fk_contact').val('').trigger('change');
+		$('#naturevisite').html(initialNatureInput);
+		$('#naturevisite').val('').trigger('change');
+	}
+}
+
+function hideConvocationInput(NatureConvoc) {
+	if(NatureConvoc == 1) {
+		$('#convocationform .field_type').css('display', '');
+		$('#convocationform .field_fk_societe').css('display', '');
+		$('#convocationform .field_fk_formation').css('display', '');
+		$('#convocationform .field_fk_contact').css('display', 'none');
+		$('#convocationform .field_naturevisite').css('display', 'none');
+		$('#convocationform .field_centremedecine').css('display', 'none');
+		$('#convocationform .field_examenrealiser').css('display', 'none');
+
+		$('#convocationform .field_type #type').prop('disabled', false);
+		$('#convocationform .field_fk_societe #fk_societe').prop('disabled', false);
+		$('#convocationform .field_fk_formation #fk_formation').prop('disabled', false);
+		$('#convocationform .field_fk_contact #fk_contact').prop('disabled', true);
+		$('#convocationform .field_naturevisite #naturevisite').prop('disabled', true);
+		$('#convocationform .field_centremedecine #centremedecine').prop('disabled', true);
+		$('#convocationform .field_examenrealiser #examenrealiser').prop('disabled', true);
+	}
+	else if(NatureConvoc == 2) {
+		$('#convocationform .field_type').css('display', 'none');
+		$('#convocationform .field_fk_societe').css('display', 'none');
+		$('#convocationform .field_fk_formation').css('display', 'none');
+		$('#convocationform .field_fk_contact').css('display', '');
+		$('#convocationform .field_naturevisite').css('display', '');
+		$('#convocationform .field_centremedecine').css('display', 'none');
+		$('#convocationform .field_examenrealiser').css('display', 'none');
+
+		$('#convocationform .field_type #type').prop('disabled', true);
+		$('#convocationform .field_fk_societe #fk_societe').prop('disabled', true);
+		$('#convocationform .field_fk_formation #fk_formation').prop('disabled', true);
+		$('#convocationform .field_fk_contact #fk_contact').prop('disabled', false);
+		$('#convocationform .field_naturevisite #naturevisite').prop('disabled', false);
+		$('#convocationform .field_centremedecine #centremedecine').prop('disabled', true);
+		$('#convocationform .field_examenrealiser #examenrealiser').prop('disabled', true);
+	}
+	else if(NatureConvoc == 3) {
+		$('#convocationform .field_type').css('display', 'none');
+		$('#convocationform .field_fk_societe').css('display', 'none');
+		$('#convocationform .field_fk_formation').css('display', 'none');
+		$('#convocationform .field_fk_contact').css('display', 'none');
+		$('#convocationform .field_naturevisite').css('display', 'none');
+		$('#convocationform .field_centremedecine').css('display', '');
+		$('#convocationform .field_examenrealiser').css('display', '');
+
+		$('#convocationform .field_type #type').prop('disabled', true);
+		$('#convocationform .field_fk_societe #fk_societe').prop('disabled', true);
+		$('#convocationform .field_fk_formation #fk_formation').prop('disabled', true);
+		$('#convocationform .field_fk_contact #fk_contact').prop('disabled', true);
+		$('#convocationform .field_naturevisite #naturevisite').prop('disabled', true);
+		$('#convocationform .field_centremedecine #centremedecine').prop('disabled', false);
+		$('#convocationform .field_examenrealiser #examenrealiser').prop('disabled', false);
+	}
+	else if(NatureConvoc == 4) {
+		$('#convocationform .field_type').css('display', 'none');
+		$('#convocationform .field_fk_societe').css('display', 'none');
+		$('#convocationform .field_fk_formation').css('display', 'none');
+		$('#convocationform .field_fk_contact').css('display', 'none');
+		$('#convocationform .field_naturevisite').css('display', 'none');
+		$('#convocationform .field_centremedecine').css('display', '');
+		$('#convocationform .field_examenrealiser').css('display', '');
+
+		$('#convocationform .field_type #type').prop('disabled', true);
+		$('#convocationform .field_fk_societe #fk_societe').prop('disabled', true);
+		$('#convocationform .field_fk_formation #fk_formation').prop('disabled', true);
+		$('#convocationform .field_fk_contact #fk_contact').prop('disabled', true);
+		$('#convocationform .field_naturevisite #naturevisite').prop('disabled', true);
+		$('#convocationform .field_centremedecine #centremedecine').prop('disabled', false);
+		$('#convocationform .field_examenrealiser #examenrealiser').prop('disabled', false);
+	}
+	else {
+		$('#convocationform .field_type').css('display', 'none');
+		$('#convocationform .field_fk_societe').css('display', 'none');
+		$('#convocationform .field_fk_formation').css('display', 'none');
+		$('#convocationform .field_fk_contact').css('display', 'none');
+		$('#convocationform .field_naturevisite').css('display', 'none');
+		$('#convocationform .field_centremedecine').css('display', 'none');
+		$('#convocationform .field_examenrealiser').css('display', 'none');
+
+		$('#convocationform .field_type #type').prop('disabled', true);
+		$('#convocationform .field_fk_societe #fk_societe').prop('disabled', true);
+		$('#convocationform .field_fk_formation #fk_formation').prop('disabled', true);
+		$('#convocationform .field_fk_contact #fk_contact').prop('disabled', true);
+		$('#convocationform .field_naturevisite #naturevisite').prop('disabled', true);
+		$('#convocationform .field_centremedecine #centremedecine').prop('disabled', true);
+		$('#convocationform .field_examenrealiser #examenrealiser').prop('disabled', true);
+	}
+}

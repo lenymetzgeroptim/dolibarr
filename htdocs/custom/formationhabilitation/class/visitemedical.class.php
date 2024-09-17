@@ -57,7 +57,7 @@ class VisiteMedical extends CommonObject
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 1;
+	public $isextrafieldmanaged = 0;
 
 	/**
 	 * @var string String with name of icon for visitemedical. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'visitemedical@formationhabilitation' if picto is file 'img/object_visitemedical.png'.
@@ -65,9 +65,9 @@ class VisiteMedical extends CommonObject
 	public $picto = 'fa-hospital-alt_fas_#b4161b';
 
 
-	const STATUS_DRAFT = 0;
-	const STATUS_VALIDATED = 1;
-	const STATUS_CANCELED = 9;
+	const STATUS_APTE = 1;
+	const STATUS_CONDITIONNEL = 2;
+	const STATUS_INAPTE = 9;
 
 	/**
 	 *  'type' field format:
@@ -115,31 +115,29 @@ class VisiteMedical extends CommonObject
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
 		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
-		"label" => array("type"=>"varchar(255)", "label"=>"Label", "enabled"=>"1", 'position'=>30, 'notnull'=>0, "visible"=>"1", "alwayseditable"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "help"=>"Help text", "showoncombobox"=>"2", "validate"=>"1",),
-		"amount" => array("type"=>"price", "label"=>"Amount", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1", "default"=>"null", "isameasure"=>"1", "help"=>"Help text for amount", "validate"=>"1",),
-		"qty" => array("type"=>"real", "label"=>"Qty", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"1", "default"=>"0", "isameasure"=>"1", "css"=>"maxwidth75imp", "help"=>"Help text for quantity", "validate"=>"1",),
-		"fk_soc" => array("type"=>"integer:Societe:societe/class/societe.class.php:1:((status:=:1) AND (entity:IN:__SHARED_ENTITIES__))", "label"=>"ThirdParty", "picto"=>"company", "enabled"=>"isModEnabled('societe')", 'position'=>50, 'notnull'=>-1, "visible"=>"1", "index"=>"1", "css"=>"maxwidth500 widthcentpercentminusxx", "csslist"=>"tdoverflowmax150", "help"=>"OrganizationEventLinkToThirdParty", "validate"=>"1",),
-		"fk_project" => array("type"=>"integer:Project:projet/class/project.class.php:1", "label"=>"Project", "picto"=>"project", "enabled"=>"isModEnabled('project')", 'position'=>52, 'notnull'=>-1, "visible"=>"-1", "index"=>"1", "css"=>"maxwidth500 widthcentpercentminusxx", "csslist"=>"tdoverflowmax150", "validate"=>"1",),
-		"description" => array("type"=>"text", "label"=>"Description", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"3", "validate"=>"1",),
 		"note_public" => array("type"=>"html", "label"=>"NotePublic", "enabled"=>"1", 'position'=>61, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
 		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
-		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0", "csslist"=>"tdoverflowmax150",),
+		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
 		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "picto"=>"user", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "9" => "Annul&eacute;"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Resultat", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Apte", "9" => "Inapte", "2" => "Conditionnel"), "validate"=>"1",),
+		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
+		"fk_contact" => array("type"=>"integer:contact:contact/class/contact.class.php:0:(civility:=:'dr')", "label"=>"Medecin", "enabled"=>"1", 'position'=>36, 'notnull'=>1, "visible"=>"1",),
+		"objetvisite" => array("type"=>"varchar(128)", "label"=>"ObjetVisite", "enabled"=>"1", 'position'=>25, 'notnull'=>1, "visible"=>"1",),
+		"caractereponctuelvisite" => array("type"=>"integer", "label"=>"CaracterePonctuelVisite", "enabled"=>"1", 'position'=>26, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Embauche", "1" => "Examen complémentaire", "2" => "Reprise AM", "3" => "Reprise AT", "4" => "Autre"),),
+		"demandeurvisite" => array("type"=>"integer", "label"=>"DemandeurVisite", "enabled"=>"1", 'position'=>27, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Employeur", "1" => "Médecin", "2" => "Salarié", "3" => "Autre"),),
+		"datevisite" => array("type"=>"date", "label"=>"DateVisite", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
+		"datefinvalidite" => array("type"=>"date", "label"=>"DateFinValidite", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
+		"coutvisite" => array("type"=>"price", "label"=>"CoutVisite", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1",),
+		"naturevisite" => array("type"=>"sellist:c_nature_visite:label:rowid::(active:=:1)", "label"=>"NatureVisite", "enabled"=>"1", 'position'=>37, 'notnull'=>1, "visible"=>"1",),
+		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
-	public $label;
-	public $amount;
-	public $qty;
-	public $fk_soc;
-	public $fk_project;
-	public $description;
 	public $note_public;
 	public $note_private;
 	public $date_creation;
@@ -150,6 +148,16 @@ class VisiteMedical extends CommonObject
 	public $import_key;
 	public $model_pdf;
 	public $status;
+	public $commentaire;
+	public $fk_contact;
+	public $objetvisite;
+	public $caractereponctuelvisite;
+	public $demandeurvisite;
+	public $datevisite;
+	public $datefinvalidite;
+	public $coutvisite;
+	public $naturevisite;
+	public $fk_user;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -287,9 +295,6 @@ class VisiteMedical extends CommonObject
 		}
 		if (property_exists($object, 'label')) {
 			$object->label = empty($this->fields['label']['default']) ? $langs->trans("CopyOf")." ".$object->label : $this->fields['label']['default'];
-		}
-		if (property_exists($object, 'status')) {
-			$object->status = self::STATUS_DRAFT;
 		}
 		if (property_exists($object, 'date_creation')) {
 			$object->date_creation = dol_now();
@@ -538,130 +543,130 @@ class VisiteMedical extends CommonObject
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
 	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function validate($user, $notrigger = 0)
-	{
-		global $conf, $langs;
+	// public function validate($user, $notrigger = 0)
+	// {
+	// 	global $conf, $langs;
 
-		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+	// 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
-		$error = 0;
+	// 	$error = 0;
 
-		// Protection
-		if ($this->status == self::STATUS_VALIDATED) {
-			dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
-			return 0;
-		}
+	// 	// Protection
+	// 	if ($this->status == self::STATUS_VALIDATED) {
+	// 		dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
+	// 		return 0;
+	// 	}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'visitemedical', 'write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'visitemedical_advance', 'validate')))
-		 {
-		 $this->error='NotEnoughPermissions';
-		 dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
-		 return -1;
-		 }*/
+	// 	/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'visitemedical', 'write'))
+	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'visitemedical_advance', 'validate')))
+	// 	 {
+	// 	 $this->error='NotEnoughPermissions';
+	// 	 dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
+	// 	 return -1;
+	// 	 }*/
 
-		$now = dol_now();
+	// 	$now = dol_now();
 
-		$this->db->begin();
+	// 	$this->db->begin();
 
-		// Define new ref
-		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
-			$num = $this->getNextNumRef();
-		} else {
-			$num = $this->ref;
-		}
-		$this->newref = $num;
+	// 	// Define new ref
+	// 	if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
+	// 		$num = $this->getNextNumRef();
+	// 	} else {
+	// 		$num = $this->ref;
+	// 	}
+	// 	$this->newref = $num;
 
-		if (!empty($num)) {
-			// Validate
-			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_VALIDATED;
-			if (!empty($this->fields['date_validation'])) {
-				$sql .= ", date_validation = '".$this->db->idate($now)."'";
-			}
-			if (!empty($this->fields['fk_user_valid'])) {
-				$sql .= ", fk_user_valid = ".((int) $user->id);
-			}
-			$sql .= " WHERE rowid = ".((int) $this->id);
+	// 	if (!empty($num)) {
+	// 		// Validate
+	// 		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+	// 		$sql .= " SET ref = '".$this->db->escape($num)."',";
+	// 		$sql .= " status = ".self::STATUS_VALIDATED;
+	// 		if (!empty($this->fields['date_validation'])) {
+	// 			$sql .= ", date_validation = '".$this->db->idate($now)."'";
+	// 		}
+	// 		if (!empty($this->fields['fk_user_valid'])) {
+	// 			$sql .= ", fk_user_valid = ".((int) $user->id);
+	// 		}
+	// 		$sql .= " WHERE rowid = ".((int) $this->id);
 
-			dol_syslog(get_class($this)."::validate()", LOG_DEBUG);
-			$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
+	// 		dol_syslog(get_class($this)."::validate()", LOG_DEBUG);
+	// 		$resql = $this->db->query($sql);
+	// 		if (!$resql) {
+	// 			dol_print_error($this->db);
+	// 			$this->error = $this->db->lasterror();
+	// 			$error++;
+	// 		}
 
-			if (!$error && !$notrigger) {
-				// Call trigger
-				$result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
-				if ($result < 0) {
-					$error++;
-				}
-				// End call triggers
-			}
-		}
+	// 		if (!$error && !$notrigger) {
+	// 			// Call trigger
+	// 			$result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+	// 			if ($result < 0) {
+	// 				$error++;
+	// 			}
+	// 			// End call triggers
+	// 		}
+	// 	}
 
-		if (!$error) {
-			$this->oldref = $this->ref;
+	// 	if (!$error) {
+	// 		$this->oldref = $this->ref;
 
-			// Rename directory if dir was a temporary ref
-			if (preg_match('/^[\(]?PROV/i', $this->ref)) {
-				// Now we rename also files into index
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'visitemedical/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'visitemedical/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
-				$resql = $this->db->query($sql);
-				if (!$resql) {
-					$error++;
-					$this->error = $this->db->lasterror();
-				}
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filepath = 'visitemedical/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filepath = 'visitemedical/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
-				$resql = $this->db->query($sql);
-				if (!$resql) {
-					$error++;
-					$this->error = $this->db->lasterror();
-				}
+	// 		// Rename directory if dir was a temporary ref
+	// 		if (preg_match('/^[\(]?PROV/i', $this->ref)) {
+	// 			// Now we rename also files into index
+	// 			$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'visitemedical/".$this->db->escape($this->newref)."'";
+	// 			$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'visitemedical/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
+	// 			$resql = $this->db->query($sql);
+	// 			if (!$resql) {
+	// 				$error++;
+	// 				$this->error = $this->db->lasterror();
+	// 			}
+	// 			$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filepath = 'visitemedical/".$this->db->escape($this->newref)."'";
+	// 			$sql .= " WHERE filepath = 'visitemedical/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
+	// 			$resql = $this->db->query($sql);
+	// 			if (!$resql) {
+	// 				$error++;
+	// 				$this->error = $this->db->lasterror();
+	// 			}
 
-				// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
-				$oldref = dol_sanitizeFileName($this->ref);
-				$newref = dol_sanitizeFileName($num);
-				$dirsource = $conf->formationhabilitation->dir_output.'/visitemedical/'.$oldref;
-				$dirdest = $conf->formationhabilitation->dir_output.'/visitemedical/'.$newref;
-				if (!$error && file_exists($dirsource)) {
-					dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
+	// 			// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
+	// 			$oldref = dol_sanitizeFileName($this->ref);
+	// 			$newref = dol_sanitizeFileName($num);
+	// 			$dirsource = $conf->formationhabilitation->dir_output.'/visitemedical/'.$oldref;
+	// 			$dirdest = $conf->formationhabilitation->dir_output.'/visitemedical/'.$newref;
+	// 			if (!$error && file_exists($dirsource)) {
+	// 				dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
 
-					if (@rename($dirsource, $dirdest)) {
-						dol_syslog("Rename ok");
-						// Rename docs starting with $oldref with $newref
-						$listoffiles = dol_dir_list($conf->formationhabilitation->dir_output.'/visitemedical/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
-						foreach ($listoffiles as $fileentry) {
-							$dirsource = $fileentry['name'];
-							$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
-							$dirsource = $fileentry['path'].'/'.$dirsource;
-							$dirdest = $fileentry['path'].'/'.$dirdest;
-							@rename($dirsource, $dirdest);
-						}
-					}
-				}
-			}
-		}
+	// 				if (@rename($dirsource, $dirdest)) {
+	// 					dol_syslog("Rename ok");
+	// 					// Rename docs starting with $oldref with $newref
+	// 					$listoffiles = dol_dir_list($conf->formationhabilitation->dir_output.'/visitemedical/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
+	// 					foreach ($listoffiles as $fileentry) {
+	// 						$dirsource = $fileentry['name'];
+	// 						$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
+	// 						$dirsource = $fileentry['path'].'/'.$dirsource;
+	// 						$dirdest = $fileentry['path'].'/'.$dirdest;
+	// 						@rename($dirsource, $dirdest);
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
 
-		// Set new ref and current status
-		if (!$error) {
-			$this->ref = $num;
-			$this->status = self::STATUS_VALIDATED;
-		}
+	// 	// Set new ref and current status
+	// 	if (!$error) {
+	// 		$this->ref = $num;
+	// 		$this->status = self::STATUS_VALIDATED;
+	// 	}
 
-		if (!$error) {
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-	}
+	// 	if (!$error) {
+	// 		$this->db->commit();
+	// 		return 1;
+	// 	} else {
+	// 		$this->db->rollback();
+	// 		return -1;
+	// 	}
+	// }
 
 
 	/**
@@ -671,22 +676,22 @@ class VisiteMedical extends CommonObject
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						Return integer <0 if KO, >0 if OK
 	 */
-	public function setDraft($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status <= self::STATUS_DRAFT) {
-			return 0;
-		}
+	// public function setDraft($user, $notrigger = 0)
+	// {
+	// 	// Protection
+	// 	if ($this->status <= self::STATUS_DRAFT) {
+	// 		return 0;
+	// 	}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
-		 {
-		 $this->error='Permission denied';
-		 return -1;
-		 }*/
+	// 	/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+	// 	 {
+	// 	 $this->error='Permission denied';
+	// 	 return -1;
+	// 	 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
-	}
+	// 	return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
+	// }
 
 	/**
 	 *	Set cancel status
@@ -695,22 +700,22 @@ class VisiteMedical extends CommonObject
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						Return integer <0 if KO, 0=Nothing done, >0 if OK
 	 */
-	public function cancel($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status != self::STATUS_VALIDATED) {
-			return 0;
-		}
+	// public function cancel($user, $notrigger = 0)
+	// {
+	// 	// Protection
+	// 	if ($this->status != self::STATUS_VALIDATED) {
+	// 		return 0;
+	// 	}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
-		 {
-		 $this->error='Permission denied';
-		 return -1;
-		 }*/
+	// 	/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+	// 	 {
+	// 	 $this->error='Permission denied';
+	// 	 return -1;
+	// 	 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
-	}
+	// 	return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+	// }
 
 	/**
 	 *	Set back to validated status
@@ -719,22 +724,22 @@ class VisiteMedical extends CommonObject
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						Return integer <0 if KO, 0=Nothing done, >0 if OK
 	 */
-	public function reopen($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status == self::STATUS_VALIDATED) {
-			return 0;
-		}
+	// public function reopen($user, $notrigger = 0)
+	// {
+	// 	// Protection
+	// 	if ($this->status == self::STATUS_VALIDATED) {
+	// 		return 0;
+	// 	}
 
-		/*if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
-		 {
-		 $this->error='Permission denied';
-		 return -1;
-		 }*/
+	// 	/*if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+	// 	 {
+	// 	 $this->error='Permission denied';
+	// 	 return -1;
+	// 	 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
-	}
+	// 	return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
+	// }
 
 	/**
 	 * getTooltipContentArray
@@ -971,18 +976,23 @@ class VisiteMedical extends CommonObject
 		if (empty($this->labelStatus) || empty($this->labelStatusShort)) {
 			global $langs;
 			//$langs->load("formationhabilitation@formationhabilitation");
-			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
-			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
+			$this->labelStatus[self::STATUS_APTE] = $langs->transnoentitiesnoconv('Apte');
+			$this->labelStatus[self::STATUS_INAPTE] = $langs->transnoentitiesnoconv('Inapte');
+			$this->labelStatus[self::STATUS_CONDITIONNEL] = $langs->transnoentitiesnoconv('Conditionnel');
+			$this->labelStatusShort[self::STATUS_APTE] = $langs->transnoentitiesnoconv('Apte');
+			$this->labelStatusShort[self::STATUS_INAPTE] = $langs->transnoentitiesnoconv('Inapte');
+			$this->labelStatusShort[self::STATUS_CONDITIONNEL] = $langs->transnoentitiesnoconv('Conditionnel');
 		}
 
 		$statusType = 'status'.$status;
-		//if ($status == self::STATUS_VALIDATED) $statusType = 'status1';
-		if ($status == self::STATUS_CANCELED) {
-			$statusType = 'status6';
+		if ($status == self::STATUS_APTE) {
+			$statusType = 'status4';
+		}
+		elseif ($status == self::STATUS_INAPTE) {
+			$statusType = 'status8';
+		}
+		elseif ($status == self::STATUS_CONDITIONNEL) {
+			$statusType = 'status1';
 		}
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);

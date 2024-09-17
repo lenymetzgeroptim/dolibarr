@@ -62,7 +62,7 @@ class Volet extends CommonObject
 	/**
 	 * @var string String with name of icon for volet. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'volet@formationhabilitation' if picto is file 'img/object_volet.png'.
 	 */
-	public $picto = 'fa-file-alt_fas_#004a95';
+	public $picto = 'fa-book_fas_#004a95';
 
 
 	const STATUS_DRAFT = 0;

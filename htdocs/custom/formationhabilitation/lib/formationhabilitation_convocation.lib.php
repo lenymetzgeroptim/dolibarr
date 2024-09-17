@@ -16,18 +16,18 @@
  */
 
 /**
- * \file    lib/formationhabilitation_visitemedical.lib.php
+ * \file    lib/formationhabilitation_convocation.lib.php
  * \ingroup formationhabilitation
- * \brief   Library files with common functions for VisiteMedical
+ * \brief   Library files with common functions for Convocation
  */
 
 /**
- * Prepare array of tabs for VisiteMedical
+ * Prepare array of tabs for Convocation
  *
- * @param	VisiteMedical	$object		VisiteMedical
+ * @param	Convocation	$object		Convocation
  * @return 	array					Array of tabs
  */
-function visitemedicalPrepareHead($object)
+function convocationPrepareHead($object)
 {
 	global $db, $langs, $conf;
 
@@ -41,13 +41,13 @@ function visitemedicalPrepareHead($object)
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = dol_buildpath("/formationhabilitation/visitemedical_card.php", 1).'?id='.$object->id;
-	$head[$h][1] = $langs->trans("VisiteMedical");
+	$head[$h][0] = dol_buildpath("/formationhabilitation/convocation_card.php", 1).'?id='.$object->id;
+	$head[$h][1] = $langs->trans("Convocation");
 	$head[$h][2] = 'card';
 	$h++;
 
 	if ($showtabofpagecontact) {
-		$head[$h][0] = dol_buildpath("/formationhabilitation/visitemedical_contact.php", 1).'?id='.$object->id;
+		$head[$h][0] = dol_buildpath("/formationhabilitation/convocation_contact.php", 1).'?id='.$object->id;
 		$head[$h][1] = $langs->trans("Contacts");
 		$head[$h][2] = 'contact';
 		$h++;
@@ -62,7 +62,7 @@ function visitemedicalPrepareHead($object)
 			if (!empty($object->note_public)) {
 				$nbNote++;
 			}
-			$head[$h][0] = dol_buildpath('/formationhabilitation/visitemedical_note.php', 1).'?id='.$object->id;
+			$head[$h][0] = dol_buildpath('/formationhabilitation/convocation_note.php', 1).'?id='.$object->id;
 			$head[$h][1] = $langs->trans('Notes');
 			if ($nbNote > 0) {
 				$head[$h][1] .= (!getDolGlobalInt('MAIN_OPTIMIZEFORTEXTBROWSER') ? '<span class="badge marginleftonlyshort">'.$nbNote.'</span>' : '');
@@ -75,10 +75,10 @@ function visitemedicalPrepareHead($object)
 	if ($showtabofpagedocument) {
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 		require_once DOL_DOCUMENT_ROOT.'/core/class/link.class.php';
-		$upload_dir = $conf->formationhabilitation->dir_output."/visitemedical/".dol_sanitizeFileName($object->ref);
+		$upload_dir = $conf->formationhabilitation->dir_output."/convocation/".dol_sanitizeFileName($object->ref);
 		$nbFiles = count(dol_dir_list($upload_dir, 'files', 0, '', '(\.meta|_preview.*\.png)$'));
 		$nbLinks = Link::count($db, $object->element, $object->id);
-		$head[$h][0] = dol_buildpath("/formationhabilitation/visitemedical_document.php", 1).'?id='.$object->id;
+		$head[$h][0] = dol_buildpath("/formationhabilitation/convocation_document.php", 1).'?id='.$object->id;
 		$head[$h][1] = $langs->trans('Documents');
 		if (($nbFiles + $nbLinks) > 0) {
 			$head[$h][1] .= '<span class="badge marginleftonlyshort">'.($nbFiles + $nbLinks).'</span>';
@@ -88,7 +88,7 @@ function visitemedicalPrepareHead($object)
 	}
 
 	if ($showtabofpageagenda) {
-		$head[$h][0] = dol_buildpath("/formationhabilitation/visitemedical_agenda.php", 1).'?id='.$object->id;
+		$head[$h][0] = dol_buildpath("/formationhabilitation/convocation_agenda.php", 1).'?id='.$object->id;
 		$head[$h][1] = $langs->trans("Events");
 		$head[$h][2] = 'agenda';
 		$h++;
@@ -102,9 +102,9 @@ function visitemedicalPrepareHead($object)
 	//$this->tabs = array(
 	//	'entity:-tabname:Title:@formationhabilitation:/formationhabilitation/mypage.php?id=__ID__'
 	//); // to remove a tab
-	complete_head_from_modules($conf, $langs, $object, $head, $h, 'visitemedical@formationhabilitation');
+	complete_head_from_modules($conf, $langs, $object, $head, $h, 'convocation@formationhabilitation');
 
-	complete_head_from_modules($conf, $langs, $object, $head, $h, 'visitemedical@formationhabilitation', 'remove');
+	complete_head_from_modules($conf, $langs, $object, $head, $h, 'convocation@formationhabilitation', 'remove');
 
 	return $head;
 }

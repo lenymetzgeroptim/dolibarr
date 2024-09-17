@@ -43,6 +43,7 @@ Settings = Paramètre
 FormationHabilitationSetupPage = Paramètrage du module Formation - Habilitation
 FamilleFormation = Famille de formation
 SousDomaineFormation = Domaine de formation
+ExamensMedicaux = Examens Médicaux
 
 
 #
@@ -90,6 +91,29 @@ DelaisProgrammation = Délais programmation
 # Attribut Habiliation _ Autorisation
 # 
 ValiditeEmployeur = Durée de validité de l'employeur
+
+
+#
+# Attribut Visites Medicales
+# 
+VisiteMedical = Visite Médicale
+VisiteMedicals = Visites médicale
+ObjetVisite = Objet
+CaracterePonctuelVisite = Caractère ponctuel
+DemandeurVisite = Demandeur
+DateVisite = Date de la visite
+DateFinValidite = Date de fin de validité 
+CoutVisite = Coût
+NatureVisite = Nature 
+Utilisateur = Collaborateur
+
+#
+# Attribut Convocation
+# 
+NatureConvoc = Nature
+CentreMedecine = Centre de medecine
+ExamenARéaliser = Examen(s) à réaliser
+OrganismeConvoc = Organisme / Employeur
 
 
 #

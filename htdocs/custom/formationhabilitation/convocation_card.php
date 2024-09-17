@@ -17,9 +17,9 @@
  */
 
 /**
- *    \file       visitemedical_card.php
+ *    \file       convocation_card.php
  *    \ingroup    formationhabilitation
- *    \brief      Page to create/edit/view visitemedical
+ *    \brief      Page to create/edit/view convocation
  */
 
 
@@ -80,8 +80,8 @@ if (!$res) {
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
-dol_include_once('/formationhabilitation/class/visitemedical.class.php');
-dol_include_once('/formationhabilitation/lib/formationhabilitation_visitemedical.lib.php');
+dol_include_once('/formationhabilitation/class/convocation.class.php');
+dol_include_once('/formationhabilitation/lib/formationhabilitation_convocation.lib.php');
 
 // Load translation files required by the page
 $langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"));
@@ -106,7 +106,7 @@ if (!empty($backtopagejsfields)) {
 }
 
 // Initialize technical objects
-$object = new VisiteMedical($db);
+$object = new Convocation($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($object->element.'card', 'globalcard')); // Note that conf->hooks_modules contains array
@@ -136,11 +136,11 @@ include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be includ
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 0;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'read');
-	$permissiontoadd = $user->hasRight('formationhabilitation', 'visitemedical', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = $user->hasRight('formationhabilitation', 'visitemedical', 'delete');
-	$permissionnote = $user->hasRight('formationhabilitation', 'visitemedical', 'write'); // Used by the include of actions_setnotes.inc.php
-	$permissiondellink = $user->hasRight('formationhabilitation', 'visitemedical', 'write'); // Used by the include of actions_dellink.inc.php
+	$permissiontoread = $user->hasRight('formationhabilitation', 'convocation', 'read');
+	$permissiontoadd = $user->hasRight('formationhabilitation', 'convocation', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+	$permissiontodelete = $user->hasRight('formationhabilitation', 'convocation', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
+	$permissionnote = $user->hasRight('formationhabilitation', 'convocation', 'write'); // Used by the include of actions_setnotes.inc.php
+	$permissiondellink = $user->hasRight('formationhabilitation', 'convocation', 'write'); // Used by the include of actions_dellink.inc.php
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
@@ -149,7 +149,7 @@ if ($enablepermissioncheck) {
 	$permissiondellink = 1;
 }
 
-$upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/visitemedical';
+$upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/convocation';
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();
@@ -177,14 +177,14 @@ if ($reshook < 0) {
 if (empty($reshook)) {
 	$error = 0;
 
-	$backurlforlist = dol_buildpath('/formationhabilitation/visitemedical_list.php', 1);
+	$backurlforlist = dol_buildpath('/formationhabilitation/convocation_list.php', 1);
 
 	if (empty($backtopage) || ($cancel && empty($id))) {
 		if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
 			if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
 				$backtopage = $backurlforlist;
 			} else {
-				$backtopage = dol_buildpath('/formationhabilitation/visitemedical_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
+				$backtopage = dol_buildpath('/formationhabilitation/convocation_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
 			}
 		}
 	}
@@ -192,9 +192,48 @@ if (empty($reshook)) {
 	$triggermodname = 'FORMATIONHABILITATION_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
 
 	if($action == 'add') {
-		if (empty(GETPOST("naturevisite", 'int'))) {
-			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("NatureVisite")), null, 'errors');
+		if (empty(GETPOST("nature", 'int'))) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("NatureConvoc")), null, 'errors');
 			$error++;
+		}
+
+		if (GETPOST("nature", 'int') == '1') {
+			if(empty(GETPOST("datefinmonth", 'int')) || empty(GETPOST("datefinday", 'int')) || empty(GETPOST("datefinyear", 'int')) || empty(GETPOST("datefinhour", 'int')) || empty(GETPOST("datefinmin", 'int'))) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFin")), null, 'errors');
+				$error++;
+			}
+			if(empty(GETPOST("type", 'int'))) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Type")), null, 'errors');
+				$error++;
+			}
+			if(GETPOST("fk_societe", 'int') <= 0) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("OrganismeConvoc")), null, 'errors');
+				$error++;
+			}
+			if(GETPOST("fk_formation", 'int') <= 0) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Formation")), null, 'errors');
+				$error++;
+			}
+		}
+		elseif (GETPOST("nature", 'int') == '2') {
+			if(empty(GETPOST("naturevisite", 'int'))) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Nature visite")), null, 'errors');
+				$error++;
+			}
+			if(GETPOST("fk_contact", 'int') <= 0) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Medecin")), null, 'errors');
+				$error++;
+			}
+		}
+		elseif (GETPOST("nature", 'int') == '3' || GETPOST("nature", 'int') == '4') {
+			if(empty(GETPOST("examenrealiser"))) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("ExamenARéaliser")), null, 'errors');
+				$error++;
+			}
+			if(GETPOST("centremedecine", 'int') <= 0) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("CentreMedecine")), null, 'errors');
+				$error++;
+			}
 		}
 	}
 
@@ -223,7 +262,7 @@ if (empty($reshook)) {
 	// Actions to send emails
 	$triggersendname = 'FORMATIONHABILITATION_MYOBJECT_SENTBYMAIL';
 	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
-	$trackid = 'visitemedical'.$object->id;
+	$trackid = 'convocation'.$object->id;
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
@@ -238,10 +277,10 @@ $form = new Form($db);
 $formfile = new FormFile($db);
 $formproject = new FormProjets($db);
 
-$title = $langs->trans("VisiteMedical")." - ".$langs->trans('Card');
+$title = $langs->trans("Convocation")." - ".$langs->trans('Card');
 //$title = $object->ref." - ".$langs->trans('Card');
 if ($action == 'create') {
-	$title = $langs->trans("NewObj", $langs->transnoentitiesnoconv("VisiteMedical"));
+	$title = $langs->trans("NewObj", $langs->transnoentitiesnoconv("Convocation"));
 }
 $help_url = '';
 
@@ -292,9 +331,8 @@ if ($action == 'create') {
 	// Set some default values
 	//if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
 
-	print '<table id="visitemedicaleform" class="border centpercent tableforfieldcreate">'."\n";
+	print '<table id="convocationform" class="border centpercent tableforfieldcreate">'."\n";
 
-	$object->fields['fk_contact']['default'] = 2;
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
 
@@ -314,7 +352,7 @@ if ($action == 'create') {
 
 // Part to edit record
 if (($id || $ref) && $action == 'edit') {
-	print load_fiche_titre($langs->trans("VisiteMedical"), '', 'object_'.$object->picto);
+	print load_fiche_titre($langs->trans("Convocation"), '', 'object_'.$object->picto);
 
 	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
@@ -329,7 +367,7 @@ if (($id || $ref) && $action == 'edit') {
 
 	print dol_get_fiche_head();
 
-	print '<table id="visitemedicaleform" class="border centpercent tableforfieldedit">'."\n";
+	print '<table id="convocationform" class="border centpercent tableforfieldedit">'."\n";
 
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
@@ -348,15 +386,15 @@ if (($id || $ref) && $action == 'edit') {
 
 // Part to show record
 if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
-	$head = visitemedicalPrepareHead($object);
+	$head = convocationPrepareHead($object);
 
-	print dol_get_fiche_head($head, 'card', $langs->trans("VisiteMedical"), -1, $object->picto, 0, '', '', 0, '', 1);
+	print dol_get_fiche_head($head, 'card', $langs->trans("Convocation"), -1, $object->picto, 0, '', '', 0, '', 1);
 
 	$formconfirm = '';
 
 	// Confirmation to delete (using preloaded confirm popup)
 	if ($action == 'delete' || ($conf->use_javascript_ajax && empty($conf->dol_use_jmobile))) {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('DeleteVisiteMedical'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 'action-delete');
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('DeleteConvocation'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 'action-delete');
 	}
 	// Confirmation to delete line
 	if ($action == 'deleteline') {
@@ -372,7 +410,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
 	if ($action == 'xxx') {
-		$text = $langs->trans('ConfirmActionVisiteMedical', $object->ref);
+		$text = $langs->trans('ConfirmActionConvocation', $object->ref);
 		/*if (isModEnabled('notification'))
 		{
 			require_once DOL_DOCUMENT_ROOT . '/core/class/notify.class.php';
@@ -411,7 +449,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// Object card
 	// ------------------------------------------------------------
-	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/visitemedical_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/convocation_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*
@@ -457,7 +495,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Common attributes
-	$keyforbreak='coutvisite';	// We change column just before this field
+	//$keyforbreak='fieldkeytoswitchonsecondcolumn';	// We change column just before this field
 	//unset($object->fields['fk_project']);				// Hide field already shown in banner
 	//unset($object->fields['fk_soc']);					// Hide field already shown in banner
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_view.tpl.php';
@@ -495,7 +533,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 
 		print '<div class="div-table-responsive-no-min">';
-		if (!empty($object->lines)) {
+		if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 		}
 
@@ -519,7 +557,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}
 		}
 
-		if (!empty($object->lines)) {
+		if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '</table>';
 		}
 		print '</div>';
@@ -544,13 +582,46 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
 			}
 
+			// Back to draft
+			if ($object->status == $object::STATUS_VALIDATED) {
+				print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			}
+
 			// Modify
 			print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
 
+			// Validate
+			if ($object->status == $object::STATUS_DRAFT) {
+				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
+				} else {
+					$langs->load("errors");
+					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
+				}
+			}
+
 			// Clone
-			// if ($permissiontoadd) {
-			// 	print dolGetButtonAction('', $langs->trans('ToClone'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.(!empty($object->socid) ? '&socid='.$object->socid : '').'&action=clone&token='.newToken(), '', $permissiontoadd);
-			// }
+			if ($permissiontoadd) {
+				print dolGetButtonAction('', $langs->trans('ToClone'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.(!empty($object->socid) ? '&socid='.$object->socid : '').'&action=clone&token='.newToken(), '', $permissiontoadd);
+			}
+
+			/*
+			// Disable / Enable
+			if ($permissiontoadd) {
+				if ($object->status == $object::STATUS_ENABLED) {
+					print dolGetButtonAction('', $langs->trans('Disable'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=disable&token='.newToken(), '', $permissiontoadd);
+				} else {
+					print dolGetButtonAction('', $langs->trans('Enable'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=enable&token='.newToken(), '', $permissiontoadd);
+				}
+			}
+			if ($permissiontoadd) {
+				if ($object->status == $object::STATUS_VALIDATED) {
+					print dolGetButtonAction('', $langs->trans('Cancel'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=close&token='.newToken(), '', $permissiontoadd);
+				} else {
+					print dolGetButtonAction('', $langs->trans('Re-Open'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=reopen&token='.newToken(), '', $permissiontoadd);
+				}
+			}
+			*/
 
 			// Delete (with preloaded confirm popup)
 			$deleteUrl = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=delete&token='.newToken();
@@ -585,11 +656,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			$urlsource = $_SERVER["PHP_SELF"]."?id=".$object->id;
 			$genallowed = $permissiontoread; // If you can read, you can build the PDF to read content
 			$delallowed = $permissiontoadd; // If you can create/edit, you can remove a file on card
-			print $formfile->showdocuments('formationhabilitation:VisiteMedical', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
+			print $formfile->showdocuments('formationhabilitation:Convocation', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
 		}
 
 		// Show links to link elements
-		$linktoelem = $form->showLinkToObjectBlock($object, null, array('visitemedical'));
+		$linktoelem = $form->showLinkToObjectBlock($object, null, array('convocation'));
 		$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 
 
@@ -597,7 +668,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		$MAXEVENT = 10;
 
-		$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/formationhabilitation/visitemedical_agenda.php', 1).'?id='.$object->id);
+		$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/formationhabilitation/convocation_agenda.php', 1).'?id='.$object->id);
 
 		// List of actions on element
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
@@ -613,10 +684,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 
 	// Presend form
-	$modelmail = 'visitemedical';
+	$modelmail = 'convocation';
 	$defaulttopic = 'InformationMessage';
 	$diroutput = $conf->formationhabilitation->dir_output;
-	$trackid = 'visitemedical'.$object->id;
+	$trackid = 'convocation'.$object->id;
 
 	include DOL_DOCUMENT_ROOT.'/core/tpl/card_presend.tpl.php';
 }

@@ -17,10 +17,32 @@
  */
 
 /**
- *  \file       visitemedical_contact.php
+ *  \file       convocation_note.php
  *  \ingroup    formationhabilitation
- *  \brief      Tab for contacts linked to VisiteMedical
+ *  \brief      Tab for notes on Convocation
  */
+
+
+// General defined Options
+//if (! defined('CSRFCHECK_WITH_TOKEN'))     define('CSRFCHECK_WITH_TOKEN', '1');					// Force use of CSRF protection with tokens even for GET
+//if (! defined('MAIN_AUTHENTICATION_MODE')) define('MAIN_AUTHENTICATION_MODE', 'aloginmodule');	// Force authentication handler
+//if (! defined('MAIN_LANG_DEFAULT'))        define('MAIN_LANG_DEFAULT', 'auto');					// Force LANG (language) to a particular value
+//if (! defined('MAIN_SECURITY_FORCECSP'))   define('MAIN_SECURITY_FORCECSP', 'none');				// Disable all Content Security Policies
+//if (! defined('NOBROWSERNOTIF'))     		 define('NOBROWSERNOTIF', '1');					// Disable browser notification
+//if (! defined('NOIPCHECK'))                define('NOIPCHECK', '1');						// Do not check IP defined into conf $dolibarr_main_restrict_ip
+//if (! defined('NOLOGIN'))                  define('NOLOGIN', '1');						// Do not use login - if this page is public (can be called outside logged session). This includes the NOIPCHECK too.
+//if (! defined('NOREQUIREAJAX'))            define('NOREQUIREAJAX', '1');       	  		// Do not load ajax.lib.php library
+//if (! defined('NOREQUIREDB'))              define('NOREQUIREDB', '1');					// Do not create database handler $db
+//if (! defined('NOREQUIREHTML'))            define('NOREQUIREHTML', '1');					// Do not load html.form.class.php
+//if (! defined('NOREQUIREMENU'))            define('NOREQUIREMENU', '1');					// Do not load and show top and left menu
+//if (! defined('NOREQUIRESOC'))             define('NOREQUIRESOC', '1');					// Do not load object $mysoc
+//if (! defined('NOREQUIRETRAN'))            define('NOREQUIRETRAN', '1');					// Do not load object $langs
+//if (! defined('NOREQUIREUSER'))            define('NOREQUIREUSER', '1');					// Do not load object $user
+//if (! defined('NOSCANGETFORINJECTION'))    define('NOSCANGETFORINJECTION', '1');			// Do not check injection attack on GET parameters
+//if (! defined('NOSCANPOSTFORINJECTION'))   define('NOSCANPOSTFORINJECTION', '1');			// Do not check injection attack on POST parameters
+//if (! defined('NOSTYLECHECK'))             define('NOSTYLECHECK', '1');					// Do not check style html tag into posted data
+//if (! defined('NOTOKENRENEWAL'))           define('NOTOKENRENEWAL', '1');					// Do not roll the Anti CSRF token (used if MAIN_SECURITY_CSRF_WITH_TOKEN is on)
+
 
 // Load Dolibarr environment
 $res = 0;
@@ -54,40 +76,45 @@ if (!$res) {
 	die("Include of main fails");
 }
 
-require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
-dol_include_once('/formationhabilitation/class/visitemedical.class.php');
-dol_include_once('/formationhabilitation/lib/formationhabilitation_visitemedical.lib.php');
+dol_include_once('/formationhabilitation/class/convocation.class.php');
+dol_include_once('/formationhabilitation/lib/formationhabilitation_convocation.lib.php');
 
 // Load translation files required by the page
-$langs->loadLangs(array("formationhabilitation@formationhabilitation", "companies", "other", "mails"));
+$langs->loadLangs(array("formationhabilitation@formationhabilitation", "companies"));
 
-$id     = (GETPOST('id') ? GETPOST('id', 'int') : GETPOST('facid', 'int')); // For backward compatibility
-$ref    = GETPOST('ref', 'alpha');
-$lineid = GETPOST('lineid', 'int');
-$socid  = GETPOST('socid', 'int');
+// Get parameters
+$id = GETPOST('id', 'int');
+$ref        = GETPOST('ref', 'alpha');
 $action = GETPOST('action', 'aZ09');
+$cancel     = GETPOST('cancel', 'aZ09');
+$backtopage = GETPOST('backtopage', 'alpha');
 
 // Initialize technical objects
-$object = new VisiteMedical($db);
+$object = new Convocation($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
-$hookmanager->initHooks(array($object->element.'contact', 'globalcard')); // Note that conf->hooks_modules contains array
+$hookmanager->initHooks(array($object->element.'note', 'globalcard')); // Note that conf->hooks_modules contains array
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
 
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once  // Must be include, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
+if ($id > 0 || !empty($ref)) {
+	$upload_dir = $conf->formationhabilitation->multidir_output[empty($object->entity) ? $conf->entity : $object->entity]."/".$object->id;
+}
+
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 0;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'read');
-	$permissiontoadd = $user->hasRight('formationhabilitation', 'visitemedical', 'write');
+	$permissiontoread = $user->hasRight('formationhabilitation', 'convocation', 'read');
+	$permissiontoadd = $user->hasRight('formationhabilitation', 'convocation', 'write');
+	$permissionnote = $user->hasRight('formationhabilitation', 'convocation', 'write'); // Used by the include of actions_setnotes.inc.php
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;
+	$permissionnote = 1;
 }
 
 // Security check (enable the most restrictive one)
@@ -104,38 +131,16 @@ if (!$permissiontoread) {
 
 
 /*
- * Add a new contact
+ * Actions
  */
 
-if ($action == 'addcontact' && $permissiontoadd) {
-	$contactid = (GETPOST('userid') ? GETPOST('userid', 'int') : GETPOST('contactid', 'int'));
-	$typeid = (GETPOST('typecontact') ? GETPOST('typecontact') : GETPOST('type'));
-	$result = $object->add_contact($contactid, $typeid, GETPOST("source", 'aZ09'));
-
-	if ($result >= 0) {
-		header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
-		exit;
-	} else {
-		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
-			$langs->load("errors");
-			setEventMessages($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), null, 'errors');
-		} else {
-			setEventMessages($object->error, $object->errors, 'errors');
-		}
-	}
-} elseif ($action == 'swapstatut' && $permissiontoadd) {
-	// Toggle the status of a contact
-	$result = $object->swapContactStatus(GETPOST('ligne', 'int'));
-} elseif ($action == 'deletecontact' && $permissiontoadd) {	// Permission to add on object because this is an update of a link of object, not a deletion of data
-	// Deletes a contact
-	$result = $object->delete_contact($lineid);
-
-	if ($result >= 0) {
-		header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
-		exit;
-	} else {
-		dol_print_error($db);
-	}
+$parameters = array();
+$reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
+if ($reshook < 0) {
+	setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+}
+if (empty($reshook)) {
+	include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php'; // Must be include, not include_once
 }
 
 
@@ -143,33 +148,25 @@ if ($action == 'addcontact' && $permissiontoadd) {
  * View
  */
 
-$title = $langs->trans("VisiteMedical")." - ".$langs->trans('ContactsAddresses');
-//$title = $object->ref." - ".$langs->trans('ContactsAddresses');
-$help_url = '';
-//$help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
-llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-card_contact');
-
 $form = new Form($db);
-$formcompany = new FormCompany($db);
-$contactstatic = new Contact($db);
-$userstatic = new User($db);
 
+$title = $langs->trans('Convocation').' - '.$langs->trans("Notes");
+//$title = $object->ref." - ".$langs->trans("Notes");
+$help_url = '';
+//$help_url='EN:Customers_Orders|FR:Commandes_Clients|ES:Pedidos de clientes';
 
-/* *************************************************************************** */
-/*                                                                             */
-/* View and edit mode                                                         */
-/*                                                                             */
-/* *************************************************************************** */
+llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-card_notes');
 
-if ($object->id) {
-	/*
-	 * Show tabs
-	 */
-	$head = visitemedicalPrepareHead($object);
+if ($id > 0 || !empty($ref)) {
+	$object->fetch_thirdparty();
 
-	print dol_get_fiche_head($head, 'contact', $langs->trans("VisiteMedical"), -1, $object->picto);
+	$head = convocationPrepareHead($object);
 
-	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/visitemedical_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	print dol_get_fiche_head($head, 'note', $langs->trans("Convocation"), -1, $object->picto);
+
+	// Object card
+	// ------------------------------------------------------------
+	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/convocation_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*
@@ -210,20 +207,20 @@ if ($object->id) {
 	 }*/
 	$morehtmlref .= '</div>';
 
-	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref, '', 0, '', '', 1);
+
+	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
+
+
+	print '<div class="fichecenter">';
+	print '<div class="underbanner clearboth"></div>';
+
+
+	$cssclass = "titlefield";
+	include DOL_DOCUMENT_ROOT.'/core/tpl/notes.tpl.php';
+
+	print '</div>';
 
 	print dol_get_fiche_end();
-
-	print '<br>';
-
-	// Contacts lines (modules that overwrite templates must declare this into descriptor)
-	$dirtpls = array_merge($conf->modules_parts['tpl'], array('/core/tpl'));
-	foreach ($dirtpls as $reldir) {
-		$res = @include dol_buildpath($reldir.'/contacts.tpl.php');
-		if ($res) {
-			break;
-		}
-	}
 }
 
 // End of page

@@ -15,12 +15,12 @@
 
 
 -- BEGIN MODULEBUILDER INDEXES
-ALTER TABLE llx_formationhabilitation_visitemedical ADD INDEX idx_formationhabilitation_visitemedical_rowid (rowid);
-ALTER TABLE llx_formationhabilitation_visitemedical ADD INDEX idx_formationhabilitation_visitemedical_ref (ref);
-ALTER TABLE llx_formationhabilitation_visitemedical ADD INDEX idx_formationhabilitation_visitemedical_status (status);
+ALTER TABLE llx_formationhabilitation_convocation ADD INDEX idx_formationhabilitation_convocation_rowid (rowid);
+ALTER TABLE llx_formationhabilitation_convocation ADD INDEX idx_formationhabilitation_convocation_ref (ref);
+ALTER TABLE llx_formationhabilitation_convocation ADD INDEX idx_formationhabilitation_convocation_status (status);
 -- END MODULEBUILDER INDEXES
 
---ALTER TABLE llx_formationhabilitation_visitemedical ADD UNIQUE INDEX uk_formationhabilitation_visitemedical_fieldxy(fieldx, fieldy);
+--ALTER TABLE llx_formationhabilitation_convocation ADD UNIQUE INDEX uk_formationhabilitation_convocation_fieldxy(fieldx, fieldy);
 
---ALTER TABLE llx_formationhabilitation_visitemedical ADD CONSTRAINT llx_formationhabilitation_visitemedical_fk_field FOREIGN KEY (fk_field) REFERENCES llx_formationhabilitation_myotherobject(rowid);
+--ALTER TABLE llx_formationhabilitation_convocation ADD CONSTRAINT llx_formationhabilitation_convocation_fk_field FOREIGN KEY (fk_field) REFERENCES llx_formationhabilitation_myotherobject(rowid);
 
