@@ -383,7 +383,7 @@ class extendedHoliday extends Holiday
 	{
 		global $mysoc;
 
-		$sql = "SELECT rowid, code, label, affect, delay, newbymonth";
+		$sql = "SELECT rowid, code, label, affect, delay, newbymonth, in_hour";
 		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types";
 		$sql .= " WHERE (fk_country IS NULL OR fk_country = ".((int) $mysoc->country_id).')';
 		if ($active >= 0) {
@@ -399,7 +399,7 @@ class extendedHoliday extends Holiday
 			$num = $this->db->num_rows($result);
 			if ($num) {
 				while ($obj = $this->db->fetch_object($result)) {
-					$types[$obj->rowid] = array('rowid'=> $obj->rowid, 'code'=> $obj->code, 'label'=>$obj->label, 'affect'=>$obj->affect, 'delay'=>$obj->delay, 'newbymonth'=>$obj->newbymonth);
+					$types[$obj->rowid] = array('rowid'=> $obj->rowid, 'code'=> $obj->code, 'label'=>$obj->label, 'affect'=>$obj->affect, 'delay'=>$obj->delay, 'newbymonth'=>$obj->newbymonth, 'in_hour'=>$obj->in_hour);
 				}
 
 				return $types;

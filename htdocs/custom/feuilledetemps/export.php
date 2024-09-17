@@ -317,6 +317,7 @@ elseif($datatoexport == 'total_holiday') {
 	);
 	foreach($typesHoliday as $type) {
 		$array_export_fields[0][$type['code']] = $type['label'];
+		$array_export_fields[0][$type['code']] .= ($type['in_hour'] ? ' (H)' : ' (J)');
 	}
 }
 else {
@@ -428,6 +429,7 @@ else {
 	);
 	foreach($typesHoliday as $type) {
 		$array_export_fields[6][0][$type['code']] = $type['label'];
+		$array_export_fields[0][$type['code']] .= ($type['in_hour'] ? ' (H)' : ' (J)');
 	}
 }
 
