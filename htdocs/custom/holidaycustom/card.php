@@ -364,9 +364,13 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 
+				$form = new Form($this->db);
 				$userstatic->fetch($object->fk_user);
 				if($object->fk_type == 4 || $userstatic->array_options['options_employeur'] != 1) {
 					$object->array_options['options_statutfdt'] = 4;
+				}
+				elseif(!in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
+					$object->array_options['options_statutfdt'] = 2;
 				}
 
 				$result = $object->create($user);
