@@ -1034,13 +1034,13 @@ class ExtendedExportFDT extends Export
 			$sql .= $newfield;
 		}
 		$sql .= " FROM (
-						SELECT et.fk_user as user_id, et.element_date as element_date, et.element_duration as element_duration, null as s_heure_sup00, null as s_heure_sup25, null as s_heure_sup50, null as s_heure_route, null as r_heure_sup00, null as r_heure_sup25, null as r_heure_sup50, null as r_heure_nuit_50, null as r_heure_nuit_75, null as r_heure_nuit_100, null as r_heure_route, null as deplacement FROM llx_element_time AS et
+						SELECT et.fk_user as user_id, et.element_date as element_date, et.element_duration as element_duration, null as s_heure_sup00, null as s_heure_sup25, null as s_heure_sup50, null as s_heure_route, null as r_heure_sup00, null as r_heure_sup25, null as r_heure_sup50, null as r_heure_nuit_50, null as r_heure_nuit_75, null as r_heure_nuit_100, null as r_heure_route, null as deplacement, null as s_kilometres, null as r_kilometres FROM llx_element_time AS et
 						UNION
-						SELECT s.fk_user, s.date, null, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_route, null, null, null, null, null, null, null, null FROM llx_feuilledetemps_silae AS s
+						SELECT s.fk_user, s.date, null, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_route, null, null, null, null, null, null, null, null, s.kilometres, null FROM llx_feuilledetemps_silae AS s
 						UNION 
-						SELECT r.fk_user, r.date, null, null, null, null, null, r.heure_sup00, r.heure_sup25, r.heure_sup50, r.heure_nuit_50, r.heure_nuit_75, r.heure_nuit_100, r.heure_route, null FROM llx_feuilledetemps_regul AS r
+						SELECT r.fk_user, r.date, null, null, null, null, null, r.heure_sup00, r.heure_sup25, r.heure_sup50, r.heure_nuit_50, r.heure_nuit_75, r.heure_nuit_100, r.heure_route, null, null, r.kilometres FROM llx_feuilledetemps_regul AS r
 						UNION 
-						SELECT d.fk_user, d.date, null, null, null, null, null, null, null, null, null, null, null, null, d.type_deplacement FROM llx_feuilledetemps_deplacement AS d
+						SELECT d.fk_user, d.date, null, null, null, null, null, null, null, null, null, null, null, null, d.type_deplacement, null, null FROM llx_feuilledetemps_deplacement AS d
 					) AS t1";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user AS u ON user_id = u.rowid";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields AS eu ON u.rowid = eu.fk_object";
