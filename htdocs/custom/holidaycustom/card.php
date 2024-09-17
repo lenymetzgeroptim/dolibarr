@@ -364,12 +364,12 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 
-				$form = new Form($this->db);
+				$form = new Form($db);
 				$userstatic->fetch($object->fk_user);
 				if($object->fk_type == 4 || $userstatic->array_options['options_employeur'] != 1) {
 					$object->array_options['options_statutfdt'] = 4;
 				}
-				elseif(!in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
+				elseif(in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
 					$object->array_options['options_statutfdt'] = 2;
 				}
 
@@ -1854,6 +1854,10 @@ if (empty($reshook)) {
 		$error = 0;
 
 		$object->fetch($id);
+
+		if($object->array_options['options_statutfdt'] == 4 && ($object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED) && $object->fk_type != 4) {
+			$object->array_options['options_statutfdt'] = 1;
+		}
 
 		$oldstatus = $object->statut;
 		$object->statut = Holiday::STATUS_DRAFT;
