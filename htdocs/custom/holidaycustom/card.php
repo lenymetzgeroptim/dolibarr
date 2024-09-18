@@ -364,6 +364,15 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 
+				$form = new Form($db);
+				$userstatic->fetch($object->fk_user);
+				if($object->fk_type == 4 || $userstatic->array_options['options_employeur'] != 1) {
+					$object->array_options['options_statutfdt'] = 4;
+				}
+				elseif(in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
+					$object->array_options['options_statutfdt'] = 2;
+				}
+
 				$result = $object->create($user);
 
 				if ($result <= 0) {
@@ -905,7 +914,7 @@ if (empty($reshook)) {
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 					$link = '<a href="'.$urlwithroot.'/custom/holidaycustom/card.php?id='.$object->id.'">'.$object->ref.'</a>';
-					$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerModify2" : "EMailTextCongesRegulerModify3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($date_debut, '%d/%m/%Y'), dol_print_date($date_fin, '%d/%m/%Y'), $link);
+					$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerModify2" : "EMailTextCongesRegulerModify3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_fin, '%d/%m/%Y'), $link);
 					$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 					$res = $mail->sendfile();
 				}
@@ -954,7 +963,7 @@ if (empty($reshook)) {
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 				$link = $object->ref;
-				$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerDelete2" : "EMailTextCongesRegulerDelete3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($date_debut, '%d/%m/%Y'), dol_print_date($date_fin, '%d/%m/%Y'), $link);
+				$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerDelete2" : "EMailTextCongesRegulerDelete3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_fin, '%d/%m/%Y'), $link);
 				$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 				$res = $mail->sendfile();
 			}
@@ -1741,6 +1750,10 @@ if (empty($reshook)) {
 				$object->statut = Holiday::STATUS_REFUSED;
 				$object->detail_refuse = GETPOST('detail_refuse', 'alphanohtml');
 
+				if($object->array_options['options_statutfdt'] == 1) {
+					$object->array_options['options_statutfdt'] = 4;
+				}
+				
 				$db->begin();
 
 				$verif = $object->update($user);
@@ -1815,7 +1828,7 @@ if (empty($reshook)) {
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 					$link = '<a href="'.$urlwithroot.'/custom/holidaycustom/card.php?id='.$object->id.'">'.$object->ref.'</a>';
-					$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerRefuse2" : "EMailTextCongesRegulerRefuse3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($date_debut, '%d/%m/%Y'), dol_print_date($date_fin, '%d/%m/%Y'), $link);
+					$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerRefuse2" : "EMailTextCongesRegulerRefuse3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_fin, '%d/%m/%Y'), $link);
 					$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 					$res = $mail->sendfile();
 				}
@@ -1841,6 +1854,10 @@ if (empty($reshook)) {
 		$error = 0;
 
 		$object->fetch($id);
+
+		if($object->array_options['options_statutfdt'] == 4 && ($object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED) && $object->fk_type != 4) {
+			$object->array_options['options_statutfdt'] = 1;
+		}
 
 		$oldstatus = $object->statut;
 		$object->statut = Holiday::STATUS_DRAFT;
@@ -1895,6 +1912,10 @@ if (empty($reshook)) {
 				$object->statut = Holiday::STATUS_CANCELED;
 				$object->array_options['options_detail_annulation'] = GETPOST('detail_annulation', 'alphanohtml');
 
+				if($object->array_options['options_statutfdt'] == 1) {
+					$object->array_options['options_statutfdt'] = 4;
+				}
+				
 				$result = $object->update($user);
 
 				if ($result >= 0 && $oldstatus == Holiday::STATUS_APPROVED2) {	// holiday was already validated, status 3, so we must increase back the balance
@@ -2114,7 +2135,7 @@ if (empty($reshook)) {
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 					$link = '<a href="'.$urlwithroot.'/custom/holidaycustom/card.php?id='.$object->id.'">'.$object->ref.'</a>';
-					$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerCancel2" : "EMailTextCongesRegulerCancel3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($date_debut, '%d/%m/%Y'), dol_print_date($date_fin, '%d/%m/%Y'), $link);
+					$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerCancel2" : "EMailTextCongesRegulerCancel3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_debut, '%d/%m/%Y'), $link);
 					$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 					$res = $mail->sendfile();
 				}
