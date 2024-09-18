@@ -250,16 +250,19 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 			case 'USER_ENABLEDISABLE':
 				if($object->status == 0) {
 					$fdt = new FeuilleDeTemps($this->db);
+					$object_id = $fdt->ExisteDeja(dol_print_date(dol_now(), '%m'), $object->id);
 
-					$this->db->begin();
+					if($object_id == 0) {
+						$this->db->begin();
 
-					$fdt->date_debut = dol_get_first_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
-					$fdt->date_fin = dol_get_last_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
-					$fdt->ref = "FDT_".str_pad($object->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date(dol_now(), '%m%Y');
-					$fdt->fk_user = $object->id;
-					$fdt->status = 0;
+						$fdt->date_debut = dol_get_first_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
+						$fdt->date_fin = dol_get_last_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
+						$fdt->ref = "FDT_".str_pad($object->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date(dol_now(), '%m%Y');
+						$fdt->fk_user = $object->id;
+						$fdt->status = 0;
 
-					$res = $fdt->create($user, 0);
+						$res = $fdt->create($user, 0);
+					}
 				}
 
 				if($res){
@@ -270,53 +273,55 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return -1;
 				}
 
+			case 'TASK_TIMESPENT_CREATE':
+				$error = 0;
+				// select user if alternant and update alternant for each timespent line creation 
+				$sql = "INSERT INTO ".MAIN_DB_PREFIX."element_time_extrafields (fk_object, alternant)";
+				$sql .= " SELECT '.$object->timespent_id.', ue.isalternant";
+				$sql .= " FROM ".MAIN_DB_PREFIX."user_extrafields as ue";
+				$sql .= ' WHERE  ue.fk_object = '.$object->timespent_fk_user.'';
+				$res = $this->db->query($sql);
+				if ($res) {
+						if (!$error) {
+							$this->db->commit();
+							return 1;
+						} else {
+							$this->db->rollback();
+							return -3;
+						}
+					
+				} else {
+					$error = $this->db->error();
+					$this->db->rollback();
+					return -1;
+				}
+				break;
+				
+			case 'TASK_TIMESPENT_DELETE' :
+				$error = 0;
+				//Delete timespent line fk_object from element_time_extrafields
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX."element_time_extrafields WHERE fk_object = ".((int) $object->timespent_id);
+				$res = $this->db->query($sql);
+				if ($res) {
+						if (!$error) {
+							$this->db->commit();
+							return 1;
+						} else {
+							$this->db->rollback();
+							return -3;
+						}
+					
+				} else {
+					$error = $this->db->error();
+					$this->db->rollback();
+					return -1;
+				}
+				break;
+
 			default:
 				dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
 				break;
 
-				case 'TASK_TIMESPENT_CREATE':
-					$error = 0;
-					// select user if alternant and update alternant for each timespent line creation 
-					$sql = "INSERT INTO ".MAIN_DB_PREFIX."element_time_extrafields (fk_object, alternant)";
-					$sql .= " SELECT '.$object->timespent_id.', ue.isalternant";
-					$sql .= " FROM ".MAIN_DB_PREFIX."user_extrafields as ue";
-					$sql .= ' WHERE  ue.fk_object = '.$object->timespent_fk_user.'';
-					$res = $this->db->query($sql);
-					if ($res) {
-							if (!$error) {
-								$this->db->commit();
-								return 1;
-							} else {
-								$this->db->rollback();
-								return -3;
-							}
-						
-					} else {
-						$error = $this->db->error();
-						$this->db->rollback();
-						return -1;
-					}
-				break;
-				
-				case 'TASK_TIMESPENT_DELETE' :
-					//Delete timespent line fk_object from element_time_extrafields
-					$sql = "DELETE FROM ".MAIN_DB_PREFIX."element_time_extrafields WHERE fk_object = ".((int) $object->timespent_id);
-					$res = $this->db->query($sql);
-					if ($res) {
-							if (!$error) {
-								$this->db->commit();
-								return 1;
-							} else {
-								$this->db->rollback();
-								return -3;
-							}
-						
-					} else {
-						$error = $this->db->error();
-						$this->db->rollback();
-						return -1;
-					}
-				break;
 
 				//Lancer une seule fois
 				// case 'USER_MODIFY' :

@@ -218,6 +218,11 @@ class ExtendedExportFDT extends Export
 				$holiday = new extendedHoliday($this->db);
 				$typesHoliday = $holiday->getTypesNoCP();
 
+				$extrafields = new ExtraFields($this->db);
+				$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+				$userField = new UserField($this->db);
+				$userField->table_element = 'donneesrh_Positionetcoefficient';
+
 				if($array_filterValue["u.firstname"]) {
 					$filter["t.firstname"] = $array_filterValue["u.firstname"];
 				}
@@ -225,17 +230,19 @@ class ExtendedExportFDT extends Export
 					$filter["t.lastname"] = $array_filterValue["u.lastname"];
 				}
 
-				$filter["t.statut"] = "1";
+				//$filter["t.statut"] = "1";
 
 				$date_debut = dol_mktime(-1, -1, -1, substr($array_filterValue["date_debut"], 4, 2), substr($array_filterValue["date_debut"], 6, 2), substr($array_filterValue["date_debut"], 0, 4));
 				$date_fin = dol_mktime(-1, -1, -1, substr($array_filterValue["date_fin"], 4, 2), substr($array_filterValue["date_fin"], 6, 2), substr($array_filterValue["date_fin"], 0, 4));
 				$timeHoliday = $object->timeHolidayForExport($date_debut, $date_fin);
+				$total = array();
 
 				$userstatic->fetchAll('', 't.lastname', 0, 0, $filter);
 				foreach($userstatic->users as $id => $user_obj) {
-					if($user_obj->array_options['options_employeur'] == 1) {
+					$userField->id = $id;
+					$userField->fetch_optionals();
+					if($user_obj->array_options['options_employeur'] == 1 && (empty($userField->array_options['options_datedepart']) || $userField->array_options['options_datedepart'] >= $date_debut)) {
 						$societe = new Societe($this->db);
-						$societe->fetch($user_obj->array_options['options_antenne']);
 
 						$obj->eu_matricule = $user_obj->array_options['options_matricule'];
 						$obj->u_firstname = $user_obj->firstname;
@@ -247,11 +254,25 @@ class ExtendedExportFDT extends Export
 						foreach($typesHoliday as $type) {		
 							$code = $type['code'];				
 							$obj->$code = ($timeHoliday[$id][$type['code']] > 0 ? $timeHoliday[$id][$type['code']] : 0);
+							$total[$type['code']] += $obj->$code;
 						}	
 
 						$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
 					}
 				}
+
+				// Affiche un total en dernière ligne
+				$obj->eu_matricule ='TOTAL';
+				$obj->u_firstname = '';
+				$obj->u_lastname = '';
+				$obj->eu_antenne = '';
+				$obj->date_debut = $array_filterValue["date_debut"];
+				$obj->date_fin = $array_filterValue["date_fin"];
+				foreach($typesHoliday as $type) {		
+					$code = $type['code'];				
+					$obj->$code = ($total[$type['code']] > 0 ? $total[$type['code']] : 0);
+				}	
+				$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
 
 				// Genere en-tete
 				$objmodel->write_footer($outputlangs);
@@ -1013,13 +1034,13 @@ class ExtendedExportFDT extends Export
 			$sql .= $newfield;
 		}
 		$sql .= " FROM (
-						SELECT et.fk_user as user_id, et.element_date as element_date, et.element_duration as element_duration, null as s_heure_sup00, null as s_heure_sup25, null as s_heure_sup50, null as s_heure_route, null as r_heure_sup00, null as r_heure_sup25, null as r_heure_sup50, null as r_heure_nuit_50, null as r_heure_nuit_75, null as r_heure_nuit_100, null as r_heure_route, null as deplacement FROM llx_element_time AS et
+						SELECT et.fk_user as user_id, et.element_date as element_date, et.element_duration as element_duration, null as s_heure_sup00, null as s_heure_sup25, null as s_heure_sup50, null as s_heure_route, null as r_heure_sup00, null as r_heure_sup25, null as r_heure_sup50, null as r_heure_nuit_50, null as r_heure_nuit_75, null as r_heure_nuit_100, null as r_heure_route, null as deplacement, null as s_kilometres, null as r_kilometres FROM llx_element_time AS et
 						UNION
-						SELECT s.fk_user, s.date, null, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_route, null, null, null, null, null, null, null, null FROM llx_feuilledetemps_silae AS s
+						SELECT s.fk_user, s.date, null, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_route, null, null, null, null, null, null, null, null, s.kilometres, null FROM llx_feuilledetemps_silae AS s
 						UNION 
-						SELECT r.fk_user, r.date, null, null, null, null, null, r.heure_sup00, r.heure_sup25, r.heure_sup50, r.heure_nuit_50, r.heure_nuit_75, r.heure_nuit_100, r.heure_route, null FROM llx_feuilledetemps_regul AS r
+						SELECT r.fk_user, r.date, null, null, null, null, null, r.heure_sup00, r.heure_sup25, r.heure_sup50, r.heure_nuit_50, r.heure_nuit_75, r.heure_nuit_100, r.heure_route, null, null, r.kilometres FROM llx_feuilledetemps_regul AS r
 						UNION 
-						SELECT d.fk_user, d.date, null, null, null, null, null, null, null, null, null, null, null, null, d.type_deplacement FROM llx_feuilledetemps_deplacement AS d
+						SELECT d.fk_user, d.date, null, null, null, null, null, null, null, null, null, null, null, null, d.type_deplacement, null, null FROM llx_feuilledetemps_deplacement AS d
 					) AS t1";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user AS u ON user_id = u.rowid";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields AS eu ON u.rowid = eu.fk_object";

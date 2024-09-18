@@ -2251,6 +2251,7 @@ class FeuilleDeTemps extends CommonObject
 
 		$userfield_load = array();
 		$userfield_pasdroitrtt = array();
+		$userfield_datedepart = array();
 
 		for ($idw = 0; $idw < $nb_jour; $idw++) { 
 			$tmpday = dol_time_plus_duree($firstdate, $idw, 'd');
@@ -2268,6 +2269,11 @@ class FeuilleDeTemps extends CommonObject
 
 						$userfield_load[$user_id] = 1;
 						$userfield_pasdroitrtt[$user_id] = $userField->array_options['options_pasdroitrtt'];
+						$userfield_datedepart[$user_id] = $userField->array_options['options_datedepart'];
+					}
+
+					if(!empty($userfield_datedepart[$user_id]) && $userfield_datedepart[$user_id] < $tmpday) {
+						continue;
 					}
 
 					if(sizeof($isavailablefordayanduser['rowid'][$user_id]) > 1) {

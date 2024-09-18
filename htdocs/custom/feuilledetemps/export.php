@@ -296,14 +296,17 @@ elseif($datatoexport == 'total_hour') {
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Total Heure Nuit 75%",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "Total Heure Nuit 100%",
 		"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "Total Heure Route",
-		"SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"Total D1 (km)",
-		"SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"Total D2 (km)",
-		"SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"Total D3 (km)",
-		"SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"Total D4 (km)",
-		"SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"Total GD1 (km)",
-		"SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"Total GD2 (km)",
-		"SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"Total GD3 (km)",
-		"SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"Total GD4 (km)",
+		// "SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"Total D1 (km)",
+		// "SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"Total D2 (km)",
+		// "SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"Total D3 (km)",
+		// "SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"Total D4 (km)",
+		// "SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"Total GD1 (km)",
+		// "SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"Total GD2 (km)",
+		// "SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"Total GD3 (km)",
+		// "SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"Total GD4 (km)",
+		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Total Déplacement (km)",
 	);
 }
 elseif($datatoexport == 'total_holiday') {
@@ -317,6 +320,7 @@ elseif($datatoexport == 'total_holiday') {
 	);
 	foreach($typesHoliday as $type) {
 		$array_export_fields[0][$type['code']] = $type['label'];
+		$array_export_fields[0][$type['code']] .= ($type['in_hour'] ? ' (H)' : ' (J)');
 	}
 }
 else {
@@ -409,14 +413,17 @@ else {
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Total Heure Nuit 75%",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "Total Heure Nuit 100%",
 		"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "Total Heure Route",
-		"SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"Total D1 (km)",
-		"SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"Total D2 (km)",
-		"SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"Total D3 (km)",
-		"SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"Total D4 (km)",
-		"SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"Total GD1 (km)",
-		"SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"Total GD2 (km)",
-		"SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"Total GD3 (km)",
-		"SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"Total GD4 (km)",
+		// "SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"Total D1 (km)",
+		// "SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"Total D2 (km)",
+		// "SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"Total D3 (km)",
+		// "SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"Total D4 (km)",
+		// "SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"Total GD1 (km)",
+		// "SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"Total GD2 (km)",
+		// "SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"Total GD3 (km)",
+		// "SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"Total GD4 (km)",
+		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Total Déplacement (km)",
 	);
 	$array_export_fields[6][0] = array(
 		"eu.matricule" => "Matricule",
@@ -428,6 +435,7 @@ else {
 	);
 	foreach($typesHoliday as $type) {
 		$array_export_fields[6][0][$type['code']] = $type['label'];
+		$array_export_fields[0][$type['code']] .= ($type['in_hour'] ? ' (H)' : ' (J)');
 	}
 }
 
@@ -533,14 +541,17 @@ elseif($datatoexport == 'total_hour') {
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "timesheet_16@feuilledetemps",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "timesheet_16@feuilledetemps",
 		"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"timesheet_16@feuilledetemps",
+		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"timesheet_16@feuilledetemps",
 	);
 }
 elseif($datatoexport == 'total_holiday') {
@@ -645,14 +656,17 @@ else {
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "timesheet_16@feuilledetemps",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "timesheet_16@feuilledetemps",
 		"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"timesheet_16@feuilledetemps",
-		"SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"timesheet_16@feuilledetemps",
+		// "SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"timesheet_16@feuilledetemps",
+		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"timesheet_16@feuilledetemps",
 	);
 	$array_export_entities[6][0] = array(
 		"eu.matricule" => "user",
@@ -768,14 +782,17 @@ elseif($datatoexport == 'total_hour') {
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Numeric",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "Numeric",
 		"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "Numeric",
-		"SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"Numeric",
-		"SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"Numeric",
-		"SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"Numeric",
-		"SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"Numeric",
-		"SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"Numeric",
-		"SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"Numeric",
-		"SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"Numeric",
-		"SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"Numeric",
+		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Numeric",
 	);
 }
 elseif($datatoexport == 'total_holiday') {
@@ -886,14 +903,17 @@ else {
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Numeric",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "Numeric",
 		"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "Numeric",
-		"SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"Numeric",
-		"SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"Numeric",
-		"SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"Numeric",
-		"SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"Numeric",
-		"SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"Numeric",
-		"SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"Numeric",
-		"SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"Numeric",
-		"SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"Numeric",
+		// "SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"Numeric",
+		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Numeric",
 	);
 	$array_export_TypeFields[6][0] = array(
 		"eu.matricule" => "Numeric",
@@ -1007,14 +1027,17 @@ elseif($datatoexport == 'total_hour') {
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "llx_feuilledetemps_regul",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "llx_feuilledetemps_regul",
 		"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "llx_feuilledetemps_silae",
-		"SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"llx_feuilledetemps_deplacement",
+		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"llx_feuilledetemps_deplacement",
 	);
 }
 elseif($datatoexport == 'total_holiday') {
@@ -1118,14 +1141,17 @@ else {
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "llx_feuilledetemps_regul",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "llx_feuilledetemps_regul",
 		"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "llx_feuilledetemps_silae",
-		"SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"llx_feuilledetemps_deplacement",
-		"SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1 as total_d1"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2 as total_d2"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3 as total_d3"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4 as total_d4"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 5 THEN 1 ELSE 0 END) * dd.distancegd1 as total_gd1"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 6 THEN 1 ELSE 0 END) * dd.distancegd2 as total_gd2"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 8 THEN 1 ELSE 0 END) * dd.distancegd3 as total_gd3"=>"llx_feuilledetemps_deplacement",
+		// "SUM(CASE deplacement WHEN 9 THEN 1 ELSE 0 END) * dd.distancegd4 as total_gd4"=>"llx_feuilledetemps_deplacement",
+		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"llx_feuilledetemps_deplacement",
 	);
 	$array_tablename[6][0] = array(
 		"eu.matricule" => "llx_user_extrafields",
