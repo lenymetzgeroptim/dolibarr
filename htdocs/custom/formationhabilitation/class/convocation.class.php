@@ -132,7 +132,7 @@ class Convocation extends CommonObject
 		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1",),
 		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"OrganismeConvoc", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"fk_contact" => array("type"=>"integer:contact:contact/class/contact.class.php:0:(civility:=:'dr')", "label"=>"Medecin", "enabled"=>"1", 'position'=>44, 'notnull'=>0, "visible"=>"1",),
-		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
+		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
 		"naturevisite" => array("type"=>"sellist:c_nature_visite:label:rowid::(active:=:1)", "label"=>"Nature visite", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"1",),
 		"centremedecine" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"CentreMedecine", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
 		"examenrealiser" => array("type"=>"chkbxlst:c_examen_medical:label:rowid::(active=1)", "label"=>"ExamenARéaliser", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"1",),

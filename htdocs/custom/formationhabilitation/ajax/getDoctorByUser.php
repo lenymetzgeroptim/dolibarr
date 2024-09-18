@@ -36,6 +36,7 @@ $userId = $_POST['userId'];
 
 $fk_contact = '';
 $naturevisite = '';
+$centremedecine = '';
 
 if ($userId > 0) {
     $extrafields = new Extrafields($db);
@@ -52,12 +53,17 @@ if ($userId > 0) {
     if ($userField->array_options['options_naturevisitemedicale']) {
         $naturevisite = $userField->array_options['options_naturevisitemedicale'];
     }
+
+    if ($userField->array_options['options_medecinedutravail']) {
+        $centremedecine = $userField->array_options['options_medecinedutravail'];
+    }
 }
 
 // Préparer la réponse
 $response = [
     'fk_contact' => $fk_contact,
-    'naturevisite' => $naturevisite
+    'naturevisite' => $naturevisite,
+    'centremedecine' => $centremedecine
 ];
 
 echo json_encode($response);

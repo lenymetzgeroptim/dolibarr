@@ -130,7 +130,7 @@ class Convocation extends CommonObject
 		"nature" => array("type"=>"integer", "label"=>"NatureConvoc", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Formation", "2" => "Visite médicale", "3" => "Examen médical", "4" => "Vaccination"),),
 		"type" => array("type"=>"integer", "label"=>"Type", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1", "default"=>"1", "arrayofkeyval"=>array("1" => "Externe", "2" => "Interne"),),
 		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1",),
-		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"Organisme", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
+		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"OrganismeConvoc", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"fk_contact" => array("type"=>"integer:contact:contact/class/contact.class.php:0:(civility:=:'dr')", "label"=>"Medecin", "enabled"=>"1", 'position'=>44, 'notnull'=>0, "visible"=>"1",),
 		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
 		"naturevisite" => array("type"=>"sellist:c_nature_visite:label:rowid::(active:=:1)", "label"=>"Nature visite", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"1",),

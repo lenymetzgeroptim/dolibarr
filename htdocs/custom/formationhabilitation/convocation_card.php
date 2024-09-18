@@ -191,7 +191,7 @@ if (empty($reshook)) {
 
 	$triggermodname = 'FORMATIONHABILITATION_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
 
-	if($action == 'add') {
+	if($action == 'add' || $action == 'update') {
 		if (empty(GETPOST("nature", 'int'))) {
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("NatureConvoc")), null, 'errors');
 			$error++;
@@ -234,6 +234,36 @@ if (empty($reshook)) {
 				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("CentreMedecine")), null, 'errors');
 				$error++;
 			}
+		}
+	}
+
+	if($action == 'update') {
+		if($object->nature == 1) {
+			$object->fk_contact = '';
+			$object->naturevisite = '';
+			$object->centremedecine = '';
+			$object->examenrealiser = '';
+		}
+		elseif($object->nature == 2) {
+			$object->type = '';
+			$object->fk_societe = '';
+			$object->fk_formation = '';
+			$object->centremedecine = '';
+			$object->examenrealiser = '';
+		}
+		elseif($object->nature == 3) {
+			$object->type = '';
+			$object->fk_societe = '';
+			$object->fk_formation = '';
+			$object->fk_contact = '';
+			$object->naturevisite = '';
+		}
+		elseif($object->nature == 4) {
+			$object->type = '';
+			$object->fk_societe = '';
+			$object->fk_formation = '';
+			$object->fk_contact = '';
+			$object->naturevisite = '';
 		}
 	}
 
@@ -331,7 +361,7 @@ if ($action == 'create') {
 	// Set some default values
 	//if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
 
-	print '<table id="convocationform" class="border centpercent tableforfieldcreate">'."\n";
+	print '<table id="convocationformcreate" class="border centpercent tableforfieldcreate">'."\n";
 
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
@@ -367,7 +397,7 @@ if (($id || $ref) && $action == 'edit') {
 
 	print dol_get_fiche_head();
 
-	print '<table id="convocationform" class="border centpercent tableforfieldedit">'."\n";
+	print '<table id="convocationformupdate" class="border centpercent tableforfieldedit">'."\n";
 
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
@@ -495,9 +525,34 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Common attributes
-	//$keyforbreak='fieldkeytoswitchonsecondcolumn';	// We change column just before this field
-	//unset($object->fields['fk_project']);				// Hide field already shown in banner
-	//unset($object->fields['fk_soc']);					// Hide field already shown in banner
+	$keyforbreak='nature';	// We change column just before this field
+	if($object->nature == 1) {
+		unset($object->fields['fk_contact']);
+		unset($object->fields['naturevisite']);
+		unset($object->fields['centremedecine']);
+		unset($object->fields['examenrealiser']);
+	}
+	elseif($object->nature == 2) {
+		unset($object->fields['type']);
+		unset($object->fields['fk_societe']);
+		unset($object->fields['fk_formation']);
+		unset($object->fields['centremedecine']);
+		unset($object->fields['examenrealiser']);
+	}
+	elseif($object->nature == 3) {
+		unset($object->fields['type']);
+		unset($object->fields['fk_societe']);
+		unset($object->fields['fk_formation']);
+		unset($object->fields['fk_contact']);
+		unset($object->fields['naturevisite']);
+	}
+	elseif($object->nature == 4) {
+		unset($object->fields['type']);
+		unset($object->fields['fk_societe']);
+		unset($object->fields['fk_formation']);
+		unset($object->fields['fk_contact']);
+		unset($object->fields['naturevisite']);
+	}
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_view.tpl.php';
 
 	// Other attributes. Fields from hook formObjectOptions and Extrafields.
