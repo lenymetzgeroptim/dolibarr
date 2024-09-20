@@ -79,6 +79,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userformation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/convocation.class.php';
 dol_include_once('/formationhabilitation/class/formation.class.php');
 dol_include_once('/formationhabilitation/lib/formationhabilitation_formation.lib.php');
 
@@ -366,9 +367,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}// Confirmation to programmer
 	if ($action == 'programmer_formation') {
 		$objectline->fetch($lineid);
-		$formquestion = array(array('label'=>'Date début formation' ,'type'=>'date', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
-							  array('label'=>'Date fin formation' ,'type'=>'date', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation));
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ProgrammerFormation'), $langs->trans('ConfirmProgrammerFormation'), 'confirm_programmer_formation', $formquestion, 0, 2);
+		$formquestion = array(
+							  array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
+							  array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation),
+							  array('label'=>$langs->trans('InterneExterne') ,'type'=>'select', 'name'=>'interne_externe', 'values'=>$objectline->fields['interne_externe']['arrayofkeyval'], 'select_show_empty'=>0, 'default'=>1),
+							  array('label'=>$langs->trans('Organisme') ,'type'=>'link', 'name'=>'fk_societe', 'options'=>$objectline->fields['fk_societe']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module)
+							);
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ProgrammerFormation'), $langs->trans('ConfirmProgrammerFormation'), 'confirm_programmer_formation', $formquestion, 0, 2, 350, 700);
 	}
 	if ($action == 'valider_formation') {
 		$objectline->fetch($lineid);

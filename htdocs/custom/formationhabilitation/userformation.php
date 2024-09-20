@@ -54,6 +54,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userautorisa
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/extendedUser3.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/convocation.class.php';
 
 
 // Translations

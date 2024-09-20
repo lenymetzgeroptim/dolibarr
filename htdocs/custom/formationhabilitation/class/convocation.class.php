@@ -261,6 +261,42 @@ class Convocation extends CommonObject
 	}
 
 	/**
+	 * Generation d'une convocation à partir d'une formation programmée
+	 *
+	 * @param  UserFormation $userFormation 
+	 * @param  User $user      User that creates
+	 * @param  bool $notrigger false=launch triggers after, true=disable triggers
+	 * @return int             Return integer <0 if KO, Id of created object if OK
+	 */
+	 public function generationWithFormation(UserFormation $userFormation, User $user, $notrigger = false)
+	{
+		$userStatic = new User($this->db);
+		$userStatic->fetch($userFormation->fk_user);
+		
+		$formationStatic = new Formation($this->db);
+		$formationStatic->fetch($userFormation->fk_formation);
+
+		$this->ref = 'CONVOC-'.$userStatic->login."-".$formationStatic->ref.'-'.dol_print_date($userFormation->date_debut_formation, "%Y%m%d");
+		$this->fk_user = $userFormation->fk_user;
+		$this->datedebut = $userFormation->date_debut_formation;
+		$this->datefin = $userFormation->date_fin_formation;
+		$this->nature = 1;
+		$this->type = $userFormation->interne_externe;
+		if($userFormation->interne_externe == 1) {
+			$this->fk_societe = $userFormation->fk_societe;
+		}
+		elseif($userFormation->interne_externe == 2) {
+			$this->fk_societe = 157;
+		}
+		$this->fk_formation = $userFormation->fk_formation;
+		$this->status = 0;
+
+		$resultcreate = $this->create($user, $notrigger);
+
+		return $resultcreate;
+	}
+
+	/**
 	 * Clone an object into another one
 	 *
 	 * @param  	User 	$user      	User that creates

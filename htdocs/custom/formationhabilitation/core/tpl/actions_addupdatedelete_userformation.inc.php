@@ -369,6 +369,11 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 		}
 
 		if(!$error && $result){
+			$convocation = new Convocation($db);
+			$result = $convocation->generationWithFormation($objectline, $user);
+		}
+
+		if(!$error && $result){
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;

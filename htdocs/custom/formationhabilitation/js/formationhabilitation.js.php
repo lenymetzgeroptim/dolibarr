@@ -112,8 +112,8 @@ $(document).ready(function() {
 		loadDoctorAndNature(initialUserId, initialNatureInput);
 	}
 	else if ($("#tablelinesaddline").length) {
-		var initialFormationId = $('#tablelinesaddline #fk_formation').val();	
-		var initialOrganismeId = $('#tablelinesaddline #fk_societe').val();	
+		var initialFormationId = $('#tablelinesaddline #fk_formation, .tredited #fk_formation').val();	
+		var initialOrganismeId = $('#tablelinesaddline #fk_societe, .tredited #fk_societe').val();	
 		loadOrganismeAndDuration(initialFormationId, initialOrganismeId, 1);
 	}
 	else if ($("#convocationformcreate").length) {
@@ -160,14 +160,14 @@ $(document).ready(function() {
 		loadDoctorAndNature(userId, initialNatureInput);
 	});
 
-	$('#tablelinesaddline #interne_externe').change(function() {
-		if($('#tablelinesaddline #interne_externe').val() == 2) {
-			$('#tablelinesaddline #formateur').parent().css('display', '');
-			$('#tablelinesaddline #fk_societe').parent().css('display', 'none');
+	$('#tablelinesaddline #interne_externe, .tredited #interne_externe').change(function() {
+		if($('#tablelinesaddline #interne_externe, .tredited #interne_externe').val() == 2) {
+			$('#tablelinesaddline #formateur, .tredited #formateur').parent().css('display', '');
+			$('#tablelinesaddline #fk_societe, .tredited #fk_societe').parent().css('display', 'none');
 		}
 		else {
-			$('#tablelinesaddline #fk_societe').parent().css('display', '');
-			$('#tablelinesaddline #formateur').parent().css('display', 'none');
+			$('#tablelinesaddline #fk_societe, .tredited #fk_societe').parent().css('display', '');
+			$('#tablelinesaddline #formateur, .tredited #formateur').parent().css('display', 'none');
 		}
 	});
 });
