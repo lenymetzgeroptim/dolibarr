@@ -55,6 +55,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/extendedUser
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/convocation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/extendedhtml.form.class.php';
 
 
 // Translations
@@ -82,7 +83,7 @@ $object = New ExtendedUser3($db);
 if($userid > 0){
     $object->fetch($userid);
 }
-$form = new Form($db);
+$form = new ExtendedForm($db);
 
 if($onglet == 'formation' || empty($onglet)){
     $objectline = new UserFormation($db);
@@ -259,8 +260,14 @@ if ($action == 'remove_file') {
 }
 if ($action == 'programmer_formation') {
     $objectline->fetch($lineid);
-    $formquestion = array(array('label'=>'Date début formation' ,'type'=>'date', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
-                          array('label'=>'Date fin formation' ,'type'=>'date', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation));
+    $formquestion = array(
+                        array('label'=>$langs->trans('Formation') ,'type'=>'hidden', 'name'=>'fk_formation_programmer', 'value'=>$objectline->fk_formation),
+                        array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
+                        array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation),
+                        array('label'=>$langs->trans('InterneExterne') ,'type'=>'select', 'name'=>'interne_externe_programmer', 'values'=>$objectline->fields['interne_externe']['arrayofkeyval'], 'select_show_empty'=>0, 'default'=>1),
+                        array('label'=>$langs->trans('Organisme') ,'type'=>'link', 'code'=>'fk_societe', 'name'=>'fk_societe_programmer', 'options'=>$objectline->fields['fk_societe']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module),
+                        array('label'=>$langs->trans('Formateur') ,'type'=>'link', 'code'=>'formateur', 'name'=>'formateur_programmer', 'options'=>$objectline->fields['formateur']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module, 'hidden'=>1)
+                    );
     $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ProgrammerFormation'), $langs->trans('ConfirmProgrammerFormation'), 'confirm_programmer_formation', $formquestion, 0, 2);
 }
 if ($action == 'valider_formation') {

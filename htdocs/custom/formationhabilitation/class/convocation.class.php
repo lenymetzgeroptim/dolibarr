@@ -264,12 +264,17 @@ class Convocation extends CommonObject
 	 * Generation d'une convocation à partir d'une formation programmée
 	 *
 	 * @param  UserFormation $userFormation 
-	 * @param  User $user      User that creates
-	 * @param  bool $notrigger false=launch triggers after, true=disable triggers
-	 * @return int             Return integer <0 if KO, Id of created object if OK
+	 * @param  User $user      		User that creates
+	 * @param  int $date_debut     Date Start of Convocation
+	 * @param  int $date_fin      	Date End of Convocation
+	 * @param  bool $notrigger 		false=launch triggers after, true=disable triggers
+	 * @return int             		Return integer <0 if KO, Id of created object if OK
 	 */
-	 public function generationWithFormation(UserFormation $userFormation, User $user, $notrigger = false)
+	 public function generationWithFormation(UserFormation $userFormation, User $user, $date_debut, $date_fin, $notrigger = false)
 	{
+		global $langs; 
+		$error = 0; 
+
 		$userStatic = new User($this->db);
 		$userStatic->fetch($userFormation->fk_user);
 		
@@ -278,8 +283,8 @@ class Convocation extends CommonObject
 
 		$this->ref = 'CONVOC-'.$userStatic->login."-".$formationStatic->ref.'-'.dol_print_date($userFormation->date_debut_formation, "%Y%m%d");
 		$this->fk_user = $userFormation->fk_user;
-		$this->datedebut = $userFormation->date_debut_formation;
-		$this->datefin = $userFormation->date_fin_formation;
+		$this->datedebut = $date_debut;
+		$this->datefin = $date_fin;
 		$this->nature = 1;
 		$this->type = $userFormation->interne_externe;
 		if($userFormation->interne_externe == 1) {

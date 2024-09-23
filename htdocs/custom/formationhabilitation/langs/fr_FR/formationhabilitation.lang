@@ -125,6 +125,8 @@ DateFinValiditeFormation = Fin de validité
 InterneExterne = Effectuée en
 Organisme = Organisme / Formatteur
 Formateur = Organisme / Formateur
+HeureDebut = Heure début
+HeureFin = Heure de fin
 
 
 #

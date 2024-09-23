@@ -82,6 +82,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userformatio
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/convocation.class.php';
 dol_include_once('/formationhabilitation/class/formation.class.php');
 dol_include_once('/formationhabilitation/lib/formationhabilitation_formation.lib.php');
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/extendedhtml.form.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"));
@@ -103,7 +104,7 @@ $sortorder = GETPOST('sortorder', 'aZ09comma');
 $object = new Formation($db);
 $objectline = new UserFormation($db);
 $extrafields = new ExtraFields($db);
-$form = new Form($db);
+$form = new ExtendedForm($db);
 $formfile = new FormFile($db);
 $formproject = new FormProjets($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
@@ -165,6 +166,7 @@ $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entit
 if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 if (!$permissiontoread) accessforbidden();
 
+include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
 
 /*
  * Actions
@@ -245,7 +247,6 @@ if (empty($reshook)) {
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
-include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
 
 /*
  * View
@@ -368,10 +369,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	if ($action == 'programmer_formation') {
 		$objectline->fetch($lineid);
 		$formquestion = array(
-							  array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
-							  array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation),
-							  array('label'=>$langs->trans('InterneExterne') ,'type'=>'select', 'name'=>'interne_externe', 'values'=>$objectline->fields['interne_externe']['arrayofkeyval'], 'select_show_empty'=>0, 'default'=>1),
-							  array('label'=>$langs->trans('Organisme') ,'type'=>'link', 'name'=>'fk_societe', 'options'=>$objectline->fields['fk_societe']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module)
+								array('label'=>$langs->trans('Formation') ,'type'=>'hidden', 'name'=>'fk_formation_programmer', 'value'=>$objectline->fk_formation),
+							  	array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
+							  	array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation),
+							  	array('label'=>$langs->trans('InterneExterne') ,'type'=>'select', 'name'=>'interne_externe_programmer', 'values'=>$objectline->fields['interne_externe']['arrayofkeyval'], 'select_show_empty'=>0, 'default'=>1),
+							  	array('label'=>$langs->trans('Organisme') ,'type'=>'link', 'code'=>'fk_societe', 'name'=>'fk_societe_programmer', 'options'=>$objectline->fields['fk_societe']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module),
+								array('label'=>$langs->trans('Formateur') ,'type'=>'link', 'code'=>'formateur', 'name'=>'formateur_programmer', 'options'=>$objectline->fields['formateur']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module, 'hidden'=>1)
 							);
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ProgrammerFormation'), $langs->trans('ConfirmProgrammerFormation'), 'confirm_programmer_formation', $formquestion, 0, 2, 350, 700);
 	}

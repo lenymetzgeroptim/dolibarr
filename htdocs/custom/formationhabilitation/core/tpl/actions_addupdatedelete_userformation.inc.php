@@ -121,14 +121,14 @@ if($action == 'confirm_addline' && $confirm == 'yes' && $permissiontoaddline) {
 		$resultcreate = $objectline->create($user);
 	}
 
-	if(!$error && $resultcreate){
+	if(!$error && $resultcreate > 0){
 		$db->commit();
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 		// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 		exit;
 	}
-	elseif(!$error && !$resultcreate){
+	elseif(!$error && $resultcreate <= 0){
 		$db->rollback();
 		setEventMessages($langs->trans($objectline->error), null, 'errors');
 	}
@@ -196,13 +196,13 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 			$resultupdate = $objectline->update($user);
 		}
 
-		if(!$error && $resultupdate){
+		if(!$error && $resultupdate > 0){
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 			// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		}
-		elseif(!$error && !$resultupdate){
+		elseif(!$error && $resultupdate <= 0){
 			setEventMessages($langs->trans($objectline->error), null, 'errors');
 		}
 		elseif($error) {
@@ -323,6 +323,9 @@ if ($action == 'updatecoutmobilisation' && !$cancel && $permissiontoaddline) {
 }
 
 if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permissiontoaddline){
+	$db->begin();
+	$result = 0;
+
 	if($lineid > 0){
 		if (empty(GETPOST("date_debut_formation_programmermonth", 'int')) || empty(GETPOST("date_debut_formation_programmerday", 'int')) || empty(GETPOST("date_debut_formation_programmeryear", 'int'))) {
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateDebutFormation")), null, 'errors');
@@ -336,11 +339,26 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 		}
 		$date_fin = dol_mktime(-1, -1, -1, GETPOST("date_fin_formation_programmermonth", 'int'), GETPOST("date_fin_formation_programmerday", 'int'), GETPOST("date_fin_formation_programmeryear", 'int'));
 
+		if (empty(GETPOST("date_debut_formation_programmerhour", 'int')) || empty(GETPOST("date_debut_formation_programmermin", 'int')) || 
+		(GETPOST("date_debut_formation_programmerhour", 'int') == '00' && GETPOST("date_debut_formation_programmermin", 'int') == '00')) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("HeureDebut")), null, 'errors');
+			$error++;
+		}
+		$date_debut_convoc = dol_mktime(GETPOST("date_debut_formation_programmerhour", 'int'), GETPOST("date_debut_formation_programmermin", 'int'), -1, GETPOST("date_debut_formation_programmermonth", 'int'), GETPOST("date_debut_formation_programmerday", 'int'), GETPOST("date_debut_formation_programmeryear", 'int'));
+
+		if (empty(GETPOST("date_fin_formation_programmerhour", 'int')) || empty(GETPOST("date_fin_formation_programmermin", 'int')) || 
+		(GETPOST("date_fin_formation_programmerhour", 'int') == '00' && GETPOST("date_fin_formation_programmermin", 'int') == '00')) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("HeureFin")), null, 'errors');
+			$error++;
+		}
+		$date_fin_convoc = dol_mktime(GETPOST("date_fin_formation_programmerhour", 'int'), GETPOST("date_fin_formation_programmermin", 'int'), -1, GETPOST("date_fin_formation_programmermonth", 'int'), GETPOST("date_fin_formation_programmerday", 'int'), GETPOST("date_fin_formation_programmeryear", 'int'));
+
+
 		if (!$error) {
 			// Changement status de l'ancienne ligne
 			$objectline->fetch($lineid);
-			$objectline->status = UserFormation::STATUS_REPROGRAMMEE;
-			$result == $objectline->update($user);
+			//$objectline->status = UserFormation::STATUS_REPROGRAMMEE;
+			//$result == $objectline->update($user);
 			$userid = $objectline->fk_user; 
 			$formationid = $objectline->fk_formation;
 
@@ -353,7 +371,7 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 			$objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date_fin, "%Y%m%d");
 			$objectline->fk_formation = $formationid;
 			$objectline->fk_user = $userid;
-			// $objectline->interne_externe = GETPOST('interne_externe');
+			$objectline->interne_externe = GETPOST('interne_externe_programmer');
 			$objectline->date_debut_formation = $date_debut;
 			$objectline->date_fin_formation = $date_fin;
 			$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm') : '');
@@ -361,28 +379,30 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 			$objectline->cout_pedagogique = $formation_static->cout;
 			$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
 			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
-			// $objectline->fk_societe = GETPOST('fk_societe');
-			// $objectline->formateur = GETPOST('formateur');
+			$objectline->fk_societe = GETPOST('fk_societe_programmer');
+			$objectline->formateur = GETPOST('formateur_programmer');
 			$objectline->status = UserFormation::STATUS_PROGRAMMEE;
-
 			$result = $objectline->create($user);
 		}
 
-		if(!$error && $result){
+		if($result > 0){
 			$convocation = new Convocation($db);
-			$result = $convocation->generationWithFormation($objectline, $user);
+			$result = $convocation->generationWithFormation($objectline, $user, $date_debut_convoc, $date_fin_convoc);
 		}
 
-		if(!$error && $result){
+		if(!$error && $result > 0){
+			$db->commit();
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		}
-		elseif(!$result){
+		elseif($result < 0){
+			$db->rollback();
 			setEventMessages($langs->trans($object->error), null, 'errors');
 		}
 	}
 	else {
+		$db->rollback();
 		$langs->load("errors");
 		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
 	}

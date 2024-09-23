@@ -96,7 +96,9 @@ if (empty($dolibarr_nocache)) {
 ?>
 
 $(document).ready(function() {
+	//
 	// Sélectionne tous les inputs dans la table avec l'ID 'tablelinesaddline'
+	//
 	$("#tablelinesaddline input, #tablelines tr.tredited input").each(function() {
 		// Vérifie si l'input n'a pas l'attribut 'form'
 		if (!$(this).attr("form")) {
@@ -105,18 +107,27 @@ $(document).ready(function() {
 		}
 	});
 
-	// Sauvegarde et exécution au chargement de la page
-	if ($("#visitemedicaleform").length) {
+
+	//
+	// Exécution au chargement de la page
+	//
+	if ($("#visitemedicaleform").length) { // Visite médicale
 		var initialNatureInput = $('#naturevisite').html();	
 		var initialUserId = $('#visitemedicaleform #fk_user').val();	
 		loadDoctorAndNature(initialUserId, initialNatureInput);
 	}
-	else if ($("#tablelinesaddline").length) {
-		var initialFormationId = $('#tablelinesaddline #fk_formation, .tredited #fk_formation').val();	
-		var initialOrganismeId = $('#tablelinesaddline #fk_societe, .tredited #fk_societe').val();	
+	else if ($("#tablelinesaddline").length) { // Formulaire des création d'une ligne de formation
+		var initialFormationId = $('#fk_formation, .tredited #fk_formation').val();
+		var initialOrganismeId = $('#fk_societe, .tredited #fk_societe').val();	
 		loadOrganismeAndDuration(initialFormationId, initialOrganismeId, 1);
+
+		if ($("#dialog-confirm .confirmquestions").length) { // Si le popup pour programmer une ligne apparait
+			var initialFormationIdPopup = $('#dialog-confirm .confirmquestions #fk_formation_programmer').val();	
+			var initialOrganismeIdPopup = $('#dialog-confirm .confirmquestions #fk_societe_programmer').val();	
+			loadOrganismeAndDurationPopup(initialFormationIdPopup, initialOrganismeIdPopup, 1);
+		}
 	}
-	else if ($("#convocationformcreate").length) {
+	else if ($("#convocationformcreate").length) { // Création d'une convocation
 		var initialNatureConvoc = $('#convocationformcreate #nature').val();	
 		hideConvocationInput(initialNatureConvoc);
 		var initialNatureInput = $('#naturevisite').html();	
@@ -126,7 +137,7 @@ $(document).ready(function() {
 			loadDoctorAndNature(initialUserId, initialNatureInput);
 		}
 	}
-	else if ($("#convocationformupdate").length) {
+	else if ($("#convocationformupdate").length) { // Modification d'une convocation
 		var initialNatureConvoc = $('#convocationformupdate #nature').val();	
 		hideConvocationInput(initialNatureConvoc);
 		var initialNatureInput = $('#naturevisite').html();	
@@ -137,6 +148,10 @@ $(document).ready(function() {
 		}
 	}
 
+
+	//
+	// Exécution à la modif des input
+	//
 	$('#tablelinesaddline #fk_formation').change(function() {
 		var formationId = $(this).val();
 		loadOrganismeAndDuration(formationId);
@@ -160,6 +175,7 @@ $(document).ready(function() {
 		loadDoctorAndNature(userId, initialNatureInput);
 	});
 
+	// Affichage des bons input en fonction des choix interne / externe
 	$('#tablelinesaddline #interne_externe, .tredited #interne_externe').change(function() {
 		if($('#tablelinesaddline #interne_externe, .tredited #interne_externe').val() == 2) {
 			$('#tablelinesaddline #formateur, .tredited #formateur').parent().css('display', '');
@@ -168,6 +184,16 @@ $(document).ready(function() {
 		else {
 			$('#tablelinesaddline #fk_societe, .tredited #fk_societe').parent().css('display', '');
 			$('#tablelinesaddline #formateur, .tredited #formateur').parent().css('display', 'none');
+		}
+	});
+	$('#dialog-confirm .confirmquestions #interne_externe_programmer').change(function() {
+		if($('#dialog-confirm .confirmquestions #interne_externe_programmer').val() == 2) {
+			$('#dialog-confirm .confirmquestions #formateur_programmer').parent().parent().css('display', '');
+			$('#dialog-confirm .confirmquestions #fk_societe_programmer').parent().parent().css('display', 'none');
+		}
+		else {
+			$('#dialog-confirm .confirmquestions #fk_societe_programmer').parent().parent().css('display', '');
+			$('#dialog-confirm .confirmquestions #formateur_programmer').parent().parent().css('display', 'none');
 		}
 	});
 });
@@ -180,19 +206,35 @@ function loadOrganismeAndDuration(formationId, organismeId, firstLoad) {
 			data: { formationId: formationId, organismeId: organismeId },
 			success: function(response) {
 				var data = JSON.parse(response);
-                $('#fk_societe').html(data.fk_societe);
+                $('#tablelinesaddline #fk_societe').html(data.fk_societe);
 				if(!firstLoad) {
-					$('input[name="nombre_heurehour"]').val(data.hour);
-					$('input[name="nombre_heuremin"]').val(data.min);
+					$('#tablelinesaddline input[name="nombre_heurehour"]').val(data.hour);
+					$('#tablelinesaddline input[name="nombre_heuremin"]').val(data.min);
 				}
 			}
 		});
 	} else {
-		$('#fk_societe').html('<option value="">Sélectionnez une formation</option>');
+		$('#tablelinesaddline #fk_societe').html('<option value="">Sélectionnez une formation</option>');
 		if(!firstLoad) {
-			$('input[name="nombre_heurehour"]').val('');
-			$('input[name="nombre_heuremin"]').val('');
+			$('#tablelinesaddline input[name="nombre_heurehour"]').val('');
+			$('#tablelinesaddline input[name="nombre_heuremin"]').val('');
 		}
+	}
+}
+
+function loadOrganismeAndDurationPopup(formationId, organismeId, firstLoad) {
+	if (formationId > 0) {
+		$.ajax({
+			type: 'POST',
+			url: '/custom/formationhabilitation/ajax/getSocieteByFormation.php',
+			data: { formationId: formationId, organismeId: organismeId },
+			success: function(response) {
+				var data = JSON.parse(response);
+                $('#dialog-confirm .confirmquestions #fk_societe_programmer').html(data.fk_societe);
+			}
+		});
+	} else {
+		$('#dialog-confirm .confirmquestions #fk_societe_programmer').html('<option value="">Sélectionnez une formation</option>');
 	}
 }
 
