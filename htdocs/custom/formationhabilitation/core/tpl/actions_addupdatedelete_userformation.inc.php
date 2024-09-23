@@ -33,7 +33,7 @@
 // 	$action = '';
 // }
 
-if($action == 'confirm_addline' && $confirm == 'yes' && $permissiontoaddline) {
+if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == $objectline::STATUS_VALIDE || GETPOST('status') == $objectline::STATUS_PROGRAMMEE)) || ($action == 'addline' && (GETPOST('status') != $objectline::STATUS_VALIDE && GETPOST('status') != $objectline::STATUS_PROGRAMMEE))) && $permissiontoaddline) {
 	$formation = new Formation($db);
 	$userFormation = new UserFormation($db);
 	$db->begin();
@@ -74,6 +74,22 @@ if($action == 'confirm_addline' && $confirm == 'yes' && $permissiontoaddline) {
 	if(GETPOST('status') == -1 || empty(GETPOST('status'))){
 		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
 		$error++;
+	}
+
+	if(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
+		if (empty(GETPOST("date_debut_formation_programmerhour", 'int')) || empty(GETPOST("date_debut_formation_programmermin", 'int')) || 
+		(GETPOST("date_debut_formation_programmerhour", 'int') == '00' && GETPOST("date_debut_formation_programmermin", 'int') == '00')) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("HeureDebut")), null, 'errors');
+			$error++;
+		}
+		$date_debut_convoc = dol_mktime(GETPOST("date_debut_formation_programmerhour", 'int'), GETPOST("date_debut_formation_programmermin", 'int'), -1, GETPOST("date_debut_formation_programmermonth", 'int'), GETPOST("date_debut_formation_programmerday", 'int'), GETPOST("date_debut_formation_programmeryear", 'int'));
+
+		if (empty(GETPOST("date_fin_formation_programmerhour", 'int')) || empty(GETPOST("date_fin_formation_programmermin", 'int')) || 
+		(GETPOST("date_fin_formation_programmerhour", 'int') == '00' && GETPOST("date_fin_formation_programmermin", 'int') == '00')) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("HeureFin")), null, 'errors');
+			$error++;
+		}
+		$date_fin_convoc = dol_mktime(GETPOST("date_fin_formation_programmerhour", 'int'), GETPOST("date_fin_formation_programmermin", 'int'), -1, GETPOST("date_fin_formation_programmermonth", 'int'), GETPOST("date_fin_formation_programmerday", 'int'), GETPOST("date_fin_formation_programmeryear", 'int'));
 	}
 
 	if(!$error && GETPOST('forcecreation') == 0) { // Gestion des prérequis 
@@ -121,10 +137,15 @@ if($action == 'confirm_addline' && $confirm == 'yes' && $permissiontoaddline) {
 		$resultcreate = $objectline->create($user);
 	}
 
+	if($resultcreate > 0 && $objectline->status == $objectline::STATUS_PROGRAMMEE){
+		$convocation = new Convocation($db);
+		$result = $convocation->generationWithFormation($objectline, $user, $date_debut_convoc, $date_fin_convoc);
+	}
+
 	if(!$error && $resultcreate > 0){
 		$db->commit();
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-		// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 		exit;
 	}

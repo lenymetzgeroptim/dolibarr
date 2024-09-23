@@ -227,17 +227,34 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
     $param .= (GETPOST('numero_certificat') ? '&numero_certificat='.urlencode(GETPOST('numero_certificat')) : '');
     $param .= (GETPOST('resultat') ? '&resultat='.urlencode(GETPOST('resultat')) : '');
 
-    if(GETPOST('fk_formation') > 0 && GETPOST('fk_user') > 0 && GETPOST('status') == $objectline::STATUS_VALIDE) { // Formation inferieur
-        $formationToClose = $objectparentline->getFormationToClose(GETPOST('fk_user'), GETPOST('fk_formation'));
-        $txt_formationToClose = '';
-		foreach($formationToClose as $idformation => $refformation) {
-            $txt_formationToClose .= $refformation.', ';
+    if(GETPOST('status') == $objectline::STATUS_VALIDE || GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
+        if(GETPOST('fk_formation') > 0 && GETPOST('fk_user') > 0 && GETPOST('status') == $objectline::STATUS_VALIDE) { // Formation inferieur
+            $formationToClose = $objectparentline->getFormationToClose(GETPOST('fk_user'), GETPOST('fk_formation'));
+            $txt_formationToClose = '';
+            foreach($formationToClose as $idformation => $refformation) {
+                $txt_formationToClose .= $refformation.', ';
+            }
+            $txt_formationToClose = rtrim($txt_formationToClose, ', ');
         }
-        $txt_formationToClose = rtrim($txt_formationToClose, ', ');
-    }
+    
+        if(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
+            if (!empty(GETPOST("date_debut_formationmonth", 'int')) && !empty(GETPOST("date_debut_formationday", 'int')) && !empty(GETPOST("date_debut_formationyear", 'int'))) {
+                $date_debut = dol_mktime(-1, -1, -1, GETPOST("date_debut_formationmonth", 'int'), GETPOST("date_debut_formationday", 'int'), GETPOST("date_debut_formationyear", 'int'));
+            }
+        
+            if (!empty(GETPOST("date_fin_formationmonth", 'int')) || !empty(GETPOST("date_fin_formationday", 'int')) || !empty(GETPOST("date_fin_formationyear", 'int'))) {
+                $date_fin = dol_mktime(-1, -1, -1, GETPOST("date_fin_formationmonth", 'int'), GETPOST("date_fin_formationday", 'int'), GETPOST("date_fin_formationyear", 'int'));
+            }
+            
+            $formquestion = array(
+                array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$date_debut),
+                array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$date_fin),
+            );
+        }
 
-    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$param, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLine2', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', '', 0, 1);
-    print $formconfirm;
+        $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$param, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLine2', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
+        print $formconfirm;
+    }
 }
 
 print "</form>\n";
