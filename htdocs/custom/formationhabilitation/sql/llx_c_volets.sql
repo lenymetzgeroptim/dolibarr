@@ -23,5 +23,7 @@ CREATE TABLE llx_c_volets(
 	nb_recyclage integer NOT NULL, 
 	nb_passerelle integer NOT NULL, 
 	active int(11) DEFAULT 1
+	nb_passerelle integer NOT NULL, 
+	typevolet integer NOT NULL, 
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

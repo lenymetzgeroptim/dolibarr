@@ -56,6 +56,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/convocation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/extendedhtml.form.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/volet.class.php';
 
 
 // Translations
@@ -98,7 +99,8 @@ elseif($onglet == 'autorisation'){
     $objectparentline = new Autorisation($db);
 }
 elseif($onglet == 'volet'){
-    $objectparentline = new Formation($db);
+    $objectline = new Volet($db);
+    $objectparentline = new Volet($db);
 }
 
 // Default sort order (if not yet defined by previous GETPOST)
@@ -170,52 +172,61 @@ if($onglet == 'autorisation'){
 
 // Action pour générer un document
 if ($onglet == 'volet') {
-    if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline) {
-        if ($voletid < 1) {
-            setEventMessages("Vous devez sélectionner un volet", null, 'errors');
-            $error++;
-        }
+    $objectline = new Volet($db);
 
-        if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
-            if (method_exists($objectparentline, 'generateDocument') && !$error) {
-                $outputlangs = $langs;
-                $newlang = '';
-                if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-                    $newlang = GETPOST('lang_id', 'aZ09');
-                }
-                if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
-                    $newlang = $objectparentline->thirdparty->default_lang;
-                }
-                if (!empty($newlang)) {
-                    $outputlangs = new Translate("", $conf);
-                    $outputlangs->setDefaultLang($newlang);
-                }
-
-                //$ret = $object->fetch($id); // Reload to get new records
-
-                $model = 'userformationhabilitation';
-
-                $retgen = $objectparentline->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-                if ($retgen < 0) {
-                    setEventMessages($objectparentline->error, $objectparentline->errors, 'warnings');
-                }
-            }
-        }
+    if(GETPOST('fk_user') > 0) {
+        $user_static = new User($db);
+        $user_static->fetch(GETPOST('fk_user'));
     }
 
-    // Delete file
-    if ($action == 'confirm_deletefile' && $confirm == 'yes') {
-        $file = $conf->formationhabilitation->dir_output.'/'.$object->id."/".GETPOST('file'); // Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_volet.inc.php';
 
-        $ret = dol_delete_file($file);
-        if ($ret) {
-            setEventMessages($langs->trans("FileWasRemoved", GETPOST('file')), null, 'mesgs');
-        } else {
-            setEventMessages($langs->trans("ErrorFailToDeleteFile", GETPOST('file')), null, 'errors');
-        }
-        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet=volet');
-        exit;
-    }
+    // if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline) {
+    //     if ($voletid < 1) {
+    //         setEventMessages("Vous devez sélectionner un volet", null, 'errors');
+    //         $error++;
+    //     }
+
+    //     if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+    //         if (method_exists($objectparentline, 'generateDocument') && !$error) {
+    //             $outputlangs = $langs;
+    //             $newlang = '';
+    //             if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+    //                 $newlang = GETPOST('lang_id', 'aZ09');
+    //             }
+    //             if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
+    //                 $newlang = $objectparentline->thirdparty->default_lang;
+    //             }
+    //             if (!empty($newlang)) {
+    //                 $outputlangs = new Translate("", $conf);
+    //                 $outputlangs->setDefaultLang($newlang);
+    //             }
+
+    //             //$ret = $object->fetch($id); // Reload to get new records
+
+    //             $model = 'userformationhabilitation';
+
+    //             $retgen = $objectparentline->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+    //             if ($retgen < 0) {
+    //                 setEventMessages($objectparentline->error, $objectparentline->errors, 'warnings');
+    //             }
+    //         }
+    //     }
+    // }
+
+    // // Delete file
+    // if ($action == 'confirm_deletefile' && $confirm == 'yes') {
+    //     $file = $conf->formationhabilitation->dir_output.'/'.$object->id."/".GETPOST('file'); // Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
+
+    //     $ret = dol_delete_file($file);
+    //     if ($ret) {
+    //         setEventMessages($langs->trans("FileWasRemoved", GETPOST('file')), null, 'mesgs');
+    //     } else {
+    //         setEventMessages($langs->trans("ErrorFailToDeleteFile", GETPOST('file')), null, 'errors');
+    //     }
+    //     header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet=volet');
+    //     exit;
+    // }
 }
 
 
@@ -224,10 +235,15 @@ if ($onglet == 'volet') {
  * View
  */
 
+if ($onglet == 'volet') {
+    print '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>'; 
+    print '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">';
+}
+
 $help_url = '';
 $page_name = "Formation - Habilitation";
 
-llxHeader('', $page_name, $help_url);
+llxHeader('', $page_name, $help_url, '', 0, 0, '', '', '', 'classforhorizontalscrolloftabs');
 
 $res = $object->fetch($userid, '', '', 1);
 if ($res < 0) {
@@ -321,7 +337,7 @@ if(empty($onglet) || $onglet == 'formation'){
     print dol_get_fiche_head($head2, 'formation', $title, -1, 'user');
 
     $contextpage = 'userformation';
-    $css_div = 'min-height: 520px;';
+    //$css_div = 'margin-bottom: 250px;';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
@@ -329,7 +345,7 @@ elseif($onglet == 'habilitation'){
     print dol_get_fiche_head($head2, 'habilitation', $title, -1, 'user');
 
     $contextpage = 'userhabilitation';
-    //$css_div = 'min-height: 520px;';
+    //$css_div = 'margin-bottom: 250px;';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
@@ -337,43 +353,48 @@ elseif($onglet == 'autorisation'){
     print dol_get_fiche_head($head2, 'autorisation', $title, -1, 'user');
 
     $contextpage = 'userautorisation';
-   //$css_div = 'min-height: 520px;';
-   include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
-   print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    //$css_div = 'margin-bottom: 250px;';
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+    print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
 elseif($onglet == 'volet') {
-    $formfile = new FormFile($db);
-    $upload_dir = $conf->export->dir_temp.'/'.$user->id;
-
     print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
+
+    $contextpage = 'volet';
+    //$css_div = 'margin-bottom: 250px;';
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+    print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+
+    // $formfile = new FormFile($db);
+    // $upload_dir = $conf->export->dir_temp.'/'.$user->id;
     
-    print '<div class="fichecenter">';
-        print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?action=confirm_genererPdf">';
-            print '<input type="hidden" name="confirm" value="yes">';
-            print '<input type="hidden" name="onglet" value="volet">';
-            print '<input type="hidden" name="id" value="'.$object->id.'">';
-            print '<input type="hidden" name="fk_user" value="'.$object->id.'">';
+    // print '<div class="fichecenter">';
+    //     print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?action=confirm_genererPdf">';
+    //         print '<input type="hidden" name="confirm" value="yes">';
+    //         print '<input type="hidden" name="onglet" value="volet">';
+    //         print '<input type="hidden" name="id" value="'.$object->id.'">';
+    //         print '<input type="hidden" name="fk_user" value="'.$object->id.'">';
 
 
-            $urlsource = $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet';
+    //         $urlsource = $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet';
         
-            $filedir = $conf->formationhabilitation->dir_output.'/'.$object->id;
-            $genallowed = 1; // LENYTODO
-            $delallowed = 1; // LENYTODO
+    //         $filedir = $conf->formationhabilitation->dir_output.'/'.$object->id;
+    //         $genallowed = 1; // LENYTODO
+    //         $delallowed = 1; // LENYTODO
         
-            include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/modules/formationhabilitation/modules_formationhabilitation_user.php';
-            print $formfile->showdocuments('formationhabilitation_user', '', $filedir, $urlsource, $genallowed, $delallowed, '', 1, 0, 0, 0, 1, '', 'Volets');
+    //         include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/modules/formationhabilitation/modules_formationhabilitation_user.php';
+    //         print $formfile->showdocuments('formationhabilitation_user', '', $filedir, $urlsource, $genallowed, $delallowed, '', 1, 0, 0, 0, 1, '', 'Volets');
 
-            print '<div class="tabsAction">'."\n";
-            // Generer PDF
-            $voletarray = $objectparentline->getallVolet();
-            print $form->selectarray('voletid', $voletarray, $voletid, 1);
-            if($permissiontoaddline) {
-                print '<input type="submit" value="'.$langs->trans("GenererDoc").'" class="button"/>';
-            }
-            print '</div>'."\n";
-        print '</form>';
-    print '</div>';
+    //         print '<div class="tabsAction">'."\n";
+    //         // Generer PDF
+    //         $voletarray = $objectparentline->getallVolet();
+    //         print $form->selectarray('voletid', $voletarray, $voletid, 1);
+    //         if($permissiontoaddline) {
+    //             print '<input type="submit" value="'.$langs->trans("GenererDoc").'" class="button"/>';
+    //         }
+    //         print '</div>'."\n";
+    //     print '</form>';
+    // print '</div>';
 }
 
 print '</div>';

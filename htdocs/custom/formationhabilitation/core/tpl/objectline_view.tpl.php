@@ -38,7 +38,7 @@
  * $text, $description, $line
  */
 
-global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param;
+global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $enableunlink, $enablelink;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -85,8 +85,13 @@ foreach($objectline->fields as $key => $val){
 	if($object->element == 'user' && $key == 'fk_user'){
 		continue;
 	}
-	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
+	if($object->element == 'volet' && $key == 'fk_user'){
 		continue;
+	}
+	if($action == 'editline') {
+		if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
+			continue;
+		}
 	}
 	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 		continue;
@@ -169,26 +174,42 @@ elseif ($action == 'edit_coutmobilisation') {
 	print '</td>';
 }
 else {
-	print '<td class="linecoledit center width30">';
+	if ($enableunlink) {
+		print '<td class="linecollink center width20">';
+			$url = $_SERVER["PHP_SELF"].'?'.$param.'&action=dellink&token='.newToken().'&dellinkid='.$line->id.'#line_'.$line->id;
+			print '<a class="reposition" href="'.$url.'">';
+			print img_picto($langs->transnoentitiesnoconv("RemoveLink"), 'unlink').'</a>';
+		print '</td>';
+	}
+
+	if ($enablelink) {
+		print '<td class="linecollink center width20">';
+			$url = $_SERVER["PHP_SELF"].'?'.$param.'&action=addlink&token='.newToken().'&addlinkid='.$line->id.'#line_'.$line->id;
+			print '<a class="reposition" href="'.$url.'">';
+			print img_picto($langs->transnoentitiesnoconv("AddLink"), 'link').'</a>';
+		print '</td>';
+	}
+
+	print '<td class="linecoledit center width20">';
 	if (empty($disableedit)) {
 		if($object->element == 'user'){
-			$url = $_SERVER["PHP_SELF"].'?id='.$param.'&action=editline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
+			$url = $_SERVER["PHP_SELF"].'?'.$param.'&action=editline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
 		}
 		else {
-			$url = $_SERVER["PHP_SELF"].'?id='.$param.'&action=editline&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
+			$url = $_SERVER["PHP_SELF"].'?'.$param.'&action=editline&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
 		}
 		print '<a class="editfielda reposition" href="'.$url.'">';
 		print img_edit().'</a>';
 	}
 	print '</td>';
 
-	print '<td class="linecoldelete center width30">';
+	print '<td class="linecoldelete center width20">';
 	if (empty($disableremove)) { 
 		if($object->element == 'user'){
-			$url = $_SERVER["PHP_SELF"].'?id='.$param.'&action=deleteline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id;
+			$url = $_SERVER["PHP_SELF"].'?'.$param.'&action=deleteline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id;
 		}
 		else {
-			$url = $_SERVER["PHP_SELF"].'?id='.$param.'&action=deleteline&token='.newToken().'&lineid='.$line->id;
+			$url = $_SERVER["PHP_SELF"].'?'.$param.'&action=deleteline&token='.newToken().'&lineid='.$line->id;
 		}
 		print '<a class="reposition" href="'.$url.'">';
 		print img_delete();
@@ -196,15 +217,17 @@ else {
 	}
 	print '</td>';
 
-	print '<td class="linecolchkbox nowrap center width30">';
-	if ($massactionbutton || $massaction) { // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
-		$selected = 0;
-		if (in_array($line->id, $arrayofselected)) {
-			$selected = 1;
+	if (empty($enableunlink) && empty($enablelink)) {
+		print '<td class="linecolchkbox nowrap center width20">';
+		if ($massactionbutton || $massaction) { // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
+			$selected = 0;
+			if (in_array($line->id, $arrayofselected)) {
+				$selected = 1;
+			}
+			print '<input id="cb'.$line->id.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$line->id.'"'.($selected ? ' checked="checked"' : '').'>';
 		}
-		print '<input id="cb'.$line->id.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$line->id.'"'.($selected ? ' checked="checked"' : '').'>';
+		print '</td>';
 	}
-	print '</td>';
 }
 
 print '</tr>';

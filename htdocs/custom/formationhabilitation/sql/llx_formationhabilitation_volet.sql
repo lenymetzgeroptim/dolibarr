@@ -25,6 +25,10 @@ CREATE TABLE llx_formationhabilitation_volet(
 	last_main_doc varchar(255), 
 	import_key varchar(14), 
 	model_pdf varchar(255), 
-	status integer NOT NULL
+	status integer NOT NULL, 
+	fk_user integer NOT NULL, 
+	numvolet integer NOT NULL, 
+	datedebutvolet date, 
+	datefinvolet date
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

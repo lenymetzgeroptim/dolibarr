@@ -50,6 +50,9 @@ if ($this->table_element_line == 'formationhabilitation_userhabilitation') {
 if ($this->table_element_line == 'formationhabilitation_userautorisation') {
 	$objectline = new UserAutorisation($this->db);
 } 
+if ($this->table_element == 'formationhabilitation_volet') {
+	$objectline = new Volet($this->db);
+} 
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
 

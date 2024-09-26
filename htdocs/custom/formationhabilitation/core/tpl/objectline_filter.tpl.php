@@ -35,16 +35,6 @@ if (empty($object) || !is_object($object)) {
 	exit;
 }
 
-if ($object->table_element_line == 'formationhabilitation_userformation') {
-	$objectline = new UserFormation($object->db);
-}
-if ($object->table_element_line == 'formationhabilitation_userhabilitation') {
-	$objectline = new UserHabilitation($object->db);
-} 
-if ($object->table_element_line == 'formationhabilitation_userautorisation') {
-	$objectline = new UserAutorisation($object->db);
-} 
-
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
 print "<!-- BEGIN PHP TEMPLATE objectline_filter.tpl.php -->\n";
@@ -59,8 +49,10 @@ foreach($objectline->fields as $key => $val){
 	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
 		continue;
 	}
-	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
-		continue;
+	if($action == 'editline') {
+		if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
+			continue;
+		}
 	}
 	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 		continue;
@@ -84,7 +76,6 @@ foreach($objectline->fields as $key => $val){
 	} 
 	if (!empty($arrayfields['t.'.$key]['checked']) || $action == 'editline') {
 		print '<td class="liste_titre'.($cssforfield ? ' '.$cssforfield : '').'">';
-		
 		if($key == 'status') {
 			$value = $objectline->getArrayStatut();
 			print $form->multiselectarray('search_status', $value, explode(',', $search[$key]));

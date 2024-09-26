@@ -67,7 +67,11 @@ class Volet extends CommonObject
 
 	const STATUS_DRAFT = 0;
 	const STATUS_VALIDATED = 1;
-	const STATUS_CANCELED = 9;
+	const STATUS_VALIDATION1 = 2;
+	const STATUS_VALIDATION2 = 3;
+	const STATUS_VALIDATION3 = 4;
+	const STATUS_VALIDATION4 = 5;
+	const STATUS_CLOSE = 9;
 
 	/**
 	 *  'type' field format:
@@ -114,7 +118,7 @@ class Volet extends CommonObject
 	 */
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"4", "index"=>"1", "searchall"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
 		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
@@ -123,6 +127,10 @@ class Volet extends CommonObject
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "9" => "Annul&eacute;"), "validate"=>"1",),
+		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
+		"numvolet" => array("type"=>"sellist:c_volets:numero|label:numero::(active:=:1)", "label"=>"Numéro volet", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
+		"datedebutvolet" => array("type"=>"date", "label"=>"DateDebutVolet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
+		"datefinvolet" => array("type"=>"date", "label"=>"DateFinVolet", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -134,6 +142,10 @@ class Volet extends CommonObject
 	public $import_key;
 	public $model_pdf;
 	public $status;
+	public $fk_user;
+	public $numvolet;
+	public $datedebutvolet;
+	public $datefinvolet;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -142,7 +154,7 @@ class Volet extends CommonObject
 	// /**
 	//  * @var string    Name of subtable line
 	//  */
-	// public $table_element_line = 'formationhabilitation_voletline';
+	public $table_element_line = 'formationhabilitation_userhabilitation';
 
 	// /**
 	//  * @var string    Field with ID of parent key if this object has a parent
@@ -344,7 +356,7 @@ class Volet extends CommonObject
 	{
 		$result = $this->fetchCommon($id, $ref, '', $noextrafields);
 		if ($result > 0 && !empty($this->table_element_line) && empty($nolines)) {
-			$this->fetchLines($noextrafields);
+			//$this->fetchLines($noextrafields);
 		}
 		return $result;
 	}
@@ -396,41 +408,27 @@ class Volet extends CommonObject
 		$sqlwhere = array();
 		if (count($filter) > 0) {
 			foreach ($filter as $key => $value) {
-				$columnName = preg_replace('/^t\./', '', $key);
-				if ($key === 'customsql') {
-					// Never use 'customsql' with a value from user input since it is injected as is. The value must be hard coded.
-					$sqlwhere[] = $value;
-					continue;
-				} elseif (isset($this->fields[$columnName])) {
-					$type = $this->fields[$columnName]['type'];
-					if (preg_match('/^integer/', $type)) {
-						if (is_int($value)) {
-							// single value
-							$sqlwhere[] = $key . " = " . intval($value);
-						} elseif (is_array($value)) {
-							if (empty($value)) {
-								continue;
+				if($value) {
+					if ($key == 't.rowid') {
+						$sqlwhere[] = $key." = ".((int) $value);
+					} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+						$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
+					} elseif (preg_match('/(_dtstart|_dtend)$/', $key)) {
+						$columnName = preg_replace('/(_dtstart|_dtend)$/', '', $key);
+						if (preg_match('/^(date|timestamp|datetime)/', $this->fields[$columnName]['type'])) {
+							if (preg_match('/_dtstart$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." >= '".$this->db->idate($value)."'";
 							}
-							$sqlwhere[] = $key . ' IN (' . $this->db->sanitize(implode(',', array_map('intval', $value))) . ')';
+							if (preg_match('/_dtend$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." <= '".$this->db->idate($value)."'";
+							}
 						}
-						continue;
-					} elseif (in_array($type, array('date', 'datetime', 'timestamp'))) {
-						$sqlwhere[] = $key . " = '" . $this->db->idate($value) . "'";
-						continue;
-					}
-				}
-
-				// when the $key doesn't fall into the previously handled categories, we do as if the column were a varchar/text
-				if (is_array($value) && count($value)) {
-					$value = implode(',', array_map(function ($v) {
-						return "'" . $this->db->sanitize($this->db->escape($v)) . "'";
-					}, $value));
-					$sqlwhere[] = $key . ' IN (' . $this->db->sanitize($value, true) . ')';
-				} elseif (is_scalar($value)) {
-					if (strpos($value, '%') === false) {
-						$sqlwhere[] = $key . " = '" . $this->db->sanitize($this->db->escape($value)) . "'";
+					} elseif ($key == 'customsql') {
+						$sqlwhere[] = $value;
+					} elseif (strpos($value, '%') === false) {
+						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
 					} else {
-						$sqlwhere[] = $key . " LIKE '%" . $this->db->escape($this->db->escapeforlike($value)) . "%'";
+						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
 					}
 				}
 			}
@@ -673,18 +671,18 @@ class Volet extends CommonObject
 	}
 
 	/**
-	 *	Set cancel status
+	 *	Set close status
 	 *
 	 *	@param	User	$user			Object user that modify
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						Return integer <0 if KO, 0=Nothing done, >0 if OK
 	 */
-	public function cancel($user, $notrigger = 0)
+	public function close($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status != self::STATUS_VALIDATED) {
-			return 0;
-		}
+		// if ($this->status != self::STATUS_VALIDATED) {
+		// 	return 0;
+		// }
 
 		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
 		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
@@ -693,7 +691,7 @@ class Volet extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
 	}
 
 	/**
@@ -957,16 +955,31 @@ class Volet extends CommonObject
 			//$langs->load("formationhabilitation@formationhabilitation");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
+			$this->labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Approbation');
+			$this->labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Approbation');
+			$this->labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Approbation');
+			$this->labelStatus[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Approbation');
+			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
+			$this->labelStatusShort[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Approbation1');
+			$this->labelStatusShort[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Approbation2');
+			$this->labelStatusShort[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Approbation3');
+			$this->labelStatusShort[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Approbation4');
+			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 		}
 
-		$statusType = 'status'.$status;
-		//if ($status == self::STATUS_VALIDATED) $statusType = 'status1';
-		if ($status == self::STATUS_CANCELED) {
+		if ($status == self::STATUS_VALIDATED) {
+			$statusType = 'status4';
+		}
+		elseif ($status == self::STATUS_DRAFT) {
+			$statusType = 'status0';
+		}
+		elseif ($status == self::STATUS_CLOSE) {
 			$statusType = 'status6';
+		}
+		else {
+			$statusType = 'status1';
 		}
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
@@ -1046,12 +1059,68 @@ class Volet extends CommonObject
 	 *
 	 * 	@return array|int		array of lines if OK, <0 if KO
 	 */
-	public function getLinesArray()
+	public function getLinkedLinesArray()
 	{
 		$this->lines = array();
 
-		$objectline = new VoletLine($this->db);
-		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_volet = '.((int) $this->id)));
+		$objectline = new UserHabilitation($this->db);
+		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NOT NULL'), 'AND', $this->id);
+
+		if (is_numeric($result)) {
+			$this->setErrorsFromObject($objectline);
+			return $result;
+		} else {
+			$this->lines = $result;
+			return $this->lines;
+		}
+	}
+
+	/**
+	 * 	Create an array of lines
+	 *
+	 * 	@return array|int		array of lines if OK, <0 if KO
+	 */
+	public function getNoLinkedLinesArray()
+	{
+		$this->lines = array();
+
+		$objectline = new UserHabilitation($this->db);
+		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL'), 'AND', $this->id);
+
+		if (is_numeric($result)) {
+			$this->setErrorsFromObject($objectline);
+			return $result;
+		} else {
+			$this->lines = $result;
+			return $this->lines;
+		}
+	}
+
+	/**
+	 * 	Create an array of lines
+	 *
+	 * 	@return array|int		array of lines if OK, <0 if KO
+	 */
+	public function getLinesArray()
+	{
+		global $sortorder, $sortfield, $search, $limit, $offset, $id;
+
+		$objectline = new Volet($this->db);		
+		$this->lines = array();
+
+		$tmp_search_status = $search['status'];
+		$search_status = explode(',', $search['status']);
+		foreach(array_keys($search_status, '50', false) as $key) {
+			unset($search_status[$key]);
+			$search_status[] = self::STATUS_VALIDATION1;
+			$search_status[] = self::STATUS_VALIDATION2;
+			$search_status[] = self::STATUS_VALIDATION3;
+			$search_status[] = self::STATUS_VALIDATION4;
+		}
+		$search['status'] = implode(',', $search_status);
+
+		$result = $objectline->fetchAll($sortorder, $sortfield, $limit + 1, $offset, $search);
+		$search['status'] = $tmp_search_status;
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
@@ -1186,6 +1255,551 @@ class Volet extends CommonObject
 		dol_syslog(__METHOD__." end", LOG_INFO);
 
 		return $error;
+	}
+
+	public function getArrayStatut() {
+		global $langs; 
+
+		$labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
+		$labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
+		// $labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Validation1');
+		// $labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Validation2');
+		// $labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Validation3');
+		// $labelStatus[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Validation4');
+		$labelStatus[50] = $langs->transnoentitiesnoconv('Approbation');
+		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
+		
+		return $labelStatus;
+	}
+
+	/**
+	 *	Return HTML table for object lines
+	 *	TODO Move this into an output class file (htmlline.class.php)
+	 *	If lines are into a template, title must also be into a template
+	 *	But for the moment we don't know if it's possible as we keep a method available on overloaded objects.
+	 *
+	 *	@param	string		$action				Action code
+	 *	@param  Societe		$seller            	Object of seller third party
+	 *	@param  Societe  	$buyer             	Object of buyer third party
+	 *	@param	int			$selected		   	ID line selected
+	 *	@param  int	    	$dateSelector      	1=Show also date range input fields
+	 *  @param	string		$defaulttpldir		Directory where to find the template
+	 *	@return	void
+	 */
+	public function printObjectLinkedLines($action, $seller, $buyer, $selected = 0, $dateSelector = 0, $defaulttpldir = '/core/tpl')
+	{
+		global $conf, $hookmanager, $langs, $user, $form, $extrafields, $object;
+		// TODO We should not use global var for this
+		global $inputalsopricewithtax, $usemargins, $disableedit, $disablemove, $disableremove, $outputalsopricetotalwithtax;
+
+		// Define usemargins
+		$usemargins = 0;
+		if (isModEnabled('margin') && !empty($this->element) && in_array($this->element, array('facture', 'facturerec', 'propal', 'commande'))) {
+			$usemargins = 1;
+		}
+
+		$num = count($this->lines);
+
+		// Line extrafield
+		if (!is_object($extrafields)) {
+			require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+			$extrafields = new ExtraFields($this->db);
+		}
+		$extrafields->fetch_name_optionals_label($this->table_element_line);
+
+		$parameters = array('num'=>$num, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$this->table_element_line);
+		$reshook = $hookmanager->executeHooks('printObjectLineTitle', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+		if (empty($reshook)) {
+			// Output template part (modules that overwrite templates must declare this into descriptor)
+			// Use global variables + $dateSelector + $seller and $buyer
+			// Note: This is deprecated. If you need to overwrite the tpl file, use instead the hook.
+			$dirtpls = array_merge($conf->modules_parts['tpl'], array($defaulttpldir));
+			foreach ($dirtpls as $module => $reldir) {
+				$res = 0;
+				if (!empty($module)) {
+					$tpl = dol_buildpath($reldir.'/objectline_title.tpl.php');
+				} else {
+					$tpl = DOL_DOCUMENT_ROOT.$reldir.'/objectline_title.tpl.php';
+				}
+				if (file_exists($tpl)) {
+					if (empty($conf->file->strict_mode)) {
+						$res = @include $tpl;
+					} else {
+						$res = include $tpl; // for debug
+					}
+				}
+				if ($res) {
+					break;
+				}
+			}
+		}
+
+		$i = 0;
+
+		print "<!-- begin printObjectLines() --><tbody>\n";
+		foreach ($this->lines as $line) {
+			//Line extrafield
+			$line->fetch_optionals();
+
+			//if (is_object($hookmanager) && (($line->product_type == 9 && !empty($line->special_code)) || !empty($line->fk_parent_line)))
+			if (is_object($hookmanager)) {   // Old code is commented on preceding line.
+				if (empty($line->fk_parent_line)) {
+					$parameters = array('line'=>$line, 'num'=>$num, 'i'=>$i, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$line->table_element, 'defaulttpldir'=>$defaulttpldir);
+					$reshook = $hookmanager->executeHooks('printObjectLine', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+				} else {
+					$parameters = array('line'=>$line, 'num'=>$num, 'i'=>$i, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$line->table_element, 'fk_parent_line'=>$line->fk_parent_line, 'defaulttpldir'=>$defaulttpldir);
+					$reshook = $hookmanager->executeHooks('printObjectSubLine', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+				}
+			}
+			if (empty($reshook)) {
+				$this->printObjectLinkedLine($action, $line, '', $num, $i, $dateSelector, $seller, $buyer, $selected, $extrafields, $defaulttpldir);
+			}
+
+			$i++;
+		}
+		print "</tbody><!-- end printObjectLines() -->\n";
+	}
+
+	/**
+	 *	Return HTML content of a detail line
+	 *	TODO Move this into an output class file (htmlline.class.php)
+	 *
+	 *	@param	string      		$action				GET/POST action
+	 *	@param  CommonObjectLine 	$line			    Selected object line to output
+	 *	@param  string	    		$var               	Not used
+	 *	@param  int		    		$num               	Number of line (0)
+	 *	@param  int		    		$i					I
+	 *	@param  int		    		$dateSelector      	1=Show also date range input fields
+	 *	@param  Societe	    		$seller            	Object of seller third party
+	 *	@param  Societe	    		$buyer             	Object of buyer third party
+	 *	@param	int					$selected		   	ID line selected
+	 *  @param  Extrafields			$extrafields		Object of extrafields
+	 *  @param	string				$defaulttpldir		Directory where to find the template (deprecated)
+	 *	@return	void
+	 */
+	public function printObjectLinkedLine($action, $line, $var, $num, $i, $dateSelector, $seller, $buyer, $selected = 0, $extrafields = null, $defaulttpldir = '/core/tpl')
+	{
+		global $conf, $langs, $user, $object, $hookmanager;
+		global $form;
+		global $object_rights, $disableedit, $disablemove, $disableremove; // TODO We should not use global var for this !
+
+		$object_rights = $this->getRights();
+
+		// var used into tpl
+		$text = '';
+		$description = '';
+
+		// Line in view mode
+		if ($action != 'editline' || $selected != $line->id) {
+			// Product
+			if (!empty($line->fk_product) && $line->fk_product > 0) {
+				$product_static = new Product($this->db);
+				$product_static->fetch($line->fk_product);
+
+				$product_static->ref = $line->ref; //can change ref in hook
+				$product_static->label = !empty($line->label) ? $line->label : ""; //can change label in hook
+
+				$text = $product_static->getNomUrl(1);
+
+				// Define output language and label
+				if (getDolGlobalInt('MAIN_MULTILANGS')) {
+					if (property_exists($this, 'socid') && !is_object($this->thirdparty)) {
+						dol_print_error('', 'Error: Method printObjectLine was called on an object and object->fetch_thirdparty was not done before');
+						return;
+					}
+
+					$prod = new Product($this->db);
+					$prod->fetch($line->fk_product);
+
+					$outputlangs = $langs;
+					$newlang = '';
+					if (empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+						$newlang = GETPOST('lang_id', 'aZ09');
+					}
+					if (getDolGlobalString('PRODUIT_TEXTS_IN_THIRDPARTY_LANGUAGE') && empty($newlang) && is_object($this->thirdparty)) {
+						$newlang = $this->thirdparty->default_lang; // To use language of customer
+					}
+					if (!empty($newlang)) {
+						$outputlangs = new Translate("", $conf);
+						$outputlangs->setDefaultLang($newlang);
+					}
+
+					$label = (!empty($prod->multilangs[$outputlangs->defaultlang]["label"])) ? $prod->multilangs[$outputlangs->defaultlang]["label"] : $line->product_label;
+				} else {
+					$label = $line->product_label;
+				}
+
+				$text .= ' - '.(!empty($line->label) ? $line->label : $label);
+				$description .= (getDolGlobalInt('PRODUIT_DESC_IN_FORM_ACCORDING_TO_DEVICE') ? '' : (!empty($line->description) ? dol_htmlentitiesbr($line->description) : '')); // Description is what to show on popup. We shown nothing if already into desc.
+			}
+
+			$line->pu_ttc = price2num((!empty($line->subprice) ? $line->subprice : 0) * (1 + ((!empty($line->tva_tx) ? $line->tva_tx : 0) / 100)), 'MU');
+
+			// Output template part (modules that overwrite templates must declare this into descriptor)
+			// Use global variables + $dateSelector + $seller and $buyer
+			// Note: This is deprecated. If you need to overwrite the tpl file, use instead the hook printObjectLine and printObjectSubLine.
+			$dirtpls = array_merge($conf->modules_parts['tpl'], array($defaulttpldir));
+			foreach ($dirtpls as $module => $reldir) {
+				$res = 0;
+				if (!empty($module)) {
+					$tpl = dol_buildpath($reldir.'/objectline_view.tpl.php');
+				} else {
+					$tpl = DOL_DOCUMENT_ROOT.$reldir.'/objectline_view.tpl.php';
+				}
+				//var_dump($tpl);
+				if (file_exists($tpl)) {
+					if (empty($conf->file->strict_mode)) {
+						$res = @include $tpl;
+					} else {
+						$res = include $tpl; // for debug
+					}
+				}
+				if ($res) {
+					break;
+				}
+			}
+		}
+
+		// Line in update mode
+		if ($this->statut == 0 && $action == 'editline' && $selected == $line->id) {
+			$label = (!empty($line->label) ? $line->label : (($line->fk_product > 0) ? $line->product_label : ''));
+
+			$line->pu_ttc = price2num($line->subprice * (1 + ($line->tva_tx / 100)), 'MU');
+
+			// Output template part (modules that overwrite templates must declare this into descriptor)
+			// Use global variables + $dateSelector + $seller and $buyer
+			// Note: This is deprecated. If you need to overwrite the tpl file, use instead the hook printObjectLine and printObjectSubLine.
+			$dirtpls = array_merge($conf->modules_parts['tpl'], array($defaulttpldir));
+			foreach ($dirtpls as $module => $reldir) {
+				if (!empty($module)) {
+					$tpl = dol_buildpath($reldir.'/objectline_edit.tpl.php');
+				} else {
+					$tpl = DOL_DOCUMENT_ROOT.$reldir.'/objectline_edit.tpl.php';
+				}
+
+				if (empty($conf->file->strict_mode)) {
+					$res = @include $tpl;
+				} else {
+					$res = include $tpl; // for debug
+				}
+				if ($res) {
+					break;
+				}
+			}
+		}
+	}
+
+
+	/**
+	 *	Return HTML table for object lines
+	 *	TODO Move this into an output class file (htmlline.class.php)
+	 *	If lines are into a template, title must also be into a template
+	 *	But for the moment we don't know if it's possible as we keep a method available on overloaded objects.
+	 *
+	 *	@param	string		$action				Action code
+	 *	@param  Societe		$seller            	Object of seller third party
+	 *	@param  Societe  	$buyer             	Object of buyer third party
+	 *	@param	int			$selected		   	ID line selected
+	 *	@param  int	    	$dateSelector      	1=Show also date range input fields
+	 *  @param	string		$defaulttpldir		Directory where to find the template
+	 *	@return	void
+	 */
+	public function printObjectLines($action, $seller, $buyer, $selected = 0, $dateSelector = 0, $defaulttpldir = '/core/tpl')
+	{
+		global $conf, $hookmanager, $langs, $user, $form, $extrafields, $object;
+		// TODO We should not use global var for this
+		global $inputalsopricewithtax, $usemargins, $disableedit, $disablemove, $disableremove, $outputalsopricetotalwithtax;
+
+		// Define usemargins
+		$usemargins = 0;
+		if (isModEnabled('margin') && !empty($this->element) && in_array($this->element, array('facture', 'facturerec', 'propal', 'commande'))) {
+			$usemargins = 1;
+		}
+
+		$num = count($this->lines);
+
+		// Line extrafield
+		if (!is_object($extrafields)) {
+			require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+			$extrafields = new ExtraFields($this->db);
+		}
+		$extrafields->fetch_name_optionals_label($this->table_element_line);
+
+		$parameters = array('num'=>$num, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$this->table_element_line);
+		$reshook = $hookmanager->executeHooks('printObjectLineTitle', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+		if (empty($reshook)) {
+			// Output template part (modules that overwrite templates must declare this into descriptor)
+			// Use global variables + $dateSelector + $seller and $buyer
+			// Note: This is deprecated. If you need to overwrite the tpl file, use instead the hook.
+			$dirtpls = array_merge($conf->modules_parts['tpl'], array($defaulttpldir));
+			foreach ($dirtpls as $module => $reldir) {
+				$res = 0;
+				if (!empty($module)) {
+					$tpl = dol_buildpath($reldir.'/objectline_title.tpl.php');
+				} else {
+					$tpl = DOL_DOCUMENT_ROOT.$reldir.'/objectline_title.tpl.php';
+				}
+				if (file_exists($tpl)) {
+					if (empty($conf->file->strict_mode)) {
+						$res = @include $tpl;
+					} else {
+						$res = include $tpl; // for debug
+					}
+				}
+				if ($res) {
+					break;
+				}
+			}
+		}
+
+		$i = 0;
+
+		print '</table>';
+
+		print "<!-- begin printObjectLines() --><tbody>\n";
+		print '<div class="row row-cols-1 row-cols-md-5 g-4">';
+		foreach ($this->lines as $line) {
+			//Line extrafield
+			$line->fetch_optionals();
+
+			//if (is_object($hookmanager) && (($line->product_type == 9 && !empty($line->special_code)) || !empty($line->fk_parent_line)))
+			if (is_object($hookmanager)) {   // Old code is commented on preceding line.
+				if (empty($line->fk_parent_line)) {
+					$parameters = array('line'=>$line, 'num'=>$num, 'i'=>$i, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$line->table_element, 'defaulttpldir'=>$defaulttpldir);
+					$reshook = $hookmanager->executeHooks('printObjectLine', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+				} else {
+					$parameters = array('line'=>$line, 'num'=>$num, 'i'=>$i, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$line->table_element, 'fk_parent_line'=>$line->fk_parent_line, 'defaulttpldir'=>$defaulttpldir);
+					$reshook = $hookmanager->executeHooks('printObjectSubLine', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+				}
+			}
+			if (empty($reshook)) {
+				$this->printObjectLine($action, $line, '', $num, $i, $dateSelector, $seller, $buyer, $selected, $extrafields, $defaulttpldir);
+			}
+
+			$i++;
+		}
+		print '</div>';
+		print "</tbody><!-- end printObjectLines() -->\n";
+	}
+
+
+	/**
+	 *	Return HTML content of a detail line
+	 *	TODO Move this into an output class file (htmlline.class.php)
+	 *
+	 *	@param	string      		$action				GET/POST action
+	 *	@param  CommonObjectLine 	$line			    Selected object line to output
+	 *	@param  string	    		$var               	Not used
+	 *	@param  int		    		$num               	Number of line (0)
+	 *	@param  int		    		$i					I
+	 *	@param  int		    		$dateSelector      	1=Show also date range input fields
+	 *	@param  Societe	    		$seller            	Object of seller third party
+	 *	@param  Societe	    		$buyer             	Object of buyer third party
+	 *	@param	int					$selected		   	ID line selected
+	 *  @param  Extrafields			$extrafields		Object of extrafields
+	 *  @param	string				$defaulttpldir		Directory where to find the template (deprecated)
+	 *	@return	void
+	 */
+	public function printObjectLine($action, $line, $var, $num, $i, $dateSelector, $seller, $buyer, $selected = 0, $extrafields = null, $defaulttpldir = '/core/tpl')
+	{
+		global $conf, $langs, $user, $object, $hookmanager;
+		global $form;
+		global $object_rights, $disableedit, $disablemove, $disableremove; // TODO We should not use global var for this !
+
+		$object_rights = $this->getRights();
+
+		// var used into tpl
+		$text = '';
+		$description = '';
+
+		// Line in view mode
+		if ($action != 'editline' || $selected != $line->id) {
+			// Product
+			if (!empty($line->fk_product) && $line->fk_product > 0) {
+				$product_static = new Product($this->db);
+				$product_static->fetch($line->fk_product);
+
+				$product_static->ref = $line->ref; //can change ref in hook
+				$product_static->label = !empty($line->label) ? $line->label : ""; //can change label in hook
+
+				$text = $product_static->getNomUrl(1);
+
+				// Define output language and label
+				if (getDolGlobalInt('MAIN_MULTILANGS')) {
+					if (property_exists($this, 'socid') && !is_object($this->thirdparty)) {
+						dol_print_error('', 'Error: Method printObjectLine was called on an object and object->fetch_thirdparty was not done before');
+						return;
+					}
+
+					$prod = new Product($this->db);
+					$prod->fetch($line->fk_product);
+
+					$outputlangs = $langs;
+					$newlang = '';
+					if (empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+						$newlang = GETPOST('lang_id', 'aZ09');
+					}
+					if (getDolGlobalString('PRODUIT_TEXTS_IN_THIRDPARTY_LANGUAGE') && empty($newlang) && is_object($this->thirdparty)) {
+						$newlang = $this->thirdparty->default_lang; // To use language of customer
+					}
+					if (!empty($newlang)) {
+						$outputlangs = new Translate("", $conf);
+						$outputlangs->setDefaultLang($newlang);
+					}
+
+					$label = (!empty($prod->multilangs[$outputlangs->defaultlang]["label"])) ? $prod->multilangs[$outputlangs->defaultlang]["label"] : $line->product_label;
+				} else {
+					$label = $line->product_label;
+				}
+
+				$text .= ' - '.(!empty($line->label) ? $line->label : $label);
+				$description .= (getDolGlobalInt('PRODUIT_DESC_IN_FORM_ACCORDING_TO_DEVICE') ? '' : (!empty($line->description) ? dol_htmlentitiesbr($line->description) : '')); // Description is what to show on popup. We shown nothing if already into desc.
+			}
+
+			$line->pu_ttc = price2num((!empty($line->subprice) ? $line->subprice : 0) * (1 + ((!empty($line->tva_tx) ? $line->tva_tx : 0) / 100)), 'MU');
+
+			// Output template part (modules that overwrite templates must declare this into descriptor)
+			// Use global variables + $dateSelector + $seller and $buyer
+			// Note: This is deprecated. If you need to overwrite the tpl file, use instead the hook printObjectLine and printObjectSubLine.
+			$dirtpls = array_merge($conf->modules_parts['tpl'], array($defaulttpldir));
+			foreach ($dirtpls as $module => $reldir) {
+				$res = 0;
+				if (!empty($module)) {
+					$tpl = dol_buildpath($reldir.'/objectline_view_volet.tpl.php');
+				} else {
+					$tpl = DOL_DOCUMENT_ROOT.$reldir.'/objectline_view_volet.tpl.php';
+				}
+				//var_dump($tpl);
+				if (file_exists($tpl)) {
+					if (empty($conf->file->strict_mode)) {
+						$res = @include $tpl;
+					} else {
+						$res = include $tpl; // for debug
+					}
+				}
+				if ($res) {
+					break;
+				}
+			}
+		}
+
+		// Line in update mode
+		if ($this->statut == 0 && $action == 'editline' && $selected == $line->id) {
+			$label = (!empty($line->label) ? $line->label : (($line->fk_product > 0) ? $line->product_label : ''));
+
+			$line->pu_ttc = price2num($line->subprice * (1 + ($line->tva_tx / 100)), 'MU');
+
+			// Output template part (modules that overwrite templates must declare this into descriptor)
+			// Use global variables + $dateSelector + $seller and $buyer
+			// Note: This is deprecated. If you need to overwrite the tpl file, use instead the hook printObjectLine and printObjectSubLine.
+			$dirtpls = array_merge($conf->modules_parts['tpl'], array($defaulttpldir));
+			foreach ($dirtpls as $module => $reldir) {
+				if (!empty($module)) {
+					$tpl = dol_buildpath($reldir.'/objectline_edit.tpl.php');
+				} else {
+					$tpl = DOL_DOCUMENT_ROOT.$reldir.'/objectline_edit.tpl.php';
+				}
+
+				if (empty($conf->file->strict_mode)) {
+					$res = @include $tpl;
+				} else {
+					$res = include $tpl; // for debug
+				}
+				if ($res) {
+					break;
+				}
+			}
+		}
+	}
+
+	/**
+	 *	Delete all links between an object $this
+	 *
+	 *	@param	int		$sourceid		Object source id
+	 *	@param  string	$sourcetype		Object source type
+	 *	@param  int		$targetid		Object target id
+	 *	@param  string	$targettype		Object target type
+	 *  @param	int		$rowid			Row id of line to delete. If defined, other parameters are not used.
+	 * 	@param	User	$f_user			User that create
+	 * 	@param	int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return     					int	>0 if OK, <0 if KO
+	 *	@see	add_object_linked(), updateObjectLinked(), fetchObjectLinked()
+	 */
+	public function deleteObjectLinked($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '', $rowid = 0, $f_user = null, $notrigger = 0)
+	{
+		global $user;
+		$deletesource = false;
+		$deletetarget = false;
+		$deletetargetandsource = false;
+		$f_user = isset($f_user) ? $f_user : $user;
+
+		if (!empty($sourceid) && !empty($sourcetype) && empty($targetid) && empty($targettype)) {
+			$deletesource = true;
+		} elseif (empty($sourceid) && empty($sourcetype) && !empty($targetid) && !empty($targettype)) {
+			$deletetarget = true;
+		} elseif (!empty($sourceid) && !empty($sourcetype) && !empty($targetid) && !empty($targettype)) {
+			$deletetargetandsource = true;
+		}
+
+		$sourceid = (!empty($sourceid) ? $sourceid : $this->id);
+		$sourcetype = (!empty($sourcetype) ? $sourcetype : $this->element);
+		$targetid = (!empty($targetid) ? $targetid : $this->id);
+		$targettype = (!empty($targettype) ? $targettype : $this->element);
+		$this->db->begin();
+		$error = 0;
+
+		if (!$notrigger) {
+			// Call trigger
+			$this->context['link_id'] = $rowid;
+			$this->context['link_source_id'] = $sourceid;
+			$this->context['link_source_type'] = $sourcetype;
+			$this->context['link_target_id'] = $targetid;
+			$this->context['link_target_type'] = $targettype;
+			$result = $this->call_trigger('OBJECT_LINK_DELETE', $f_user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		if (!$error) {
+			$sql = "DELETE FROM " . $this->db->prefix() . "element_element";
+			$sql .= " WHERE";
+			if ($rowid > 0) {
+				$sql .= " rowid = " . ((int) $rowid);
+			} else {
+				if ($deletesource) {
+					$sql .= " fk_source = " . ((int) $sourceid) . " AND sourcetype = '" . $this->db->escape($sourcetype) . "'";
+					$sql .= " AND fk_target = " . ((int) $this->id) . " AND targettype = '" . $this->db->escape($this->element) . "'";
+				} elseif ($deletetarget) {
+					$sql .= " fk_target = " . ((int) $targetid) . " AND targettype = '" . $this->db->escape($targettype) . "'";
+					$sql .= " AND fk_source = " . ((int) $this->id) . " AND sourcetype = '" . $this->db->escape($this->element) . "'";
+				} elseif ($deletetargetandsource) {
+					$sql .= " (fk_source = " . ((int) $sourceid) . " AND sourcetype = '" . $this->db->escape($sourcetype) . "')";
+					$sql .= " AND";
+					$sql .= " (fk_target = " . ((int) $targetid) . " AND targettype = '" . $this->db->escape($targettype) . "')";
+				} else {
+					$sql .= " (fk_source = " . ((int) $this->id) . " AND sourcetype = '" . $this->db->escape($this->element) . "')";
+					$sql .= " OR";
+					$sql .= " (fk_target = " . ((int) $this->id) . " AND targettype = '" . $this->db->escape($this->element) . "')";
+				}
+			}
+
+			dol_syslog(get_class($this) . "::deleteObjectLinked", LOG_DEBUG);
+			if (!$this->db->query($sql)) {
+				$this->error = $this->db->lasterror();
+				$this->errors[] = $this->error;
+				$error++;
+			}
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return 0;
+		}
 	}
 }
 

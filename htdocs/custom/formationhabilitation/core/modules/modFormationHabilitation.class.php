@@ -206,23 +206,25 @@ class modFormationHabilitation extends DolibarrModules
 			'langs'=>'formationhabilitation@formationhabilitation',
 			'picto'=>'user',
 			// List of tables we want to see into dictonnary editor
-			'tabname'=>array(MAIN_DB_PREFIX."c_famille_formation", MAIN_DB_PREFIX."c_volets", MAIN_DB_PREFIX."c_sousdomaine_formation", MAIN_DB_PREFIX."c_examen_medical", MAIN_DB_PREFIX."c_nature_visite"),
+			'tabname'=>array("c_famille_formation", "c_volets", "c_sousdomaine_formation", "c_examen_medical", "c_nature_visite"),
 			// Label of tables
 			'tablib'=>array("FamilleFormation", "Volets", "SousDomaineFormation", "ExamensMedicaux", "NatureVisite"),
 			// Request to select fields
-			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT v.rowid as rowid, v.numero, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle, v.active FROM '.MAIN_DB_PREFIX.'c_volets as v', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_sousdomaine_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_examen_medical as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_nature_visite as f'),
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT v.rowid as rowid, v.numero, v.typevolet, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle, v.active FROM '.MAIN_DB_PREFIX.'c_volets as v', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_sousdomaine_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_examen_medical as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_nature_visite as f'),
 			// Sort order
 			'tabsqlsort'=>array("label ASC", "numero ASC", "label ASC", "label ASC", "label ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label"),
+			'tabfield'=>array("label", "numero,typevolet,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label"),
+			'tabfieldvalue'=>array("label", "numero,typevolet,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("label", "numero,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label"),
+			'tabfieldinsert'=>array("label", "numero,typevolet,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label"),
 			// Name of columns with primary key (try to always name it 'rowid')
 			'tabrowid'=>array("rowid", "rowid", "rowid", "rowid", "rowid"),
 			// Condition to show each dictionary
-			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled)
+			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled),
+			// Tooltip for every fields of dictionaries: DO NOT PUT AN EMPTY ARRAY
+			'tabhelp' => array('', array('typevolet' => $langs->trans('DictionnaryTypeVoletHelp')), '', '', ''),
 		);
 		
 

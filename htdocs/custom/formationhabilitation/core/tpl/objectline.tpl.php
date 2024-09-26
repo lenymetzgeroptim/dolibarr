@@ -98,6 +98,10 @@ elseif($objectline->element == 'userautorisation'){
     $objectclass = 'UserAutorisation';
     $objectlabel = 'UserAutorisation';
 }
+elseif($objectline->element == 'volet'){
+    $objectclass = 'Volet';
+    $objectlabel = 'Volet';
+}
 $uploaddir = $conf->formationhabilitation->dir_output;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/actions_massactions.inc.php';
 
@@ -126,6 +130,19 @@ $arrayofselected = is_array($toselect) ? $toselect : array();
 $varpage = empty($contextpage) ? $_SERVER["PHP_SELF"] : $contextpage;
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
 $selectedfields .= (count($arrayofmassactions) ? $form->showCheckAddButtons('checkforselect', 1) : '');
+
+if($objectline->element == 'volet') {
+    $tmp_search_status = $search['status'];
+    $search_status = explode(',', $search['status']);
+    foreach(array_keys($search_status, '50', false) as $key) {
+        unset($search_status[$key]);
+        $search_status[] = $objectparentline::STATUS_VALIDATION1;
+        $search_status[] = $objectparentline::STATUS_VALIDATION2;
+        $search_status[] = $objectparentline::STATUS_VALIDATION3;
+        $search_status[] = $objectparentline::STATUS_VALIDATION4;
+    }
+    $search['status'] = implode(',', $search_status);
+}
 
 // Count total nb of records
 $nbtotalofrecords = '';
@@ -177,6 +194,9 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
     $db->free($resql);
 }
 
+if($objectline->element == 'volet') {
+    $search['status'] = $tmp_search_status;
+}
 
 // Show lines
 $result = $objectparentline->getLinesArray();
@@ -286,6 +306,11 @@ elseif($objectline->element == 'userautorisation'){
     $modelmail = "UserAutorisation";
     $objecttmp = new UserAutorisation($db);
 }
+elseif($objectline->element == 'volet'){
+    $topicmail = "SendVoletRef";
+    $modelmail = "Volet";
+    $objecttmp = new Volet($db);
+}
 $trackid = 'xxxx'.$object->id;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/massactions_pre.tpl.php';
 
@@ -297,9 +322,14 @@ else {
 }
 print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', $limit, 0, 0, 1);
 
-print '<div class="div-table-responsive-no-min" style="'.($css_div ? $css_div : '').'">';
+if($objectline->element == 'volet'){
+    print '<div>';
+}
+else {
+    print '<div class="div-table-responsive-no-min">';
+}
 
-print '<table id="tablelinesaddline" class="noborder noshadow" width="100%">';
+print '<table id="tablelinesaddline" class="noborder noshadow" width="100%" style="margin: unset;">';
 // Form to add new line
 if ($permissiontoaddline && $action != 'selectlines' && $object->status == 1) {
     if ($action != 'editline') {
@@ -308,14 +338,21 @@ if ($permissiontoaddline && $action != 'selectlines' && $object->status == 1) {
         $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $objectparentline, $action); // Note that $action and $object may have been modified by hook
         if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
         if (empty($reshook)){
-            $objectparentline->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl').'<br>';
+            $objectparentline->formAddObjectLine(1, $mysoc, $soc, '/custom/formationhabilitation/core/tpl');
         }
     }
 }
 print '</table>';
+print '</div><br>';
 
+if($objectline->element == 'volet'){
+    print '<div>';
+}
+else {
+    print '<div class="div-table-responsive-no-min">';
+}
 // if (!empty($objectparentline->lines)) {
-    print '<table id="tablelines" class="noborder noshadow" width="100%">';
+    print '<table id="tablelines" style="'.($css_div ? $css_div : '').'" class="noborder noshadow" width="100%">';
 
     print "<thead>";
         include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_filter.tpl.php';
@@ -324,7 +361,7 @@ print '</table>';
     if (!empty($conf->use_javascript_ajax)) {
         include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
     }
-    
+
     if (!empty($objectparentline->lines)) {
         $nbline = 0;
         $objectparentline->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');

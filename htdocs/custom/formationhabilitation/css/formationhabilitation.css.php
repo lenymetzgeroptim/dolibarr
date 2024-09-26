@@ -116,9 +116,19 @@ td.linecolstatus a[aria-label="Programmer"] {
 }
 
 .width30 {
-	width: 30px;
+	width: 20px;
 }
 
 .margin5 {
 	margin: 5px !important;
+}
+
+a.customhover:hover {
+	text-decoration: none;
+	background-color: #f0f0f0;
+}
+
+.voletcardtitle {
+	font-size: 16px;
+  	font-weight: bold;
 }

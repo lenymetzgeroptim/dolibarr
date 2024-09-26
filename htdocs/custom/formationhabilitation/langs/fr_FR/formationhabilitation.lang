@@ -28,12 +28,19 @@ BoxTitleLatestModifiedFormation = Les dernières autorisations modifiées
 
 ListOfs = Liste des %s
 NewObj = Nouvelle %s
+ListOfsUnlinkedObject = Liste des %s non liées au volet
+ListOfsLinkedObject = Liste des %s liées au volet
 UserFormation = formations du collaborateur
 UserHabilitation = habilitations du collaborateur
 UserAutorisation = autorisations du collaborateur
 UserFormationuser = collaborateurs possèdant la formation
 UserHabilitationuser = collaborateurs possèdant l'habilitation
 UserAutorisationuser = collaborateurs possèdant l'autorisation
+UserFormationVolet = formations
+UserHabilitationVolet = habilitations
+UserAutorisationVolet = autorisations
+
+
 
 #
 # Admin page
@@ -67,6 +74,13 @@ Long_label = Libellé long
 Nb_initial = Nombre d'initial
 Nb_recyclage = Nombre de recyclage
 Nb_passerelle = Nombre de passerelle
+Typevolet = Type
+DictionnaryTypeVoletHelp = 1 = Volet de formation<br>2 = Volet d'habilitation<br>3 = Volet d'autorisation<br>4 = Autres
+Approbation = En cours d'approbation
+Approbation1 = Approbation n°1 en attente
+Approbation2 = Approbation n°2 en attente
+Approbation3 = Approbation n°3 en attente
+Approbation4 = Approbation n°4 en attente
 
 
 #
@@ -141,6 +155,13 @@ DateFinHabilitation = Date de fin de validité de l'habilitation
 # 
 DateAutorisation = Date d'obtention de l'autorisation
 DateFinAutorisation = Date de fin de validité de l'autorisation
+
+
+#
+# Attribut Volet
+# 
+DateDebutVolet = Date début
+DateFinVolet = Date de fin de validité
 
 
 #

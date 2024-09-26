@@ -49,6 +49,9 @@ if ($this->table_element_line == 'formationhabilitation_userhabilitation') {
 if ($this->table_element_line == 'formationhabilitation_userautorisation') {
 	$objectline = new UserAutorisation($this->db);
 } 
+if ($this->table_element == 'formationhabilitation_volet') {
+	$objectline = new Volet($this->db);
+} 
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
@@ -67,6 +70,9 @@ foreach($objectline->fields as $key => $val){
 		continue;
 	}
 	if($object->element == 'user' && $key == 'fk_user'){
+		continue;
+	}
+	if($object->element == 'volet' && $key == 'fk_user'){
 		continue;
 	}
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {

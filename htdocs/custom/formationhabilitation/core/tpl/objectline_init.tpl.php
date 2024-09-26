@@ -60,6 +60,9 @@ foreach ($objectline->fields as $key => $val) {
             elseif($objectline->element == 'userautorisation'){
                 $search[$key] =  implode(',', array($objectline::STATUS_AUTORISABLE, $objectline::STATUS_AUTORISE, $objectline::STATUS_NONAUTORISE));
             }
+			elseif($objectline->element == 'volet'){
+                $search[$key] =  implode(',', array($objectline::STATUS_VALIDATED, 50));
+            }
         }
     }
     elseif (GETPOST('search_'.$key, 'alpha') !== '') {
@@ -122,6 +125,7 @@ foreach ($objectline->fields as $key => $val) {
 		);
 	}
 }
+
 // Extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 

@@ -50,6 +50,9 @@ if ($this->table_element_line == 'formationhabilitation_userhabilitation') {
 if ($this->table_element_line == 'formationhabilitation_userautorisation') {
 	$objectline = new UserAutorisation($this->db);
 } 
+if ($this->table_element == 'formationhabilitation_volet' && $this->id <= 0) {
+	$objectline = new Volet($this->db);
+} 
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
@@ -71,8 +74,13 @@ foreach($objectline->fields as $key => $val){
 	if($object->element == 'user' && $key == 'fk_user'){
 		continue;
 	}
-	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
+	if($object->element == 'volet' && $key == 'fk_user'){
 		continue;
+	}
+	if($action == 'editline') {
+		if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
+			continue;
+		}
 	}
 	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 		continue;
@@ -88,10 +96,14 @@ foreach($objectline->fields as $key => $val){
 	}
 }
 
-// print '<th class="linecolmove" style="width: 10px"></th>';
-// print '<th class="liste_titre linecoledit"></th>'; 
-// print '<th class="liste_titre linecoldelete"></th>';
-print getTitleFieldOfList($selectedfields, 0, $_SERVER["PHP_SELF"], '', '', $param, 'class="center" colspan="3"', $sortfield, $sortorder, 'center maxwidthsearch ')."\n";
+if ($this->table_element == 'formationhabilitation_volet' && $this->id > 0) {
+	print '<th class="liste_titre linecollink"></th>';
+	print '<th class="liste_titre linecoledit"></th>'; 
+	print '<th class="liste_titre linecoldelete"></th>';
+}
+else {
+	print getTitleFieldOfList($selectedfields, 0, $_SERVER["PHP_SELF"], '', '', $param, 'class="center" colspan="3"', $sortfield, $sortorder, 'center maxwidthsearch ')."\n";
+}
 
 print "</tr>\n";
 
