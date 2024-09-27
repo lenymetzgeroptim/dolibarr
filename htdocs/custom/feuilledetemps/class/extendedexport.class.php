@@ -464,11 +464,11 @@ class ExtendedExportFDT extends Export
 							// 	}
 							// }
 	
-							if($obj->ht_in_hour == 1 && $obj->hef_hour%26280 != 0) {
-								$obj->type = 'H';
-								$obj->valeur = $obj->hef_hour / 3600;
-							}
-							elseif($obj->ht_code_silae == 'AB-620') {
+							// if($obj->ht_in_hour == 1 && $obj->hef_hour%26280 != 0) {
+							// 	$obj->type = 'H';
+							// 	$obj->valeur = $obj->hef_hour / 3600;
+							// }
+							if($obj->ht_in_hour == 1 || $obj->ht_code_silae == 'AB-620') {
 								$obj->type = 'H';
 								$obj->valeur = $obj->hef_hour / 3600;
 							}
