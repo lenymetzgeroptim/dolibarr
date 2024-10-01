@@ -70,7 +70,7 @@ class Volet extends CommonObject
 	const STATUS_VALIDATION1 = 2;
 	const STATUS_VALIDATION2 = 3;
 	const STATUS_VALIDATION3 = 4;
-	const STATUS_VALIDATION4 = 5;
+	//const STATUS_VALIDATION4 = 5;
 	const STATUS_CLOSE = 9;
 
 	/**
@@ -355,9 +355,7 @@ class Volet extends CommonObject
 	public function fetch($id, $ref = null, $noextrafields = 0, $nolines = 0)
 	{
 		$result = $this->fetchCommon($id, $ref, '', $noextrafields);
-		if ($result > 0 && !empty($this->table_element_line) && empty($nolines)) {
-			//$this->fetchLines($noextrafields);
-		}
+
 		if($result > 0) {
 			$voletInfo = $this->getVoletInfo($this->numvolet); 
 
@@ -371,6 +369,11 @@ class Volet extends CommonObject
 				$this->table_element_line = 'formationhabilitation_userautorisation';
 			}
 		}
+
+		if ($result > 0 && !empty($this->table_element_line) && empty($nolines)) {
+			$this->getLinkedLinesArray();
+		}
+
 		return $result;
 	}
 
@@ -525,15 +528,251 @@ class Volet extends CommonObject
 		return $this->deleteLineCommon($user, $idline, $notrigger);
 	}
 
-
 	/**
-	 *	Validate object
+	 *	First Validation of object
 	 *
 	 *	@param		User	$user     		User making status change
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
 	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function validate($user, $notrigger = 0)
+	public function validate1($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_VALIDATION1) {
+			dol_syslog(get_class($this)."::validate1 action abandonned: already validated", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Define new ref
+		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
+			$num = $this->getNextNumRef();
+		} else {
+			$num = $this->ref;
+		}
+		$this->newref = $num;
+
+		if (!empty($num)) {
+			// Validate
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET ref = '".$this->db->escape($num)."',";
+			$sql .= " status = ".self::STATUS_VALIDATION1;
+			if (!empty($this->fields['date_validation'])) {
+				$sql .= ", date_validation = '".$this->db->idate($now)."'";
+			}
+			if (!empty($this->fields['fk_user_valid'])) {
+				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::validate1()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger('VOLET_VALIDATE1', $user);
+				if ($result < 0) {
+					$error++;
+				}
+				// End call triggers
+			}
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->ref = $num;
+			$this->status = self::STATUS_VALIDATION1;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	2nd Validation of object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function validate2($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_VALIDATION2) {
+			dol_syslog(get_class($this)."::validate2 action abandonned: already validated", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Define new ref
+		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
+			$num = $this->getNextNumRef();
+		} else {
+			$num = $this->ref;
+		}
+		$this->newref = $num;
+
+		if (!empty($num)) {
+			// Validate
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET ref = '".$this->db->escape($num)."',";
+			$sql .= " status = ".self::STATUS_VALIDATION2;
+			if (!empty($this->fields['date_validation'])) {
+				$sql .= ", date_validation = '".$this->db->idate($now)."'";
+			}
+			if (!empty($this->fields['fk_user_valid'])) {
+				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::validate2()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger('VOLET_VALIDATE2', $user);
+				if ($result < 0) {
+					$error++;
+				}
+				// End call triggers
+			}
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->ref = $num;
+			$this->status = self::STATUS_VALIDATION2;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	3rd Validation of object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function validate3($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_VALIDATION3) {
+			dol_syslog(get_class($this)."::validate3 action abandonned: already validated", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Define new ref
+		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
+			$num = $this->getNextNumRef();
+		} else {
+			$num = $this->ref;
+		}
+		$this->newref = $num;
+
+		if (!empty($num)) {
+			// Validate
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET ref = '".$this->db->escape($num)."',";
+			$sql .= " status = ".self::STATUS_VALIDATION3;
+			if (!empty($this->fields['date_validation'])) {
+				$sql .= ", date_validation = '".$this->db->idate($now)."'";
+			}
+			if (!empty($this->fields['fk_user_valid'])) {
+				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::validate3()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger('VOLET_VALIDATE3', $user);
+				if ($result < 0) {
+					$error++;
+				}
+				// End call triggers
+			}
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->ref = $num;
+			$this->status = self::STATUS_VALIDATION3;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	Last Validation of object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function validate4($user, $notrigger = 0)
 	{
 		global $conf, $langs;
 
@@ -543,7 +782,7 @@ class Volet extends CommonObject
 
 		// Protection
 		if ($this->status == self::STATUS_VALIDATED) {
-			dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
+			dol_syslog(get_class($this)."::validate4 action abandonned: already validated", LOG_WARNING);
 			return 0;
 		}
 
@@ -580,7 +819,7 @@ class Volet extends CommonObject
 			}
 			$sql .= " WHERE rowid = ".((int) $this->id);
 
-			dol_syslog(get_class($this)."::validate()", LOG_DEBUG);
+			dol_syslog(get_class($this)."::validate4()", LOG_DEBUG);
 			$resql = $this->db->query($sql);
 			if (!$resql) {
 				dol_print_error($this->db);
@@ -590,7 +829,7 @@ class Volet extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
-				$result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+				$result = $this->call_trigger('VOLET_VALIDATE4', $user);
 				if ($result < 0) {
 					$error++;
 				}
@@ -625,7 +864,7 @@ class Volet extends CommonObject
 				$dirsource = $conf->formationhabilitation->dir_output.'/volet/'.$oldref;
 				$dirdest = $conf->formationhabilitation->dir_output.'/volet/'.$newref;
 				if (!$error && file_exists($dirsource)) {
-					dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
+					dol_syslog(get_class($this)."::validate4() rename dir ".$dirsource." into ".$dirdest);
 
 					if (@rename($dirsource, $dirdest)) {
 						dol_syslog("Rename ok");
@@ -963,22 +1202,26 @@ class Volet extends CommonObject
 			return '';
 		}
 
+		if($mode == 6) {
+			$mode = 5;
+		}
+
 		if (empty($this->labelStatus) || empty($this->labelStatusShort)) {
 			global $langs;
 			//$langs->load("formationhabilitation@formationhabilitation");
-			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
+			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Approbation1');
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Approbation');
-			$this->labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Approbation');
-			$this->labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Approbation');
-			$this->labelStatus[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Approbation');
+			$this->labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Approbation2');
+			$this->labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Approbation3');
+			$this->labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Approbation4');
+			//$this->labelStatus[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Approbation');
 			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatusShort[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Approbation1');
-			$this->labelStatusShort[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Approbation2');
-			$this->labelStatusShort[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Approbation3');
-			$this->labelStatusShort[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Approbation4');
+			$this->labelStatusShort[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Approbation');
+			$this->labelStatusShort[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Approbation');
+			$this->labelStatusShort[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Approbation');
+			//$this->labelStatusShort[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Approbation4');
 			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 		}
 
@@ -1150,10 +1393,11 @@ class Volet extends CommonObject
 		$search_status = explode(',', $search['status']);
 		foreach(array_keys($search_status, '50', false) as $key) {
 			unset($search_status[$key]);
+			$search_status[] = self::STATUS_DRAFT;
 			$search_status[] = self::STATUS_VALIDATION1;
 			$search_status[] = self::STATUS_VALIDATION2;
 			$search_status[] = self::STATUS_VALIDATION3;
-			$search_status[] = self::STATUS_VALIDATION4;
+			//$search_status[] = self::STATUS_VALIDATION4;
 		}
 		$search['status'] = implode(',', $search_status);
 

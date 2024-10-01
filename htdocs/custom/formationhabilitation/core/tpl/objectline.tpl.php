@@ -119,8 +119,8 @@ $arrayofmassactions = array(
 );
 if ($permissiontoaddline) {
     $arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"').$langs->trans("Delete");
-    if($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation'){
-        $arrayofmassactions['validate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("Validate");
+    if($permissiontovalidate && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
+        $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("Validate");
     }
 }
 if (GETPOST('nomassaction', 'int') || in_array($massaction, array('presend', 'predelete'))) {

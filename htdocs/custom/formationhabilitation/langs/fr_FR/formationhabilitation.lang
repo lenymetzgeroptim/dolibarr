@@ -77,10 +77,10 @@ Nb_passerelle = Nombre de passerelle
 Typevolet = Type
 DictionnaryTypeVoletHelp = 1 = Volet de formation<br>2 = Volet d'habilitation<br>3 = Volet d'autorisation<br>4 = Autres
 Approbation = En cours d'approbation
-Approbation1 = Approbation n°1 en attente
-Approbation2 = Approbation n°2 en attente
-Approbation3 = Approbation n°3 en attente
-Approbation4 = Approbation n°4 en attente
+Approbation1 = Approbation d'un responsable d'affaire en attente
+Approbation2 = Approbation d'un RD en attente
+Approbation3 = Approbation de la direction en attente
+Approbation4 = Approbation du collaborateur en attente
 
 
 #
@@ -184,6 +184,11 @@ ConfirmAddLine2 = Êtes-vous sûr de vouloir ajouter cette formation ? Cela clô
 ValiderFormation = Valider la formation
 ConfirmValiderFormation = Êtes-vous sûr de vouloir valider la formation ?
 ConfirmValiderFormation2 = Êtes-vous sûr de vouloir valider la formation ? Cela clôturera les formations %s
+ConfirmMassValidationQuestion = Etes vous sûrs de vouloir valider les enregistrements sélectionnés ? <strong>ATTENTION : </strong> Seules les habilitations en statut 'Habilitable' vont être validées
+RecordsValidated = %s enregistrements validés
+RecordValidated = %s enregistrement validé
+NoRecordValidated = Aucun enregistrement validé
+ImpossibleToValidateWithThisStatut = Impossible de valider %s à cause du statut
 
 
 #

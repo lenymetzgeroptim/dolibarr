@@ -145,6 +145,7 @@ if ($enablepermissioncheck) {
 	$permissionnote = $user->rights->formationhabilitation->habilitation->write; // Used by the include of actions_setnotes.inc.php
 	$permissiondellink = $user->rights->formationhabilitation->habilitation->write; // Used by the include of actions_dellink.inc.php
 	$permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
+	$permissiontovalidate = $permissiontoaddline;
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php

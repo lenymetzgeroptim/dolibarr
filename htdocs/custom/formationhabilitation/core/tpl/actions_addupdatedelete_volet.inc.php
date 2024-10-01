@@ -145,12 +145,108 @@ if($action == 'addline' && $permissiontoaddline) {
 // Link object to another object
 if ($action == 'addlink' && !empty($permissiondellink) && $id > 0 && $addlinkid > 0) {
 	$result = $object->add_object_linked($addlink, $addlinkid);
+
+	if($result > 0) {
+		$urltogo = $backtopage ? str_replace('__ID__', $result, $backtopage) : $backurlforlist;
+		$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $urltogo); // New method to autoselect project after a New on another form object creation
+		if ($urltogo && empty($noback)) {
+			header("Location: " . $urltogo);
+			exit;
+		}
+	}
 }
 
 // Delete link in table llx_element_element
 if ($action == 'dellink' && !empty($permissiondellink) && !$cancellink && $dellinkid > 0) {
 	$result = $object->deleteObjectLinked($dellinkid, $addlink, $object->id, $object->table_element);
-	if ($result < 0) {
+	
+	if($result > 0) {
+		$urltogo = $backtopage ? str_replace('__ID__', $result, $backtopage) : $backurlforlist;
+		$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $urltogo); // New method to autoselect project after a New on another form object creation
+		if ($urltogo && empty($noback)) {
+			header("Location: " . $urltogo);
+			exit;
+		}
+	}
+	elseif ($result < 0) {
 		setEventMessages($object->error, $object->errors, 'errors');
 	}
+}
+
+// Action validate1 object
+if ($action == 'confirm_validate1' && $confirm == 'yes' && $permissiontovalidate1) {
+	$result = $object->validate1($user);
+
+	if ($result >= 0) {
+		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+	} else {
+		$error++;
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
+	$action = '';
+}
+
+// Action validate2 object
+if ($action == 'confirm_validate2' && $confirm == 'yes' && $permissiontovalidate2) {
+	$result = $object->validate2($user);
+
+	if ($result >= 0) {
+		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+	} else {
+		$error++;
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
+	$action = '';
+}
+
+// Action validate3 object
+if ($action == 'confirm_validate3' && $confirm == 'yes' && $permissiontovalidate2) {
+	$result = $object->validate3($user);
+
+	if ($result >= 0) {
+		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+	} else {
+		$error++;
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
+	$action = '';
+}
+
+// Action validate4 object
+if ($action == 'confirm_validate4' && $confirm == 'yes' && $permissiontovalidate4) {
+	$result = $object->validate4($user);
+
+	if ($result >= 0) {
+		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+		// Define output language
+		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+		// 	if (method_exists($object, 'generateDocument')) {
+		// 		$outputlangs = $langs;
+		// 		$newlang = '';
+		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+		// 			$newlang = GETPOST('lang_id', 'aZ09');
+		// 		}
+		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+		// 			$newlang = !empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : "";
+		// 		}
+		// 		if (!empty($newlang)) {
+		// 			$outputlangs = new Translate("", $conf);
+		// 			$outputlangs->setDefaultLang($newlang);
+		// 		}
+
+		// 		$ret = $object->fetch($id); // Reload to get new records
+
+		// 		$model = $object->model_pdf;
+
+		// 		$retgen = $object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		// 		if ($retgen < 0) {
+		// 			setEventMessages($object->error, $object->errors, 'warnings');
+		// 		}
+		// 	}
+		// }
+	} else {
+		$error++;
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
+	$action = '';
 }

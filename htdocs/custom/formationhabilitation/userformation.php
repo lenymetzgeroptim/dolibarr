@@ -77,6 +77,7 @@ $voletid   = GETPOST('voletid', 'int');
 
 $permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
 $permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
+$permissiontovalidate = $permissiontoaddline;
 
 if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 

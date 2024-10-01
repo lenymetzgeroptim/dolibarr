@@ -626,6 +626,11 @@ class UserAutorisation extends CommonObject
 			return 0;
 		}
 
+		if ($this->status != self::STATUS_AUTORISABLE) {
+			$this->errors[] = $langs->trans('ImpossibleToValidateWithThisStatut', $this->ref);
+			return 0;
+		}
+
 		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
 		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && !empty($user->rights->formationhabilitation->userautorisation->userautorisation_advance->validate))))
 		 {

@@ -44,6 +44,10 @@ if ($massaction == 'predelete') {
 	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassDeletion"), $langs->trans("ConfirmMassDeletionQuestion", count($toselect)), "deletelines", null, '', 0, 200, 500, 1);
 }
 
+if ($massaction == 'prevalidate') {
+	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassValidation"), $langs->trans("ConfirmMassValidationQuestion", count($toselect)), "validatelines", null, '', 0, 200, 500, 1);
+}
+
 if ($massaction == 'preclonetasks') {
 	$selected = '';
 	foreach (GETPOST('toselect') as $tmpselected) {

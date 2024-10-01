@@ -116,6 +116,7 @@ if (!empty($backtopagejsfields)) {
 // Initialize technical objects
 $object = new Volet($db);
 $extrafields = new ExtraFields($db);
+$usergroup = new UserGroup($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($object->element.'card', 'globalcard')); // Note that conf->hooks_modules contains array
 
@@ -169,6 +170,17 @@ if ($enablepermissioncheck) {
 	$permissiondellink = $user->hasRight('formationhabilitation', 'volet', 'write'); // Used by the include of actions_dellink.inc.php
 	$permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
 	$permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
+
+	$usergroup->fetch(0, 'Responsable Affaires');
+	$permissiontovalidate1 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+
+	$usergroup->fetch(0, 'RD');
+	$permissiontovalidate2 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+
+	$usergroup->fetch(0, 'Direction');
+	$permissiontovalidate3 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+
+	$permissiontovalidate4 = ($user->id == $object->fk_user);
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
@@ -570,10 +582,40 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
 			}
 
-			// Validate
+			// Validate n°1
 			if ($object->status == $object::STATUS_DRAFT) {
 				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate1&confirm=yes&token='.newToken(), '', $permissiontovalidate1);
+				} else {
+					$langs->load("errors");
+					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
+				}
+			}
+
+			// Validate n°2
+			if ($object->status == $object::STATUS_VALIDATION1) {
+				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate2&confirm=yes&token='.newToken(), '', $permissiontovalidate2);
+				} else {
+					$langs->load("errors");
+					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
+				}
+			}
+
+			// Validate n°3
+			if ($object->status == $object::STATUS_VALIDATION2) {
+				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate3&confirm=yes&token='.newToken(), '', $permissiontovalidate3);
+				} else {
+					$langs->load("errors");
+					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
+				}
+			}
+
+			// Validate n°4
+			if ($object->status == $object::STATUS_VALIDATION3) {
+				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate4&confirm=yes&token='.newToken(), '', $permissiontovalidate4);
 				} else {
 					$langs->load("errors");
 					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
