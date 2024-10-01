@@ -112,6 +112,7 @@ foreach($objectline as $key => $val) {
 
 // Definition of array of fields for columns
 $arrayfields = array();
+$objectline->fields = dol_sort_array($objectline->fields, 'position');
 foreach ($objectline->fields as $key => $val) {
 	// If $val['visible']==0, then we never show the field
 	if (!empty($val['visible'])) {
@@ -127,7 +128,7 @@ foreach ($objectline->fields as $key => $val) {
 }
 
 // Extra fields
-include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
+// include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 
 // Param
 $param = '';

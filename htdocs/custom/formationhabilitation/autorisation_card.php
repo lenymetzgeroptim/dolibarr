@@ -174,6 +174,8 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
+unset($objectline->fields['fk_autorisation']);
+
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
 
 /*
@@ -513,6 +515,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	* Lines
 	*/
 	if (!empty($object->table_element_line)  && $object->status != $object::STATUS_CONSTRUCTION) {
+		$css_table = 'min-height: 450px;';
 		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
 		print '<input type="hidden" form="addline" id="fk_autorisation" name="fk_autorisation" value="' . $object->id.'">';
 	}

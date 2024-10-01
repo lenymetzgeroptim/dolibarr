@@ -38,23 +38,13 @@
  * $text, $description, $line
  */
 
-global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $enableunlink, $enablelink;
+global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $enableunlink, $enablelink, $objectline;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
 	print "Error, template page can't be called as URL";
 	exit;
 }
-
-if ($this->table_element_line == 'formationhabilitation_userformation') {
-	$objectline = new UserFormation($this->db);
-}
-if ($this->table_element_line == 'formationhabilitation_userhabilitation') {
-	$objectline = new UserHabilitation($this->db);
-} 
-if ($this->table_element_line == 'formationhabilitation_userautorisation') {
-	$objectline = new UserAutorisation($this->db);
-} 
 
 if(!$user->rights->formationhabilitation->formation->addline){
 	$disableedit = 1;
@@ -73,29 +63,12 @@ else {
 }
 
 foreach($objectline->fields as $key => $val){
-	if($object->element == 'formation' && $key == 'fk_formation'){
-		continue;
-	}
-	if($object->element == 'habilitation' && $key == 'fk_habilitation'){
-		continue;
-	}
-	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
-		continue;
-	}
-	if($object->element == 'user' && $key == 'fk_user'){
-		continue;
-	}
-	if($object->element == 'volet' && $key == 'fk_user'){
-		continue;
-	}
 	if($action == 'editline') {
 		if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
 			continue;
 		}
 	}
-	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
-		continue;
-	}
+
 	if($key == 'formateur') {
 		continue;
 	}

@@ -33,7 +33,7 @@
  * $inputalsopricewithtax (0 by default, 1 to also show column with unit price including tax)
  */
 
- global $permissiontoreadCout, $action, $resultcreate, $cancel, $resultupdate, $object;
+ global $action, $resultcreate, $cancel, $resultupdate, $object, $objectline;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -41,40 +41,12 @@ if (empty($object) || !is_object($object)) {
 	exit;
 }
 
-if ($this->table_element_line == 'formationhabilitation_userformation') {
-	$objectline = new UserFormation($this->db);
-}
-if ($this->table_element_line == 'formationhabilitation_userhabilitation') {
-	$objectline = new UserHabilitation($this->db);
-} 
-if ($this->table_element_line == 'formationhabilitation_userautorisation') {
-	$objectline = new UserAutorisation($this->db);
-} 
-if ($this->table_element == 'formationhabilitation_volet') {
-	$objectline = new Volet($this->db);
-} 
-
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
 //if(count($this->lines) == 0){
 	print '<tr class="liste_titre nodrag nodrop">';
 	foreach($objectline->fields as $key => $val){
-		if($object->element == 'formation' && $key == 'fk_formation'){
-			continue;
-		}
-		if($object->element == 'habilitation' && $key == 'fk_habilitation'){
-			continue;
-		}
-		if($object->element == 'autorisation' && $key == 'fk_autorisation'){
-			continue;
-		}
-		if($object->element == 'user' && $key == 'fk_user'){
-			continue;
-		}
 		if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
-			continue;
-		}
-		if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
 			continue;
 		}
 		if($key == 'formateur') {
@@ -97,27 +69,13 @@ else {
 }
 
 foreach($objectline->fields as $key => $val){
-	if($object->element == 'formation' && $key == 'fk_formation'){
-		continue;
-	}
-	if($object->element == 'habilitation' && $key == 'fk_habilitation'){
-		continue;
-	}
-	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
-		continue;
-	}
-	if($object->element == 'user' && $key == 'fk_user'){
-		continue;
-	}
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3) {
 		if(abs($val['visible']) == 4) {
 			print '<td class="nobottom linecol'.$key.'">&nbsp;</td>';
 		}
 		continue;
 	}
-	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
-		continue;
-	}
+
 	if($key == 'date_finvalidite_formation' || $key == 'date_fin_habilitation' || $key == 'date_fin_autorisation') {
 		print '<td class="nobottom linecol'.$key.'">&nbsp;</td>';
 		continue;

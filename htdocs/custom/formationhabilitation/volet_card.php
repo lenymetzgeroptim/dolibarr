@@ -83,6 +83,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 dol_include_once('/formationhabilitation/class/volet.class.php');
 dol_include_once('/formationhabilitation/lib/formationhabilitation_volet.lib.php');
 dol_include_once('/formationhabilitation/class/habilitation.class.php');
+dol_include_once('/formationhabilitation/class/formation.class.php');
+dol_include_once('/formationhabilitation/class/autorisation.class.php');
 dol_include_once('/formationhabilitation/class/userhabilitation.class.php');
 dol_include_once('/formationhabilitation/class/userformation.class.php');
 dol_include_once('/formationhabilitation/class/userautorisation.class.php');
@@ -105,8 +107,6 @@ $backtopage = GETPOST('backtopage', 'alpha');					// if not set, a default page 
 $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');	// if not set, $backtopage will be used
 $backtopagejsfields = GETPOST('backtopagejsfields', 'alpha');
 $dol_openinpopup = GETPOST('dol_openinpopup', 'aZ09');
-
-$addlink = 'habilitation';
 
 if (!empty($backtopagejsfields)) {
 	$tmpbacktopagejsfields = explode(':', $backtopagejsfields);
@@ -145,25 +145,30 @@ $voletInfo = $object->getVoletInfo($object->numvolet);
 
 if($voletInfo['type'] == 1) {
 	$objectline = new UserFormation($db);
+	$addlink = 'formation';
 }
 elseif($voletInfo['type'] == 2) {
 	$objectline = new UserHabilitation($db);
+	$addlink = 'habilitation';
 }
 elseif($voletInfo['type'] == 3) {
 	$objectline = new UserAutorisation($db);
+	$addlink = 'autorisation';
 }
 
 $objectparentline = new Volet($db);
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('formationhabilitation', 'volet', 'read');
 	$permissiontoadd = $user->hasRight('formationhabilitation', 'volet', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 	$permissiontodelete = $user->hasRight('formationhabilitation', 'volet', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
 	$permissionnote = $user->hasRight('formationhabilitation', 'volet', 'write'); // Used by the include of actions_setnotes.inc.php
 	$permissiondellink = $user->hasRight('formationhabilitation', 'volet', 'write'); // Used by the include of actions_dellink.inc.php
+	$permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
+	$permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
@@ -186,9 +191,15 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
-include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
+unset($objectline->fields['fk_user']);
+if(!$permissiontoreadCout) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_mobilisation']);
+    unset($objectline->fields['cout_total']);
+}
 
-unset($arrayfields['t.fk_user']);
+include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
+unset($arrayfields['t.formateur']);
 
 /*
  * Actions
@@ -233,6 +244,46 @@ if (empty($reshook)) {
 	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
 
 	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_volet.inc.php';
+
+	if($voletInfo['type'] == 1) {
+		if(GETPOST('fk_formation') > 0) {
+			$formation_static = new Formation($db);
+			$formation_static->fetch(GETPOST('fk_formation'));
+		}
+	
+		if(GETPOST('fk_user') > 0) {
+			$user_static = new User($db);
+			$user_static->fetch(GETPOST('fk_user'));
+		}
+	
+		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userformation.inc.php';
+	}
+	elseif($voletInfo['type'] == 2) {
+		if(GETPOST('fk_habilitation') > 0) {
+			$habilitation_static = new Habilitation($db);
+			$habilitation_static->fetch(GETPOST('fk_habilitation'));
+		}
+	
+		if(GETPOST('fk_user') > 0) {
+			$user_static = new User($db);
+			$user_static->fetch(GETPOST('fk_user'));
+		}
+
+		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userhabilitation.inc.php';
+	}
+	elseif($voletInfo['type'] == 3) {
+		if(GETPOST('fk_autorisation') > 0) {
+			$autorisation_static = new Autorisation($db);
+			$autorisation_static->fetch(GETPOST('fk_autorisation'));
+		}
+	
+		if(GETPOST('fk_user') > 0) {
+			$user_static = new User($db);
+			$user_static->fetch(GETPOST('fk_user'));
+		}
+	
+		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userautorisation.inc.php';
+	}
 
 	if ($action == 'set_thirdparty' && $permissiontoadd) {
 		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
@@ -650,6 +701,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		<input type="hidden" name="page_y" value="">
 		<input type="hidden" name="id" value="' . $object->id.'">
 		';
+    	print '<input type="hidden" id="fk_user" name="fk_user" value="' . $object->fk_user.'">';
 
 		if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
 			include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
@@ -692,10 +744,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 			}
 
-			if($voletInfo['type'] == 1) {
-				$colspan -= 4;
-			}
-
 			print '<tr>';
 			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';
 			print '<td class="linecollink center width20"></div>';
@@ -725,6 +773,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		<input type="hidden" name="page_y" value="">
 		<input type="hidden" name="id" value="' . $object->id.'">
 		';
+    	print '<input type="hidden" id="fk_user" name="fk_user" value="' . $object->fk_user.'">';
 
 		if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
 			include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
@@ -760,15 +809,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// }
 
 		if (sizeof($object->lines) == 0) {
-			$colspan = 0;
 			foreach ($arrayfields as $key => $val) {
 				if (!empty($val['checked'])) {
 					$colspan++;
 				}
-			}
-
-			if($voletInfo['type'] == 1) {
-				$colspan -= 4;
 			}
 
 			print '<tr>';

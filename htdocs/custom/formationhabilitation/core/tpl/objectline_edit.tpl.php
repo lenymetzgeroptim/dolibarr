@@ -32,26 +32,13 @@
  * $canchangeproduct (0 by default, 1 to allow to change the product if it is a predefined product)
  */
 
- global $permissiontoreadCout, $object;
+ global $object, $objectline;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
 	print "Error, template page can't be called as URL";
 	exit;
 }
-
-if ($this->table_element_line == 'formationhabilitation_userformation') {
-	$objectline = new UserFormation($this->db);
-}
-if ($this->table_element_line == 'formationhabilitation_userhabilitation') {
-	$objectline = new UserHabilitation($this->db);
-} 
-if ($this->table_element_line == 'formationhabilitation_userautorisation') {
-	$objectline = new UserAutorisation($this->db);
-} 
-if ($this->table_element == 'formationhabilitation_volet') {
-	$objectline = new Volet($this->db);
-} 
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
@@ -60,29 +47,11 @@ print "<!-- BEGIN PHP TEMPLATE objectline_edit.tpl.php -->\n";
 print '<tr class="oddeven tredited">';
 print '<input type="hidden" name="lineid" value="'.$line->id.'">';
 foreach($objectline->fields as $key => $val){
-	if($object->element == 'formation' && $key == 'fk_formation'){
-		continue;
-	}
-	if($object->element == 'habilitation' && $key == 'fk_habilitation'){
-		continue;
-	}
-	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
-		continue;
-	}
-	if($object->element == 'user' && $key == 'fk_user'){
-		continue;
-	}
-	if($object->element == 'volet' && $key == 'fk_user'){
-		continue;
-	}
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
 		continue;
 	}
-	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
-		continue;
-	}
 
-	if(($key == 'fk_societe' && $line->interne_externe == 2) || ($key == 'formateur' &&$line->interne_externe != 2)) {
+	if(($key == 'fk_societe' && $line->interne_externe == 2) || ($key == 'formateur' && $line->interne_externe != 2)) {
 		print '<td style="display: none;" class="center linecol'.$key.' nowrap">'.$objectline->showInputField($val, $key, $line->$key, 'form="addline"').'</td>';
 		continue;
 	}

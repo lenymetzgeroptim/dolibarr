@@ -38,15 +38,13 @@
  * $text, $description, $line
  */
 
-global $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param;
+global $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
 	print "Error, template page can't be called as URL";
 	exit;
 }
-
-$objectline = new Volet($this->db);
 
 if(!$user->rights->formationhabilitation->formation->addline){
 	$disableedit = 1;

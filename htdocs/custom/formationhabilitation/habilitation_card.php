@@ -164,6 +164,8 @@ $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entit
 if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 if (!$permissiontoread) accessforbidden();
 
+unset($objectline->fields['fk_habilitation']);
+
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
 
 /*
@@ -456,6 +458,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	 */
 
 	if (!empty($object->table_element_line)  && $object->status != $object::STATUS_CONSTRUCTION) {
+		$css_table = 'min-height: 450px;';
 		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
 		print '<input type="hidden" form="addline" id="fk_habilitation" name="fk_habilitation" value="' . $object->id.'">';
 	}

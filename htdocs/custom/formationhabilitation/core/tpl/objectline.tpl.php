@@ -355,7 +355,7 @@ else {
     print '<div class="div-table-responsive-no-min">';
 }
 // if (!empty($objectparentline->lines)) {
-    print '<table id="tablelines" style="'.($css_div ? $css_div : '').'" class="noborder noshadow" width="100%">';
+    print '<table id="tablelines" '.(sizeof($objectparentline->lines) != 0 ? 'style="'.$css_table.'"' : '').' class="noborder noshadow" width="100%">';
 
     print "<thead>";
         include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_filter.tpl.php';

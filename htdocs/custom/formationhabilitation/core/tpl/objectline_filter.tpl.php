@@ -27,7 +27,7 @@
  * $type, $text, $description, $line
  */
 
-global $sortfield, $sortorder, $permissiontoreadCout, $search, $langs;
+global $sortfield, $sortorder, $search, $langs;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -43,32 +43,24 @@ print "<!-- BEGIN PHP TEMPLATE objectline_filter.tpl.php -->\n";
 print '<tr class="liste_titre nodrag nodrop">';
 
 foreach($objectline->fields as $key => $val){
-	if($object->element == 'habilitation' && $key == 'fk_habilitation'){
-		continue;
-	}
-	if($object->element == 'autorisation' && $key == 'fk_autorisation'){
-		continue;
-	}
 	if($action == 'editline') {
 		if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
 			continue;
 		}
 	}
-	if(($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total') && !$permissiontoreadCout) {
-		continue;
-	}
+
 	if($key == 'formateur') {
 		continue;
 	}
 
-	if($object->element == 'formation' && $key == 'fk_formation'){
-		print '<input type="hidden" name="search_'.$key.'" value="'.dol_escape_htmltag(isset($object->id) ? $object->id : '').'">';
-		continue;
-	}
-	elseif($object->element == 'user' && $key == 'fk_user'){
-		print '<input type="hidden" name="search_'.$key.'" value="'.dol_escape_htmltag(isset($object->id) ? $object->id : '').'">';
-		continue;
-	}
+	// if($object->element == 'formation' && $key == 'fk_formation'){
+	// 	print '<input type="hidden" name="search_'.$key.'" value="'.dol_escape_htmltag(isset($object->id) ? $object->id : '').'">';
+	// 	continue;
+	// }
+	// elseif($object->element == 'user' && $key == 'fk_user'){
+	// 	print '<input type="hidden" name="search_'.$key.'" value="'.dol_escape_htmltag(isset($object->id) ? $object->id : '').'">';
+	// 	continue;
+	// }
 
 	$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');
 	if (in_array($val['type'], array('timestamp'))) {

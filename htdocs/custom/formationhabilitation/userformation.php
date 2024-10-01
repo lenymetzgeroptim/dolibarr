@@ -115,16 +115,22 @@ if (!$sortorder) {
 $search = array();
 $search['fk_user'] = $object->id;
 
+unset($objectline->fields['fk_user']);
+if(!$permissiontoreadCout) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_mobilisation']);
+    unset($objectline->fields['cout_total']);
+}
+
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
+unset($arrayfields['t.formateur']);
 
 /*
  * Actions
  */
 
 
-if($onglet == 'formation' || empty($onglet)){
-    $objectline = new UserFormation($db);
-	
+if($onglet == 'formation' || empty($onglet)){	
     if(GETPOST('fk_formation') > 0) {
         $formation_static = new Formation($db);
         $formation_static->fetch(GETPOST('fk_formation'));
@@ -138,9 +144,7 @@ if($onglet == 'formation' || empty($onglet)){
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userformation.inc.php';
 }
 
-if($onglet == 'habilitation'){
-    $objectline = new UserHabilitation($db);
-	
+if($onglet == 'habilitation'){	
     if(GETPOST('fk_habilitation') > 0) {
         $habilitation_static = new Habilitation($db);
         $habilitation_static->fetch(GETPOST('fk_habilitation'));
@@ -150,13 +154,11 @@ if($onglet == 'habilitation'){
         $user_static = new User($db);
         $user_static->fetch(GETPOST('fk_user'));
     }
-
+        
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userhabilitation.inc.php';
 }
 
-if($onglet == 'autorisation'){
-    $objectline = new UserAutorisation($db);
-	
+if($onglet == 'autorisation'){	
     if(GETPOST('fk_autorisation') > 0) {
         $autorisation_static = new Autorisation($db);
         $autorisation_static->fetch(GETPOST('fk_autorisation'));
@@ -172,8 +174,6 @@ if($onglet == 'autorisation'){
 
 // Action pour générer un document
 if ($onglet == 'volet') {
-    $objectline = new Volet($db);
-
     if(GETPOST('fk_user') > 0) {
         $user_static = new User($db);
         $user_static->fetch(GETPOST('fk_user'));
@@ -228,8 +228,6 @@ if ($onglet == 'volet') {
     //     exit;
     // }
 }
-
-
 
 /*
  * View
@@ -337,7 +335,7 @@ if(empty($onglet) || $onglet == 'formation'){
     print dol_get_fiche_head($head2, 'formation', $title, -1, 'user');
 
     $contextpage = 'userformation';
-    //$css_div = 'margin-bottom: 250px;';
+    $css_table = 'min-height: 450px;';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
@@ -345,7 +343,7 @@ elseif($onglet == 'habilitation'){
     print dol_get_fiche_head($head2, 'habilitation', $title, -1, 'user');
 
     $contextpage = 'userhabilitation';
-    //$css_div = 'margin-bottom: 250px;';
+    $css_table = 'min-height: 450px;';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
@@ -353,7 +351,7 @@ elseif($onglet == 'autorisation'){
     print dol_get_fiche_head($head2, 'autorisation', $title, -1, 'user');
 
     $contextpage = 'userautorisation';
-    //$css_div = 'margin-bottom: 250px;';
+    $css_table = 'min-height: 450px;';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
@@ -361,7 +359,6 @@ elseif($onglet == 'volet') {
     print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
 
     $contextpage = 'volet';
-    //$css_div = 'margin-bottom: 250px;';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 
