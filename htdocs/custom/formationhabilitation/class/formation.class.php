@@ -125,7 +125,7 @@ class Formation extends CommonObject
 		"periode_souplesse" => array("type"=>"integer", "label"=>"PeriodeSouplesse", "enabled"=>"1", 'position'=>36, 'notnull'=>0, "visible"=>"-1", "help"=>"en mois",),
 		"periode_souplesse_bloquant" => array("type"=>"boolean", "label"=>"PeriodeSouplesseBloquant", "enabled"=>"1", 'position'=>37, 'notnull'=>0, "visible"=>"1",),
 		"prerequis" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"Prerequis", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
-		"volet" => array("type"=>"sellist:c_volets:numero|label:numero::(active:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
+		"volet" => array("type"=>"sellist:c_volets:numero|label:rowid::(active:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
 		"formationssuperieurs" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"FormationsSuperieur", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 		"delaisprogrammation" => array("type"=>"integer", "label"=>"DelaisProgrammation", "enabled"=>"1", 'position'=>38, 'notnull'=>0, "visible"=>"1", "help"=>"en mois",),
 		"sousdomaine" => array("type"=>"sellist:c_sousdomaine_formation:label:rowid::(active:=:1)", "label"=>"SousDomaine", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
@@ -1092,68 +1092,6 @@ class Formation extends CommonObject
 		return $error;
 	}
 
-	/**
-	 * 	Return tous les volets à partir du dictionnaire
-	 *
-	 * 	@return	array						
-	 */
-	public function getAllVolet()
-	{
-		global $conf, $user;
-		$res = array();
-
-		$sql = "SELECT v.rowid, v.numero, v.label";
-		$sql .= " FROM ".MAIN_DB_PREFIX."c_volets as v";
-		$sql .= " WHERE v.active = 1";
-		$sql .= " ORDER BY v.numero";
-
-		dol_syslog(get_class($this)."::getAllVolet", LOG_DEBUG);
-		$resql = $this->db->query($sql);
-		if ($resql) {
-			while($obj = $this->db->fetch_object($resql)) {
-				$res[$obj->numero] = $obj->numero." - ".$obj->label;
-			}
-
-			$this->db->free($resql);
-			return $res;
-		} else {
-			$this->error = $this->db->lasterror();
-			return -1;
-		}
-	}
-
-	/**
-	 * 	Return tous les volets à partir du dictionnaire
-	 *
-	 * 	@param  int		$voletid       Id of Volet
-	 * 	@return	array						
-	 */
-	public function getVoletInfo($voletid)
-	{
-		global $conf, $user;
-		$res = array();
-
-		$sql = "SELECT v.numero, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle";
-		$sql .= " FROM ".MAIN_DB_PREFIX."c_volets as v";
-		$sql .= " WHERE v.numero = $voletid";
-
-		dol_syslog(get_class($this)."::getVoletInfo", LOG_DEBUG);
-		$resql = $this->db->query($sql);
-		if ($resql) {
-			$obj = $this->db->fetch_object($resql);
-			$res['label'] = $obj->label;
-			$res['long_label'] = $obj->long_label;
-			$res['nb_initial'] = $obj->nb_initial;
-			$res['nb_recyclage'] = $obj->nb_recyclage;
-			$res['nb_passerelle'] = $obj->nb_passerelle;
-
-			$this->db->free($resql);
-			return $res;
-		} else {
-			$this->error = $this->db->lasterror();
-			return -1;
-		}
-	}
 
 	/**
 	 * 	Return toutes les formations qui correspondent à un volet

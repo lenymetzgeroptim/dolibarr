@@ -447,9 +447,9 @@ class pdf_userformationhabilitation extends ModelePDFFormation
 		$posy = $this->marge_haute;
 		$posx = $this->page_largeur - $this->marge_droite - $w;
 
-		$formation = new Formation($db);
+		$volet = new Volet($db);
 		$voletid = GETPOST('voletid', 'int');
-		$voletarray = $formation->getallVolet();
+		$voletarray = $volet->getallVolet();
 		$title = $voletarray[$voletid];
 
 		$userField = new UserField($this->db);
@@ -541,9 +541,10 @@ class pdf_userformationhabilitation extends ModelePDFFormation
 
 		$nb_formation = 0;
 		$formation = new Formation($db);
+		$volet_obj = new Volet($db);
 		$userformation = new UserFormation($db);
 		$voletid = GETPOST('voletid', 'int');
-		$volet = $formation->getVoletInfo($voletid);
+		$volet = $volet_obj->getVoletInfo($voletid);
 		$arrayformations = $formation->getFormationsByVolet($voletid);
 
 		$nb_initial = $volet['nb_initial'];

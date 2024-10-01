@@ -128,7 +128,7 @@ class Volet extends CommonObject
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "9" => "Annul&eacute;"), "validate"=>"1",),
 		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
-		"numvolet" => array("type"=>"sellist:c_volets:numero|label:numero::(active:=:1)", "label"=>"Numéro volet", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
+		"numvolet" => array("type"=>"sellist:c_volets:numero|label:rowid::(active:=:1)", "label"=>"Numéro volet", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
 		"datedebutvolet" => array("type"=>"date", "label"=>"DateDebutVolet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"datefinvolet" => array("type"=>"date", "label"=>"DateFinVolet", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 	);
@@ -154,7 +154,7 @@ class Volet extends CommonObject
 	// /**
 	//  * @var string    Name of subtable line
 	//  */
-	public $table_element_line = 'formationhabilitation_userhabilitation';
+	public $table_element_line = '';
 
 	// /**
 	//  * @var string    Field with ID of parent key if this object has a parent
@@ -357,6 +357,19 @@ class Volet extends CommonObject
 		$result = $this->fetchCommon($id, $ref, '', $noextrafields);
 		if ($result > 0 && !empty($this->table_element_line) && empty($nolines)) {
 			//$this->fetchLines($noextrafields);
+		}
+		if($result > 0) {
+			$voletInfo = $this->getVoletInfo($this->numvolet); 
+
+			if($voletInfo['type'] == 1) {
+				$this->table_element_line = 'formationhabilitation_userformation';
+			}
+			elseif($voletInfo['type'] == 2) {
+				$this->table_element_line = 'formationhabilitation_userhabilitation';
+			}
+			elseif($voletInfo['type'] == 3) {
+				$this->table_element_line = 'formationhabilitation_userautorisation';
+			}
 		}
 		return $result;
 	}
@@ -1063,8 +1076,19 @@ class Volet extends CommonObject
 	{
 		$this->lines = array();
 
-		$objectline = new UserHabilitation($this->db);
-		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NOT NULL'), 'AND', $this->id);
+		$voletInfo = $this->getVoletInfo($this->numvolet); 
+
+		if($voletInfo['type'] == 1) {
+			$objectline = new UserFormation($this->db);
+		}
+		elseif($voletInfo['type'] == 2) {
+			$objectline = new UserHabilitation($this->db);
+		}
+		elseif($voletInfo['type'] == 3) {
+			$objectline = new UserAutorisation($this->db);
+		}
+
+		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NOT NULL'), 'AND', $this->id, $this->numvolet);
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
@@ -1084,8 +1108,22 @@ class Volet extends CommonObject
 	{
 		$this->lines = array();
 
-		$objectline = new UserHabilitation($this->db);
-		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL'), 'AND', $this->id);
+		$voletInfo = $this->getVoletInfo($this->numvolet); 
+
+		if($voletInfo['type'] == 1) {
+			$objectline = new UserFormation($this->db);
+			$status = UserFormation::STATUS_VALIDE;
+		}
+		elseif($voletInfo['type'] == 2) {
+			$objectline = new UserHabilitation($this->db);
+			$status = UserHabilitation::STATUS_HABILITE;
+		}
+		elseif($voletInfo['type'] == 3) {
+			$objectline = new UserAutorisation($this->db);
+			$status = UserAutorisation::STATUS_AUTORISE;
+		}
+
+		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL AND t.status = '.$status), 'AND', $this->id, $this->numvolet);
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
@@ -1799,6 +1837,71 @@ class Volet extends CommonObject
 		} else {
 			$this->db->rollback();
 			return 0;
+		}
+	}
+
+	/**
+	 * 	Return tous les volets à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllVolet()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT v.rowid, v.numero, v.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_volets as v";
+		$sql .= " WHERE v.active = 1";
+		$sql .= " ORDER BY v.numero";
+
+		dol_syslog(get_class($this)."::getAllVolet", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->numero." - ".$obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return les informations d'un volet
+	 *
+	 * 	@param  int		$voletid       Id of Volet
+	 * 	@return	array						
+	 */
+	public function getVoletInfo($voletid)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT v.numero, v.typevolet, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_volets as v";
+		$sql .= " WHERE v.rowid = $voletid";
+
+		dol_syslog(get_class($this)."::getVoletInfo", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$obj = $this->db->fetch_object($resql);
+			$res['numero'] = $obj->numero;
+			$res['type'] = $obj->typevolet;
+			$res['label'] = $obj->label;
+			$res['long_label'] = $obj->long_label;
+			$res['nb_initial'] = $obj->nb_initial;
+			$res['nb_recyclage'] = $obj->nb_recyclage;
+			$res['nb_passerelle'] = $obj->nb_passerelle;
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
 		}
 	}
 }

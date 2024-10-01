@@ -366,6 +366,7 @@ elseif($onglet == 'volet') {
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 
     // $formfile = new FormFile($db);
+    // $volet = new Volet($db);
     // $upload_dir = $conf->export->dir_temp.'/'.$user->id;
     
     // print '<div class="fichecenter">';
@@ -387,7 +388,7 @@ elseif($onglet == 'volet') {
 
     //         print '<div class="tabsAction">'."\n";
     //         // Generer PDF
-    //         $voletarray = $objectparentline->getallVolet();
+    //         $voletarray = $volet->getallVolet();
     //         print $form->selectarray('voletid', $voletarray, $voletid, 1);
     //         if($permissiontoaddline) {
     //             print '<input type="submit" value="'.$langs->trans("GenererDoc").'" class="button"/>';

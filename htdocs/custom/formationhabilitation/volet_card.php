@@ -84,6 +84,8 @@ dol_include_once('/formationhabilitation/class/volet.class.php');
 dol_include_once('/formationhabilitation/lib/formationhabilitation_volet.lib.php');
 dol_include_once('/formationhabilitation/class/habilitation.class.php');
 dol_include_once('/formationhabilitation/class/userhabilitation.class.php');
+dol_include_once('/formationhabilitation/class/userformation.class.php');
+dol_include_once('/formationhabilitation/class/userautorisation.class.php');
 
 // Load translation files required by the page
 $langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"));
@@ -117,9 +119,6 @@ $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($object->element.'card', 'globalcard')); // Note that conf->hooks_modules contains array
 
-$objectline = new UserHabilitation($db);
-$objectparentline = new Volet($db);
-
 
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
@@ -141,6 +140,20 @@ if (empty($action) && empty($id) && empty($ref)) {
 
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
+
+$voletInfo = $object->getVoletInfo($object->numvolet); 
+
+if($voletInfo['type'] == 1) {
+	$objectline = new UserFormation($db);
+}
+elseif($voletInfo['type'] == 2) {
+	$objectline = new UserHabilitation($db);
+}
+elseif($voletInfo['type'] == 3) {
+	$objectline = new UserAutorisation($db);
+}
+
+$objectparentline = new Volet($db);
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
@@ -630,7 +643,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$enableunlink = 1; 
 		$enablelink = 0; 
 
-		print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+		print '	<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
 		<input type="hidden" name="token" value="' . newToken().'">
 		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
 		<input type="hidden" name="mode" value="">
@@ -678,6 +691,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					$colspan++;
 				}
 			}
+
+			if($voletInfo['type'] == 1) {
+				$colspan -= 4;
+			}
+
 			print '<tr>';
 			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';
 			print '<td class="linecollink center width20"></div>';
@@ -700,7 +718,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$enablelink = 1; 
 		$enableunlink = 0; 
 
-		print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+		print '	<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
 		<input type="hidden" name="token" value="' . newToken().'">
 		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
 		<input type="hidden" name="mode" value="">
@@ -748,6 +766,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					$colspan++;
 				}
 			}
+
+			if($voletInfo['type'] == 1) {
+				$colspan -= 4;
+			}
+
 			print '<tr>';
 			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';
 			print '<td class="linecollink center width20"></div>';

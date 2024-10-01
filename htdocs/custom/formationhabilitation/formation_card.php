@@ -193,15 +193,15 @@ if (empty($reshook)) {
 
 	$backurlforlist = dol_buildpath('/formationhabilitation/formation_list.php', 1);
 
-	// if (empty($backtopage) || ($cancel && empty($id))) {
-	// 	if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
-	// 		if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
-	// 			$backtopage = $backurlforlist;
-	// 		} else {
-	// 			$backtopage = dol_buildpath('/formationhabilitation/formation_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
-	// 		}
-	// 	}
-	// }
+	if (empty($backtopage) || ($cancel && empty($id))) {
+		if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
+			if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
+				$backtopage = $backurlforlist;
+			} else {
+				$backtopage = dol_buildpath('/formationhabilitation/formation_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
+			}
+		}
+	}
 
 	$triggermodname = 'FORMATIONHABILITATION_FORMATION_MODIFY'; // Name of trigger action code to execute when we modify record
 

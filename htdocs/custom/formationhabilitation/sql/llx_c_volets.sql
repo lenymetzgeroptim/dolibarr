@@ -17,7 +17,7 @@
 CREATE TABLE llx_c_volets(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
-	numero integer NOT NULL, 
+	numero integer, 
 	label varchar(128) COLLATE utf8_unicode_ci NOT NULL,
 	nb_initial integer NOT NULL, 
 	nb_recyclage integer NOT NULL, 

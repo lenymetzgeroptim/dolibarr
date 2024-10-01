@@ -31,6 +31,6 @@ CREATE TABLE llx_formationhabilitation_autorisation(
 	status integer NOT NULL, 
 	formation chkbxlst, 
 	volet integer, 
-	test integer
+	test varchar(255)
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;
