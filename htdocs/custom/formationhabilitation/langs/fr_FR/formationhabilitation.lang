@@ -51,6 +51,14 @@ FormationHabilitationSetupPage = Paramètrage du module Formation - Habilitation
 FamilleFormation = Famille de formation
 SousDomaineFormation = Domaine de formation
 ExamensMedicaux = Examens Médicaux
+DomainesApplication = Domaines d'application
+MotifVisite = Motifs visite médicale
+ApprobationVoletTitle = Approbation des volets
+FORMTIONHABILITATION_APPROBATEURVOLET1 = Approbation n°1
+FORMTIONHABILITATION_APPROBATEURVOLET2 = Approbation n°2
+FORMTIONHABILITATION_APPROBATEURVOLET3 = Approbation n°3
+FORMTIONHABILITATION_APPROBATEURVOLET4 = Approbation n°4é
+FORMTIONHABILITATION_APPROBATIONVOLET = Approbation(s) réalisée(s) pour le volet %s
 
 
 #
@@ -75,13 +83,12 @@ Nb_initial = Nombre d'initial
 Nb_recyclage = Nombre de recyclage
 Nb_passerelle = Nombre de passerelle
 Typevolet = Type
+Validationvolet = Validation
 DictionnaryTypeVoletHelp = 1 = Volet de formation<br>2 = Volet d'habilitation<br>3 = Volet d'autorisation<br>4 = Autres
-Approbation = En cours d'approbation
-Approbation1 = Approbation d'un responsable d'affaire en attente
-Approbation2 = Approbation d'un RD en attente
-Approbation3 = Approbation de la direction en attente
-Approbation4 = Approbation du collaborateur en attente
-
+DictionnaryValidationVoletHelp = 1 = Approbation n°1 uniquement<br>2 = Approbation n°2 uniquement<br>3 = Approbation n°3 uniquement<br>4 = Approbation n°4 uniquement<br>5 = Approbation n°1 et 2 uniquement<br>6 = Approbation n°1 et 3 uniquement<br>7 = Approbation n°1 et 4 uniquement<br>8 = Approbation n°2 et 3 uniquement<br>9 = Approbation n°2 et 4 uniquement<br>10 = Approbation n°3 et 4 uniquement<br>11 = Approbation n°1, 2 et 3<br>12 = Approbation n°1, 2 et 4<br>13 = Approbation n°2, 3, 4<br>14 = Approbation n°1, 2, 3 et 4<br>
+ApprobationVolet = En cours d'approbation
+ApprobationVoletGroupe = Approbation du groupe %s en attente
+ApprobationVoletCollaborateur = Approbation du collaborateur en attente
 
 #
 # Attribut Formation
@@ -105,6 +112,7 @@ DelaisProgrammation = Délais programmation
 # Attribut Habiliation _ Autorisation
 # 
 ValiditeEmployeur = Durée de validité de l'employeur
+DomaineApplication = Domaine d'application (défaut)
 
 
 #
@@ -113,12 +121,12 @@ ValiditeEmployeur = Durée de validité de l'employeur
 VisiteMedical = Visite Médicale
 VisiteMedicals = Visites médicale
 ObjetVisite = Objet
-CaracterePonctuelVisite = Caractère ponctuel
+MotifVisite = Motif ponctuel
 DemandeurVisite = Demandeur
 DateVisite = Date de la visite
 DateFinValidite = Date de fin de validité 
 CoutVisite = Coût
-NatureVisite = Nature 
+NatureVisite = Nature visite médicale
 Utilisateur = Collaborateur
 
 #

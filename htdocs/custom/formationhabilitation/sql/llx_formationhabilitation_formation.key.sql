@@ -16,7 +16,6 @@
 
 -- BEGIN MODULEBUILDER INDEXES
 ALTER TABLE llx_formationhabilitation_formation ADD INDEX idx_formationhabilitation_formation_rowid (rowid);
-ALTER TABLE llx_formationhabilitation_formation ADD INDEX idx_formationhabilitation_formation_ref (ref);
 ALTER TABLE llx_formationhabilitation_formation ADD INDEX idx_formationhabilitation_formation_status (status);
 -- END MODULEBUILDER INDEXES
 

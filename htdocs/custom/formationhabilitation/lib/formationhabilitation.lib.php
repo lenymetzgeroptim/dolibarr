@@ -79,3 +79,31 @@ function formationhabilitationAdminPrepareHead()
 
 	return $head;
 }
+
+/**
+ * 	Return tous les volets à partir du dictionnaire
+ *
+ * 	@return	array						
+ */
+function getLabelList($table, $fieldname)
+{
+	global $conf, $user, $db;
+	$res = array();
+
+	$sql = "SELECT t.rowid, t.$fieldname";
+	$sql .= " FROM ".MAIN_DB_PREFIX."$table as t";
+	$sql .= " ORDER BY t.$fieldname";
+
+	dol_syslog("formationhabilitation.lib.php::getLabelList", LOG_DEBUG);
+	$resql = $db->query($sql);
+	if ($resql) {
+		while($obj = $db->fetch_object($resql)) {
+			$res[$obj->rowid] = $obj->$fieldname;
+		}
+
+		$db->free($resql);
+		return $res;
+	} else {
+		return -1;
+	}
+}

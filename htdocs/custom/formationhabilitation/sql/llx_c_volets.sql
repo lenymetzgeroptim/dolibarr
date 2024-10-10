@@ -25,5 +25,6 @@ CREATE TABLE llx_c_volets(
 	active int(11) DEFAULT 1
 	nb_passerelle integer NOT NULL, 
 	typevolet integer NOT NULL, 
+	validationvolet integer NOT NULL,
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

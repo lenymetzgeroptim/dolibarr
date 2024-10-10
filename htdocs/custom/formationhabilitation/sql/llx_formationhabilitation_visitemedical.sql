@@ -31,7 +31,7 @@ CREATE TABLE llx_formationhabilitation_visitemedical(
 	commentaire text, 
 	fk_contact integer NOT NULL, 
 	objetvisite varchar(128) NOT NULL, 
-	caractereponctuelvisite integer NOT NULL, 
+	motifvisite integer NOT NULL, 
 	demandeurvisite integer NOT NULL, 
 	datevisite date NOT NULL, 
 	datefinvalidite date NOT NULL, 

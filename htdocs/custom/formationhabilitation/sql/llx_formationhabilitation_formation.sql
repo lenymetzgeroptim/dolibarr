@@ -17,7 +17,6 @@
 CREATE TABLE llx_formationhabilitation_formation(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
-	ref varchar(128) NOT NULL, 
 	label varchar(255) NOT NULL, 
 	note_public text, 
 	note_private text, 
@@ -31,16 +30,16 @@ CREATE TABLE llx_formationhabilitation_formation(
 	status integer NOT NULL, 
 	type integer, 
 	ref_externe varchar(128), 
-	nombre_heure integer NOT NULL, 
-	cout double NOT NULL, 
+	nombre_heure integer, 
+	cout double, 
 	periode_recyclage integer, 
-	fournisseur varchar(255) NOT NULL, 
-	famille integer NOT NULL, 
+	fournisseur chkbxlst NOT NULL, 
+	famille integer, 
 	periode_souplesse integer, 
 	periode_souplesse_bloquant boolean, 
-	prerequis varchar(255), 
+	prerequis chkbxlst, 
 	volet integer, 
-	formationssuperieurs varchar(255), 
+	formationssuperieurs chkbxlst, 
 	delaisprogrammation integer, 
 	sousdomaine integer NOT NULL
 	-- END MODULEBUILDER FIELDS

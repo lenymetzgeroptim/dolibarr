@@ -14,24 +14,10 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-CREATE TABLE llx_formationhabilitation_userhabilitation(
+CREATE TABLE llx_c_domaine_application(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
-	ref varchar(128) NOT NULL, 
-	note_public text, 
-	note_private text, 
-	date_creation datetime NOT NULL, 
-	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
-	fk_user_creat integer NOT NULL, 
-	fk_user_modif integer, 
-	last_main_doc varchar(255), 
-	import_key varchar(14), 
-	model_pdf varchar(255), 
-	fk_habilitation integer NOT NULL, 
-	fk_user integer NOT NULL, 
-	date_habilitation date NOT NULL, 
-	status integer NOT NULL, 
-	date_fin_habilitation date NOT NULL, 
-	domaineapplication integer
+	label varchar(128) COLLATE utf8_unicode_ci NOT NULL,
+	active int(11) DEFAULT 1
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

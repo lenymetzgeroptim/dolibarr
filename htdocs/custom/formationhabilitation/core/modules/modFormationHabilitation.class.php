@@ -206,23 +206,23 @@ class modFormationHabilitation extends DolibarrModules
 			'langs'=>'formationhabilitation@formationhabilitation',
 			'picto'=>'user',
 			// List of tables we want to see into dictonnary editor
-			'tabname'=>array("c_famille_formation", "c_volets", "c_sousdomaine_formation", "c_examen_medical", "c_nature_visite"),
+			'tabname'=>array("c_famille_formation", "c_volets", "c_sousdomaine_formation", "c_examen_medical", "c_nature_visite", "c_domaine_application", "c_motif_visite"),
 			// Label of tables
-			'tablib'=>array("FamilleFormation", "Volets", "SousDomaineFormation", "ExamensMedicaux", "NatureVisite"),
+			'tablib'=>array("FamilleFormation", "Volets", "SousDomaineFormation", "ExamensMedicaux", "NatureVisite", "DomainesApplication", "MotifVisite"),
 			// Request to select fields
-			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT v.rowid as rowid, v.numero, v.typevolet, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle, v.active FROM '.MAIN_DB_PREFIX.'c_volets as v', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_sousdomaine_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_examen_medical as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_nature_visite as f'),
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT v.rowid as rowid, v.numero, v.typevolet, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle, v.active FROM '.MAIN_DB_PREFIX.'c_volets as v', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_sousdomaine_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_examen_medical as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_nature_visite as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_domaine_application as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_motif_visite as f'),
 			// Sort order
-			'tabsqlsort'=>array("label ASC", "numero ASC", "label ASC", "label ASC", "label ASC"),
+			'tabsqlsort'=>array("label ASC", "numero ASC", "label ASC", "label ASC", "label ASC", "label ASC", "label ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("label", "numero,typevolet,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label"),
+			'tabfield'=>array("label", "numero,typevolet,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label", "label", "label"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("label", "numero,typevolet,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label"),
+			'tabfieldvalue'=>array("label", "numero,typevolet,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label", "label", "label"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("label", "numero,typevolet,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label"),
+			'tabfieldinsert'=>array("label", "numero,typevolet,label,long_label,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label", "label", "label"),
 			// Name of columns with primary key (try to always name it 'rowid')
-			'tabrowid'=>array("rowid", "rowid", "rowid", "rowid", "rowid"),
+			'tabrowid'=>array("rowid", "rowid", "rowid", "rowid", "rowid", "rowid", "rowid"),
 			// Condition to show each dictionary
-			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled),
+			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled),
 			// Tooltip for every fields of dictionaries: DO NOT PUT AN EMPTY ARRAY
 			'tabhelp' => array('', array('typevolet' => $langs->trans('DictionnaryTypeVoletHelp')), '', '', ''),
 		);
@@ -664,21 +664,144 @@ class modFormationHabilitation extends DolibarrModules
 		// Imports profiles provided by this module
 		$r = 1;
 		/* BEGIN MODULEBUILDER IMPORT FORMATION */
-		/*
-		 $langs->load("formationhabilitation@formationhabilitation");
-		 $this->export_code[$r]=$this->rights_class.'_'.$r;
-		 $this->export_label[$r]='FormationLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
-		 $this->export_icon[$r]='formation@formationhabilitation';
-		 $keyforclass = 'Formation'; $keyforclassfile='/formationhabilitation/class/formation.class.php'; $keyforelement='formation@formationhabilitation';
-		 include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
-		 $keyforselect='formation'; $keyforaliasextra='extra'; $keyforelement='formation@formationhabilitation';
-		 include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
-		 //$this->export_dependencies_array[$r]=array('mysubobject'=>'ts.rowid', 't.myfield'=>array('t.myfield2','t.myfield3')); // To force to activate one or several fields if we select some fields that need same (like to select a unique key if we ask a field of a child to avoid the DISTINCT to discard them, or for computed field than need several other fields)
-		 $this->export_sql_start[$r]='SELECT DISTINCT ';
-		 $this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'formation as t';
-		 $this->export_sql_end[$r] .=' WHERE 1 = 1';
-		 $this->export_sql_end[$r] .=' AND t.entity IN ('.getEntity('formation').')';
-		 $r++; */
+		$langs->load("formationhabilitation@formationhabilitation");
+
+		$this->import_code[$r]=$this->rights_class.'_'.$r;
+		$this->import_label[$r]='Formation';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		$this->import_icon[$r]='fa-graduation-cap_fas_#1f3d89';
+		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX.'formationhabilitation_formation');
+		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_creat'); // Fields to store import user id
+		$import_sample = array();
+		$keyforclass = 'Formation'; $keyforclassfile='/formationhabilitation/class/formation.class.php'; $keyforelement='formation@formationhabilitation';
+		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
+		$import_extrafield_sample = array();
+		$keyforselect='formation'; $keyforaliasextra='extra'; $keyforelement='formation@formationhabilitation';
+		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinimport.inc.php';
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.MAIN_DB_PREFIX.'formationhabilitation_formation', 't.status' => 'const-1', 't.volet' => 'const-2',  't.delaisprogrammation' => 'const-6');
+		$this->import_regex_array[$r] = array();
+		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
+		$this->import_updatekeys_array[$r] = array('t.rowid' => 'ID');
+		$this->import_convertvalue_array[$r] = array(
+			// 't.ref' => array(
+			// 	'rule'=>'getrefifauto',
+			// 	'class'=>(!getDolGlobalString('MYMODULE_MYOBJECT_ADDON') ? 'mod_myobject_standard' : getDolGlobalString('MYMODULE_MYOBJECT_ADDON')),
+			// 	'path'=>"/core/modules/commande/".(!getDolGlobalString('MYMODULE_MYOBJECT_ADDON') ? 'mod_myobject_standard' : getDolGlobalString('MYMODULE_MYOBJECT_ADDON')).'.php'
+			// 	'classobject'=>'MyObject',
+			// 	'pathobject'=>'/mymodule/class/myobject.class.php',
+			// ),
+			//'t.fk_soc' => array('rule' => 'fetchidfromref', 'file' => '/societe/class/societe.class.php', 'class' => 'Societe', 'method' => 'fetch', 'element' => 'ThirdParty'),
+			't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
+		);
+		$this->import_run_sql_after_array[$r] = array();
+		$r++;
+
+		$this->import_code[$r]=$this->rights_class.'_'.$r;
+		$this->import_label[$r]='UserFormation';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		$this->import_icon[$r]='fa-user-graduate_fas_#1f3d89';
+		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX.'formationhabilitation_userformation');
+		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_creat'); // Fields to store import user id
+		$import_sample = array();
+		$keyforclass = 'UserFormation'; $keyforclassfile='/formationhabilitation/class/userformation.class.php'; $keyforelement='userformation@formationhabilitation';
+		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
+		$import_extrafield_sample = array();
+		$keyforselect='userformation'; $keyforaliasextra='extra'; $keyforelement='userformation@formationhabilitation';
+		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinimport.inc.php';
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.MAIN_DB_PREFIX.'formationhabilitation_userformation');
+		$this->import_regex_array[$r] = array();
+		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
+		$this->import_updatekeys_array[$r] = array('t.ref' => 'Ref');
+		$this->import_convertvalue_array[$r] = array(
+			't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
+		);
+		$this->import_run_sql_after_array[$r] = array();
+		$r++;
+
+
+
+		$this->import_code[$r]=$this->rights_class.'_'.$r;
+		$this->import_label[$r]='Habilitation';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		$this->import_icon[$r]='fa-cog_fa_#c46c0e';
+		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX.'formationhabilitation_habilitation');
+		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_creat'); // Fields to store import user id
+		$import_sample = array();
+		$keyforclass = 'Habilitation'; $keyforclassfile='/formationhabilitation/class/habilitation.class.php'; $keyforelement='habilitation@formationhabilitation';
+		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
+		$import_extrafield_sample = array();
+		$keyforselect='habilitation'; $keyforaliasextra='extra'; $keyforelement='habilitation@formationhabilitation';
+		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinimport.inc.php';
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.MAIN_DB_PREFIX.'formationhabilitation_habilitation');
+		$this->import_regex_array[$r] = array();
+		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
+		$this->import_updatekeys_array[$r] = array('t.rowid' => 'ID');
+		$this->import_convertvalue_array[$r] = array(
+			't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
+		);
+		$this->import_run_sql_after_array[$r] = array();
+		$r++;
+
+		$this->import_code[$r]=$this->rights_class.'_'.$r;
+		$this->import_label[$r]='UserHabilitation';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		$this->import_icon[$r]='fa-user-gear_fas_#c46c0e';
+		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX.'formationhabilitation_userhabilitation');
+		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_creat'); // Fields to store import user id
+		$import_sample = array();
+		$keyforclass = 'UserHabilitation'; $keyforclassfile='/formationhabilitation/class/userhabilitation.class.php'; $keyforelement='userhabilitation@formationhabilitation';
+		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
+		$import_extrafield_sample = array();
+		$keyforselect='userhabilitation'; $keyforaliasextra='extra'; $keyforelement='userhabilitation@formationhabilitation';
+		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinimport.inc.php';
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.MAIN_DB_PREFIX.'formationhabilitation_userhabilitation');
+		$this->import_regex_array[$r] = array();
+		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
+		$this->import_updatekeys_array[$r] = array('t.ref' => 'Ref');
+		$this->import_convertvalue_array[$r] = array(
+			't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
+		);
+		$this->import_run_sql_after_array[$r] = array();
+		$r++;
+
+
+		$this->import_code[$r]=$this->rights_class.'_'.$r;
+		$this->import_label[$r]='Autorisation';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		$this->import_icon[$r]='fa-check_fas_green';
+		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX.'formationhabilitation_autorisation');
+		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_creat'); // Fields to store import user id
+		$import_sample = array();
+		$keyforclass = 'Autorisation'; $keyforclassfile='/formationhabilitation/class/autorisation.class.php'; $keyforelement='autorisation@formationhabilitation';
+		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
+		$import_extrafield_sample = array();
+		$keyforselect='autorisation'; $keyforaliasextra='extra'; $keyforelement='autorisation@formationhabilitation';
+		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinimport.inc.php';
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.MAIN_DB_PREFIX.'formationhabilitation_autorisation');
+		$this->import_regex_array[$r] = array();
+		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
+		$this->import_updatekeys_array[$r] = array('t.rowid' => 'ID');
+		$this->import_convertvalue_array[$r] = array(
+			't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
+		);
+		$this->import_run_sql_after_array[$r] = array();
+		$r++;
+
+		$this->import_code[$r]=$this->rights_class.'_'.$r;
+		$this->import_label[$r]='UserAutorisation';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		$this->import_icon[$r]='fa-user-check_fas_green';
+		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX.'formationhabilitation_userautorisation');
+		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_creat'); // Fields to store import user id
+		$import_sample = array();
+		$keyforclass = 'UserAutorisation'; $keyforclassfile='/formationhabilitation/class/userautorisation.class.php'; $keyforelement='userautorisation@formationhabilitation';
+		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
+		$import_extrafield_sample = array();
+		$keyforselect='userautorisation'; $keyforaliasextra='extra'; $keyforelement='userautorisation@formationhabilitation';
+		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinimport.inc.php';
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.MAIN_DB_PREFIX.'formationhabilitation_userautorisation');
+		$this->import_regex_array[$r] = array();
+		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
+		$this->import_updatekeys_array[$r] = array('t.ref' => 'Ref');
+		$this->import_convertvalue_array[$r] = array(
+			't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
+		);
+		$this->import_run_sql_after_array[$r] = array();
+		$r++;
 		/* END MODULEBUILDER IMPORT FORMATION */
 	}
 

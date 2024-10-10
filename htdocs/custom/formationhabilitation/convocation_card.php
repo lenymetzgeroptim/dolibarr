@@ -216,8 +216,8 @@ if (empty($reshook)) {
 			}
 		}
 		elseif (GETPOST("nature", 'int') == '2') {
-			if(empty(GETPOST("naturevisite", 'int'))) {
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Nature visite")), null, 'errors');
+			if(empty(GETPOST("motifvisite"))) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("MotifVisite")), null, 'errors');
 				$error++;
 			}
 			if(GETPOST("fk_contact", 'int') <= 0) {
@@ -240,7 +240,7 @@ if (empty($reshook)) {
 	if($action == 'update') {
 		if($object->nature == 1) {
 			$object->fk_contact = '';
-			$object->naturevisite = '';
+			$object->motifvisite = '';
 			$object->centremedecine = '';
 			$object->examenrealiser = '';
 		}
@@ -256,14 +256,14 @@ if (empty($reshook)) {
 			$object->fk_societe = '';
 			$object->fk_formation = '';
 			$object->fk_contact = '';
-			$object->naturevisite = '';
+			$object->motifvisite = '';
 		}
 		elseif($object->nature == 4) {
 			$object->type = '';
 			$object->fk_societe = '';
 			$object->fk_formation = '';
 			$object->fk_contact = '';
-			$object->naturevisite = '';
+			$object->motifvisite = '';
 		}
 	}
 
@@ -528,7 +528,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	$keyforbreak='nature';	// We change column just before this field
 	if($object->nature == 1) {
 		unset($object->fields['fk_contact']);
-		unset($object->fields['naturevisite']);
+		unset($object->fields['motifvisite']);
 		unset($object->fields['centremedecine']);
 		unset($object->fields['examenrealiser']);
 	}
@@ -544,14 +544,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		unset($object->fields['fk_societe']);
 		unset($object->fields['fk_formation']);
 		unset($object->fields['fk_contact']);
-		unset($object->fields['naturevisite']);
+		unset($object->fields['motifvisite']);
 	}
 	elseif($object->nature == 4) {
 		unset($object->fields['type']);
 		unset($object->fields['fk_societe']);
 		unset($object->fields['fk_formation']);
 		unset($object->fields['fk_contact']);
-		unset($object->fields['naturevisite']);
+		unset($object->fields['motifvisite']);
 	}
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_view.tpl.php';
 

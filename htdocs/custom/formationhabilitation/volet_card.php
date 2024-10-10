@@ -171,16 +171,37 @@ if ($enablepermissioncheck) {
 	$permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
 	$permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
 
-	$usergroup->fetch(0, 'Responsable Affaires');
-	$permissiontovalidate1 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == 9999) {
+		$permissiontovalidate1 = $user->id == $object->fk_user;
+	}
+	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 > 0) {
+		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+		$permissiontovalidate1 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+	}
 
-	$usergroup->fetch(0, 'RD');
-	$permissiontovalidate2 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == 9999) {
+		$permissiontovalidate2 = $user->id == $object->fk_user;
+	}
+	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 > 0) {
+		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+		$permissiontovalidate2 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+	}
 
-	$usergroup->fetch(0, 'Direction');
-	$permissiontovalidate3 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == 9999) {
+		$permissiontovalidate3 = $user->id == $object->fk_user;
+	}
+	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 > 0) {
+		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+		$permissiontovalidate3 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+	}
 
-	$permissiontovalidate4 = ($user->id == $object->fk_user);
+	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == 9999) {
+		$permissiontovalidate4 = $user->id == $object->fk_user;
+	}
+	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 > 0) {
+		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+		$permissiontovalidate4 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+	}
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
@@ -584,8 +605,27 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 			// Validate n°1
 			if ($object->status == $object::STATUS_DRAFT) {
+				$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->numvolet;
+				$approbationRequire = $conf->global->$variableName;
+				$approbationRequireArray = explode(',', $conf->global->$variableName);
+
 				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate1&confirm=yes&token='.newToken(), '', $permissiontovalidate1);
+					if(sizeof($approbationRequireArray) == 1) {
+						$permissionName = 'permissiontovalidate'.($approbationRequireArray[0]+1);
+						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate4&confirm=yes&token='.newToken(), '', $$permissionName);
+					}
+					elseif(strpos($approbationRequire, '1') !== false) {
+						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate1&confirm=yes&token='.newToken(), '', $permissiontovalidate1);
+					}
+					elseif(strpos($approbationRequire, '2') !== false) {
+						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate2&confirm=yes&token='.newToken(), '', $permissiontovalidate2);
+					}
+					elseif(strpos($approbationRequire, '3') !== false) {
+						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate3&confirm=yes&token='.newToken(), '', $permissiontovalidate3);
+					}
+					elseif(strpos($approbationRequire, '4') !== false) {
+						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate4&confirm=yes&token='.newToken(), '', $permissiontovalidate4);
+					}
 				} else {
 					$langs->load("errors");
 					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);

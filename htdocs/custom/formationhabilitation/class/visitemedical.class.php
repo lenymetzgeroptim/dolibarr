@@ -128,7 +128,7 @@ class VisiteMedical extends CommonObject
 		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"fk_contact" => array("type"=>"integer:contact:contact/class/contact.class.php:0:(civility:=:'dr')", "label"=>"Medecin", "enabled"=>"1", 'position'=>36, 'notnull'=>1, "visible"=>"1",),
 		"objetvisite" => array("type"=>"varchar(128)", "label"=>"ObjetVisite", "enabled"=>"1", 'position'=>25, 'notnull'=>1, "visible"=>"1",),
-		"caractereponctuelvisite" => array("type"=>"integer", "label"=>"CaracterePonctuelVisite", "enabled"=>"1", 'position'=>26, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Embauche", "1" => "Examen complémentaire", "2" => "Reprise AM", "3" => "Reprise AT", "4" => "Autre"),),
+		"motifvisite" => array("type"=>"sellist:c_motif_visite:label:rowid::(active:=:1)", "label"=>"MotifVisite", "enabled"=>"1", 'position'=>26, 'notnull'=>1, "visible"=>"1",),
 		"demandeurvisite" => array("type"=>"integer", "label"=>"DemandeurVisite", "enabled"=>"1", 'position'=>27, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Employeur", "1" => "Médecin", "2" => "Salarié", "3" => "Autre"),),
 		"datevisite" => array("type"=>"date", "label"=>"DateVisite", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
 		"datefinvalidite" => array("type"=>"date", "label"=>"DateFinValidite", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
@@ -151,7 +151,7 @@ class VisiteMedical extends CommonObject
 	public $commentaire;
 	public $fk_contact;
 	public $objetvisite;
-	public $caractereponctuelvisite;
+	public $motifvisite;
 	public $demandeurvisite;
 	public $datevisite;
 	public $datefinvalidite;

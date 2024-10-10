@@ -1197,6 +1197,8 @@ class Volet extends CommonObject
 	 */
 	public function LibStatut($status, $mode = 0)
 	{
+		global $conf; 
+
 		// phpcs:enable
 		if (is_null($status)) {
 			return '';
@@ -1206,22 +1208,69 @@ class Volet extends CommonObject
 			$mode = 5;
 		}
 
+		$usergroup = new UserGroup($this->db);
+		if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 > 0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 != 9999) {
+			$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+			$nameGroup1 = $usergroup->name;
+		}
+		if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 > 0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 != 9999) {
+			$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+			$nameGroup2 = $usergroup->name;
+		}
+		if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 > 0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 != 9999) {
+			$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+			$nameGroup3 = $usergroup->name;
+		}
+		if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 > 0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 != 9999) {
+			$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+			$nameGroup4 = $usergroup->name;
+		}
+
+		$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$this->numvolet;
+		$approbationRequire = explode(',', $conf->global->$variableName);
+		asort($approbationRequire);
+
 		if (empty($this->labelStatus) || empty($this->labelStatusShort)) {
 			global $langs;
 			//$langs->load("formationhabilitation@formationhabilitation");
-			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Approbation1');
+
+			$variableName = 'nameGroup'.($approbationRequire[0]+1);
+			if(!empty($$variableName)) {
+				$this->labelStatus[self::STATUS_DRAFT] = "Approbation du groupe ".$$variableName." en attente";
+			}
+			else {
+				$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			}
+
+			if(!empty($nameGroup2)) {
+				$this->labelStatus[self::STATUS_VALIDATION1] = "Approbation du groupe $nameGroup2 en attente";
+			}
+			else {
+				$this->labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			}
+		
+			if(!empty($nameGroup3)) {
+				$this->labelStatus[self::STATUS_VALIDATION2] = "Approbation du groupe $nameGroup3 en attente";
+			}
+			else {
+				$this->labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			}
+
+			if(!empty($nameGroup4)) {
+				$this->labelStatus[self::STATUS_VALIDATION3] = "Approbation du groupe $nameGroup4 en attente";
+			}
+			else {
+				$this->labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			}
+
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Approbation2');
-			$this->labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Approbation3');
-			$this->labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Approbation4');
-			//$this->labelStatus[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Approbation');
 			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
+
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatusShort[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Approbation');
-			$this->labelStatusShort[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Approbation');
-			$this->labelStatusShort[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Approbation');
-			//$this->labelStatusShort[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Approbation4');
+			$this->labelStatusShort[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('ApprobationVolet');
+			$this->labelStatusShort[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('ApprobationVolet');
+			$this->labelStatusShort[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('ApprobationVolet');
 			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 		}
 
@@ -1548,7 +1597,7 @@ class Volet extends CommonObject
 		// $labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Validation2');
 		// $labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Validation3');
 		// $labelStatus[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Validation4');
-		$labelStatus[50] = $langs->transnoentitiesnoconv('Approbation');
+		$labelStatus[50] = $langs->transnoentitiesnoconv('ApprobationVolet');
 		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 		
 		return $labelStatus;

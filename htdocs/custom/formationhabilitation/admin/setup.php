@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2004-2017 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2022 METZGER Leny <l.metzger@optim-industries.fr>
+ * Copyright (C) ---Put here your own copyright and developer email---
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  */
 
 /**
- * \file    formationhabilitation/admin/setup.php
+ * \file    htdocs/modulebuilder/template/admin/setup.php
  * \ingroup formationhabilitation
  * \brief   FormationHabilitation setup page.
  */
@@ -31,7 +31,8 @@ if (!$res && !empty($_SERVER["CONTEXT_DOCUMENT_ROOT"])) {
 // Try main.inc.php into web root detected using web root calculated from SCRIPT_FILENAME
 $tmp = empty($_SERVER['SCRIPT_FILENAME']) ? '' : $_SERVER['SCRIPT_FILENAME']; $tmp2 = realpath(__FILE__); $i = strlen($tmp) - 1; $j = strlen($tmp2) - 1;
 while ($i > 0 && $j > 0 && isset($tmp[$i]) && isset($tmp2[$j]) && $tmp[$i] == $tmp2[$j]) {
-	$i--; $j--;
+	$i--;
+	$j--;
 }
 if (!$res && $i > 0 && file_exists(substr($tmp, 0, ($i + 1))."/main.inc.php")) {
 	$res = @include substr($tmp, 0, ($i + 1))."/main.inc.php";
@@ -55,7 +56,7 @@ global $langs, $user;
 // Libraries
 require_once DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php";
 require_once '../lib/formationhabilitation.lib.php';
-//require_once "../class/myclass.class.php";
+require_once "../class/volet.class.php";
 
 // Translations
 $langs->loadLangs(array("admin", "formationhabilitation@formationhabilitation"));
@@ -78,64 +79,100 @@ $label = GETPOST('label', 'alpha');
 $scandir = GETPOST('scan_dir', 'alpha');
 $type = 'myobject';
 
-$arrayofparameters = array(
-	'FORMATIONHABILITATION_MYPARAM1'=>array('type'=>'string', 'css'=>'minwidth500' ,'enabled'=>1),
-	'FORMATIONHABILITATION_MYPARAM2'=>array('type'=>'textarea','enabled'=>1),
-	//'FORMATIONHABILITATION_MYPARAM3'=>array('type'=>'category:'.Categorie::TYPE_CUSTOMER, 'enabled'=>1),
-	//'FORMATIONHABILITATION_MYPARAM4'=>array('type'=>'emailtemplate:thirdparty', 'enabled'=>1),
-	//'FORMATIONHABILITATION_MYPARAM5'=>array('type'=>'yesno', 'enabled'=>1),
-	//'FORMATIONHABILITATION_MYPARAM5'=>array('type'=>'thirdparty_type', 'enabled'=>1),
-	//'FORMATIONHABILITATION_MYPARAM6'=>array('type'=>'securekey', 'enabled'=>1),
-	//'FORMATIONHABILITATION_MYPARAM7'=>array('type'=>'product', 'enabled'=>1),
-);
 
 $error = 0;
 $setupnotempty = 0;
 
 // Set this to 1 to use the factory to manage constants. Warning, the generated module will be compatible with version v15+ only
-$useFormSetup = 0;
-// Convert arrayofparameter into a formSetup object
-if ($useFormSetup && (float) DOL_VERSION >= 15) {
+$useFormSetup = 1;
+
+if (!class_exists('FormSetup')) {
 	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formsetup.class.php';
-	$formSetup = new FormSetup($db);
-
-	// you can use the param convertor
-	$formSetup->addItemsFromParamsArray($arrayofparameters);
-
-	// or use the new system see exemple as follow (or use both because you can ;-) )
-
-	/*
-	// Hôte
-	$item = $formSetup->newItem('NO_PARAM_JUST_TEXT');
-	$item->fieldOverride = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'];
-	$item->cssClass = 'minwidth500';
-
-	// Setup conf FORMATIONHABILITATION_MYPARAM1 as a simple string input
-	$item = $formSetup->newItem('FORMATIONHABILITATION_MYPARAM1');
-
-	// Setup conf FORMATIONHABILITATION_MYPARAM1 as a simple textarea input but we replace the text of field title
-	$item = $formSetup->newItem('FORMATIONHABILITATION_MYPARAM2');
-	$item->nameText = $item->getNameText().' more html text ';
-
-	// Setup conf FORMATIONHABILITATION_MYPARAM3
-	$item = $formSetup->newItem('FORMATIONHABILITATION_MYPARAM3');
-	$item->setAsThirdpartyType();
-
-	// Setup conf FORMATIONHABILITATION_MYPARAM4 : exemple of quick define write style
-	$formSetup->newItem('FORMATIONHABILITATION_MYPARAM4')->setAsYesNo();
-
-	// Setup conf FORMATIONHABILITATION_MYPARAM5
-	$formSetup->newItem('FORMATIONHABILITATION_MYPARAM5')->setAsEmailTemplate('thirdparty');
-
-	// Setup conf FORMATIONHABILITATION_MYPARAM6
-	$formSetup->newItem('FORMATIONHABILITATION_MYPARAM6')->setAsSecureKey()->enabled = 0; // disabled
-
-	// Setup conf FORMATIONHABILITATION_MYPARAM7
-	$formSetup->newItem('FORMATIONHABILITATION_MYPARAM7')->setAsProduct();
-	*/
-
-	$setupnotempty = count($formSetup->items);
 }
+$formSetup = new FormSetup($db);
+
+
+// Enter here all parameters in your setup page
+
+// // Setup conf for selection of an URL
+// $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM1');
+// $item->fieldOverride = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'];
+// $item->cssClass = 'minwidth500';
+
+// // Setup conf for selection of a simple string input
+// $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM2');
+// $item->defaultFieldValue = 'default value';
+
+// // Setup conf for selection of a simple textarea input but we replace the text of field title
+// $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM3');
+// $item->nameText = $item->getNameText().' more html text ';
+
+// // Setup conf for a selection of a thirdparty
+// $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM4');
+// $item->setAsThirdpartyType();
+
+// // Setup conf for a selection of a boolean
+// $formSetup->newItem('FORMTIONHABILITATION_MYPARAM5')->setAsYesNo();
+
+// // Setup conf for a selection of an email template of type thirdparty
+// $formSetup->newItem('FORMTIONHABILITATION_MYPARAM6')->setAsEmailTemplate('thirdparty');
+
+// // Setup conf for a selection of a secured key
+// //$formSetup->newItem('FORMTIONHABILITATION_MYPARAM7')->setAsSecureKey();
+
+// // Setup conf for a selection of a product
+// $formSetup->newItem('FORMTIONHABILITATION_MYPARAM8')->setAsProduct();
+
+// Add a title for a new section
+$formSetup->newItem('ApprobationVoletTitle')->setAsTitle();
+
+$TField = getLabelList('usergroup', 'nom');
+$TField[9999] = 'Le collaborateur'; 
+
+// Setup conf for a simple combo list
+$formSetup->newItem('FORMTIONHABILITATION_APPROBATEURVOLET1')->setAsSelect($TField);
+$formSetup->newItem('FORMTIONHABILITATION_APPROBATEURVOLET2')->setAsSelect($TField);
+$formSetup->newItem('FORMTIONHABILITATION_APPROBATEURVOLET3')->setAsSelect($TField);
+$formSetup->newItem('FORMTIONHABILITATION_APPROBATEURVOLET4')->setAsSelect($TField);
+
+$volet = new Volet($db);
+$voletArray = $volet->getAllVolet();
+
+$TField = array(
+	'Approbation n°1',
+	'Approbation n°2',
+	'Approbation n°3',
+	'Approbation n°4',
+); 
+
+foreach($voletArray as $idVolet => $NomVolet) {
+	$item = $formSetup->newItem('FORMTIONHABILITATION_APPROBATIONVOLET'.$idVolet);
+	$item->setAsMultiSelect($TField);
+	$item->nameText = $langs->transnoentitiesnoconv('FORMTIONHABILITATION_APPROBATIONVOLET', $NomVolet);
+}
+
+// // Setup conf for a multiselect combo list
+// $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM10');
+// $item->setAsMultiSelect($TField);
+// $item->helpText = $langs->transnoentities('FORMTIONHABILITATION_MYPARAM10');
+
+
+
+// Setup conf FORMTIONHABILITATION_MYPARAM10
+// $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM10');
+// $item->setAsColor();
+// $item->defaultFieldValue = '#FF0000';
+// $item->nameText = $item->getNameText().' more html text ';
+// $item->fieldInputOverride = '';
+// $item->helpText = $langs->transnoentities('AnHelpMessage');
+// $item->fieldValue = '';
+// $item->fieldAttr = array() ; // fields attribute only for compatible fields like input text
+// $item->fieldOverride = false; // set this var to override field output will override $fieldInputOverride and $fieldOutputOverride too
+// $item->fieldInputOverride = false; // set this var to override field input
+// $item->fieldOutputOverride = false; // set this var to override field output
+
+
+$setupnotempty += count($formSetup->items);
 
 
 $dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
@@ -145,13 +182,18 @@ $dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
  * Actions
  */
 
+// For retrocompatibility Dolibarr < 15.0
+if (versioncompare(explode('.', DOL_VERSION), array(15)) < 0 && $action == 'update' && !empty($user->admin)) {
+	$formSetup->saveConfFromPost();
+}
+
 include DOL_DOCUMENT_ROOT.'/core/actions_setmoduleoptions.inc.php';
 
 if ($action == 'updateMask') {
-	$maskconst = GETPOST('maskconst', 'alpha');
+	$maskconst = GETPOST('maskconst', 'aZ09');
 	$maskvalue = GETPOST('maskvalue', 'alpha');
 
-	if ($maskconst) {
+	if ($maskconst && preg_match('/_MASK$/', $maskconst)) {
 		$res = dolibarr_set_const($db, $maskconst, $maskvalue, 'chaine', 0, '', $conf->entity);
 		if (!($res > 0)) {
 			$error++;
@@ -171,7 +213,9 @@ if ($action == 'updateMask') {
 	$tmpobject->initAsSpecimen();
 
 	// Search template files
-	$file = ''; $classname = ''; $filefound = 0;
+	$file = '';
+	$classname = '';
+	$filefound = 0;
 	$dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
 	foreach ($dirmodels as $reldir) {
 		$file = dol_buildpath($reldir."core/modules/formationhabilitation/doc/pdf_".$modele."_".strtolower($tmpobjectkey).".modules.php", 0);
@@ -202,7 +246,7 @@ if ($action == 'updateMask') {
 	// TODO Check if numbering module chosen can be activated by calling method canBeActivated
 	$tmpobjectkey = GETPOST('object');
 	if (!empty($tmpobjectkey)) {
-		$constforval = 'FORMATIONHABILITATION_'.strtoupper($tmpobjectkey)."_ADDON";
+		$constforval = 'FORMTIONHABILITATION_'.strtoupper($tmpobjectkey)."_ADDON";
 		dolibarr_set_const($db, $constforval, $value, 'chaine', 0, '', $conf->entity);
 	}
 } elseif ($action == 'set') {
@@ -213,8 +257,8 @@ if ($action == 'updateMask') {
 	if ($ret > 0) {
 		$tmpobjectkey = GETPOST('object');
 		if (!empty($tmpobjectkey)) {
-			$constforval = 'FORMATIONHABILITATION_'.strtoupper($tmpobjectkey).'_ADDON_PDF';
-			if ($conf->global->$constforval == "$value") {
+			$constforval = 'FORMTIONHABILITATION_'.strtoupper($tmpobjectkey).'_ADDON_PDF';
+			if (getDolGlobalString($constforval) == "$value") {
 				dolibarr_del_const($db, $constforval, $conf->entity);
 			}
 		}
@@ -223,11 +267,11 @@ if ($action == 'updateMask') {
 	// Set or unset default model
 	$tmpobjectkey = GETPOST('object');
 	if (!empty($tmpobjectkey)) {
-		$constforval = 'FORMATIONHABILITATION_'.strtoupper($tmpobjectkey).'_ADDON_PDF';
+		$constforval = 'FORMTIONHABILITATION_'.strtoupper($tmpobjectkey).'_ADDON_PDF';
 		if (dolibarr_set_const($db, $constforval, $value, 'chaine', 0, '', $conf->entity)) {
 			// The constant that was read before the new set
 			// We therefore requires a variable to have a coherent view
-			$conf->global->$constforval = $value;
+			$conf->global->{$constforval} = $value;
 		}
 
 		// We disable/enable the document template (into llx_document_model table)
@@ -239,7 +283,7 @@ if ($action == 'updateMask') {
 } elseif ($action == 'unsetdoc') {
 	$tmpobjectkey = GETPOST('object');
 	if (!empty($tmpobjectkey)) {
-		$constforval = 'FORMATIONHABILITATION_'.strtoupper($tmpobjectkey).'_ADDON_PDF';
+		$constforval = 'FORMTIONHABILITATION_'.strtoupper($tmpobjectkey).'_ADDON_PDF';
 		dolibarr_del_const($db, $constforval, $conf->entity);
 	}
 }
@@ -255,7 +299,7 @@ $form = new Form($db);
 $help_url = '';
 $page_name = "FormationHabilitationSetup";
 
-llxHeader('', $langs->trans($page_name), $help_url);
+llxHeader('', $langs->trans($page_name), $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-admin');
 
 // Subheader
 $linkback = '<a href="'.($backtopage ? $backtopage : DOL_URL_ROOT.'/admin/modules.php?restore_lastsearch_values=1').'">'.$langs->trans("BackToModuleList").'</a>';
@@ -271,210 +315,32 @@ echo '<span class="opacitymedium">'.$langs->trans("FormationHabilitationSetupPag
 
 
 if ($action == 'edit') {
-	if ($useFormSetup && (float) DOL_VERSION >= 15) {
-		print $formSetup->generateOutput(true);
-	} else {
-		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-		print '<input type="hidden" name="token" value="'.newToken().'">';
-		print '<input type="hidden" name="action" value="update">';
-
-		print '<table class="noborder centpercent">';
-		print '<tr class="liste_titre"><td class="titlefield">'.$langs->trans("Parameter").'</td><td>'.$langs->trans("Value").'</td></tr>';
-
-		foreach ($arrayofparameters as $constname => $val) {
-			if ($val['enabled']==1) {
-				$setupnotempty++;
-				print '<tr class="oddeven"><td>';
-				$tooltiphelp = (($langs->trans($constname . 'Tooltip') != $constname . 'Tooltip') ? $langs->trans($constname . 'Tooltip') : '');
-				print '<span id="helplink'.$constname.'" class="spanforparamtooltip">'.$form->textwithpicto($langs->trans($constname), $tooltiphelp, 1, 'info', '', 0, 3, 'tootips'.$constname).'</span>';
-				print '</td><td>';
-
-				if ($val['type'] == 'textarea') {
-					print '<textarea class="flat" name="'.$constname.'" id="'.$constname.'" cols="50" rows="5" wrap="soft">' . "\n";
-					print $conf->global->{$constname};
-					print "</textarea>\n";
-				} elseif ($val['type']== 'html') {
-					require_once DOL_DOCUMENT_ROOT . '/core/class/doleditor.class.php';
-					$doleditor = new DolEditor($constname, $conf->global->{$constname}, '', 160, 'dolibarr_notes', '', false, false, $conf->fckeditor->enabled, ROWS_5, '90%');
-					$doleditor->Create();
-				} elseif ($val['type'] == 'yesno') {
-					print $form->selectyesno($constname, $conf->global->{$constname}, 1);
-				} elseif (preg_match('/emailtemplate:/', $val['type'])) {
-					include_once DOL_DOCUMENT_ROOT . '/core/class/html.formmail.class.php';
-					$formmail = new FormMail($db);
-
-					$tmp = explode(':', $val['type']);
-					$nboftemplates = $formmail->fetchAllEMailTemplate($tmp[1], $user, null, 1); // We set lang=null to get in priority record with no lang
-					//$arraydefaultmessage = $formmail->getEMailTemplate($db, $tmp[1], $user, null, 0, 1, '');
-					$arrayofmessagename = array();
-					if (is_array($formmail->lines_model)) {
-						foreach ($formmail->lines_model as $modelmail) {
-							//var_dump($modelmail);
-							$moreonlabel = '';
-							if (!empty($arrayofmessagename[$modelmail->label])) {
-								$moreonlabel = ' <span class="opacitymedium">(' . $langs->trans("SeveralLangugeVariatFound") . ')</span>';
-							}
-							// The 'label' is the key that is unique if we exclude the language
-							$arrayofmessagename[$modelmail->id] = $langs->trans(preg_replace('/\(|\)/', '', $modelmail->label)) . $moreonlabel;
-						}
-					}
-					print $form->selectarray($constname, $arrayofmessagename, $conf->global->{$constname}, 'None', 0, 0, '', 0, 0, 0, '', '', 1);
-				} elseif (preg_match('/category:/', $val['type'])) {
-					require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
-					require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
-					$formother = new FormOther($db);
-
-					$tmp = explode(':', $val['type']);
-					print img_picto('', 'category', 'class="pictofixedwidth"');
-					print $formother->select_categories($tmp[1],  $conf->global->{$constname}, $constname, 0, $langs->trans('CustomersProspectsCategoriesShort'));
-				} elseif (preg_match('/thirdparty_type/', $val['type'])) {
-					require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
-					$formcompany = new FormCompany($db);
-					print $formcompany->selectProspectCustomerType($conf->global->{$constname}, $constname);
-				} elseif ($val['type'] == 'securekey') {
-					print '<input required="required" type="text" class="flat" id="'.$constname.'" name="'.$constname.'" value="'.(GETPOST($constname, 'alpha') ?GETPOST($constname, 'alpha') : $conf->global->{$constname}).'" size="40">';
-					if (!empty($conf->use_javascript_ajax)) {
-						print '&nbsp;'.img_picto($langs->trans('Generate'), 'refresh', 'id="generate_token'.$constname.'" class="linkobject"');
-					}
-					if (!empty($conf->use_javascript_ajax)) {
-						print "\n".'<script type="text/javascript">';
-						print '$(document).ready(function () {
-                        $("#generate_token'.$constname.'").click(function() {
-                	        $.get( "'.DOL_URL_ROOT.'/core/ajax/security.php", {
-                		      action: \'getrandompassword\',
-                		      generic: true
-    				        },
-    				        function(token) {
-    					       $("#'.$constname.'").val(token);
-            				});
-                         });
-                    });';
-						print '</script>';
-					}
-				} elseif ($val['type'] == 'product') {
-					if (!empty($conf->product->enabled) || !empty($conf->service->enabled)) {
-						$selected = (empty($conf->global->$constname) ? '' : $conf->global->$constname);
-						$form->select_produits($selected, $constname, '', 0);
-					}
-				} else {
-					print '<input name="'.$constname.'"  class="flat '.(empty($val['css']) ? 'minwidth200' : $val['css']).'" value="'.$conf->global->{$constname}.'">';
-				}
-				print '</td></tr>';
-			}
-		}
-		print '</table>';
-
-		print '<br><div class="center">';
-		print '<input class="button button-save" type="submit" value="'.$langs->trans("Save").'">';
-		print '</div>';
-
-		print '</form>';
-	}
-
+	print $formSetup->generateOutput(true);
 	print '<br>';
+} elseif (!empty($formSetup->items)) {
+	print $formSetup->generateOutput();
+	print '<div class="tabsAction">';
+	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit&token='.newToken().'">'.$langs->trans("Modify").'</a>';
+	print '</div>';
 } else {
-	if ($useFormSetup && (float) DOL_VERSION >= 15) {
-		if (!empty($formSetup->items)) {
-			print $formSetup->generateOutput();
-		}
-	} else {
-		if (!empty($arrayofparameters)) {
-			print '<table class="noborder centpercent">';
-			print '<tr class="liste_titre"><td class="titlefield">'.$langs->trans("Parameter").'</td><td>'.$langs->trans("Value").'</td></tr>';
-
-			foreach ($arrayofparameters as $constname => $val) {
-				if ($val['enabled']==1) {
-					$setupnotempty++;
-					print '<tr class="oddeven"><td>';
-					$tooltiphelp = (($langs->trans($constname . 'Tooltip') != $constname . 'Tooltip') ? $langs->trans($constname . 'Tooltip') : '');
-					print $form->textwithpicto($langs->trans($constname), $tooltiphelp);
-					print '</td><td>';
-
-					if ($val['type'] == 'textarea') {
-						print dol_nl2br($conf->global->{$constname});
-					} elseif ($val['type']== 'html') {
-						print  $conf->global->{$constname};
-					} elseif ($val['type'] == 'yesno') {
-						print ajax_constantonoff($constname);
-					} elseif (preg_match('/emailtemplate:/', $val['type'])) {
-						include_once DOL_DOCUMENT_ROOT . '/core/class/html.formmail.class.php';
-						$formmail = new FormMail($db);
-
-						$tmp = explode(':', $val['type']);
-
-						$template = $formmail->getEMailTemplate($db, $tmp[1], $user, $langs, $conf->global->{$constname});
-						if ($template<0) {
-							setEventMessages(null, $formmail->errors, 'errors');
-						}
-						print $langs->trans($template->label);
-					} elseif (preg_match('/category:/', $val['type'])) {
-						$c = new Categorie($db);
-						$result = $c->fetch($conf->global->{$constname});
-						if ($result < 0) {
-							setEventMessages(null, $c->errors, 'errors');
-						} elseif ($result > 0 ) {
-							$ways = $c->print_all_ways(' &gt;&gt; ', 'none', 0, 1); // $ways[0] = "ccc2 >> ccc2a >> ccc2a1" with html formated text
-							$toprint = array();
-							foreach ($ways as $way) {
-								$toprint[] = '<li class="select2-search-choice-dolibarr noborderoncategories"' . ($c->color ? ' style="background: #' . $c->color . ';"' : ' style="background: #bbb"') . '>' . $way . '</li>';
-							}
-							print '<div class="select2-container-multi-dolibarr" style="width: 90%;"><ul class="select2-choices-dolibarr">' . implode(' ', $toprint) . '</ul></div>';
-						}
-					} elseif (preg_match('/thirdparty_type/', $val['type'])) {
-						if ($conf->global->{$constname}==2) {
-							print $langs->trans("Prospect");
-						} elseif ($conf->global->{$constname}==3) {
-							print $langs->trans("ProspectCustomer");
-						} elseif ($conf->global->{$constname}==1) {
-							print $langs->trans("Customer");
-						} elseif ($conf->global->{$constname}==0) {
-							print $langs->trans("NorProspectNorCustomer");
-						}
-					} elseif ($val['type'] == 'product') {
-						$product = new Product($db);
-						$resprod = $product->fetch($conf->global->{$constname});
-						if ($resprod > 0) {
-							print $product->ref;
-						} elseif ($resprod < 0) {
-							setEventMessages(null, $object->errors, "errors");
-						}
-					} else {
-						print $conf->global->{$constname};
-					}
-					print '</td></tr>';
-				}
-			}
-
-			print '</table>';
-		}
-	}
-
-	if ($setupnotempty) {
-		print '<div class="tabsAction">';
-		print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit&token='.newToken().'">'.$langs->trans("Modify").'</a>';
-		print '</div>';
-	} else {
-		print '<br>'.$langs->trans("NothingToSetup");
-	}
+	print '<br>'.$langs->trans("NothingToSetup");
 }
 
 
 $moduledir = 'formationhabilitation';
 $myTmpObjects = array();
-$myTmpObjects['MyObject'] = array('includerefgeneration'=>0, 'includedocgeneration'=>0);
+// TODO Scan list of objects
+$myTmpObjects['myobject'] = array('label'=>'MyObject', 'includerefgeneration'=>0, 'includedocgeneration'=>0, 'class'=>'MyObject');
 
 
 foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
-	if ($myTmpObjectKey == 'MyObject') {
-		continue;
-	}
 	if ($myTmpObjectArray['includerefgeneration']) {
 		/*
 		 * Orders Numbering model
 		 */
 		$setupnotempty++;
 
-		print load_fiche_titre($langs->trans("NumberingModules", $myTmpObjectKey), '', '');
+		print load_fiche_titre($langs->trans("NumberingModules", $myTmpObjectArray['label']), '', '');
 
 		print '<table class="noborder centpercent">';
 		print '<tr class="liste_titre">';
@@ -502,10 +368,10 @@ foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 							$module = new $file($db);
 
 							// Show modules according to features level
-							if ($module->version == 'development' && $conf->global->MAIN_FEATURES_LEVEL < 2) {
+							if ($module->version == 'development' && getDolGlobalInt('MAIN_FEATURES_LEVEL') < 2) {
 								continue;
 							}
-							if ($module->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1) {
+							if ($module->version == 'experimental' && getDolGlobalInt('MAIN_FEATURES_LEVEL') < 1) {
 								continue;
 							}
 
@@ -513,7 +379,7 @@ foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 								dol_include_once('/'.$moduledir.'/class/'.strtolower($myTmpObjectKey).'.class.php');
 
 								print '<tr class="oddeven"><td>'.$module->name."</td><td>\n";
-								print $module->info();
+								print $module->info($langs);
 								print '</td>';
 
 								// Show example of numbering model
@@ -530,8 +396,8 @@ foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 								print '</td>'."\n";
 
 								print '<td class="center">';
-								$constforvar = 'FORMATIONHABILITATION_'.strtoupper($myTmpObjectKey).'_ADDON';
-								if ($conf->global->$constforvar == $file) {
+								$constforvar = 'FORMTIONHABILITATION_'.strtoupper($myTmpObjectKey).'_ADDON';
+								if (getDolGlobalString($constforvar) == $file) {
 									print img_picto($langs->trans("Activated"), 'switch_on');
 								} else {
 									print '<a href="'.$_SERVER["PHP_SELF"].'?action=setmod&token='.newToken().'&object='.strtolower($myTmpObjectKey).'&value='.urlencode($file).'">';
@@ -540,7 +406,8 @@ foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 								}
 								print '</td>';
 
-								$mytmpinstance = new $myTmpObjectKey($db);
+								$nameofclass = $myTmpObjectArray['class'];
+								$mytmpinstance = new $nameofclass($db);
 								$mytmpinstance->initAsSpecimen();
 
 								// Info
@@ -603,8 +470,8 @@ foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 			dol_print_error($db);
 		}
 
-		print "<table class=\"noborder\" width=\"100%\">\n";
-		print "<tr class=\"liste_titre\">\n";
+		print '<table class="noborder centpercent">'."\n";
+		print '<tr class="liste_titre">'."\n";
 		print '<td>'.$langs->trans("Name").'</td>';
 		print '<td>'.$langs->trans("Description").'</td>';
 		print '<td class="center" width="60">'.$langs->trans("Status")."</td>\n";
@@ -639,16 +506,16 @@ foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 									$module = new $classname($db);
 
 									$modulequalified = 1;
-									if ($module->version == 'development' && $conf->global->MAIN_FEATURES_LEVEL < 2) {
+									if ($module->version == 'development' && getDolGlobalInt('MAIN_FEATURES_LEVEL') < 2) {
 										$modulequalified = 0;
 									}
-									if ($module->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1) {
+									if ($module->version == 'experimental' && getDolGlobalInt('MAIN_FEATURES_LEVEL') < 1) {
 										$modulequalified = 0;
 									}
 
 									if ($modulequalified) {
 										print '<tr class="oddeven"><td width="100">';
-										print (empty($module->name) ? $name : $module->name);
+										print(empty($module->name) ? $name : $module->name);
 										print "</td><td>\n";
 										if (method_exists($module, 'info')) {
 											print $module->info($langs);
@@ -672,8 +539,8 @@ foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 
 										// Default
 										print '<td class="center">';
-										$constforvar = 'FORMATIONHABILITATION_'.strtoupper($myTmpObjectKey).'_ADDON';
-										if ($conf->global->$constforvar == $name) {
+										$constforvar = 'FORMTIONHABILITATION_'.strtoupper($myTmpObjectKey).'_ADDON_PDF';
+										if (getDolGlobalString($constforvar) == $name) {
 											//print img_picto($langs->trans("Default"), 'on');
 											// Even if choice is the default value, we allow to disable it. Replace this with previous line if you need to disable unset
 											print '<a href="'.$_SERVER["PHP_SELF"].'?action=unsetdoc&token='.newToken().'&object='.urlencode(strtolower($myTmpObjectKey)).'&value='.urlencode($name).'&scan_dir='.urlencode($module->scandir).'&label='.urlencode($module->name).'&amp;type='.urlencode($type).'" alt="'.$langs->trans("Disable").'">'.img_picto($langs->trans("Enabled"), 'on').'</a>';
