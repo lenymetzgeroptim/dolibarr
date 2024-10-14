@@ -3318,7 +3318,7 @@ class Holiday extends CommonObject
 								$sql .= ' AND h.fk_type = '.$typeleaves_CP_N_ACQUIS['rowid'];
 							}
 						}
-						elseif($acquis_N1 != 0) {
+						elseif($acquis_N != 0) {
 							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
 							$sql .= $obj_user->fk_object.",";
 							$sql .= " ".$typeleaves_CP_N_ACQUIS['rowid'].",";
