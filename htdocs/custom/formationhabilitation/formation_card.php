@@ -170,6 +170,7 @@ unset($objectline->fields['fk_formation']);
 if(!$permissiontoreadCout) {
     unset($objectline->fields['cout_pedagogique']);
     unset($objectline->fields['cout_mobilisation']);
+	unset($objectline->fields['cout_annexe']);
     unset($objectline->fields['cout_total']);
 }
 
@@ -264,7 +265,7 @@ if (empty($reshook)) {
 
 $title = $langs->trans("Formation");
 $help_url = '';
-llxHeader('', $title, $help_url);
+llxHeader('', $page_name, $help_url, '', 0, 0, '', '', '', 'formationhabilitation classforhorizontalscrolloftabs');
 
 // Part to create
 if ($action == 'create') {
@@ -362,7 +363,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 	// Confirmation to close
 	if ($action == 'cloture') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ClotureFormation'), $langs->trans('ConfirmCloseObject'), 'confirm_cloture', '', 0, 1);
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ClotureFormation'), $langs->trans('ConfirmCloseFormation'), 'confirm_cloture', '', 0, 1);
 	}
 	// Confirmation to delete line
 	if ($action == 'deleteline') {
@@ -464,7 +465,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction($langs->trans('SetToDraft'), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
 			}*/
 
-			print dolGetButtonAction($langs->trans('Modify'), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
+			if ($object->status == $object::STATUS_CONSTRUCTION || $object->status == $object::STATUS_OUVERTE) {
+				print dolGetButtonAction($langs->trans('Modify'), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
+			}
 
 			// Validate
 			if ($object->status == $object::STATUS_CONSTRUCTION) {
@@ -474,7 +477,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction($langs->trans('Clôture'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=cloture&token='.newToken(), '', $permissiontoadd);
 			} 
 			elseif ($object->status == $object::STATUS_CLOTURE) {
-				print dolGetButtonAction($langs->trans('Re-Open'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=reopen&token='.newToken(), '', $permissiontoadd);
+				print dolGetButtonAction($langs->trans('Rouvrir'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_reopen&confirm=yes&token='.newToken(), '', $permissiontoadd);
 			}
 
 			// Clone

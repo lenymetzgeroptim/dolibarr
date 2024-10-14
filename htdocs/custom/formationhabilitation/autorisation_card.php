@@ -267,7 +267,7 @@ if (empty($reshook)) {
 
 $title = $langs->trans("Autorisation");
 $help_url = '';
-llxHeader('', $title, $help_url);
+llxHeader('', $page_name, $help_url, '', 0, 0, '', '', '', 'formationhabilitation classforhorizontalscrolloftabs');
 
 // Example : Adding jquery code
 // print '<script type="text/javascript">

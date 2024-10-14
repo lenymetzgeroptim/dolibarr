@@ -121,16 +121,18 @@ class UserFormation extends CommonObject
 		"date_debut_formation" => array("type"=>"date", "label"=>"DateDebutFormation", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1",),
 		"date_fin_formation" => array("type"=>"date", "label"=>"DateFinFormation", "enabled"=>"1", 'position'=>39, 'notnull'=>1, "visible"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "9" => "Cloturée"), "validate"=>"1",),
-		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"4",),
-		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>46, 'notnull'=>1, "visible"=>"4",),
-		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>47, 'notnull'=>1, "visible"=>"4",),
+		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"4",),
+		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>46, 'notnull'=>0, "visible"=>"4",),
+		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"4",),
 		"date_finvalidite_formation" => array("type"=>"date", "label"=>"DateFinValiditeFormation", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"Organisme", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"numero_certificat" => array("type"=>"varchar(20)", "label"=>"Numéro Certificat", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 		"formateur" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Formateur", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"interne_externe" => array("type"=>"integer", "label"=>"InterneExterne", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "default"=>"1", "arrayofkeyval"=>array("1" => "Externe", "2" => "Interne"),),
-		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>1, "visible"=>"1",),
+		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"resultat" => array("type"=>"integer", "label"=>"Résultat", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Non défini", "2" => "Satisfaisant", "3" => "Non satisfaisant"),),
+		"cout_annexe" => array("type"=>"price", "label"=>"CoutAnnexe", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"4",),
+		"prevupif" => array("type"=>"boolean", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -158,6 +160,8 @@ class UserFormation extends CommonObject
 	public $interne_externe;
 	public $nombre_heure;
 	public $resultat;
+	public $cout_annexe;
+	public $prevupif;
 	// END MODULEBUILDER PROPERTIES
 
 

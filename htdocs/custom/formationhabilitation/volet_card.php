@@ -228,6 +228,7 @@ unset($objectline->fields['fk_user']);
 if(!$permissiontoreadCout) {
     unset($objectline->fields['cout_pedagogique']);
     unset($objectline->fields['cout_mobilisation']);
+	unset($objectline->fields['cout_annexe']);
     unset($objectline->fields['cout_total']);
 }
 

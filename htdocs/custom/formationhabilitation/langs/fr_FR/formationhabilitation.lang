@@ -101,12 +101,13 @@ PeriodeSouplesse = Période de souplesse
 PeriodeSouplesseBloquant = Période de souplesse bloquante
 CoutMobilisation = Coût mobilisation
 CoutPedagogique = Coût pédagogique
+CoutAnnexe = Coût annexe
 CoutTotal = Coût total
 Prerequis = Prérequis
 FormationsSuperieur = Formations supérieures
 SousDomaine = Sous domaine
 DelaisProgrammation = Délais programmation
-
+PrevuPIF = Prévue au PIF
 
 #
 # Attribut Habiliation _ Autorisation
@@ -184,11 +185,14 @@ ConfirmValidateAutorisation = Êtes-vous sûr de vouloir valider l'autorisation 
 DeleteFormation = Supprimer la formation
 DeleteHabilitation = Supprimer l'habilitation
 DeleteAutorisation = Supprimer l'autorisation
+ClotureFormation = Clôturer la formation
+ConfirmCloseFormation = Êtes-vous sûr de vouloir clôturer la formation ?
 ProgrammerFormation = Programmer la formation
 ConfirmProgrammerFormation = Êtes-vous sûr de vouloir programmer la formation ?
 AddLine = Ajout d'une formation au collaborateur
 ConfirmAddLine = Êtes-vous sûr de vouloir ajouter cette formation ?
-ConfirmAddLine2 = Êtes-vous sûr de vouloir ajouter cette formation ? Cela clôturera les formations %s
+ConfirmAddLineWithDeletion = Êtes-vous sûr de vouloir ajouter cette formation ? Cela clôturera les formations %s
+ConfirmAddLineWithProgrammation = Êtes-vous sûr de vouloir ajouter cette formation ? Cela reprogrammera les formations %s
 ValiderFormation = Valider la formation
 ConfirmValiderFormation = Êtes-vous sûr de vouloir valider la formation ?
 ConfirmValiderFormation2 = Êtes-vous sûr de vouloir valider la formation ? Cela clôturera les formations %s
@@ -203,6 +207,7 @@ ImpossibleToValidateWithThisStatut = Impossible de valider %s à cause du statut
 # Erreur
 #
 ErrorPrerequis = Le collaborateur ne possède pas la formation %s qui est requise
+ErrorFormationAlreadyExist = Impossible d'ajouter cette formation car le collaborateur la possède déja (Il faut forcer la création)
 
 
 #

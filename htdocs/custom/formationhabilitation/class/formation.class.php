@@ -103,7 +103,8 @@ class Formation extends CommonObject
 	 */
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"label" => array("type"=>"varchar(255)", "label"=>"Label", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "validate"=>"1",),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "index"=>"1", "searchall"=>"1", "validate"=>"1",),
+		"label" => array("type"=>"varchar(255)", "label"=>"Label", "enabled"=>"1", 'position'=>25, 'notnull'=>1, "visible"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "validate"=>"1",),
 		"note_public" => array("type"=>"html", "label"=>"NotePublic", "enabled"=>"1", 'position'=>61, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
 		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
@@ -114,12 +115,11 @@ class Formation extends CommonObject
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"5", "default"=>"0", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Actif", "2" => "Cloturée"), "validate"=>"1",),
-		"type" => array("type"=>"integer", "label"=>"Type", "enabled"=>"0", 'position'=>31, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("{1:Formation Habilitante" => "2:Formation qui donne une autorisation}"),),
-		"ref_externe" => array("type"=>"varchar(128)", "label"=>"RefExterne", "enabled"=>"1", 'position'=>25, 'notnull'=>0, "visible"=>"1",),
+		"ref_externe" => array("type"=>"varchar(128)", "label"=>"RefExterne", "enabled"=>"1", 'position'=>21, 'notnull'=>0, "visible"=>"1",),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
 		"cout" => array("type"=>"price", "label"=>"Cout", "enabled"=>"1", 'position'=>34, 'notnull'=>0, "visible"=>"1",),
 		"periode_recyclage" => array("type"=>"integer", "label"=>"PeriodeRecyclage", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1", "help"=>"en mois",),
-		"fournisseur" => array("type"=>"chkbxlst:societe:nom:rowid::fournisseur=1", "label"=>"Fournisseur", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1",),
+		"fournisseur" => array("type"=>"chkbxlst:societe:nom:rowid::fournisseur=1", "label"=>"Fournisseur", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"famille" => array("type"=>"sellist:c_famille_formation:label:rowid::(active:=:1)", "label"=>"Famille", "enabled"=>"1", 'position'=>32, 'notnull'=>0, "visible"=>"1",),
 		"periode_souplesse" => array("type"=>"integer", "label"=>"PeriodeSouplesse", "enabled"=>"1", 'position'=>36, 'notnull'=>0, "visible"=>"-1", "help"=>"en mois",),
 		"periode_souplesse_bloquant" => array("type"=>"boolean", "label"=>"PeriodeSouplesseBloquant", "enabled"=>"1", 'position'=>37, 'notnull'=>0, "visible"=>"1",),
@@ -128,8 +128,10 @@ class Formation extends CommonObject
 		"formationssuperieurs" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"FormationsSuperieur", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 		"delaisprogrammation" => array("type"=>"integer", "label"=>"DelaisProgrammation", "enabled"=>"1", 'position'=>38, 'notnull'=>0, "visible"=>"1", "help"=>"en mois",),
 		"sousdomaine" => array("type"=>"sellist:c_sousdomaine_formation:label:rowid::(active:=:1)", "label"=>"SousDomaine", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
+		"commentaire" => array("type"=>"texte", "label"=>"Commentaire", "enabled"=>"1", 'position'=>58, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
+	public $ref;
 	public $label;
 	public $note_public;
 	public $note_private;
@@ -141,7 +143,6 @@ class Formation extends CommonObject
 	public $import_key;
 	public $model_pdf;
 	public $status;
-	public $type;
 	public $ref_externe;
 	public $nombre_heure;
 	public $cout;
@@ -155,6 +156,7 @@ class Formation extends CommonObject
 	public $formationssuperieurs;
 	public $delaisprogrammation;
 	public $sousdomaine;
+	public $commentaire;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -736,7 +738,7 @@ class Formation extends CommonObject
 		$label .= '<br>';
 		$label .= '<b>'.$langs->trans('Ref').':</b> '.$this->ref;
 		$label .= '<br><b>'.$langs->trans('Label').':</b> '.$this->label;
-		$label .= '<br><b>'.$langs->trans('Type').':</b> '.$this->showOutputField($this->fields['type'], 'type', $this->type);
+		// $label .= '<br><b>'.$langs->trans('Type').':</b> '.$this->showOutputField($this->fields['type'], 'type', $this->type);
 		$label .= '<br><b>'.$langs->trans('Duree').':</b> '.$this->duree;
 		$label .= '<br><b>'.$langs->trans('Fournisseur').':</b> '.$this->showOutputField($this->fields['fournisseur'], 'fournisseur', $this->fournisseur);
 
@@ -1162,6 +1164,82 @@ class Formation extends CommonObject
 		}
 	}
 
+	/**
+	 * 	Return les formations à reprogrammer lors de la création d'une nouvelle ligne de formation
+	 *
+	 * 	@param  int		$userid       				Id of User
+	 *  @param  int		$formationid    			Id of Formation
+ 	 *  @param  int		$userformation_exclude      Id of UserFormation not cloture
+	 * 	@return	array						
+	 */
+	public function getFormationToReprogrammer($userid, $formationid, $userformation_exclude = '')
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT uf.rowid, uf.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND uf.fk_formation = $formationid";
+		$sql .= " AND (uf.status = ".UserFormation::STATUS_VALIDE.")";
+		if($userformation_exclude) {
+			$sql .= " AND uf.rowid != $userformation_exclude";
+		}
+		$sql .= " ORDER BY uf.ref";
+
+		dol_syslog(get_class($this)."::getFormationToReprogrammer", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->ref;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return les formations non cloturée ou expirée
+	 *
+	 * 	@param  int		$userid       				Id of User
+	 *  @param  int		$formationid    			Id of Formation
+ 	 *  @param  int		$userformation_exclude      Id of UserFormation not cloture
+	 * 	@return	array						
+	 */
+	public function getFormationEnCours($userid, $formationid, $userformation_exclude = '')
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT uf.rowid, uf.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
+		$sql .= " WHERE uf.fk_user = $userid AND uf.fk_formation = $formationid";
+		$sql .= " AND (uf.status != ".UserFormation::STATUS_CLOTUREE." OR uf.status != ".UserFormation::STATUS_EXPIREE.")";
+		if($userformation_exclude) {
+			$sql .= " AND uf.rowid != $userformation_exclude";
+		}
+		$sql .= " ORDER BY uf.ref";
+
+		dol_syslog(get_class($this)."::getFormationEnCours", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->ref;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

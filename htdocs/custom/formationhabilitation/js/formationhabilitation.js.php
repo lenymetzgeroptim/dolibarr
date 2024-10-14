@@ -93,13 +93,14 @@ if (empty($dolibarr_nocache)) {
 } else {
 	header('Cache-Control: no-cache');
 }
+
 ?>
 
 $(document).ready(function() {
 	//
 	// Sélectionne tous les inputs dans la table avec l'ID 'tablelinesaddline'
 	//
-	$("#tablelinesaddline input, #tablelines tr.tredited input, #tablelinesaddline select").each(function() {
+	$(".formationhabilitation #tablelinesaddline input, .formationhabilitation #tablelines tr.tredited input, .formationhabilitation #tablelinesaddline select").each(function() {
 		// Vérifie si l'input n'a pas l'attribut 'form'
 		if (!$(this).attr("form")) {
 			// Ajoute l'attribut 'form' avec la valeur 'addline'
@@ -119,7 +120,8 @@ $(document).ready(function() {
 	else if ($("#tablelinesaddline").length) { // Formulaire des création d'une ligne de formation
 		var initialFormationId = $('#fk_formation, .tredited #fk_formation').val();
 		var initialOrganismeId = $('#fk_societe, .tredited #fk_societe').val();	
-		loadOrganismeAndDuration(initialFormationId, initialOrganismeId, 1);
+		var initialOrganismeInput = $('#fk_societe, .tredited #fk_societe').html();
+		loadOrganismeAndDuration(initialFormationId, initialOrganismeInput, initialOrganismeId, 1);
 
 		if ($("#dialog-confirm .confirmquestions").length) { // Si le popup pour programmer une ligne apparait
 			var initialFormationIdPopup = $('#dialog-confirm .confirmquestions #fk_formation_programmer').val();	
@@ -154,7 +156,7 @@ $(document).ready(function() {
 	//
 	$('#tablelinesaddline #fk_formation').change(function() {
 		var formationId = $(this).val();
-		loadOrganismeAndDuration(formationId);
+		loadOrganismeAndDuration(formationId, initialOrganismeInput);
 	});
 
 	$('#visitemedicaleform #fk_user').change(function() {
@@ -198,7 +200,7 @@ $(document).ready(function() {
 	});
 });
 
-function loadOrganismeAndDuration(formationId, organismeId, firstLoad) {
+function loadOrganismeAndDuration(formationId, initialOrganismeInput, organismeId, firstLoad) {
 	if (formationId > 0) {
 		$.ajax({
 			type: 'POST',
@@ -206,7 +208,14 @@ function loadOrganismeAndDuration(formationId, organismeId, firstLoad) {
 			data: { formationId: formationId, organismeId: organismeId },
 			success: function(response) {
 				var data = JSON.parse(response);
-                $('#tablelinesaddline #fk_societe').html(data.fk_societe);
+
+				if(data.fk_societe) {
+					$('#tablelinesaddline #fk_societe').html(data.fk_societe);
+				}
+				else {
+					$('#tablelinesaddline #fk_societe').html(initialOrganismeInput);
+				}
+
 				if(!firstLoad) {
 					$('#tablelinesaddline input[name="nombre_heurehour"]').val(data.hour);
 					$('#tablelinesaddline input[name="nombre_heuremin"]').val(data.min);
@@ -214,7 +223,7 @@ function loadOrganismeAndDuration(formationId, organismeId, firstLoad) {
 			}
 		});
 	} else {
-		$('#tablelinesaddline #fk_societe').html('<option value="">Sélectionnez une formation</option>');
+		$('#tablelinesaddline #fk_societe').html(initialOrganismeInput);
 		if(!firstLoad) {
 			$('#tablelinesaddline input[name="nombre_heurehour"]').val('');
 			$('#tablelinesaddline input[name="nombre_heuremin"]').val('');

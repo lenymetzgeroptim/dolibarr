@@ -32,15 +32,17 @@ CREATE TABLE llx_formationhabilitation_userformation(
 	date_debut_formation date NOT NULL, 
 	date_fin_formation date NOT NULL, 
 	status integer NOT NULL, 
-	cout_pedagogique double NOT NULL, 
-	cout_mobilisation double NOT NULL, 
-	cout_total double NOT NULL, 
+	cout_pedagogique double, 
+	cout_mobilisation double, 
+	cout_total double, 
 	date_finvalidite_formation date, 
 	fk_societe integer, 
 	numero_certificat varchar(20), 
 	formateur integer, 
 	interne_externe integer DEFAULT 1 NOT NULL, 
-	nombre_heure integer NOT NULL, 
-	resultat integer NOT NULL
+	nombre_heure integer, 
+	resultat integer, 
+	cout_annexe double, 
+	prevupif int(11)
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

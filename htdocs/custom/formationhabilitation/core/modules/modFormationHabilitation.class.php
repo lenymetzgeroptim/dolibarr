@@ -677,7 +677,7 @@ class modFormationHabilitation extends DolibarrModules
 		$import_extrafield_sample = array();
 		$keyforselect='formation'; $keyforaliasextra='extra'; $keyforelement='formation@formationhabilitation';
 		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinimport.inc.php';
-		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.MAIN_DB_PREFIX.'formationhabilitation_formation', 't.status' => 'const-1', 't.volet' => 'const-2',  't.delaisprogrammation' => 'const-6');
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.MAIN_DB_PREFIX.'formationhabilitation_formation', /*'t.delaisprogrammation' => 'const-6'*/);
 		$this->import_regex_array[$r] = array();
 		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
 		$this->import_updatekeys_array[$r] = array('t.rowid' => 'ID');

@@ -64,7 +64,7 @@ if($action == 'addline' && $permissiontoaddline) {
 		$error++;
 	}
 
-	if(!$error && GETPOST('forcecreation') == 0) { // Gestion des prérequis : TODOL -> aptitude medicale
+	if(!$error && !empty(GETPOST('forcecreation'))) { // Gestion des prérequis : TODOL -> aptitude medicale
 		$prerequis = explode(',', $autorisation_static->formation);
 		$formation = new Formation($db);
 		foreach($prerequis as $formationid) {
@@ -80,7 +80,7 @@ if($action == 'addline' && $permissiontoaddline) {
 		$objectline->ref = $user_static->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 		$objectline->fk_autorisation = GETPOST('fk_autorisation');
 		$objectline->date_autorisation = $date;
-		$objectline->date_fin_autorisation = dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd');
+		$objectline->date_fin_autorisation = dol_time_plus_duree(dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd'), -1, 'd');
 		$objectline->fk_user = GETPOST('fk_user');
 		$objectline->status = GETPOST('status');
 
@@ -120,7 +120,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 		if (!$error) {
 			$objectline->ref = $user_static->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 			$objectline->date_autorisation = $date;
-			$objectline->date_fin_autorisation = dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd');
+			$objectline->date_fin_autorisation = dol_time_plus_duree(dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd'), -1, 'd');
 			$objectline->status = GETPOST('status');
 
 			$resultupdate = $objectline->update($user);

@@ -259,6 +259,14 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
             }
             $txt_formationToClose = rtrim($txt_formationToClose, ', ');
         }
+        elseif(GETPOST('fk_formation') > 0 && GETPOST('fk_user') > 0 && GETPOST('status') == $objectline::STATUS_PROGRAMMEE) { // Formation reprogrammée
+            $formationToReprogrammer = $objectparentline->getFormationToReprogrammer(GETPOST('fk_user'), GETPOST('fk_formation'));
+            $txt_formationToReprogrammer = '';
+            foreach($formationToReprogrammer as $idformation => $refformation) {
+                $txt_formationToReprogrammer .= $refformation.', ';
+            }
+            $txt_formationToReprogrammer = rtrim($txt_formationToReprogrammer, ', ');
+        }
     
         if(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
             if (!empty(GETPOST("date_debut_formationmonth", 'int')) && !empty(GETPOST("date_debut_formationday", 'int')) && !empty(GETPOST("date_debut_formationyear", 'int'))) {
@@ -275,7 +283,13 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
             );
         }
 
-        $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$param, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLine2', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
+        if(GETPOST('status') == $objectline::STATUS_VALIDE) {
+            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$param, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLineWithDeletion', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
+        }
+        elseif(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
+            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$param, $langs->trans('AddLine'), (!empty($txt_formationToReprogrammer) ? $langs->trans('ConfirmAddLineWithProgrammation', $txt_formationToReprogrammer) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
+        }
+
         print $formconfirm;
     }
 }

@@ -116,15 +116,7 @@ if (!$sortorder) {
 $search = array();
 $search['fk_user'] = $object->id;
 
-unset($objectline->fields['fk_user']);
-if(!$permissiontoreadCout) {
-    unset($objectline->fields['cout_pedagogique']);
-    unset($objectline->fields['cout_mobilisation']);
-    unset($objectline->fields['cout_total']);
-}
-
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
-unset($arrayfields['t.formateur']);
 
 /*
  * Actions
@@ -230,6 +222,15 @@ if ($onglet == 'volet') {
     // }
 }
 
+unset($arrayfields['t.formateur']);
+unset($objectline->fields['fk_user']);
+if(!$permissiontoreadCout) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_mobilisation']);
+    unset($objectline->fields['cout_annexe']);
+    unset($objectline->fields['cout_total']);
+}
+
 /*
  * View
  */
@@ -242,7 +243,7 @@ if ($onglet == 'volet') {
 $help_url = '';
 $page_name = "Formation - Habilitation";
 
-llxHeader('', $page_name, $help_url, '', 0, 0, '', '', '', 'classforhorizontalscrolloftabs');
+llxHeader('', $page_name, $help_url, '', 0, 0, '', '', '', 'formationhabilitation classforhorizontalscrolloftabs');
 
 $res = $object->fetch($userid, '', '', 1);
 if ($res < 0) {

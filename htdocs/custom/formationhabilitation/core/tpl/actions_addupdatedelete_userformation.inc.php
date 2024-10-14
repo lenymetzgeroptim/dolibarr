@@ -92,7 +92,16 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$date_fin_convoc = dol_mktime(GETPOST("date_fin_formation_programmerhour", 'int'), GETPOST("date_fin_formation_programmermin", 'int'), -1, GETPOST("date_fin_formation_programmermonth", 'int'), GETPOST("date_fin_formation_programmerday", 'int'), GETPOST("date_fin_formation_programmeryear", 'int'));
 	}
 
-	if(!$error && GETPOST('forcecreation') == 0) { // Gestion des prérequis 
+	if(!$error && !empty(GETPOST('forcecreation')) && GETPOST('status') != $objectline::STATUS_VALIDE && GETPOST('status') != $objectline::STATUS_EXPIREE && GETPOST('status') != $objectline::STATUS_CLOTUREE){ // Impossimble d'ajouter une formation si une ligne avec la même formation existe déja (hors cloturée et expirée)
+		$formationEnCours = $formation->getFormationEnCours(GETPOST('fk_user'), GETPOST('fk_formation'));
+
+		if(sizeof($formationEnCours) >= 1){
+			setEventMessages($langs->trans('ErrorFormationAlreadyExist'), null, 'errors');
+			$error++;
+		}
+	}
+
+	if(!$error && !empty(GETPOST('forcecreation'))) { // Gestion des prérequis 
 		$formation->fetch(GETPOST('fk_formation'));
 		$prerequis = explode(',', $formation->prerequis);
 		foreach($prerequis as $formationid) {
@@ -115,6 +124,18 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 			}
         }
 	}
+	elseif(!$error && GETPOST('status') == $objectline::STATUS_PROGRAMMEE) { // Gestion de la reprogrammation des formations de niveau inferieur
+		$formationToReprogrammer = $formation->getFormationToReprogrammer(GETPOST('fk_user'), GETPOST('fk_formation'));
+		foreach($formationToReprogrammer as $userformation_id => $userformation_ref) {
+            $userFormation->fetch($userformation_id);
+			$userFormation->status = UserFormation::STATUS_REPROGRAMMEE;
+			$res == $userFormation->update($user);
+
+			if(!$res) {
+				$error++;
+			}
+        }
+	}
 
 	if (!$error) {
 		$objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date_fin, "%Y%m%d");
@@ -123,14 +144,16 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$objectline->interne_externe = GETPOST('interne_externe');
 		$objectline->date_debut_formation = $date_debut;
 		$objectline->date_fin_formation = $date_fin;
-		$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm') : '');
+		$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree(dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm'), -1, 'd') : '');
 		$objectline->nombre_heure = $nombre_heure;
 		$objectline->cout_pedagogique = $formation_static->cout;
 		$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
-		$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+		$objectline->cout_annexe = GETPOST('cout_annexe', 'int');
+		$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 		$objectline->fk_societe = GETPOST('fk_societe');
 		$objectline->formateur = GETPOST('formateur');
 		$objectline->numero_certificat = GETPOST('numero_certificat');
+		$objectline->prevupif = GETPOST('prevupif', 'int');
 		$objectline->resultat = GETPOST('resultat');
 		$objectline->status = GETPOST('status');
 
@@ -145,7 +168,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 	if(!$error && $resultcreate > 0){
 		$db->commit();
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
+		//header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 		exit;
 	}
@@ -193,14 +216,16 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 			$objectline->interne_externe = GETPOST('interne_externe');
 			$objectline->date_debut_formation = $date_debut;
 			$objectline->date_fin_formation = $date_fin;
-			$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm') : '');
+			$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree(dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm'), -1, 'd') : '');
 			$objectline->nombre_heure = $nombre_heure;
-			$objectline->cout_pedagogique = $formation_static->cout;
-			$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
-			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+			// $objectline->cout_pedagogique = $formation_static->cout;
+			// $objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
+			$objectline->cout_annexe = GETPOST('cout_annexe');
+			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 			$objectline->fk_societe = (GETPOST('interne_externe') != 2 ? GETPOST('fk_societe') : '');
 			$objectline->formateur = (GETPOST('interne_externe') == 2 ? GETPOST('formateur') : '');
 			$objectline->numero_certificat = GETPOST('numero_certificat');
+			$objectline->prevupif = GETPOST('prevupif', 'int');
 			$objectline->resultat = GETPOST('resultat');
 			$objectline->status = GETPOST('status');
 
@@ -378,8 +403,8 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 		if (!$error) {
 			// Changement status de l'ancienne ligne
 			$objectline->fetch($lineid);
-			//$objectline->status = UserFormation::STATUS_REPROGRAMMEE;
-			//$result == $objectline->update($user);
+			$objectline->status = UserFormation::STATUS_REPROGRAMMEE;
+			$result == $objectline->update($user);
 			$userid = $objectline->fk_user; 
 			$formationid = $objectline->fk_formation;
 
@@ -395,11 +420,12 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 			$objectline->interne_externe = GETPOST('interne_externe_programmer');
 			$objectline->date_debut_formation = $date_debut;
 			$objectline->date_fin_formation = $date_fin;
-			$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm') : '');
+			$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree(dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm'), -1, 'd') : '');
 			$objectline->nombre_heure = $formation_static->nombre_heure;
 			$objectline->cout_pedagogique = $formation_static->cout;
 			$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
-			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+			// $objectline->cout_annexe = GETPOST('cout_annexe', 'int');
+			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 			$objectline->fk_societe = GETPOST('fk_societe_programmer');
 			$objectline->formateur = GETPOST('formateur_programmer');
 			$objectline->status = UserFormation::STATUS_PROGRAMMEE;
@@ -472,7 +498,7 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 			// $objectline->interne_externe = GETPOST('interne_externe');
 			// $objectline->date_debut_formation = $date_debut;
 			// $objectline->date_fin_formation = $date_fin;
-			// $objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm') : '');
+			// $objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree(dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm'), -1, 'd') : '');
 			// $objectline->nombre_heure = $formation_static->nombre_heure;
 			// $objectline->cout_pedagogique = $formation_static->cout;
 			// $objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);

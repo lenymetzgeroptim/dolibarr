@@ -50,18 +50,20 @@ if ($formationId > 0) {
         $obj = $db->fetch_object($resql);
         $fournisseurs = explode(",", $obj->fournisseur);
         $time = explode(':', convertSecondToTime($obj->nombre_heure, 'allhourmin'));
-        $hour = $time[0];
-        $min = $time[1];
+        $hour = ($time[0] ? $time[0] : '');
+        $min = ($time[1] ? $time[1] : '');
 
         foreach($fournisseurs as $fournisseur_id) {
-            $societe->fetch($fournisseur_id);
-            $fk_societe .= '<option'.($fournisseur_id == $organismeId ? ' selected' : '').' value="' . $societe->id . '">' . $societe->name . '</option>';
+            if($fournisseur_id > 0) {
+                $societe->fetch($fournisseur_id);
+                $fk_societe .= '<option'.($fournisseur_id == $organismeId ? ' selected' : '').' value="' . $societe->id . '">' . $societe->name . '</option>';
+            }
         }
     } else {
-        $fk_societe .= '<option value="">Aucun organisme de formation</option>';
+        // $fk_societe .= '<option value="">Aucun organisme de formation</option>';
     }
 } else {
-    $fk_societe .= '<option value="">Sélectionnez une formation</option>';
+    // $fk_societe .= '<option value="">Sélectionnez une formation</option>';
 }
 
 // Préparer la réponse

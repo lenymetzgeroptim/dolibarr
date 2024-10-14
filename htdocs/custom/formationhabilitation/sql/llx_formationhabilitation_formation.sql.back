@@ -17,6 +17,7 @@
 CREATE TABLE llx_formationhabilitation_formation(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
+	ref varchar(128) NOT NULL, 
 	label varchar(255) NOT NULL, 
 	note_public text, 
 	note_private text, 
@@ -28,7 +29,6 @@ CREATE TABLE llx_formationhabilitation_formation(
 	import_key varchar(14), 
 	model_pdf varchar(255), 
 	status integer NOT NULL, 
-	type integer, 
 	ref_externe varchar(128), 
 	nombre_heure integer, 
 	cout double, 

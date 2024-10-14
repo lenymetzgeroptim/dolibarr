@@ -259,7 +259,7 @@ if (empty($reshook)) {
 
 $title = $langs->trans("Habilitation");
 $help_url = '';
-llxHeader('', $title, $help_url);
+llxHeader('', $page_name, $help_url, '', 0, 0, '', '', '', 'formationhabilitation classforhorizontalscrolloftabs');
 
 // Part to create
 if ($action == 'create') {
