@@ -520,7 +520,8 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 
 		// Création des habilitations 
 		$resultcreateline = 1;
-		if($result && $formation_static->type == 1) {
+		$txtListHabilitation = '';
+		if($result && !$error) {
 			$habilitationStatic = new Habilitation($db);
 			$userHabilitation = new UserHabilitation($db);
 			
@@ -533,10 +534,59 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
                 $userHabilitation->ref = $user_static->login."-".$habilitation->ref.'-'.dol_print_date($objectline->date_fin_formation, "%Y%m%d");
                 $userHabilitation->fk_habilitation = $habilitation->id;
                 $userHabilitation->date_fin_habilitation = dol_time_plus_duree($objectline->date_fin_formation, $habilitationStatic->validite_employeur, 'd');
+				$txtListHabilitation .= $habilitation->label.', ';
 
 				$resultcreateline = $userHabilitation->create($user);
 				if($resultcreateline <= 0) {
 					break;
+				}
+			}
+
+			// Envoi du mail
+			if($resultcreateline > 0 && !empty($txtListHabilitation)) { 
+				$responsable = new User($db);
+				$responsable->fetch($user_static->fk_user); // TODOLény : gestion du responsable d'antenne
+				rtrim($txtListHabilitation, ', ');
+
+				global $dolibarr_main_url_root;
+
+				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($object->module);
+				$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+				$to = $responsable->email;
+
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$object->id.'">'.$object->login.'</a>';
+				$message = $langs->transnoentitiesnoconv("EMailTextHabilitationCreation", $formation_static->label, $link, $txtListHabilitation);
+
+				$trackid = 'formationhabilitation'.$this->id;
+
+				$mailfile = new CMailFile(
+					$subject,
+					$to,
+					$from,
+					$message,
+					array(),
+					array(),
+					array(),
+					'',
+					'',
+					0,
+					1,
+					'',
+					'',
+					$trackid,
+					'',
+					$sendcontext
+				);
+
+				if(!empty($to)) {
+					$result = $mail->sendfile();
+
+					if (!$result) {
+						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+					}
 				}
 			}
 		}

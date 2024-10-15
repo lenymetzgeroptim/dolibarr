@@ -218,6 +218,12 @@ ErrorFormationAlreadyExist = Impossible d'ajouter cette formation car le collabo
 
 
 #
+# Email
+#
+EMailTextHabilitationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les habilitations suivantes sont à valider pour %s : %s
+
+
+#
 # Autres
 #
 ForceCreation = Forcer la création
