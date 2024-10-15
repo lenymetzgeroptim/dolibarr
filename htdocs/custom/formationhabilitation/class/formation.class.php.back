@@ -119,15 +119,16 @@ class Formation extends CommonObject
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
 		"cout" => array("type"=>"price", "label"=>"Cout", "enabled"=>"1", 'position'=>34, 'notnull'=>0, "visible"=>"1",),
 		"periode_recyclage" => array("type"=>"integer", "label"=>"PeriodeRecyclage", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1", "help"=>"en mois",),
-		"fournisseur" => array("type"=>"chkbxlst:societe:nom:rowid::fournisseur=1", "label"=>"Fournisseur", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1",),
+		"fournisseur" => array("type"=>"chkbxlst:societe:nom:rowid::fournisseur=1", "label"=>"Fournisseur", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"famille" => array("type"=>"sellist:c_famille_formation:label:rowid::(active:=:1)", "label"=>"Famille", "enabled"=>"1", 'position'=>32, 'notnull'=>0, "visible"=>"1",),
-		"periode_souplesse" => array("type"=>"integer", "label"=>"PeriodeSouplesse", "enabled"=>"1", 'position'=>36, 'notnull'=>0, "visible"=>"-1", "help"=>"en mois",),
-		"periode_souplesse_bloquant" => array("type"=>"boolean", "label"=>"PeriodeSouplesseBloquant", "enabled"=>"1", 'position'=>37, 'notnull'=>0, "visible"=>"1",),
+		"periode_souplesse" => array("type"=>"integer", "label"=>"PeriodeSouplesse", "enabled"=>"getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION')==1", 'position'=>36, 'notnull'=>0, "visible"=>"-1", "help"=>"en mois",),
+		"periode_souplesse_bloquant" => array("type"=>"boolean", "label"=>"PeriodeSouplesseBloquant", "enabled"=>"getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION')==2", 'position'=>37, 'notnull'=>0, "visible"=>"1",),
 		"prerequis" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"Prerequis", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"volet" => array("type"=>"sellist:c_volets:numero|label:rowid::(active:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
 		"formationssuperieurs" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"FormationsSuperieur", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 		"delaisprogrammation" => array("type"=>"integer", "label"=>"DelaisProgrammation", "enabled"=>"1", 'position'=>38, 'notnull'=>0, "visible"=>"1", "help"=>"en mois",),
 		"sousdomaine" => array("type"=>"sellist:c_sousdomaine_formation:label:rowid::(active:=:1)", "label"=>"SousDomaine", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
+		"commentaire" => array("type"=>"texte", "label"=>"Commentaire", "enabled"=>"1", 'position'=>58, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -155,6 +156,7 @@ class Formation extends CommonObject
 	public $formationssuperieurs;
 	public $delaisprogrammation;
 	public $sousdomaine;
+	public $commentaire;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1162,6 +1164,82 @@ class Formation extends CommonObject
 		}
 	}
 
+	/**
+	 * 	Return les formations à reprogrammer lors de la création d'une nouvelle ligne de formation
+	 *
+	 * 	@param  int		$userid       				Id of User
+	 *  @param  int		$formationid    			Id of Formation
+ 	 *  @param  int		$userformation_exclude      Id of UserFormation not cloture
+	 * 	@return	array						
+	 */
+	public function getFormationToReprogrammer($userid, $formationid, $userformation_exclude = '')
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT uf.rowid, uf.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND uf.fk_formation = $formationid";
+		$sql .= " AND (uf.status = ".UserFormation::STATUS_VALIDE.")";
+		if($userformation_exclude) {
+			$sql .= " AND uf.rowid != $userformation_exclude";
+		}
+		$sql .= " ORDER BY uf.ref";
+
+		dol_syslog(get_class($this)."::getFormationToReprogrammer", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->ref;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return les formations non cloturée ou expirée
+	 *
+	 * 	@param  int		$userid       				Id of User
+	 *  @param  int		$formationid    			Id of Formation
+ 	 *  @param  int		$userformation_exclude      Id of UserFormation not cloture
+	 * 	@return	array						
+	 */
+	public function getFormationEnCours($userid, $formationid, $userformation_exclude = '')
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT uf.rowid, uf.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
+		$sql .= " WHERE uf.fk_user = $userid AND uf.fk_formation = $formationid";
+		$sql .= " AND (uf.status != ".UserFormation::STATUS_CLOTUREE." OR uf.status != ".UserFormation::STATUS_EXPIREE.")";
+		if($userformation_exclude) {
+			$sql .= " AND uf.rowid != $userformation_exclude";
+		}
+		$sql .= " ORDER BY uf.ref";
+
+		dol_syslog(get_class($this)."::getFormationEnCours", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->ref;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

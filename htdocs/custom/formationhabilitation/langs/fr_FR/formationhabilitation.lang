@@ -59,6 +59,11 @@ FORMTIONHABILITATION_APPROBATEURVOLET2 = Approbation n°2
 FORMTIONHABILITATION_APPROBATEURVOLET3 = Approbation n°3
 FORMTIONHABILITATION_APPROBATEURVOLET4 = Approbation n°4é
 FORMTIONHABILITATION_APPROBATIONVOLET = Approbation(s) réalisée(s) pour le volet %s
+FormationTitle = Formations
+FORMTIONHABILITATION_SOUPLESSEFORMATION = Activer la période de souplesse
+UserFormationLines = Formations des collaborateurs
+fa-user-graduate_fas_#1f3d89 = Formations des collaborateurs
+fa-graduation-cap_fas_#1f3d89 = Formations
 
 
 #
@@ -148,6 +153,8 @@ DateFinValiditeFormation = Fin de validité
 InterneExterne = Effectuée en
 Organisme = Organisme / Formatteur
 Formateur = Organisme / Formateur
+Organisme2 = Organisme
+Formateur2 = Formateur
 HeureDebut = Heure début
 HeureFin = Heure de fin
 

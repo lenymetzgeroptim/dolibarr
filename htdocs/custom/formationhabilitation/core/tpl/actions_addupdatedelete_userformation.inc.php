@@ -92,7 +92,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$date_fin_convoc = dol_mktime(GETPOST("date_fin_formation_programmerhour", 'int'), GETPOST("date_fin_formation_programmermin", 'int'), -1, GETPOST("date_fin_formation_programmermonth", 'int'), GETPOST("date_fin_formation_programmerday", 'int'), GETPOST("date_fin_formation_programmeryear", 'int'));
 	}
 
-	if(!$error && !empty(GETPOST('forcecreation')) && GETPOST('status') != $objectline::STATUS_VALIDE && GETPOST('status') != $objectline::STATUS_EXPIREE && GETPOST('status') != $objectline::STATUS_CLOTUREE){ // Impossimble d'ajouter une formation si une ligne avec la même formation existe déja (hors cloturée et expirée)
+	if(!$error && empty(GETPOST('forcecreation')) && GETPOST('status') != $objectline::STATUS_VALIDE && GETPOST('status') != $objectline::STATUS_EXPIREE && GETPOST('status') != $objectline::STATUS_CLOTUREE){ // Impossimble d'ajouter une formation si une ligne avec la même formation existe déja (hors cloturée et expirée)
 		$formationEnCours = $formation->getFormationEnCours(GETPOST('fk_user'), GETPOST('fk_formation'));
 
 		if(sizeof($formationEnCours) >= 1){
@@ -101,7 +101,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		}
 	}
 
-	if(!$error && !empty(GETPOST('forcecreation'))) { // Gestion des prérequis 
+	if(!$error && empty(GETPOST('forcecreation'))) { // Gestion des prérequis 
 		$formation->fetch(GETPOST('fk_formation'));
 		$prerequis = explode(',', $formation->prerequis);
 		foreach($prerequis as $formationid) {
@@ -148,7 +148,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$objectline->nombre_heure = $nombre_heure;
 		$objectline->cout_pedagogique = $formation_static->cout;
 		$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
-		$objectline->cout_annexe = GETPOST('cout_annexe', 'int');
+		$objectline->cout_annexe = GETPOST('cout_annexe');
 		$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 		$objectline->fk_societe = GETPOST('fk_societe');
 		$objectline->formateur = GETPOST('formateur');
@@ -212,14 +212,20 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 		}
 
 		if (!$error) {
+			$nombre_heure_before = $objectline->nombre_heure;
+
 			$objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date_fin, "%Y%m%d");
 			$objectline->interne_externe = GETPOST('interne_externe');
 			$objectline->date_debut_formation = $date_debut;
 			$objectline->date_fin_formation = $date_fin;
 			$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree(dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm'), -1, 'd') : '');
 			$objectline->nombre_heure = $nombre_heure;
-			// $objectline->cout_pedagogique = $formation_static->cout;
-			// $objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
+			if(empty($objectline->cout_pedagogique)) {
+				$objectline->cout_pedagogique = $formation_static->cout;
+			}
+			if(empty($objectline->cout_mobilisation) || $nombre_heure_before != $nombre_heure) {
+				$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
+			}
 			$objectline->cout_annexe = GETPOST('cout_annexe');
 			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 			$objectline->fk_societe = (GETPOST('interne_externe') != 2 ? GETPOST('fk_societe') : '');
@@ -424,7 +430,7 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 			$objectline->nombre_heure = $formation_static->nombre_heure;
 			$objectline->cout_pedagogique = $formation_static->cout;
 			$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
-			// $objectline->cout_annexe = GETPOST('cout_annexe', 'int');
+			// $objectline->cout_annexe = GETPOST('cout_annexe');
 			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 			$objectline->fk_societe = GETPOST('fk_societe_programmer');
 			$objectline->formateur = GETPOST('formateur_programmer');

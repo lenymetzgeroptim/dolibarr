@@ -131,7 +131,7 @@ class UserFormation extends CommonObject
 		"interne_externe" => array("type"=>"integer", "label"=>"InterneExterne", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "default"=>"1", "arrayofkeyval"=>array("1" => "Externe", "2" => "Interne"),),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"resultat" => array("type"=>"integer", "label"=>"Résultat", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Non défini", "2" => "Satisfaisant", "3" => "Non satisfaisant"),),
-		"cout_annexe" => array("type"=>"price", "label"=>"CoutAnnexe", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"4",),
+		"cout_annexe" => array("type"=>"price", "label"=>"CoutAnnexe", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
 		"prevupif" => array("type"=>"boolean", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
@@ -1020,24 +1020,31 @@ class UserFormation extends CommonObject
 		$tab_id = array();
 
 		$this->db->begin();
+		$this->output = '';
 
-		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour => Expirée
-		$sql = "SELECT uf.rowid";
+		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée
+		$sql = "SELECT uf.rowid, uf.ref";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql .= " AND f.periode_souplesse IS NULL";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
-		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
+		$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+		//$sql .= " AND f.periode_recyclage IS NOT NULL";
+		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
+			$sql .= " AND f.periode_souplesse IS NULL";
+		}
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE." OR uf.status = ".self::STATUS_PROGRAMMEE.")";
+		$sql .= " AND uf.date_finvalidite_formation < '".substr($this->db->idate($now), 0, 10)."'";
 
-		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour + 6 mois => A programmer
-		$sql2 = "SELECT uf.rowid";
+		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité > DateJour + $delaisprogrammation mois => A programmer
+		$sql2 = "SELECT uf.rowid, uf.ref";
 		$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql2 .= " AND f.periode_souplesse IS NULL";
+		$sql2 .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+		//$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
+		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
+			$sql2 .= " AND f.periode_souplesse IS NULL";
+		}
 		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.delaisprogrammation MONTH) <= '".$this->db->idate($now)."'";
+		$sql2 .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL -f.delaisprogrammation MONTH) <= '".substr($this->db->idate($now), 0, 10)."'";
 
 		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
 
@@ -1045,27 +1052,29 @@ class UserFormation extends CommonObject
 		$resql2 = $this->db->query($sql2);
 
 		if ($resql && $resql2) {
-			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour => Expirée
+			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée
 			$num = $this->db->num_rows($resql);
 			$i = 0;
 			while ($i < $num) {
 				$obj = $this->db->fetch_object($resql);
 				$tab_id[] = $obj->rowid;
+				$this->output .= "La formation $obj->ref a été passé au statut 'Expirée'<br>";
 				$i++;
 			}	
 
-			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour + 6 mois => A programmer
+			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité > DateJour + $delaisprogrammation mois => A programmer
 			$num = $this->db->num_rows($resql2);
 			$i = 0;
 			while ($i < $num) {
 				$obj = $this->db->fetch_object($resql2);
 				if(!in_array($obj->rowid, $tab_id)) {
 					$tab_id2[] = $obj->rowid;
+					$this->output .= "La formation $obj->ref a été passé au statut 'A programmer'<br>";
 				}
 				$i++;
 			}	
 
-			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour => Expirée
+			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée
 			if(!empty($tab_id)){
 				$ID = implode(",", $tab_id);
 
@@ -1083,7 +1092,7 @@ class UserFormation extends CommonObject
 				}
 			}
 
-			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour + 6 mois => A programmer
+			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité > DateJour + $delaisprogrammation mois => A programmer
 			if(!empty($tab_id2)){
 				$ID = implode(",", $tab_id2);
 
@@ -1105,135 +1114,140 @@ class UserFormation extends CommonObject
 			return -1;
 		}
 
-		// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
-		$sql = "SELECT uf.rowid";
-		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql .= " AND f.periode_souplesse IS NOT NULL";
-		$sql .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) <= '".$this->db->idate($now)."'";
+		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
+			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse > DateJour => Expirée
+			$sql = "SELECT uf.rowid, uf.ref";
+			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
+			$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+			$sql .= " AND f.periode_souplesse IS NOT NULL";
+			$sql .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
+			$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE." OR uf.status = ".self::STATUS_PROGRAMMEE.")";
+			$sql .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL f.periode_souplesse MONTH) < '".substr($this->db->idate($now), 0, 10)."'";
 
-		// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => A programmer
-		$sql2 = "SELECT uf.rowid";
-		$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
-		$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql2 .= " AND f.periode_souplesse IS NOT NULL";
-		$sql2 .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
-		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) > '".$this->db->idate($now)."'";
-		$sql2 .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
+			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => A programmer
+			$sql2 = "SELECT uf.rowid, uf.ref";
+			$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+			$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
+			$sql2 .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+			$sql2 .= " AND f.periode_souplesse IS NOT NULL";
+			$sql2 .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
+			$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
+			$sql2 .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL f.periode_souplesse MONTH) > '".substr($this->db->idate($now), 0, 10)."'";
+			$sql2 .= " AND uf.date_finvalidite_formation < '".substr($this->db->idate($now), 0, 10)."'";
 
-		$resql = $this->db->query($sql);
-		$resql2 = $this->db->query($sql2);
+			$resql = $this->db->query($sql);
+			$resql2 = $this->db->query($sql2);
 
-		if ($resql && $resql2) {
-			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
-			$num = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num) {
-				$obj = $this->db->fetch_object($resql);
-				$tab_id[] = $obj->rowid;
-				$i++;
-			}	
+			if ($resql && $resql2) {
+				// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
+				$num = $this->db->num_rows($resql);
+				$i = 0;
+				while ($i < $num) {
+					$obj = $this->db->fetch_object($resql);
+					$tab_id[] = $obj->rowid;
+					$this->output .= "La formation $obj->ref a été passé au statut 'Expirée' (souplesse non restrictive)<br>";
+					$i++;
+				}	
 
-			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => A programmer
-			$num = $this->db->num_rows($resql2);
-			$i = 0;
-			while ($i < $num) {
-				$obj = $this->db->fetch_object($resql2);
-				if(!in_array($obj->rowid, $tab_id)) {
-					$tab_id2[] = $obj->rowid;
+				// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => A programmer
+				$num = $this->db->num_rows($resql2);
+				$i = 0;
+				while ($i < $num) {
+					$obj = $this->db->fetch_object($resql2);
+					if(!in_array($obj->rowid, $tab_id)) {
+						$tab_id2[] = $obj->rowid;
+						$this->output .= "La formation $obj->ref a été passé au statut 'A programmer' (souplesse non restrictive)<br>";
+					}
+					$i++;
+				}	
+
+				// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse > DateJour => Expirée
+				if(!empty($tab_id)){
+					$ID = implode(",", $tab_id);
+
+					$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
+					$sql .= " SET uf.status = ".self::STATUS_EXPIREE;
+					$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+
+					$resql = $this->db->query($sql);
+					if ($resql) {
+						$this->db->commit();
+					}
+					else{
+						$this->error = $this->db->lasterror();
+						$error++;
+					}
 				}
-				$i++;
-			}	
 
-			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
-			if(!empty($tab_id)){
-				$ID = implode(",", $tab_id);
+				// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => A programmer
+				if(!empty($tab_id2)){
+					$ID = implode(",", $tab_id2);
 
-				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
-				$sql .= " SET uf.status = ".self::STATUS_EXPIREE;
-				$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+					$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
+					$sql .= " SET uf.status = ".self::STATUS_A_PROGRAMMER;
+					$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
 
-				$resql = $this->db->query($sql);
-				if ($resql) {
-					$this->db->commit();
+					$resql = $this->db->query($sql);
+					if ($resql) {
+						$this->db->commit();
+					}
+					else{
+						$this->error = $this->db->lasterror();
+						$error++;
+					}
 				}
-				else{
-					$this->error = $this->db->lasterror();
-					$error++;
-				}
+			} else {
+				$this->error = $this->db->lasterror();
+				return -1;
 			}
 
-			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => A programmer
-			if(!empty($tab_id2)){
-				$ID = implode(",", $tab_id2);
 
-				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
-				$sql .= " SET uf.status = ".self::STATUS_A_PROGRAMMER;
-				$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée
+			$sql = "SELECT uf.rowid, uf.ref";
+			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
+			$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+			$sql .= " AND f.periode_souplesse IS NOT NULL";
+			$sql .= " AND f.periode_souplesse_bloquant = 1";
+			$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE." OR uf.status = ".self::STATUS_PROGRAMMEE.")";
+			$sql .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL f.periode_souplesse MONTH) > '".substr($this->db->idate($now), 0, 10)."'";
+			$sql .= " AND uf.date_finvalidite_formation < '".substr($this->db->idate($now), 0, 10)."'";
 
-				$resql = $this->db->query($sql);
-				if ($resql) {
-					$this->db->commit();
-				}
-				else{
-					$this->error = $this->db->lasterror();
-					$error++;
-				}
+			$resql = $this->db->query($sql);
+
+			if ($resql) {
+				// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée
+				$num = $this->db->num_rows($resql);
+				$i = 0;
+				while ($i < $num) {
+					$obj = $this->db->fetch_object($resql);
+					$tab_id[] = $obj->rowid;
+					$this->output .= "La formation $obj->ref a été passé au statut 'Expirée' (souplesse restrictive)<br>";
+					$i++;
+				}	
+
+				// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée
+				if(!empty($tab_id)){
+					$ID = implode(",", $tab_id);
+
+					$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
+					$sql .= " SET uf.status = ".self::STATUS_EXPIREE;
+					$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+
+					$resql = $this->db->query($sql);
+					if ($resql) {
+						$this->db->commit();
+					}
+					else{
+						$this->error = $this->db->lasterror();
+						$error++;
+					}
+				}			
+			} else {
+				$this->error = $this->db->lasterror();
+				return -1;
 			}
-		} else {
-			$this->error = $this->db->lasterror();
-			return -1;
-		}
-
-
-		// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => Expirée
-		$sql = "SELECT uf.rowid";
-		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql .= " AND f.periode_souplesse IS NOT NULL";
-		$sql .= " AND f.periode_souplesse_bloquant = 1";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) > '".$this->db->idate($now)."'";
-		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
-
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => Expirée
-			$num = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num) {
-				$obj = $this->db->fetch_object($resql);
-				$tab_id[] = $obj->rowid;
-				$i++;
-			}	
-
-			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => Expirée
-			if(!empty($tab_id)){
-				$ID = implode(",", $tab_id);
-
-				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
-				$sql .= " SET uf.status = ".self::STATUS_EXPIREE;
-				$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
-
-				$resql = $this->db->query($sql);
-				if ($resql) {
-					$this->db->commit();
-				}
-				else{
-					$this->error = $this->db->lasterror();
-					$error++;
-				}
-			}			
-		} else {
-			$this->error = $this->db->lasterror();
-			return -1;
 		}
 
 
@@ -1348,5 +1362,16 @@ class UserFormation extends CommonObject
 			return -1;
 		}
 	}
+
+	/**
+	 * 	Format Duration
+	 *
+	 * 	@param  int		$duration       Duration
+	 * 	@return	int						
+	 */
+	public function formatDuration($duration) {
+		return $duration / 3600;
+	}
+
 }
 

@@ -224,11 +224,16 @@ if ($onglet == 'volet') {
 
 unset($arrayfields['t.formateur']);
 unset($objectline->fields['fk_user']);
+unset($arrayfields['t.fk_user']);
 if(!$permissiontoreadCout) {
     unset($objectline->fields['cout_pedagogique']);
     unset($objectline->fields['cout_mobilisation']);
     unset($objectline->fields['cout_annexe']);
     unset($objectline->fields['cout_total']);
+    unset($arrayfields['t.cout_pedagogique']);
+    unset($arrayfields['t.cout_mobilisation']);
+    unset($arrayfields['t.cout_annexe']);
+    unset($arrayfields['t.cout_total']);
 }
 
 /*
@@ -269,10 +274,10 @@ print dol_get_fiche_head($head, 'userformation', $title, -1, 'user');
 $formconfirm = '';
 // Confirmation to delete line
 if ($action == 'deleteline') {
-    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid.'&onglet='.$onglet, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].($param ? '?'.$param : '').'&lineid='.$lineid, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
 }
 if ($action == 'remove_file') {
-    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&file='.urlencode(GETPOST("file")).'&onglet='.$onglet, $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].($param ? '?'.$param : '').'&file='.urlencode(GETPOST("file")), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
 }
 if ($action == 'programmer_formation') {
     $objectline->fetch($lineid);
@@ -284,7 +289,7 @@ if ($action == 'programmer_formation') {
                         array('label'=>$langs->trans('Organisme') ,'type'=>'link', 'code'=>'fk_societe', 'name'=>'fk_societe_programmer', 'options'=>$objectline->fields['fk_societe']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module),
                         array('label'=>$langs->trans('Formateur') ,'type'=>'link', 'code'=>'formateur', 'name'=>'formateur_programmer', 'options'=>$objectline->fields['formateur']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module, 'hidden'=>1)
                     );
-    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ProgrammerFormation'), $langs->trans('ConfirmProgrammerFormation'), 'confirm_programmer_formation', $formquestion, 0, 2);
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].($param ? '?'.$param : '').'&lineid='.$lineid, $langs->trans('ProgrammerFormation'), $langs->trans('ConfirmProgrammerFormation'), 'confirm_programmer_formation', $formquestion, 0, 2);
 }
 if ($action == 'valider_formation') {
     $objectline->fetch($lineid);
@@ -300,7 +305,7 @@ if ($action == 'valider_formation') {
 
     $formquestion = array(array('label'=>'Résultat' ,'type'=>'select', 'name'=>'resultat_valider', 'value'=>$objectline->resultat, 'values' => $objectline->fields['resultat']['arrayofkeyval']),
                           array('label'=>'Numéro Certificat' ,'type'=>'text', 'name'=>'numero_certificat_valider', 'value'=>$objectline->numero_certificat));
-    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('ValiderFormation'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmValiderFormation2', $txt_formationToClose) : $langs->trans('ConfirmValiderFormation')), 'confirm_valider_formation', $formquestion, 0, 2);
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].($param ? '?'.$param : '').'&lineid='.$lineid, $langs->trans('ValiderFormation'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmValiderFormation2', $txt_formationToClose) : $langs->trans('ConfirmValiderFormation')), 'confirm_valider_formation', $formquestion, 0, 2);
 }
 // Print form confirm
 print $formconfirm;

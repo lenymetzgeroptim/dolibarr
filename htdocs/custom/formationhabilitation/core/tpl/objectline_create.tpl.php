@@ -108,7 +108,7 @@ foreach($objectline->fields as $key => $val){
 	} elseif ($val['type'] == 'duration') {
 		$value = convertTime2Seconds(GETPOST($key.'hour', 'int'), GETPOST($key.'min', 'int'), 0);
 	} elseif ($val['type'] == 'boolean') {
-		$value = (GETPOST($key) == 'on' ? 1 : 0);
+		$value = (GETPOST($key) == 'on' || GETPOST($key) == 1  ? 1 : 0);
 	} elseif ($val['type'] == 'price') {
 		$value = price2num(GETPOST($key));
 	} elseif ($key == 'lang') {

@@ -103,13 +103,13 @@ foreach($objectline->fields as $key => $val){
 		}
 
 		if($key == 'date_finvalidite_formation' && $permissiontoaddline && $action != 'edit_datefinvalidite') {
-			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit_datefinvalidite&token='.newToken().(!empty($onglet) ? "&onglet=$onglet" : '').'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_datefinvalidite&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
 		elseif($key == 'cout_pedagogique' && $permissiontoaddline && $action != 'edit_coutpedagogique') {
-			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit_coutpedagogique&token='.newToken().(!empty($onglet) ? "&onglet=$onglet" : '').'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_coutpedagogique&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
 		elseif($key == 'cout_mobilisation' && $permissiontoaddline && $action != 'edit_coutmobilisation') {
-			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit_coutmobilisation&token='.newToken().(!empty($onglet) ? "&onglet=$onglet" : '').'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_coutmobilisation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
 
 		print '</td>';

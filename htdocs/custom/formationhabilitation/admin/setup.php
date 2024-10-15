@@ -124,6 +124,11 @@ $formSetup = new FormSetup($db);
 // $formSetup->newItem('FORMTIONHABILITATION_MYPARAM8')->setAsProduct();
 
 // Add a title for a new section
+$formSetup->newItem('FormationTitle')->setAsTitle();
+
+$formSetup->newItem('FORMTIONHABILITATION_SOUPLESSEFORMATION')->setAsYesNo();
+
+// Add a title for a new section
 $formSetup->newItem('ApprobationVoletTitle')->setAsTitle();
 
 $TField = getLabelList('usergroup', 'nom');

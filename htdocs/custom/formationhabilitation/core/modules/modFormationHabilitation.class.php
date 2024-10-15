@@ -633,32 +633,37 @@ class modFormationHabilitation extends DolibarrModules
 		// Exports profiles provided by this module
 		$r = 1;
 		/* BEGIN MODULEBUILDER EXPORT FORMATION */
-		/*
 		$langs->load("formationhabilitation@formationhabilitation");
 		$this->export_code[$r]=$this->rights_class.'_'.$r;
-		$this->export_label[$r]='FormationLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
-		$this->export_icon[$r]='formation@formationhabilitation';
+		$this->export_label[$r]='UserFormationLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		$this->export_icon[$r]='fa-user-graduate_fas_#1f3d89';
 		// Define $this->export_fields_array, $this->export_TypeFields_array and $this->export_entities_array
-		$keyforclass = 'Formation'; $keyforclassfile='/formationhabilitation/class/formation.class.php'; $keyforelement='formation@formationhabilitation';
+		$keyforclass = 'UserFormation'; $keyforclassfile='/formationhabilitation/class/userformation.class.php'; $keyforelement='fa-user-graduate_fas_#1f3d89';
 		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
-		//$this->export_fields_array[$r]['t.fieldtoadd']='FieldToAdd'; $this->export_TypeFields_array[$r]['t.fieldtoadd']='Text';
-		//unset($this->export_fields_array[$r]['t.fieldtoremove']);
+		$this->export_fields_array[$r]['f.label']='Label'; $this->export_TypeFields_array[$r]['f.label']='Text'; $this->export_entities_array[$r]['f.label']='fa-graduation-cap_fas_#1f3d89';
+		$this->export_fields_array[$r]['u.firstname']='Firstname'; $this->export_TypeFields_array[$r]['u.firstname']='Text'; $this->export_entities_array[$r]['u.firstname']='user';
+		$this->export_fields_array[$r]['u.lastname']='Lastname'; $this->export_TypeFields_array[$r]['u.lastname']='Text'; $this->export_entities_array[$r]['u.lastname']='user';
+		$this->export_fields_array[$r]['t.fk_societe']='Organisme2';	$this->export_fields_array[$r]['t.formateur']='Formateur2';
+		unset($this->export_fields_array[$r]['t.fk_formation']);
 		//$keyforclass = 'FormationLine'; $keyforclassfile='/formationhabilitation/class/formation.class.php'; $keyforelement='formationline@formationhabilitation'; $keyforalias='tl';
 		//include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
-		$keyforselect='formation'; $keyforaliasextra='extra'; $keyforelement='formation@formationhabilitation';
+		$keyforselect='userformation'; $keyforaliasextra='extra'; $keyforelement='fa-user-graduate_fas_#1f3d89';
 		include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
 		//$keyforselect='formationline'; $keyforaliasextra='extraline'; $keyforelement='formationline@formationhabilitation';
 		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
 		//$this->export_dependencies_array[$r] = array('formationline'=>array('tl.rowid','tl.ref')); // To force to activate one or several fields if we select some fields that need same (like to select a unique key if we ask a field of a child to avoid the DISTINCT to discard them, or for computed field than need several other fields)
-		//$this->export_special_array[$r] = array('t.field'=>'...');
+		$this->export_special_array[$r] = array(
+			't.nombre_heure' => array('rule' => 'compute', 'classfile' => '/custom/formationhabilitation/class/userformation.class.php', 'class' => 'UserFormation', 'method' => 'formatDuration', 'element' => 'userformation', 'method_params' => array('t_nombre_heure')),
+		);
 		//$this->export_examplevalues_array[$r] = array('t.field'=>'Example');
 		//$this->export_help_array[$r] = array('t.field'=>'FieldDescHelp');
 		$this->export_sql_start[$r]='SELECT DISTINCT ';
-		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'formation as t';
-		//$this->export_sql_end[$r]  =' LEFT JOIN '.MAIN_DB_PREFIX.'formation_line as tl ON tl.fk_formation = t.rowid';
+		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'formationhabilitation_userformation as t';
+		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'formationhabilitation_formation as f ON t.fk_formation = f.rowid';
+		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON t.fk_user = u.rowid';
 		$this->export_sql_end[$r] .=' WHERE 1 = 1';
-		$this->export_sql_end[$r] .=' AND t.entity IN ('.getEntity('formation').')';
-		$r++; */
+		//$this->export_sql_end[$r] .=' AND t.entity IN ('.getEntity('formation').')';
+		$r++;
 		/* END MODULEBUILDER EXPORT FORMATION */
 
 		// Imports profiles provided by this module

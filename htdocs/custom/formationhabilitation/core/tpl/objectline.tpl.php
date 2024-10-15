@@ -232,23 +232,26 @@ else {
 
 // Confirmation
 if ($action == 'addline' && $objectparentline->element == 'formation') {
-    $param = '';
-    $param .= (GETPOST('fk_formation') ? '&fk_formation='.urlencode(GETPOST('fk_formation')) : '');
-    $param .= (GETPOST('fk_user') ? '&fk_user='.urlencode(GETPOST('fk_user')) : '');
-    $param .= (GETPOST('date_debut_formationmonth') ? '&date_debut_formationmonth='.urlencode(GETPOST('date_debut_formationmonth')) : '');
-    $param .= (GETPOST('date_debut_formationday') ? '&date_debut_formationday='.urlencode(GETPOST('date_debut_formationday')) : '');
-    $param .= (GETPOST('date_debut_formationyear') ? '&date_debut_formationyear='.urlencode(GETPOST('date_debut_formationyear')) : '');
-    $param .= (GETPOST('date_fin_formationmonth') ? '&date_fin_formationmonth='.urlencode(GETPOST('date_fin_formationmonth')) : '');
-    $param .= (GETPOST('date_fin_formationday') ? '&date_fin_formationday='.urlencode(GETPOST('date_fin_formationday')) : '');
-    $param .= (GETPOST('date_fin_formationyear') ? '&date_fin_formationyear='.urlencode(GETPOST('date_fin_formationyear')) : '');
-    $param .= (GETPOST('nombre_heurehour') ? '&nombre_heurehour='.urlencode(GETPOST('nombre_heurehour')) : '');
-    $param .= (GETPOST('nombre_heuremin') ? '&nombre_heuremin='.urlencode(GETPOST('nombre_heuremin')) : '');
-    $param .= (GETPOST('fk_societe') ? '&fk_societe='.urlencode(GETPOST('fk_societe')) : '');
-    $param .= (GETPOST('status') ? '&status='.urlencode(GETPOST('status')) : '');
-    $param .= (GETPOST('interne_externe') ? '&interne_externe='.urlencode(GETPOST('interne_externe')) : '');
-    $param .= (GETPOST('formateur') ? '&formateur='.urlencode(GETPOST('formateur')) : '');
-    $param .= (GETPOST('numero_certificat') ? '&numero_certificat='.urlencode(GETPOST('numero_certificat')) : '');
-    $param .= (GETPOST('resultat') ? '&resultat='.urlencode(GETPOST('resultat')) : '');
+    $paramformconfirm = '';
+    $paramformconfirm .= (GETPOST('fk_formation') ? '&fk_formation='.urlencode(GETPOST('fk_formation')) : '');
+    $paramformconfirm .= (GETPOST('fk_user') ? '&fk_user='.urlencode(GETPOST('fk_user')) : '');
+    $paramformconfirm .= (GETPOST('date_debut_formationmonth') ? '&date_debut_formationmonth='.urlencode(GETPOST('date_debut_formationmonth')) : '');
+    $paramformconfirm .= (GETPOST('date_debut_formationday') ? '&date_debut_formationday='.urlencode(GETPOST('date_debut_formationday')) : '');
+    $paramformconfirm .= (GETPOST('date_debut_formationyear') ? '&date_debut_formationyear='.urlencode(GETPOST('date_debut_formationyear')) : '');
+    $paramformconfirm .= (GETPOST('date_fin_formationmonth') ? '&date_fin_formationmonth='.urlencode(GETPOST('date_fin_formationmonth')) : '');
+    $paramformconfirm .= (GETPOST('date_fin_formationday') ? '&date_fin_formationday='.urlencode(GETPOST('date_fin_formationday')) : '');
+    $paramformconfirm .= (GETPOST('date_fin_formationyear') ? '&date_fin_formationyear='.urlencode(GETPOST('date_fin_formationyear')) : '');
+    $paramformconfirm .= (GETPOST('nombre_heurehour') ? '&nombre_heurehour='.urlencode(GETPOST('nombre_heurehour')) : '');
+    $paramformconfirm .= (GETPOST('nombre_heuremin') ? '&nombre_heuremin='.urlencode(GETPOST('nombre_heuremin')) : '');
+    $paramformconfirm .= (GETPOST('cout_annexe') ? '&cout_annexe='.urlencode(GETPOST('cout_annexe')) : '');
+    $paramformconfirm .= (GETPOST('interne_externe') ? '&interne_externe='.urlencode(GETPOST('interne_externe')) : '');
+    $paramformconfirm .= (GETPOST('fk_societe') ? '&fk_societe='.urlencode(GETPOST('fk_societe')) : '');
+    $paramformconfirm .= (GETPOST('formateur') ? '&formateur='.urlencode(GETPOST('formateur')) : '');
+    $paramformconfirm .= (GETPOST('numero_certificat') ? '&numero_certificat='.urlencode(GETPOST('numero_certificat')) : '');
+    $paramformconfirm .= (GETPOST('prevupif') ? '&prevupif='.urlencode(GETPOST('prevupif')) : '');
+    $paramformconfirm .= (GETPOST('resultat') ? '&resultat='.urlencode(GETPOST('resultat')) : '');
+    $paramformconfirm .= (GETPOST('status') ? '&status='.urlencode(GETPOST('status')) : '');
+    $paramformconfirm .= (GETPOST('forcecreation') ? '&forcecreation='.urlencode(GETPOST('forcecreation')) : '');
 
     if(GETPOST('status') == $objectline::STATUS_VALIDE || GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
         if(GETPOST('fk_formation') > 0 && GETPOST('fk_user') > 0 && GETPOST('status') == $objectline::STATUS_VALIDE) { // Formation inferieur
@@ -284,10 +287,10 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
         }
 
         if(GETPOST('status') == $objectline::STATUS_VALIDE) {
-            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$param, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLineWithDeletion', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
+            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$paramformconfirm, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLineWithDeletion', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
         }
         elseif(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
-            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$param, $langs->trans('AddLine'), (!empty($txt_formationToReprogrammer) ? $langs->trans('ConfirmAddLineWithProgrammation', $txt_formationToReprogrammer) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
+            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$paramformconfirm, $langs->trans('AddLine'), (!empty($txt_formationToReprogrammer) ? $langs->trans('ConfirmAddLineWithProgrammation', $txt_formationToReprogrammer) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
         }
 
         print $formconfirm;
@@ -337,7 +340,7 @@ if(strpos($_SERVER["PHP_SELF"], 'card') === false) {
 else {
     $title = $langs->trans('ListOfs', $langs->transnoentitiesnoconv($objectlabel.'user'));
 }
-print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', $limit, 0, 0, 1);
+print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $paramforpagination, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', $limit, 0, 0, 1);
 
 if($objectline->element == 'volet'){
     print '<div>';
@@ -380,6 +383,9 @@ else {
     }
 
     if (!empty($objectparentline->lines)) {
+        if(!empty($limit) && sizeof($objectparentline->lines) > $limit) {
+            array_pop($objectparentline->lines);
+        }
         $nbline = 0;
         $objectparentline->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
     }

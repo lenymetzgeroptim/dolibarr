@@ -58,7 +58,7 @@ foreach($objectline->fields as $key => $val){
 	if($key == 'formateur') {
 		continue;
 	}
-
+	
 	//print '<td class="linecol'.$key.'">'.$langs->trans($val['label']).'</td>';
 	if (!empty($arrayfields['t.'.$key]['checked']) || $action == 'editline') {
 		$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');

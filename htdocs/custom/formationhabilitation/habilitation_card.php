@@ -165,8 +165,6 @@ $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entit
 if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 if (!$permissiontoread) accessforbidden();
 
-unset($objectline->fields['fk_habilitation']);
-
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
 
 /*
@@ -194,12 +192,14 @@ if (empty($reshook)) {
 
 	$backurlforlist = dol_buildpath('/formationhabilitation/habilitation_list.php', 1);
 
-	if (empty($backtopage) || ($cancel && empty($id))) {
-		if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
-			if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
-				$backtopage = $backurlforlist;
-			} else {
-				$backtopage = dol_buildpath('/formationhabilitation/habilitation_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
+	if($action != 'updateline'){
+		if (empty($backtopage) || ($cancel && empty($id))) {
+			if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
+				if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
+					$backtopage = $backurlforlist;
+				} else {
+					$backtopage = dol_buildpath('/formationhabilitation/habilitation_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
+				}
 			}
 		}
 	}
@@ -248,8 +248,8 @@ if (empty($reshook)) {
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
-
-
+unset($objectline->fields['fk_habilitation']);
+unset($arrayfields['t.fk_habilitation']);
 
 /*
  * View

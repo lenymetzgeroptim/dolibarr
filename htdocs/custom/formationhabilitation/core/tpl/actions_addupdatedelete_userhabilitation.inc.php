@@ -64,7 +64,7 @@ if($action == 'addline' && $permissiontoaddline) {
 		$error++;
 	}
 
-	if(!$error && !empty(GETPOST('forcecreation'))) { // Gestion des prérequis : TODOL -> aptitude medicale
+	if(!$error && empty(GETPOST('forcecreation'))) { // Gestion des prérequis : TODOL -> aptitude medicale
 		$prerequis = explode(',', $habilitation_static->formation);
 		$formation = new Formation($db);
 		foreach($prerequis as $formationid) {

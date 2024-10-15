@@ -40,7 +40,7 @@ $offset = $limit * $page;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
 
- // Initialize array of search criterias
+// Initialize array of search criterias
 $search_all = GETPOST('search_all', 'alphanohtml');
 foreach ($objectline->fields as $key => $val) {
 	if($key == 'status') {
@@ -163,3 +163,7 @@ foreach ($search as $key => $val) {
 }
 // Add $param from extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
+$paramforpagination = $param;
+if(!empty($page)) {
+	$param .= '&page='.urlencode($page);
+}

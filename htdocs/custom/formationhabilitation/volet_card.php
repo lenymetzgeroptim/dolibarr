@@ -224,17 +224,6 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
-unset($objectline->fields['fk_user']);
-if(!$permissiontoreadCout) {
-    unset($objectline->fields['cout_pedagogique']);
-    unset($objectline->fields['cout_mobilisation']);
-	unset($objectline->fields['cout_annexe']);
-    unset($objectline->fields['cout_total']);
-}
-
-include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
-unset($arrayfields['t.formateur']);
-
 /*
  * Actions
  */
@@ -250,12 +239,14 @@ if (empty($reshook)) {
 
 	$backurlforlist = dol_buildpath('/formationhabilitation/volet_list.php', 1);
 
-	if (empty($backtopage) || ($cancel && empty($id))) {
-		if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
-			if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
-				$backtopage = $backurlforlist;
-			} else {
-				$backtopage = dol_buildpath('/formationhabilitation/volet_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
+	if($action != 'updateline' && $action != 'updatedatefinvalidite' && $action != 'updatecoutpedagogique' && $action != 'updatecoutmobilisation'){
+		if (empty($backtopage) || ($cancel && empty($id))) {
+			if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
+				if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
+					$backtopage = $backurlforlist;
+				} else {
+					$backtopage = dol_buildpath('/formationhabilitation/volet_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
+				}
 			}
 		}
 	}
@@ -333,7 +324,19 @@ if (empty($reshook)) {
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
-
+unset($arrayfields['t.formateur']);
+unset($objectline->fields['fk_user']);
+unset($arrayfields['t.fk_user']);
+if(!$permissiontoreadCout) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_mobilisation']);
+    unset($objectline->fields['cout_annexe']);
+    unset($objectline->fields['cout_total']);
+    unset($arrayfields['t.cout_pedagogique']);
+    unset($arrayfields['t.cout_mobilisation']);
+    unset($arrayfields['t.cout_annexe']);
+    unset($arrayfields['t.cout_total']);
+}
 
 
 /*
