@@ -29,9 +29,9 @@ CREATE TABLE llx_formationhabilitation_autorisation(
 	import_key varchar(14), 
 	model_pdf varchar(255), 
 	status integer NOT NULL, 
-	formation chkbxlst, 
-	volet integer, 
-	test chkbxlst, 
+	formation varchar(128), 
+	volet varchar(128), 
+	test varchar(128), 
 	domaineapplication integer
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

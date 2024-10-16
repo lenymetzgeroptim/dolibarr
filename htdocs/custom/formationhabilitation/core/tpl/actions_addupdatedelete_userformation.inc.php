@@ -533,7 +533,8 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 			foreach($listHabilitation as $habilitation) {
                 $userHabilitation->ref = $user_static->login."-".$habilitation->ref.'-'.dol_print_date($objectline->date_fin_formation, "%Y%m%d");
                 $userHabilitation->fk_habilitation = $habilitation->id;
-                $userHabilitation->date_fin_habilitation = dol_time_plus_duree($objectline->date_fin_formation, $habilitationStatic->validite_employeur, 'd');
+                //$userHabilitation->date_fin_habilitation = dol_time_plus_duree($objectline->date_fin_formation, $habilitationStatic->validite_employeur, 'd');
+				$userHabilitation->date_fin_habilitation = $objectline->date_finvalidite_formation;
 				$txtListHabilitation .= $habilitation->label.', ';
 
 				$resultcreateline = $userHabilitation->create($user);

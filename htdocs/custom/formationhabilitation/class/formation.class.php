@@ -66,7 +66,7 @@ class Formation extends CommonObject
 
 	const STATUS_CONSTRUCTION = 0;
 	const STATUS_OUVERTE = 1;
-	const STATUS_CLOTURE = 2;
+	const STATUS_CLOTURE = 5;
 
 
 	/**
@@ -124,7 +124,7 @@ class Formation extends CommonObject
 		"periode_souplesse" => array("type"=>"integer", "label"=>"PeriodeSouplesse", "enabled"=>"getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION')==1", 'position'=>36, 'notnull'=>0, "visible"=>"-1", "help"=>"en mois",),
 		"periode_souplesse_bloquant" => array("type"=>"boolean", "label"=>"PeriodeSouplesseBloquant", "enabled"=>"getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION')==1", 'position'=>37, 'notnull'=>0, "visible"=>"1",),
 		"prerequis" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"Prerequis", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
-		"volet" => array("type"=>"sellist:c_volets:numero|label:rowid::(active:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
+		"volet" => array("type"=>"chkbxlst:c_volets:numero|label:rowid::(active=1)", "label"=>"Volet", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
 		"formationssuperieurs" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"FormationsSuperieur", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 		"delaisprogrammation" => array("type"=>"integer", "label"=>"DelaisProgrammation", "enabled"=>"1", 'position'=>38, 'notnull'=>0, "visible"=>"1", "help"=>"en mois",),
 		"sousdomaine" => array("type"=>"sellist:c_sousdomaine_formation:label:rowid::(active:=:1)", "label"=>"SousDomaine", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
