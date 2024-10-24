@@ -68,6 +68,12 @@ else {
 	print '<tr class="pair nodrag nodrop nohoverpair liste_titre_create">';
 }
 
+if($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation') {
+	unset($objectline->fields['status']['arrayofkeyval'][2]);
+	unset($objectline->fields['status']['arrayofkeyval'][3]);
+	unset($objectline->fields['status']['arrayofkeyval'][9]);
+}
+
 foreach($objectline->fields as $key => $val){
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3) {
 		if(abs($val['visible']) == 4) {

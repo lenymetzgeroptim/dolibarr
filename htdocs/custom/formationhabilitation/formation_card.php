@@ -136,6 +136,18 @@ $search['fk_formation'] = $object->id;
 $objectparentline = $object;
 
 // There is several ways to check permission.
+$user_group = New UserGroup($db);
+$societe = New Societe($db);
+
+$user_group->fetch(0, "Responsable d'antenne");
+$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
+// $userInRespAntenneGroup = in_array($user->id, $arrayUserRespAntenneGroup); // Utilisateur dans le groupe Responsable d'antenne
+
+$societe->fetch($user->array_options['options_antenne']);
+$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
+// $userIsRespAntenne = in_array($user->id, $arrayUserRespAntenne); // Utilisateur commercial de l'antenne de ratachement
+$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
+
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 1;
 if ($enablepermissioncheck) {

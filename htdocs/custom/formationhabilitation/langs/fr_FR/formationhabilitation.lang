@@ -94,6 +94,9 @@ DictionnaryValidationVoletHelp = 1 = Approbation n°1 uniquement<br>2 = Approbat
 ApprobationVolet = En cours d'approbation
 ApprobationVoletGroupe = Approbation du groupe %s en attente
 ApprobationVoletCollaborateur = Approbation du collaborateur en attente
+DictionnaryModelHelp = 1 = Identité<br>2 = Formation<br>3 = Entreprise<br>4 = Habiliation<br>5 = Médical<br>6 = Autorisation
+GeneratePDF = Générer PDF
+
 
 #
 # Attribut Formation
@@ -203,17 +206,22 @@ ConfirmAddLineWithProgrammation = Êtes-vous sûr de vouloir ajouter cette forma
 ValiderFormation = Valider la formation
 ConfirmValiderFormation = Êtes-vous sûr de vouloir valider la formation ?
 ConfirmValiderFormation2 = Êtes-vous sûr de vouloir valider la formation ? Cela clôturera les formations %s
-ConfirmMassValidationQuestion = Etes vous sûrs de vouloir valider les enregistrements sélectionnés ? <strong>ATTENTION : </strong> Seules les habilitations en statut 'Habilitable' vont être validées
+ConfirmMassValidationHabilitationQuestion = Etes vous sûrs de vouloir valider les %s enregistrements sélectionnés ? Un nouveau volet %s sera émis<br>Les habilitations suivantes seront clôturées : %s
+ConfirmMassValidationAutorisationQuestion = Etes vous sûrs de vouloir valider les %s enregistrements sélectionnés ? Un nouveau volet %s sera émis<br>Les autorisations suivantes seront clôturées : %s
 RecordsValidated = %s enregistrements validés
 RecordValidated = %s enregistrement validé
 NoRecordValidated = Aucun enregistrement validé
 ImpossibleToValidateWithThisStatut = Impossible de valider %s à cause du statut
+ValidateAndGenerateVolet = Valider et générer volet
+ConfirmValidateVoletWithClose = Êtes-vous sûr de vouloir valider le volet ? <strong>Un volet actif sera clôturé</strong>
+ConfirmValidateVolet = Êtes-vous sûr de vouloir valider le volet ?
 
 
 #
 # Erreur
 #
-ErrorPrerequis = Le collaborateur ne possède pas la formation %s qui est requise
+ErrorPrerequisFormation = Le collaborateur ne possède pas la formation %s qui est requise
+ErrorPrerequisAptitude = Le collaborateur ne possède pas l'aptitude médicale %s qui est requise
 ErrorFormationAlreadyExist = Impossible d'ajouter cette formation car le collaborateur la possède déja (Il faut forcer la création)
 
 

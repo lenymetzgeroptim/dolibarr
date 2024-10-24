@@ -33,6 +33,9 @@
 // 	$action = '';
 // }
 
+require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/visitemedical.class.php';
+
 if($action == 'addline' && $permissiontoaddline) {
 	$userHabilitation = new UserHabilitation($db);
 	$userFormation = new UserFormation($db);
@@ -65,12 +68,13 @@ if($action == 'addline' && $permissiontoaddline) {
 	}
 
 	if(!$error && empty(GETPOST('forcecreation'))) { // Gestion des prérequis : TODOL -> aptitude medicale
+		// Prérequis des formations
 		$prerequis = explode(',', $habilitation_static->formation);
 		$formation = new Formation($db);
 		foreach($prerequis as $formationid) {
 			if(!$userFormation->userAsFormation(GETPOST('fk_user'), $formationid)) {
 				$formation->fetch($formationid);
-				setEventMessages($langs->trans('ErrorPrerequis', $formation->label), null, 'errors');
+				setEventMessages($langs->trans('ErrorPrerequisFormation', $formation->label), null, 'errors');
 				$error++;
 			}
 		}
@@ -121,6 +125,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 			$objectline->ref = $user_static->login."-".$habilitation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 			$objectline->date_habilitation = $date;
 			$objectline->date_fin_habilitation = dol_time_plus_duree(dol_time_plus_duree($date, $habilitation_static->validite_employeur, 'd'), -1, 'd');
+			$objectline->domaineapplication = GETPOST('domaineapplication');
 			$objectline->status = GETPOST('status');
 
 			$resultupdate = $objectline->update($user);

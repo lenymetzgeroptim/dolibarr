@@ -19,12 +19,13 @@ CREATE TABLE llx_c_volets(
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
 	numero integer, 
 	label varchar(128) COLLATE utf8_unicode_ci NOT NULL,
+	long_label varchar(128) COLLATE utf8_unicode_ci NOT NULL,
 	nb_initial integer NOT NULL, 
 	nb_recyclage integer NOT NULL, 
 	nb_passerelle integer NOT NULL, 
 	active int(11) DEFAULT 1
-	nb_passerelle integer NOT NULL, 
 	typevolet integer NOT NULL, 
-	validationvolet integer NOT NULL,
+	nommage varchar(128) NOT NULL,
+	model integer NOT NULL, 
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

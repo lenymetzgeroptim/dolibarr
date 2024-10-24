@@ -35,6 +35,8 @@
 // $toselect may be defined
 // $diroutputmassaction may be defined
 
+dol_include_once('/formationhabilitation/class/visitemedical.class.php');
+require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
 
 // Protection
 if (empty($objectclass) || empty($uploaddir)) {
@@ -162,33 +164,106 @@ if (!$error && ($massaction == 'delete' || ($action == 'deletelines' && $confirm
 }
 
 // Validate record from mass action
-if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $confirm == 'yes')) && $permissiontoaddline) {
+if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $confirm == 'yes')) && $permissiontovalidatelines) {
 	$db->begin();
 
 	$objecttmp = new $objectclass($db);
+	$objectparenttmp = new $objectparentclass($db);
+
 	$nbok = 0;
 	$TMsg = array();
+	$validateObjects = array();
+	$parentobjectid = array();
 
 	//$toselect could contain duplicate entries, cf https://github.com/Dolibarr/dolibarr/issues/26244
 	$unique_arr = array_unique($toselect);
 	foreach ($unique_arr as $toselectid) {
 		$result = $objecttmp->fetch($toselectid);
-		if ($result > 0) {
-			$result = $objecttmp->validate($user);
+		
+		if($objecttmp->element == 'userhabilitation') {
+			$objectparenttmp->fetch($objecttmp->fk_habilitation);
+			$parentobjectid[] = $objecttmp->fk_habilitation;
+		}
+		elseif($objecttmp->element == 'userautorisation') {
+			$objectparenttmp->fetch($objecttmp->fk_autorisation);
+			$parentobjectid[] = $objecttmp->fk_autorisation;
+		}
 
-			if (empty($result)) { // if validate returns 0, there is at least one object linked
-				$TMsg = array_merge($objecttmp->errors, $TMsg);
-			} elseif ($result < 0) { // if validate returns is < 0, there is an error, we break and rollback later
-				setEventMessages($objecttmp->error, $objecttmp->errors, 'errors');
-				$error++;
-				break;
-			} else {
-				$nbok++;
+		if ($result > 0) {
+			// Prérequis des formations
+			$prerequis = explode(',', $objectparenttmp->formation);
+			$formation = new Formation($db);
+			$userFormation = new UserFormation($db);
+
+			foreach($prerequis as $formationid) {
+				if(!$userFormation->userAsFormation($objecttmp->fk_user, $formationid)) {
+					$formation->fetch($formationid);
+					setEventMessages($langs->trans('ErrorPrerequisFormation', $formation->label), null, 'errors');
+					$error++;
+				}
+			}
+
+			// Prérequis aptitude médicale
+			if(!$error) {
+				$visiteMedicale = new VisiteMedical($db);
+				$extrafields = new Extrafields($db);
+				$extrafields->fetch_name_optionals_label('donneesrh_Medecinedutravail');
+				$userField = new UserField($db);
+				$userField->id = $objecttmp->fk_user;
+				$userField->table_element = 'donneesrh_Medecinedutravail';
+				$userField->fetch_optionals();
+				$naturesVisite = explode(',', $userField->array_options['options_naturevisitemedicale']);
+				foreach($naturesVisite as $natureid) {
+					if(!$visiteMedicale->userAsAptitudeMedicale($objecttmp->fk_user, $natureid)) {
+						$nature = $visiteMedicale->getNatureInfo($natureid);
+						setEventMessages($langs->trans('ErrorPrerequisAptitude', $nature['label']), null, 'errors');
+						$error++;
+					}
+				}
+			}	
+
+			if(!$error) {
+				$result = $objecttmp->validate($user);
+				$validateObjects[$objecttmp->id] = clone $objecttmp;
+				$userid = $objecttmp->fk_user; 
+
+				if (empty($result)) { // if validate returns 0, there is at least one object linked
+					$TMsg = array_merge($objecttmp->errors, $TMsg);
+				} elseif ($result < 0) { // if validate returns is < 0, there is an error, we break and rollback later
+					setEventMessages($objecttmp->error, $objecttmp->errors, 'errors');
+					$error++;
+					break;
+				} else {
+					$nbok++;
+				}
 			}
 		} else {
 			setEventMessages($objecttmp->error, $objecttmp->errors, 'errors');
 			$error++;
 			break;
+		}
+	}
+
+	if (empty($error)) {
+		$objectToClose = $objecttmp->getObjectToClose($userid, implode(',', $unique_arr), implode(',', $parentobjectid));
+		foreach($objectToClose as $idobject => $refobject) {
+			$objecttmp->fetch($idobject);
+			$result = $objecttmp->close($user);
+
+			if ($result < 0) { 
+				setEventMessages($objecttmp->error, $objecttmp->errors, 'errors');
+				$error++;
+			}
+		}
+	}
+
+	if (empty($error)) {
+		$volet = new Volet($db);
+		$result = $volet->generateNewVolet($objectclass, $validateObjects, $userid);
+
+		if ($result < 0) { 
+			setEventMessages($volet->error, $volet->errors, 'errors');
+			$error++;
 		}
 	}
 

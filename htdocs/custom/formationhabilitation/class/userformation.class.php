@@ -553,6 +553,30 @@ class UserFormation extends CommonObject
 	}
 
 	/**
+	 *	Set close status
+	 *
+	 *	@param	User	$user			Object user that modify
+	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
+	 *	@return	int						Return integer <0 if KO, 0=Nothing done, >0 if OK
+	 */
+	public function close($user, $notrigger = 0)
+	{
+		// Protection
+		// if ($this->status != self::STATUS_VALIDATED) {
+		// 	return 0;
+		// }
+
+		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+		 {
+		 $this->error='Permission denied';
+		 return -1;
+		 }*/
+
+		return $this->setStatusCommon($user, self::STATUS_CLOTUREE, $notrigger, 'FORMATIONHABILITATION_USERFORMATION_CANCEL');
+	}
+
+	/**
 	 * Delete object in database
 	 *
 	 * @param User $user       User that deletes

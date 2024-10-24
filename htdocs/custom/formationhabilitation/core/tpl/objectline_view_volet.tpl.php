@@ -60,7 +60,7 @@ print '<div class="col">';
 			//print '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEdw67K7dC_tAz6cwn64PyZRirAHi8Vdgd-A&s" class="card-img-top" alt="Image Volet">';
 			print '<div class="card-body">';
 				print $line->getNomUrl(0, 'nolink', 1, 'voletcardtitle');
-				print '<div class="statusref" style="margin-top: 0px;">'.$line->getLibStatut(2).'</div><br><br>';
+				print '<div class="statusref" style="margin-top: 0px;">'.$line->getLibStatut(5).'</div><br><br>';
 
 				foreach($objectline->fields as $key => $val){
 					if($key == 'ref' || $key == 'status' || $key == 'fk_user'){

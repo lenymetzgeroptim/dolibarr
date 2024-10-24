@@ -70,7 +70,7 @@ if($action == 'addline' && $permissiontoaddline) {
 		foreach($prerequis as $formationid) {
 			if(!$userFormation->userAsFormation(GETPOST('fk_user'), $formationid)) {
 				$formation->fetch($formationid);
-				setEventMessages($langs->trans('ErrorPrerequis', $formation->label), null, 'errors');
+				setEventMessages($langs->trans('ErrorPrerequisFormation', $formation->label), null, 'errors');
 				$error++;
 			}
 		}

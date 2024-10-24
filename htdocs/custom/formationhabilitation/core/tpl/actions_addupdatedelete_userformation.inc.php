@@ -107,7 +107,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		foreach($prerequis as $formationid) {
 			if(!$userFormation->userAsFormation(GETPOST('fk_user'), $formationid)) {
 				$formation->fetch($formationid);
-				setEventMessages($langs->trans('ErrorPrerequis', $formation->label), null, 'errors');
+				setEventMessages($langs->trans('ErrorPrerequisFormation', $formation->label), null, 'errors');
 				$error++;
 			}
 		}
@@ -545,23 +545,36 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 
 			// Envoi du mail
 			if($resultcreateline > 0 && !empty($txtListHabilitation)) { 
-				$responsable = new User($db);
-				$responsable->fetch($user_static->fk_user); // TODOLény : gestion du responsable d'antenne
+				$user_static = new User($db);
 				rtrim($txtListHabilitation, ', ');
 
 				global $dolibarr_main_url_root;
 
 				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($object->module);
 				$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
-				$to = $responsable->email;
+
+				$to = '';
+				if(sizeof($arrayRespAntenneForMail) > 0) {
+					foreach($arrayRespAntenneForMail as $userid) {
+						$user_static->fetch($user_id);
+
+						if(!empty($user_static->email)) {
+							$to .= $user_static->email.', ';
+						}
+					}
+				}
+				else {
+					$to = 'administratif@optim-industries.fr';
+				}
+				rtrim($to, ', ');
 
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 
-				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$object->id.'">'.$object->login.'</a>';
+				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$object->id.'$onglet=habilitation">'.$object->login.'</a>';
 				$message = $langs->transnoentitiesnoconv("EMailTextHabilitationCreation", $formation_static->label, $link, $txtListHabilitation);
 
-				$trackid = 'formationhabilitation'.$this->id;
+				$trackid = 'formationhabilitation'.$formation_static->id;
 
 				$mailfile = new CMailFile(
 					$subject,

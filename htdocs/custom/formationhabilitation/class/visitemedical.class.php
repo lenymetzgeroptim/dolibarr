@@ -1213,6 +1213,78 @@ class VisiteMedical extends CommonObject
 
 		return $error;
 	}
+
+	/**
+	 * 	Est-ce que l'utilisateur $userid possède une aptitude médicale avec la nature $natureid 
+	 *
+	 * 	@param  int		$userid       	Id of User
+	 *  @param  int		$natureid    	Id of Nature
+	 * 	@return	bool						
+	 */
+	public function userAsAptitudeMedicale($userid, $natureid)
+	{
+		global $conf, $user;
+		$res = array();
+
+		if(empty($userid) || empty($natureid)) {
+			$this->error = 'Il faut renseigner les aptitudes médicales nécessaires pour le collaborateur';
+			return -1;
+		}
+
+		$sql = "SELECT vm.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
+		$sql .= " WHERE vm.fk_user = $userid";
+		$sql .= " AND vm.naturevisite = $natureid";
+		$sql .= " AND vm.status = ".self::STATUS_APTE;
+		$sql .= " AND vm.datevisite <= '".substr($this->db->idate(dol_now()), 0, 10)."'";
+		$sql .= " AND vm.datefinvalidite >= '".substr($this->db->idate(dol_now()), 0, 10)."'";
+
+		dol_syslog(get_class($this)."::userAsAptitudeMedicale", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if($this->db->num_rows($resql)) {
+				$this->db->free($resql);
+				return 1;
+			}
+			else {
+				$this->db->free($resql);
+				return 0;
+			}
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return les informations d'une nature de visite
+	 *
+	 * 	@param  int		$natureid       Id of Nature
+	 * 	@return	array						
+	 */
+	public function getNatureInfo($natureid)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT v.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_nature_visite as v";
+		$sql .= " WHERE v.rowid = $natureid";
+
+		dol_syslog(get_class($this)."::getNatureInfo", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$obj = $this->db->fetch_object($resql);
+			$res['label'] = $obj->label;
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

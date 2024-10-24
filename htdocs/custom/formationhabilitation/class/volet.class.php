@@ -27,6 +27,9 @@
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+dol_include_once('/formationhabilitation/class/userhabilitation.class.php');
+dol_include_once('/formationhabilitation/class/userformation.class.php');
+dol_include_once('/formationhabilitation/class/userautorisation.class.php');
 
 /**
  * Class for Volet
@@ -943,7 +946,7 @@ class Volet extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_VOLET_CANCEL');
 	}
 
 	/**
@@ -1408,14 +1411,14 @@ class Volet extends CommonObject
 		}
 		elseif($voletInfo['type'] == 2) {
 			$objectline = new UserHabilitation($this->db);
-			$status = UserHabilitation::STATUS_HABILITE;
+			$status = UserHabilitation::STATUS_HABILITE.', '.UserHabilitation::STATUS_HABILITABLE;
 		}
 		elseif($voletInfo['type'] == 3) {
 			$objectline = new UserAutorisation($this->db);
-			$status = UserAutorisation::STATUS_AUTORISE;
+			$status = UserAutorisation::STATUS_AUTORISE.', '.UserAutorisation::STATUS_AUTORISABLE;
 		}
 
-		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL AND t.status = '.$status), 'AND', $this->id, $this->numvolet);
+		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL AND t.status IN ('.$this->db->sanitize($this->db->escape($status)).')'), 'AND', $this->id, $this->numvolet);
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
@@ -2174,7 +2177,7 @@ class Volet extends CommonObject
 		global $conf, $user;
 		$res = array();
 
-		$sql = "SELECT v.numero, v.typevolet, v.label, v.long_label, v.nb_initial, v.nb_recyclage, v.nb_passerelle";
+		$sql = "SELECT v.numero, v.typevolet, v.label, v.long_label, v.nommage, v.model, v.nb_initial, v.nb_recyclage, v.nb_passerelle";
 		$sql .= " FROM ".MAIN_DB_PREFIX."c_volets as v";
 		$sql .= " WHERE v.rowid = $voletid";
 
@@ -2189,9 +2192,299 @@ class Volet extends CommonObject
 			$res['nb_initial'] = $obj->nb_initial;
 			$res['nb_recyclage'] = $obj->nb_recyclage;
 			$res['nb_passerelle'] = $obj->nb_passerelle;
+			$res['nommage'] = $obj->nommage;
+			$res['model'] = $obj->model;
 
 			$this->db->free($resql);
 			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return tous les domaines d'application à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllDomaineApplication()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT d.rowid, d.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_domaine_application as d";
+		$sql .= " WHERE d.active = 1";
+
+		dol_syslog(get_class($this)."::getAllDomaineApplication", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Génère les volets avec de nouvelles lignes
+	 *
+	 * 	@return	int						
+	 */
+	public function generateNewVolet($objectclass, $validateObjects, $userid)
+	{
+		global $conf, $user;
+
+		$objecttmp = new $objectclass($this->db);
+		if($objecttmp->element == 'userformation') {
+			$objectparenttmp = new Formation($this->db);
+		}
+		elseif($objecttmp->element == 'userhabilitation') {
+			$objectparenttmp = new Habilitation($this->db);
+		}
+		elseif($objecttmp->element == 'userautorisation') {
+			$objectparenttmp = new Autorisation($this->db);
+		}
+		$volet = new Volet($this->db);
+		$user_static = new User($this->db);
+		$user_static->fetch($userid);
+
+		$voletsCreate = array(); 
+
+		dol_syslog(get_class($this)."::generateNewVolet", LOG_DEBUG);
+		foreach($validateObjects as $validateObject) { // On boucle sur toutes les lignes ajouté
+			if($objecttmp->element == 'userformation') {
+				$objectparenttmp->fetch($validateObject->fk_formation);
+			}
+			elseif($objecttmp->element == 'userhabilitation') {
+				$objectparenttmp->fetch($validateObject->fk_habilitation);
+			}
+			elseif($objecttmp->element == 'userautorisation') {
+				$objectparenttmp->fetch($validateObject->fk_autorisation);
+			}
+
+			$voletsForObject = explode(',', $objectparenttmp->volet);
+			foreach($voletsForObject as $voletid) {
+				$voletInfo = $volet->getVoletInfo($voletid);
+
+				// Création du nouveau volet
+				if(!array_key_exists($voletid, $voletsCreate)) {
+					$volet->ref = $user_static->login."-Volet".$voletInfo['numero'];
+					$volet->fk_user = $userid;
+					$volet->numvolet = $voletid;
+					$volet->status = $volet::STATUS_DRAFT;
+
+					$resultcreate = $volet->create($user);
+					$voletsCreate[$voletid] = $volet;
+
+					if($resultcreate < 0) {
+						$error++;
+						$this->error = "Impossible de créer le volet ".$voletInfo['label'];
+						break;
+					}
+				}
+
+				if($objecttmp->element == 'userformation') {
+					$addlink = 'formation';
+				}
+				elseif($objecttmp->element == 'userhabilitation') {
+					$addlink = 'habilitation';
+				}
+				elseif($objecttmp->element == 'userautorisation') {
+					$addlink = 'autorisation';
+				}
+
+				$volet = $voletsCreate[$voletid];
+				$resultLink = $volet->add_object_linked($addlink, $validateObject->id);
+
+				if($resultLink < 0) {
+					$error++;
+					$this->error = "Impossible de lier la ligne ".$validateObject->ref." sur le volet ".$voletInfo['label'];
+					break;
+				}
+			}
+		}
+
+		if (!$error) {
+			return 1;
+		} else {
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Ajoute un domaine d'application spécifique pour l'habilitation liée au volet
+	 *
+	 * 	@param  int		$lineid       				Id of Habilitation
+	 *  @param  int		$domaineapplication     	Dommaine d'application
+	 *  @return	int		> 0 if OK, < 0 if KO
+	 */
+	public function updateDomaineApplication($lineid, $domaineapplication, $sourcetype)
+	{
+		global $conf, $user;
+
+		$sql = "SELECT f.fk_element_element";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_element_fields as f";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON e.rowid = f.fk_element_element AND e.sourcetype = '$sourcetype' AND e.fk_source = $lineid";
+		$sql .= " AND e.targettype = 'formationhabilitation_volet' AND e.fk_target = $this->id";
+
+		dol_syslog(get_class($this)."::updateDomaineApplication", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			if($this->db->num_rows($resql) > 0) {
+				$obj = $this->db->fetch_object($resql);
+
+				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_element_fields";
+				$sql .= " SET domaineapplication = $domaineapplication";
+				$sql .= " WHERE fk_element_element = $obj->fk_element_element";
+
+				$resql = $this->db->query($sql);
+
+				if ($resql) {
+					return 1;
+				}
+				else {
+					$this->error = $this->db->lasterror();
+					return -1;
+				}
+			}
+			else {
+				$sql = "SELECT e.rowid";
+				$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e ";
+				$sql .= " WHERE e.sourcetype = '$sourcetype' AND e.fk_source = $lineid";
+				$sql .= " AND e.targettype = 'formationhabilitation_volet' AND e.fk_target = $this->id";
+
+				$resql = $this->db->query($sql);
+				if ($resql) {
+					$obj = $this->db->fetch_object($resql);
+
+					$sql = "INSERT INTO ".MAIN_DB_PREFIX."formationhabilitation_element_fields(fk_element_element, domaineapplication) VALUES";
+					$sql .= " ($obj->rowid, $domaineapplication)";
+
+					$resql = $this->db->query($sql);
+
+					if ($resql) {
+						return 1;
+					}
+					else {
+						$this->error = $this->db->lasterror();
+						return -1;
+					}
+				}
+				else {
+					$this->error = $this->db->lasterror();
+					return -1;
+				}
+			}
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Supprime un domaine d'application spécifique pour l'habilitation liée au volet
+	 *
+	 * 	@param  int		$lineid       	Id of Habilitation
+	 *  @return	int		> 0 if OK, < 0 if KO
+	 */
+	public function deleteDomaineApplication($lineid)
+	{
+		global $conf, $user;
+
+		$sql = "SELECT e.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
+		$sql .= " WHERE e.sourcetype = 'habilitation' AND e.fk_source = $lineid";
+		$sql .= " AND e.targettype = 'formationhabilitation_volet' AND e.fk_target = $this->id";
+
+		dol_syslog(get_class($this)."::deleteDomaineApplication", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			if($this->db->num_rows($resql) > 0) {
+				$obj = $this->db->fetch_object($resql);
+
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX."formationhabilitation_element_fields";
+				$sql .= " WHERE fk_element_element = $obj->rowid";
+
+				$resql = $this->db->query($sql);
+			}
+
+			if ($resql) {
+				return 1;
+			}
+			else {
+				$this->error = $this->db->lasterror();
+				return -1;
+			}
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Récupère les volets actifs les volets actifs
+	 *
+	 *  @param  int		$mode	0 uniquement l'id, 1 les objets volet
+	 *  @return	array|int		array with volet if OK, < 0 if KO
+	 */
+	public function getActiveVolet($mode = 0)
+	{
+		global $conf, $user;
+		$volet = new self($this->db);
+		$ret = array(); 
+
+		$sql = "SELECT v.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_volet as v";
+		$sql .= " WHERE v.numvolet = $this->numvolet AND v.fk_user = $this->fk_user";
+		$sql .= " AND v.status = ".self::STATUS_VALIDATED;
+
+		dol_syslog(get_class($this)."::getActiveVolet", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				if($mode = 1) {
+					$volet->fetch($obj->rowid);
+					$ret[$obj->rowid] = clone $volet;
+				}
+				else {
+					$ret[] = $obj->rowid;
+				}
+			}
+			return $ret;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Clôture les volets actifs lors de la validation d'un nouveau volet
+	 *
+	 *  @return	int		> 0 if OK, < 0 if KO
+	 */
+	public function closeActiveVolet()
+	{
+		global $conf, $user;
+
+		$listVolet = $this->getActiveVolet(1);
+
+		if (is_array($listVolet)) {
+			foreach($listVolet as $volet) {
+				$result = $volet->close($user);
+
+				if(!$result) {
+					$this->error = $volet->db->lasterror();
+					return -1;
+				}
+			}
+			return 1;
 		} else {
 			$this->error = $this->db->lasterror();
 			return -1;

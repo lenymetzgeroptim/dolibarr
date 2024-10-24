@@ -144,9 +144,24 @@ if($action == 'addline' && $permissiontoaddline) {
 
 // Link object to another object
 if ($action == 'addlink' && !empty($permissiondellink) && $id > 0 && $addlinkid > 0) {
+	$db->begin();
+
 	$result = $object->add_object_linked($addlink, $addlinkid);
 
 	if($result > 0) {
+		$objectline->fetch($addlinkid);
+		if($objectline->element == 'userhabilitation') {
+			$objectline->status = $objectline::STATUS_HABILITE;
+		}
+		elseif($objectline->element == 'userautorisation') {
+			$objectline->status = $objectline::STATUS_AUTORISE;
+		}
+		$result = $objectline->update($user);
+	}
+
+	if($result > 0) {
+		$db->commit();
+
 		$urltogo = $backtopage ? str_replace('__ID__', $result, $backtopage) : $backurlforlist;
 		$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $urltogo); // New method to autoselect project after a New on another form object creation
 		if ($urltogo && empty($noback)) {
@@ -154,13 +169,36 @@ if ($action == 'addlink' && !empty($permissiondellink) && $id > 0 && $addlinkid 
 			exit;
 		}
 	}
+	else {
+		$db->rollback();
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
 }
 
 // Delete link in table llx_element_element
 if ($action == 'dellink' && !empty($permissiondellink) && !$cancellink && $dellinkid > 0) {
-	$result = $object->deleteObjectLinked($dellinkid, $addlink, $object->id, $object->table_element);
+	$db->begin();
+
+	$result = $object->deleteDomaineApplication($dellinkid);
+
+	if($result > 0) {
+		$result = $object->deleteObjectLinked($dellinkid, $addlink, $object->id, $object->table_element);
+	}
 	
 	if($result > 0) {
+		$objectline->fetch($dellinkid);
+		if($objectline->element == 'userhabilitation') {
+			$objectline->status = $objectline::STATUS_HABILITABLE;
+		}
+		elseif($objectline->element == 'userautorisation') {
+			$objectline->status = $objectline::STATUS_AUTORISABLE;
+		}
+		$result = $objectline->update($user);
+	}
+
+	if($result > 0) {
+		$db->commit();
+
 		$urltogo = $backtopage ? str_replace('__ID__', $result, $backtopage) : $backurlforlist;
 		$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $urltogo); // New method to autoselect project after a New on another form object creation
 		if ($urltogo && empty($noback)) {
@@ -169,6 +207,7 @@ if ($action == 'dellink' && !empty($permissiondellink) && !$cancellink && $delli
 		}
 	}
 	elseif ($result < 0) {
+		$db->rollback();
 		setEventMessages($object->error, $object->errors, 'errors');
 	}
 }
@@ -214,39 +253,116 @@ if ($action == 'confirm_validate3' && $confirm == 'yes' && $permissiontovalidate
 
 // Action validate4 object
 if ($action == 'confirm_validate4' && $confirm == 'yes' && $permissiontovalidate4) {
-	$result = $object->validate4($user);
+	$db->begin();
+
+	$result = $object->closeActiveVolet();
+
+	if($result > 0) { // TODOLENY : Gérer une date de fin en fonction du volet
+		if(empty($object->datedebutvolet)) {
+			$object->datedebutvolet = dol_now();
+		}
+		$object->datefinvolet = dol_time_plus_duree($object->datedebutvolet, 1, 'y');
+		$result = $object->update($user);
+	}
+
+	if($result > 0) {
+		$result = $object->validate4($user);
+	}
 
 	if ($result >= 0) {
+		$db->commit();
 		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
-		// Define output language
-		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
-		// 	if (method_exists($object, 'generateDocument')) {
-		// 		$outputlangs = $langs;
-		// 		$newlang = '';
-		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-		// 			$newlang = GETPOST('lang_id', 'aZ09');
-		// 		}
-		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
-		// 			$newlang = !empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : "";
-		// 		}
-		// 		if (!empty($newlang)) {
-		// 			$outputlangs = new Translate("", $conf);
-		// 			$outputlangs->setDefaultLang($newlang);
-		// 		}
+		
+		// Génération du PDF
+		if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+			if (method_exists($object, 'generateDocument')) {
+				$outputlangs = $langs;
+				$newlang = '';
+				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+					$newlang = GETPOST('lang_id', 'aZ09');
+				}
+				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+					$newlang = !empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : "";
+				}
+				if (!empty($newlang)) {
+					$outputlangs = new Translate("", $conf);
+					$outputlangs->setDefaultLang($newlang);
+				}
 
-		// 		$ret = $object->fetch($id); // Reload to get new records
+				$ret = $object->fetch($id); // Reload to get new records
 
-		// 		$model = $object->model_pdf;
+				$model = '';
 
-		// 		$retgen = $object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-		// 		if ($retgen < 0) {
-		// 			setEventMessages($object->error, $object->errors, 'warnings');
-		// 		}
-		// 	}
-		// }
+				$retgen = $object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+				if ($retgen < 0) {
+					setEventMessages($object->error, $object->errors, 'warnings');
+				}
+			}
+		}
 	} else {
+		$db->rollback();
 		$error++;
 		setEventMessages($object->error, $object->errors, 'errors');
 	}
 	$action = '';
 }
+
+if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline) {
+        if ($object->numvolet < 1) {
+            setEventMessages("Vous devez sélectionner un volet", null, 'errors');
+            $error++;
+        }
+
+        if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+            if (method_exists($object, 'generateDocument') && !$error) {
+                $outputlangs = $langs;
+                $newlang = '';
+                if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+                    $newlang = GETPOST('lang_id', 'aZ09');
+                }
+                if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
+                    $newlang = $object->thirdparty->default_lang;
+                }
+                if (!empty($newlang)) {
+                    $outputlangs = new Translate("", $conf);
+                    $outputlangs->setDefaultLang($newlang);
+                }
+
+                $ret = $object->fetch($id); // Reload to get new records
+
+                $model = '';
+
+                $retgen = $object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+                if ($retgen < 0) {
+                    setEventMessages($object->error, $object->errors, 'warnings');
+                }
+            }
+        }
+    }
+
+	if ($action == 'updatedomaineapplication' && !$cancel && $permissiontoaddline) {
+		$db->begin();
+	
+		if($lineid > 0){
+			$result = $object->updateDomaineApplication($lineid, GETPOST('domaineapplication', 'int'), ($objectline->element == 'userhabilitation' ? 'habilitation' : 'autorisation'));
+
+			if ($result) {
+				$db->commit();
+				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+				$urltogo = $backtopage ? str_replace('__ID__', $result, $backtopage) : $backurlforlist;
+				$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $urltogo); // New method to autoselect project after a New on another form object creation
+				if ($urltogo && empty($noback)) {
+					header("Location: " . $urltogo);
+					exit;
+				}
+			} else {
+				$db->rollback();
+				setEventMessages($objectline->error, $objectline->errors, 'warnings');
+				$action = 'edit_domaineapplication';
+			}
+		}
+		else {
+			$langs->load("errors");
+			setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+		}
+	}

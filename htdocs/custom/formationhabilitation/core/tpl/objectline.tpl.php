@@ -88,14 +88,17 @@ include DOL_DOCUMENT_ROOT.'/core/actions_changeselectedfields.inc.php';
 // Mass actions
 if($objectline->element == 'userformation'){
     $objectclass = 'UserFormation';
+    $objectparentclass = 'Formation';
     $objectlabel = 'UserFormation';
 }
 elseif($objectline->element == 'userhabilitation'){
     $objectclass = 'UserHabilitation';
+    $objectparentclass = 'Habilitation';
     $objectlabel = 'UserHabilitation';
 }
 elseif($objectline->element == 'userautorisation'){
     $objectclass = 'UserAutorisation';
+    $objectparentclass = 'Autorisation';
     $objectlabel = 'UserAutorisation';
 }
 elseif($objectline->element == 'volet'){
@@ -119,11 +122,11 @@ $arrayofmassactions = array(
 );
 if ($permissiontoaddline) {
     $arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"').$langs->trans("Delete");
-    if($permissiontovalidate && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
-        $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("Validate");
+    if($permissiontovalidatelines && $object->element == 'user' && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
+        $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("ValidateAndGenerateVolet");
     }
 }
-if (GETPOST('nomassaction', 'int') || in_array($massaction, array('presend', 'predelete'))) {
+if (GETPOST('nomassaction', 'int') || in_array($massaction, array('presend', 'predelete', 'prevalidate'))) {
     $arrayofmassactions = array();
 }
 $massactionbutton = $form->selectMassAction('', $arrayofmassactions);
@@ -139,10 +142,10 @@ if($objectline->element == 'volet') {
     $search_status = explode(',', $search['status']);
     foreach(array_keys($search_status, '50', false) as $key) {
         unset($search_status[$key]);
+        $search_status[] = $objectparentline::STATUS_DRAFT;
         $search_status[] = $objectparentline::STATUS_VALIDATION1;
         $search_status[] = $objectparentline::STATUS_VALIDATION2;
         $search_status[] = $objectparentline::STATUS_VALIDATION3;
-        $search_status[] = $objectparentline::STATUS_VALIDATION4;
     }
     $search['status'] = implode(',', $search_status);
 }

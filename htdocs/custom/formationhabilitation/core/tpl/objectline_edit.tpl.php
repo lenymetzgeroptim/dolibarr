@@ -42,6 +42,11 @@ if (empty($object) || !is_object($object)) {
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
+if($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation') {
+	unset($line->fields['status']['arrayofkeyval'][2]);
+	unset($line->fields['status']['arrayofkeyval'][3]);
+}
+
 print "<!-- BEGIN PHP TEMPLATE objectline_edit.tpl.php -->\n";
 
 print '<tr class="oddeven tredited">';

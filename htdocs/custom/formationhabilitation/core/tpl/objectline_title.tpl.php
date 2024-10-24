@@ -68,8 +68,8 @@ foreach($objectline->fields as $key => $val){
 
 if ($this->table_element == 'formationhabilitation_volet' && $this->id > 0) {
 	print '<th class="liste_titre linecollink"></th>';
-	print '<th class="liste_titre linecoledit"></th>'; 
-	print '<th class="liste_titre linecoldelete"></th>';
+	// print '<th class="liste_titre linecoledit"></th>'; 
+	// print '<th class="liste_titre linecoldelete"></th>';
 }
 else {
 	print getTitleFieldOfList($selectedfields, 0, $_SERVER["PHP_SELF"], '', '', $param, 'class="center" colspan="3"', $sortfield, $sortorder, 'center maxwidthsearch ')."\n";

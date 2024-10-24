@@ -224,6 +224,26 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
+include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
+
+// // Definition of array of fields for columns
+// $arrayfields = array();
+// foreach ($objectline->fields as $key => $val) {
+// 	// If $val['visible']==0, then we never show the field
+// 	if (!empty($val['visible'])) {
+// 		$visible = (int) dol_eval($val['visible'], 1);
+// 		$arrayfields['t.'.$key] = array(
+// 			'label'=>$val['label'],
+// 			'checked'=>(($visible < 0) ? 0 : 1),
+// 			'enabled'=>(abs($visible) != 3 && dol_eval($val['enabled'], 1)),
+// 			'position'=>$val['position'],
+// 			'help'=> isset($val['help']) ? $val['help'] : ''
+// 		);
+// 	}
+// }
+// // Extra fields
+// include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
+
 /*
  * Actions
  */
@@ -440,6 +460,8 @@ if (($id || $ref) && $action == 'edit') {
 	print '<table class="border centpercent tableforfieldedit">'."\n";
 
 	// Common attributes
+	unset($object->fields['fk_user']);
+	unset($object->fields['numvolet']);
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
 
 	// Other attributes
@@ -476,6 +498,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// Create an array for form
 		$formquestion = array();
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
+	}
+
+	// Confirmation to validate
+	if ($action == 'validate4') {
+		$listVolet = $object->getActiveVolet(0);
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ValidateVolet'), (sizeof($listVolet) > 0 ? $langs->trans('ConfirmValidateVoletWithClose') : $langs->trans('ConfirmValidateVolet')), 'confirm_validate4', '', 0, 1);
 	}
 
 	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
@@ -607,6 +635,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
 			}
 
+			if ($object->status == $object::STATUS_VALIDATED) {
+				print dolGetButtonAction($langs->trans('GeneratePDF'), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererPdf&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			}
+
 			// Validate n°1
 			if ($object->status == $object::STATUS_DRAFT) {
 				$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->numvolet;
@@ -616,7 +648,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
 					if(sizeof($approbationRequireArray) == 1) {
 						$permissionName = 'permissiontovalidate'.($approbationRequireArray[0]+1);
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate4&confirm=yes&token='.newToken(), '', $$permissionName);
+						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $$permissionName);
 					}
 					elseif(strpos($approbationRequire, '1') !== false) {
 						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate1&confirm=yes&token='.newToken(), '', $permissiontovalidate1);
@@ -628,7 +660,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate3&confirm=yes&token='.newToken(), '', $permissiontovalidate3);
 					}
 					elseif(strpos($approbationRequire, '4') !== false) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate4&confirm=yes&token='.newToken(), '', $permissiontovalidate4);
+						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $permissiontovalidate4);
 					}
 				} else {
 					$langs->load("errors");
@@ -659,7 +691,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			// Validate n°4
 			if ($object->status == $object::STATUS_VALIDATION3) {
 				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate4&confirm=yes&token='.newToken(), '', $permissiontovalidate4);
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $permissiontovalidate4);
 				} else {
 					$langs->load("errors");
 					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
@@ -779,15 +811,24 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$result = $object->getLinkedLinesArray();
 		$enableunlink = 1; 
 		$enablelink = 0; 
+		$disableedit = 1;
+		$disableremove = 1;
 
 		print '	<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
 		<input type="hidden" name="token" value="' . newToken().'">
-		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
 		<input type="hidden" name="mode" value="">
 		<input type="hidden" name="page_y" value="">
-		<input type="hidden" name="id" value="' . $object->id.'">
-		';
+		<input type="hidden" name="id" value="' . $object->id.'">';
     	print '<input type="hidden" id="fk_user" name="fk_user" value="' . $object->fk_user.'">';
+		if($action == 'editline') {
+			print '<input type="hidden" name="action" value="updateline">';
+		}
+		elseif($action == 'edit_domaineapplication') {
+			print '<input type="hidden" name="action" value="updatedomaineapplication">';
+		}
+		else {
+			print '<input type="hidden" name="action" value="addline">';
+		}
 
 		if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
 			include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
@@ -833,8 +874,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			print '<tr>';
 			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';
 			print '<td class="linecollink center width20"></div>';
-			print '<td class="linecoledit center width20"></div>';
-			print '<td class="linecoldelete center width20"></div>';
+			// print '<td class="linecoledit center width20"></div>';
+			// print '<td class="linecoldelete center width20"></div>';
 			print '</tr>';
 		}
 
@@ -851,7 +892,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$result = $object->getNoLinkedLinesArray();
 		$enablelink = 1; 
 		$enableunlink = 0; 
-
+		$disableedit = 1;
+		$disableremove = 1;
+		
 		print '	<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
 		<input type="hidden" name="token" value="' . newToken().'">
 		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
@@ -904,8 +947,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			print '<tr>';
 			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';
 			print '<td class="linecollink center width20"></div>';
-			print '<td class="linecoledit center width20"></div>';
-			print '<td class="linecoldelete center width20"></div>';
+			// print '<td class="linecoledit center width20"></div>';
+			// print '<td class="linecoldelete center width20"></div>';
 			print '</tr>';
 		}
 

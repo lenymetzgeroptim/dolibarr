@@ -68,6 +68,7 @@ class UserAutorisation extends CommonObject
 	const STATUS_AUTORISABLE = 1;
 	const STATUS_AUTORISE = 2;
 	const STATUS_NONAUTORISE = 3;
+	const STATUS_CLOSE = 9;
 
 
 	/**
@@ -128,7 +129,7 @@ class UserAutorisation extends CommonObject
 		"fk_autorisation" => array("type"=>"integer:autorisation:custom/formationhabilitation/class/autorisation.class.php:0:(t.status:=:1)", "label"=>"Autorisation", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
 		"fk_user" => array("type"=>"integer:User:user\class\user.class.php", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 		"date_autorisation" => array("type"=>"date", "label"=>"DateAutorisation", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Autorisable", "2" => "Autorisé", "3" => "Non Autorisé"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Autorisable", "2" => "Autorisé", "3" => "Non Autorisé", "9" => "Cloturée"), "validate"=>"1",),
 		"date_fin_autorisation" => array("type"=>"date", "label"=>"DateFinAutorisation", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
 		"domaineapplication" => array("type"=>"sellist:c_domaine_application:label:rowid::(active:=:1)", "label"=>"DomaineApplication", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1",),
 	);
@@ -487,11 +488,12 @@ class UserAutorisation extends CommonObject
 
 		$records = array();
 
-		$sql = "SELECT ";
+		$sql = "SELECT ef.domaineapplication as ef_domaineapplication, ";
 		$sql .= $this->getFieldList('t');
 		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
 		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_autorisation as h ON h.rowid = t.fk_autorisation AND h.volet = $fk_numvoletid";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON t.rowid = e.fk_source AND e.sourcetype = 'autorisation' AND e.targettype = 'formationhabilitation_volet' AND e.fk_target = $voletid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_element_fields as ef ON e.rowid = ef.fk_element_element";
 		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
 			$sql .= " WHERE t.entity IN (".getEntity($this->table_element).")";
 		} else {
@@ -548,6 +550,10 @@ class UserAutorisation extends CommonObject
 				$record = new self($this->db);
 				$record->setVarsFromFetchObj($obj);
 
+				if(!empty($obj->ef_domaineapplication)) {
+					$record->domaineapplication = $obj->ef_domaineapplication;
+				}
+				
 				$records[$record->id] = $record;
 
 				$i++;
@@ -789,6 +795,30 @@ class UserAutorisation extends CommonObject
 		 }*/
 
 		return $this->setStatusCommon($user, self::STATUS_NONAUTORISE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+	}
+
+	/**
+	 *	Set close status
+	 *
+	 *	@param	User	$user			Object user that modify
+	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
+	 *	@return	int						Return integer <0 if KO, 0=Nothing done, >0 if OK
+	 */
+	public function close($user, $notrigger = 0)
+	{
+		// Protection
+		// if ($this->status != self::STATUS_VALIDATED) {
+		// 	return 0;
+		// }
+
+		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+		 {
+		 $this->error='Permission denied';
+		 return -1;
+		 }*/
+
+		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_USERAUTORISATION_CANCEL');
 	}
 
 	/**
@@ -1044,15 +1074,18 @@ class UserAutorisation extends CommonObject
 			$this->labelStatus[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Autorisable');
 			$this->labelStatus[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Autorisé');
 			$this->labelStatus[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Autorisé');
+			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
 			$this->labelStatusShort[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Autorisable');
 			$this->labelStatusShort[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Autorisé');
 			$this->labelStatusShort[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Autorisé');
+			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
 		}
 
 		$statusType = 'status'.$status;
 		if ($status == self::STATUS_AUTORISABLE) $statusType = 'status7';
 		if ($status == self::STATUS_AUTORISE) $statusType = 'status4';
 		if ($status == self::STATUS_NONAUTORISE) $statusType = 'status8';
+		if ($status == self::STATUS_CLOSE) $statusType = 'status6';
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
 	}
@@ -1335,8 +1368,45 @@ class UserAutorisation extends CommonObject
 		$labelStatus[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Autorisable');
 		$labelStatus[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Autorisé');
 		$labelStatus[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Autorisé');
-		
+		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
+
 		return $labelStatus;
+	}
+
+	/**
+	 * 	Return les autorisations à cloturée lors de la validation d'une ou plusieurs lignes
+	 *
+	 * 	@param  int		$userid       				Id of User
+	 *  @param  int		$userautorisationsId    	Ids of UserAutorisation
+	 * @param  int		$autorisationsId    		Ids of autorisation
+	 * 	@return	array						
+	 */
+	public function getObjectToClose($userid, $userautorisationsId, $autorisationsId)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT f.rowid, f.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userautorisation as f";
+		$sql .= " WHERE f.fk_user = $userid";
+		$sql .= " AND f.rowid NOT IN (".$this->db->sanitize($userautorisationsId).")";
+		$sql .= " AND f.fk_autorisation IN (".$this->db->sanitize($autorisationsId).")";
+		$sql .= " AND f.status = ".self::STATUS_AUTORISE;
+		$sql .= " ORDER BY f.ref";
+
+		dol_syslog(get_class($this)."::getObjectToClose", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->ref;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
 	}
 }
 

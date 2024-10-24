@@ -127,7 +127,7 @@ class Autorisation extends CommonObject
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Actif", "5" => "Cloturée"), "validate"=>"1",),
 		"formation" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"Formation", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1",),
-		"volet" => array("type"=>"sellist:c_volets:numero|label:rowid::(active:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
+		"volet" => array("type"=>"chkbxlst:c_volets:numero|label:rowid::(active=1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"test" => array("type"=>"chkbxlst:formationhabilitation_test:label:rowid::(status=1)", "label"=>"Test", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"domaineapplication" => array("type"=>"sellist:c_domaine_application:label:rowid::(active:=:1)", "label"=>"DomaineApplication", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1",),
 	);

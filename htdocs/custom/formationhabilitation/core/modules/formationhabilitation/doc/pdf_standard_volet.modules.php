@@ -49,11 +49,6 @@ class pdf_standard_volet extends ModelePDFVolet
 	public $db;
 
 	/**
-	 * @var int The environment ID when using a multicompany module
-	 */
-	public $entity;
-
-	/**
 	 * @var string model name
 	 */
 	public $name;
@@ -75,9 +70,9 @@ class pdf_standard_volet extends ModelePDFVolet
 
 	/**
 	 * @var array Minimum version of PHP required by module.
-	 * e.g.: PHP ≥ 7.0 = array(7, 0)
+	 * e.g.: PHP ≥ 5.6 = array(5, 6)
 	 */
-	public $phpmin = array(7, 0);
+	public $phpmin = array(5, 6);
 
 	/**
 	 * Dolibarr version of the loaded document
@@ -86,10 +81,51 @@ class pdf_standard_volet extends ModelePDFVolet
 	public $version = 'dolibarr';
 
 	/**
+	 * @var int page_largeur
+	 */
+	public $page_largeur;
+
+	/**
+	 * @var int page_hauteur
+	 */
+	public $page_hauteur;
+
+	/**
+	 * @var array format
+	 */
+	public $format;
+
+	/**
+	 * @var int marge_gauche
+	 */
+	public $marge_gauche;
+
+	/**
+	 * @var int marge_droite
+	 */
+	public $marge_droite;
+
+	/**
+	 * @var int marge_haute
+	 */
+	public $marge_haute;
+
+	/**
+	 * @var int marge_basse
+	 */
+	public $marge_basse;
+
+	/**
 	 * Issuer
 	 * @var Societe Object that emits
 	 */
 	public $emetteur;
+
+	/**
+	 * @var bool Situation invoice type
+	 */
+	public $situationinvoice;
+
 
 	/**
 	 * @var array of document table columns
@@ -110,9 +146,9 @@ class pdf_standard_volet extends ModelePDFVolet
 		$langs->loadLangs(array("main", "bills"));
 
 		$this->db = $db;
-		$this->name = "standard";
+		$this->name = "user";
 		$this->description = $langs->trans('DocumentModelStandardPDF');
-		$this->update_main_doc_field = 1; // Save the name of generated file as the main doc when generating a doc with this template
+		$this->update_main_doc_field = 0; // Save the name of generated file as the main doc when generating a doc with this template
 
 		// Dimension page
 		$this->type = 'pdf';
@@ -120,10 +156,10 @@ class pdf_standard_volet extends ModelePDFVolet
 		$this->page_largeur = $formatarray['width'];
 		$this->page_hauteur = $formatarray['height'];
 		$this->format = array($this->page_largeur, $this->page_hauteur);
-		$this->marge_gauche = getDolGlobalInt('MAIN_PDF_MARGIN_LEFT', 10);
-		$this->marge_droite = getDolGlobalInt('MAIN_PDF_MARGIN_RIGHT', 10);
-		$this->marge_haute = getDolGlobalInt('MAIN_PDF_MARGIN_TOP', 10);
-		$this->marge_basse = getDolGlobalInt('MAIN_PDF_MARGIN_BOTTOM', 10);
+		$this->marge_gauche = 10;
+		$this->marge_droite = 115;
+		$this->marge_haute = 10;
+		$this->marge_basse = 158;
 
 		// Get source company
 		$this->emetteur = $mysoc;
@@ -140,11 +176,11 @@ class pdf_standard_volet extends ModelePDFVolet
 		//  Use new system for position of columns, view  $this->defineColumnField()
 
 		$this->tva = array();
-		$this->tva_array = array();
 		$this->localtax1 = array();
 		$this->localtax2 = array();
 		$this->atleastoneratenotnull = 0;
 		$this->atleastonediscount = 0;
+		$this->situationinvoice = false;
 	}
 
 
@@ -152,7 +188,7 @@ class pdf_standard_volet extends ModelePDFVolet
 	/**
 	 *  Function to build pdf onto disk
 	 *
-	 *  @param		Volet	$object				Object to generate
+	 *  @param		Volet		$object				Object to generate
 	 *  @param		Translate	$outputlangs		Lang output object
 	 *  @param		string		$srctemplatepath	Full path of source filename for generator using a template file
 	 *  @param		int			$hidedetails		Do not show line details
@@ -163,7 +199,8 @@ class pdf_standard_volet extends ModelePDFVolet
 	public function write_file($object, $outputlangs, $srctemplatepath = '', $hidedetails = 0, $hidedesc = 0, $hideref = 0)
 	{
 		// phpcs:enable
-		global $user, $langs, $conf, $mysoc, $db, $hookmanager, $nblines;
+		global $user, $langs, $conf, $mysoc, $db, $hookmanager, $object;
+		$voletInfo = $object->getVoletInfo($object->numvolet);
 
 		dol_syslog("write_file outputlangs->defaultlang=".(is_object($outputlangs) ? $outputlangs->defaultlang : 'null'));
 
@@ -171,103 +208,35 @@ class pdf_standard_volet extends ModelePDFVolet
 			$outputlangs = $langs;
 		}
 		// For backward compatibility with FPDF, force output charset to ISO, because FPDF expect text to be encoded in ISO
-		if (getDolGlobalInt('MAIN_USE_FPDF')) {
+		if (!empty($conf->global->MAIN_USE_FPDF)) {
 			$outputlangs->charset_output = 'ISO-8859-1';
 		}
 
 		// Load translation files required by the page
-		$outputlangs->loadLangs(array("main", "bills", "products", "dict", "companies"));
+		$outputlangs->loadLangs(array("main", "user", "dict"));
 
-		// Show Draft Watermark
-		if (getDolGlobalString('MYOBJECT_DRAFT_WATERMARK') && $object->statut == $object::STATUS_DRAFT) {
-			$this->watermark = getDolGlobalString('MYOBJECT_DRAFT_WATERMARK');
-		}
-
-		global $outputlangsbis;
-		$outputlangsbis = null;
-		if (getDolGlobalString('PDF_USE_ALSO_LANGUAGE_CODE') && $outputlangs->defaultlang != getDolGlobalString('PDF_USE_ALSO_LANGUAGE_CODE')) {
+		if (!empty($conf->global->PDF_USE_ALSO_LANGUAGE_CODE) && $outputlangs->defaultlang != $conf->global->PDF_USE_ALSO_LANGUAGE_CODE) {
+			global $outputlangsbis;
 			$outputlangsbis = new Translate('', $conf);
-			$outputlangsbis->setDefaultLang(getDolGlobalString('PDF_USE_ALSO_LANGUAGE_CODE'));
+			$outputlangsbis->setDefaultLang($conf->global->PDF_USE_ALSO_LANGUAGE_CODE);
 			$outputlangsbis->loadLangs(array("main", "bills", "products", "dict", "companies"));
 		}
 
-		$nblines = (is_array($object->lines) ? count($object->lines) : 0);
-
 		$hidetop = 0;
-		if (getDolGlobalString('MAIN_PDF_DISABLE_COL_HEAD_TITLE')) {
-			$hidetop = getDolGlobalString('MAIN_PDF_DISABLE_COL_HEAD_TITLE');
+		if (!empty($conf->global->MAIN_PDF_DISABLE_COL_HEAD_TITLE)) {
+			$hidetop = $conf->global->MAIN_PDF_DISABLE_COL_HEAD_TITLE;
 		}
 
-		// Loop on each lines to detect if there is at least one image to show
-		$realpatharray = array();
-		$this->atleastonephoto = false;
-		/*
-		if (getDolGlobalInt('MAIN_GENERATE_MYOBJECT_WITH_PICTURE'))) {
-			$objphoto = new Product($this->db);
-
-			for ($i = 0; $i < $nblines; $i++) {
-				if (empty($object->lines[$i]->fk_product)) {
-					continue;
-				}
-
-				$objphoto->fetch($object->lines[$i]->fk_product);
-				//var_dump($objphoto->ref);exit;
-				if (getDolGlobalInt('PRODUCT_USE_OLD_PATH_FOR_PHOTO')) {
-					$pdir[0] = get_exdir($objphoto->id, 2, 0, 0, $objphoto, 'product').$objphoto->id."/photos/";
-					$pdir[1] = get_exdir(0, 0, 0, 0, $objphoto, 'product').dol_sanitizeFileName($objphoto->ref).'/';
-				} else {
-					$pdir[0] = get_exdir(0, 0, 0, 0, $objphoto, 'product'); // default
-					$pdir[1] = get_exdir($objphoto->id, 2, 0, 0, $objphoto, 'product').$objphoto->id."/photos/"; // alternative
-				}
-
-				$arephoto = false;
-				foreach ($pdir as $midir) {
-					if (!$arephoto) {
-						if ($conf->entity != $objphoto->entity) {
-							$dir = $conf->product->multidir_output[$objphoto->entity].'/'.$midir; //Check repertories of current entities
-						} else {
-							$dir = $conf->product->dir_output.'/'.$midir; //Check repertory of the current product
-						}
-
-						foreach ($objphoto->liste_photos($dir, 1) as $key => $obj) {
-							if (!getDolGlobalInt('CAT_HIGH_QUALITY_IMAGES')) {		// If CAT_HIGH_QUALITY_IMAGES not defined, we use thumb if defined and then original photo
-								if ($obj['photo_vignette'])	{
-									$filename = $obj['photo_vignette'];
-								} else {
-									$filename = $obj['photo'];
-								}
-							} else {
-								$filename = $obj['photo'];
-							}
-
-							$realpath = $dir.$filename;
-							$arephoto = true;
-							$this->atleastonephoto = true;
-						}
-					}
-				}
-
-				if ($realpath && $arephoto) {
-					$realpatharray[$i] = $realpath;
-				}
-			}
-		}
-		*/
-
-		//if (count($realpatharray) == 0) $this->posxpicture=$this->posxtva;
-
-		if (getMultidirOutput($object)) {
-			$object->fetch_thirdparty();
-
-			// Definition of $dir and $file
-			if ($object->specimen) {
-				$dir = getMultidirOutput($object);
-				$file = $dir."/SPECIMEN.pdf";
-			} else {
-				$objectref = dol_sanitizeFileName($object->ref);
-				$dir = getMultidirOutput($object)."/".$objectref;
-				$file = $dir."/".$objectref.".pdf";
-			}
+		if ($conf->user->dir_output) {
+			// Definition of $dir and $file : // LENYTODO
+			$objref = dol_sanitizeFileName($object->ref);
+			$now = dol_now();
+			$user_static = new User($db);
+			$user_static->fetch($object->fk_user);
+			$dir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
+			$file = $dir."/".$user_static->lastname."_Volet-".$voletInfo['nommage']."_".dol_print_date($now, "%Y%m%d").".pdf";
+			// Appeler la fonction pour obtenir un chemin de fichier unique
+			$file = $this->getUniqueFilename($file);
 			if (!file_exists($dir)) {
 				if (dol_mkdir($dir) < 0) {
 					$this->error = $langs->transnoentities("ErrorCanNotCreateDir", $dir);
@@ -276,43 +245,20 @@ class pdf_standard_volet extends ModelePDFVolet
 			}
 
 			if (file_exists($dir)) {
-				// Add pdfgeneration hook
-				if (!is_object($hookmanager)) {
-					include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-					$hookmanager = new HookManager($this->db);
-				}
-				$hookmanager->initHooks(array('pdfgeneration'));
-				$parameters = array('file'=>$file, 'object'=>$object, 'outputlangs'=>$outputlangs);
-				global $action;
-				$reshook = $hookmanager->executeHooks('beforePDFCreation', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
-
-				// Set nblines with the new lines content after hook
-				$nblines = (is_array($object->lines) ? count($object->lines) : 0);
-
 				// Create pdf instance
 				$pdf = pdf_getInstance($this->format);
 				$default_font_size = pdf_getPDFFontSize($outputlangs); // Must be after pdf_getInstance
 				$pdf->SetAutoPageBreak(1, 0);
 
 				$heightforinfotot = 50; // Height reserved to output the info and total part and payment part
-				$heightforfreetext = getDolGlobalInt('MAIN_PDF_FREETEXT_HEIGHT', 5); // Height reserved to output the free text on last page
-				$heightforfooter = $this->marge_basse + (getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS') ? 12 : 22); // Height reserved to output the footer (value include bottom margin)
+				$heightforfreetext = (isset($conf->global->MAIN_PDF_FREETEXT_HEIGHT) ? $conf->global->MAIN_PDF_FREETEXT_HEIGHT : 5); // Height reserved to output the free text on last page
+				$heightforfooter = $this->marge_basse + (empty($conf->global->MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS) ? 12 : 22); // Height reserved to output the footer (value include bottom margin)
 
 				if (class_exists('TCPDF')) {
 					$pdf->setPrintHeader(false);
 					$pdf->setPrintFooter(false);
 				}
 				$pdf->SetFont(pdf_getPDFFont($outputlangs));
-
-				// Set path to the background PDF File
-				if (getDolGlobalString('MAIN_ADD_PDF_BACKGROUND')) {
-					$logodir = $conf->mycompany->dir_output;
-					if (!empty($conf->mycompany->multidir_output[$object->entity])) {
-						$logodir = $conf->mycompany->multidir_output[$object->entity];
-					}
-					$pagecount = $pdf->setSourceFile($logodir.'/'.getDolGlobalString('MAIN_ADD_PDF_BACKGROUND'));
-					$tplidx = $pdf->importPage(1);
-				}
 
 				$pdf->Open();
 				$pagenb = 0;
@@ -323,7 +269,7 @@ class pdf_standard_volet extends ModelePDFVolet
 				$pdf->SetCreator("Dolibarr ".DOL_VERSION);
 				$pdf->SetAuthor($outputlangs->convToOutputCharset($user->getFullName($outputlangs)));
 				$pdf->SetKeyWords($outputlangs->convToOutputCharset($object->ref)." ".$outputlangs->transnoentities("PdfTitle")." ".$outputlangs->convToOutputCharset($object->thirdparty->name));
-				if (getDolGlobalString('MAIN_DISABLE_PDF_COMPRESSION')) {
+				if (!empty($conf->global->MAIN_DISABLE_PDF_COMPRESSION)) {
 					$pdf->SetCompression(false);
 				}
 
@@ -331,7 +277,7 @@ class pdf_standard_volet extends ModelePDFVolet
 				$cert = empty($user->conf->CERTIFICATE_CRT) ? '' : $user->conf->CERTIFICATE_CRT;
 				// If user has no certificate, we try to take the company one
 				if (!$cert) {
-					$cert = getDolGlobalString('CERTIFICATE_CRT');
+					$cert = empty($conf->global->CERTIFICATE_CRT) ? '' : $conf->global->CERTIFICATE_CRT;
 				}
 				// If a certificate is found
 				if ($cert) {
@@ -346,471 +292,58 @@ class pdf_standard_volet extends ModelePDFVolet
 
 				$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite); // Left, Top, Right
 
-
 				// New page
 				$pdf->AddPage();
-				if (!empty($tplidx)) {
-					$pdf->useTemplate($tplidx);
-				}
 				$pagenb++;
 
+				// Head
 				$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
+				
+				// Body
 				$pdf->SetFont('', '', $default_font_size - 1);
-				$pdf->MultiCell(0, 3, ''); // Set interline to 3
+				//$pdf->MultiCell(0, 3, ''); // Set interline to 3
 				$pdf->SetTextColor(0, 0, 0);
 
-				$tab_top = 90 + $top_shift;
-				$tab_top_newpage = (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD') ? 42 + $top_shift : 10);
-
-				$tab_height = $this->page_hauteur - $tab_top - $heightforfooter - $heightforfreetext;
-
-				$tab_height_newpage = 150;
-				if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-					$tab_height_newpage -= $top_shift;
+				if($voletInfo['model'] == 1) {
+					$this->pagebodyidentity($pdf, $object, $outputlangs, $outputlangsbis);
+				}
+				elseif($voletInfo['model'] == 2) {
+					$this->pagebodyformation($pdf, $object, $outputlangs, $outputlangsbis);
+				}
+				elseif($voletInfo['model'] == 3) {
+					$this->pagebodyentreprise($pdf, $object, $outputlangs, $outputlangsbis);
+				}
+				elseif($voletInfo['model'] == 4) {
+					$this->pagebodyhabilitation($pdf, $object, $outputlangs, $outputlangsbis, $pagenb);
+				}
+				elseif($voletInfo['model'] == 5) {
+					$this->pagebodymedical($pdf, $object, $outputlangs, $outputlangsbis);
+				}
+				elseif($voletInfo['model'] == 6) {
+					$this->pagebodyautorisation($pdf, $object, $outputlangs, $outputlangsbis);
 				}
 
-				$nexY = $tab_top - 1;
-
-				// Display notes
-				$notetoshow = empty($object->note_public) ? '' : $object->note_public;
-				// Extrafields in note
-				$extranote = $this->getExtrafieldsInHtml($object, $outputlangs);
-				if (!empty($extranote)) {
-					$notetoshow = dol_concatdesc($notetoshow, $extranote);
-				}
-
-				$pagenb = $pdf->getPage();
-				if ($notetoshow) {
-					$tab_top -= 2;
-
-					$tab_width = $this->page_largeur - $this->marge_gauche - $this->marge_droite;
-					$pageposbeforenote = $pagenb;
-
-					$substitutionarray = pdf_getSubstitutionArray($outputlangs, null, $object);
-					complete_substitutions_array($substitutionarray, $outputlangs, $object);
-					$notetoshow = make_substitutions($notetoshow, $substitutionarray, $outputlangs);
-					$notetoshow = convertBackOfficeMediasLinksToPublicLinks($notetoshow);
-
-					$pdf->startTransaction();
-
-					$pdf->SetFont('', '', $default_font_size - 1);
-					$pdf->writeHTMLCell(190, 3, $this->posxdesc - 1, $tab_top, dol_htmlentitiesbr($notetoshow), 0, 1);
-					// Description
-					$pageposafternote = $pdf->getPage();
-					$posyafter = $pdf->GetY();
-
-					if ($pageposafternote > $pageposbeforenote) {
-						$pdf->rollbackTransaction(true);
-
-						// prepare pages to receive notes
-						while ($pagenb < $pageposafternote) {
-							$pdf->AddPage();
-							$pagenb++;
-							if (!empty($tplidx)) {
-								$pdf->useTemplate($tplidx);
-							}
-							if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-								$this->_pagehead($pdf, $object, 0, $outputlangs);
-							}
-							// $this->_pagefoot($pdf,$object,$outputlangs,1);
-							$pdf->setTopMargin($tab_top_newpage);
-							// The only function to edit the bottom margin of current page to set it.
-							$pdf->setPageOrientation('', 1, $heightforfooter + $heightforfreetext);
-						}
-
-						// back to start
-						$pdf->setPage($pageposbeforenote);
-						$pdf->setPageOrientation('', 1, $heightforfooter + $heightforfreetext);
-						$pdf->SetFont('', '', $default_font_size - 1);
-						$pdf->writeHTMLCell(190, 3, $this->posxdesc - 1, $tab_top, dol_htmlentitiesbr($notetoshow), 0, 1);
-						$pageposafternote = $pdf->getPage();
-
-						$posyafter = $pdf->GetY();
-
-						if ($posyafter > ($this->page_hauteur - ($heightforfooter + $heightforfreetext + 20))) {	// There is no space left for total+free text
-							$pdf->AddPage('', '', true);
-							$pagenb++;
-							$pageposafternote++;
-							$pdf->setPage($pageposafternote);
-							$pdf->setTopMargin($tab_top_newpage);
-							// The only function to edit the bottom margin of current page to set it.
-							$pdf->setPageOrientation('', 1, $heightforfooter + $heightforfreetext);
-							//$posyafter = $tab_top_newpage;
-						}
-
-
-						// apply note frame to previous pages
-						$i = $pageposbeforenote;
-						while ($i < $pageposafternote) {
-							$pdf->setPage($i);
-
-
-							$pdf->SetDrawColor(128, 128, 128);
-							// Draw note frame
-							if ($i > $pageposbeforenote) {
-								$height_note = $this->page_hauteur - ($tab_top_newpage + $heightforfooter);
-								$pdf->Rect($this->marge_gauche, $tab_top_newpage - 1, $tab_width, $height_note + 1);
-							} else {
-								$height_note = $this->page_hauteur - ($tab_top + $heightforfooter);
-								$pdf->Rect($this->marge_gauche, $tab_top - 1, $tab_width, $height_note + 1);
-							}
-
-							// Add footer
-							$pdf->setPageOrientation('', 1, 0); // The only function to edit the bottom margin of current page to set it.
-							$this->_pagefoot($pdf, $object, $outputlangs, 1);
-
-							$i++;
-						}
-
-						// apply note frame to last page
-						$pdf->setPage($pageposafternote);
-						if (!empty($tplidx)) {
-							$pdf->useTemplate($tplidx);
-						}
-						if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-							$this->_pagehead($pdf, $object, 0, $outputlangs);
-						}
-						$height_note = $posyafter - $tab_top_newpage;
-						$pdf->Rect($this->marge_gauche, $tab_top_newpage - 1, $tab_width, $height_note + 1);
-					} else {
-						// No pagebreak
-						$pdf->commitTransaction();
-						$posyafter = $pdf->GetY();
-						$height_note = $posyafter - $tab_top;
-						$pdf->Rect($this->marge_gauche, $tab_top - 1, $tab_width, $height_note + 1);
-
-
-						if ($posyafter > ($this->page_hauteur - ($heightforfooter + $heightforfreetext + 20))) {
-							// not enough space, need to add page
-							$pdf->AddPage('', '', true);
-							$pagenb++;
-							$pageposafternote++;
-							$pdf->setPage($pageposafternote);
-							if (!empty($tplidx)) {
-								$pdf->useTemplate($tplidx);
-							}
-							if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-								$this->_pagehead($pdf, $object, 0, $outputlangs);
-							}
-
-							$posyafter = $tab_top_newpage;
-						}
-					}
-
-					$tab_height = $tab_height - $height_note;
-					$tab_top = $posyafter + 6;
-				} else {
-					$height_note = 0;
-				}
-
-				// Use new auto column system
-				$this->prepareArrayColumnField($object, $outputlangs, $hidedetails, $hidedesc, $hideref);
-
-				// Table simulation to know the height of the title line
-				$pdf->startTransaction();
-				$this->pdfTabTitles($pdf, $tab_top, $tab_height, $outputlangs, $hidetop);
-				$pdf->rollbackTransaction(true);
-
-				$nexY = $tab_top + $this->tabTitleHeight;
-
-				// Loop on each lines
-				$pageposbeforeprintlines = $pdf->getPage();
-				$pagenb = $pageposbeforeprintlines;
-				for ($i = 0; $i < $nblines; $i++) {
-					$curY = $nexY;
-					$pdf->SetFont('', '', $default_font_size - 1); // Into loop to work with multipage
-					$pdf->SetTextColor(0, 0, 0);
-
-					// Define size of image if we need it
-					$imglinesize = array();
-					if (!empty($realpatharray[$i])) {
-						$imglinesize = pdf_getSizeForImage($realpatharray[$i]);
-					}
-
-					$pdf->setTopMargin($tab_top_newpage);
-					$pdf->setPageOrientation('', 1, $heightforfooter + $heightforfreetext + $heightforinfotot); // The only function to edit the bottom margin of current page to set it.
-					$pageposbefore = $pdf->getPage();
-
-					$showpricebeforepagebreak = 1;
-					$posYAfterImage = 0;
-					$posYAfterDescription = 0;
-
-					if ($this->getColumnStatus('photo')) {
-						// We start with Photo of product line
-						if (isset($imglinesize['width']) && isset($imglinesize['height']) && ($curY + $imglinesize['height']) > ($this->page_hauteur - ($heightforfooter + $heightforfreetext + $heightforinfotot))) {	// If photo too high, we moved completely on new page
-							$pdf->AddPage('', '', true);
-							if (!empty($tplidx)) {
-								$pdf->useTemplate($tplidx);
-							}
-							$pdf->setPage($pageposbefore + 1);
-
-							$curY = $tab_top_newpage;
-
-							// Allows data in the first page if description is long enough to break in multiples pages
-							if (getDolGlobalInt('MAIN_PDF_DATA_ON_FIRST_PAGE')) {
-								$showpricebeforepagebreak = 1;
-							} else {
-								$showpricebeforepagebreak = 0;
-							}
-						}
-
-						if (!empty($this->cols['photo']) && isset($imglinesize['width']) && isset($imglinesize['height'])) {
-							$pdf->Image($realpatharray[$i], $this->getColumnContentXStart('photo'), $curY + 1, $imglinesize['width'], $imglinesize['height'], '', '', '', 2, 300); // Use 300 dpi
-							// $pdf->Image does not increase value return by getY, so we save it manually
-							$posYAfterImage = $curY + $imglinesize['height'];
-						}
-					}
-
-					// Description of product line
-					if ($this->getColumnStatus('desc')) {
-						$pdf->startTransaction();
-
-						$this->printColDescContent($pdf, $curY, 'desc', $object, $i, $outputlangs, $hideref, $hidedesc);
-						$pageposafter = $pdf->getPage();
-
-						if ($pageposafter > $pageposbefore) {	// There is a pagebreak
-							$pdf->rollbackTransaction(true);
-							$pageposafter = $pageposbefore;
-							$pdf->setPageOrientation('', 1, $heightforfooter); // The only function to edit the bottom margin of current page to set it.
-
-							$this->printColDescContent($pdf, $curY, 'desc', $object, $i, $outputlangs, $hideref, $hidedesc);
-
-							$pageposafter = $pdf->getPage();
-							$posyafter = $pdf->GetY();
-							//var_dump($posyafter); var_dump(($this->page_hauteur - ($heightforfooter+$heightforfreetext+$heightforinfotot))); exit;
-							if ($posyafter > ($this->page_hauteur - ($heightforfooter + $heightforfreetext + $heightforinfotot))) {	// There is no space left for total+free text
-								if ($i == ($nblines - 1)) {	// No more lines, and no space left to show total, so we create a new page
-									$pdf->AddPage('', '', true);
-									if (!empty($tplidx)) {
-										$pdf->useTemplate($tplidx);
-									}
-									$pdf->setPage($pageposafter + 1);
-								}
-							} else {
-								// We found a page break
-								// Allows data in the first page if description is long enough to break in multiples pages
-								if (getDolGlobalInt('MAIN_PDF_DATA_ON_FIRST_PAGE')) {
-									$showpricebeforepagebreak = 1;
-								} else {
-									$showpricebeforepagebreak = 0;
-								}
-							}
-						} else {	// No pagebreak
-							$pdf->commitTransaction();
-						}
-						$posYAfterDescription = $pdf->GetY();
-					}
-
-					$nexY = max($pdf->GetY(), $posYAfterImage);
-
-
-					$pageposafter = $pdf->getPage();
-					$pdf->setPage($pageposbefore);
-					$pdf->setTopMargin($this->marge_haute);
-					$pdf->setPageOrientation('', 1, 0); // The only function to edit the bottom margin of current page to set it.
-
-					// We suppose that a too long description or photo were moved completely on next page
-					if ($pageposafter > $pageposbefore && empty($showpricebeforepagebreak)) {
-						$pdf->setPage($pageposafter);
-						$curY = $tab_top_newpage;
-					}
-
-					$pdf->SetFont('', '', $default_font_size - 1); // We reposition the default font
-
-					// Quantity
-					// Enough for 6 chars
-					if ($this->getColumnStatus('qty')) {
-						$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
-						$this->printStdColumnContent($pdf, $curY, 'qty', $qty);
-						$nexY = max($pdf->GetY(), $nexY);
-					}
-
-					// Extrafields
-					if (!empty($object->lines[$i]->array_options)) {
-						foreach ($object->lines[$i]->array_options as $extrafieldColKey => $extrafieldValue) {
-							if ($this->getColumnStatus($extrafieldColKey)) {
-								$extrafieldValue = $this->getExtrafieldContent($object->lines[$i], $extrafieldColKey, $outputlangs);
-								$this->printStdColumnContent($pdf, $curY, $extrafieldColKey, $extrafieldValue);
-								$nexY = max($pdf->GetY(), $nexY);
-							}
-						}
-					}
-
-
-					$parameters = array(
-						'object' => $object,
-						'i' => $i,
-						'pdf' =>& $pdf,
-						'curY' =>& $curY,
-						'nexY' =>& $nexY,
-						'outputlangs' => $outputlangs,
-						'hidedetails' => $hidedetails
-					);
-					$reshook = $hookmanager->executeHooks('printPDFline', $parameters, $this); // Note that $object may have been modified by hook
-
-
-					$sign = 1;
-					// Collecte des totaux par valeur de tva dans $this->tva["taux"]=total_tva
-					$prev_progress = $object->lines[$i]->get_prev_progress($object->id);
-					if ($prev_progress > 0 && !empty($object->lines[$i]->situation_percent)) { // Compute progress from previous situation
-						if (isModEnabled("multicurrency") && $object->multicurrency_tx != 1) {
-							$tvaligne = $sign * $object->lines[$i]->multicurrency_total_tva * ($object->lines[$i]->situation_percent - $prev_progress) / $object->lines[$i]->situation_percent;
-						} else {
-							$tvaligne = $sign * $object->lines[$i]->total_tva * ($object->lines[$i]->situation_percent - $prev_progress) / $object->lines[$i]->situation_percent;
-						}
-					} else {
-						if (isModEnabled("multicurrency") && $object->multicurrency_tx != 1) {
-							$tvaligne = $sign * $object->lines[$i]->multicurrency_total_tva;
-						} else {
-							$tvaligne = $sign * $object->lines[$i]->total_tva;
-						}
-					}
-
-					$localtax1ligne = $object->lines[$i]->total_localtax1;
-					$localtax2ligne = $object->lines[$i]->total_localtax2;
-					$localtax1_rate = $object->lines[$i]->localtax1_tx;
-					$localtax2_rate = $object->lines[$i]->localtax2_tx;
-					$localtax1_type = $object->lines[$i]->localtax1_type;
-					$localtax2_type = $object->lines[$i]->localtax2_type;
-
-					$vatrate = (string) $object->lines[$i]->tva_tx;
-
-					// Retrieve type from database for backward compatibility with old records
-					if ((!isset($localtax1_type) || $localtax1_type == '' || !isset($localtax2_type) || $localtax2_type == '') // if tax type not defined
-						&& (!empty($localtax1_rate) || !empty($localtax2_rate))) { // and there is local tax
-						$localtaxtmp_array = getLocalTaxesFromRate($vatrate, 0, $object->thirdparty, $mysoc);
-						$localtax1_type = isset($localtaxtmp_array[0]) ? $localtaxtmp_array[0] : '';
-						$localtax2_type = isset($localtaxtmp_array[2]) ? $localtaxtmp_array[2] : '';
-					}
-
-					// retrieve global local tax
-					if ($localtax1_type && $localtax1ligne != 0) {
-						if (empty($this->localtax1[$localtax1_type][$localtax1_rate])) {
-							$this->localtax1[$localtax1_type][$localtax1_rate] = $localtax1ligne;
-						} else {
-							$this->localtax1[$localtax1_type][$localtax1_rate] += $localtax1ligne;
-						}
-					}
-					if ($localtax2_type && $localtax2ligne != 0) {
-						if (empty($this->localtax2[$localtax2_type][$localtax2_rate])) {
-							$this->localtax2[$localtax2_type][$localtax2_rate] = $localtax2ligne;
-						} else {
-							$this->localtax2[$localtax2_type][$localtax2_rate] += $localtax2ligne;
-						}
-					}
-
-					if (($object->lines[$i]->info_bits & 0x01) == 0x01) {
-						$vatrate .= '*';
-					}
-
-					// Fill $this->tva and $this->tva_array
-					if (!isset($this->tva[$vatrate])) {
-						$this->tva[$vatrate] = 0;
-					}
-					$this->tva[$vatrate] += $tvaligne;
-					$vatcode = $object->lines[$i]->vat_src_code;
-					if (empty($this->tva_array[$vatrate.($vatcode ? ' ('.$vatcode.')' : '')]['amount'])) {
-						$this->tva_array[$vatrate.($vatcode ? ' ('.$vatcode.')' : '')]['amount'] = 0;
-					}
-					$this->tva_array[$vatrate.($vatcode ? ' ('.$vatcode.')' : '')] = array('vatrate'=>$vatrate, 'vatcode'=>$vatcode, 'amount'=> $this->tva_array[$vatrate.($vatcode ? ' ('.$vatcode.')' : '')]['amount'] + $tvaligne);
-
-					$nexY = max($nexY, $posYAfterImage);
-
-					// Add line
-					if (getDolGlobalInt('MAIN_PDF_DASH_BETWEEN_LINES') && $i < ($nblines - 1)) {
-						$pdf->setPage($pageposafter);
-						$pdf->SetLineStyle(array('dash'=>'1,1', 'color'=>array(80, 80, 80)));
-						//$pdf->SetDrawColor(190,190,200);
-						$pdf->line($this->marge_gauche, $nexY, $this->page_largeur - $this->marge_droite, $nexY);
-						$pdf->SetLineStyle(array('dash'=>0));
-					}
-
-					// Detect if some page were added automatically and output _tableau for past pages
-					while ($pagenb < $pageposafter) {
-						$pdf->setPage($pagenb);
-						if ($pagenb == $pageposbeforeprintlines) {
-							$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforfooter, 0, $outputlangs, $hidetop, 1, $object->multicurrency_code, $outputlangsbis);
-						} else {
-							$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1, $object->multicurrency_code, $outputlangsbis);
-						}
-						$this->_pagefoot($pdf, $object, $outputlangs, 1);
-						$pagenb++;
-						$pdf->setPage($pagenb);
-						$pdf->setPageOrientation('', 1, 0); // The only function to edit the bottom margin of current page to set it.
-						if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-							$this->_pagehead($pdf, $object, 0, $outputlangs);
-						}
-						if (!empty($tplidx)) {
-							$pdf->useTemplate($tplidx);
-						}
-					}
-
-					if (isset($object->lines[$i + 1]->pagebreak) && $object->lines[$i + 1]->pagebreak) {
-						if ($pagenb == $pageposafter) {
-							$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforfooter, 0, $outputlangs, $hidetop, 1, $object->multicurrency_code, $outputlangsbis);
-						} else {
-							$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1, $object->multicurrency_code, $outputlangsbis);
-						}
-						$this->_pagefoot($pdf, $object, $outputlangs, 1);
-						// New page
-						$pdf->AddPage();
-						if (!empty($tplidx)) {
-							$pdf->useTemplate($tplidx);
-						}
-						$pagenb++;
-						if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-							$this->_pagehead($pdf, $object, 0, $outputlangs);
-						}
-					}
-				}
-
-				// Show square
-				if ($pagenb == $pageposbeforeprintlines) {
-					$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforinfotot - $heightforfreetext - $heightforfooter, 0, $outputlangs, $hidetop, 0, $object->multicurrency_code, $outputlangsbis);
-				} else {
-					$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforinfotot - $heightforfreetext - $heightforfooter, 0, $outputlangs, 1, 0, $object->multicurrency_code, $outputlangsbis);
-				}
-				$bottomlasttab = $this->page_hauteur - $heightforinfotot - $heightforfreetext - $heightforfooter + 1;
-
-				// Display infos area
-				//$posy = $this->drawInfoTable($pdf, $object, $bottomlasttab, $outputlangs);
-
-				// Display total zone
-				//$posy = $this->drawTotalTable($pdf, $object, $deja_regle, $bottomlasttab, $outputlangs);
-
-				// Display payment area
-				/*
-				if ($deja_regle)
-				{
-					$posy = $this->drawPaymentsTable($pdf, $object, $posy, $outputlangs);
-				}
-				*/
-
-				// Pagefoot
+				// Footer
 				$this->_pagefoot($pdf, $object, $outputlangs);
-				if (method_exists($pdf, 'AliasNbPages')) {
-					$pdf->AliasNbPages();
+
+				if($voletInfo['model'] == 6) {
+					$pdf->AddPage();
+					$pagenb++;
+					$pagecount = $pdf->setSourceFile($conf->formationhabilitation->dir_output.'/'.$object->element.'/Autorisation.pdf');
+					$pdf->useTemplate($pdf->importPage(1));
 				}
 
 				$pdf->Close();
 
 				$pdf->Output($file, 'F');
 
-				// Add pdfgeneration hook
-				$hookmanager->initHooks(array('pdfgeneration'));
-				$parameters = array('file'=>$file, 'object'=>$object, 'outputlangs'=>$outputlangs);
-				global $action;
-				$reshook = $hookmanager->executeHooks('afterPDFCreation', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
-				if ($reshook < 0) {
-					$this->error = $hookmanager->error;
-					$this->errors = $hookmanager->errors;
+				if (!empty($conf->global->MAIN_UMASK)) {
+					@chmod($file, octdec($conf->global->MAIN_UMASK));
 				}
 
-				dolChmod($file);
+					$this->result = array('fullpath'=>$file);
 
-				$this->result = array('fullpath'=>$file);
-
-				return 1; // No error
+					return 1; // No error
 			} else {
 				$this->error = $langs->transnoentities("ErrorCanNotCreateDir", $dir);
 				return 0;
@@ -832,14 +365,14 @@ class pdf_standard_volet extends ModelePDFVolet
 	public static function liste_modeles($db, $maxfilenamelength = 0)
 	{
 		// phpcs:enable
-		return parent::liste_modeles($db, $maxfilenamelength); // TODO: Change the autogenerated stub
+		return parent::liste_modeles($db, $maxfilenamelength); 
 	}
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.PublicUnderscore
 	/**
 	 *   Show table for lines
 	 *
-	 *   @param		tcpdf		$pdf     		Object PDF
+	 *   @param		tcpdf			$pdf     		Object PDF
 	 *   @param		string		$tab_top		Top position of table
 	 *   @param		string		$tab_height		Height of table (rectangle)
 	 *   @param		int			$nexY			Y (not used)
@@ -869,7 +402,7 @@ class pdf_standard_volet extends ModelePDFVolet
 
 		if (empty($hidetop)) {
 			$titre = $outputlangs->transnoentities("AmountInCurrency", $outputlangs->transnoentitiesnoconv("Currency".$currency));
-			if (getDolGlobalInt('PDF_USE_ALSO_LANGUAGE_CODE') && is_object($outputlangsbis)) {
+			if (!empty($conf->global->PDF_USE_ALSO_LANGUAGE_CODE) && is_object($outputlangsbis)) {
 				$titre .= ' - '.$outputlangsbis->transnoentities("AmountInCurrency", $outputlangsbis->transnoentitiesnoconv("Currency".$currency));
 			}
 
@@ -877,8 +410,8 @@ class pdf_standard_volet extends ModelePDFVolet
 			$pdf->MultiCell(($pdf->GetStringWidth($titre) + 3), 2, $titre);
 
 			//$conf->global->MAIN_PDF_TITLE_BACKGROUND_COLOR='230,230,230';
-			if (getDolGlobalString('MAIN_PDF_TITLE_BACKGROUND_COLOR')) {
-				$pdf->Rect($this->marge_gauche, $tab_top, $this->page_largeur - $this->marge_droite - $this->marge_gauche, $this->tabTitleHeight, 'F', null, explode(',', getDolGlobalString('MAIN_PDF_TITLE_BACKGROUND_COLOR')));
+			if (!empty($conf->global->MAIN_PDF_TITLE_BACKGROUND_COLOR)) {
+				$pdf->Rect($this->marge_gauche, $tab_top, $this->page_largeur - $this->marge_droite - $this->marge_gauche, $this->tabTitleHeight, 'F', null, explode(',', $conf->global->MAIN_PDF_TITLE_BACKGROUND_COLOR));
 			}
 		}
 
@@ -900,34 +433,23 @@ class pdf_standard_volet extends ModelePDFVolet
 	/**
 	 *  Show top header of page.
 	 *
-	 *  @param	TCPDF		$pdf     		Object PDF
-	 *  @param  Volet	$object     	Object to show
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  Volet		$object     	Object to show
 	 *  @param  int	    	$showaddress    0=no, 1=yes
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
-	 *  @return	float|int
+	 *  @return	void
 	 */
 	protected function _pagehead(&$pdf, $object, $showaddress, $outputlangs, $outputlangsbis = null)
 	{
-		// phpcs:enable
-		global $conf, $langs;
+		global $conf, $langs, $db, $object;
 
-		$ltrdirection = 'L';
-		if ($outputlangs->trans("DIRECTION") == 'rtl') {
-			$ltrdirection = 'R';
-		}
-
-		// Load traductions files required by page
-		$outputlangs->loadLangs(array("main", "bills", "propal", "companies"));
+		$user_static = new User($db);
+		$user_static->fetch($object->fk_user);
 
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
 		pdf_pagehead($pdf, $outputlangs, $this->page_hauteur);
-
-		// Show Draft Watermark
-		if (getDolGlobalString('FORMATIONHABILITATION_DRAFT_WATERMARK') && $object->statut == $object::STATUS_DRAFT) {
-			pdf_watermark($pdf, $outputlangs, $this->page_hauteur, $this->page_largeur, 'mm', dol_escape_htmltag(getDolGlobalString('FORMATIONHABILITATION_DRAFT_WATERMARK')));
-		}
 
 		$pdf->SetTextColor(0, 0, 60);
 		$pdf->SetFont('', 'B', $default_font_size + 3);
@@ -937,227 +459,569 @@ class pdf_standard_volet extends ModelePDFVolet
 		$posy = $this->marge_haute;
 		$posx = $this->page_largeur - $this->marge_droite - $w;
 
-		$pdf->SetXY($this->marge_gauche, $posy);
+		$voletInfo = $object->getVoletInfo($object->numvolet);
 
-		// Logo
-		if (!getDolGlobalInt('PDF_DISABLE_MYCOMPANY_LOGO')) {
-			if ($this->emetteur->logo) {
-				$logodir = $conf->mycompany->dir_output;
-				if (!empty(getMultidirOutput($object, 'mycompany'))) {
-					$logodir = getMultidirOutput($object, 'mycompany');
-				}
-				if (!getDolGlobalInt('MAIN_PDF_USE_LARGE_LOGO')) {
-					$logo = $logodir.'/logos/thumbs/'.$this->emetteur->logo_small;
-				} else {
-					$logo = $logodir.'/logos/'.$this->emetteur->logo;
-				}
-				if (is_readable($logo)) {
-					$height = pdf_getHeightForLogo($logo);
-					$pdf->Image($logo, $this->marge_gauche, $posy, 0, $height); // width=0 (auto)
-				} else {
-					$pdf->SetTextColor(200, 0, 0);
-					$pdf->SetFont('', 'B', $default_font_size - 2);
-					$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorLogoFileNotFound", $logo), 0, 'L');
-					$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorGoToGlobalSetup"), 0, 'L');
-				}
-			} else {
-				$text = $this->emetteur->name;
-				$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
-			}
-		}
-
-		$pdf->SetFont('', 'B', $default_font_size + 3);
-		$pdf->SetXY($posx, $posy);
-		$pdf->SetTextColor(0, 0, 60);
-		$title = $outputlangs->transnoentities("PdfTitle");
-		if (getDolGlobalInt('PDF_USE_ALSO_LANGUAGE_CODE') && is_object($outputlangsbis)) {
-			$title .= ' - ';
-			$title .= $outputlangsbis->transnoentities("PdfTitle");
-		}
-		$pdf->MultiCell($w, 3, $title, '', 'R');
+		$userField = new UserField($this->db);
+		$userField->id = $user_static->id;
+		$userField->table_element = 'donneesrh_Medecinedutravail';
+		$userField->fetch_optionals();
 
 		$pdf->SetFont('', 'B', $default_font_size);
-
-		$posy += 5;
-		$pdf->SetXY($posx, $posy);
-		$pdf->SetTextColor(0, 0, 60);
-		$textref = $outputlangs->transnoentities("Ref")." : ".$outputlangs->convToOutputCharset($object->ref);
-		if ($object->statut == $object::STATUS_DRAFT) {
-			$pdf->SetTextColor(128, 0, 0);
-			$textref .= ' - '.$outputlangs->transnoentities("NotValidated");
+		$pdf->writeHTML('<h4 style="text-align: center; border: 1px black solid;">VOLET '.($voletInfo['numero'] ? $voletInfo['numero'].' - ' : '- ').$voletInfo['label'].'</h2>');
+		if($voletInfo['model'] != 1) {
+			$pdf->SetFont('', '', $default_font_size);
+			$pdf->writeHTML('<p style="border-bottom: 1px black solid;">NOM : '.$user_static->lastname.'</p>');
+			$pdf->writeHTML('<p style="border-bottom: 1px black solid;">PRENOMS : '.$user_static->firstname." ".$userField->array_options['options_secondprenom'].'</p>');
 		}
-		$pdf->MultiCell($w, 4, $textref, '', 'R');
+		$pdf->SetFont('', 'B', $default_font_size);
+		$pdf->writeHTML('<p style="border-bottom: 1px black solid;">CARNET D\'ACCES N° : '.$userField->array_options['options_carnetdaccsn'].'</p>');
 
-		$posy += 1;
-		$pdf->SetFont('', '', $default_font_size - 2);
+		//return $top_shift;
+	}
 
-		if ($object->ref_client) {
-			$posy += 4;
-			$pdf->SetXY($posx, $posy);
-			$pdf->SetTextColor(0, 0, 60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("RefCustomer")." : ".dol_trunc($outputlangs->convToOutputCharset($object->ref_client), 65), '', 'R');
-		}
+	/**
+	 *  Show Body for identity volet
+	 *
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  Volet		$object     	Object to show
+	 *  @param  Translate	$outputlangs	Object lang for output
+	 *  @param  Translate	$outputlangsbis	Object lang for output bis
+	 *  @return	void
+	 */
+	protected function pagebodyidentity(&$pdf, $object, $outputlangs, $outputlangsbis = null)
+	{
+		global $conf, $langs, $db, $object;
 
-		if (getDolGlobalInt('PDF_SHOW_PROJECT_TITLE')) {
-			$object->fetch_projet();
-			if (!empty($object->project->ref)) {
-				$posy += 3;
-				$pdf->SetXY($posx, $posy);
-				$pdf->SetTextColor(0, 0, 60);
-				$pdf->MultiCell($w, 3, $outputlangs->transnoentities("Project")." : ".(empty($object->project->title) ? '' : $object->project->title), '', 'R');
-			}
-		}
+		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
-		if (getDolGlobalInt('PDF_SHOW_PROJECT')) {
-			$object->fetch_projet();
-			if (!empty($object->project->ref)) {
-				$outputlangs->load("projects");
-				$posy += 3;
-				$pdf->SetXY($posx, $posy);
-				$pdf->SetTextColor(0, 0, 60);
-				$pdf->MultiCell($w, 3, $outputlangs->transnoentities("RefProject")." : ".(empty($object->project->ref) ? '' : $object->project->ref), '', 'R');
-			}
-		}
-
-		$posy += 4;
-		$pdf->SetXY($posx, $posy);
 		$pdf->SetTextColor(0, 0, 60);
 
-		$title = $outputlangs->transnoentities("Date");
-		if (getDolGlobalInt('PDF_USE_ALSO_LANGUAGE_CODE') && is_object($outputlangsbis)) {
-			$title .= ' - '.$outputlangsbis->transnoentities("Date");
-		}
-		$pdf->MultiCell($w, 3, $title." : ".dol_print_date($object->date, "day", false, $outputlangs, true), '', 'R');
+		$user_static = new User($db);
+		$user_static->fetch($object->fk_user);
+		$extrafields = new Extrafields($this->db);
+		$table_element = 'donneesrh_Etatcivil';
+		$extrafields->fetch_name_optionals_label($table_element, false);
+		$userField = new UserField($this->db);
+		$userField->id = $user_static->id;
+		$userField->table_element = 'donneesrh_Etatcivil';
+		$userField->fetch_optionals();
 
-		if (!getDolGlobalString('MAIN_PDF_HIDE_CUSTOMER_CODE') && !empty($object->thirdparty->code_client)) {
-			$posy += 3;
-			$pdf->SetXY($posx, $posy);
-			$pdf->SetTextColor(0, 0, 60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CustomerCode")." : ".$outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
+		$gender = '';
+		if($langs->transnoentities($user_static->gender) == 'man') {
+			$gender = 'M';
 		}
-
-		// Get contact
-		if (getDolGlobalInt('DOC_SHOW_FIRST_SALES_REP')) {
-			$arrayidcontact = $object->getIdContact('internal', 'SALESREPFOLL');
-			if (count($arrayidcontact) > 0) {
-				$usertmp = new User($this->db);
-				$usertmp->fetch($arrayidcontact[0]);
-				$posy += 4;
-				$pdf->SetXY($posx, $posy);
-				$pdf->SetTextColor(0, 0, 60);
-				$pdf->MultiCell($w, 3, $langs->transnoentities("SalesRepresentative")." : ".$usertmp->getFullName($langs), '', 'R');
-			}
+		elseif($langs->transnoentities($user_static->gender) == 'women') {
+			$gender = 'F';
 		}
 
-		$posy += 1;
+		$departement = $extrafields->showOutputField('departementnaissance', $userField->array_options['options_departementnaissance'], '', $table_element);
 
-		$top_shift = 0;
-		// Show list of linked objects
-		$current_y = $pdf->getY();
-		$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, $w, 3, 'R', $default_font_size);
-		if ($current_y < $pdf->getY()) {
-			$top_shift = $pdf->getY() - $current_y;
+		$pdf->SetFont('', '', $default_font_size);
+		$pdf->writeHTML('<p style="">NOM : '.$user_static->lastname.'</p><br>');
+		$pdf->writeHTML('<p style="">NOM (de jeune fille) : '.$userField->array_options['options_nomdejeunefille'].'</p><br>');
+		$pdf->writeHTML('<p style="">PRENOMS : '.$user_static->firstname." ".$userField->array_options['options_secondprenom'].'</p><br>');
+		$pdf->writeHTML('<p style="">Né(e) le : '.dol_print_date($userField->array_options['options_datedenaissance'], "%d/%m/%Y").'</p>');
+		$pdf->Rect(60, 65, 28, 35, '', array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))));
+		$pdf->writeHTML('<p style="">à : '.$userField->array_options['options_lieunaissance'].'</p>');
+		$pdf->writeHTML('<p style="">Département : '.$departement.'</p><br>');
+		$pdf->writeHTML('<p style="">SEXE (M.F.) : '.$gender.'</p><br>');
+
+
+		$userField->table_element = 'donneesrh_Medecinedutravail';
+		$userField->fetch_optionals();
+
+		$pdf->writeHTML('<p style="">DELIVRE LE : '.dol_print_date($userField->array_options['options_datedattribution'], "%d/%m/%Y").'</p><br>');
+
+		$pdf->SetFont('', '', $default_font_size - 3);
+		$pdf->setCellPadding(1.3);
+		$pdf->MultiCell(85, 0, 'Ce carnet d\'accès est affecté exclusivement à son titulaire pour toute sa vie professionnelle. Il doit être conservé par son titulaire en cas de changement d\'employeur', array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 'C', false, 1, '', '', true, 0, false);
+	}
+
+	/**
+	 *  Show Body for formation volet
+	 *
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  Volet		$object     	Object to show
+	 *  @param  Translate	$outputlangs	Object lang for output
+	 *  @param  Translate	$outputlangsbis	Object lang for output bis
+	 *  @return	void
+	 */
+	protected function pagebodyformation(&$pdf, $object, $outputlangs, $outputlangsbis = null)
+	{
+		global $conf, $langs, $db, $object;
+
+		$nb_formation = 0;
+		$formation = new Formation($db);
+		$userformation = new UserFormation($db);
+		$voletInfo = $object->getVoletInfo($object->numvolet);
+		$arrayformations = $formation->getFormationsByVolet($object->numvolet);
+
+		$nb_initial = $voletInfo['nb_initial'];
+		$nb_recyclage = $voletInfo['nb_recyclage'];
+		$nb_passerelle = $voletInfo['nb_passerelle'];
+		$nb_total = $nb_initial + $nb_recyclage + $nb_passerelle;
+
+		$default_font_size = pdf_getPDFFontSize($outputlangs);
+		$pdf->SetTextColor(0, 0, 60);
+
+		$html = 
+		'<table cellpadding="2" cellspacing="0" border="1" align="center" style="font-size: 6pt">
+			<thead>
+				<tr>
+					<td colspan="5" style="font-size: 9pt">'.$voletInfo['long_label'].'</td>
+				</tr>
+				<tr>
+					<td width="30%" colspan="2"><br><br>DESIGNATION DE LA FORMATION</td>
+					<td width="20%"><br><br>DATE DE DELIVRANCE</td>
+					<td width="30%"><br><br><br>N° DE CERTIFICAT</td>
+					<td width="20%">ORGANISME DE FORMATION CERTIF CEFRI N°</td>
+				</tr>
+			</thead>
+			<tbody>';
+
+			foreach($arrayformations as $_formation) {
+				$formationid = $_formation['id'];
+				$formationsbyUser = $userformation->getFormationsByUser($object->fk_user, $formationid, $nb_initial, $nb_recyclage, $nb_passerelle);
+				$formation_title = 0;
+
+				for($i = 0; $i < $nb_initial; $i++) {
+					$html .= 
+					'<tr>';
+					if(!$formation_title) {
+						$html .= 
+						'<td width="10%" rowspan="'.$nb_total.'"><br><br><br><br>'.explode(" ", $_formation['label'])[0].'</td>';
+						$formation_title = 1;
+					}
+					if($i == 0) {
+						$html .=
+						'<td width="20%" rowspan="'.$nb_initial.'">Initial</td>';
+					}
+					$html .=
+						'<td width="20%">'.dol_print_date($formationsbyUser[1]['date'][$i], '%d/%m/%Y').'</td>
+						<td width="30%">'.$formationsbyUser[1]['certificat'][$i].'</td>
+						<td width="20%">'.$formationsbyUser[1]['fk_societe'][$i].'</td>
+					</tr>';
+				}
+
+				for($i = 0; $i < $nb_passerelle; $i++) {
+					$html .= 
+					'<tr>';
+					if(!$formation_title) {
+						$html .= 
+						'<td width="10%" rowspan="'.$nb_total.'"><br><br><br><br>'.$_formation['label'].'</td>';
+						$formation_title = 1;
+					}
+					if($i == 0) {
+						$html .=
+						'<td width="20%" rowspan="'.$nb_passerelle.'">Passerelle</td>';
+					}
+					$html .=
+						'<td width="20%">'.dol_print_date($formationsbyUser[3]['date'][$i], '%d/%m/%Y').'</td>
+						<td width="30%">'.$formationsbyUser[3]['certificat'][$i].'</td>
+						<td width="20%">'.$formationsbyUser[3]['fk_societe'][$i].'</td>
+					</tr>';
+				}
+
+				for($i = 0; $i < $nb_recyclage; $i++) {
+					$html .= 
+					'<tr>';
+					if(!$formation_title) {
+						$html .= 
+						'<td width="10%" rowspan="'.$nb_total.'"><br><br><br><br>'.$_formation['label'].'</td>';
+						$formation_title = 1;
+					}
+					if($i == 0) {
+						$html .=
+						'<td width="20%" rowspan="'.$nb_recyclage.'">Recyclage</td>';
+					}
+					$html .=
+						'<td width="20%">'.dol_print_date($formationsbyUser[2]['date'][$i], '%d/%m/%Y').'</td>
+						<td width="30%">'.$formationsbyUser[2]['certificat'][$i].'</td>
+						<td width="20%">'.$formationsbyUser[2]['fk_societe'][$i].'</td>
+					</tr>';
+				}
+			}
+
+		$html .= 
+			'</tbody>
+		</table>';
+			
+		$pdf->SetFont('', '', $default_font_size - 1);
+		$pdf->writeHTML($html, true, false, false, false, '');
+	}
+
+	/**
+	 *  Show Body for entreprise volet
+	 *
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  Volet		$object     	Object to show
+	 *  @param  Translate	$outputlangs	Object lang for output
+	 *  @param  Translate	$outputlangsbis	Object lang for output bis
+	 *  @return	void
+	 */
+	protected function pagebodyentreprise(&$pdf, $object, $outputlangs, $outputlangsbis = null)
+	{
+		global $conf, $langs, $db, $object;
+
+		$societe = new Societe($db);
+		$societe->fetch(157);
+		$default_font_size = pdf_getPDFFontSize($outputlangs) - 2;
+	
+		$pdf->SetTextColor(0, 0, 60);
+		$pdf->setCellHeightRatio(0.6);
+		$pdf->SetFont('', '', $default_font_size);
+
+		$pdf->writeHTML('<p style="">EMPLOYEUR : '.$societe->name.'</p><br>');
+		$pdf->writeHTML('<p style="">SIRET : '.$societe->idprof2.'</p><br>');
+		$pdf->writeHTML('<p style="">ADRESSE : <br><br>'.$chaine_coupee = wordwrap($societe->address, 20, "<br><br>", false).'<br><br>'.$societe->zip.', '.$societe->town.'<br></p><br>');
+		$pdf->writeHTML('<p style="">TEL : '.$societe->phone.'</p><br>');
+		$pdf->writeHTML('<p style="">ORGANISME CERTIFIANT : '.$societe->phone.'</p><br>');
+		$pdf->writeHTML('<p style="">N° CERTIF : '.$societe->phone.'</p><br>');
+		$pdf->writeHTML('<p style="border-bottom: 1px black solid;">CEFRI : '.$societe->phone.'</p><br>');
+
+		$pdf->SetFont('', '', $default_font_size - 3);
+		$pdf->writeHTML('(Pour les Intérimaires)<br><br>');
+
+		$pdf->SetFont('', '', $default_font_size);
+		$pdf->writeHTML('<p style="">EMPLOYEUR UTILISATRICE : <br><br>'.$societe->name.'</p><br><br>');
+		$pdf->writeHTML('<p style="">SIRET : '.$societe->idprof2.'</p><br>');
+		$pdf->writeHTML('<p style="">ADRESSE : <br><br>'.$chaine_coupee = wordwrap($societe->address, 20, "<br><br>", false).'<br><br>'.$societe->zip.', '.$societe->town.'<br></p><br>');
+		$pdf->writeHTML('<p style="">TEL : '.$societe->phone.'</p><br>');
+		$pdf->writeHTML('<p style="">ORGANISME CERTIFIANT : '.$societe->phone.'</p><br>');
+		$pdf->writeHTML('<p style="">N° CERTIF : '.$societe->phone.'</p><br>');
+		$pdf->writeHTML('<p>CEFRI : '.$societe->phone.'</p><br>');
+
+		$pdf->setCellHeightRatio(1.25);
+		$pdf->SetFont('', 'B', $default_font_size - 2);
+		$cachet = '<h3>CACHET</h3><p><span style="font-size: 8px"><strong>'.$societe->name."</strong></span><br>".$societe->address."<br>".$societe->zip." ".$societe->town."<br> Tél. : ".$societe->phone."<br>Fax : ".$societe->phone."<br>SIRET ".$societe->idprof2."<br>Code TVA : ".$societe->tva_intra."</p>";
+		$pdf->writeHTMLCell(40, 30, 55, 45, $cachet, array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+		$pdf->writeHTMLCell(40, 30, 55, 95, $cachet, array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+
+	}
+
+	/**
+	 *  Show Body for habilitation volet
+	 *
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  Volet		$object     	Object to show
+	 *  @param  Translate	$outputlangs	Object lang for output
+	 *  @param  Translate	$outputlangsbis	Object lang for output bis
+	 *  @return	void
+	 */
+	protected function pagebodyhabilitation(&$pdf, $object, $outputlangs, $outputlangsbis = null, $pagenb)
+	{
+		global $conf, $langs, $db, $object;
+
+		$user_static = new User($db);
+		$user_static->fetch($object->fk_user);
+		$nb_habilitation = 0;
+		$nb_habilitation_max = 5;
+		$habilitation = new Habilitation($db);
+		$voletInfo = $object->getVoletInfo($object->numvolet);
+		$domaineapplicationInfo = $object->getAllDomaineApplication();
+		//$arrayhabilitations = $userhabilitation->getHabilitationsByUser($object->id, $object->numvolet);
+		$object->getLinkedLinesArray();
+		$default_font_size = pdf_getPDFFontSize($outputlangs);
+		$pdf->SetTextColor(0, 0, 60);
+
+		$x = $pdf->getX();
+		$y = $pdf->getY();
+		//var_dump($pdf->GetLineWidth());
+		$pdf->writeHTMLCell(85, 8, $x, $y, '<span>QUALIFICATION PROFESSIONNELLE (Métier) : <span><br><span align="center"><strong>'.$user_static->job."</strong></span>", array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 1, false, true, '', false);
+		
+					
+		$pdf->SetFont('', '', $default_font_size - 1);
+		$pdf->MultiCell(0, 1, '');
+		$html = "";
+		foreach($object->lines as $userhabilitation) {
+			$habilitation->fetch($userhabilitation->fk_habilitation);
+
+			if($nb_habilitation % $nb_habilitation_max == 0) {
+				if($nb_habilitation > 0) {
+					// Footer
+					$this->writeCachet($pdf, $object, $outputlangs, $outputlangsbis);
+
+					$pdf->AddPage();
+					$pagenb++;
+
+					// Head
+					$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
+
+					$pdf->writeHTMLCell(85, 8, $x, $y, '<span>QUALIFICATION PROFESSIONNELLE (Métier) : <span><br><span align="center"><strong>'.$user_static->job."</strong></span>", array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 1, false, true, '', false);
+
+					$pdf->SetFont('', '', $default_font_size - 1);
+					$pdf->SetTextColor(0, 0, 60);
+					$pdf->MultiCell(0, 1, '');
+				}
+				$html .= 
+				'<table cellpadding="2" cellspacing="0" border="1" align="center">
+					<thead>
+						<tr>
+							<td width="35%" style="font-size: 7pt">HABILITATION</td>
+							<td width="30%" style="font-size: 7pt">FIN DE VALIDITE</td>
+							<td width="35%" style="font-size: 6pt">DOMAINE D\'APPLICATION</td>
+						</tr>
+					</thead>
+					<tbody>';
+			}
+
+			$html .= 
+			'<tr>
+				<td width="35%">'.$habilitation->label.'</td>
+				<td width="30%">'.dol_print_date($userhabilitation->date_fin_habilitation, '%d/%m/%Y').'</td>
+				<td width="35%" style="font-size: 8pt">'.$domaineapplicationInfo[$userhabilitation->domaineapplication].'</td>
+			</tr>';
+
+			$nb_habilitation++;
+
+			if($nb_habilitation % $nb_habilitation_max == 0) {
+				$html .= 
+					'</tbody>
+				</table>';
+				$pdf->writeHTML($html, true, false, false, false, '');
+				$html = "";
+			}
 		}
 
-		if ($showaddress) {
-			// Sender properties
-			$carac_emetteur = pdf_build_address($outputlangs, $this->emetteur, $object->thirdparty, '', 0, 'source', $object);
-
-			// Show sender
-			$posy = getDolGlobalInt('MAIN_PDF_USE_ISO_LOCATION') ? 40 : 42;
-			$posy += $top_shift;
-			$posx = $this->marge_gauche;
-			if (getDolGlobalInt('MAIN_INVERT_SENDER_RECIPIENT')) {
-				$posx = $this->page_largeur - $this->marge_droite - 80;
-			}
-
-			$hautcadre = getDolGlobalInt('MAIN_PDF_USE_ISO_LOCATION') ? 38 : 40;
-			$widthrecbox = getDolGlobalInt('MAIN_PDF_USE_ISO_LOCATION') ? 92 : 82;
-
-
-			// Show sender frame
-			if (!getDolGlobalString('MAIN_PDF_NO_SENDER_FRAME')) {
-				$pdf->SetTextColor(0, 0, 0);
-				$pdf->SetFont('', '', $default_font_size - 2);
-				$pdf->SetXY($posx, $posy - 5);
-				$pdf->MultiCell($widthrecbox, 5, $outputlangs->transnoentities("BillFrom").":", 0, $ltrdirection);
-				$pdf->SetXY($posx, $posy);
-				$pdf->SetFillColor(230, 230, 230);
-				$pdf->MultiCell($widthrecbox, $hautcadre, "", 0, 'R', 1);
-				$pdf->SetTextColor(0, 0, 60);
-			}
-
-			// Show sender name
-			if (!getDolGlobalString('MAIN_PDF_HIDE_SENDER_NAME')) {
-				$pdf->SetXY($posx + 2, $posy + 3);
-				$pdf->SetFont('', 'B', $default_font_size);
-				$pdf->MultiCell($widthrecbox - 2, 4, $outputlangs->convToOutputCharset($this->emetteur->name), 0, $ltrdirection);
-				$posy = $pdf->getY();
-			}
-
-			// Show sender information
-			$pdf->SetXY($posx + 2, $posy);
-			$pdf->SetFont('', '', $default_font_size - 1);
-			$pdf->MultiCell($widthrecbox - 2, 4, $carac_emetteur, 0, $ltrdirection);
-
-			// If BILLING contact defined, we use it
-			$usecontact = false;
-			$arrayidcontact = $object->getIdContact('external', 'BILLING');
-			if (count($arrayidcontact) > 0) {
-				$usecontact = true;
-				$result = $object->fetch_contact($arrayidcontact[0]);
-			}
-
-			// Recipient name
-			if ($usecontact && $object->contact->socid != $object->thirdparty->id && getDolGlobalInt('MAIN_USE_COMPANY_NAME_OF_CONTACT')) {
-				$thirdparty = $object->contact;
-			} else {
-				$thirdparty = $object->thirdparty;
-			}
-
-			if (is_object($thirdparty)) {
-				$carac_client_name = pdfBuildThirdpartyName($thirdparty, $outputlangs);
-			}
-
-			$mode = 'target';
-			$carac_client = pdf_build_address($outputlangs, $this->emetteur, $object->thirdparty, ($usecontact ? $object->contact : ''), $usecontact, $mode, $object);
-
-			// Show recipient
-			$widthrecbox = getDolGlobalInt('MAIN_PDF_USE_ISO_LOCATION') ? 92 : 100;
-			if ($this->page_largeur < 210) {
-				$widthrecbox = 84; // To work with US executive format
-			}
-			$posy = getDolGlobalInt('MAIN_PDF_USE_ISO_LOCATION') ? 40 : 42;
-			$posy += $top_shift;
-			$posx = $this->page_largeur - $this->marge_droite - $widthrecbox;
-			if (getDolGlobalInt('MAIN_INVERT_SENDER_RECIPIENT')) {
-				$posx = $this->marge_gauche;
-			}
-
-			// Show recipient frame
-			if (!getDolGlobalString('MAIN_PDF_NO_RECIPENT_FRAME')) {
-				$pdf->SetTextColor(0, 0, 0);
-				$pdf->SetFont('', '', $default_font_size - 2);
-				$pdf->SetXY($posx + 2, $posy - 5);
-				$pdf->MultiCell($widthrecbox, 5, $outputlangs->transnoentities("To").":", 0, $ltrdirection);
-				$pdf->Rect($posx, $posy, $widthrecbox, $hautcadre);
-			}
-
-			// Show recipient name
-			$pdf->SetXY($posx + 2, $posy + 3);
-			$pdf->SetFont('', 'B', $default_font_size);
-			$pdf->MultiCell($widthrecbox, 2, $carac_client_name, 0, $ltrdirection);
-
-			$posy = $pdf->getY();
-
-			// Show recipient information
-			$pdf->SetFont('', '', $default_font_size - 1);
-			$pdf->SetXY($posx + 2, $posy);
-			$pdf->MultiCell($widthrecbox, 4, $carac_client, 0, $ltrdirection);
+		if($nb_habilitation % $nb_habilitation_max != 0) {
+			$html .= 
+					'</tbody>
+				</table>';
+			$pdf->writeHTML($html, true, false, false, false, '');
 		}
 
-		$pdf->SetTextColor(0, 0, 0);
-		return $top_shift;
+		//$pdf->SetFont('', 'B', $default_font_size - 2);
+		$this->writeCachet($pdf, $object, $outputlangs, $outputlangsbis);
+	}
+
+	/**
+	 *  Show Body for medicale volet
+	 *
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  Volet		$object     	Object to show
+	 *  @param  Translate	$outputlangs	Object lang for output
+	 *  @param  Translate	$outputlangsbis	Object lang for output bis
+	 *  @return	void
+	 */
+	protected function pagebodymedical(&$pdf, $object, $outputlangs, $outputlangsbis = null)
+	{
+		global $conf, $langs, $db, $object;
+
+		$societe = new Societe($db);
+		$societe->fetch(157);
+		
+		$extrafields = new Extrafields($this->db);
+		$table_element = 'donneesrh_Medecinedutravail';
+		$extrafields->fetch_name_optionals_label($table_element, false);
+		$userField = new UserField($this->db);
+		$userField->id = $object->fk_user;
+		$userField->table_element = $table_element;
+		$userField->fetch_optionals();
+		$default_font_size = pdf_getPDFFontSize($outputlangs) - 2;
+
+		$medecinedutravailid = $userField->array_options['options_medecinedutravail'];
+		$medecinedutravail = new Societe($db);
+		$medecinedutravail->fetch($medecinedutravailid);
+
+		$docteur = new Contact($db);
+		$docteur->fetch($userField->array_options['options_docteur']);
+		$docteurname = "Dr ".$docteur->lastname." ".$docteur->firstname;
+
+		$pdf->SetTextColor(0, 0, 60);
+		$pdf->SetFont('', '', $default_font_size);
+		
+		$pdf->setCellHeightRatio(0.8);
+		$pdf->writeHTML('<p style="">NOM DU MEDECIN DU TRAVAIL : '.$docteurname.'</p><br><br>');
+		$pdf->setCellHeightRatio(0.6);
+		$pdf->writeHTML('<p style="">NOM DU SERVICE DE<br><br>MEDECINE DU TRAVAIL<br><br>DE L\'EMPLOYEUR CHARGE<br><br>DU SUIVI MEDICAL : <br>');
+		$pdf->setCellHeightRatio(1);
+		$pdf->writeHTML('<p style="">'.$medecinedutravail->name.'</p>');
+		$pdf->writeHTML('<p style="">'.$medecinedutravail->address.'</p>');
+		$pdf->writeHTML('<p style="">'.'10550200'.'</p>');
+		$pdf->writeHTML('<p style="">'.$medecinedutravail->zip.', '.$medecinedutravail->town.'</p>');
+		$pdf->writeHTML('<p style="">TEL : '.$medecinedutravail->phone.'</p><br>');
+		$pdf->setCellHeightRatio(0.6);
+
+		$x = $pdf->getX();
+		$y = $pdf->getY();
+		$pdf->writeHTML('<p style="border-bottom: 1px black solid;">SERVICE HABILITE SITE NUCLEAIRE : </p><br>');
+		$xafter = $pdf->getX();
+		$yafter = $pdf->getY();
+		$pdf->SetXY($x + 55, $y);
+		$pdf->Cell(7, 0, 'Oui', 0, 0, 'R', false, '', 0, false, 'T', 'T');
+		$pdf->CheckBox('yes', 3, true, array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
+		$pdf->Cell(7, 0, 'Non', 0, 0, 'R', false, '', 0, false, 'T', 'T');
+		$pdf->CheckBox('no', 3, false, array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
+		$pdf->writeHTML('<br>');
+
+		$pdf->SetXY($xafter, $yafter);
+
+		$pdf->setCellHeightRatio(0.8);
+		$pdf->writeHTML('<p style="">*NOM DU MEDECIN DU TRAVAIL : '.$docteurname.'</p><br><br>');
+		$pdf->setCellHeightRatio(0.6);
+		$pdf->writeHTML('<p style="">NOM DU SERVICE DE<br><br>MEDECINE DU TRAVAIL<br><br>DE L\'EMPLOYEUR CHARGE<br><br>DU SUIVI MEDICAL : <br>');
+		$pdf->setCellHeightRatio(1);
+		$pdf->writeHTML('<p style="">'.$medecinedutravail->name.'</p>');
+		$pdf->writeHTML('<p style="">'.$medecinedutravail->address.'</p>');
+		$pdf->writeHTML('<p style="">'.'10550200'.'</p>');
+		$pdf->writeHTML('<p style="">'.$medecinedutravail->zip.', '.$medecinedutravail->town.'</p>');
+		$pdf->writeHTML('<p style="">TEL : '.$medecinedutravail->phone.'</p><br>');
+		$pdf->setCellHeightRatio(0.6);
+		
+		$x = $pdf->getX();
+		$y = $pdf->getY();
+		$pdf->writeHTML('<p style="border-bottom: 1px black solid;">SERVICE HABILITE SITE NUCLEAIRE : </p><br>');
+		$xafter = $pdf->getX();
+		$yafter = $pdf->getY();
+		$pdf->SetXY($x + 55, $y);
+		$pdf->Cell(7, 0, 'Oui', 0, 0, 'R', false, '', 0, false, 'T', 'T');
+		$pdf->CheckBox('yes_interim', 3, true, array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
+		$pdf->Cell(7, 0, 'Non', 0, 0, 'R', false, '', 0, false, 'T', 'T');
+		$pdf->CheckBox('no_interim', 3, false, array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
+		$pdf->writeHTML('<br>');
+
+		$pdf->SetXY($xafter, $yafter);
+		$pdf->SetFont('', '', $default_font_size - 1);
+		$pdf->writeHTML('(*) Partie à renseigner par l\'entreprise utilisatrice dans le cas où l\'employeur est une entreprise de travail temporaire');
+
+		$pdf->setCellHeightRatio(1.25);
+		$pdf->SetFont('', 'B', $default_font_size - 2);
+		$cachet = '<h3>CACHET</h3><p><span style="font-size: 8px"><strong>'.$societe->name."</strong></span><br>".$societe->address."<br>".$societe->zip." ".$societe->town."<br> Tél. : ".$societe->phone."<br>Fax : ".$societe->phone."<br>SIRET ".$societe->idprof2."<br>Code TVA : ".$societe->tva_intra."</p>";
+		$pdf->writeHTMLCell(40, 30, 55, 50, $cachet, array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+		$pdf->writeHTMLCell(40, 30, 55, 95, $cachet, array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+
+	}
+
+	/**
+	 *  Show Body for autorisation volet
+	 *
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  Volet		$object     	Object to show
+	 *  @param  Translate	$outputlangs	Object lang for output
+	 *  @param  Translate	$outputlangsbis	Object lang for output bis
+	 *  @return	void
+	 */
+	protected function pagebodyautorisation(&$pdf, $object, $outputlangs, $outputlangsbis = null)
+	{
+		global $conf, $langs, $db, $object, $pagenb;
+
+		$nb_autorisation = 0;
+		$nb_autorisation_max = 4;
+		$autorisation = new Autorisation($db);
+		$voletInfo = $object->getVoletInfo($object->numvolet);
+		//$arrayautorisations = $userautorisation->getAutorisationsByUser($object->fk_user, $object->numvolet);
+		$domaineapplicationInfo = $object->getAllDomaineApplication();
+		$object->getLinkedLinesArray();
+		$default_font_size = pdf_getPDFFontSize($outputlangs);
+		$pdf->SetTextColor(0, 0, 60);
+
+		$default_font_size = pdf_getPDFFontSize($outputlangs);
+		$pdf->SetTextColor(0, 0, 60);
+
+		// $x = $pdf->getX();
+		// $y = $pdf->getY();
+		// $pdf->writeHTMLCell(85, 8, $x, $y, '<span>QUALIFICATION PROFESSIONNELLE (Métier) : <span><br><span align="center"><strong>'.$user_static->job."</strong></span>", array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 1, false, true, '', false);
+		
+					
+		$pdf->SetFont('', '', $default_font_size - 1);
+		$pdf->MultiCell(0, 1, '');
+		$html = "";
+		foreach($object->lines as $userautorisation) {
+			if($nb_autorisation % $nb_autorisation_max == 0) {
+				$autorisation->fetch($userautorisation->fk_autorisation);
+
+				if($nb_autorisation > 0) {
+					// Footer
+					$this->writeCachet($pdf, $object, $outputlangs, $outputlangsbis);
+
+					// Ajout de la page avec la liste des autorisations
+					$pdf->AddPage();
+					$pagenb++;
+					$pagecount = $pdf->setSourceFile($conf->formationhabilitation->dir_output.'/'.$object->element.'/Autorisation.pdf');
+					$pdf->useTemplate($pdf->importPage(1));
+
+					$pdf->AddPage();
+					$pagenb++;
+
+					// Head
+					$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
+
+					//$pdf->writeHTMLCell(85, 8, $x, $y, '<span>QUALIFICATION PROFESSIONNELLE (Métier) : <span><br><span align="center"><strong>'.$user_static->job."</strong></span>", array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 1, false, true, '', false);
+
+					$pdf->SetFont('', '', $default_font_size - 1);
+					$pdf->SetTextColor(0, 0, 60);
+					$pdf->MultiCell(0, 1, '');
+				}
+				$html .= 
+				'<table cellpadding="2" cellspacing="0" border="1" align="center">
+					<thead>
+						<tr>
+							<td width="35%" style="font-size: 7pt">AUTORISATION</td>
+							<td width="30%" style="font-size: 7pt">FIN DE VALIDITE</td>
+							<td width="35%" style="font-size: 6pt">DOMAINE D\'APPLICATION</td>
+						</tr>
+					</thead>
+					<tbody>';
+			}
+
+			$html .= 
+			'<tr>
+				<td width="35%">'.$autorisation->label.'</td>
+				<td width="30%">'.dol_print_date($userautorisation->date_fin_autorisation, '%d/%m/%Y').'</td>
+				<td width="35%" style="font-size: 8pt">'.$domaineapplicationInfo[$userautorisation->domaineapplication].'</td>
+			</tr>';
+
+			$nb_autorisation++;
+
+			if($nb_autorisation % $nb_autorisation_max == 0) {
+				$html .= 
+					'</tbody>
+				</table>';
+				$pdf->writeHTML($html, true, false, false, false, '');
+				$html = "";
+			}
+		}
+
+		if($nb_autorisation % $nb_autorisation_max != 0) {
+			$html .= 
+					'</tbody>
+				</table>';
+			$pdf->writeHTML($html, true, false, false, false, '');
+		}
+
+		//$pdf->SetFont('', 'B', $default_font_size - 2);
+		$this->writeCachet($pdf, $object, $outputlangs, $outputlangsbis);
+	}
+
+	/**
+	 *  Show Body for autorisation volet
+	 *
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  Volet		$object     	Object to show
+	 *  @param  Translate	$outputlangs	Object lang for output
+	 *  @param  Translate	$outputlangsbis	Object lang for output bis
+	 *  @return	void
+	 */
+	protected function writeCachet(&$pdf, $object, $outputlangs, $outputlangsbis = null)
+	{
+		global $db; 
+
+		$x = $pdf->getX();
+		$y = $pdf->getY();
+		$societe = new Societe($db);
+		$societe->fetch(157);
+		$user_static = new User($db);
+		$user_static->fetch($object->fk_user);
+
+		$cachet1 = '<span>Date : '.dol_print_date(dol_now(), '%d/%m/%Y').'</span><br><p style="font-size: 6.5pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>';
+		$pdf->writeHTMLCell(30, 35, $x, $y, $cachet1, array('LTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+
+		$cachet2 = '<span style="font-size: 6pt">Cachet et signature employeur ou entreprise utilisatrice</span><br><p style="font-size: 5pt"><span style="font-size: 7px"><strong>'.$societe->name."</strong></span><br>".$societe->address."<br>".$societe->zip." ".$societe->town."<br> Tél. : ".$societe->phone."<br>Fax : ".$societe->phone."<br>SIRET ".$societe->idprof2."<br>Code TVA : ".$societe->tva_intra."</p>";
+		$pdf->writeHTMLCell(25, 35, $x + 30, $y, $cachet2, array('RTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+
+		$signature = $user_static->firstname." ".$user_static->lastname;
+		$cachet3 = '<p>Signature intervenant</p>'.$signature;
+		$pdf->writeHTMLCell(30, 35, $x + 55, $y, $cachet3, array('RTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
 	}
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.PublicUnderscore
@@ -1165,7 +1029,7 @@ class pdf_standard_volet extends ModelePDFVolet
 	 *   	Show footer of page. Need this->emetteur object
 	 *
 	 *   	@param	TCPDF		$pdf     			PDF
-	 * 		@param	Object		$object				Object to show
+	 * 		@param	Volet		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
 	 *      @param	int			$hidefreetext		1=Hide free text
 	 *      @return	int								Return height of bottom margin including footer text
@@ -1173,8 +1037,8 @@ class pdf_standard_volet extends ModelePDFVolet
 	protected function _pagefoot(&$pdf, $object, $outputlangs, $hidefreetext = 0)
 	{
 		global $conf;
-		$showdetails = !getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS') ? 0 : getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS');
-		return pdf_pagefoot($pdf, $outputlangs, 'INVOICE_FREE_TEXT', $this->emetteur, $this->marge_basse, $this->marge_gauche, $this->page_hauteur, $object, $showdetails, $hidefreetext);
+		return 0;
+		//return pdf_pagefoot($pdf, $outputlangs, 'INVOICE_FREE_TEXT', $this->emetteur, $this->marge_basse, $this->marge_gauche, $this->page_hauteur, $object, $showdetails, $hidefreetext);
 	}
 
 	/**
@@ -1185,7 +1049,7 @@ class pdf_standard_volet extends ModelePDFVolet
 	 *  @param	int			   $hidedetails		Do not show line details
 	 *  @param	int			   $hidedesc		Do not show desc
 	 *  @param	int			   $hideref			Do not show ref
-	 *  @return	void
+	 *  @return	null
 	 */
 	public function defineColumnField($object, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0)
 	{
@@ -1243,7 +1107,7 @@ class pdf_standard_volet extends ModelePDFVolet
 		$rank = $rank + 10;
 		$this->cols['photo'] = array(
 			'rank' => $rank,
-			'width' => (!getDolGlobalInt('MAIN_DOCUMENTS_WITH_PICTURE_WIDTH') ? 20 : getDolGlobalInt('MAIN_DOCUMENTS_WITH_PICTURE_WIDTH')), // in mm
+			'width' => (empty($conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH) ? 20 : $conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH), // in mm
 			'status' => false,
 			'title' => array(
 				'textkey' => 'Photo',
@@ -1255,7 +1119,7 @@ class pdf_standard_volet extends ModelePDFVolet
 			'border-left' => false, // remove left line separator
 		);
 
-		if (getDolGlobalInt('MAIN_GENERATE_INVOICES_WITH_PICTURE') && !empty($this->atleastonephoto)) {
+		if (!empty($conf->global->MAIN_GENERATE_INVOICES_WITH_PICTURE) && !empty($this->atleastonephoto)) {
 			$this->cols['photo']['status'] = true;
 		}
 
@@ -1271,7 +1135,7 @@ class pdf_standard_volet extends ModelePDFVolet
 			'border-left' => true, // add left line separator
 		);
 
-		if (!getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT') && !getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT_COLUMN')) {
+		if (empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT) && empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT_COLUMN)) {
 			$this->cols['vat']['status'] = true;
 		}
 
@@ -1298,6 +1162,21 @@ class pdf_standard_volet extends ModelePDFVolet
 		);
 
 		$rank = $rank + 10;
+		$this->cols['progress'] = array(
+			'rank' => $rank,
+			'width' => 19, // in mm
+			'status' => false,
+			'title' => array(
+				'textkey' => 'Progress'
+			),
+			'border-left' => true, // add left line separator
+		);
+
+		if ($this->situationinvoice) {
+			$this->cols['progress']['status'] = true;
+		}
+
+		$rank = $rank + 10;
 		$this->cols['unit'] = array(
 			'rank' => $rank,
 			'width' => 11, // in mm
@@ -1307,7 +1186,7 @@ class pdf_standard_volet extends ModelePDFVolet
 			),
 			'border-left' => true, // add left line separator
 		);
-		if (getDolGlobalInt('PRODUCT_USE_UNITS')) {
+		if (!empty($conf->global->PRODUCT_USE_UNITS)) {
 			$this->cols['unit']['status'] = true;
 		}
 
@@ -1331,7 +1210,7 @@ class pdf_standard_volet extends ModelePDFVolet
 			'width' => 26, // in mm
 			'status' => true,
 			'title' => array(
-				'textkey' => 'TotalHTShort'
+				'textkey' => 'TotalHT'
 			),
 			'border-left' => true, // add left line separator
 		);
@@ -1358,5 +1237,18 @@ class pdf_standard_volet extends ModelePDFVolet
 		} else {
 			$this->cols = $hookmanager->resArray;
 		}
+	}
+
+	function getUniqueFilename($fullpath) {
+		$path_info = pathinfo($fullpath);
+		$i = 1;
+	
+		// Vérifier si le fichier existe
+		while (file_exists($fullpath)) {
+			// Générer un nouveau nom avec un suffixe (ex: document_1.pdf, document_2.pdf, etc.)
+			$fullpath = $path_info['dirname'] . '/' . $path_info['filename'] . '_' . $i . '.' . $path_info['extension'];
+			$i++;
+		}
+		return $fullpath;
 	}
 }

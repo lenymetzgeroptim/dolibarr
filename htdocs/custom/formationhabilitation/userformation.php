@@ -75,9 +75,25 @@ $lineid   = GETPOST('lineid', 'int');
 $onglet = GETPOST('onglet', 'aZ09');
 $voletid   = GETPOST('voletid', 'int');
 
+
+//Permissions
+$user_group = New UserGroup($db);
+$societe = New Societe($db);
+
+$user_group->fetch(0, "Responsable d'antenne");
+$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
+$userInRespAntenneGroup = in_array($user->id, $arrayUserRespAntenneGroup); // Utilisateur dans le groupe Responsable d'antenne
+
+$societe->fetch($user->array_options['options_antenne']);
+$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
+$userIsRespAntenne = in_array($user->id, $arrayUserRespAntenne); // Utilisateur commercial de l'antenne de ratachement
+$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
+
 $permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
 $permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
-$permissiontovalidate = $permissiontoaddline;
+$permissiontovalidatelines = $userInRespAntenneGroup && $userIsRespAntenne;
+
+
 
 if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 
@@ -173,39 +189,6 @@ if ($onglet == 'volet') {
     }
 
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_volet.inc.php';
-
-    // if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline) {
-    //     if ($voletid < 1) {
-    //         setEventMessages("Vous devez sélectionner un volet", null, 'errors');
-    //         $error++;
-    //     }
-
-    //     if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
-    //         if (method_exists($objectparentline, 'generateDocument') && !$error) {
-    //             $outputlangs = $langs;
-    //             $newlang = '';
-    //             if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-    //                 $newlang = GETPOST('lang_id', 'aZ09');
-    //             }
-    //             if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
-    //                 $newlang = $objectparentline->thirdparty->default_lang;
-    //             }
-    //             if (!empty($newlang)) {
-    //                 $outputlangs = new Translate("", $conf);
-    //                 $outputlangs->setDefaultLang($newlang);
-    //             }
-
-    //             //$ret = $object->fetch($id); // Reload to get new records
-
-    //             $model = 'userformationhabilitation';
-
-    //             $retgen = $objectparentline->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-    //             if ($retgen < 0) {
-    //                 setEventMessages($objectparentline->error, $objectparentline->errors, 'warnings');
-    //             }
-    //         }
-    //     }
-    // }
 
     // // Delete file
     // if ($action == 'confirm_deletefile' && $confirm == 'yes') {
@@ -353,6 +336,7 @@ elseif($onglet == 'habilitation'){
     $css_table = 'min-height: 450px;';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    print '<input type="hidden" form="searchline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
 elseif($onglet == 'autorisation'){
     print dol_get_fiche_head($head2, 'autorisation', $title, -1, 'user');
@@ -361,6 +345,7 @@ elseif($onglet == 'autorisation'){
     $css_table = 'min-height: 450px;';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    print '<input type="hidden" form="searchline" id="fk_user" name="fk_user" value="' . $object->id.'">';
 }
 elseif($onglet == 'volet') {
     print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
