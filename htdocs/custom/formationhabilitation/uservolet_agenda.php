@@ -17,9 +17,9 @@
  */
 
 /**
- *  \file       voletline_agenda.php
+ *  \file       uservolet_agenda.php
  *  \ingroup    formationhabilitation
- *  \brief      Tab of events on VoletLine
+ *  \brief      Tab of events on UserVolet
  */
 
 //if (! defined('NOREQUIREDB'))              define('NOREQUIREDB', '1');				// Do not create database handler $db
@@ -76,8 +76,8 @@ if (!$res) {
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
-dol_include_once('/formationhabilitation/class/voletline.class.php');
-dol_include_once('/formationhabilitation/lib/formationhabilitation_voletline.lib.php');
+dol_include_once('/formationhabilitation/class/uservolet.class.php');
+dol_include_once('/formationhabilitation/lib/formationhabilitation_uservolet.lib.php');
 
 // Load translation files required by the page
 $langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"));
@@ -119,7 +119,7 @@ if (!$sortorder) {
 }
 
 // Initialize technical objects
-$object = new VoletLine($db);
+$object = new UserVolet($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($object->element.'agenda', 'globalcard')); // Note that conf->hooks_modules contains array
@@ -136,8 +136,8 @@ if ($id > 0 || !empty($ref)) {
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 0;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'voletline', 'read');
-	$permissiontoadd = $user->hasRight('formationhabilitation', 'voletline', 'write');
+	$permissiontoread = $user->hasRight('formationhabilitation', 'uservolet', 'read');
+	$permissiontoadd = $user->hasRight('formationhabilitation', 'uservolet', 'write');
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;
@@ -189,7 +189,7 @@ if (empty($reshook)) {
 $form = new Form($db);
 
 if ($object->id > 0) {
-	$title = $langs->trans("VoletLine")." - ".$langs->trans('Agenda');
+	$title = $langs->trans("UserVolet")." - ".$langs->trans('Agenda');
 	//$title = $object->ref." - ".$langs->trans("Agenda");
 	$help_url = 'EN:Module_Agenda_En|DE:Modul_Terminplanung';
 
@@ -198,14 +198,14 @@ if ($object->id > 0) {
 	if (isModEnabled('notification')) {
 		$langs->load("mails");
 	}
-	$head = voletlinePrepareHead($object);
+	$head = uservoletPrepareHead($object);
 
 
-	print dol_get_fiche_head($head, 'agenda', $langs->trans("VoletLine"), -1, $object->picto);
+	print dol_get_fiche_head($head, 'agenda', $langs->trans("UserVolet"), -1, $object->picto);
 
 	// Object card
 	// ------------------------------------------------------------
-	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/voletline_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/uservolet_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*
@@ -311,7 +311,7 @@ if ($object->id > 0) {
 		// Try to know count of actioncomm from cache
 		$nbEvent = 0;
 		//require_once DOL_DOCUMENT_ROOT.'/core/lib/memory.lib.php';
-		//$cachekey = 'count_events_voletline_'.$object->id;
+		//$cachekey = 'count_events_uservolet_'.$object->id;
 		//$nbEvent = dol_getcache($cachekey);
 		$titlelist = $langs->trans("Actions").(is_numeric($nbEvent) ? '<span class="opacitymedium colorblack paddingleft">('.$nbEvent.')</span>' : '');
 

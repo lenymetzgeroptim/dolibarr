@@ -82,12 +82,6 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 dol_include_once('/formationhabilitation/class/volet.class.php');
 dol_include_once('/formationhabilitation/lib/formationhabilitation_volet.lib.php');
-dol_include_once('/formationhabilitation/class/habilitation.class.php');
-dol_include_once('/formationhabilitation/class/formation.class.php');
-dol_include_once('/formationhabilitation/class/autorisation.class.php');
-dol_include_once('/formationhabilitation/class/userhabilitation.class.php');
-dol_include_once('/formationhabilitation/class/userformation.class.php');
-dol_include_once('/formationhabilitation/class/userautorisation.class.php');
 
 // Load translation files required by the page
 $langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"));
@@ -96,8 +90,6 @@ $langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"))
 $id = GETPOST('id', 'int');
 $ref = GETPOST('ref', 'alpha');
 $lineid   = GETPOST('lineid', 'int');
-$addlinkid   = GETPOST('addlinkid', 'int');
-$dellinkid   = GETPOST('dellinkid', 'int');
 
 $action = GETPOST('action', 'aZ09');
 $confirm = GETPOST('confirm', 'alpha');
@@ -116,10 +108,8 @@ if (!empty($backtopagejsfields)) {
 // Initialize technical objects
 $object = new Volet($db);
 $extrafields = new ExtraFields($db);
-$usergroup = new UserGroup($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($object->element.'card', 'globalcard')); // Note that conf->hooks_modules contains array
-
 
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
@@ -142,66 +132,15 @@ if (empty($action) && empty($id) && empty($ref)) {
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
 
-$voletInfo = $object->getVoletInfo($object->numvolet); 
-
-if($voletInfo['type'] == 1) {
-	$objectline = new UserFormation($db);
-	$addlink = 'formation';
-}
-elseif($voletInfo['type'] == 2) {
-	$objectline = new UserHabilitation($db);
-	$addlink = 'habilitation';
-}
-elseif($voletInfo['type'] == 3) {
-	$objectline = new UserAutorisation($db);
-	$addlink = 'autorisation';
-}
-
-$objectparentline = new Volet($db);
-
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 1;
+$enablepermissioncheck = 0;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('formationhabilitation', 'volet', 'read');
 	$permissiontoadd = $user->hasRight('formationhabilitation', 'volet', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 	$permissiontodelete = $user->hasRight('formationhabilitation', 'volet', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
 	$permissionnote = $user->hasRight('formationhabilitation', 'volet', 'write'); // Used by the include of actions_setnotes.inc.php
 	$permissiondellink = $user->hasRight('formationhabilitation', 'volet', 'write'); // Used by the include of actions_dellink.inc.php
-	$permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
-	$permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
-
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == 9999) {
-		$permissiontovalidate1 = $user->id == $object->fk_user;
-	}
-	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 > 0) {
-		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
-		$permissiontovalidate1 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
-	}
-
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == 9999) {
-		$permissiontovalidate2 = $user->id == $object->fk_user;
-	}
-	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 > 0) {
-		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
-		$permissiontovalidate2 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
-	}
-
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == 9999) {
-		$permissiontovalidate3 = $user->id == $object->fk_user;
-	}
-	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 > 0) {
-		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
-		$permissiontovalidate3 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
-	}
-
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == 9999) {
-		$permissiontovalidate4 = $user->id == $object->fk_user;
-	}
-	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 > 0) {
-		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
-		$permissiontovalidate4 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
-	}
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
@@ -224,25 +163,6 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
-include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
-
-// // Definition of array of fields for columns
-// $arrayfields = array();
-// foreach ($objectline->fields as $key => $val) {
-// 	// If $val['visible']==0, then we never show the field
-// 	if (!empty($val['visible'])) {
-// 		$visible = (int) dol_eval($val['visible'], 1);
-// 		$arrayfields['t.'.$key] = array(
-// 			'label'=>$val['label'],
-// 			'checked'=>(($visible < 0) ? 0 : 1),
-// 			'enabled'=>(abs($visible) != 3 && dol_eval($val['enabled'], 1)),
-// 			'position'=>$val['position'],
-// 			'help'=> isset($val['help']) ? $val['help'] : ''
-// 		);
-// 	}
-// }
-// // Extra fields
-// include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 
 /*
  * Actions
@@ -259,14 +179,12 @@ if (empty($reshook)) {
 
 	$backurlforlist = dol_buildpath('/formationhabilitation/volet_list.php', 1);
 
-	if($action != 'updateline' && $action != 'updatedatefinvalidite' && $action != 'updatecoutpedagogique' && $action != 'updatecoutmobilisation'){
-		if (empty($backtopage) || ($cancel && empty($id))) {
-			if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
-				if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
-					$backtopage = $backurlforlist;
-				} else {
-					$backtopage = dol_buildpath('/formationhabilitation/volet_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
-				}
+	if (empty($backtopage) || ($cancel && empty($id))) {
+		if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
+			if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
+				$backtopage = $backurlforlist;
+			} else {
+				$backtopage = dol_buildpath('/formationhabilitation/volet_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__');
 			}
 		}
 	}
@@ -277,7 +195,7 @@ if (empty($reshook)) {
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
 	// Actions when linking object each other
-	//include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
+	include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
 
 	// Actions when printing a doc from card
 	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
@@ -287,48 +205,6 @@ if (empty($reshook)) {
 
 	// Action to build doc
 	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
-
-	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_volet.inc.php';
-
-	if($voletInfo['type'] == 1) {
-		if(GETPOST('fk_formation') > 0) {
-			$formation_static = new Formation($db);
-			$formation_static->fetch(GETPOST('fk_formation'));
-		}
-	
-		if(GETPOST('fk_user') > 0) {
-			$user_static = new User($db);
-			$user_static->fetch(GETPOST('fk_user'));
-		}
-	
-		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userformation.inc.php';
-	}
-	elseif($voletInfo['type'] == 2) {
-		if(GETPOST('fk_habilitation') > 0) {
-			$habilitation_static = new Habilitation($db);
-			$habilitation_static->fetch(GETPOST('fk_habilitation'));
-		}
-	
-		if(GETPOST('fk_user') > 0) {
-			$user_static = new User($db);
-			$user_static->fetch(GETPOST('fk_user'));
-		}
-
-		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userhabilitation.inc.php';
-	}
-	elseif($voletInfo['type'] == 3) {
-		if(GETPOST('fk_autorisation') > 0) {
-			$autorisation_static = new Autorisation($db);
-			$autorisation_static->fetch(GETPOST('fk_autorisation'));
-		}
-	
-		if(GETPOST('fk_user') > 0) {
-			$user_static = new User($db);
-			$user_static->fetch(GETPOST('fk_user'));
-		}
-	
-		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userautorisation.inc.php';
-	}
 
 	if ($action == 'set_thirdparty' && $permissiontoadd) {
 		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
@@ -344,19 +220,7 @@ if (empty($reshook)) {
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
-unset($arrayfields['t.formateur']);
-unset($objectline->fields['fk_user']);
-unset($arrayfields['t.fk_user']);
-if(!$permissiontoreadCout) {
-    unset($objectline->fields['cout_pedagogique']);
-    unset($objectline->fields['cout_mobilisation']);
-    unset($objectline->fields['cout_annexe']);
-    unset($objectline->fields['cout_total']);
-    unset($arrayfields['t.cout_pedagogique']);
-    unset($arrayfields['t.cout_mobilisation']);
-    unset($arrayfields['t.cout_annexe']);
-    unset($arrayfields['t.cout_total']);
-}
+
 
 
 /*
@@ -460,8 +324,6 @@ if (($id || $ref) && $action == 'edit') {
 	print '<table class="border centpercent tableforfieldedit">'."\n";
 
 	// Common attributes
-	unset($object->fields['fk_user']);
-	unset($object->fields['numvolet']);
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
 
 	// Other attributes
@@ -498,12 +360,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// Create an array for form
 		$formquestion = array();
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
-	}
-
-	// Confirmation to validate
-	if ($action == 'validate4') {
-		$listVolet = $object->getActiveVolet(0);
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ValidateVolet'), (sizeof($listVolet) > 0 ? $langs->trans('ConfirmValidateVoletWithClose') : $langs->trans('ConfirmValidateVolet')), 'confirm_validate4', '', 0, 1);
 	}
 
 	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
@@ -593,7 +449,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Common attributes
-	$keyforbreak='datedebutvolet';	// We change column just before this field
+	//$keyforbreak='fieldkeytoswitchonsecondcolumn';	// We change column just before this field
 	//unset($object->fields['fk_project']);				// Hide field already shown in banner
 	//unset($object->fields['fk_soc']);					// Hide field already shown in banner
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_view.tpl.php';
@@ -609,6 +465,61 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	print dol_get_fiche_end();
 
+
+	/*
+	 * Lines
+	 */
+
+	if (!empty($object->table_element_line)) {
+		// Show object lines
+		$result = $object->getLinesArray();
+
+		print '	<form name="addproduct" id="addproduct" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+		<input type="hidden" name="token" value="' . newToken().'">
+		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
+		<input type="hidden" name="mode" value="">
+		<input type="hidden" name="page_y" value="">
+		<input type="hidden" name="id" value="' . $object->id.'">
+		';
+
+		if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
+			include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
+		}
+
+		print '<div class="div-table-responsive-no-min">';
+		if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
+			print '<table id="tablelines" class="noborder noshadow" width="100%">';
+		}
+
+		if (!empty($object->lines)) {
+			$object->printObjectLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1);
+		}
+
+		// Form to add new line
+		if ($object->status == 0 && $permissiontoadd && $action != 'selectlines') {
+			if ($action != 'editline') {
+				// Add products/services form
+
+				$parameters = array();
+				$reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
+				if ($reshook < 0) {
+					setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+				}
+				if (empty($reshook)) {
+					$object->formAddObjectLine(1, $mysoc, $soc);
+				}
+			}
+		}
+
+		if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
+			print '</table>';
+		}
+		print '</div>';
+
+		print "</form>\n";
+	}
+
+
 	// Buttons for actions
 
 	if ($action != 'presend' && $action != 'editline') {
@@ -621,9 +532,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		if (empty($reshook)) {
 			// Send
-			// if (empty($user->socid)) {
-			// 	print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
-			// }
+			if (empty($user->socid)) {
+				print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
+			}
 
 			// Back to draft
 			if ($object->status == $object::STATUS_VALIDATED) {
@@ -631,67 +542,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}
 
 			// Modify
+			print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
+
+			// Validate
 			if ($object->status == $object::STATUS_DRAFT) {
-				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
-			}
-
-			if ($object->status == $object::STATUS_VALIDATED) {
-				print dolGetButtonAction($langs->trans('GeneratePDF'), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererPdf&confirm=yes&token='.newToken(), '', $permissiontoadd);
-			}
-
-			// Validate n°1
-			if ($object->status == $object::STATUS_DRAFT) {
-				$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->numvolet;
-				$approbationRequire = $conf->global->$variableName;
-				$approbationRequireArray = explode(',', $conf->global->$variableName);
-
 				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					if(sizeof($approbationRequireArray) == 1) {
-						$permissionName = 'permissiontovalidate'.($approbationRequireArray[0]+1);
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $$permissionName);
-					}
-					elseif(strpos($approbationRequire, '1') !== false) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate1&confirm=yes&token='.newToken(), '', $permissiontovalidate1);
-					}
-					elseif(strpos($approbationRequire, '2') !== false) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate2&confirm=yes&token='.newToken(), '', $permissiontovalidate2);
-					}
-					elseif(strpos($approbationRequire, '3') !== false) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate3&confirm=yes&token='.newToken(), '', $permissiontovalidate3);
-					}
-					elseif(strpos($approbationRequire, '4') !== false) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $permissiontovalidate4);
-					}
-				} else {
-					$langs->load("errors");
-					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
-				}
-			}
-
-			// Validate n°2
-			if ($object->status == $object::STATUS_VALIDATION1) {
-				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate2&confirm=yes&token='.newToken(), '', $permissiontovalidate2);
-				} else {
-					$langs->load("errors");
-					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
-				}
-			}
-
-			// Validate n°3
-			if ($object->status == $object::STATUS_VALIDATION2) {
-				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate3&confirm=yes&token='.newToken(), '', $permissiontovalidate3);
-				} else {
-					$langs->load("errors");
-					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
-				}
-			}
-
-			// Validate n°4
-			if ($object->status == $object::STATUS_VALIDATION3) {
-				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $permissiontovalidate4);
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
 				} else {
 					$langs->load("errors");
 					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
@@ -735,230 +591,59 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 
 
-	// // Select mail models is same action as presend
-	// if (GETPOST('modelselected')) {
-	// 	$action = 'presend';
-	// }
-
-	// if ($action != 'presend') {
-	// 	print '<div class="fichecenter"><div class="fichehalfleft">';
-	// 	print '<a name="builddoc"></a>'; // ancre
-
-	// 	$includedocgeneration = 1;
-
-	// 	// Documents
-	// 	if ($includedocgeneration) {
-	// 		$objref = dol_sanitizeFileName($object->ref);
-	// 		$relativepath = $objref.'/'.$objref.'.pdf';
-	// 		$filedir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
-	// 		$urlsource = $_SERVER["PHP_SELF"]."?id=".$object->id;
-	// 		$genallowed = $permissiontoread; // If you can read, you can build the PDF to read content
-	// 		$delallowed = $permissiontoadd; // If you can create/edit, you can remove a file on card
-	// 		print $formfile->showdocuments('formationhabilitation:Volet', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
-	// 	}
-
-	// 	// Show links to link elements
-	// 	$linktoelem = $form->showLinkToObjectBlock($object, null, array('volet'));
-	// 	$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
-
-
-	// 	print '</div><div class="fichehalfright">';
-
-	// 	$MAXEVENT = 10;
-
-	// 	$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/formationhabilitation/volet_agenda.php', 1).'?id='.$object->id);
-
-	// 	// List of actions on element
-	// 	include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
-	// 	$formactions = new FormActions($db);
-	// 	$somethingshown = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
-
-	// 	print '</div></div>';
-	// }
-
-	// //Select mail models is same action as presend
-	// if (GETPOST('modelselected')) {
-	// 	$action = 'presend';
-	// }
-
-	// // Presend form
-	// $modelmail = 'volet';
-	// $defaulttopic = 'InformationMessage';
-	// $diroutput = $conf->formationhabilitation->dir_output;
-	// $trackid = 'volet'.$object->id;
-
-	// include DOL_DOCUMENT_ROOT.'/core/tpl/card_presend.tpl.php';
-
-		/*
-	 * Lines
-	 */
-
-	 if (!empty($object->table_element_line)) {
-		if($objectline->element == 'userformation'){
-			$objectclass = 'UserFormation';
-			$objectlabel = 'UserFormation';
-		}
-		elseif($objectline->element == 'userhabilitation'){
-			$objectclass = 'UserHabilitation';
-			$objectlabel = 'UserHabilitation';
-		}
-		elseif($objectline->element == 'userautorisation'){
-			$objectclass = 'UserAutorisation';
-			$objectlabel = 'UserAutorisation';
-		}
-
-		// Show object lines linked
-		$result = $object->getLinkedLinesArray();
-		$enableunlink = 1; 
-		$enablelink = 0; 
-		$disableedit = 1;
-		$disableremove = 1;
-
-		print '	<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-		<input type="hidden" name="token" value="' . newToken().'">
-		<input type="hidden" name="mode" value="">
-		<input type="hidden" name="page_y" value="">
-		<input type="hidden" name="id" value="' . $object->id.'">';
-    	print '<input type="hidden" id="fk_user" name="fk_user" value="' . $object->fk_user.'">';
-		if($action == 'editline') {
-			print '<input type="hidden" name="action" value="updateline">';
-		}
-		elseif($action == 'edit_domaineapplication') {
-			print '<input type="hidden" name="action" value="updatedomaineapplication">';
-		}
-		else {
-			print '<input type="hidden" name="action" value="addline">';
-		}
-
-		if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
-			include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
-		}
-
-		$title = $langs->trans('ListOfsLinkedObject', $langs->transnoentitiesnoconv($objectlabel.'Volet'));
-		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', 0, 0, 0, 1);
-	
-
-		print '<div class="">';
-		//if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
-			print '<table id="tablelines" class="noborder noshadow" width="100%">';
-		//}
-
-		//if (!empty($object->lines)) {
-			$object->printObjectLinkedLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-		//}
-
-		// Form to add new line
-		// if ($object->status == 0 && $permissiontoadd && $action != 'selectlines') {
-		// 	if ($action != 'editline') {
-		// 		// Add products/services form
-
-		// 		$parameters = array();
-		// 		$reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-		// 		if ($reshook < 0) {
-		// 			setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-		// 		}
-		// 		if (empty($reshook)) {
-		// 			$object->formAddObjectLine(1, $mysoc, $soc);
-		// 		}
-		// 	}
-		// }
-
-		if (sizeof($object->lines) == 0) {
-			$colspan = 0;
-			foreach ($arrayfields as $key => $val) {
-				if (!empty($val['checked'])) {
-					$colspan++;
-				}
-			}
-
-			print '<tr>';
-			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';
-			print '<td class="linecollink center width20"></div>';
-			// print '<td class="linecoledit center width20"></div>';
-			// print '<td class="linecoldelete center width20"></div>';
-			print '</tr>';
-		}
-
-		//if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
-			print '</table>';
-		//}
-		print '</div>';
-
-		print "</form>\n";
-
-
-
-		// Show object lines no linked
-		$result = $object->getNoLinkedLinesArray();
-		$enablelink = 1; 
-		$enableunlink = 0; 
-		$disableedit = 1;
-		$disableremove = 1;
-		
-		print '	<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
-		<input type="hidden" name="token" value="' . newToken().'">
-		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
-		<input type="hidden" name="mode" value="">
-		<input type="hidden" name="page_y" value="">
-		<input type="hidden" name="id" value="' . $object->id.'">
-		';
-    	print '<input type="hidden" id="fk_user" name="fk_user" value="' . $object->fk_user.'">';
-
-		if (!empty($conf->use_javascript_ajax) && $object->status == 0) {
-			include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
-		}
-
-		$title = $langs->trans('ListOfsUnlinkedObject', $langs->transnoentitiesnoconv($objectlabel.'Volet'));
-		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', 0, 0, 0, 1);
-	
-
-		print '<div class="">';
-		//if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
-			print '<table id="tablelines" class="noborder noshadow" width="100%">';
-		//}
-
-		//if (!empty($object->lines)) {
-			$object->printObjectLinkedLines($action, $mysoc, null, GETPOST('lineid', 'int'), 1, '/custom/formationhabilitation/core/tpl');
-		//}
-
-		// Form to add new line
-		// if ($object->status == 0 && $permissiontoadd && $action != 'selectlines') {
-		// 	if ($action != 'editline') {
-		// 		// Add products/services form
-
-		// 		$parameters = array();
-		// 		$reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
-		// 		if ($reshook < 0) {
-		// 			setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-		// 		}
-		// 		if (empty($reshook)) {
-		// 			$object->formAddObjectLine(1, $mysoc, $soc);
-		// 		}
-		// 	}
-		// }
-
-		if (sizeof($object->lines) == 0) {
-			foreach ($arrayfields as $key => $val) {
-				if (!empty($val['checked'])) {
-					$colspan++;
-				}
-			}
-
-			print '<tr>';
-			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';
-			print '<td class="linecollink center width20"></div>';
-			// print '<td class="linecoledit center width20"></div>';
-			// print '<td class="linecoldelete center width20"></div>';
-			print '</tr>';
-		}
-
-		//if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
-			print '</table>';
-		//}
-		print '</div>';
-
-		print "</form>\n";
+	// Select mail models is same action as presend
+	if (GETPOST('modelselected')) {
+		$action = 'presend';
 	}
+
+	if ($action != 'presend') {
+		print '<div class="fichecenter"><div class="fichehalfleft">';
+		print '<a name="builddoc"></a>'; // ancre
+
+		$includedocgeneration = 0;
+
+		// Documents
+		if ($includedocgeneration) {
+			$objref = dol_sanitizeFileName($object->ref);
+			$relativepath = $objref.'/'.$objref.'.pdf';
+			$filedir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
+			$urlsource = $_SERVER["PHP_SELF"]."?id=".$object->id;
+			$genallowed = $permissiontoread; // If you can read, you can build the PDF to read content
+			$delallowed = $permissiontoadd; // If you can create/edit, you can remove a file on card
+			print $formfile->showdocuments('formationhabilitation:Volet', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
+		}
+
+		// Show links to link elements
+		$linktoelem = $form->showLinkToObjectBlock($object, null, array('volet'));
+		$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
+
+
+		print '</div><div class="fichehalfright">';
+
+		$MAXEVENT = 10;
+
+		$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/formationhabilitation/volet_agenda.php', 1).'?id='.$object->id);
+
+		// List of actions on element
+		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
+		$formactions = new FormActions($db);
+		$somethingshown = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
+
+		print '</div></div>';
+	}
+
+	//Select mail models is same action as presend
+	if (GETPOST('modelselected')) {
+		$action = 'presend';
+	}
+
+	// Presend form
+	$modelmail = 'volet';
+	$defaulttopic = 'InformationMessage';
+	$diroutput = $conf->formationhabilitation->dir_output;
+	$trackid = 'volet'.$object->id;
+
+	include DOL_DOCUMENT_ROOT.'/core/tpl/card_presend.tpl.php';
 }
 
 // End of page

@@ -46,6 +46,11 @@ function autorisationPrepareHead($object)
 	$head[$h][2] = 'card';
 	$h++;
 
+	$head[$h][0] = dol_buildpath("/formationhabilitation/autorisation_prerequis.php", 1).'?id='.$object->id;
+	$head[$h][1] = $langs->trans("Prerequis");
+	$head[$h][2] = 'prerequis';
+	$h++;
+
 	if ($showtabofpagenote) {
 		if (isset($object->fields['note_public']) || isset($object->fields['note_private'])) {
 			$nbNote = 0;

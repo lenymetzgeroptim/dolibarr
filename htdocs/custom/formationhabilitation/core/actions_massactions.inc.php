@@ -191,15 +191,30 @@ if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $con
 
 		if ($result > 0) {
 			// Prérequis des formations
-			$prerequis = explode(',', $objectparenttmp->formation);
-			$formation = new Formation($db);
-			$userFormation = new UserFormation($db);
-
-			foreach($prerequis as $formationid) {
-				if(!$userFormation->userAsFormation($objecttmp->fk_user, $formationid)) {
-					$formation->fetch($formationid);
-					setEventMessages($langs->trans('ErrorPrerequisFormation', $formation->label), null, 'errors');
-					$error++;
+			if (!$error) { 
+				$userFormation = new UserFormation($db);
+				$formations_user = $userFormation->getAllFormationsForUser($objecttmp->fk_user);
+		
+				// Récupérer toutes les conditions de prérequis pour cette formation
+				$prerequisConditions = $objectparenttmp->getPrerequis($objectparenttmp->id);
+		
+				foreach ($prerequisConditions as $conditionId => $formationIds) {
+					$conditionMet = false;
+		
+					// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
+					foreach ($formationIds as $formationid) {
+						if (in_array($formationid, $formations_user)) {
+							$conditionMet = true; 
+							break;
+						}
+					}
+		
+					// Si une condition OR n'est pas remplie, générer un message d'erreur
+					if (!$conditionMet) {
+						setEventMessages($langs->trans('ErrorPrerequisFormation'), null, 'errors');
+						$error++;
+						break;
+					}
 				}
 			}
 
@@ -258,11 +273,11 @@ if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $con
 	}
 
 	if (empty($error)) {
-		$volet = new Volet($db);
-		$result = $volet->generateNewVolet($objectclass, $validateObjects, $userid);
+		$uservolet = new UserVolet($db);
+		$result = $uservolet->generateNewVolet($objectclass, $validateObjects, $userid);
 
 		if ($result < 0) { 
-			setEventMessages($volet->error, $volet->errors, 'errors');
+			setEventMessages($uservolet->error, $uservolet->errors, 'errors');
 			$error++;
 		}
 	}

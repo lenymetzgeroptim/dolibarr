@@ -37,9 +37,13 @@ UserFormationuser = collaborateurs possèdant la formation
 UserHabilitationuser = collaborateurs possèdant l'habilitation
 UserAutorisationuser = collaborateurs possèdant l'autorisation
 UserFormationVolet = formations
-UserHabilitationVolet = habilitations
-UserAutorisationVolet = autorisations
-
+UserHabilitationUserVolet = habilitations
+UserAutorisationUserVolet = autorisations
+UserFormations = Formations des collaborateurs
+UserHabilitations = Habilitations des collaborateurs
+UserAutorisations = Autorisations des collaborateurs
+UserVolet = Volet d'un collaborateur
+UserVolets = Volets des collaborateurs
 
 
 #
@@ -96,6 +100,9 @@ ApprobationVoletGroupe = Approbation du groupe %s en attente
 ApprobationVoletCollaborateur = Approbation du collaborateur en attente
 DictionnaryModelHelp = 1 = Identité<br>2 = Formation<br>3 = Entreprise<br>4 = Habiliation<br>5 = Médical<br>6 = Autorisation
 GeneratePDF = Générer PDF
+NommagePDF = Nommage du pdf
+TypeVolet = Type
+ModelPDF = Modèle du pdf
 
 
 #
@@ -212,7 +219,7 @@ RecordsValidated = %s enregistrements validés
 RecordValidated = %s enregistrement validé
 NoRecordValidated = Aucun enregistrement validé
 ImpossibleToValidateWithThisStatut = Impossible de valider %s à cause du statut
-ValidateAndGenerateVolet = Valider et générer volet
+ValidateAndGenerateUserVolet = Valider et générer volet
 ConfirmValidateVoletWithClose = Êtes-vous sûr de vouloir valider le volet ? <strong>Un volet actif sera clôturé</strong>
 ConfirmValidateVolet = Êtes-vous sûr de vouloir valider le volet ?
 
@@ -220,7 +227,7 @@ ConfirmValidateVolet = Êtes-vous sûr de vouloir valider le volet ?
 #
 # Erreur
 #
-ErrorPrerequisFormation = Le collaborateur ne possède pas la formation %s qui est requise
+ErrorPrerequisFormation = Le collaborateur ne possède pas les formations requises
 ErrorPrerequisAptitude = Le collaborateur ne possède pas l'aptitude médicale %s qui est requise
 ErrorFormationAlreadyExist = Impossible d'ajouter cette formation car le collaborateur la possède déja (Il faut forcer la création)
 
@@ -229,9 +236,11 @@ ErrorFormationAlreadyExist = Impossible d'ajouter cette formation car le collabo
 # Email
 #
 EMailTextHabilitationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les habilitations suivantes sont à valider pour %s : %s
+EMailTextAutorisationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les autorisations suivantes sont à valider pour %s : %s
 
 
 #
 # Autres
 #
 ForceCreation = Forcer la création
+PrerequisObjects = Prérequis

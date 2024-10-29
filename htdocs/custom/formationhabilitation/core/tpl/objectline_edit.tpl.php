@@ -77,6 +77,9 @@ foreach($objectline->fields as $key => $val){
 	elseif($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total' || $key == 'date_finvalidite_formation' || $key == 'date_fin_habilitation' || $key == 'date_fin_autorisation'){
 		print $line->showOutputField($val, $key, $line->$key);
 	}
+	elseif($key == 'status') {
+		print $line->getLibStatut(2);
+	}
 	else {
 		print $line->showInputField($val, $key, $line->$key, 'form="addline"');
 	}

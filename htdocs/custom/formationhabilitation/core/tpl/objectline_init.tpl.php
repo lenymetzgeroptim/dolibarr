@@ -60,7 +60,7 @@ foreach ($objectline->fields as $key => $val) {
             elseif($objectline->element == 'userautorisation'){
                 $search[$key] =  implode(',', array($objectline::STATUS_AUTORISABLE, $objectline::STATUS_AUTORISE, $objectline::STATUS_NONAUTORISE));
             }
-			elseif($objectline->element == 'volet'){
+			elseif($objectline->element == 'uservolet'){
                 $search[$key] =  implode(',', array($objectline::STATUS_VALIDATED, 50));
             }
         }

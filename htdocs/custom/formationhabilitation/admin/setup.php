@@ -56,7 +56,7 @@ global $langs, $user;
 // Libraries
 require_once DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php";
 require_once '../lib/formationhabilitation.lib.php';
-require_once "../class/volet.class.php";
+require_once "../class/uservolet.class.php";
 
 // Translations
 $langs->loadLangs(array("admin", "formationhabilitation@formationhabilitation"));

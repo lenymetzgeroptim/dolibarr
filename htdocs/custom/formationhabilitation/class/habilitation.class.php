@@ -115,8 +115,7 @@ class Habilitation extends CommonObject
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"5", "default"=>"0", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Actif", "5" => "Cloturée"), "validate"=>"1",),
-		"formation" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"Formation", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1",),
-		"volet" => array("type"=>"chkbxlst:c_volets:numero|label:rowid::(active=1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
+		"fk_volet" => array("type"=>"chkbxlst:formationhabilitation_volet:numero|label:rowid::(status=1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"test" => array("type"=>"chkbxlst:formationhabilitation_test:label:rowid::(status=1)", "label"=>"Test", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"domaineapplication" => array("type"=>"sellist:c_domaine_application:label:rowid::(active:=:1)", "label"=>"DomaineApplication", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1",),
 		"commentaire" => array("type"=>"text", "label"=>"Commentaire", "enabled"=>"1", 'position'=>58, 'notnull'=>0, "visible"=>"1",),
@@ -134,8 +133,7 @@ class Habilitation extends CommonObject
 	public $import_key;
 	public $model_pdf;
 	public $status;
-	public $formation;
-	public $volet;
+	public $fk_volet;
 	public $test;
 	public $domaineapplication;
 	public $commentaire;
@@ -1185,7 +1183,7 @@ class Habilitation extends CommonObject
 
 		$sql = "SELECT f.rowid, f.label";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_habilitation as f";
-		$sql .= " WHERE f.volet = $voletid";
+		$sql .= " WHERE f.fk_volet = $voletid";
 		$sql .= " ORDER BY f.label";
 
 		dol_syslog(get_class($this)."::getHabilitationsByVolet", LOG_DEBUG);
@@ -1205,27 +1203,27 @@ class Habilitation extends CommonObject
 	}
 
 	/**
-	 * 	Return toutes les habilitations qui correspondent à une formation
+	 * 	Return toutes les habilitations dont la formation $formationid est requise
 	 *
 	 * 	@param  int		$formationId       Id of Formation
-	 * 	@return	array						
+	 * 	@return	array(int)|int							
 	 */
-	public function getHabilitationsByFormation($formationId)
+	public function getHabilitationsWhereFormationIsRequire($formationId)
 	{
 		global $conf, $user;
 		$res = array();
 
-		$sql = "SELECT f.rowid";
-		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_habilitation as f";
-		$sql .= " WHERE f.formation = $formationId";
+		$sql = "SELECT ep.fk_source";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."$this->table_element as h ON h.rowid = ep.fk_source AND ep.sourcetype = '$this->element'";
+		$sql .= " WHERE FIND_IN_SET(".$formationId.", ep.prerequisobjects)";
+		$sql .= " AND h.status = ".self::STATUS_OUVERTE;
 
-		dol_syslog(get_class($this)."::getHabilitationsByFormation", LOG_DEBUG);
+		dol_syslog(get_class($this)."::getHabilitationsWhereFormationIsRequire", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while($obj = $this->db->fetch_object($resql)) {
-				$habilitation = new self($this->db);
-				$habilitation->fetch($obj->rowid);
-				$res[$obj->rowid] = $habilitation;
+				$res[] = $obj->fk_source;
 			}
 
 			$this->db->free($resql);
@@ -1235,6 +1233,121 @@ class Habilitation extends CommonObject
 			return -1;
 		}
 	}
+
+	
+	/**
+	 * 	Return tous les prérequis d'une habilitation
+	 *
+	 * 	@param  int		$habilitation_id       Id of Habilitation
+	 * 	@return	array(array(int))|int						
+	 */
+	function getPrerequis($habilitation_id) {
+		$res = array();
+
+		$sql = "SELECT rowid, prerequisobjects";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
+		$sql .= " WHERE sourcetype = '$this->element' AND fk_source = $habilitation_id";
+
+		dol_syslog(get_class($this)."::getPrerequis", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = explode(',', $obj->prerequisobjects);
+			}
+
+			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Attribuer une habilitation à un utilisateur
+	 *
+	 * 	@param  int				$user_id       	   Id of User
+	 *  @param  UserFormation	$userformation     UserFormation object
+	 * 	@return	int						<0 if KO, Id of created object if OK				
+	 */
+	function AsignToUser($user_id, $userformation) {
+		global $user; 
+
+		$userHabilitation = new UserHabilitation($this->db);
+		$user_static = new User($this->db);
+		$user_static->fetch($user_id);
+
+		$userHabilitation->date_habilitation = $userformation->date_fin_formation;
+		$userHabilitation->date_fin_habilitation = $userformation->date_finvalidite_formation;
+		$userHabilitation->fk_user = $user_id;
+		$userHabilitation->status = UserHabilitation::STATUS_HABILITABLE;
+		$userHabilitation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userformation->date_fin_formation, "%Y%m%d");
+		$userHabilitation->fk_habilitation = $this->id;
+
+		$resultcreate = $userHabilitation->create($user);
+
+		return $resultcreate;
+	}
+
+	/**
+	 * 	Génère les habilitations lors de la validation d'une formation
+	 *
+	 * 	@param  int				$user_id       			Id of User
+	 *  @param  UserFormation	$userformation     		new UserFormation
+	 * 	@param  string			$txtListHabilitation  	Contain label of habilitation generate
+	 * 	@return	int						<0 if KO, > 0 if OK				
+	 */
+	function generateHabilitationsForUser($user_id, $userformation, &$txtListHabilitation) { // TODOLeny - gestion des erreurs
+		// 1. Récupérer toutes les formations de l'utilisateur (y compris la nouvelle)
+		$formations_user = $userformation->getAllFormationsForUser($user_id);
+		// if (!in_array($userformation->fk_formation, $formations_user)) {
+		// 	$formations_user[] = $userformation->fk_formation; // Ajouter la nouvelle formation
+		// }
+
+		// 2. Récupérer toutes les habilitations où la nouvelle formation est un prérequis
+		$habilitations = $this->getHabilitationsWhereFormationIsRequire($userformation->fk_formation);
+
+		// 3. Parcourir chaque habilitation et vérifier les conditions
+		foreach ($habilitations as $habilitation_id) {
+			$conditions = $this->getPrerequis($habilitation_id);
+			$all_conditions_met = true;
+	
+			foreach ($conditions as $prerequis) {
+				$condition_met = false;
+	
+				// Vérifier si l'utilisateur satisfait au moins une formation dans la condition
+				foreach ($prerequis as $formation_id) {
+					if (in_array($formation_id, $formations_user)) {
+						$condition_met = true; // Condition remplie
+						break;
+					}
+				}
+	
+				if (!$condition_met) {
+					$all_conditions_met = false;
+					break; // Condition non remplie, on arrête pour cette habilitation
+				}
+			}
+	
+			// Si toutes les conditions sont remplies, attribuer l'habilitation
+			if ($all_conditions_met) {
+				$habilitation = new self($this->db);
+				$habilitation->fetch($habilitation_id);
+				$txtListHabilitation .= $habilitation->label.', ';
+
+				$resultcreate = $habilitation->AsignToUser($user_id, $userformation);
+
+				if($resultcreate <= 0) {
+					$this->error = $habilitation->db->lasterror();
+					$this->errors[] = $this->error;
+					return -1;
+				}
+			}
+		}
+
+		return 1;
+	}
+
 }
 
 

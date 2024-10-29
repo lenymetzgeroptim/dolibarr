@@ -112,7 +112,7 @@ foreach($objectline->fields as $key => $val){
 		elseif($key == 'cout_mobilisation' && $permissiontoaddline && $action != 'edit_coutmobilisation') {
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_coutmobilisation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
-		elseif($object->element == 'volet' && $key == 'domaineapplication' && $permissiontoaddline && $action != 'edit_domaineapplication' && $enableunlink) {
+		elseif($object->element == 'uservolet' && $key == 'domaineapplication' && $permissiontoaddline && $action != 'edit_domaineapplication' && $enableunlink) {
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_domaineapplication&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
 

@@ -57,7 +57,7 @@ class ElementPrerequis extends CommonObject
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 1;
+	public $isextrafieldmanaged = 0;
 
 	/**
 	 * @var string String with name of icon for elementprerequis. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'elementprerequis@formationhabilitation' if picto is file 'img/object_elementprerequis.png'.
@@ -115,15 +115,17 @@ class ElementPrerequis extends CommonObject
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
-		"sourcetype" => array("type"=>"varchar(128)", "label"=>"SourceType", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"1",),
-		"fk_source" => array("type"=>"integer", "label"=>"SourceObject", "enabled"=>"1", 'position'=>11, 'notnull'=>0, "visible"=>"1",),
-		"prerequistype" => array("type"=>"varchar(128)", "label"=>"PrerequisType", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"1",),
+		"sourcetype" => array("type"=>"varchar(128)", "label"=>"SourceType", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"0",),
+		"fk_source" => array("type"=>"integer", "label"=>"SourceObject", "enabled"=>"1", 'position'=>11, 'notnull'=>0, "visible"=>"0",),
+		"prerequistype" => array("type"=>"varchar(128)", "label"=>"PrerequisType", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"0",),
+		"prerequisobjects" => array("type"=>"varchar(255)", "label"=>"PrerequisObjects", "enabled"=>"1", 'position'=>21, 'notnull'=>0, "visible"=>"0",),
 	);
 	public $rowid;
 	public $import_key;
 	public $sourcetype;
 	public $fk_source;
 	public $prerequistype;
+	public $prerequisobjects;
 	// END MODULEBUILDER PROPERTIES
 
 

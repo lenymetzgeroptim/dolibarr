@@ -57,7 +57,7 @@ class VoletLine extends CommonObject
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 1;
+	public $isextrafieldmanaged = 0;
 
 	/**
 	 * @var string String with name of icon for voletline. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'voletline@formationhabilitation' if picto is file 'img/object_voletline.png'.

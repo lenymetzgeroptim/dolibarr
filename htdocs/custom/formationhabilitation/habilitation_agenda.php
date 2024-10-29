@@ -84,7 +84,7 @@ dol_include_once('/formationhabilitation/class/theme.class.php');
 dol_include_once('/formationhabilitation/class/userautorisation.class.php');
 dol_include_once('/formationhabilitation/class/userformation.class.php');
 dol_include_once('/formationhabilitation/class/userhabilitation.class.php');
-dol_include_once('/formationhabilitation/class/volet.class.php');
+dol_include_once('/formationhabilitation/class/uservolet.class.php');
 dol_include_once('/mymodule/lib/mymodule_myobject.lib.php');
 
 // Load translation files required by the page

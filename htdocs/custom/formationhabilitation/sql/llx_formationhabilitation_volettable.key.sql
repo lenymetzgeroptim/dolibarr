@@ -16,10 +16,6 @@
 
 -- BEGIN MODULEBUILDER INDEXES
 ALTER TABLE llx_formationhabilitation_volettable ADD INDEX idx_formationhabilitation_volettable_rowid (rowid);
-ALTER TABLE llx_formationhabilitation_volettable ADD INDEX idx_formationhabilitation_volettable_ref (ref);
-ALTER TABLE llx_formationhabilitation_volettable ADD INDEX idx_formationhabilitation_volettable_fk_soc (fk_soc);
-ALTER TABLE llx_formationhabilitation_volettable ADD INDEX idx_formationhabilitation_volettable_fk_project (fk_project);
-ALTER TABLE llx_formationhabilitation_volettable ADD CONSTRAINT llx_formationhabilitation_volettable_fk_user_creat FOREIGN KEY (fk_user_creat) REFERENCES llx_user(rowid);
 ALTER TABLE llx_formationhabilitation_volettable ADD INDEX idx_formationhabilitation_volettable_status (status);
 -- END MODULEBUILDER INDEXES
 

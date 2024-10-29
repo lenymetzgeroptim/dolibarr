@@ -23,9 +23,9 @@
  */
 
 /**
- *  \file			htdocs/core/modules/formationhabilitation/modules_volet.php
+ *  \file			htdocs/core/modules/formationhabilitation/modules_uservolet.php
  *  \ingroup		formationhabilitation
- *  \brief			File that contains parent class for formations document models and parent class for volet numbering models
+ *  \brief			File that contains parent class for formations document models and parent class for uservolet numbering models
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commondocgenerator.class.php';
@@ -35,7 +35,7 @@ require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php'; // requir
 /**
  *	Parent class for documents models
  */
-abstract class ModelePDFVolet extends CommonDocGenerator
+abstract class ModelePDFUserVolet extends CommonDocGenerator
 {
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
@@ -51,7 +51,7 @@ abstract class ModelePDFVolet extends CommonDocGenerator
 		// phpcs:enable
 		global $conf;
 
-		$type = 'volet';
+		$type = 'uservolet';
 		$list = array();
 
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
@@ -66,7 +66,7 @@ abstract class ModelePDFVolet extends CommonDocGenerator
 /**
  *  Parent class to manage numbering of Formation
  */
-abstract class ModeleNumRefVolet
+abstract class ModeleNumRefUserVolet
 {
 	/**
 	 * @var string Error code (or message)

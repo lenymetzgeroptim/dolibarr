@@ -29,8 +29,7 @@ CREATE TABLE llx_formationhabilitation_habilitation(
 	import_key varchar(14), 
 	model_pdf varchar(255), 
 	status integer NOT NULL, 
-	formation chkbxlst, 
-	volet chkbxlst, 
+	fk_volet chkbxlst, 
 	test chkbxlst, 
 	domaineapplication integer, 
 	commentaire text

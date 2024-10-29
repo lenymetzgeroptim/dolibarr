@@ -33,7 +33,7 @@ function voletPrepareHead($object)
 
 	$langs->load("formationhabilitation@formationhabilitation");
 
-	$showtabofpagecontact = 0;
+	$showtabofpagecontact = 1;
 	$showtabofpagenote = 1;
 	$showtabofpagedocument = 1;
 	$showtabofpageagenda = 1;

@@ -16,38 +16,38 @@
  */
 
 /**
- * \file    lib/formationhabilitation_voletline.lib.php
+ * \file    lib/formationhabilitation_uservolet.lib.php
  * \ingroup formationhabilitation
- * \brief   Library files with common functions for VoletLine
+ * \brief   Library files with common functions for UserVolet
  */
 
 /**
- * Prepare array of tabs for VoletLine
+ * Prepare array of tabs for UserVolet
  *
- * @param	VoletLine	$object		VoletLine
+ * @param	UserVolet	$object		uservolet
  * @return 	array					Array of tabs
  */
-function voletlinePrepareHead($object)
+function uservoletPrepareHead($object)
 {
 	global $db, $langs, $conf;
 
 	$langs->load("formationhabilitation@formationhabilitation");
 
 	$showtabofpagecontact = 0;
-	$showtabofpagenote = 0;
-	$showtabofpagedocument = 0;
-	$showtabofpageagenda = 0;
+	$showtabofpagenote = 1;
+	$showtabofpagedocument = 1;
+	$showtabofpageagenda = 1;
 
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = dol_buildpath("/formationhabilitation/voletline_card.php", 1).'?id='.$object->id;
-	$head[$h][1] = $langs->trans("VoletLine");
+	$head[$h][0] = dol_buildpath("/formationhabilitation/uservolet_card.php", 1).'?id='.$object->id;
+	$head[$h][1] = $langs->trans("UserVolet");
 	$head[$h][2] = 'card';
 	$h++;
 
 	if ($showtabofpagecontact) {
-		$head[$h][0] = dol_buildpath("/formationhabilitation/voletline_contact.php", 1).'?id='.$object->id;
+		$head[$h][0] = dol_buildpath("/formationhabilitation/uservolet_contact.php", 1).'?id='.$object->id;
 		$head[$h][1] = $langs->trans("Contacts");
 		$head[$h][2] = 'contact';
 		$h++;
@@ -62,7 +62,7 @@ function voletlinePrepareHead($object)
 			if (!empty($object->note_public)) {
 				$nbNote++;
 			}
-			$head[$h][0] = dol_buildpath('/formationhabilitation/voletline_note.php', 1).'?id='.$object->id;
+			$head[$h][0] = dol_buildpath('/formationhabilitation/uservolet_note.php', 1).'?id='.$object->id;
 			$head[$h][1] = $langs->trans('Notes');
 			if ($nbNote > 0) {
 				$head[$h][1] .= (!getDolGlobalInt('MAIN_OPTIMIZEFORTEXTBROWSER') ? '<span class="badge marginleftonlyshort">'.$nbNote.'</span>' : '');
@@ -75,10 +75,10 @@ function voletlinePrepareHead($object)
 	if ($showtabofpagedocument) {
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 		require_once DOL_DOCUMENT_ROOT.'/core/class/link.class.php';
-		$upload_dir = $conf->formationhabilitation->dir_output."/voletline/".dol_sanitizeFileName($object->ref);
+		$upload_dir = $conf->formationhabilitation->dir_output."/uservolet/".dol_sanitizeFileName($object->ref);
 		$nbFiles = count(dol_dir_list($upload_dir, 'files', 0, '', '(\.meta|_preview.*\.png)$'));
 		$nbLinks = Link::count($db, $object->element, $object->id);
-		$head[$h][0] = dol_buildpath("/formationhabilitation/voletline_document.php", 1).'?id='.$object->id;
+		$head[$h][0] = dol_buildpath("/formationhabilitation/uservolet_document.php", 1).'?id='.$object->id;
 		$head[$h][1] = $langs->trans('Documents');
 		if (($nbFiles + $nbLinks) > 0) {
 			$head[$h][1] .= '<span class="badge marginleftonlyshort">'.($nbFiles + $nbLinks).'</span>';
@@ -88,7 +88,7 @@ function voletlinePrepareHead($object)
 	}
 
 	if ($showtabofpageagenda) {
-		$head[$h][0] = dol_buildpath("/formationhabilitation/voletline_agenda.php", 1).'?id='.$object->id;
+		$head[$h][0] = dol_buildpath("/formationhabilitation/uservolet_agenda.php", 1).'?id='.$object->id;
 		$head[$h][1] = $langs->trans("Events");
 		$head[$h][2] = 'agenda';
 		$h++;
@@ -102,9 +102,9 @@ function voletlinePrepareHead($object)
 	//$this->tabs = array(
 	//	'entity:-tabname:Title:@formationhabilitation:/formationhabilitation/mypage.php?id=__ID__'
 	//); // to remove a tab
-	complete_head_from_modules($conf, $langs, $object, $head, $h, 'voletline@formationhabilitation');
+	complete_head_from_modules($conf, $langs, $object, $head, $h, 'uservolet@formationhabilitation');
 
-	complete_head_from_modules($conf, $langs, $object, $head, $h, 'voletline@formationhabilitation', 'remove');
+	complete_head_from_modules($conf, $langs, $object, $head, $h, 'uservolet@formationhabilitation', 'remove');
 
 	return $head;
 }

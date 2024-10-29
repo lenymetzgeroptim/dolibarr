@@ -17,9 +17,9 @@
  */
 
 /**
- *  \file       voletline_contact.php
+ *  \file       volet_contact.php
  *  \ingroup    formationhabilitation
- *  \brief      Tab for contacts linked to VoletLine
+ *  \brief      Tab for contacts linked to Volet
  */
 
 // Load Dolibarr environment
@@ -56,8 +56,8 @@ if (!$res) {
 
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
-dol_include_once('/formationhabilitation/class/voletline.class.php');
-dol_include_once('/formationhabilitation/lib/formationhabilitation_voletline.lib.php');
+dol_include_once('/formationhabilitation/class/volet.class.php');
+dol_include_once('/formationhabilitation/lib/formationhabilitation_volet.lib.php');
 
 // Load translation files required by the page
 $langs->loadLangs(array("formationhabilitation@formationhabilitation", "companies", "other", "mails"));
@@ -69,7 +69,7 @@ $socid  = GETPOST('socid', 'int');
 $action = GETPOST('action', 'aZ09');
 
 // Initialize technical objects
-$object = new VoletLine($db);
+$object = new Volet($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($object->element.'contact', 'globalcard')); // Note that conf->hooks_modules contains array
@@ -83,8 +83,8 @@ include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be includ
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 0;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'voletline', 'read');
-	$permissiontoadd = $user->hasRight('formationhabilitation', 'voletline', 'write');
+	$permissiontoread = $user->hasRight('formationhabilitation', 'volet', 'read');
+	$permissiontoadd = $user->hasRight('formationhabilitation', 'volet', 'write');
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;
@@ -143,7 +143,7 @@ if ($action == 'addcontact' && $permissiontoadd) {
  * View
  */
 
-$title = $langs->trans("VoletLine")." - ".$langs->trans('ContactsAddresses');
+$title = $langs->trans("Volet")." - ".$langs->trans('ContactsAddresses');
 //$title = $object->ref." - ".$langs->trans('ContactsAddresses');
 $help_url = '';
 //$help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
@@ -165,11 +165,11 @@ if ($object->id) {
 	/*
 	 * Show tabs
 	 */
-	$head = voletlinePrepareHead($object);
+	$head = voletPrepareHead($object);
 
-	print dol_get_fiche_head($head, 'contact', $langs->trans("VoletLine"), -1, $object->picto);
+	print dol_get_fiche_head($head, 'contact', $langs->trans("Volet"), -1, $object->picto);
 
-	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/voletline_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/volet_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*

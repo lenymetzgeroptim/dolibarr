@@ -123,12 +123,16 @@ td.linecolstatus a[aria-label="Programmer"] {
 	margin: 5px !important;
 }
 
-a.customhover:hover {
+.formationhabilitation div.card:hover {
 	text-decoration: none;
 	background-color: #f0f0f0;
 }
 
-.voletcardtitle {
+.uservoletcardtitle {
 	font-size: 16px;
   	font-weight: bold;
+}
+
+.pr-8 {
+	padding-right: 8px;
 }

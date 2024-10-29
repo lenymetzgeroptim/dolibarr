@@ -127,7 +127,7 @@ class Autorisation extends CommonObject
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Actif", "5" => "Cloturée"), "validate"=>"1",),
 		"formation" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"Formation", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1",),
-		"volet" => array("type"=>"chkbxlst:c_volets:numero|label:rowid::(active=1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
+		"fk_volet" => array("type"=>"chkbxlst:formationhabilitation_volet:numero|label:rowid::(status=1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"test" => array("type"=>"chkbxlst:formationhabilitation_test:label:rowid::(status=1)", "label"=>"Test", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"domaineapplication" => array("type"=>"sellist:c_domaine_application:label:rowid::(active:=:1)", "label"=>"DomaineApplication", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1",),
 	);
@@ -145,7 +145,7 @@ class Autorisation extends CommonObject
 	public $model_pdf;
 	public $status;
 	public $formation;
-	public $volet;
+	public $fk_volet;
 	public $test;
 	public $domaineapplication;
 	// END MODULEBUILDER PROPERTIES
@@ -1294,6 +1294,152 @@ class Autorisation extends CommonObject
 		$this->db->commit();
 
 		return $error;
+	}
+
+	/**
+	 * 	Return toutes les autorisations dont la formation $formationid est requise
+	 *
+	 * 	@param  int		$formationId       Id of Formation
+	 * 	@return	array(int)|int						
+	 */
+	public function getAutorisationsWhereFormationIsRequire($formationId)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT ep.fk_source";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."$this->table_element as h ON h.rowid = ep.fk_source AND ep.sourcetype = '$this->element'";
+		$sql .= " WHERE FIND_IN_SET(".$formationId.", ep.prerequisobjects)";
+		$sql .= " AND h.status = ".self::STATUS_OUVERTE;
+
+		dol_syslog(get_class($this)."::getAutorisationsWhereFormationIsRequire", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->fk_source;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	
+	/**
+	 * 	Return tous les prérequis d'une autorisation
+	 *
+	 * 	@param  int		$autorisation_id       Id of Autorisation
+	 * 	@return	array(array(int))|int						
+	 */
+	function getPrerequis($autorisation_id) {
+		$res = array();
+
+		$sql = "SELECT rowid, prerequisobjects";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
+		$sql .= " WHERE sourcetype = '$this->element' AND fk_source = $autorisation_id";
+
+		dol_syslog(get_class($this)."::getPrerequis", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = explode(',', $obj->prerequisobjects);
+			}
+
+			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Attribuer une autorisation à un utilisateur
+	 *
+	 * 	@param  int				$user_id       	   Id of User
+	 *  @param  UserFormation	$userformation     UserFormation object
+	 * 	@return	int						<0 if KO, Id of created object if OK				
+	 */
+	function AsignToUser($user_id, $userformation) {
+		global $user; 
+
+		$userAutorisation = new UserAutorisation($this->db);
+		$user_static = new User($this->db);
+		$user_static->fetch($user_id);
+
+		$userAutorisation->date_autorisation = $userformation->date_fin_formation;
+		$userAutorisation->date_fin_autorisation = $userformation->date_finvalidite_formation;
+		$userAutorisation->fk_user = $user_id;
+		$userAutorisation->status = UserAutorisation::STATUS_AUTORISABLE;
+		$userAutorisation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userformation->date_fin_formation, "%Y%m%d");
+		$userAutorisation->fk_autorisation = $this->id;
+
+		$resultcreate = $userAutorisation->create($user);
+
+		return $resultcreate;
+	}
+
+	/**
+	 * 	Génère les autorisations lors de la validation d'une formation
+	 *
+	 * 	@param  int				$user_id       			Id of User
+	 *  @param  UserFormation	$userformation     		new UserFormation
+	 * 	@param  string			$txtListAutorisation  	Contain label of autorisation generate
+	 * 	@return	int						<0 if KO, > 0 if OK				
+	 */
+	function generateAutorisationsForUser($user_id, $userformation, &$txtListAutorisation) { // TODOLeny - gestion des erreurs
+		// 1. Récupérer toutes les formations de l'utilisateur (y compris la nouvelle)
+		$formations_user = $userformation->getAllFormationsForUser($user_id);
+		// if (!in_array($userformation->fk_formation, $formations_user)) {
+		// 	$formations_user[] = $userformation->fk_formation; // Ajouter la nouvelle formation
+		// }
+
+		// 2. Récupérer toutes les autorisations où la nouvelle formation est un prérequis
+		$autorisations = $this->getAutorisationsWhereFormationIsRequire($userformation->fk_formation);
+
+		// 3. Parcourir chaque habilitation et vérifier les conditions
+		foreach ($autorisations as $autorisation_id) {
+			$conditions = $this->getPrerequis($autorisation_id);
+			$all_conditions_met = true;
+
+			foreach ($conditions as $prerequis) {
+				$condition_met = false;
+	
+				// Vérifier si l'utilisateur satisfait au moins une formation dans la condition
+				foreach ($prerequis as $formation_id) {
+					if (in_array($formation_id, $formations_user)) {
+						$condition_met = true; // Condition remplie
+						break;
+					}
+				}
+	
+				if (!$condition_met) {
+					$all_conditions_met = false;
+					break; // Condition non remplie, on arrête pour cette habilitation
+				}
+			}
+	
+			// Si toutes les conditions sont remplies, attribuer l'habilitation
+			if ($all_conditions_met) {
+				$autorisation = new self($this->db);
+				$autorisation->fetch($autorisation_id);
+				$txtListHabilitation .= $autorisation->label.', ';
+
+				$resultcreate = $autorisation->AsignToUser($user_id, $userformation);
+
+				if($resultcreate <= 0) {
+					$this->error = $autorisation->db->lasterror();
+					$this->errors[] = $this->error;
+					return -1;
+				}
+			}
+		}
+
+		return 1;
 	}
 }
 

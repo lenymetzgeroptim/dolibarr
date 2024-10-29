@@ -33,15 +33,14 @@ CREATE TABLE llx_formationhabilitation_formation(
 	nombre_heure integer, 
 	cout double, 
 	periode_recyclage integer, 
-	fournisseur varchar(128), 
+	fournisseur chkbxlst, 
 	famille integer, 
 	periode_souplesse integer, 
 	periode_souplesse_bloquant boolean, 
-	prerequis varchar(128), 
-	volet varchar(128), 
-	formationssuperieurs varchar(128), 
+	fk_volet chkbxlst, 
+	formationssuperieurs chkbxlst, 
 	delaisprogrammation integer, 
 	sousdomaine integer NOT NULL, 
-	commentaire text
+	commentaire texte
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

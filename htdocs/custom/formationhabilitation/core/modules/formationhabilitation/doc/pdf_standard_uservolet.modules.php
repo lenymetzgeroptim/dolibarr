@@ -31,7 +31,7 @@
  *  \brief      File of class to generate document from standard template
  */
 
-dol_include_once('/formationhabilitation/core/modules/formationhabilitation/modules_volet.php');
+dol_include_once('/formationhabilitation/core/modules/formationhabilitation/modules_uservolet.php');
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
@@ -39,9 +39,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 
 
 /**
- *	Class to manage PDF template standard_volet
+ *	Class to manage PDF template standard_uservolet
  */
-class pdf_standard_volet extends ModelePDFVolet
+class pdf_standard_uservolet extends ModelePDFUserVolet
 {
 	/**
 	 * @var DoliDb Database handler
@@ -188,7 +188,7 @@ class pdf_standard_volet extends ModelePDFVolet
 	/**
 	 *  Function to build pdf onto disk
 	 *
-	 *  @param		Volet		$object				Object to generate
+	 *  @param		UserVolet		$object				Object to generate
 	 *  @param		Translate	$outputlangs		Lang output object
 	 *  @param		string		$srctemplatepath	Full path of source filename for generator using a template file
 	 *  @param		int			$hidedetails		Do not show line details
@@ -200,7 +200,8 @@ class pdf_standard_volet extends ModelePDFVolet
 	{
 		// phpcs:enable
 		global $user, $langs, $conf, $mysoc, $db, $hookmanager, $object;
-		$voletInfo = $object->getVoletInfo($object->numvolet);
+		$volet = new Volet($this->db);
+		$volet->fetch($object->fk_volet); 
 
 		dol_syslog("write_file outputlangs->defaultlang=".(is_object($outputlangs) ? $outputlangs->defaultlang : 'null'));
 
@@ -233,8 +234,10 @@ class pdf_standard_volet extends ModelePDFVolet
 			$now = dol_now();
 			$user_static = new User($db);
 			$user_static->fetch($object->fk_user);
+			$volet = new Volet($this->db);
+			$volet->fetch($object->fk_volet);
 			$dir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
-			$file = $dir."/".$user_static->lastname."_Volet-".$voletInfo['nommage']."_".dol_print_date($now, "%Y%m%d").".pdf";
+			$file = $dir."/".$user_static->lastname."_".$volet->nommage."_".dol_print_date($now, "%Y%m%d").".pdf";
 			// Appeler la fonction pour obtenir un chemin de fichier unique
 			$file = $this->getUniqueFilename($file);
 			if (!file_exists($dir)) {
@@ -304,29 +307,29 @@ class pdf_standard_volet extends ModelePDFVolet
 				//$pdf->MultiCell(0, 3, ''); // Set interline to 3
 				$pdf->SetTextColor(0, 0, 0);
 
-				if($voletInfo['model'] == 1) {
+				if($volet->model == 1) {
 					$this->pagebodyidentity($pdf, $object, $outputlangs, $outputlangsbis);
 				}
-				elseif($voletInfo['model'] == 2) {
+				elseif($volet->model == 2) {
 					$this->pagebodyformation($pdf, $object, $outputlangs, $outputlangsbis);
 				}
-				elseif($voletInfo['model'] == 3) {
+				elseif($volet->model == 3) {
 					$this->pagebodyentreprise($pdf, $object, $outputlangs, $outputlangsbis);
 				}
-				elseif($voletInfo['model'] == 4) {
+				elseif($volet->model == 4) {
 					$this->pagebodyhabilitation($pdf, $object, $outputlangs, $outputlangsbis, $pagenb);
 				}
-				elseif($voletInfo['model'] == 5) {
+				elseif($volet->model == 5) {
 					$this->pagebodymedical($pdf, $object, $outputlangs, $outputlangsbis);
 				}
-				elseif($voletInfo['model'] == 6) {
+				elseif($volet->model == 6) {
 					$this->pagebodyautorisation($pdf, $object, $outputlangs, $outputlangsbis);
 				}
 
 				// Footer
 				$this->_pagefoot($pdf, $object, $outputlangs);
 
-				if($voletInfo['model'] == 6) {
+				if($volet->model == 6) {
 					$pdf->AddPage();
 					$pagenb++;
 					$pagecount = $pdf->setSourceFile($conf->formationhabilitation->dir_output.'/'.$object->element.'/Autorisation.pdf');
@@ -434,7 +437,7 @@ class pdf_standard_volet extends ModelePDFVolet
 	 *  Show top header of page.
 	 *
 	 *  @param	Tcpdf		$pdf     		Object PDF
-	 *  @param  Volet		$object     	Object to show
+	 *  @param  UserVolet		$object     	Object to show
 	 *  @param  int	    	$showaddress    0=no, 1=yes
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
@@ -459,7 +462,8 @@ class pdf_standard_volet extends ModelePDFVolet
 		$posy = $this->marge_haute;
 		$posx = $this->page_largeur - $this->marge_droite - $w;
 
-		$voletInfo = $object->getVoletInfo($object->numvolet);
+		$volet = new Volet($this->db);
+		$volet->fetch($object->fk_volet); 
 
 		$userField = new UserField($this->db);
 		$userField->id = $user_static->id;
@@ -467,8 +471,8 @@ class pdf_standard_volet extends ModelePDFVolet
 		$userField->fetch_optionals();
 
 		$pdf->SetFont('', 'B', $default_font_size);
-		$pdf->writeHTML('<h4 style="text-align: center; border: 1px black solid;">VOLET '.($voletInfo['numero'] ? $voletInfo['numero'].' - ' : '- ').$voletInfo['label'].'</h2>');
-		if($voletInfo['model'] != 1) {
+		$pdf->writeHTML('<h4 style="text-align: center; border: 1px black solid;">VOLET '.($volet->numero ? $volet->numero.' - ' : '- ').$volet->label.'</h2>');
+		if($volet->model != 1) {
 			$pdf->SetFont('', '', $default_font_size);
 			$pdf->writeHTML('<p style="border-bottom: 1px black solid;">NOM : '.$user_static->lastname.'</p>');
 			$pdf->writeHTML('<p style="border-bottom: 1px black solid;">PRENOMS : '.$user_static->firstname." ".$userField->array_options['options_secondprenom'].'</p>');
@@ -480,10 +484,10 @@ class pdf_standard_volet extends ModelePDFVolet
 	}
 
 	/**
-	 *  Show Body for identity volet
+	 *  Show Body for identity uservolet
 	 *
 	 *  @param	Tcpdf		$pdf     		Object PDF
-	 *  @param  Volet		$object     	Object to show
+	 *  @param  UserVolet		$object     	Object to show
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
@@ -538,10 +542,10 @@ class pdf_standard_volet extends ModelePDFVolet
 	}
 
 	/**
-	 *  Show Body for formation volet
+	 *  Show Body for formation uservolet
 	 *
 	 *  @param	Tcpdf		$pdf     		Object PDF
-	 *  @param  Volet		$object     	Object to show
+	 *  @param  UserVolet		$object     	Object to show
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
@@ -553,7 +557,8 @@ class pdf_standard_volet extends ModelePDFVolet
 		$nb_formation = 0;
 		$formation = new Formation($db);
 		$userformation = new UserFormation($db);
-		$voletInfo = $object->getVoletInfo($object->numvolet);
+		$volet = new Volet($this->db);
+		$volet->fetch($object->fk_volet); 
 		$arrayformations = $formation->getFormationsByVolet($object->numvolet);
 
 		$nb_initial = $voletInfo['nb_initial'];
@@ -651,10 +656,10 @@ class pdf_standard_volet extends ModelePDFVolet
 	}
 
 	/**
-	 *  Show Body for entreprise volet
+	 *  Show Body for entreprise uservolet
 	 *
 	 *  @param	Tcpdf		$pdf     		Object PDF
-	 *  @param  Volet		$object     	Object to show
+	 *  @param  UserVolet		$object     	Object to show
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
@@ -700,10 +705,10 @@ class pdf_standard_volet extends ModelePDFVolet
 	}
 
 	/**
-	 *  Show Body for habilitation volet
+	 *  Show Body for habilitation uservolet
 	 *
 	 *  @param	Tcpdf		$pdf     		Object PDF
-	 *  @param  Volet		$object     	Object to show
+	 *  @param  UserVolet		$object     	Object to show
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
@@ -717,9 +722,10 @@ class pdf_standard_volet extends ModelePDFVolet
 		$nb_habilitation = 0;
 		$nb_habilitation_max = 5;
 		$habilitation = new Habilitation($db);
-		$voletInfo = $object->getVoletInfo($object->numvolet);
-		$domaineapplicationInfo = $object->getAllDomaineApplication();
-		//$arrayhabilitations = $userhabilitation->getHabilitationsByUser($object->id, $object->numvolet);
+		$volet = new Volet($this->db);
+		$volet->fetch($object->fk_volet); 
+		$domaineapplicationInfo = $volet->getAllDomaineApplication();
+		//$arrayhabilitations = $userhabilitation->getHabilitationsByUser($object->id, $object->fk_volet);
 		$object->getLinkedLinesArray();
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 		$pdf->SetTextColor(0, 0, 60);
@@ -795,10 +801,10 @@ class pdf_standard_volet extends ModelePDFVolet
 	}
 
 	/**
-	 *  Show Body for medicale volet
+	 *  Show Body for medicale uservolet
 	 *
 	 *  @param	Tcpdf		$pdf     		Object PDF
-	 *  @param  Volet		$object     	Object to show
+	 *  @param  UserVolet		$object     	Object to show
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
@@ -893,10 +899,10 @@ class pdf_standard_volet extends ModelePDFVolet
 	}
 
 	/**
-	 *  Show Body for autorisation volet
+	 *  Show Body for autorisation uservolet
 	 *
 	 *  @param	Tcpdf		$pdf     		Object PDF
-	 *  @param  Volet		$object     	Object to show
+	 *  @param  UserVolet		$object     	Object to show
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
@@ -908,9 +914,10 @@ class pdf_standard_volet extends ModelePDFVolet
 		$nb_autorisation = 0;
 		$nb_autorisation_max = 4;
 		$autorisation = new Autorisation($db);
-		$voletInfo = $object->getVoletInfo($object->numvolet);
-		//$arrayautorisations = $userautorisation->getAutorisationsByUser($object->fk_user, $object->numvolet);
-		$domaineapplicationInfo = $object->getAllDomaineApplication();
+		$volet = new Volet($this->db);
+		$volet->fetch($object->fk_volet); 
+		//$arrayautorisations = $userautorisation->getAutorisationsByUser($object->fk_user, $object->fk_volet);
+		$domaineapplicationInfo = $volet->getAllDomaineApplication();
 		$object->getLinkedLinesArray();
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 		$pdf->SetTextColor(0, 0, 60);
@@ -994,10 +1001,10 @@ class pdf_standard_volet extends ModelePDFVolet
 	}
 
 	/**
-	 *  Show Body for autorisation volet
+	 *  Show Body for autorisation uservolet
 	 *
 	 *  @param	Tcpdf		$pdf     		Object PDF
-	 *  @param  Volet		$object     	Object to show
+	 *  @param  UserVolet		$object     	Object to show
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
@@ -1029,7 +1036,7 @@ class pdf_standard_volet extends ModelePDFVolet
 	 *   	Show footer of page. Need this->emetteur object
 	 *
 	 *   	@param	TCPDF		$pdf     			PDF
-	 * 		@param	Volet		$object				Object to show
+	 * 		@param	UserVolet		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
 	 *      @param	int			$hidefreetext		1=Hide free text
 	 *      @return	int								Return height of bottom margin including footer text

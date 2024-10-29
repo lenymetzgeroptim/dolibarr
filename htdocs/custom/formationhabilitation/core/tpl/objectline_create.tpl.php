@@ -74,6 +74,14 @@ if($objectline->element == 'userhabilitation' || $objectline->element == 'userau
 	unset($objectline->fields['status']['arrayofkeyval'][9]);
 }
 
+if($objectline->element == 'uservolet') {
+	unset($objectline->fields['status']['arrayofkeyval'][1]);
+	unset($objectline->fields['status']['arrayofkeyval'][2]);
+	unset($objectline->fields['status']['arrayofkeyval'][3]);
+	unset($objectline->fields['status']['arrayofkeyval'][4]);
+	unset($objectline->fields['status']['arrayofkeyval'][9]);
+}
+
 foreach($objectline->fields as $key => $val){
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3) {
 		if(abs($val['visible']) == 4) {

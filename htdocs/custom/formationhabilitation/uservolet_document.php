@@ -17,9 +17,9 @@
  */
 
 /**
- *  \file       voletline_document.php
+ *  \file       uservolet_document.php
  *  \ingroup    formationhabilitation
- *  \brief      Tab for documents linked to VoletLine
+ *  \brief      Tab for documents linked to UserVolet
  */
 
 // General defined Options
@@ -79,8 +79,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/images.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
-dol_include_once('/formationhabilitation/class/voletline.class.php');
-dol_include_once('/formationhabilitation/lib/formationhabilitation_voletline.lib.php');
+dol_include_once('/formationhabilitation/class/uservolet.class.php');
+dol_include_once('/formationhabilitation/lib/formationhabilitation_uservolet.lib.php');
 
 // Load translation files required by the page
 $langs->loadLangs(array("formationhabilitation@formationhabilitation", "companies", "other", "mails"));
@@ -110,7 +110,7 @@ if (!$sortfield) {
 //if (! $sortfield) $sortfield="position_name";
 
 // Initialize technical objects
-$object = new VoletLine($db);
+$object = new UserVolet($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($object->element.'document', 'globalcard')); // Note that conf->hooks_modules contains array
@@ -122,7 +122,7 @@ $extrafields->fetch_name_optionals_label($object->table_element);
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once  // Must be include, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
 
 if ($id > 0 || !empty($ref)) {
-	$upload_dir = $conf->formationhabilitation->multidir_output[$object->entity ? $object->entity : $conf->entity]."/voletline/".get_exdir(0, 0, 0, 1, $object);
+	$upload_dir = $conf->formationhabilitation->multidir_output[$object->entity ? $object->entity : $conf->entity]."/uservolet/".get_exdir(0, 0, 0, 1, $object);
 }
 
 // Permissions
@@ -130,8 +130,8 @@ if ($id > 0 || !empty($ref)) {
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 0;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'voletline', 'read');
-	$permissiontoadd  = $user->hasRight('formationhabilitation', 'voletline', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
+	$permissiontoread = $user->hasRight('formationhabilitation', 'uservolet', 'read');
+	$permissiontoadd  = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd  = 1;
@@ -169,16 +169,16 @@ $form = new Form($db);
 
 // Header
 // ------
-$title = $langs->trans("VoletLine")." - ".$langs->trans("Files");
+$title = $langs->trans("UserVolet")." - ".$langs->trans("Files");
 //$title = $object->ref." - ".$langs->trans("Files");
 $help_url = '';
 //Example $help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
 llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-card_document');
 
 // Show tabs
-$head = voletlinePrepareHead($object);
+$head = uservoletPrepareHead($object);
 
-print dol_get_fiche_head($head, 'document', $langs->trans("VoletLine"), -1, $object->picto);
+print dol_get_fiche_head($head, 'document', $langs->trans("UserVolet"), -1, $object->picto);
 
 
 // Build file list
@@ -190,7 +190,7 @@ foreach ($filearray as $key => $file) {
 
 // Object card
 // ------------------------------------------------------------
-$linkback = '<a href="'.dol_buildpath('/formationhabilitation/voletline_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+$linkback = '<a href="'.dol_buildpath('/formationhabilitation/uservolet_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
 $morehtmlref = '<div class="refidno">';
 /*
@@ -252,8 +252,8 @@ print dol_get_fiche_end();
 
 $modulepart = 'formationhabilitation';
 $param = '&id='.$object->id;
-//$relativepathwithnofile='voletline/' . dol_sanitizeFileName($object->id).'/';
-$relativepathwithnofile = 'voletline/'.dol_sanitizeFileName($object->ref).'/';
+//$relativepathwithnofile='uservolet/' . dol_sanitizeFileName($object->id).'/';
+$relativepathwithnofile = 'uservolet/'.dol_sanitizeFileName($object->ref).'/';
 
 include DOL_DOCUMENT_ROOT.'/core/tpl/document_actions_post_headers.tpl.php';
 

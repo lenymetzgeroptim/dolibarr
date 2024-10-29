@@ -22,12 +22,12 @@
  */
 
 /**
- *	\file       htdocs/core/modules/formationhabilitation/doc/doc_generic_volet_odt.modules.php
+ *	\file       htdocs/core/modules/formationhabilitation/doc/doc_generic_uservolet_odt.modules.php
  *	\ingroup    formationhabilitation
- *	\brief      File of class to build ODT documents for volets
+ *	\brief      File of class to build ODT documents for uservolets
  */
 
-dol_include_once('/formationhabilitation/core/modules/formationhabilitation/modules_volet.php');
+dol_include_once('/formationhabilitation/core/modules/formationhabilitation/modules_uservolet.php');
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
@@ -38,7 +38,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/doc.lib.php';
 /**
  *	Class to build documents using ODF templates generator
  */
-class doc_generic_volet_odt extends ModelePDFVolet
+class doc_generic_uservolet_odt extends ModelePDFUserVolet
 {
 	/**
 	 * Issuer
@@ -176,7 +176,7 @@ class doc_generic_volet_odt extends ModelePDFVolet
 			$texte .= '<div id="div_'.get_class($this).'" class="hiddenx">';
 			// Show list of found files
 			foreach ($listoffiles as $file) {
-				$texte .= '- '.$file['name'].' <a href="'.DOL_URL_ROOT.'/document.php?modulepart=doctemplates&file=formationhabilitation_volet/'.urlencode(basename($file['name'])).'">'.img_picto('', 'listlight').'</a>';
+				$texte .= '- '.$file['name'].' <a href="'.DOL_URL_ROOT.'/document.php?modulepart=doctemplates&file=formationhabilitation_uservolet/'.urlencode(basename($file['name'])).'">'.img_picto('', 'listlight').'</a>';
 				$texte .= ' &nbsp; <a class="reposition" href="'.$_SERVER["PHP_SELF"].'?modulepart=doctemplates&keyforuploaddir=FORMATIONHABILITATION_MYOBJECT_ADDON_PDF_ODT_PATH&action=deletefile&token='.newToken().'&file='.urlencode(basename($file['name'])).'">'.img_picto('', 'delete').'</a>';
 				$texte .= '<br>';
 			}
@@ -209,7 +209,7 @@ class doc_generic_volet_odt extends ModelePDFVolet
 	/**
 	 *  Function to build a document on disk using the generic odt module.
 	 *
-	 *	@param		Volet	$object				Object source to build document
+	 *	@param		UserVolet	$object				Object source to build document
 	 *	@param		Translate	$outputlangs		Lang output object
 	 * 	@param		string		$srctemplatepath	Full path of source filename for generator using a template file
 	 *  @param		int			$hidedetails		Do not show line details
@@ -243,7 +243,7 @@ class doc_generic_volet_odt extends ModelePDFVolet
 			// If $object is id instead of object
 			if (!is_object($object)) {
 				$id = $object;
-				$object = new Volet($this->db);
+				$object = new UserVolet($this->db);
 				$result = $object->fetch($id);
 				if ($result < 0) {
 					dol_print_error($this->db, $object->error);

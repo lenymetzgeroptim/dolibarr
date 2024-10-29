@@ -52,14 +52,14 @@ if(!$user->rights->formationhabilitation->formation->addline){
 }
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
-$url = dol_buildpath('/formationhabilitation/volet_card.php', 1).'?id='.$line->id;
+$url = dol_buildpath('/formationhabilitation/uservolet_card.php', 1).'?id='.$line->id;
 
 print '<div class="col">';
 	print '<div class="card">';
 		print '<a class="customhover" href="'.$url.'">';
-			//print '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEdw67K7dC_tAz6cwn64PyZRirAHi8Vdgd-A&s" class="card-img-top" alt="Image Volet">';
+			//print '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEdw67K7dC_tAz6cwn64PyZRirAHi8Vdgd-A&s" class="card-img-top" alt="Image UserVolet">';
 			print '<div class="card-body">';
-				print $line->getNomUrl(0, 'nolink', 1, 'voletcardtitle');
+				print $line->getNomUrl(0, 'nolink', 1, 'uservoletcardtitle');
 				print '<div class="statusref" style="margin-top: 0px;">'.$line->getLibStatut(5).'</div><br><br>';
 
 				foreach($objectline->fields as $key => $val){

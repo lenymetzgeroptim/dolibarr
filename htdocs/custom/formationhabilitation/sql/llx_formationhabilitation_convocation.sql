@@ -36,7 +36,7 @@ CREATE TABLE llx_formationhabilitation_convocation(
 	fk_societe integer, 
 	fk_contact integer, 
 	commentaire text, 
-	naturevisite varchar(255), 
+	motifvisite varchar(255), 
 	centremedecine integer, 
 	examenrealiser varchar(255), 
 	fk_formation integer

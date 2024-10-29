@@ -383,7 +383,7 @@ class UserFormation extends CommonObject
 	}
 
 	/**
-	 * Load list of formation linked to the volet
+	 * Load list of formation linked to the uservolet
 	 *
 	 * @param  string      $sortorder    Sort Order
 	 * @param  string      $sortfield    Sort field
@@ -391,11 +391,11 @@ class UserFormation extends CommonObject
 	 * @param  int         $offset       Offset
 	 * @param  array       $filter       Filter array. Example array('field'=>'valueforlike', 'customurl'=>...)
 	 * @param  string      $filtermode   Filter mode (AND or OR)
-	 * @param  int     	   $voletid   	 Id of volet
-	 * @param  int     	   $fk_numvoletid Id of c_volet
+	 * @param  int     	   $uservoletid  Id of uservolet
+	 * @param  int     	   $voletid 	 Id of volet
 	 * @return array|int                 int <0 if KO, array of pages if OK
 	 */
-	public function fetchAllLinked($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND', $voletid, $fk_numvoletid)
+	public function fetchAllLinked($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND', $uservoletid, $voletid)
 	{
 		global $conf;
 
@@ -406,8 +406,8 @@ class UserFormation extends CommonObject
 		$sql = "SELECT ";
 		$sql .= $this->getFieldList('t');
 		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
-		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as h ON h.rowid = t.fk_formation AND h.volet = $fk_numvoletid";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON t.rowid = e.fk_source AND e.sourcetype = 'formation' AND e.targettype = 'formationhabilitation_volet' AND e.fk_target = $voletid";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as h ON h.rowid = t.fk_formation AND h.fk_volet = $voletid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON t.rowid = e.fk_source AND e.sourcetype = 'formation' AND e.targettype = 'formationhabilitation_uservolet' AND e.fk_target = $uservoletid";
 		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
 			$sql .= " WHERE t.entity IN (".getEntity($this->table_element).")";
 		} else {
@@ -1382,6 +1382,36 @@ class UserFormation extends CommonObject
 				return 0;
 			}
 		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Est-ce que l'utilisateur $userid possède la formation $formationid
+	 *
+	 * 	@param  int		$userid       	Id of User
+	 * 	@return	array(int)|int				Array with Id of formation		
+	 */
+	function getAllFormationsForUser($userid) {
+    	global $db;
+		$res = array();
+
+		$sql = "SELECT DISTINCT uf.fk_formation";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_PROGRAMMEE." OR uf.status = ".self::STATUS_REPROGRAMMEE.')';
+
+		dol_syslog(get_class($this)."::getAllFormationsForUser", LOG_DEBUG);
+		$resql = $db->query($sql);
+		if ($resql) {
+			while ($obj = $db->fetch_object($resql)) {
+				$res[] = $obj->fk_formation;
+			}
+
+			return $res;
+		}
+		else {
 			$this->error = $this->db->lasterror();
 			return -1;
 		}

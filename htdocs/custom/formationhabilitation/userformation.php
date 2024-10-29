@@ -56,6 +56,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/convocation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/extendedhtml.form.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/uservolet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/volet.class.php';
 
 
@@ -73,7 +74,6 @@ $sortorder = GETPOST('sortorder', 'aZ09comma');
 $userid = GETPOST('id', 'integer');
 $lineid   = GETPOST('lineid', 'int');
 $onglet = GETPOST('onglet', 'aZ09');
-$voletid   = GETPOST('voletid', 'int');
 
 
 //Permissions
@@ -90,7 +90,7 @@ $userIsRespAntenne = in_array($user->id, $arrayUserRespAntenne); // Utilisateur 
 $arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
 
 $permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
-$permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
+$permissiontoreadCout = $user->rights->formationhabilitation->formation->readcout;
 $permissiontovalidatelines = $userInRespAntenneGroup && $userIsRespAntenne;
 
 
@@ -116,7 +116,7 @@ elseif($onglet == 'autorisation'){
     $objectparentline = new Autorisation($db);
 }
 elseif($onglet == 'volet'){
-    $objectline = new Volet($db);
+    $objectline = new UserVolet($db);
     $objectparentline = new Volet($db);
 }
 
@@ -188,7 +188,7 @@ if ($onglet == 'volet') {
         $user_static->fetch(GETPOST('fk_user'));
     }
 
-    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_volet.inc.php';
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_uservolet.inc.php';
 
     // // Delete file
     // if ($action == 'confirm_deletefile' && $confirm == 'yes') {
@@ -286,7 +286,7 @@ if ($action == 'valider_formation') {
         $txt_formationToClose = rtrim($txt_formationToClose, ', ');
     }
 
-    $formquestion = array(array('label'=>'Résultat' ,'type'=>'select', 'name'=>'resultat_valider', 'value'=>$objectline->resultat, 'values' => $objectline->fields['resultat']['arrayofkeyval']),
+    $formquestion = array(array('label'=>'Résultat' ,'type'=>'select', 'name'=>'resultat_valider', 'default'=>$objectline->resultat, 'values' => $objectline->fields['resultat']['arrayofkeyval']),
                           array('label'=>'Numéro Certificat' ,'type'=>'text', 'name'=>'numero_certificat_valider', 'value'=>$objectline->numero_certificat));
     $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].($param ? '?'.$param : '').'&lineid='.$lineid, $langs->trans('ValiderFormation'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmValiderFormation2', $txt_formationToClose) : $langs->trans('ConfirmValiderFormation')), 'confirm_valider_formation', $formquestion, 0, 2);
 }
@@ -350,41 +350,9 @@ elseif($onglet == 'autorisation'){
 elseif($onglet == 'volet') {
     print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
 
-    $contextpage = 'volet';
+    $contextpage = 'uservolet';
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
     print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
-
-    // $formfile = new FormFile($db);
-    // $volet = new Volet($db);
-    // $upload_dir = $conf->export->dir_temp.'/'.$user->id;
-    
-    // print '<div class="fichecenter">';
-    //     print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?action=confirm_genererPdf">';
-    //         print '<input type="hidden" name="confirm" value="yes">';
-    //         print '<input type="hidden" name="onglet" value="volet">';
-    //         print '<input type="hidden" name="id" value="'.$object->id.'">';
-    //         print '<input type="hidden" name="fk_user" value="'.$object->id.'">';
-
-
-    //         $urlsource = $_SERVER['PHP_SELF'].'?id='.$object->id.'&onglet=volet';
-        
-    //         $filedir = $conf->formationhabilitation->dir_output.'/'.$object->id;
-    //         $genallowed = 1; // LENYTODO
-    //         $delallowed = 1; // LENYTODO
-        
-    //         include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/modules/formationhabilitation/modules_formationhabilitation_user.php';
-    //         print $formfile->showdocuments('formationhabilitation_user', '', $filedir, $urlsource, $genallowed, $delallowed, '', 1, 0, 0, 0, 1, '', 'Volets');
-
-    //         print '<div class="tabsAction">'."\n";
-    //         // Generer PDF
-    //         $voletarray = $volet->getallVolet();
-    //         print $form->selectarray('voletid', $voletarray, $voletid, 1);
-    //         if($permissiontoaddline) {
-    //             print '<input type="submit" value="'.$langs->trans("GenererDoc").'" class="button"/>';
-    //         }
-    //         print '</div>'."\n";
-    //     print '</form>';
-    // print '</div>';
 }
 
 print '</div>';

@@ -21,6 +21,9 @@
  *  \brief			Code for common actions delete / add / update
  */
 
+dol_include_once('/formationhabilitation/class/visitemedical.class.php');
+require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
+
 // if ($cancel) {
 // 	/*var_dump($cancel);var_dump($backtopage);var_dump($backtopageforcancel);exit;*/
 // 	if (!empty($backtopageforcancel)) {
@@ -64,16 +67,51 @@ if($action == 'addline' && $permissiontoaddline) {
 		$error++;
 	}
 
-	if(!$error && empty(GETPOST('forcecreation'))) { // Gestion des prérequis : TODOL -> aptitude medicale
-		$prerequis = explode(',', $autorisation_static->formation);
-		$formation = new Formation($db);
-		foreach($prerequis as $formationid) {
-			if(!$userFormation->userAsFormation(GETPOST('fk_user'), $formationid)) {
-				$formation->fetch($formationid);
-				setEventMessages($langs->trans('ErrorPrerequisFormation', $formation->label), null, 'errors');
+	if(!$error && empty(GETPOST('forcecreation'))) {
+		// Prérequis des formations
+		$formations_user = $userFormation->getAllFormationsForUser(GETPOST('fk_user'));
+
+		// Récupérer toutes les conditions de prérequis pour cette autorisation
+		$prerequisConditions = $autorisation_static->getPrerequis($autorisation_static->id);
+
+		foreach ($prerequisConditions as $conditionId => $formationIds) {
+			$conditionMet = false;
+
+			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
+			foreach ($formationIds as $formationid) {
+				if (in_array($formationid, $formations_user)) {
+					$conditionMet = true; 
+					break;
+				}
+			}
+
+			// Si une condition OR n'est pas remplie, générer un message d'erreur
+			if (!$conditionMet) {
+				setEventMessages($langs->trans('ErrorPrerequisFormation'), null, 'errors');
 				$error++;
+				break;
 			}
 		}
+		
+
+		// Prérequis aptitude médicale
+		if(!$error) {
+			$visiteMedicale = new VisiteMedical($db);
+			$extrafields = new Extrafields($db);
+			$extrafields->fetch_name_optionals_label('donneesrh_Medecinedutravail');
+			$userField = new UserField($db);
+			$userField->id = GETPOST('fk_user', 'int');
+			$userField->table_element = 'donneesrh_Medecinedutravail';
+			$userField->fetch_optionals();
+			$naturesVisite = explode(',', $userField->array_options['options_naturevisitemedicale']);
+			foreach($naturesVisite as $natureid) {
+				if(!$visiteMedicale->userAsAptitudeMedicale(GETPOST('fk_user', 'int'), $natureid)) {
+					$nature = $visiteMedicale->getNatureInfo($natureid);
+					setEventMessages($langs->trans('ErrorPrerequisAptitude', $nature['label']), null, 'errors');
+					$error++;
+				}
+			}
+		}	
 	}
 
 	if (!$error) {

@@ -26,6 +26,7 @@
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/elementprerequis.class.php';
 
 /**
  * Class for Formation
@@ -123,8 +124,7 @@ class Formation extends CommonObject
 		"famille" => array("type"=>"sellist:c_famille_formation:label:rowid::(active:=:1)", "label"=>"Famille", "enabled"=>"1", 'position'=>32, 'notnull'=>0, "visible"=>"1",),
 		"periode_souplesse" => array("type"=>"integer", "label"=>"PeriodeSouplesse", "enabled"=>"getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION')==1", 'position'=>36, 'notnull'=>0, "visible"=>"-1", "help"=>"en mois",),
 		"periode_souplesse_bloquant" => array("type"=>"boolean", "label"=>"PeriodeSouplesseBloquant", "enabled"=>"getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION')==1", 'position'=>37, 'notnull'=>0, "visible"=>"1",),
-		"prerequis" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"Prerequis", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
-		"volet" => array("type"=>"chkbxlst:c_volets:numero|label:rowid::(active=1)", "label"=>"Volet", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
+		"fk_volet" => array("type"=>"chkbxlst:formationhabilitation_volet:numero|label:rowid::(status=1)", "label"=>"Volet", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
 		"formationssuperieurs" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"FormationsSuperieur", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 		"delaisprogrammation" => array("type"=>"integer", "label"=>"DelaisProgrammation", "enabled"=>"1", 'position'=>38, 'notnull'=>0, "visible"=>"1", "help"=>"en mois",),
 		"sousdomaine" => array("type"=>"sellist:c_sousdomaine_formation:label:rowid::(active:=:1)", "label"=>"SousDomaine", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
@@ -151,8 +151,7 @@ class Formation extends CommonObject
 	public $famille;
 	public $periode_souplesse;
 	public $periode_souplesse_bloquant;
-	public $prerequis;
-	public $volet;
+	public $fk_volet;
 	public $formationssuperieurs;
 	public $delaisprogrammation;
 	public $sousdomaine;
@@ -667,6 +666,15 @@ class Formation extends CommonObject
 		}
 
 		if (!$error) {
+			$elementPrerequis = new ElementPrerequis($this->db);
+			$elementPrerequis->removeFormationFromPrerequis($this->id);
+
+			if ($result < 0) {
+				$error++;
+			}
+		}
+
+		if (!$error) {
 			$this->db->commit();
 			return 1;
 		} else {
@@ -1106,7 +1114,7 @@ class Formation extends CommonObject
 
 		$sql = "SELECT f.rowid, f.label";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_formation as f";
-		$sql .= " WHERE f.volet = $voletid";
+		$sql .= " WHERE f.fk_volet = $voletid";
 		$sql .= " ORDER BY f.label";
 
 		dol_syslog(get_class($this)."::getFormationsByVolet", LOG_DEBUG);
@@ -1236,6 +1244,34 @@ class Formation extends CommonObject
 			$this->db->free($resql);
 			return $res;
 		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return tous les prérequis d'une formation
+	 *
+	 * 	@param  int		$formation_id       Id of Formation
+	 * 	@return	array(array(int))|int						
+	 */
+	function getPrerequis($formation_id) {
+		$res = array();
+
+		$sql = "SELECT rowid, prerequisobjects";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
+		$sql .= " WHERE sourcetype = '$this->element' AND fk_source = $formation_id";
+
+		dol_syslog(get_class($this)."::getPrerequis", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = explode(',', $obj->prerequisobjects);
+			}
+
+			return $res;
+		}
+		else {
 			$this->error = $this->db->lasterror();
 			return -1;
 		}

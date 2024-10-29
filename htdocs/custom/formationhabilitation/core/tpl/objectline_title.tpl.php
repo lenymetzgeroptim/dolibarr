@@ -66,7 +66,7 @@ foreach($objectline->fields as $key => $val){
 	}
 }
 
-if ($this->table_element == 'formationhabilitation_volet' && $this->id > 0) {
+if ($this->table_element == 'formationhabilitation_uservolet' && $this->id > 0) {
 	print '<th class="liste_titre linecollink"></th>';
 	// print '<th class="liste_titre linecoledit"></th>'; 
 	// print '<th class="liste_titre linecoldelete"></th>';

@@ -55,9 +55,9 @@ if($action == 'addline' && $permissiontoaddline) {
 	}
 
 	if (!$error) {
-		$objectline->ref = $user_static->login."-Volet".GETPOST('numvolet');
+		$objectline->ref = $user_static->login."-Volet".GETPOST('fk_volet');
 		$objectline->fk_user = GETPOST('fk_user');
-		$objectline->numvolet = GETPOST('numvolet');
+		$objectline->fk_volet = GETPOST('fk_volet');
 		if($date_debut) {
 			$objectline->datedebutvolet = $date_debut;
 		}
@@ -255,7 +255,7 @@ if ($action == 'confirm_validate3' && $confirm == 'yes' && $permissiontovalidate
 if ($action == 'confirm_validate4' && $confirm == 'yes' && $permissiontovalidate4) {
 	$db->begin();
 
-	$result = $object->closeActiveVolet();
+	$result = $object->closeActiveUserVolet();
 
 	if($result > 0) { // TODOLENY : Gérer une date de fin en fonction du volet
 		if(empty($object->datedebutvolet)) {
@@ -308,7 +308,7 @@ if ($action == 'confirm_validate4' && $confirm == 'yes' && $permissiontovalidate
 }
 
 if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline) {
-        if ($object->numvolet < 1) {
+        if ($object->fk_volet < 1) {
             setEventMessages("Vous devez sélectionner un volet", null, 'errors');
             $error++;
         }

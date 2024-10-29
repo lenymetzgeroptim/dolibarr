@@ -18,20 +18,24 @@
  */
 
 /**
- * \file        class/volet.class.php
+ * \file        class/uservolet.class.php
  * \ingroup     formationhabilitation
- * \brief       This file is a CRUD class file for Volet (Create/Read/Update/Delete)
+ * \brief       This file is a CRUD class file for UserVolet (Create/Read/Update/Delete)
  */
 
 // Put here all includes required by your class file
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+dol_include_once('/formationhabilitation/class/userhabilitation.class.php');
+dol_include_once('/formationhabilitation/class/userformation.class.php');
+dol_include_once('/formationhabilitation/class/userautorisation.class.php');
+dol_include_once('/formationhabilitation/class/volet.class.php');
 
 /**
- * Class for Volet
+ * Class for UserVolet
  */
-class Volet extends CommonObject
+class UserVolet extends CommonObject
 {
 	/**
 	 * @var string ID of module.
@@ -41,12 +45,12 @@ class Volet extends CommonObject
 	/**
 	 * @var string ID to identify managed object.
 	 */
-	public $element = 'volet';
+	public $element = 'uservolet';
 
 	/**
 	 * @var string Name of table without prefix where object is stored. This is also the key used for extrafields management.
 	 */
-	public $table_element = 'formationhabilitation_volet';
+	public $table_element = 'formationhabilitation_uservolet';
 
 	/**
 	 * @var int  	Does this object support multicompany module ?
@@ -60,14 +64,18 @@ class Volet extends CommonObject
 	public $isextrafieldmanaged = 1;
 
 	/**
-	 * @var string String with name of icon for volet. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'volet@formationhabilitation' if picto is file 'img/object_volet.png'.
+	 * @var string String with name of icon for uservolet. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'uservolet@formationhabilitation' if picto is file 'img/object_uservolet.png'.
 	 */
 	public $picto = 'fa-book_fas_#004a95';
 
 
 	const STATUS_DRAFT = 0;
 	const STATUS_VALIDATED = 1;
-	const STATUS_CANCELED = 9;
+	const STATUS_VALIDATION1 = 2;
+	const STATUS_VALIDATION2 = 3;
+	const STATUS_VALIDATION3 = 4;
+	//const STATUS_VALIDATION4 = 5;
+	const STATUS_CLOSE = 9;
 
 	/**
 	 *  'type' field format:
@@ -114,34 +122,34 @@ class Volet extends CommonObject
 	 */
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
-		"label" => array("type"=>"varchar(255)", "label"=>"Label", "enabled"=>"1", 'position'=>30, 'notnull'=>0, "visible"=>"1", "alwayseditable"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "help"=>"Help text", "showoncombobox"=>"2", "validate"=>"1",),
-		"note_public" => array("type"=>"html", "label"=>"NotePublic", "enabled"=>"1", 'position'=>61, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
-		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"4", "index"=>"1", "searchall"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
 		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
 		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "picto"=>"user", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "default"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Actif", "9" => "Inactif"), "validate"=>"1",),
-		"numero" => array("type"=>"integer", "label"=>"Numero", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"1",),
-		"typevolet" => array("type"=>"integer", "label"=>"TypeVolet", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Volet de formations", "2" => "Volet d'habilitations", "3" => "Volet d'autorisations", "4" => "Autre"),),
-		"nommage" => array("type"=>"varchar(128)", "label"=>"NommagePDF", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
-		"model" => array("type"=>"integer", "label"=>"ModelPDF", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Identité", "2" => "Formation", "3" => "Entreprise", "4" => "Habilitation", "5" => "Médical", "6" => "Autorisation"),),
+		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
+		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
+		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "9" => "Annul&eacute;"), "validate"=>"1",),
+		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
+		"fk_volet" => array("type"=>"integer:volet:custom/formationhabilitation/class/volet.class.php:0:(status:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
+		"datedebutvolet" => array("type"=>"date", "label"=>"DateDebutVolet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
+		"datefinvolet" => array("type"=>"date", "label"=>"DateFinVolet", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
-	public $label;
-	public $note_public;
-	public $note_private;
 	public $date_creation;
 	public $tms;
 	public $fk_user_creat;
 	public $fk_user_modif;
+	public $last_main_doc;
+	public $import_key;
+	public $model_pdf;
 	public $status;
-	public $numero;
-	public $typevolet;
-	public $nommage;
-	public $model;
+	public $fk_user;
+	public $fk_volet;
+	public $datedebutvolet;
+	public $datefinvolet;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -150,32 +158,32 @@ class Volet extends CommonObject
 	// /**
 	//  * @var string    Name of subtable line
 	//  */
-	// public $table_element_line = 'formationhabilitation_voletline';
+	public $table_element_line = '';
 
 	// /**
 	//  * @var string    Field with ID of parent key if this object has a parent
 	//  */
-	// public $fk_element = 'fk_volet';
+	// public $fk_element = 'fk_uservolet';
 
 	// /**
 	//  * @var string    Name of subtable class that manage subtable lines
 	//  */
-	// public $class_element_line = 'Voletline';
+	// public $class_element_line = 'UserVoletline';
 
 	// /**
 	//  * @var array	List of child tables. To test if we can delete object.
 	//  */
-	// protected $childtables = array('mychildtable' => array('name'=>'Volet', 'fk_element'=>'fk_volet'));
+	// protected $childtables = array('mychildtable' => array('name'=>'UserVolet', 'fk_element'=>'fk_uservolet'));
 
 	// /**
 	//  * @var array    List of child tables. To know object to delete on cascade.
 	//  *               If name matches '@ClassNAme:FilePathClass;ParentFkFieldName' it will
 	//  *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object
 	//  */
-	// protected $childtablesoncascade = array('formationhabilitation_voletdet');
+	// protected $childtablesoncascade = array('formationhabilitation_uservoletdet');
 
 	// /**
-	//  * @var VoletLine[]     Array of subtable lines
+	//  * @var UserVoletLine[]     Array of subtable lines
 	//  */
 	// public $lines = array();
 
@@ -200,7 +208,7 @@ class Volet extends CommonObject
 		}
 
 		// Example to show how to set values of fields definition dynamically
-		/*if ($user->hasRight('formationhabilitation', 'volet', 'read')) {
+		/*if ($user->hasRight('formationhabilitation', 'uservolet', 'read')) {
 			$this->fields['myfield']['visible'] = 1;
 			$this->fields['myfield']['noteditable'] = 0;
 		}*/
@@ -351,9 +359,26 @@ class Volet extends CommonObject
 	public function fetch($id, $ref = null, $noextrafields = 0, $nolines = 0)
 	{
 		$result = $this->fetchCommon($id, $ref, '', $noextrafields);
-		if ($result > 0 && !empty($this->table_element_line) && empty($nolines)) {
-			$this->fetchLines($noextrafields);
+
+		if($result > 0) {
+			$volet = new Volet($this->db);
+			$volet->fetch($this->fk_volet); 
+
+			if($volet->typevolet == 1) {
+				$this->table_element_line = 'formationhabilitation_userformation';
+			}
+			elseif($volet->typevolet == 2) {
+				$this->table_element_line = 'formationhabilitation_userhabilitation';
+			}
+			elseif($volet->typevolet == 3) {
+				$this->table_element_line = 'formationhabilitation_userautorisation';
+			}
 		}
+
+		if ($result > 0 && !empty($this->table_element_line) && empty($nolines)) {
+			$this->getLinkedLinesArray();
+		}
+
 		return $result;
 	}
 
@@ -404,41 +429,27 @@ class Volet extends CommonObject
 		$sqlwhere = array();
 		if (count($filter) > 0) {
 			foreach ($filter as $key => $value) {
-				$columnName = preg_replace('/^t\./', '', $key);
-				if ($key === 'customsql') {
-					// Never use 'customsql' with a value from user input since it is injected as is. The value must be hard coded.
-					$sqlwhere[] = $value;
-					continue;
-				} elseif (isset($this->fields[$columnName])) {
-					$type = $this->fields[$columnName]['type'];
-					if (preg_match('/^integer/', $type)) {
-						if (is_int($value)) {
-							// single value
-							$sqlwhere[] = $key . " = " . intval($value);
-						} elseif (is_array($value)) {
-							if (empty($value)) {
-								continue;
+				if($value) {
+					if ($key == 't.rowid') {
+						$sqlwhere[] = $key." = ".((int) $value);
+					} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+						$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
+					} elseif (preg_match('/(_dtstart|_dtend)$/', $key)) {
+						$columnName = preg_replace('/(_dtstart|_dtend)$/', '', $key);
+						if (preg_match('/^(date|timestamp|datetime)/', $this->fields[$columnName]['type'])) {
+							if (preg_match('/_dtstart$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." >= '".$this->db->idate($value)."'";
 							}
-							$sqlwhere[] = $key . ' IN (' . $this->db->sanitize(implode(',', array_map('intval', $value))) . ')';
+							if (preg_match('/_dtend$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." <= '".$this->db->idate($value)."'";
+							}
 						}
-						continue;
-					} elseif (in_array($type, array('date', 'datetime', 'timestamp'))) {
-						$sqlwhere[] = $key . " = '" . $this->db->idate($value) . "'";
-						continue;
-					}
-				}
-
-				// when the $key doesn't fall into the previously handled categories, we do as if the column were a varchar/text
-				if (is_array($value) && count($value)) {
-					$value = implode(',', array_map(function ($v) {
-						return "'" . $this->db->sanitize($this->db->escape($v)) . "'";
-					}, $value));
-					$sqlwhere[] = $key . ' IN (' . $this->db->sanitize($value, true) . ')';
-				} elseif (is_scalar($value)) {
-					if (strpos($value, '%') === false) {
-						$sqlwhere[] = $key . " = '" . $this->db->sanitize($this->db->escape($value)) . "'";
+					} elseif ($key == 'customsql') {
+						$sqlwhere[] = $value;
+					} elseif (strpos($value, '%') === false) {
+						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
 					} else {
-						$sqlwhere[] = $key . " LIKE '%" . $this->db->escape($this->db->escapeforlike($value)) . "%'";
+						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
 					}
 				}
 			}
@@ -522,15 +533,251 @@ class Volet extends CommonObject
 		return $this->deleteLineCommon($user, $idline, $notrigger);
 	}
 
-
 	/**
-	 *	Validate object
+	 *	First Validation of object
 	 *
 	 *	@param		User	$user     		User making status change
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
 	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function validate($user, $notrigger = 0)
+	public function validate1($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_VALIDATION1) {
+			dol_syslog(get_class($this)."::validate1 action abandonned: already validated", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Define new ref
+		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
+			$num = $this->getNextNumRef();
+		} else {
+			$num = $this->ref;
+		}
+		$this->newref = $num;
+
+		if (!empty($num)) {
+			// Validate
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET ref = '".$this->db->escape($num)."',";
+			$sql .= " status = ".self::STATUS_VALIDATION1;
+			if (!empty($this->fields['date_validation'])) {
+				$sql .= ", date_validation = '".$this->db->idate($now)."'";
+			}
+			if (!empty($this->fields['fk_user_valid'])) {
+				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::validate1()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger('USERVOLET_VALIDATE1', $user);
+				if ($result < 0) {
+					$error++;
+				}
+				// End call triggers
+			}
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->ref = $num;
+			$this->status = self::STATUS_VALIDATION1;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	2nd Validation of object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function validate2($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_VALIDATION2) {
+			dol_syslog(get_class($this)."::validate2 action abandonned: already validated", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Define new ref
+		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
+			$num = $this->getNextNumRef();
+		} else {
+			$num = $this->ref;
+		}
+		$this->newref = $num;
+
+		if (!empty($num)) {
+			// Validate
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET ref = '".$this->db->escape($num)."',";
+			$sql .= " status = ".self::STATUS_VALIDATION2;
+			if (!empty($this->fields['date_validation'])) {
+				$sql .= ", date_validation = '".$this->db->idate($now)."'";
+			}
+			if (!empty($this->fields['fk_user_valid'])) {
+				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::validate2()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger('USERVOLET_VALIDATE2', $user);
+				if ($result < 0) {
+					$error++;
+				}
+				// End call triggers
+			}
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->ref = $num;
+			$this->status = self::STATUS_VALIDATION2;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	3rd Validation of object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function validate3($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_VALIDATION3) {
+			dol_syslog(get_class($this)."::validate3 action abandonned: already validated", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Define new ref
+		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
+			$num = $this->getNextNumRef();
+		} else {
+			$num = $this->ref;
+		}
+		$this->newref = $num;
+
+		if (!empty($num)) {
+			// Validate
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET ref = '".$this->db->escape($num)."',";
+			$sql .= " status = ".self::STATUS_VALIDATION3;
+			if (!empty($this->fields['date_validation'])) {
+				$sql .= ", date_validation = '".$this->db->idate($now)."'";
+			}
+			if (!empty($this->fields['fk_user_valid'])) {
+				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::validate3()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger('USERVOLET_VALIDATE3', $user);
+				if ($result < 0) {
+					$error++;
+				}
+				// End call triggers
+			}
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->ref = $num;
+			$this->status = self::STATUS_VALIDATION3;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	Last Validation of object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function validate4($user, $notrigger = 0)
 	{
 		global $conf, $langs;
 
@@ -540,12 +787,12 @@ class Volet extends CommonObject
 
 		// Protection
 		if ($this->status == self::STATUS_VALIDATED) {
-			dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
+			dol_syslog(get_class($this)."::validate4 action abandonned: already validated", LOG_WARNING);
 			return 0;
 		}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'volet', 'write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'volet_advance', 'validate')))
+		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'uservolet', 'write'))
+		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'uservolet_advance', 'validate')))
 		 {
 		 $this->error='NotEnoughPermissions';
 		 dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
@@ -577,7 +824,7 @@ class Volet extends CommonObject
 			}
 			$sql .= " WHERE rowid = ".((int) $this->id);
 
-			dol_syslog(get_class($this)."::validate()", LOG_DEBUG);
+			dol_syslog(get_class($this)."::validate4()", LOG_DEBUG);
 			$resql = $this->db->query($sql);
 			if (!$resql) {
 				dol_print_error($this->db);
@@ -587,7 +834,7 @@ class Volet extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
-				$result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+				$result = $this->call_trigger('USERVOLET_VALIDATE4', $user);
 				if ($result < 0) {
 					$error++;
 				}
@@ -601,15 +848,15 @@ class Volet extends CommonObject
 			// Rename directory if dir was a temporary ref
 			if (preg_match('/^[\(]?PROV/i', $this->ref)) {
 				// Now we rename also files into index
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'volet/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'volet/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
+				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'uservolet/".$this->db->escape($this->newref)."'";
+				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'uservolet/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
 				$resql = $this->db->query($sql);
 				if (!$resql) {
 					$error++;
 					$this->error = $this->db->lasterror();
 				}
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filepath = 'volet/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filepath = 'volet/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
+				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filepath = 'uservolet/".$this->db->escape($this->newref)."'";
+				$sql .= " WHERE filepath = 'uservolet/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
 				$resql = $this->db->query($sql);
 				if (!$resql) {
 					$error++;
@@ -619,15 +866,15 @@ class Volet extends CommonObject
 				// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
 				$oldref = dol_sanitizeFileName($this->ref);
 				$newref = dol_sanitizeFileName($num);
-				$dirsource = $conf->formationhabilitation->dir_output.'/volet/'.$oldref;
-				$dirdest = $conf->formationhabilitation->dir_output.'/volet/'.$newref;
+				$dirsource = $conf->formationhabilitation->dir_output.'/uservolet/'.$oldref;
+				$dirdest = $conf->formationhabilitation->dir_output.'/uservolet/'.$newref;
 				if (!$error && file_exists($dirsource)) {
-					dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
+					dol_syslog(get_class($this)."::validate4() rename dir ".$dirsource." into ".$dirdest);
 
 					if (@rename($dirsource, $dirdest)) {
 						dol_syslog("Rename ok");
 						// Rename docs starting with $oldref with $newref
-						$listoffiles = dol_dir_list($conf->formationhabilitation->dir_output.'/volet/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
+						$listoffiles = dol_dir_list($conf->formationhabilitation->dir_output.'/uservolet/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
 						foreach ($listoffiles as $fileentry) {
 							$dirsource = $fileentry['name'];
 							$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
@@ -677,22 +924,22 @@ class Volet extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
+		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FORMATIONHABILITATION_USERVOLET_UNVALIDATE');
 	}
 
 	/**
-	 *	Set cancel status
+	 *	Set close status
 	 *
 	 *	@param	User	$user			Object user that modify
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						Return integer <0 if KO, 0=Nothing done, >0 if OK
 	 */
-	public function cancel($user, $notrigger = 0)
+	public function close($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status != self::STATUS_VALIDATED) {
-			return 0;
-		}
+		// if ($this->status != self::STATUS_VALIDATED) {
+		// 	return 0;
+		// }
 
 		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
 		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
@@ -701,7 +948,7 @@ class Volet extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_USERVOLET_CANCEL');
 	}
 
 	/**
@@ -725,7 +972,7 @@ class Volet extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
+		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'FORMATIONHABILITATION_USERVOLET_REOPEN');
 	}
 
 	/**
@@ -742,9 +989,9 @@ class Volet extends CommonObject
 		$datas = [];
 
 		if (getDolGlobalInt('MAIN_OPTIMIZEFORTEXTBROWSER')) {
-			return ['optimize' => $langs->trans("ShowVolet")];
+			return ['optimize' => $langs->trans("ShowUserVolet")];
 		}
-		$datas['picto'] = img_picto('', $this->picto).' <u>'.$langs->trans("Volet").'</u>';
+		$datas['picto'] = img_picto('', $this->picto).' <u>'.$langs->trans("UserVolet").'</u>';
 		if (isset($this->status)) {
 			$datas['picto'] .= ' '.$this->getLibStatut(5);
 		}
@@ -792,7 +1039,7 @@ class Volet extends CommonObject
 			$label = implode($this->getTooltipContentArray($params));
 		}
 
-		$url = dol_buildpath('/formationhabilitation/volet_card.php', 1).'?id='.$this->id;
+		$url = dol_buildpath('/formationhabilitation/uservolet_card.php', 1).'?id='.$this->id;
 
 		if ($option !== 'nolink') {
 			// Add param to save lastsearch_values or not
@@ -808,7 +1055,7 @@ class Volet extends CommonObject
 		$linkclose = '';
 		if (empty($notooltip)) {
 			if (getDolGlobalInt('MAIN_OPTIMIZEFORTEXTBROWSER')) {
-				$label = $langs->trans("ShowVolet");
+				$label = $langs->trans("ShowUserVolet");
 				$linkclose .= ' alt="'.dol_escape_htmltag($label, 1).'"';
 			}
 			$linkclose .= ($label ? ' title="'.dol_escape_htmltag($label, 1).'"' : ' title="tocomplete"');
@@ -955,26 +1202,94 @@ class Volet extends CommonObject
 	 */
 	public function LibStatut($status, $mode = 0)
 	{
+		global $conf; 
+
 		// phpcs:enable
 		if (is_null($status)) {
 			return '';
 		}
 
+		if($mode == 6) {
+			$mode = 5;
+		}
+
+		$usergroup = new UserGroup($this->db);
+		if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 > 0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 != 9999) {
+			$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+			$nameGroup1 = $usergroup->name;
+		}
+		if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 > 0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 != 9999) {
+			$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+			$nameGroup2 = $usergroup->name;
+		}
+		if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 > 0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 != 9999) {
+			$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+			$nameGroup3 = $usergroup->name;
+		}
+		if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 > 0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 != 9999) {
+			$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+			$nameGroup4 = $usergroup->name;
+		}
+
+		$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$this->fk_volet;
+		$approbationRequire = explode(',', $conf->global->$variableName);
+		asort($approbationRequire);
+
 		if (empty($this->labelStatus) || empty($this->labelStatusShort)) {
 			global $langs;
 			//$langs->load("formationhabilitation@formationhabilitation");
-			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
+
+			$variableName = 'nameGroup'.($approbationRequire[0]+1);
+			if(!empty($$variableName)) {
+				$this->labelStatus[self::STATUS_DRAFT] = "Approbation du groupe ".$$variableName." en attente";
+			}
+			else {
+				$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			}
+
+			if(!empty($nameGroup2)) {
+				$this->labelStatus[self::STATUS_VALIDATION1] = "Approbation du groupe $nameGroup2 en attente";
+			}
+			else {
+				$this->labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			}
+		
+			if(!empty($nameGroup3)) {
+				$this->labelStatus[self::STATUS_VALIDATION2] = "Approbation du groupe $nameGroup3 en attente";
+			}
+			else {
+				$this->labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			}
+
+			if(!empty($nameGroup4)) {
+				$this->labelStatus[self::STATUS_VALIDATION3] = "Approbation du groupe $nameGroup4 en attente";
+			}
+			else {
+				$this->labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			}
+
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
+			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
+
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
+			$this->labelStatusShort[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('ApprobationVolet');
+			$this->labelStatusShort[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('ApprobationVolet');
+			$this->labelStatusShort[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('ApprobationVolet');
+			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 		}
 
-		$statusType = 'status'.$status;
-		//if ($status == self::STATUS_VALIDATED) $statusType = 'status1';
-		if ($status == self::STATUS_CANCELED) {
+		if ($status == self::STATUS_VALIDATED) {
+			$statusType = 'status4';
+		}
+		elseif ($status == self::STATUS_DRAFT) {
+			$statusType = 'status0';
+		}
+		elseif ($status == self::STATUS_CLOSE) {
 			$statusType = 'status6';
+		}
+		else {
+			$statusType = 'status1';
 		}
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
@@ -1054,30 +1369,85 @@ class Volet extends CommonObject
 	 *
 	 * 	@return array|int		array of lines if OK, <0 if KO
 	 */
-	public function getLinesArray()
+	public function getLinkedLinesArray()
 	{
-		global $sortorder, $sortfield, $search, $limit, $offset, $id;
-
-		$objectline = new UserVolet($this->db);		
 		$this->lines = array();
 
-		$tmp_search_status = $search['status'];
-		$search_status = explode(',', $search['status']);
-		foreach(array_keys($search_status, '50', false) as $key) {
-			unset($search_status[$key]);
-			$search_status[] = UserVolet::STATUS_DRAFT;
-			$search_status[] = UserVolet::STATUS_VALIDATION1;
-			$search_status[] = UserVolet::STATUS_VALIDATION2;
-			$search_status[] = UserVolet::STATUS_VALIDATION3;
-			//$search_status[] = UserVolet::STATUS_VALIDATION4;
-		}
-		$search['status'] = implode(',', $search_status);
+		$volet = new Volet($this->db);
+		$volet->fetch($this->fk_volet); 
 
-		$result = $objectline->fetchAll($sortorder, $sortfield, $limit + 1, $offset, $search);
-		$search['status'] = $tmp_search_status;
+		if($volet->typevolet == 1) {
+			$objectline = new UserFormation($this->db);
+		}
+		elseif($volet->typevolet == 2) {
+			$objectline = new UserHabilitation($this->db);
+		}
+		elseif($volet->typevolet == 3) {
+			$objectline = new UserAutorisation($this->db);
+		}
+
+		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NOT NULL'), 'AND', $this->id, $this->fk_volet);
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
+			return $result;
+		} else {
+			$this->lines = $result;
+			return $this->lines;
+		}
+	}
+
+	/**
+	 * 	Create an array of lines
+	 *
+	 * 	@return array|int		array of lines if OK, <0 if KO
+	 */
+	public function getNoLinkedLinesArray()
+	{
+		$this->lines = array();
+
+		$volet = new Volet($this->db);
+		$volet->fetch($this->fk_volet); 
+
+		if($volet->typevolet == 1) {
+			$objectline = new UserFormation($this->db);
+			$status = UserFormation::STATUS_VALIDE;
+		}
+		elseif($volet->typevolet == 2) {
+			$objectline = new UserHabilitation($this->db);
+			$status = UserHabilitation::STATUS_HABILITE.', '.UserHabilitation::STATUS_HABILITABLE;
+		}
+		elseif($volet->typevolet == 3) {
+			$objectline = new UserAutorisation($this->db);
+			$status = UserAutorisation::STATUS_AUTORISE.', '.UserAutorisation::STATUS_AUTORISABLE;
+		}
+
+		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL AND t.status IN ('.$this->db->sanitize($this->db->escape($status)).')'), 'AND', $this->id, $this->fk_volet);
+
+		if (is_numeric($result)) {
+			$this->setErrorsFromObject($objectline);
+			return $result;
+		} else {
+			$this->lines = $result;
+			return $this->lines;
+		}
+	}
+
+	/**
+	 * 	Create an array of lines
+	 *
+	 * 	@return array|int		array of lines if OK, <0 if KO
+	 */
+	public function getLinesArray()
+	{
+		$this->lines = array();
+
+		$objectline = new UserVoletLine($this->db);
+		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_uservolet = '.((int) $this->id)));
+
+		if (is_numeric($result)) {
+			$this->error = $objectline->error;
+			$this->errors = $objectline->errors;
 			return $result;
 		} else {
 			$this->lines = $result;
@@ -1096,7 +1466,7 @@ class Volet extends CommonObject
 		$langs->load("formationhabilitation@formationhabilitation");
 
 		if (!getDolGlobalString('FORMATIONHABILITATION_MYOBJECT_ADDON')) {
-			$conf->global->FORMATIONHABILITATION_MYOBJECT_ADDON = 'mod_volet_standard';
+			$conf->global->FORMATIONHABILITATION_MYOBJECT_ADDON = 'mod_uservolet_standard';
 		}
 
 		if (getDolGlobalString('FORMATIONHABILITATION_MYOBJECT_ADDON')) {
@@ -1156,12 +1526,12 @@ class Volet extends CommonObject
 		global $conf, $langs;
 
 		$result = 0;
-		$includedocgeneration = 0;
+		$includedocgeneration = 1;
 
 		$langs->load("formationhabilitation@formationhabilitation");
 
 		if (!dol_strlen($modele)) {
-			$modele = 'standard_volet';
+			$modele = 'standard_uservolet';
 
 			if (!empty($this->model_pdf)) {
 				$modele = $this->model_pdf;
@@ -1211,6 +1581,21 @@ class Volet extends CommonObject
 		return $error;
 	}
 
+	public function getArrayStatut() {
+		global $langs; 
+
+		//$labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
+		$labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
+		// $labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Validation1');
+		// $labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Validation2');
+		// $labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('Validation3');
+		// $labelStatus[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Validation4');
+		$labelStatus[50] = $langs->transnoentitiesnoconv('ApprobationVolet');
+		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
+		
+		return $labelStatus;
+	}
+
 	/**
 	 *	Return HTML table for object lines
 	 *	TODO Move this into an output class file (htmlline.class.php)
@@ -1225,7 +1610,7 @@ class Volet extends CommonObject
 	 *  @param	string		$defaulttpldir		Directory where to find the template
 	 *	@return	void
 	 */
-	public function printObjectLines($action, $seller, $buyer, $selected = 0, $dateSelector = 0, $defaulttpldir = '/core/tpl')
+	public function printObjectLinkedLines($action, $seller, $buyer, $selected = 0, $dateSelector = 0, $defaulttpldir = '/core/tpl')
 	{
 		global $conf, $hookmanager, $langs, $user, $form, $extrafields, $object;
 		// TODO We should not use global var for this
@@ -1275,10 +1660,7 @@ class Volet extends CommonObject
 
 		$i = 0;
 
-		print '</table>';
-
 		print "<!-- begin printObjectLines() --><tbody>\n";
-		print '<div class="row row-cols-1 row-cols-md-5 g-4">';
 		foreach ($this->lines as $line) {
 			//Line extrafield
 			$line->fetch_optionals();
@@ -1294,15 +1676,13 @@ class Volet extends CommonObject
 				}
 			}
 			if (empty($reshook)) {
-				$this->printObjectLine($action, $line, '', $num, $i, $dateSelector, $seller, $buyer, $selected, $extrafields, $defaulttpldir);
+				$this->printObjectLinkedLine($action, $line, '', $num, $i, $dateSelector, $seller, $buyer, $selected, $extrafields, $defaulttpldir);
 			}
 
 			$i++;
 		}
-		print '</div>';
 		print "</tbody><!-- end printObjectLines() -->\n";
 	}
-
 
 	/**
 	 *	Return HTML content of a detail line
@@ -1321,7 +1701,7 @@ class Volet extends CommonObject
 	 *  @param	string				$defaulttpldir		Directory where to find the template (deprecated)
 	 *	@return	void
 	 */
-	public function printObjectLine($action, $line, $var, $num, $i, $dateSelector, $seller, $buyer, $selected = 0, $extrafields = null, $defaulttpldir = '/core/tpl')
+	public function printObjectLinkedLine($action, $line, $var, $num, $i, $dateSelector, $seller, $buyer, $selected = 0, $extrafields = null, $defaulttpldir = '/core/tpl')
 	{
 		global $conf, $langs, $user, $object, $hookmanager;
 		global $form;
@@ -1386,9 +1766,9 @@ class Volet extends CommonObject
 			foreach ($dirtpls as $module => $reldir) {
 				$res = 0;
 				if (!empty($module)) {
-					$tpl = dol_buildpath($reldir.'/objectline_view_uservolet.tpl.php');
+					$tpl = dol_buildpath($reldir.'/objectline_view.tpl.php');
 				} else {
-					$tpl = DOL_DOCUMENT_ROOT.$reldir.'/objectline_view_uservolet.tpl.php';
+					$tpl = DOL_DOCUMENT_ROOT.$reldir.'/objectline_view.tpl.php';
 				}
 				//var_dump($tpl);
 				if (file_exists($tpl)) {
@@ -1434,29 +1814,249 @@ class Volet extends CommonObject
 	}
 
 	/**
-	 * 	Return tous les volets
+	 *	Delete all links between an object $this
 	 *
-	 * 	@return	array						
+	 *	@param	int		$sourceid		Object source id
+	 *	@param  string	$sourcetype		Object source type
+	 *	@param  int		$targetid		Object target id
+	 *	@param  string	$targettype		Object target type
+	 *  @param	int		$rowid			Row id of line to delete. If defined, other parameters are not used.
+	 * 	@param	User	$f_user			User that create
+	 * 	@param	int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return     					int	>0 if OK, <0 if KO
+	 *	@see	add_object_linked(), updateObjectLinked(), fetchObjectLinked()
 	 */
-	public function getAllVolet()
+	public function deleteObjectLinked($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '', $rowid = 0, $f_user = null, $notrigger = 0)
 	{
-		global $conf, $user;
-		$res = array();
+		global $user;
+		$deletesource = false;
+		$deletetarget = false;
+		$deletetargetandsource = false;
+		$f_user = isset($f_user) ? $f_user : $user;
 
-		$sql = "SELECT v.rowid, v.numero, v.label";
-		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_volet as v";
-		$sql .= " WHERE v.status = 1";
-		$sql .= " ORDER BY v.numero";
+		if (!empty($sourceid) && !empty($sourcetype) && empty($targetid) && empty($targettype)) {
+			$deletesource = true;
+		} elseif (empty($sourceid) && empty($sourcetype) && !empty($targetid) && !empty($targettype)) {
+			$deletetarget = true;
+		} elseif (!empty($sourceid) && !empty($sourcetype) && !empty($targetid) && !empty($targettype)) {
+			$deletetargetandsource = true;
+		}
 
-		dol_syslog(get_class($this)."::getAllVolet", LOG_DEBUG);
-		$resql = $this->db->query($sql);
-		if ($resql) {
-			while($obj = $this->db->fetch_object($resql)) {
-				$res[$obj->rowid] = $obj->numero." - ".$obj->label;
+		$sourceid = (!empty($sourceid) ? $sourceid : $this->id);
+		$sourcetype = (!empty($sourcetype) ? $sourcetype : $this->element);
+		$targetid = (!empty($targetid) ? $targetid : $this->id);
+		$targettype = (!empty($targettype) ? $targettype : $this->element);
+		$this->db->begin();
+		$error = 0;
+
+		if (!$notrigger) {
+			// Call trigger
+			$this->context['link_id'] = $rowid;
+			$this->context['link_source_id'] = $sourceid;
+			$this->context['link_source_type'] = $sourcetype;
+			$this->context['link_target_id'] = $targetid;
+			$this->context['link_target_type'] = $targettype;
+			$result = $this->call_trigger('OBJECT_LINK_DELETE', $f_user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		if (!$error) {
+			$sql = "DELETE FROM " . $this->db->prefix() . "element_element";
+			$sql .= " WHERE";
+			if ($rowid > 0) {
+				$sql .= " rowid = " . ((int) $rowid);
+			} else {
+				if ($deletesource) {
+					$sql .= " fk_source = " . ((int) $sourceid) . " AND sourcetype = '" . $this->db->escape($sourcetype) . "'";
+					$sql .= " AND fk_target = " . ((int) $this->id) . " AND targettype = '" . $this->db->escape($this->element) . "'";
+				} elseif ($deletetarget) {
+					$sql .= " fk_target = " . ((int) $targetid) . " AND targettype = '" . $this->db->escape($targettype) . "'";
+					$sql .= " AND fk_source = " . ((int) $this->id) . " AND sourcetype = '" . $this->db->escape($this->element) . "'";
+				} elseif ($deletetargetandsource) {
+					$sql .= " (fk_source = " . ((int) $sourceid) . " AND sourcetype = '" . $this->db->escape($sourcetype) . "')";
+					$sql .= " AND";
+					$sql .= " (fk_target = " . ((int) $targetid) . " AND targettype = '" . $this->db->escape($targettype) . "')";
+				} else {
+					$sql .= " (fk_source = " . ((int) $this->id) . " AND sourcetype = '" . $this->db->escape($this->element) . "')";
+					$sql .= " OR";
+					$sql .= " (fk_target = " . ((int) $this->id) . " AND targettype = '" . $this->db->escape($this->element) . "')";
+				}
 			}
 
-			$this->db->free($resql);
-			return $res;
+			dol_syslog(get_class($this) . "::deleteObjectLinked", LOG_DEBUG);
+			if (!$this->db->query($sql)) {
+				$this->error = $this->db->lasterror();
+				$this->errors[] = $this->error;
+				$error++;
+			}
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return 0;
+		}
+	}
+
+	
+	/**
+	 * 	Génère les volets avec de nouvelles lignes
+	 *
+	 * 	@return	int						
+	 */
+	public function generateNewVolet($objectclass, $validateObjects, $userid)
+	{
+		global $conf, $user;
+
+		$objecttmp = new $objectclass($this->db);
+		if($objecttmp->element == 'userformation') {
+			$objectparenttmp = new Formation($this->db);
+		}
+		elseif($objecttmp->element == 'userhabilitation') {
+			$objectparenttmp = new Habilitation($this->db);
+		}
+		elseif($objecttmp->element == 'userautorisation') {
+			$objectparenttmp = new Autorisation($this->db);
+		}
+		$uservolet = new self($this->db);
+		$user_static = new User($this->db);
+		$user_static->fetch($userid);
+
+		$voletsCreate = array(); 
+
+		dol_syslog(get_class($this)."::generateNewVolet", LOG_DEBUG);
+		foreach($validateObjects as $validateObject) { // On boucle sur toutes les lignes ajouté
+			if($objecttmp->element == 'userformation') {
+				$objectparenttmp->fetch($validateObject->fk_formation);
+			}
+			elseif($objecttmp->element == 'userhabilitation') {
+				$objectparenttmp->fetch($validateObject->fk_habilitation);
+			}
+			elseif($objecttmp->element == 'userautorisation') {
+				$objectparenttmp->fetch($validateObject->fk_autorisation);
+			}
+
+			$voletsForObject = explode(',', $objectparenttmp->fk_volet);
+			foreach($voletsForObject as $voletid) {
+				if($voletid > 0) {
+					$volet = new Volet($this->db);
+					$volet->fetch($voletid); 
+
+					// Création du nouveau volet
+					if(!array_key_exists($voletid, $voletsCreate)) {
+						$uservolet->ref = $user_static->login."-Volet".$volet->numero;
+						$uservolet->fk_user = $userid;
+						$uservolet->fk_volet = $voletid;
+						$uservolet->status = $uservolet::STATUS_DRAFT;
+
+						$resultcreate = $uservolet->create($user);
+						$voletsCreate[$voletid] = clone $uservolet;
+
+						if($resultcreate < 0) {
+							$error++;
+							$this->error = "Impossible de créer le volet ".$volet->label;
+							break;
+						}
+					}
+				
+					if($objecttmp->element == 'userformation') {
+						$addlink = 'formation';
+					}
+					elseif($objecttmp->element == 'userhabilitation') {
+						$addlink = 'habilitation';
+					}
+					elseif($objecttmp->element == 'userautorisation') {
+						$addlink = 'autorisation';
+					}
+
+					$uservolet = $voletsCreate[$voletid];
+					$resultLink = $uservolet->add_object_linked($addlink, $validateObject->id);
+
+					if($resultLink < 0) {
+						$error++;
+						$this->error = "Impossible de lier la ligne ".$validateObject->ref." sur le volet ".$volet->label;
+						break;
+					}
+				}
+			}
+		}
+
+		if (!$error) {
+			return 1;
+		} else {
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Ajoute un domaine d'application spécifique pour l'habilitation liée au uservolet
+	 *
+	 * 	@param  int		$lineid       				Id of Habilitation
+	 *  @param  int		$domaineapplication     	Dommaine d'application
+	 *  @return	int		> 0 if OK, < 0 if KO
+	 */
+	public function updateDomaineApplication($lineid, $domaineapplication, $sourcetype)
+	{
+		global $conf, $user;
+
+		$sql = "SELECT f.fk_element_element";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_element_fields as f";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON e.rowid = f.fk_element_element AND e.sourcetype = '$sourcetype' AND e.fk_source = $lineid";
+		$sql .= " AND e.targettype = 'formationhabilitation_uservolet' AND e.fk_target = $this->id";
+
+		dol_syslog(get_class($this)."::updateDomaineApplication", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			if($this->db->num_rows($resql) > 0) {
+				$obj = $this->db->fetch_object($resql);
+
+				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_element_fields";
+				$sql .= " SET domaineapplication = $domaineapplication";
+				$sql .= " WHERE fk_element_element = $obj->fk_element_element";
+
+				$resql = $this->db->query($sql);
+
+				if ($resql) {
+					return 1;
+				}
+				else {
+					$this->error = $this->db->lasterror();
+					return -1;
+				}
+			}
+			else {
+				$sql = "SELECT e.rowid";
+				$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e ";
+				$sql .= " WHERE e.sourcetype = '$sourcetype' AND e.fk_source = $lineid";
+				$sql .= " AND e.targettype = 'formationhabilitation_uservolet' AND e.fk_target = $this->id";
+
+				$resql = $this->db->query($sql);
+				if ($resql) {
+					$obj = $this->db->fetch_object($resql);
+
+					$sql = "INSERT INTO ".MAIN_DB_PREFIX."formationhabilitation_element_fields(fk_element_element, domaineapplication) VALUES";
+					$sql .= " ($obj->rowid, $domaineapplication)";
+
+					$resql = $this->db->query($sql);
+
+					if ($resql) {
+						return 1;
+					}
+					else {
+						$this->error = $this->db->lasterror();
+						return -1;
+					}
+				}
+				else {
+					$this->error = $this->db->lasterror();
+					return -1;
+				}
+			}
 		} else {
 			$this->error = $this->db->lasterror();
 			return -1;
@@ -1464,46 +2064,119 @@ class Volet extends CommonObject
 	}
 
 	/**
-	 * 	Return tous les domaines d'application à partir du dictionnaire
+	 * 	Supprime un domaine d'application spécifique pour l'habilitation liée au uservolet
 	 *
-	 * 	@return	array						
+	 * 	@param  int		$lineid       	Id of Habilitation
+	 *  @return	int		> 0 if OK, < 0 if KO
 	 */
-	public function getAllDomaineApplication()
+	public function deleteDomaineApplication($lineid)
 	{
 		global $conf, $user;
-		$res = array();
 
-		$sql = "SELECT d.rowid, d.label";
-		$sql .= " FROM ".MAIN_DB_PREFIX."c_domaine_application as d";
-		$sql .= " WHERE d.active = 1";
+		$sql = "SELECT e.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
+		$sql .= " WHERE e.sourcetype = 'habilitation' AND e.fk_source = $lineid";
+		$sql .= " AND e.targettype = 'formationhabilitation_uservolet' AND e.fk_target = $this->id";
 
-		dol_syslog(get_class($this)."::getAllDomaineApplication", LOG_DEBUG);
+		dol_syslog(get_class($this)."::deleteDomaineApplication", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
-			while($obj = $this->db->fetch_object($resql)) {
-				$res[$obj->rowid] = $obj->label;
+			if($this->db->num_rows($resql) > 0) {
+				$obj = $this->db->fetch_object($resql);
+
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX."formationhabilitation_element_fields";
+				$sql .= " WHERE fk_element_element = $obj->rowid";
+
+				$resql = $this->db->query($sql);
 			}
 
-			$this->db->free($resql);
-			return $res;
+			if ($resql) {
+				return 1;
+			}
+			else {
+				$this->error = $this->db->lasterror();
+				return -1;
+			}
 		} else {
 			$this->error = $this->db->lasterror();
 			return -1;
 		}
 	}
 
+	/**
+	 * 	Récupère les uservolet actifs
+	 *
+	 *  @param  int		$mode	0 uniquement l'id, 1 les objets uservolet
+	 *  @return	array|int		array with uservolet if OK, < 0 if KO
+	 */
+	public function getActiveUserVolet($mode = 0)
+	{
+		global $conf, $user;
+		$uservolet = new self($this->db);
+		$ret = array(); 
+
+		$sql = "SELECT v.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as v";
+		$sql .= " WHERE v.fk_volet = $this->fk_volet AND v.fk_user = $this->fk_user";
+		$sql .= " AND v.status = ".self::STATUS_VALIDATED;
+
+		dol_syslog(get_class($this)."::getActiveUserVolet", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				if($mode = 1) {
+					$uservolet->fetch($obj->rowid);
+					$ret[$obj->rowid] = clone $uservolet;
+				}
+				else {
+					$ret[] = $obj->rowid;
+				}
+			}
+			return $ret;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Clôture les uservolet actifs lors de la validation d'un nouveau uservolet
+	 *
+	 *  @return	int		> 0 if OK, < 0 if KO
+	 */
+	public function closeActiveUserVolet()
+	{
+		global $conf, $user;
+
+		$listUserVolet = $this->getActiveUserVolet(1);
+
+		if (is_array($listUserVolet)) {
+			foreach($listUserVolet as $uservolet) {
+				$result = $uservolet->close($user);
+
+				if(!$result) {
+					$this->error = $uservolet->db->lasterror();
+					return -1;
+				}
+			}
+			return 1;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobjectline.class.php';
 
 /**
- * Class VoletLine. You can also remove this and generate a CRUD class for lines objects.
+ * Class UserVoletLine. You can also remove this and generate a CRUD class for lines objects.
  */
-class VoletLine extends CommonObjectLine
+class UserVoletLine extends CommonObjectLine
 {
-	// To complete with content of an object VoletLine
-	// We should have a field rowid, fk_volet and position
+	// To complete with content of an object UserVoletLine
+	// We should have a field rowid, fk_uservolet and position
 
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes

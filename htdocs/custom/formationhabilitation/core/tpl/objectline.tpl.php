@@ -101,9 +101,10 @@ elseif($objectline->element == 'userautorisation'){
     $objectparentclass = 'Autorisation';
     $objectlabel = 'UserAutorisation';
 }
-elseif($objectline->element == 'volet'){
-    $objectclass = 'Volet';
-    $objectlabel = 'Volet';
+elseif($objectline->element == 'uservolet'){
+    $objectclass = 'UserVolet';
+    $objectparentclass = 'Volet';
+    $objectlabel = 'UserVolet';
 }
 $uploaddir = $conf->formationhabilitation->dir_output;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/actions_massactions.inc.php';
@@ -123,7 +124,7 @@ $arrayofmassactions = array(
 if ($permissiontoaddline) {
     $arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"').$langs->trans("Delete");
     if($permissiontovalidatelines && $object->element == 'user' && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
-        $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("ValidateAndGenerateVolet");
+        $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("ValidateAndGenerateUserVolet");
     }
 }
 if (GETPOST('nomassaction', 'int') || in_array($massaction, array('presend', 'predelete', 'prevalidate'))) {
@@ -137,15 +138,15 @@ $varpage = empty($contextpage) ? $_SERVER["PHP_SELF"] : $contextpage;
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
 $selectedfields .= (count($arrayofmassactions) ? $form->showCheckAddButtons('checkforselect', 1) : '');
 
-if($objectline->element == 'volet') {
+if($objectline->element == 'uservolet') {
     $tmp_search_status = $search['status'];
     $search_status = explode(',', $search['status']);
     foreach(array_keys($search_status, '50', false) as $key) {
         unset($search_status[$key]);
-        $search_status[] = $objectparentline::STATUS_DRAFT;
-        $search_status[] = $objectparentline::STATUS_VALIDATION1;
-        $search_status[] = $objectparentline::STATUS_VALIDATION2;
-        $search_status[] = $objectparentline::STATUS_VALIDATION3;
+        $search_status[] = $objectline::STATUS_DRAFT;
+        $search_status[] = $objectline::STATUS_VALIDATION1;
+        $search_status[] = $objectline::STATUS_VALIDATION2;
+        $search_status[] = $objectline::STATUS_VALIDATION3;
     }
     $search['status'] = implode(',', $search_status);
 }
@@ -200,7 +201,7 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
     $db->free($resql);
 }
 
-if($objectline->element == 'volet') {
+if($objectline->element == 'uservolet') {
     $search['status'] = $tmp_search_status;
 }
 
@@ -329,10 +330,10 @@ elseif($objectline->element == 'userautorisation'){
     $modelmail = "UserAutorisation";
     $objecttmp = new UserAutorisation($db);
 }
-elseif($objectline->element == 'volet'){
-    $topicmail = "SendVoletRef";
-    $modelmail = "Volet";
-    $objecttmp = new Volet($db);
+elseif($objectline->element == 'uservolet'){
+    $topicmail = "SendUserVoletRef";
+    $modelmail = "UserVolet";
+    $objecttmp = new UserVolet($db);
 }
 $trackid = 'xxxx'.$object->id;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/massactions_pre.tpl.php';
@@ -345,7 +346,7 @@ else {
 }
 print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $paramforpagination, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', $limit, 0, 0, 1);
 
-if($objectline->element == 'volet'){
+if($objectline->element == 'uservolet'){
     print '<div>';
 }
 else {
@@ -368,7 +369,7 @@ if ($permissiontoaddline && $action != 'selectlines' && $object->status == 1) {
 print '</table>';
 print '</div><br>';
 
-if($objectline->element == 'volet'){
+if($objectline->element == 'uservolet'){
     print '<div>';
 }
 else {

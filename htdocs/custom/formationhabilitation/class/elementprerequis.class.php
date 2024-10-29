@@ -115,10 +115,10 @@ class ElementPrerequis extends CommonObject
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
-		"sourcetype" => array("type"=>"varchar(128)", "label"=>"SourceType", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"1",),
-		"fk_source" => array("type"=>"integer", "label"=>"SourceObject", "enabled"=>"1", 'position'=>11, 'notnull'=>0, "visible"=>"1",),
-		"prerequistype" => array("type"=>"varchar(128)", "label"=>"PrerequisType", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"1",),
-		"prerequisobjects" => array("type"=>"varchar(255)", "label"=>"PrerequisObjects", "enabled"=>"1", 'position'=>21, 'notnull'=>0, "visible"=>"1",),
+		"sourcetype" => array("type"=>"varchar(128)", "label"=>"SourceType", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"0",),
+		"fk_source" => array("type"=>"integer", "label"=>"SourceObject", "enabled"=>"1", 'position'=>11, 'notnull'=>1, "visible"=>"0",),
+		"prerequistype" => array("type"=>"varchar(128)", "label"=>"PrerequisType", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"0", "default"=>"formation",),
+		"prerequisobjects" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid::(status=1)", "label"=>"PrerequisObjects", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1",),
 	);
 	public $rowid;
 	public $import_key;
@@ -1179,6 +1179,63 @@ class ElementPrerequis extends CommonObject
 
 		return $error;
 	}
+
+	/**
+	 *  Met à jour les prérequis en supprimant une formation donnée
+	 *
+	 *  @param int $formation_id ID de la formation à supprimer
+	 *  @return bool
+	 */
+	function removeFormationFromPrerequis($formation_id) {
+		// Récupérer toutes les entrées de prérequis contenant la formation à supprimer
+		$sql = "SELECT rowid, prerequisobjects";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis";
+		$sql .= " WHERE FIND_IN_SET(".$formation_id.", prerequisobjects) > 0";
+
+
+		dol_syslog(get_class($this)."::removeFormationFromPrerequis", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$prerequisList = explode(',', $obj->prerequisobjects);
+
+				// Supprimer l'ID de formation de la liste des prérequis
+				$updatedList = array_filter($prerequisList, function($id) use ($formation_id) {
+					return $id != $formation_id;
+				});
+
+				// Recréer la liste sous forme de chaîne de caractères
+				$newPrerequis = implode(',', $updatedList);
+
+				// Vérifier si la liste est vide et supprimer la ligne si nécessaire
+				if (empty($newPrerequis)) {
+					$sqlDelete = "DELETE FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis WHERE rowid = ".$obj->rowid;
+					$resqlDelete = $this->db->query($sqlDelete);
+
+					if (!$resqlDelete) {
+						dol_syslog(get_class($this)."::removeFormationFromPrerequis Erreur suppression: ".$this->db->lasterror(), LOG_ERR);
+						return -1;
+					}
+				} else {
+					// Mettre à jour avec la liste non vide
+					$sqlUpdate = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis";
+					$sqlUpdate .= " SET prerequisobjects = '".$this->db->escape($newPrerequis)."'";
+					$sqlUpdate .= " WHERE rowid = ".$obj->rowid;
+					$resqlUpdate = $this->db->query($sqlUpdate);
+
+					if (!$resqlUpdate) {
+						dol_syslog(get_class($this)."::removeFormationFromPrerequis Erreur mise à jour: ".$this->db->lasterror(), LOG_ERR);
+						return -1;
+					}
+				}			
+			}
+			return 1;
+		} else {
+			dol_syslog(get_class($this)."::removeFormationFromPrerequis Erreur requête: ".$this->db->lasterror(), LOG_ERR);
+			return 1;
+		}
+	}
+
 }
 
 

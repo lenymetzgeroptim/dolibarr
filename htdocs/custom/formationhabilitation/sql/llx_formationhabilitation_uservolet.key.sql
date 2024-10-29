@@ -14,20 +14,13 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-CREATE TABLE llx_formationhabilitation_volet(
-	-- BEGIN MODULEBUILDER FIELDS
-	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
-	ref varchar(128) NOT NULL, 
-	label varchar(255), 
-	note_public text, 
-	note_private text, 
-	date_creation datetime NOT NULL, 
-	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
-	fk_user_creat integer NOT NULL, 
-	fk_user_modif integer, 
-	status integer DEFAULT 1 NOT NULL, 
-	numero integer, 
-	typevolet integer NOT NULL, 
-	nommage varchar(128) NOT NULL
-	-- END MODULEBUILDER FIELDS
-) ENGINE=innodb;
+-- BEGIN MODULEBUILDER INDEXES
+ALTER TABLE llx_formationhabilitation_uservolet ADD INDEX idx_formationhabilitation_uservolet_rowid (rowid);
+ALTER TABLE llx_formationhabilitation_uservolet ADD INDEX idx_formationhabilitation_uservolet_ref (ref);
+ALTER TABLE llx_formationhabilitation_uservolet ADD INDEX idx_formationhabilitation_uservolet_status (status);
+-- END MODULEBUILDER INDEXES
+
+--ALTER TABLE llx_formationhabilitation_uservolet ADD UNIQUE INDEX uk_formationhabilitation_uservolet_fieldxy(fieldx, fieldy);
+
+--ALTER TABLE llx_formationhabilitation_uservolet ADD CONSTRAINT llx_formationhabilitation_uservolet_fk_field FOREIGN KEY (fk_field) REFERENCES llx_formationhabilitation_myotherobject(rowid);
+

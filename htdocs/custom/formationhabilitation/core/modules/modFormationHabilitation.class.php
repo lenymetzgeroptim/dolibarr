@@ -206,25 +206,25 @@ class modFormationHabilitation extends DolibarrModules
 			'langs'=>'formationhabilitation@formationhabilitation',
 			'picto'=>'user',
 			// List of tables we want to see into dictonnary editor
-			'tabname'=>array("c_famille_formation", "c_volets", "c_sousdomaine_formation", "c_examen_medical", "c_nature_visite", "c_domaine_application", "c_motif_visite"),
+			'tabname'=>array("c_famille_formation", "c_sousdomaine_formation", "c_examen_medical", "c_nature_visite", "c_domaine_application", "c_motif_visite"),
 			// Label of tables
-			'tablib'=>array("FamilleFormation", "Volets", "SousDomaineFormation", "ExamensMedicaux", "NatureVisite", "DomainesApplication", "MotifVisite"),
+			'tablib'=>array("FamilleFormation", "SousDomaineFormation", "ExamensMedicaux", "NatureVisite", "DomainesApplication", "MotifVisite"),
 			// Request to select fields
-			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT v.rowid as rowid, v.numero, v.typevolet, v.label, v.long_label, v.nommage, v.model, v.nb_initial, v.nb_recyclage, v.nb_passerelle, v.active FROM '.MAIN_DB_PREFIX.'c_volets as v', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_sousdomaine_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_examen_medical as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_nature_visite as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_domaine_application as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_motif_visite as f'),
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_sousdomaine_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_examen_medical as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_nature_visite as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_domaine_application as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_motif_visite as f'),
 			// Sort order
-			'tabsqlsort'=>array("label ASC", "numero ASC", "label ASC", "label ASC", "label ASC", "label ASC", "label ASC"),
+			'tabsqlsort'=>array("label ASC", "label ASC", "label ASC", "label ASC", "label ASC", "label ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("label", "numero,typevolet,label,long_label,nommage,model,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label", "label", "label"),
+			'tabfield'=>array("label", "label", "label", "label", "label", "label"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("label", "numero,typevolet,label,long_label,nommage,model,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label", "label", "label"),
+			'tabfieldvalue'=>array("label", "label", "label", "label", "label", "label"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("label", "numero,typevolet,label,long_label,nommage,model,nb_initial,nb_recyclage,nb_passerelle", "label", "label", "label", "label", "label"),
+			'tabfieldinsert'=>array("label", "label", "label", "label", "label", "label"),
 			// Name of columns with primary key (try to always name it 'rowid')
-			'tabrowid'=>array("rowid", "rowid", "rowid", "rowid", "rowid", "rowid", "rowid"),
+			'tabrowid'=>array("rowid", "rowid", "rowid", "rowid", "rowid", "rowid"),
 			// Condition to show each dictionary
-			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled),
+			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled),
 			// Tooltip for every fields of dictionaries: DO NOT PUT AN EMPTY ARRAY
-			'tabhelp' => array('', array('typevolet' => $langs->trans('DictionnaryTypeVoletHelp'), 'model' => $langs->trans('DictionnaryModelHelp')), '', '', ''),
+			'tabhelp' => array('', '', '', ''),
 		);
 		
 
@@ -267,99 +267,109 @@ class modFormationHabilitation extends DolibarrModules
 		$r = 0;
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Lire les Formations';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'read';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 2);
-		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des collaborateurs';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'readCout';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 3);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Créer/Modifier les Formations';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 4);
-		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des Utilisateurs liés à une formation';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'addline';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 5);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Supprimer les Formations';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 6);
-		$this->rights[$r][1] = 'Lire les Habilitations';
-		$this->rights[$r][4] = 'habilitation';
-		$this->rights[$r][5] = 'read';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 7);
-		$this->rights[$r][1] = 'Créer/Modifier les Habilitations';
-		$this->rights[$r][4] = 'habilitation';
-		$this->rights[$r][5] = 'write';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 8);
-		$this->rights[$r][1] = 'Supprimer les Habilitations';
-		$this->rights[$r][4] = 'habilitation';
-		$this->rights[$r][5] = 'delete';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 9);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
 		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des collaborateurs';
 		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'readCout';
+		$this->rights[$r][5] = 'readcout';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 10);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
 		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des Utilisateurs liés à une formation';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'addline';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 11);
-		$this->rights[$r][1] = 'Read Volet object of FormationHabilitation';
-		$this->rights[$r][4] = 'volet';
+
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 0 + 1);
+		$this->rights[$r][1] = 'Lire les Habilitations';
+		$this->rights[$r][4] = 'habilitation';
 		$this->rights[$r][5] = 'read';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 12);
-		$this->rights[$r][1] = 'Create/Update Volet object of FormationHabilitation';
-		$this->rights[$r][4] = 'volet';
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Habilitations';
+		$this->rights[$r][4] = 'habilitation';
 		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 13);
-		$this->rights[$r][1] = 'Delete Volet object of FormationHabilitation';
-		$this->rights[$r][4] = 'volet';
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Supprimer les Habilitations';
+		$this->rights[$r][4] = 'habilitation';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 14);
+
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 0 + 1);
+		$this->rights[$r][1] = 'Read UserVolet object of FormationHabilitation';
+		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][5] = 'read';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Create/Update UserVolet object of FormationHabilitation';
+		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Delete UserVolet object of FormationHabilitation';
+		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][5] = 'delete';
+		$r++;
+
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Read VisiteMedical object of FormationHabilitation';
 		$this->rights[$r][4] = 'visitemedical';
 		$this->rights[$r][5] = 'read';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 15);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Create/Update VisiteMedical object of FormationHabilitation';
 		$this->rights[$r][4] = 'visitemedical';
 		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 16);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Delete VisiteMedical object of FormationHabilitation';
 		$this->rights[$r][4] = 'visitemedical';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 17);
+
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Read Convocation object of FormationHabilitation';
 		$this->rights[$r][4] = 'convocation';
 		$this->rights[$r][5] = 'read';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 18);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Create/Update Convocation object of FormationHabilitation';
 		$this->rights[$r][4] = 'convocation';
 		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', 19);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Delete Convocation object of FormationHabilitation';
 		$this->rights[$r][4] = 'convocation';
+		$this->rights[$r][5] = 'delete';
+		$r++;
+
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (5 * 10) + 0 + 1);
+		$this->rights[$r][1] = 'Read Volet object of FormationHabilitation';
+		$this->rights[$r][4] = 'volet';
+		$this->rights[$r][5] = 'read';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (5 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Create/Update Volet object of FormationHabilitation';
+		$this->rights[$r][4] = 'volet';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (5 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Delete Volet object of FormationHabilitation';
+		$this->rights[$r][4] = 'volet';
 		$this->rights[$r][5] = 'delete';
 		$r++;
 		
@@ -391,13 +401,13 @@ class modFormationHabilitation extends DolibarrModules
 		$this->menu[$r++]=array(
 			 'fk_menu' => 'fk_mainmenu=formationhabilitation',
 			 'type' => 'left',
-			 'titre' => 'Liste Formation',
+			 'titre' => 'Formations',
 			 'prefix' => img_picto('', 'fa-graduation-cap_fas_#1f3d89', 'class="paddingright pictofixedwidth valignmiddle"'),
 			 'mainmenu' => 'formationhabilitation',
 			 'leftmenu' => 'formationhabilitation_formation',
 			 'url' => '/formationhabilitation/formation_list.php',
 			 'langs' => 'formationhabilitation@formationhabilitation',
-			 'position' => 1000,
+			 'position' => 1000 + $r,
 			 'enabled' => '$conf->formationhabilitation->enabled',
 			 'perms' => '1',
 			 'target' => '',
@@ -409,27 +419,41 @@ class modFormationHabilitation extends DolibarrModules
 			 'type' => 'left',
 			 'titre' => 'Nouvelle Formation',
 			 'mainmenu' => 'formationhabilitation',
-			 'leftmenu' => 'formationhabilitation_formation',
+			 'leftmenu' => 'formationhabilitation_formationnew',
 			 'url' => '/formationhabilitation/formation_card.php?action=create',
 			 'langs' => 'formationhabilitation@formationhabilitation',
-			 'position' => 1000,
+			 'position' => 1000 + $r,
 			 'enabled' => '$conf->formationhabilitation->enabled',
 			 'perms' => '1',
 			 'target' => '',
 			 'user' => 2,
 		);
+		$this->menu[$r++]=array(
+			'fk_menu' => 'fk_mainmenu=formationhabilitation,fk_leftmenu=formationhabilitation_formation',
+			'type' => 'left',
+			'titre' => 'Formations des collaborateurs',
+			'mainmenu' => 'formationhabilitation',
+			'leftmenu' => 'formationhabilitation_userformationlist',
+			'url' => '/formationhabilitation/userformation_list.php',
+			'langs' => 'formationhabilitation@formationhabilitation',
+			'position' => 1000 + $r,
+			'enabled' => '$conf->formationhabilitation->enabled',
+			'perms' => '1',
+			'target' => '',
+			'user' => 2,
+	   );
 		/* END LEFTMENU NOUVELLE FORMATION */
 		/* LEFTMENU LISTE HABILITATION */
 		$this->menu[$r++]=array(
 			 'fk_menu' => 'fk_mainmenu=formationhabilitation',
 			 'type' => 'left',
-			 'titre' => 'Liste Habilitation',
+			 'titre' => 'Habilitations',
 			 'prefix' => img_picto('', 'fa-cog_fa_#c46c0e', 'class="paddingright pictofixedwidth valignmiddle"'),
 			 'mainmenu' => 'formationhabilitation',
 			 'leftmenu' => 'formationhabilitation_habilitation',
 			 'url' => '/formationhabilitation/habilitation_list.php',
 			 'langs' => 'formationhabilitation@formationhabilitation',
-			 'position' => 1000,
+			 'position' => 1000 + $r,
 			 'enabled' => '$conf->formationhabilitation->enabled',
 			 'perms' => '1',
 			 'target' => '',
@@ -441,27 +465,41 @@ class modFormationHabilitation extends DolibarrModules
 			 'type' => 'left',
 			 'titre' => 'Nouvelle Habilitation',
 			 'mainmenu' => 'formationhabilitation',
-			 'leftmenu' => 'formationhabilitation_habilitation',
+			 'leftmenu' => 'formationhabilitation_habilitationnew',
 			 'url' => '/formationhabilitation/habilitation_card.php?action=create',
 			 'langs' => 'formationhabilitation@formationhabilitation',
-			 'position' => 1000,
+			 'position' => 1000 + $r,
 			 'enabled' => '$conf->formationhabilitation->enabled',
 			 'perms' => '1',
 			 'target' => '',
 			 'user' => 2,
 		);
+		$this->menu[$r++]=array(
+			'fk_menu' => 'fk_mainmenu=formationhabilitation,fk_leftmenu=formationhabilitation_habilitation',
+			'type' => 'left',
+			'titre' => 'Habilitations des collaborateurs',
+			'mainmenu' => 'formationhabilitation',
+			'leftmenu' => 'formationhabilitation_userhabilitationlist',
+			'url' => '/formationhabilitation/userhabilitation_list.php',
+			'langs' => 'formationhabilitation@formationhabilitation',
+			'position' => 1000 + $r,
+			'enabled' => '$conf->formationhabilitation->enabled',
+			'perms' => '1',
+			'target' => '',
+			'user' => 2,
+	   );
 		/* END LEFTMENU NOUVELLE HABILITATION */
 		/* LEFTMENU LISTE AUTORISATION */
 		$this->menu[$r++]=array(
 			 'fk_menu' => 'fk_mainmenu=formationhabilitation',
 			 'type' => 'left',
-			 'titre' => 'Liste Autorisation',
+			 'titre' => 'Autorisations',
 			 'prefix' => img_picto('', 'fa-check_fas_green', 'class="paddingright pictofixedwidth valignmiddle"'),
 			 'mainmenu' => 'formationhabilitation',
 			 'leftmenu' => 'formationhabilitation_autorisation',
 			 'url' => '/formationhabilitation/autorisation_list.php',
 			 'langs' => 'formationhabilitation@formationhabilitation',
-			 'position' => 1000,
+			 'position' => 1000 + $r,
 			 'enabled' => '$conf->formationhabilitation->enabled',
 			 'perms' => '1',
 			 'target' => '',
@@ -473,24 +511,37 @@ class modFormationHabilitation extends DolibarrModules
 			 'type' => 'left',
 			 'titre' => 'Nouvelle Autorisation',
 			 'mainmenu' => 'formationhabilitation',
-			 'leftmenu' => 'formationhabilitation_autorisation',
+			 'leftmenu' => 'formationhabilitation_autorisationnew',
 			 'url' => '/formationhabilitation/autorisation_card.php?action=create',
 			 'langs' => 'formationhabilitation@formationhabilitation',
-			 'position' => 1000,
+			 'position' => 1000 + $r,
 			 'enabled' => '$conf->formationhabilitation->enabled',
 			 'perms' => '1',
 			 'target' => '',
 			 'user' => 2,
 		);
 		/* END LEFTMENU NOUVELLE AUTORISATION */
-
+		$this->menu[$r++]=array(
+			'fk_menu' => 'fk_mainmenu=formationhabilitation,fk_leftmenu=formationhabilitation_autorisation',
+			'type' => 'left',
+			'titre' => 'Autorisations des collaborateurs',
+			'mainmenu' => 'formationhabilitation',
+			'leftmenu' => 'formationhabilitation_userautorisationlist',
+			'url' => '/formationhabilitation/userautorisation_list.php',
+			'langs' => 'formationhabilitation@formationhabilitation',
+			'position' => 1000 + $r,
+			'enabled' => '$conf->formationhabilitation->enabled',
+			'perms' => '1',
+			'target' => '',
+			'user' => 2,
+	   );
 
 		/*LEFTMENU VOLET*/
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=formationhabilitation',
 			'type'=>'left',
-			'titre'=>'Volet',
-			'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
+			'titre'=>'Volets',
+			'prefix' => img_picto('', 'fa-book_fas_#004a95', 'class="paddingright pictofixedwidth valignmiddle"'),
 			'mainmenu'=>'formationhabilitation',
 			'leftmenu'=>'volet',
 			'url'=>'/formationhabilitation/volet_list.php',
@@ -504,38 +555,88 @@ class modFormationHabilitation extends DolibarrModules
         $this->menu[$r++]=array(
             'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
             'type'=>'left',
-            'titre'=>'List Volet',
+            'titre'=>'Nouveau volet d\'un collaborateur',
             'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_volet_list',
-            'url'=>'/formationhabilitation/volet_list.php',
+            'leftmenu'=>'formationhabilitation_uservolet_new',
+            'url'=>'/formationhabilitation/uservolet_card.php?action=create',
             'langs'=>'formationhabilitation@formationhabilitation',
             'position'=>1000+$r,
             'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "volet", "read")',
-            'target'=>'',
-            'user'=>2,
-        );
-        $this->menu[$r++]=array(
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
-            'type'=>'left',
-            'titre'=>'New Volet',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_volet_new',
-            'url'=>'/formationhabilitation/volet_card.php?action=create',
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1000+$r,
-            'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "volet", "write")',
+			'perms'=>'$user->hasRight("formationhabilitation", "uservolet", "write")',
             'target'=>'',
             'user'=>2
         );
+		$this->menu[$r++]=array(
+            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
+            'type'=>'left',
+            'titre'=>'Volets des collaborateurs',
+            'mainmenu'=>'formationhabilitation',
+            'leftmenu'=>'formationhabilitation_uservolet_list',
+            'url'=>'/formationhabilitation/uservolet_list.php',
+            'langs'=>'formationhabilitation@formationhabilitation',
+            'position'=>1000+$r,
+            'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "uservolet", "read")',
+            'target'=>'',
+            'user'=>2
+        );
+		/*LEFTMENU ELEMENTPREREQUIS*/
+		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
+			'type'=>'left',
+			'titre'=>'Liste Prérequis',
+			'mainmenu'=>'formationhabilitation',
+			'leftmenu'=>'formationhabilitation_elementprerequis_list',
+			'url'=>'/formationhabilitation/elementprerequis_list.php',
+			'langs'=>'formationhabilitation@formationhabilitation',
+			'position'=>1000+$r,
+			'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "volet", "read")',
+			'target'=>'',
+			'user'=>2,
+		);
+		/*END LEFTMENU ELEMENTPREREQUIS*/
 
+		/*LEFTMENU VOLETTABLE*/
+		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
+			'type'=>'left',
+			'titre'=>'Tableau Volet',
+			'mainmenu'=>'formationhabilitation',
+			'leftmenu'=>'formationhabilitation_volettable_list',
+			'url'=>'/formationhabilitation/volettable_list.php',
+			'langs'=>'formationhabilitation@formationhabilitation',
+			'position'=>1000+$r,
+			'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "volet", "read")',
+			'target'=>'',
+			'user'=>2,
+		);
+		/*END LEFTMENU VOLETTABLE*/
+
+		/*LEFTMENU VOLETLINE*/
+		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
+			'type'=>'left',
+			'titre'=>'Ligne Volet',
+			'mainmenu'=>'formationhabilitation',
+			'leftmenu'=>'formationhabilitation_voletline_list',
+			'url'=>'/formationhabilitation/voletline_list.php',
+			'langs'=>'formationhabilitation@formationhabilitation',
+			'position'=>1000+$r,
+			'enabled'=>'isModEnabled("formationhabilitation")',
+			'perms'=>'$user->hasRight("formationhabilitation", "volet", "read")',
+			'target'=>'',
+			'user'=>2,
+		);
+		/*END LEFTMENU VOLETLINE*/
 		/*END LEFTMENU VOLET*/
+
 		/*LEFTMENU VISITEMEDICAL*/
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=formationhabilitation',
 			'type'=>'left',
-			'titre'=>'VisiteMedical',
+			'titre'=>'Visites Médicales',
 			'prefix' => img_picto('', 'fa-hospital-alt_fas_#b4161b', 'class="paddingright pictofixedwidth valignmiddle"'),
 			'mainmenu'=>'formationhabilitation',
 			'leftmenu'=>'visitemedical',
@@ -547,20 +648,6 @@ class modFormationHabilitation extends DolibarrModules
 			'target'=>'',
 			'user'=>2,
 		);
-        $this->menu[$r++]=array(
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=visitemedical',
-            'type'=>'left',
-            'titre'=>'Liste Visites Medicale',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_visitemedical_list',
-            'url'=>'/formationhabilitation/visitemedical_list.php',
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1000+$r,
-            'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "visitemedical", "read")',
-            'target'=>'',
-            'user'=>2,
-        );
         $this->menu[$r++]=array(
             'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=visitemedical',
             'type'=>'left',
@@ -581,7 +668,7 @@ class modFormationHabilitation extends DolibarrModules
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=formationhabilitation',
 			'type'=>'left',
-			'titre'=>'Convocation',
+			'titre'=>'Convocations',
 			'prefix' => img_picto('', 'fa-envelope-open-text_fas_#808080', 'class="paddingright pictofixedwidth valignmiddle"'),
 			'mainmenu'=>'formationhabilitation',
 			'leftmenu'=>'convocation',
@@ -596,20 +683,6 @@ class modFormationHabilitation extends DolibarrModules
         $this->menu[$r++]=array(
             'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=convocation',
             'type'=>'left',
-            'titre'=>'Liste Convocations',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_convocation_list',
-            'url'=>'/formationhabilitation/convocation_list.php',
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1000+$r,
-            'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "convocation", "read")',
-            'target'=>'',
-            'user'=>2,
-        );
-        $this->menu[$r++]=array(
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=convocation',
-            'type'=>'left',
             'titre'=>'Nouvelle Convocation',
             'mainmenu'=>'formationhabilitation',
             'leftmenu'=>'formationhabilitation_convocation_new',
@@ -621,146 +694,8 @@ class modFormationHabilitation extends DolibarrModules
             'target'=>'',
             'user'=>2
         );
-
 		/*END LEFTMENU CONVOCATION*/
-		/*LEFTMENU ELEMENTPREREQUIS*/
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=formationhabilitation',
-			'type'=>'left',
-			'titre'=>'ElementPrerequis',
-			'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
-			'mainmenu'=>'formationhabilitation',
-			'leftmenu'=>'elementprerequis',
-			'url'=>'/formationhabilitation/elementprerequis_list.php',
-			'langs'=>'formationhabilitation@formationhabilitation',
-			'position'=>1000+$r,
-			'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "elementprerequis", "read")',
-			'target'=>'',
-			'user'=>2,
-		);
-        $this->menu[$r++]=array(
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=elementprerequis',
-            'type'=>'left',
-            'titre'=>'List ElementPrerequis',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_elementprerequis_list',
-            'url'=>'/formationhabilitation/elementprerequis_list.php',
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1000+$r,
-            'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "elementprerequis", "read")',
-            'target'=>'',
-            'user'=>2,
-        );
-        $this->menu[$r++]=array(
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=elementprerequis',
-            'type'=>'left',
-            'titre'=>'New ElementPrerequis',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_elementprerequis_new',
-            'url'=>'/formationhabilitation/elementprerequis_card.php?action=create',
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1000+$r,
-            'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "elementprerequis", "write")',
-            'target'=>'',
-            'user'=>2
-        );
 
-		/*END LEFTMENU ELEMENTPREREQUIS*/
-		/*LEFTMENU VOLETTABLE*/
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=formationhabilitation',
-			'type'=>'left',
-			'titre'=>'VoletTable',
-			'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
-			'mainmenu'=>'formationhabilitation',
-			'leftmenu'=>'volettable',
-			'url'=>'/formationhabilitation/volettable_list.php',
-			'langs'=>'formationhabilitation@formationhabilitation',
-			'position'=>1000+$r,
-			'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "volettable", "read")',
-			'target'=>'',
-			'user'=>2,
-		);
-        $this->menu[$r++]=array(
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volettable',
-            'type'=>'left',
-            'titre'=>'List VoletTable',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_volettable_list',
-            'url'=>'/formationhabilitation/volettable_list.php',
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1000+$r,
-            'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "volettable", "read")',
-            'target'=>'',
-            'user'=>2,
-        );
-        $this->menu[$r++]=array(
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=volettable',
-            'type'=>'left',
-            'titre'=>'New VoletTable',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_volettable_new',
-            'url'=>'/formationhabilitation/volettable_card.php?action=create',
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1000+$r,
-            'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "volettable", "write")',
-            'target'=>'',
-            'user'=>2
-        );
-
-		/*END LEFTMENU VOLETTABLE*/
-		/*LEFTMENU VOLETLINE*/
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=formationhabilitation',
-			'type'=>'left',
-			'titre'=>'VoletLine',
-			'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
-			'mainmenu'=>'formationhabilitation',
-			'leftmenu'=>'voletline',
-			'url'=>'/formationhabilitation/voletline_list.php',
-			'langs'=>'formationhabilitation@formationhabilitation',
-			'position'=>1000+$r,
-			'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "voletline", "read")',
-			'target'=>'',
-			'user'=>2,
-		);
-        $this->menu[$r++]=array(
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=voletline',
-            'type'=>'left',
-            'titre'=>'List VoletLine',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_voletline_list',
-            'url'=>'/formationhabilitation/voletline_list.php',
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1000+$r,
-            'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "voletline", "read")',
-            'target'=>'',
-            'user'=>2,
-        );
-        $this->menu[$r++]=array(
-            'fk_menu'=>'fk_mainmenu=formationhabilitation,fk_leftmenu=voletline',
-            'type'=>'left',
-            'titre'=>'New VoletLine',
-            'mainmenu'=>'formationhabilitation',
-            'leftmenu'=>'formationhabilitation_voletline_new',
-            'url'=>'/formationhabilitation/voletline_card.php?action=create',
-            'langs'=>'formationhabilitation@formationhabilitation',
-            'position'=>1000+$r,
-            'enabled'=>'isModEnabled("formationhabilitation")',
-			'perms'=>'$user->hasRight("formationhabilitation", "voletline", "write")',
-            'target'=>'',
-            'user'=>2
-        );
-
-		/*END LEFTMENU VOLETLINE*/
 		/* END MODULEBUILDER LEFTMENU MYOBJECT */
 
 

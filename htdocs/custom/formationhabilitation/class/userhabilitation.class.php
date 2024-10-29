@@ -551,7 +551,7 @@ class UserHabilitation extends CommonObject
 	}
 	
 	/**
-	 * Load list of habilitation linked to the volet
+	 * Load list of habilitation linked to the uservolet
 	 *
 	 * @param  string      $sortorder    Sort Order
 	 * @param  string      $sortfield    Sort field
@@ -559,11 +559,11 @@ class UserHabilitation extends CommonObject
 	 * @param  int         $offset       Offset
 	 * @param  array       $filter       Filter array. Example array('field'=>'valueforlike', 'customurl'=>...)
 	 * @param  string      $filtermode   Filter mode (AND or OR)
-	 * @param  int     	   $voletid   	 Id of volet
-	 * @param  int     	   $fk_numvoletid Id of c_volet
+	 * @param  int     	   $uservoletid  Id of uservolet
+	 * @param  int     	   $voletid 	 Id of volet
 	 * @return array|int                 int <0 if KO, array of pages if OK
 	 */
-	public function fetchAllLinked($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND', $voletid, $fk_numvoletid)
+	public function fetchAllLinked($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND', $uservoletid, $voletid)
 	{
 		global $conf;
 
@@ -574,8 +574,8 @@ class UserHabilitation extends CommonObject
 		$sql = "SELECT ef.domaineapplication as ef_domaineapplication, ";
 		$sql .= $this->getFieldList('t');
 		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
-		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as h ON h.rowid = t.fk_habilitation AND h.volet = $fk_numvoletid";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON t.rowid = e.fk_source AND e.sourcetype = 'habilitation' AND e.targettype = 'formationhabilitation_volet' AND e.fk_target = $voletid";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as h ON h.rowid = t.fk_habilitation AND h.fk_volet = $voletid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON t.rowid = e.fk_source AND e.sourcetype = 'habilitation' AND e.targettype = 'formationhabilitation_uservolet' AND e.fk_target = $uservoletid";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_element_fields as ef ON e.rowid = ef.fk_element_element";
 		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
 			$sql .= " WHERE t.entity IN (".getEntity($this->table_element).")";
@@ -1224,7 +1224,7 @@ class UserHabilitation extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uh";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as h ON h.rowid = uh.fk_habilitation";
 		$sql .= " WHERE uh.fk_user = $userid";
-		$sql .= " AND h.volet = $voletid";
+		$sql .= " AND h.fk_volet = $voletid";
 		$sql .= " ORDER BY uh.date_fin_habilitation ASC";
 
 		dol_syslog(get_class($this)."::getHabilitationsByUser", LOG_DEBUG);

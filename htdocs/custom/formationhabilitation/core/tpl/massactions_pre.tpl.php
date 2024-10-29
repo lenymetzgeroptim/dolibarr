@@ -47,7 +47,7 @@ if ($massaction == 'predelete') {
 if ($massaction == 'prevalidate' && $permissiontovalidatelines) {
 	$parentobjectid = array();
 	$voletToGenerate = array();
-	$volet = new Volet($db);
+	$uservolet = new UserVolet($db);
 	$objectlinetmp = new $objectclass($db);
 	$objectparentlinetmp = new $objectparentclass($db);
 
@@ -77,8 +77,8 @@ if ($massaction == 'prevalidate' && $permissiontovalidatelines) {
 			}
 		}
 
-		foreach(explode(',', $objectparentlinetmp->volet) as $voletid) {
-			if(!in_array($voletid, $voletToGenerate)) {
+		foreach(explode(',', $objectparentlinetmp->fk_volet) as $voletid) {
+			if($voletid > 0 && !in_array($voletid, $voletToGenerate)) {
 				$voletToGenerate[] = $voletid;
 				break;
 			}
@@ -97,8 +97,9 @@ if ($massaction == 'prevalidate' && $permissiontovalidatelines) {
 		// Texte pour les noms des volets qui seront regénéré
 		$txt_voletToGenerate = '';
 		foreach($voletToGenerate as $voletid) {
-			$voletInfo = $volet->getVoletInfo($voletid);
-			$txt_voletToGenerate .= $voletInfo['numero'].'-'.$voletInfo['label'].', ';
+			$volet = new Volet($db);
+			$volet->fetch($voletid); 
+			$txt_voletToGenerate .= $volet->numero.'-'.$volet->label.', ';
 		}
 		$txt_voletToGenerate = rtrim($txt_voletToGenerate, ', ');
 

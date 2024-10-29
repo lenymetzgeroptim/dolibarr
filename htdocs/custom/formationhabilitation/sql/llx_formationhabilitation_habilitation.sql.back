@@ -30,7 +30,7 @@ CREATE TABLE llx_formationhabilitation_habilitation(
 	model_pdf varchar(255), 
 	status integer NOT NULL, 
 	formation varchar(128), 
-	volet varchar(128), 
+	fk_volet varchar(128), 
 	test varchar(128), 
 	domaineapplication integer, 
 	commentaire text
