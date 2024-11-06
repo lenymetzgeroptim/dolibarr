@@ -219,6 +219,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 			$objectline->formateur = (GETPOST('interne_externe') == 2 ? GETPOST('formateur') : '');
 			$objectline->numero_certificat = GETPOST('numero_certificat');
 			$objectline->prevupif = GETPOST('prevupif', 'int');
+			$objectline->non_renouvelee = GETPOST('non_renouvelee', 'int');
 			$objectline->resultat = GETPOST('resultat');
 			// $objectline->status = GETPOST('status');
 

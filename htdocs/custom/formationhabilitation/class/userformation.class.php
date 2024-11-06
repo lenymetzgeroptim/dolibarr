@@ -23,7 +23,8 @@
  */
 
 // Put here all includes required by your class file
-require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/uservolet.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/formation.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 
@@ -133,6 +134,7 @@ class UserFormation extends CommonObject
 		"resultat" => array("type"=>"integer", "label"=>"Résultat", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Non défini", "2" => "Satisfaisant", "3" => "Non satisfaisant"),),
 		"cout_annexe" => array("type"=>"price", "label"=>"CoutAnnexe", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
 		"prevupif" => array("type"=>"boolean", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1",),
+		"non_renouvelee" => array("type"=>"boolean", "label"=>"NonRenouvelee", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1", "help"=>"Lorsque la date de fin de validité sera atteinte, la formation sera clôturée et non expirée"),
 	);
 	public $rowid;
 	public $ref;
@@ -162,6 +164,7 @@ class UserFormation extends CommonObject
 	public $resultat;
 	public $cout_annexe;
 	public $prevupif;
+	public $non_renouvelee;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1464,7 +1467,7 @@ class UserFormation extends CommonObject
 		$this->db->begin();
 		$this->output = '';
 
-		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée
+		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée ou Clôturée
 		$sql = "SELECT uf.rowid, uf.ref";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
@@ -1485,6 +1488,7 @@ class UserFormation extends CommonObject
 		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
 			$sql2 .= " AND f.periode_souplesse IS NULL";
 		}
+		$sql2 .= " AND (uf.non_renouvelee = 0 OR uf.non_renouvelee IS NULL)";
 		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
 		$sql2 .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL -f.delaisprogrammation MONTH) <= '".substr($this->db->idate($now), 0, 10)."'";
 
@@ -1494,13 +1498,12 @@ class UserFormation extends CommonObject
 		$resql2 = $this->db->query($sql2);
 
 		if ($resql && $resql2) {
-			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée
+			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée ou Clôturée
 			$num = $this->db->num_rows($resql);
 			$i = 0;
 			while ($i < $num) {
 				$obj = $this->db->fetch_object($resql);
 				$tab_id[] = $obj->rowid;
-				$this->output .= "La formation $obj->ref a été passé au statut 'Expirée'<br>";
 				$i++;
 			}	
 
@@ -1536,9 +1539,16 @@ class UserFormation extends CommonObject
 				foreach($tab_id as $userformation_id) {
 					if($userformation_id > 0) {
 						$this->fetch($userformation_id);
-						$rescloture = $this->close($user);
+						if($this->non_renouvelee == 1) {
+							$rescloture = $this->close($user);
+							$this->output .= "La formation $this->ref a été passé au statut 'Clôturée'<br>";
+						}
+						else {
+							$rescloture = $this->expire($user);
+							$this->output .= "La formation $this->ref a été passé au statut 'Expirée'<br>";
+						}
 
-						if($$rescloture < 0) {
+						if($rescloture < 0) {
 							$this->error = $this->db->lasterror();
 							$error++;
 						}
@@ -1569,7 +1579,7 @@ class UserFormation extends CommonObject
 		}
 
 		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
-			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse > DateJour => Expirée
+			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse > DateJour => Expirée ou Cloturée
 			$sql = "SELECT uf.rowid, uf.ref";
 			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
@@ -1585,6 +1595,7 @@ class UserFormation extends CommonObject
 			$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 			$sql2 .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
 			$sql2 .= " AND f.periode_souplesse IS NOT NULL";
+			$sql2 .= " AND (uf.non_renouvelee = 0 OR uf.non_renouvelee IS NULL)";
 			$sql2 .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
 			$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
 			$sql2 .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL f.periode_souplesse MONTH) > '".substr($this->db->idate($now), 0, 10)."'";
@@ -1600,7 +1611,6 @@ class UserFormation extends CommonObject
 				while ($i < $num) {
 					$obj = $this->db->fetch_object($resql);
 					$tab_id[] = $obj->rowid;
-					$this->output .= "La formation $obj->ref a été passé au statut 'Expirée' (souplesse non restrictive)<br>";
 					$i++;
 				}	
 
@@ -1636,9 +1646,16 @@ class UserFormation extends CommonObject
 					foreach($tab_id as $userformation_id) {
 						if($userformation_id > 0) {
 							$this->fetch($userformation_id);
-							$rescloture = $this->close($user);
+							if($this->non_renouvelee == 1) {
+								$rescloture = $this->close($user);
+								$this->output .= "La formation $this->ref a été passé au statut 'Clôturée' (souplesse non restrictive)<br>";
+							}
+							else {
+								$rescloture = $this->expire($user);
+								$this->output .= "La formation $this->ref a été passé au statut 'Expirée' (souplesse non restrictive)<br>";
+							}
 	
-							if($$rescloture < 0) {
+							if($rescloture < 0) {
 								$this->error = $this->db->lasterror();
 								$error++;
 							}
@@ -1669,7 +1686,7 @@ class UserFormation extends CommonObject
 			}
 
 
-			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée
+			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée ou Clôturée
 			$sql = "SELECT uf.rowid, uf.ref";
 			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
@@ -1713,9 +1730,16 @@ class UserFormation extends CommonObject
 					foreach($tab_id as $userformation_id) {
 						if($userformation_id > 0) {
 							$this->fetch($userformation_id);
-							$rescloture = $this->close($user);
+							if($this->non_renouvelee == 1) {
+								$rescloture = $this->close($user);
+								$this->output .= "La formation $this->ref a été passé au statut 'Clôturée' (souplesse restrictive)<br>";
+							}
+							else {
+								$rescloture = $this->expire($user);
+								$this->output .= "La formation $this->ref a été passé au statut 'Expirée' (souplesse restrictive)<br>";
+							}
 	
-							if($$rescloture < 0) {
+							if($rescloture < 0) {
 								$this->error = $this->db->lasterror();
 								$error++;
 							}
@@ -1730,9 +1754,11 @@ class UserFormation extends CommonObject
 
 
 		if($error == 0) {
+			$this->db->commit();
 			return 0;
 		}
 		else {
+			$this->db->rollback();
 			return 1;
 		}
 	}

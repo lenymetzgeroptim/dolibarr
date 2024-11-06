@@ -2122,8 +2122,10 @@ class UserVolet extends CommonObject
 				$volet = new Volet($this->db);
 				$volet->fetch($voletid); 
 
+				$listUserFormations = $objecttmp->getAllFormationsForUserOnVolet($userid, $voletid);
+
 				// Création du nouveau volet
-				if(!in_array($voletid, $voletsCreate)) {
+				if(!in_array($voletid, $voletsCreate) && sizeof($listUserFormations) > 0) {
 					$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$volet->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
 					$uservolet->fk_user = $userid;
 					$uservolet->fk_volet = $voletid;
@@ -2139,7 +2141,6 @@ class UserVolet extends CommonObject
 
 					$voletsCreate[] = $voletid;
 					
-					$listUserFormations = $objecttmp->getAllFormationsForUserOnVolet($userid, $voletid);
 					
 					foreach($listUserFormations as $userformation_id => $userformation_ref) {
 						$resultLink = $uservolet->add_object_linked('formation', $userformation_id);

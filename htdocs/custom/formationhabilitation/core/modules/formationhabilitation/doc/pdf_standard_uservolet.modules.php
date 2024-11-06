@@ -332,7 +332,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 
 				if($volet->model == 6) {
 					$autorisationFile = $conf->formationhabilitation->dir_output.'/'.$object->element.'/Autorisation.pdf';
-					if (!file_exists($autorisationFile)) {
+					if (file_exists($autorisationFile)) {
 						$pdf->AddPage();
 						$pagenb++;
 						$pagecount = $pdf->setSourceFile($autorisationFile);

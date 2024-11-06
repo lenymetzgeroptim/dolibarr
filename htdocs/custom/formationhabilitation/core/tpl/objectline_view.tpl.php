@@ -84,10 +84,10 @@ foreach($objectline->fields as $key => $val){
 		}
 		elseif($key == 'status'){
 			print $line->getLibStatut(2);
-			if($objectline->element == 'userformation' && $line->status == UserFormation::STATUS_A_PROGRAMMER) {
+			if($action != 'editline' && $objectline->element == 'userformation' && ($line->status == UserFormation::STATUS_A_PROGRAMMER || $line->status == UserFormation::STATUS_VALIDE || $line->status == UserFormation::STATUS_EXPIREE)) {
 				print dolGetButtonAction($langs->trans('Programmer'), $langs->trans('Programmer'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=programmer_formation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id, '', $permissiontoaddline);
 			}
-			elseif($objectline->element == 'userformation' && $line->status == UserFormation::STATUS_PROGRAMMEE) {
+			elseif($action != 'editline' && $objectline->element == 'userformation' && $line->status == UserFormation::STATUS_PROGRAMMEE) {
 				print dolGetButtonAction($langs->trans('Valider'), $langs->trans('Valider'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=valider_formation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id, '', $permissiontoaddline);
 			}
 		}

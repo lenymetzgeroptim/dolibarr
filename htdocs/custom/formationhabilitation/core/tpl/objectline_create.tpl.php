@@ -49,7 +49,7 @@ $objectline->fields = dol_sort_array($objectline->fields, 'position');
 		if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
 			continue;
 		}
-		if($key == 'formateur') {
+		if($key == 'formateur' || $key == 'non_renouvelee') {
 			continue;
 		}
 
@@ -92,6 +92,9 @@ elseif($objectline->element == 'uservolet') {
 
 foreach($objectline->fields as $key => $val){
 	if($objectline->element == 'uservolet' && $key != 'fk_volet') {
+		continue;
+	}
+	elseif($objectline->element == 'userformation' && $key == 'non_renouvelee') {
 		continue;
 	}
 
