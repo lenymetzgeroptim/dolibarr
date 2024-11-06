@@ -274,7 +274,7 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
             }
             $txt_formationToReprogrammer = rtrim($txt_formationToReprogrammer, ', ');
         }
-    
+
         if(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
             if (!empty(GETPOST("date_debut_formationmonth", 'int')) && !empty(GETPOST("date_debut_formationday", 'int')) && !empty(GETPOST("date_debut_formationyear", 'int'))) {
                 $date_debut = dol_mktime(-1, -1, -1, GETPOST("date_debut_formationmonth", 'int'), GETPOST("date_debut_formationday", 'int'), GETPOST("date_debut_formationyear", 'int'));

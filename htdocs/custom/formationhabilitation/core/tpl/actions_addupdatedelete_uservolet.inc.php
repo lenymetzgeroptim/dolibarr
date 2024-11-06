@@ -41,38 +41,38 @@ if($action == 'addline' && $permissiontoaddline) {
 		$error++;
 	}
 
-	if (!empty(GETPOST("datedebutvoletmonth", 'int')) && !empty(GETPOST("datedebutvoletmonthday", 'int')) && !empty(GETPOST("datedebutvoletmonthyear", 'int'))) {
-		$date_debut = dol_mktime(-1, -1, -1, GETPOST("datedebutvoletmonth", 'int'), GETPOST("datedebutvoletmonthday", 'int'), GETPOST("datedebutvoletmonthyear", 'int'));
-	}
+	// if (!empty(GETPOST("datedebutvoletmonth", 'int')) && !empty(GETPOST("datedebutvoletmonthday", 'int')) && !empty(GETPOST("datedebutvoletmonthyear", 'int'))) {
+	// 	$date_debut = dol_mktime(-1, -1, -1, GETPOST("datedebutvoletmonth", 'int'), GETPOST("datedebutvoletmonthday", 'int'), GETPOST("datedebutvoletmonthyear", 'int'));
+	// }
 
-	if (!empty(GETPOST("datefinvoletmonth", 'int')) && !empty(GETPOST("datefinvoletmonthday", 'int')) && !empty(GETPOST("datefinvoletmonthyear", 'int'))) {
-		$date_fin = dol_mktime(-1, -1, -1, GETPOST("datefinvoletmonth", 'int'), GETPOST("datefinvoletmonthday", 'int'), GETPOST("datefinvoletmonthyear", 'int'));
-	}
+	// if (!empty(GETPOST("datefinvoletmonth", 'int')) && !empty(GETPOST("datefinvoletmonthday", 'int')) && !empty(GETPOST("datefinvoletmonthyear", 'int'))) {
+	// 	$date_fin = dol_mktime(-1, -1, -1, GETPOST("datefinvoletmonth", 'int'), GETPOST("datefinvoletmonthday", 'int'), GETPOST("datefinvoletmonthyear", 'int'));
+	// }
 
-	if(GETPOST('status') == -1){
-		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-		$error++;
-	}
+	// if(GETPOST('status') == -1){
+	// 	setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
+	// 	$error++;
+	// }
 
 	if (!$error) {
-		$objectline->ref = $user_static->login."-Volet".GETPOST('fk_volet');
-		$objectline->fk_user = GETPOST('fk_user');
-		$objectline->fk_volet = GETPOST('fk_volet');
-		if($date_debut) {
-			$objectline->datedebutvolet = $date_debut;
+		$volet = new Volet($db);
+		$volet->fetch(GETPOST('fk_volet'));
+		
+		if($volet->typevolet == 1) { // Gestion des volets de formation
+			$resultcreate = $objectline->generateNewVoletFormation(GETPOST('fk_user'), GETPOST('fk_volet'));
 		}
-		if($date_fin) {
-			$objectline->datefinvolet = $date_fin;
+		else { // Gestion des autres volets
+			$objectline->ref = $objectline->getUniqueRef($user_static->login."_VOLET".$volet->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
+			$objectline->fk_user = GETPOST('fk_user');
+			$objectline->fk_volet = GETPOST('fk_volet');
+	
+			$resultcreate = $objectline->create($user);
 		}
-		$objectline->status = GETPOST('status');
-
-		$resultcreate = $objectline->create($user);
 	}
 
 	if(!$error && $resultcreate){
 		$db->commit();
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-		// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 		exit;
 	}
@@ -80,7 +80,6 @@ if($action == 'addline' && $permissiontoaddline) {
 		$db->rollback();
 		setEventMessages($langs->trans($objectline->error), null, 'errors');
 	}
-
 }
 
 // if($action == 'updateline' && !$cancel && $permissiontoaddline){
@@ -255,15 +254,12 @@ if ($action == 'confirm_validate3' && $confirm == 'yes' && $permissiontovalidate
 if ($action == 'confirm_validate4' && $confirm == 'yes' && $permissiontovalidate4) {
 	$db->begin();
 
-	$result = $object->closeActiveUserVolet();
-
-	if($result > 0) { // TODOLENY : Gérer une date de fin en fonction du volet
-		if(empty($object->datedebutvolet)) {
-			$object->datedebutvolet = dol_now();
-		}
-		$object->datefinvolet = dol_time_plus_duree($object->datedebutvolet, 1, 'y');
-		$result = $object->update($user);
+	// TODOLENY : Gérer une date de fin en fonction du volet
+	if(empty($object->datedebutvolet)) {
+		$object->datedebutvolet = dol_now();
 	}
+	$object->datefinvolet = dol_time_plus_duree($object->datedebutvolet, 1, 'y');
+	$result = $object->update($user);
 
 	if($result > 0) {
 		$result = $object->validate4($user);
@@ -272,33 +268,6 @@ if ($action == 'confirm_validate4' && $confirm == 'yes' && $permissiontovalidate
 	if ($result >= 0) {
 		$db->commit();
 		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
-		
-		// Génération du PDF
-		if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
-			if (method_exists($object, 'generateDocument')) {
-				$outputlangs = $langs;
-				$newlang = '';
-				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-					$newlang = GETPOST('lang_id', 'aZ09');
-				}
-				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
-					$newlang = !empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : "";
-				}
-				if (!empty($newlang)) {
-					$outputlangs = new Translate("", $conf);
-					$outputlangs->setDefaultLang($newlang);
-				}
-
-				$ret = $object->fetch($id); // Reload to get new records
-
-				$model = '';
-
-				$retgen = $object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-				if ($retgen < 0) {
-					setEventMessages($object->error, $object->errors, 'warnings');
-				}
-			}
-		}
 	} else {
 		$db->rollback();
 		$error++;

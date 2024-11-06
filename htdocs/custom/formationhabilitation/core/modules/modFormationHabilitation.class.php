@@ -272,7 +272,7 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'read';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 2);
 		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des collaborateurs';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'readcout';
@@ -282,7 +282,7 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 2);
 		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des Utilisateurs liés à une formation';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'addline';

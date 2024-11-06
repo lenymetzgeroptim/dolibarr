@@ -114,7 +114,8 @@ class Volet extends CommonObject
 	 */
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "index"=>"1", "searchall"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
+		"numero" => array("type"=>"integer", "label"=>"Numero", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"1", "showoncombobox"=>"1",),
 		"label" => array("type"=>"varchar(255)", "label"=>"Label", "enabled"=>"1", 'position'=>30, 'notnull'=>0, "visible"=>"1", "alwayseditable"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "help"=>"Help text", "showoncombobox"=>"2", "validate"=>"1",),
 		"note_public" => array("type"=>"html", "label"=>"NotePublic", "enabled"=>"1", 'position'=>61, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
 		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
@@ -123,13 +124,14 @@ class Volet extends CommonObject
 		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
 		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "picto"=>"user", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "default"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Actif", "9" => "Inactif"), "validate"=>"1",),
-		"numero" => array("type"=>"integer", "label"=>"Numero", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"1",),
 		"typevolet" => array("type"=>"integer", "label"=>"TypeVolet", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Volet de formations", "2" => "Volet d'habilitations", "3" => "Volet d'autorisations", "4" => "Autre"),),
 		"nommage" => array("type"=>"varchar(128)", "label"=>"NommagePDF", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
 		"model" => array("type"=>"integer", "label"=>"ModelPDF", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Identité", "2" => "Formation", "3" => "Entreprise", "4" => "Habilitation", "5" => "Médical", "6" => "Autorisation"),),
+		"longlabel" => array("type"=>"varchar(255)", "label"=>"LongLabel", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
+	public $numero;
 	public $label;
 	public $note_public;
 	public $note_private;
@@ -138,10 +140,10 @@ class Volet extends CommonObject
 	public $fk_user_creat;
 	public $fk_user_modif;
 	public $status;
-	public $numero;
 	public $typevolet;
 	public $nommage;
 	public $model;
+	public $longlabel;
 	// END MODULEBUILDER PROPERTIES
 
 

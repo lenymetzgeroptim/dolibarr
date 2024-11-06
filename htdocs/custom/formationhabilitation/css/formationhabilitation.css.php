@@ -136,3 +136,7 @@ td.linecolstatus a[aria-label="Programmer"] {
 .pr-8 {
 	padding-right: 8px;
 }
+
+.formationhabilitation .placeholder {
+	display: none;
+}

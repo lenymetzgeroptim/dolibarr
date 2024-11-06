@@ -36,7 +36,7 @@ UserAutorisation = autorisations du collaborateur
 UserFormationuser = collaborateurs possèdant la formation
 UserHabilitationuser = collaborateurs possèdant l'habilitation
 UserAutorisationuser = collaborateurs possèdant l'autorisation
-UserFormationVolet = formations
+UserFormationUserVolet = formations
 UserHabilitationUserVolet = habilitations
 UserAutorisationUserVolet = autorisations
 UserFormations = Formations des collaborateurs
@@ -61,7 +61,7 @@ ApprobationVoletTitle = Approbation des volets
 FORMTIONHABILITATION_APPROBATEURVOLET1 = Approbation n°1
 FORMTIONHABILITATION_APPROBATEURVOLET2 = Approbation n°2
 FORMTIONHABILITATION_APPROBATEURVOLET3 = Approbation n°3
-FORMTIONHABILITATION_APPROBATEURVOLET4 = Approbation n°4é
+FORMTIONHABILITATION_APPROBATEURVOLET4 = Approbation n°4
 FORMTIONHABILITATION_APPROBATIONVOLET = Approbation(s) réalisée(s) pour le volet %s
 FormationTitle = Formations
 FORMTIONHABILITATION_SOUPLESSEFORMATION = Activer la période de souplesse
@@ -103,6 +103,7 @@ GeneratePDF = Générer PDF
 NommagePDF = Nommage du pdf
 TypeVolet = Type
 ModelPDF = Modèle du pdf
+LongLabel = Libellé long
 
 
 #
@@ -110,7 +111,7 @@ ModelPDF = Modèle du pdf
 # 
 RefExterne = Réf. Externe 
 NombreHeure = Durée
-Cout = Coût 
+CoutFormation = Coût estimé
 PeriodeRecyclage = Période de recyclage 
 PeriodeSouplesse = Période de souplesse
 PeriodeSouplesseBloquant = Période de souplesse bloquante
@@ -220,8 +221,9 @@ RecordValidated = %s enregistrement validé
 NoRecordValidated = Aucun enregistrement validé
 ImpossibleToValidateWithThisStatut = Impossible de valider %s à cause du statut
 ValidateAndGenerateUserVolet = Valider et générer volet
-ConfirmValidateVoletWithClose = Êtes-vous sûr de vouloir valider le volet ? <strong>Un volet actif sera clôturé</strong>
-ConfirmValidateVolet = Êtes-vous sûr de vouloir valider le volet ?
+ConfirmValidateUserVoletWithClose = Êtes-vous sûr de vouloir valider le volet ? <strong>Un volet actif sera clôturé</strong>
+ConfirmValidateUserVolet = Êtes-vous sûr de vouloir valider le volet ?
+ValidateUserVolet = Valider le volet
 
 
 #
@@ -244,3 +246,5 @@ EMailTextAutorisationCreation = Bonjour,<br><br>Suite à la validation de la for
 #
 ForceCreation = Forcer la création
 PrerequisObjects = Prérequis
+Suspend = Suspendu
+SuspendLong = Suspendu pour inaptitude médicale

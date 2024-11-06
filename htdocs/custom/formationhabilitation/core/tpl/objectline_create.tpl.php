@@ -53,6 +53,10 @@ $objectline->fields = dol_sort_array($objectline->fields, 'position');
 			continue;
 		}
 
+		if($objectline->element == 'uservolet' && $key != 'fk_volet') {
+			continue;
+		}
+
 		$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');
 		print '<td class="linecol'.$key.' '.$cssforfield.'">'.$langs->trans($val['label']).'</td>';
 	}
@@ -68,13 +72,17 @@ else {
 	print '<tr class="pair nodrag nodrop nohoverpair liste_titre_create">';
 }
 
-if($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation') {
+if($objectline->element == 'userformation') {
+	unset($objectline->fields['status']['arrayofkeyval'][4]);
+	unset($objectline->fields['status']['arrayofkeyval'][5]);
+	unset($objectline->fields['status']['arrayofkeyval'][9]);
+}
+elseif($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation') {
 	unset($objectline->fields['status']['arrayofkeyval'][2]);
 	unset($objectline->fields['status']['arrayofkeyval'][3]);
 	unset($objectline->fields['status']['arrayofkeyval'][9]);
 }
-
-if($objectline->element == 'uservolet') {
+elseif($objectline->element == 'uservolet') {
 	unset($objectline->fields['status']['arrayofkeyval'][1]);
 	unset($objectline->fields['status']['arrayofkeyval'][2]);
 	unset($objectline->fields['status']['arrayofkeyval'][3]);
@@ -83,6 +91,10 @@ if($objectline->element == 'uservolet') {
 }
 
 foreach($objectline->fields as $key => $val){
+	if($objectline->element == 'uservolet' && $key != 'fk_volet') {
+		continue;
+	}
+
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3) {
 		if(abs($val['visible']) == 4) {
 			print '<td class="nobottom linecol'.$key.'">&nbsp;</td>';
@@ -145,6 +157,8 @@ foreach($objectline->fields as $key => $val){
 }
 
 print '<td class="nobottom linecoledit center valignmiddle" colspan="3">';
-print '<input type="checkbox" class="margin5" name="forcecreation" id="forcecreation" form="addline"/><label for="forcecreation">'.$langs->trans('ForceCreation').'</label>';
+if($objectline->element != 'uservolet') {
+	print '<input type="checkbox" class="margin5" name="forcecreation" id="forcecreation" form="addline"/><label for="forcecreation">'.$langs->trans('ForceCreation').'</label>';
+}
 print '<input type="submit" class="button reposition" value="'.$langs->trans('Add').'" name="addline" id="addline" form="addline"></td>';
 print '</tr>';

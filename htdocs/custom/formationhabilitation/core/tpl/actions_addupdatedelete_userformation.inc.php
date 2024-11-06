@@ -105,7 +105,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 	// Impossible d'ajouter une formation si l'utilisateur n'a pas les prérequis
 	if (!$error && empty(GETPOST('forcecreation'))) { 
 		$formation->fetch(GETPOST('fk_formation'));
-		$formations_user = $userFormation->getAllFormationsForUser(GETPOST('fk_user', 'int'));
+		$formations_user = $userFormation->getAllFormationsForUser(GETPOST('fk_user', 'int'), 1);
 
 		// Récupérer toutes les conditions de prérequis pour cette formation
 		$prerequisConditions = $formation->getPrerequis($formation->id);
@@ -130,30 +130,6 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		}
 	}
 
-	if(!$error && GETPOST('status') == $objectline::STATUS_VALIDE) { // Gestion de la cloture des formations de niveau inferieur
-		$formationToClose = $formation->getFormationToClose(GETPOST('fk_user'), GETPOST('fk_formation'));
-		foreach($formationToClose as $userformation_id => $userformation_ref) {
-            $userFormation->fetch($userformation_id);
-			$res = $userFormation->cloture($user);
-
-			if(!$res) {
-				$error++;
-			}
-        }
-	}
-	elseif(!$error && GETPOST('status') == $objectline::STATUS_PROGRAMMEE) { // Gestion de la reprogrammation des formations de niveau inferieur
-		$formationToReprogrammer = $formation->getFormationToReprogrammer(GETPOST('fk_user'), GETPOST('fk_formation'));
-		foreach($formationToReprogrammer as $userformation_id => $userformation_ref) {
-            $userFormation->fetch($userformation_id);
-			$userFormation->status = UserFormation::STATUS_REPROGRAMMEE;
-			$res == $userFormation->update($user);
-
-			if(!$res) {
-				$error++;
-			}
-        }
-	}
-
 	if (!$error) {
 		$objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date_fin, "%Y%m%d");
 		$objectline->fk_user = GETPOST('fk_user');
@@ -172,164 +148,14 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$objectline->numero_certificat = GETPOST('numero_certificat');
 		$objectline->prevupif = GETPOST('prevupif', 'int');
 		$objectline->resultat = GETPOST('resultat');
-		$objectline->status = GETPOST('status');
+		$objectline->status = GETPOST('status'); // TODOLény -> Gestion de l'appel à validate et programmer()
 
 		$resultcreate = $objectline->create($user);
-	}
-
-	// Création des habilitations et des autorisations
-	if($resultcreate > 0 && $objectline->status == $objectline::STATUS_VALIDE){
-		$txtListHabilitation = '';
-		$habilitationStatic = new Habilitation($db);
-		$resultcreatelinehabilitations = $habilitationStatic->generateHabilitationsForUser($objectline->fk_user, $objectline, $txtListHabilitation);
-
-		if($resultcreatelinehabilitations < 0) {
-			setEventMessages('Erreur lors de la création des habilitations', null, 'errors');
-			$error++;
-		}
-
-		// Envoi du mail
-		if($resultcreatelinehabilitations > 0 && !empty($txtListHabilitation)) { 
-			$user_static = new User($db);
-			rtrim($txtListHabilitation, ', ');
-
-			global $dolibarr_main_url_root;
-
-			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($object->module);
-			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
-
-			$to = '';
-			if(sizeof($arrayRespAntenneForMail) > 0) {
-				foreach($arrayRespAntenneForMail as $userid) {
-					$user_static->fetch($user_id);
-
-					if(!empty($user_static->email)) {
-						$to .= $user_static->email.', ';
-					}
-				}
-			}
-			else {
-				$to = 'administratif@optim-industries.fr';
-			}
-			rtrim($to, ', ');
-
-			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-
-			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$object->id.'$onglet=habilitation">'.$object->login.'</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextHabilitationCreation", $formation_static->label, $link, $txtListHabilitation);
-
-			$trackid = 'formationhabilitation'.$formation_static->id;
-
-			$mailfile = new CMailFile(
-				$subject,
-				$to,
-				$from,
-				$message,
-				array(),
-				array(),
-				array(),
-				'',
-				'',
-				0,
-				1,
-				'',
-				'',
-				$trackid,
-				'',
-				$sendcontext
-			);
-
-			if(!empty($to)) {
-				$result = $mail->sendfile();
-
-				if (!$result) {
-					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
-				}
-			}
-			
-		}
-
-		$txtListAutorisation = '';
-		$autorisationStatic = new Autorisation($db);
-		$resultcreatelineautorisations = $autorisationStatic->generateAutorisationsForUser($objectline->fk_user, $objectline, $txtListAutorisation);
-
-		if($resultcreatelineautorisations < 0) {
-			setEventMessages('Erreur lors de la création des autorisations', null, 'errors');
-			$error++;
-		}
-
-		// Envoi du mail
-		if($resultcreatelineautorisations > 0 && !empty($txtListAutorisation)) { 
-			$user_static = new User($db);
-			rtrim($txtListAutorisation, ', ');
-
-			global $dolibarr_main_url_root;
-
-			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($object->module);
-			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
-
-			$to = '';
-			if(sizeof($arrayRespAntenneForMail) > 0) {
-				foreach($arrayRespAntenneForMail as $userid) {
-					$user_static->fetch($user_id);
-
-					if(!empty($user_static->email)) {
-						$to .= $user_static->email.', ';
-					}
-				}
-			}
-			else {
-				$to = 'administratif@optim-industries.fr';
-			}
-			rtrim($to, ', ');
-
-			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-
-			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$object->id.'$onglet=autorisation">'.$object->login.'</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextAutorisationCreation", $formation_static->label, $link, $txtListAutorisation);
-
-			$trackid = 'formationhabilitation'.$formation_static->id;
-
-			$mailfile = new CMailFile(
-				$subject,
-				$to,
-				$from,
-				$message,
-				array(),
-				array(),
-				array(),
-				'',
-				'',
-				0,
-				1,
-				'',
-				'',
-				$trackid,
-				'',
-				$sendcontext
-			);
-
-			if(!empty($to)) {
-				$result = $mail->sendfile();
-
-				if (!$result) {
-					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
-				}
-			}
-			
-		}
-	}
-	elseif($resultcreate > 0 && $objectline->status == $objectline::STATUS_PROGRAMMEE){
-		$convocation = new Convocation($db);
-		$result = $convocation->generationWithFormation($objectline, $user, $date_debut_convoc, $date_fin_convoc);
 	}
 
 	if(!$error && $resultcreate > 0){
 		$db->commit();
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-		//header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 		exit;
 	}
@@ -411,7 +237,6 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 
 		if(!$error && $resultupdate > 0){
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-			// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
 			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 			exit;
 		}
@@ -429,7 +254,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 	}
 }
 
-if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) {
+if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) { // TODOLény -> Pouvoir supprimer des lignes que dans certains cas
     $resultdelete = $object->deleteLine($user, $lineid);
     if ($resultdelete > 0) {
         setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
@@ -452,8 +277,6 @@ if ($action == 'updatedatefinvalidite' && !$cancel && $permissiontoaddline) {
 			$error++;
 		}
 		$date_finvalidite = dol_mktime(-1, -1, -1, GETPOST("date_finvalidite_formationmonth", 'int'), GETPOST("date_finvalidite_formationday", 'int'), GETPOST("date_finvalidite_formationyear", 'int'));
-
-
 
 		if(!$error) {
 			$objectline->date_finvalidite_formation = $date_finvalidite; 
@@ -569,12 +392,13 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 
 		if (!$error) {
 			// Changement status de l'ancienne ligne
-			$objectline->fetch($lineid);
-			$objectline->status = UserFormation::STATUS_REPROGRAMMEE;
-			$result == $objectline->update($user);
-			$userid = $objectline->fk_user; 
-			$formationid = $objectline->fk_formation;
+			// $objectline->fetch($lineid);
+			// $objectline->status = UserFormation::STATUS_REPROGRAMMEE;
+			// $result == $objectline->update($user);
+			// $userid = $objectline->fk_user; 
+			// $formationid = $objectline->fk_formation;
 
+			// Création de la nouvelle ligne
 			$user_static = new User($db);
 			$user_static->fetch($userid);
 			$formation_static = new Formation($db);
@@ -599,11 +423,6 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 			$result = $objectline->create($user);
 		}
 
-		if($result > 0){
-			$convocation = new Convocation($db);
-			$result = $convocation->generationWithFormation($objectline, $user, $date_debut_convoc, $date_fin_convoc);
-		}
-
 		if(!$error && $result > 0){
 			$db->commit();
 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
@@ -625,6 +444,7 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoaddline){
 	$formation = new Formation($db);
 	$userFormation = new UserFormation($db);
+	$userVolet = new UserVolet($db);
 	$db->begin();
 
 	if($lineid > 0){
@@ -640,24 +460,13 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 
 		if (!$error) {
 			$objectline->fetch($lineid);
-			$userid = $objectline->fk_user; 
-			$formationid = $objectline->fk_formation;
+			// $userid = $objectline->fk_user; 
+			// $formationid = $objectline->fk_formation;
 
-			$user_static = new User($db);
-			$user_static->fetch($userid);
-			$formation_static = new Formation($db);
-			$formation_static->fetch($formationid);
-
-			// Changement status des anciennes lignes
-			$formationToClose = $formation->getFormationToClose($userid, $formationid, $lineid);
-			foreach($formationToClose as $userformation_id => $userformation_ref) {
-				$userFormation->fetch($userformation_id);
-				$res = $userFormation->cloture($user);
-	
-				if(!$res) {
-					$error++;
-				}
-			}
+			// $user_static = new User($db);
+			// $user_static->fetch($userid);
+			// $formation_static = new Formation($db);
+			// $formation_static->fetch($formationid);
 
 			// $objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 			// $objectline->fk_formation = $formationid;
@@ -674,151 +483,11 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 			// $objectline->formateur = GETPOST('formateur');
 			$objectline->numero_certificat = GETPOST('numero_certificat_valider');
 			$objectline->resultat = GETPOST('resultat_valider');
-			$objectline->status = UserFormation::STATUS_VALIDE;
 
 			$result = $objectline->update($user);
-		}
 
-		// Création des habilitations et des autorisations
-		if($result && !$error) {
-			$txtListHabilitation = '';
-			$habilitationStatic = new Habilitation($db);
-			$resultcreatelinehabilitations = $habilitationStatic->generateHabilitationsForUser($objectline->fk_user, $objectline, $txtListHabilitation);
-
-			if($resultcreatelinehabilitations < 0) {
-				setEventMessages('Erreur lors de la création des habilitations', null, 'errors');
-				$error++;
-			}
-
-			// Envoi du mail
-			if($resultcreatelinehabilitations > 0 && !empty($txtListHabilitation)) { 
-				$user_static = new User($db);
-				rtrim($txtListHabilitation, ', ');
-
-				global $dolibarr_main_url_root;
-
-				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($object->module);
-				$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
-
-				$to = '';
-				if(sizeof($arrayRespAntenneForMail) > 0) {
-					foreach($arrayRespAntenneForMail as $userid) {
-						$user_static->fetch($user_id);
-
-						if(!empty($user_static->email)) {
-							$to .= $user_static->email.', ';
-						}
-					}
-				}
-				else {
-					$to = 'administratif@optim-industries.fr';
-				}
-				rtrim($to, ', ');
-
-				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-
-				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$object->id.'$onglet=habilitation">'.$object->login.'</a>';
-				$message = $langs->transnoentitiesnoconv("EMailTextHabilitationCreation", $formation_static->label, $link, $txtListHabilitation);
-
-				$trackid = 'formationhabilitation'.$formation_static->id;
-
-				$mailfile = new CMailFile(
-					$subject,
-					$to,
-					$from,
-					$message,
-					array(),
-					array(),
-					array(),
-					'',
-					'',
-					0,
-					1,
-					'',
-					'',
-					$trackid,
-					'',
-					$sendcontext
-				);
-
-				if(!empty($to)) {
-					$result = $mail->sendfile();
-
-					if (!$result) {
-						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
-					}
-				}
-			}
-
-			$txtListAutorisation = '';
-			$autorisationStatic = new Autorisation($db);
-			$resultcreatelineautorisations = $autorisationStatic->generateAutorisationsForUser($objectline->fk_user, $objectline, $txtListAutorisation);
-
-			if($resultcreatelineautorisations < 0) {
-				setEventMessages('Erreur lors de la création des autorisations', null, 'errors');
-				$error++;
-			}
-
-			// Envoi du mail
-			if($resultcreatelineautorisations > 0 && !empty($txtListAutorisation)) { 
-				$user_static = new User($db);
-				rtrim($txtListAutorisation, ', ');
-
-				global $dolibarr_main_url_root;
-
-				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($object->module);
-				$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
-
-				$to = '';
-				if(sizeof($arrayRespAntenneForMail) > 0) {
-					foreach($arrayRespAntenneForMail as $userid) {
-						$user_static->fetch($user_id);
-
-						if(!empty($user_static->email)) {
-							$to .= $user_static->email.', ';
-						}
-					}
-				}
-				else {
-					$to = 'administratif@optim-industries.fr';
-				}
-				rtrim($to, ', ');
-
-				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-
-				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$object->id.'$onglet=autorisation">'.$object->login.'</a>';
-				$message = $langs->transnoentitiesnoconv("EMailTextAutorisationCreation", $formation_static->label, $link, $txtListAutorisation);
-
-				$trackid = 'formationhabilitation'.$formation_static->id;
-
-				$mailfile = new CMailFile(
-					$subject,
-					$to,
-					$from,
-					$message,
-					array(),
-					array(),
-					array(),
-					'',
-					'',
-					0,
-					1,
-					'',
-					'',
-					$trackid,
-					'',
-					$sendcontext
-				);
-
-				if(!empty($to)) {
-					$result = $mail->sendfile();
-
-					if (!$result) {
-						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
-					}
-				}
+			if($result) {
+				$result = $objectline->validate($user);
 			}
 		}
 

@@ -36,6 +36,7 @@ require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 
 
 /**
@@ -199,7 +200,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	public function write_file($object, $outputlangs, $srctemplatepath = '', $hidedetails = 0, $hidedesc = 0, $hideref = 0)
 	{
 		// phpcs:enable
-		global $user, $langs, $conf, $mysoc, $db, $hookmanager, $object;
+		global $user, $langs, $conf, $mysoc, $db, $hookmanager;
 		$volet = new Volet($this->db);
 		$volet->fetch($object->fk_volet); 
 
@@ -330,10 +331,13 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 				$this->_pagefoot($pdf, $object, $outputlangs);
 
 				if($volet->model == 6) {
-					$pdf->AddPage();
-					$pagenb++;
-					$pagecount = $pdf->setSourceFile($conf->formationhabilitation->dir_output.'/'.$object->element.'/Autorisation.pdf');
-					$pdf->useTemplate($pdf->importPage(1));
+					$autorisationFile = $conf->formationhabilitation->dir_output.'/'.$object->element.'/Autorisation.pdf';
+					if (!file_exists($autorisationFile)) {
+						$pdf->AddPage();
+						$pagenb++;
+						$pagecount = $pdf->setSourceFile($autorisationFile);
+						$pdf->useTemplate($pdf->importPage(1));
+					}
 				}
 
 				$pdf->Close();
@@ -445,7 +449,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	 */
 	protected function _pagehead(&$pdf, $object, $showaddress, $outputlangs, $outputlangsbis = null)
 	{
-		global $conf, $langs, $db, $object;
+		global $conf, $langs, $db;
 
 		$user_static = new User($db);
 		$user_static->fetch($object->fk_user);
@@ -478,8 +482,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			$pdf->writeHTML('<p style="border-bottom: 1px black solid;">PRENOMS : '.$user_static->firstname." ".$userField->array_options['options_secondprenom'].'</p>');
 		}
 		$pdf->SetFont('', 'B', $default_font_size);
-		$pdf->writeHTML('<p style="border-bottom: 1px black solid;">CARNET D\'ACCES N° : '.$userField->array_options['options_carnetdaccsn'].'</p>');
-
+		if(!empty($userField->array_options['options_carnetdaccsn'])) {
+			$pdf->writeHTML('<p style="border-bottom: 1px black solid;">CARNET D\'ACCES N° : '.$userField->array_options['options_carnetdaccsn'].'</p>');
+		}
 		//return $top_shift;
 	}
 
@@ -494,7 +499,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	 */
 	protected function pagebodyidentity(&$pdf, $object, $outputlangs, $outputlangsbis = null)
 	{
-		global $conf, $langs, $db, $object;
+		global $conf, $langs, $db;
 
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
@@ -552,155 +557,149 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	 */
 	protected function pagebodyformation(&$pdf, $object, $outputlangs, $outputlangsbis = null)
 	{
-		global $conf, $langs, $db, $object;
+		global $conf, $langs, $db;
 
 		$nb_formation = 0;
+		$nb_formation_max = 8;
 		$formation = new Formation($db);
-		$userformation = new UserFormation($db);
 		$volet = new Volet($this->db);
+		$societe = new Societe($this->db);
 		$volet->fetch($object->fk_volet); 
-		$arrayformations = $formation->getFormationsByVolet($object->numvolet);
-
-		$nb_initial = $voletInfo['nb_initial'];
-		$nb_recyclage = $voletInfo['nb_recyclage'];
-		$nb_passerelle = $voletInfo['nb_passerelle'];
-		$nb_total = $nb_initial + $nb_recyclage + $nb_passerelle;
-
+		$object->getLinkedLinesArray();
+		
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 		$pdf->SetTextColor(0, 0, 60);
-
-		$html = 
-		'<table cellpadding="2" cellspacing="0" border="1" align="center" style="font-size: 6pt">
-			<thead>
-				<tr>
-					<td colspan="5" style="font-size: 9pt">'.$voletInfo['long_label'].'</td>
-				</tr>
-				<tr>
-					<td width="30%" colspan="2"><br><br>DESIGNATION DE LA FORMATION</td>
-					<td width="20%"><br><br>DATE DE DELIVRANCE</td>
-					<td width="30%"><br><br><br>N° DE CERTIFICAT</td>
-					<td width="20%">ORGANISME DE FORMATION CERTIF CEFRI N°</td>
-				</tr>
-			</thead>
-			<tbody>';
-
-			foreach($arrayformations as $_formation) {
-				$formationid = $_formation['id'];
-				$formationsbyUser = $userformation->getFormationsByUser($object->fk_user, $formationid, $nb_initial, $nb_recyclage, $nb_passerelle);
-				$formation_title = 0;
-
-				for($i = 0; $i < $nb_initial; $i++) {
-					$html .= 
-					'<tr>';
-					if(!$formation_title) {
-						$html .= 
-						'<td width="10%" rowspan="'.$nb_total.'"><br><br><br><br>'.explode(" ", $_formation['label'])[0].'</td>';
-						$formation_title = 1;
-					}
-					if($i == 0) {
-						$html .=
-						'<td width="20%" rowspan="'.$nb_initial.'">Initial</td>';
-					}
-					$html .=
-						'<td width="20%">'.dol_print_date($formationsbyUser[1]['date'][$i], '%d/%m/%Y').'</td>
-						<td width="30%">'.$formationsbyUser[1]['certificat'][$i].'</td>
-						<td width="20%">'.$formationsbyUser[1]['fk_societe'][$i].'</td>
-					</tr>';
-				}
-
-				for($i = 0; $i < $nb_passerelle; $i++) {
-					$html .= 
-					'<tr>';
-					if(!$formation_title) {
-						$html .= 
-						'<td width="10%" rowspan="'.$nb_total.'"><br><br><br><br>'.$_formation['label'].'</td>';
-						$formation_title = 1;
-					}
-					if($i == 0) {
-						$html .=
-						'<td width="20%" rowspan="'.$nb_passerelle.'">Passerelle</td>';
-					}
-					$html .=
-						'<td width="20%">'.dol_print_date($formationsbyUser[3]['date'][$i], '%d/%m/%Y').'</td>
-						<td width="30%">'.$formationsbyUser[3]['certificat'][$i].'</td>
-						<td width="20%">'.$formationsbyUser[3]['fk_societe'][$i].'</td>
-					</tr>';
-				}
-
-				for($i = 0; $i < $nb_recyclage; $i++) {
-					$html .= 
-					'<tr>';
-					if(!$formation_title) {
-						$html .= 
-						'<td width="10%" rowspan="'.$nb_total.'"><br><br><br><br>'.$_formation['label'].'</td>';
-						$formation_title = 1;
-					}
-					if($i == 0) {
-						$html .=
-						'<td width="20%" rowspan="'.$nb_recyclage.'">Recyclage</td>';
-					}
-					$html .=
-						'<td width="20%">'.dol_print_date($formationsbyUser[2]['date'][$i], '%d/%m/%Y').'</td>
-						<td width="30%">'.$formationsbyUser[2]['certificat'][$i].'</td>
-						<td width="20%">'.$formationsbyUser[2]['fk_societe'][$i].'</td>
-					</tr>';
-				}
+		$pdf->SetFont('', '', $default_font_size - 1);
+		$pdf->MultiCell(0, 1, '');
+		$html = "";
+		foreach($object->lines as $userformation) {
+			$formation->fetch($userformation->fk_formation);
+			if($userformation->fk_societe > 0) {
+				$societe->fetch($userformation->fk_societe);
 			}
 
-		$html .= 
-			'</tbody>
-		</table>';
-			
-		$pdf->SetFont('', '', $default_font_size - 1);
-		$pdf->writeHTML($html, true, false, false, false, '');
+			if($nb_formation % $nb_formation_max == 0) {
+				if($nb_formation > 0) {
+					$pdf->AddPage();
+					$pagenb++;
+
+					// Head
+					$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
+
+					$pdf->SetFont('', '', $default_font_size - 1);
+					$pdf->SetTextColor(0, 0, 60);
+					$pdf->MultiCell(0, 1, '');
+				}
+				$html .= 
+				'<table cellpadding="2" cellspacing="0" border="1" align="center" style="font-size: 7pt">
+					<thead>
+						<tr>
+							<td colspan="5" style="font-size: 8pt">'.$volet->longlabel.'</td>
+						</tr>
+						<tr>
+							<td width="30%" style="font-size: 6pt"><div style="font-size:4pt">&nbsp;</div><strong>DESIGNATION DE LA FORMATION</strong></td>
+							<td width="18%" style="font-size: 6pt"><div style="font-size:4.5pt">&nbsp;</div><strong>DATE DE DELIVRANCE</strong></td>
+							<td width="23%" style="font-size: 6pt"><div style="font-size:4.5pt">&nbsp;</div><strong>ORGANISME DE FORMATION</strong></td>
+							<td width="17%" style="font-size: 6pt"><div style="font-size:5.5pt">&nbsp;</div><strong>N° DE CERTIFICAT</strong></td>';
+							if($volet->numero == 2 || $volet->numero == 3) {
+								$html .= '<td width="12%" style="font-size: 4pt"><strong>ORGANISME DE FORMATION AGREE SCN/CSQ N°</strong></td>';
+							}
+							else {
+								$html .= '<td width="12%" style="font-size: 4pt"><strong>ORGANISME DE FORMATION CERTIF CEFRI N°</strong></td>';
+							}
+					$html .= 
+						'</tr>
+					</thead>';
+			}
+
+			$html .= 
+			'<tr>
+				<td width="30%" style="font-size: 6pt">'.$formation->label.'</td>
+				<td width="18%">'.dol_print_date($userformation->date_fin_formation, '%d/%m/%Y').'</td>
+				<td width="23%">'.$societe->name.'</td>
+				<td width="17%">'.$userformation->numero_certificat.'</td>';
+				if($volet->numero == 2 || $volet->numero == 3) {
+					$html .= '<td width="12%">'.($userformation->fk_societe > 0 ? $societe->array_options['options_num_certif_scncsq'] : '').'</td>';
+				}
+				else {
+					$html .= '<td width="12%">'.($userformation->fk_societe > 0 ? $societe->array_options['options_num_certif_cefri'] : '').'</td>';
+				}
+			$html .= '</tr>';
+
+			$nb_formation++;
+
+			if($nb_formation % $nb_formation_max == 0) {
+				$html .= 
+					'</tbody>
+				</table>';
+				$pdf->writeHTML($html, true, false, false, false, '');
+				$html = "";
+			}
+		}
+
+		if($nb_formation % $nb_formation_max != 0) {
+			$html .= 
+					'</tbody>
+				</table>';
+			$pdf->writeHTML($html, true, false, false, false, '');
+		}
 	}
 
 	/**
 	 *  Show Body for entreprise uservolet
 	 *
 	 *  @param	Tcpdf		$pdf     		Object PDF
-	 *  @param  UserVolet		$object     	Object to show
+	 *  @param  UserVolet	$object     	Object to show
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
 	 */
 	protected function pagebodyentreprise(&$pdf, $object, $outputlangs, $outputlangsbis = null)
 	{
-		global $conf, $langs, $db, $object;
+		global $conf, $langs, $db;
 
 		$societe = new Societe($db);
-		$societe->fetch(157);
+		$organisme_certifiant = new Societe($db);
+		$user_static = new User($db);
+		$user_static->fetch($object->fk_user);
+		if($user_static->array_options['options_fk_employeur']) {
+			$societe->fetch($user_static->array_options['options_fk_employeur']);
+			if($societe->array_options['options_organismecertifiant']) {
+				$organisme_certifiant->fetch($societe->array_options['options_organismecertifiant']);
+			}
+		}
+
+		$chaine_coupee = wordwrap($societe->address, 30, "<br><br>", false);
+		$interim = $user_static->array_options['options_interim'];
 		$default_font_size = pdf_getPDFFontSize($outputlangs) - 2;
 	
 		$pdf->SetTextColor(0, 0, 60);
 		$pdf->setCellHeightRatio(0.6);
 		$pdf->SetFont('', '', $default_font_size);
 
-		$pdf->writeHTML('<p style="">EMPLOYEUR : '.$societe->name.'</p><br>');
-		$pdf->writeHTML('<p style="">SIRET : '.$societe->idprof2.'</p><br>');
-		$pdf->writeHTML('<p style="">ADRESSE : <br><br>'.$chaine_coupee = wordwrap($societe->address, 20, "<br><br>", false).'<br><br>'.$societe->zip.', '.$societe->town.'<br></p><br>');
-		$pdf->writeHTML('<p style="">TEL : '.$societe->phone.'</p><br>');
-		$pdf->writeHTML('<p style="">ORGANISME CERTIFIANT : '.$societe->phone.'</p><br>');
-		$pdf->writeHTML('<p style="">N° CERTIF : '.$societe->phone.'</p><br>');
-		$pdf->writeHTML('<p style="border-bottom: 1px black solid;">CEFRI : '.$societe->phone.'</p><br>');
+		$pdf->writeHTML('<p style="">EMPLOYEUR : '.($interim ? '' : $societe->name).'</p><br>');
+		$pdf->writeHTML('<p style="">SIRET : '.($interim ? '' : $societe->idprof2).'</p><br>');
+		$pdf->writeHTML('<p style="">ADRESSE : <br><br>'.($interim ? '' : $chaine_coupee.'<br><br>'.$societe->zip.', '.$societe->town).'<br></p><br>');
+		$pdf->writeHTML('<p style="">TEL : '.($interim ? '' : $societe->phone).'</p><br>');
+		$pdf->writeHTML('<p style="">ORGANISME CERTIFIANT : '.($interim ? '' : $organisme_certifiant->name).'</p><br>');
+		$pdf->writeHTML('<p style="border-bottom: 1px black solid;">N° CERTIF : '.($interim ? '' : $societe->array_options['options_num_certif_cefri']).'</p><br>');
 
 		$pdf->SetFont('', '', $default_font_size - 3);
 		$pdf->writeHTML('(Pour les Intérimaires)<br><br>');
 
 		$pdf->SetFont('', '', $default_font_size);
-		$pdf->writeHTML('<p style="">EMPLOYEUR UTILISATRICE : <br><br>'.$societe->name.'</p><br><br>');
-		$pdf->writeHTML('<p style="">SIRET : '.$societe->idprof2.'</p><br>');
-		$pdf->writeHTML('<p style="">ADRESSE : <br><br>'.$chaine_coupee = wordwrap($societe->address, 20, "<br><br>", false).'<br><br>'.$societe->zip.', '.$societe->town.'<br></p><br>');
-		$pdf->writeHTML('<p style="">TEL : '.$societe->phone.'</p><br>');
-		$pdf->writeHTML('<p style="">ORGANISME CERTIFIANT : '.$societe->phone.'</p><br>');
-		$pdf->writeHTML('<p style="">N° CERTIF : '.$societe->phone.'</p><br>');
-		$pdf->writeHTML('<p>CEFRI : '.$societe->phone.'</p><br>');
+		$pdf->writeHTML('<p style="">EMPLOYEUR UTILISATRICE : <br><br>'.($interim ? $societe->name : '').'</p><br><br>');
+		$pdf->writeHTML('<p style="">SIRET : '.($interim ? $societe->idprof2 : '').'</p><br>');
+		$pdf->writeHTML('<p style="">ADRESSE : <br><br>'.($interim ? $chaine_coupee.'<br><br>'.$societe->zip.', '.$societe->town : '').'<br></p><br>');
+		$pdf->writeHTML('<p style="">TEL : '.($interim ? $societe->phone : '').'</p><br>');
+		$pdf->writeHTML('<p style="">ORGANISME CERTIFIANT : '.($interim ? $organisme_certifiant->name : '').'</p><br>');
+		$pdf->writeHTML('<p style="">N° CERTIF : '.($interim ? $societe->array_options['options_num_certif_cefri'] : '').'</p><br>');
 
 		$pdf->setCellHeightRatio(1.25);
 		$pdf->SetFont('', 'B', $default_font_size - 2);
-		$cachet = '<h3>CACHET</h3><p><span style="font-size: 8px"><strong>'.$societe->name."</strong></span><br>".$societe->address."<br>".$societe->zip." ".$societe->town."<br> Tél. : ".$societe->phone."<br>Fax : ".$societe->phone."<br>SIRET ".$societe->idprof2."<br>Code TVA : ".$societe->tva_intra."</p>";
-		$pdf->writeHTMLCell(40, 30, 55, 45, $cachet, array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
-		$pdf->writeHTMLCell(40, 30, 55, 95, $cachet, array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+		$cachet = '<h3>CACHET<h3>'.$this->getSocieteCachet($pdf, $object, $outputlangs, $outputlangsbis);
+		$pdf->writeHTMLCell(40, 30, 55, 45, (!$interim ? $cachet : ''), array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+		$pdf->writeHTMLCell(40, 30, 55, ($interim ? 85 : 95), '', array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
 
 	}
 
@@ -715,12 +714,12 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	 */
 	protected function pagebodyhabilitation(&$pdf, $object, $outputlangs, $outputlangsbis = null, $pagenb)
 	{
-		global $conf, $langs, $db, $object;
+		global $conf, $langs, $db;
 
 		$user_static = new User($db);
 		$user_static->fetch($object->fk_user);
 		$nb_habilitation = 0;
-		$nb_habilitation_max = 5;
+		$nb_habilitation_max = 7;
 		$habilitation = new Habilitation($db);
 		$volet = new Volet($this->db);
 		$volet->fetch($object->fk_volet); 
@@ -745,7 +744,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			if($nb_habilitation % $nb_habilitation_max == 0) {
 				if($nb_habilitation > 0) {
 					// Footer
-					$this->writeCachet($pdf, $object, $outputlangs, $outputlangsbis);
+					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis);
 
 					$pdf->AddPage();
 					$pagenb++;
@@ -763,9 +762,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 				'<table cellpadding="2" cellspacing="0" border="1" align="center">
 					<thead>
 						<tr>
-							<td width="35%" style="font-size: 7pt">HABILITATION</td>
-							<td width="30%" style="font-size: 7pt">FIN DE VALIDITE</td>
-							<td width="35%" style="font-size: 6pt">DOMAINE D\'APPLICATION</td>
+							<td width="30%" style="font-size: 7pt"><strong>HABILITATION</strong></td>
+							<td width="30%" style="font-size: 7pt"><strong>FIN DE VALIDITE</strong></td>
+							<td width="40%" style="font-size: 7pt"><strong>DOMAINE D\'APPLICATION</strong></td>
 						</tr>
 					</thead>
 					<tbody>';
@@ -773,9 +772,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 
 			$html .= 
 			'<tr>
-				<td width="35%">'.$habilitation->label.'</td>
-				<td width="30%">'.dol_print_date($userhabilitation->date_fin_habilitation, '%d/%m/%Y').'</td>
-				<td width="35%" style="font-size: 8pt">'.$domaineapplicationInfo[$userhabilitation->domaineapplication].'</td>
+				<td width="30%" style="font-size: 7pt">'.$habilitation->label.'</td>
+				<td width="30%" style="font-size: 7pt">'.dol_print_date($userhabilitation->date_fin_habilitation, '%d/%m/%Y').'</td>
+				<td width="40%" style="font-size: 7pt">'.$domaineapplicationInfo[$userhabilitation->domaineapplication].'</td>
 			</tr>';
 
 			$nb_habilitation++;
@@ -797,7 +796,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		}
 
 		//$pdf->SetFont('', 'B', $default_font_size - 2);
-		$this->writeCachet($pdf, $object, $outputlangs, $outputlangsbis);
+		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis);
 	}
 
 	/**
@@ -811,7 +810,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	 */
 	protected function pagebodymedical(&$pdf, $object, $outputlangs, $outputlangsbis = null)
 	{
-		global $conf, $langs, $db, $object;
+		global $conf, $langs, $db;
 
 		$societe = new Societe($db);
 		$societe->fetch(157);
@@ -828,6 +827,10 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$medecinedutravailid = $userField->array_options['options_medecinedutravail'];
 		$medecinedutravail = new Societe($db);
 		$medecinedutravail->fetch($medecinedutravailid);
+		$user_static = new User($db);
+		$user_static->fetch($object->fk_user);
+		$site_nucleaire = $medecinedutravail->array_options['options_servicehabilitsitenuclaire'];
+		$interim = $user_static->array_options['options_interim'];
 
 		$docteur = new Contact($db);
 		$docteur->fetch($userField->array_options['options_docteur']);
@@ -837,15 +840,14 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$pdf->SetFont('', '', $default_font_size);
 		
 		$pdf->setCellHeightRatio(0.8);
-		$pdf->writeHTML('<p style="">NOM DU MEDECIN DU TRAVAIL : '.$docteurname.'</p><br><br>');
+		$pdf->writeHTML('<p style="">NOM DU MEDECIN DU TRAVAIL : '.($interim ? '' : $docteurname).'</p><br><br>');
 		$pdf->setCellHeightRatio(0.6);
 		$pdf->writeHTML('<p style="">NOM DU SERVICE DE<br><br>MEDECINE DU TRAVAIL<br><br>DE L\'EMPLOYEUR CHARGE<br><br>DU SUIVI MEDICAL : <br>');
 		$pdf->setCellHeightRatio(1);
-		$pdf->writeHTML('<p style="">'.$medecinedutravail->name.'</p>');
-		$pdf->writeHTML('<p style="">'.$medecinedutravail->address.'</p>');
-		$pdf->writeHTML('<p style="">'.'10550200'.'</p>');
-		$pdf->writeHTML('<p style="">'.$medecinedutravail->zip.', '.$medecinedutravail->town.'</p>');
-		$pdf->writeHTML('<p style="">TEL : '.$medecinedutravail->phone.'</p><br>');
+		$pdf->writeHTML('<p style="">'.($interim ? '' : $medecinedutravail->name).'</p>');
+		$pdf->writeHTML('<p style="">'.($interim ? '' : $medecinedutravail->address).'</p>');
+		$pdf->writeHTML('<p style="">'.($interim ? '' : $medecinedutravail->zip.', '.$medecinedutravail->town).'</p>');
+		$pdf->writeHTML('<p style="">TEL : '.($interim ? '' : $medecinedutravail->phone).'</p><br>');
 		$pdf->setCellHeightRatio(0.6);
 
 		$x = $pdf->getX();
@@ -855,23 +857,22 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$yafter = $pdf->getY();
 		$pdf->SetXY($x + 55, $y);
 		$pdf->Cell(7, 0, 'Oui', 0, 0, 'R', false, '', 0, false, 'T', 'T');
-		$pdf->CheckBox('yes', 3, true, array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
+		$pdf->CheckBox('yes', 3, (!$interim && $site_nucleaire ? true : false), array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
 		$pdf->Cell(7, 0, 'Non', 0, 0, 'R', false, '', 0, false, 'T', 'T');
-		$pdf->CheckBox('no', 3, false, array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
+		$pdf->CheckBox('no', 3, (!$interim && !$site_nucleaire ? true : false), array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
 		$pdf->writeHTML('<br>');
 
 		$pdf->SetXY($xafter, $yafter);
 
 		$pdf->setCellHeightRatio(0.8);
-		$pdf->writeHTML('<p style="">*NOM DU MEDECIN DU TRAVAIL : '.$docteurname.'</p><br><br>');
+		$pdf->writeHTML('<p style="">*NOM DU MEDECIN DU TRAVAIL : '.($interim ? $docteurname : '').'</p><br><br>');
 		$pdf->setCellHeightRatio(0.6);
 		$pdf->writeHTML('<p style="">NOM DU SERVICE DE<br><br>MEDECINE DU TRAVAIL<br><br>DE L\'EMPLOYEUR CHARGE<br><br>DU SUIVI MEDICAL : <br>');
 		$pdf->setCellHeightRatio(1);
-		$pdf->writeHTML('<p style="">'.$medecinedutravail->name.'</p>');
-		$pdf->writeHTML('<p style="">'.$medecinedutravail->address.'</p>');
-		$pdf->writeHTML('<p style="">'.'10550200'.'</p>');
-		$pdf->writeHTML('<p style="">'.$medecinedutravail->zip.', '.$medecinedutravail->town.'</p>');
-		$pdf->writeHTML('<p style="">TEL : '.$medecinedutravail->phone.'</p><br>');
+		$pdf->writeHTML('<p style="">'.($interim ? $medecinedutravail->name : '').'</p>');
+		$pdf->writeHTML('<p style="">'.($interim ? $medecinedutravail->address : '').'</p>');
+		$pdf->writeHTML('<p style="">'.($interim ? $medecinedutravail->zip.', '.$medecinedutravail->town : '').'</p>');
+		$pdf->writeHTML('<p style="">TEL : '.($interim ? $medecinedutravail->phone : '').'</p><br>');
 		$pdf->setCellHeightRatio(0.6);
 		
 		$x = $pdf->getX();
@@ -881,9 +882,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$yafter = $pdf->getY();
 		$pdf->SetXY($x + 55, $y);
 		$pdf->Cell(7, 0, 'Oui', 0, 0, 'R', false, '', 0, false, 'T', 'T');
-		$pdf->CheckBox('yes_interim', 3, true, array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
+		$pdf->CheckBox('yes_interim', 3, ($interim && $site_nucleaire ? true : false), array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
 		$pdf->Cell(7, 0, 'Non', 0, 0, 'R', false, '', 0, false, 'T', 'T');
-		$pdf->CheckBox('no_interim', 3, false, array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
+		$pdf->CheckBox('no_interim', 3, ($interim && !$site_nucleaire ? true : false), array('fillColor'=>array(190, 190, 190), 'readonly'=>'true'));
 		$pdf->writeHTML('<br>');
 
 		$pdf->SetXY($xafter, $yafter);
@@ -892,9 +893,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 
 		$pdf->setCellHeightRatio(1.25);
 		$pdf->SetFont('', 'B', $default_font_size - 2);
-		$cachet = '<h3>CACHET</h3><p><span style="font-size: 8px"><strong>'.$societe->name."</strong></span><br>".$societe->address."<br>".$societe->zip." ".$societe->town."<br> Tél. : ".$societe->phone."<br>Fax : ".$societe->phone."<br>SIRET ".$societe->idprof2."<br>Code TVA : ".$societe->tva_intra."</p>";
-		$pdf->writeHTMLCell(40, 30, 55, 50, $cachet, array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
-		$pdf->writeHTMLCell(40, 30, 55, 95, $cachet, array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+		$cachet = '<h3>CACHET<h3>'.$this->getSocieteCachet($pdf, $object, $outputlangs, $outputlangsbis);
+		$pdf->writeHTMLCell(40, 30, 55, 50, (!$interim ? $cachet : ''), array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+		$pdf->writeHTMLCell(40, 30, 55, ($interim ? 92 : 92), '', array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
 
 	}
 
@@ -909,10 +910,10 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	 */
 	protected function pagebodyautorisation(&$pdf, $object, $outputlangs, $outputlangsbis = null)
 	{
-		global $conf, $langs, $db, $object, $pagenb;
+		global $conf, $langs, $db, $pagenb;
 
 		$nb_autorisation = 0;
-		$nb_autorisation_max = 4;
+		$nb_autorisation_max = 7;
 		$autorisation = new Autorisation($db);
 		$volet = new Volet($this->db);
 		$volet->fetch($object->fk_volet); 
@@ -939,7 +940,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 
 				if($nb_autorisation > 0) {
 					// Footer
-					$this->writeCachet($pdf, $object, $outputlangs, $outputlangsbis);
+					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis);
 
 					// Ajout de la page avec la liste des autorisations
 					$pdf->AddPage();
@@ -963,9 +964,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 				'<table cellpadding="2" cellspacing="0" border="1" align="center">
 					<thead>
 						<tr>
-							<td width="35%" style="font-size: 7pt">AUTORISATION</td>
-							<td width="30%" style="font-size: 7pt">FIN DE VALIDITE</td>
-							<td width="35%" style="font-size: 6pt">DOMAINE D\'APPLICATION</td>
+							<td width="30%" style="font-size: 7pt"><strong>AUTORISATION</strong></td>
+							<td width="30%" style="font-size: 7pt"><strong>FIN DE VALIDITE</strong></td>
+							<td width="40%" style="font-size: 7pt"><strong>DOMAINE D\'APPLICATION</strong></td>
 						</tr>
 					</thead>
 					<tbody>';
@@ -973,9 +974,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 
 			$html .= 
 			'<tr>
-				<td width="35%">'.$autorisation->label.'</td>
-				<td width="30%">'.dol_print_date($userautorisation->date_fin_autorisation, '%d/%m/%Y').'</td>
-				<td width="35%" style="font-size: 8pt">'.$domaineapplicationInfo[$userautorisation->domaineapplication].'</td>
+				<td width="30%" style="font-size: 7pt">'.$autorisation->label.'</td>
+				<td width="30%" style="font-size: 7pt">'.dol_print_date($userautorisation->date_fin_autorisation, '%d/%m/%Y').'</td>
+				<td width="40%" style="font-size: 7pt">'.$domaineapplicationInfo[$userautorisation->domaineapplication].'</td>
 			</tr>';
 
 			$nb_autorisation++;
@@ -997,7 +998,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		}
 
 		//$pdf->SetFont('', 'B', $default_font_size - 2);
-		$this->writeCachet($pdf, $object, $outputlangs, $outputlangsbis);
+		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis);
 	}
 
 	/**
@@ -1009,7 +1010,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
 	 */
-	protected function writeCachet(&$pdf, $object, $outputlangs, $outputlangsbis = null)
+	protected function writeSignature(&$pdf, $object, $outputlangs, $outputlangsbis = null)
 	{
 		global $db; 
 
@@ -1023,12 +1024,37 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$cachet1 = '<span>Date : '.dol_print_date(dol_now(), '%d/%m/%Y').'</span><br><p style="font-size: 6.5pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>';
 		$pdf->writeHTMLCell(30, 35, $x, $y, $cachet1, array('LTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
 
-		$cachet2 = '<span style="font-size: 6pt">Cachet et signature employeur ou entreprise utilisatrice</span><br><p style="font-size: 5pt"><span style="font-size: 7px"><strong>'.$societe->name."</strong></span><br>".$societe->address."<br>".$societe->zip." ".$societe->town."<br> Tél. : ".$societe->phone."<br>Fax : ".$societe->phone."<br>SIRET ".$societe->idprof2."<br>Code TVA : ".$societe->tva_intra."</p>";
+		//$pdf->setCellHeightRatio(1.25);
+		//$pdf->SetFont('', 'B', $default_font_size - 2);
+		$cachet2 = '<p style="font-size: 6px:">Cachet et signature employeur ou entreprise utilisatrice</p>'.$this->getSocieteCachet($pdf, $object, $outputlangs, $outputlangsbis, 6.5);
 		$pdf->writeHTMLCell(25, 35, $x + 30, $y, $cachet2, array('RTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+		//$pdf->setCellHeightRatio(1);
+		//$pdf->SetFont('', '', $default_font_size);
 
 		$signature = $user_static->firstname." ".$user_static->lastname;
 		$cachet3 = '<p>Signature intervenant</p>'.$signature;
 		$pdf->writeHTMLCell(30, 35, $x + 55, $y, $cachet3, array('RTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+	}
+
+	/**
+	 *  Show Body for autorisation uservolet
+	 *
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  UserVolet		$object     	Object to show
+	 *  @param  Translate	$outputlangs	Object lang for output
+	 *  @param  Translate	$outputlangsbis	Object lang for output bis
+	 *  @return	void
+	 */
+	protected function getSocieteCachet(&$pdf, $object, $outputlangs, $outputlangsbis = null, $font_size = 7.5)
+	{
+		global $db; 
+
+		$societe = new Societe($db);
+		$user_static = new User($db);
+		$user_static->fetch($object->fk_user);
+		$societe->fetch($user_static->array_options['options_fk_employeur']);
+
+		return '<p style="font-size: '.($font_size - 1.5).'px"><span style="font-size: '.$font_size.'px"><strong>'.$societe->name."</strong></span><br>".$societe->address."<br>".$societe->zip." ".$societe->town."<br> Tél. : ".$societe->phone."<br>Fax : ".$societe->phone."<br>SIRET ".$societe->idprof2." - APE ".$societe->idprof3."<br>Code TVA : ".$societe->tva_intra."</p>";
 	}
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.PublicUnderscore

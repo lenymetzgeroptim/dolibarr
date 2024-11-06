@@ -28,6 +28,7 @@ CREATE TABLE llx_formationhabilitation_volet(
 	status integer DEFAULT 1 NOT NULL, 
 	numero integer, 
 	typevolet integer NOT NULL, 
-	nommage varchar(128) NOT NULL
+	nommage varchar(128) NOT NULL, 
+	model integer NOT NULL
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

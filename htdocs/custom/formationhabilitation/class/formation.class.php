@@ -118,7 +118,7 @@ class Formation extends CommonObject
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"5", "default"=>"0", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Actif", "2" => "Cloturée"), "validate"=>"1",),
 		"ref_externe" => array("type"=>"varchar(128)", "label"=>"RefExterne", "enabled"=>"1", 'position'=>21, 'notnull'=>0, "visible"=>"1",),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
-		"cout" => array("type"=>"price", "label"=>"Cout", "enabled"=>"1", 'position'=>34, 'notnull'=>0, "visible"=>"1",),
+		"cout" => array("type"=>"price", "label"=>"CoutFormation", "enabled"=>"1", 'position'=>34, 'notnull'=>0, "visible"=>"1",),
 		"periode_recyclage" => array("type"=>"integer", "label"=>"PeriodeRecyclage", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1", "help"=>"en mois",),
 		"fournisseur" => array("type"=>"chkbxlst:societe:nom:rowid::fournisseur=1", "label"=>"Fournisseur", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"famille" => array("type"=>"sellist:c_famille_formation:label:rowid::(active:=:1)", "label"=>"Famille", "enabled"=>"1", 'position'=>32, 'notnull'=>0, "visible"=>"1",),
@@ -1150,7 +1150,7 @@ class Formation extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE uf.fk_user = $userid";
-		$sql .= " AND (f.formationssuperieurs = '$formationid' OR f.formationssuperieurs LIKE '$formationid,%' OR f.formationssuperieurs LIKE '%,$formationid,%' OR f.formationssuperieurs LIKE '%,$formationid')";
+		$sql .= " AND FIND_IN_SET('$formationid', f.formationssuperieurs)";
 		$sql .= " AND (uf.status != ".UserFormation::STATUS_CLOTUREE.")";
 		if($userformation_exclude) {
 			$sql .= " AND uf.rowid != $userformation_exclude";
@@ -1190,7 +1190,7 @@ class Formation extends CommonObject
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND uf.fk_formation = $formationid";
-		$sql .= " AND (uf.status = ".UserFormation::STATUS_VALIDE.")";
+		$sql .= " AND (uf.status = ".UserFormation::STATUS_VALIDE." OR uf.status = ".UserFormation::STATUS_A_PROGRAMMER.")";
 		if($userformation_exclude) {
 			$sql .= " AND uf.rowid != $userformation_exclude";
 		}

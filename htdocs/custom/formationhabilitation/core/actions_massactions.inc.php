@@ -274,7 +274,7 @@ if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $con
 
 	if (empty($error)) {
 		$uservolet = new UserVolet($db);
-		$result = $uservolet->generateNewVolet($objectclass, $validateObjects, $userid);
+		$result = $uservolet->generateNewVoletHabilitationAutorisation($objectclass, $objectparentclass, $validateObjects, $userid);
 
 		if ($result < 0) { 
 			setEventMessages($uservolet->error, $uservolet->errors, 'errors');

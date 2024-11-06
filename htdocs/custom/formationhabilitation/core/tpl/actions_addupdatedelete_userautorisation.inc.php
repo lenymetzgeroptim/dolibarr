@@ -69,7 +69,7 @@ if($action == 'addline' && $permissiontoaddline) {
 
 	if(!$error && empty(GETPOST('forcecreation'))) {
 		// Prérequis des formations
-		$formations_user = $userFormation->getAllFormationsForUser(GETPOST('fk_user'));
+		$formations_user = $userFormation->getAllFormationsForUser(GETPOST('fk_user'), 1);
 
 		// Récupérer toutes les conditions de prérequis pour cette autorisation
 		$prerequisConditions = $autorisation_static->getPrerequis($autorisation_static->id);
@@ -120,6 +120,7 @@ if($action == 'addline' && $permissiontoaddline) {
 		$objectline->date_autorisation = $date;
 		$objectline->date_fin_autorisation = dol_time_plus_duree(dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd'), -1, 'd');
 		$objectline->fk_user = GETPOST('fk_user');
+		$objectline->domaineapplication = GETPOST('domaineapplication', 'int');
 		$objectline->status = GETPOST('status');
 
 		$resultcreate = $objectline->create($user);
@@ -150,16 +151,17 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 		$date = dol_mktime(-1, -1, -1, GETPOST("date_autorisationmonth", 'int'), GETPOST("date_autorisationday", 'int'), GETPOST("date_autorisationyear", 'int'));
 
 
-		if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-			$error++;
-		}
+		// if(GETPOST('status') == -1 || empty(GETPOST('status'))){
+		// 	setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
+		// 	$error++;
+		// }
 
 		if (!$error) {
 			$objectline->ref = $user_static->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 			$objectline->date_autorisation = $date;
 			$objectline->date_fin_autorisation = dol_time_plus_duree(dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd'), -1, 'd');
-			$objectline->status = GETPOST('status');
+			$objectline->domaineapplication = GETPOST('domaineapplication', 'int');
+			//$objectline->status = GETPOST('status');
 
 			$resultupdate = $objectline->update($user);
 		}
