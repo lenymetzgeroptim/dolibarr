@@ -246,6 +246,37 @@ class UserVolet extends CommonObject
 	{
 		global $conf; 
 
+		// Crétion des volets ID, SST, Entreprise
+		$volet = new Volet($this->db);
+		$user_static = new User($this->db);
+		$user_static->fetch($this->fk_user);
+		$listVoletAutre = $volet->getAllVoletByType(4);
+		$listUserVolet = $this->getActiveUserVolet(1, 1, 1);
+		foreach($listVoletAutre as $volet_id) {
+			if(!array_key_exists($volet_id, $listUserVolet)) {
+				$uservolet = new UserVolet($this->db);
+				$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$volet_id;
+				$approbationRequire = $conf->global->$variableName;
+
+				$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$listUserVolet[$volet_id]->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
+				$uservolet->fk_user = $this->fk_user;
+				$uservolet->fk_volet = $volet_id;
+				if(empty($approbationRequire)) {
+					$uservolet->datedebutvolet = dol_now();
+				}
+		
+				$resultcreate = $uservolet->createCommon($user, $notrigger);
+
+				if($resultcreate > 0 && empty($approbationRequire)) {
+					$resultcreate = $uservolet->validate4($user);
+				}
+
+				if($resultcreate < 0) {
+					return -1;
+				}
+			}
+		}
+
 		$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$this->fk_volet;
 		$approbationRequire = $conf->global->$variableName;
 
@@ -2296,29 +2327,44 @@ class UserVolet extends CommonObject
 	 * 	Récupère les uservolet actifs
 	 *
 	 *  @param  int		$mode			0 uniquement l'id, 1 les objets uservolet
+	 *  @param  int		$all			0 uniquement le volet actuel, 1 tous les volets
+	 *  @param  int		$get_fk_volet	Récupère fk_volet plutot que le rowid
 	 *  @return	array|int		array with uservolet if OK, < 0 if KO
 	 */
-	public function getActiveUserVolet($mode = 0)
+	public function getActiveUserVolet($mode = 0, $all = 0, $get_fk_volet = 0)
 	{
 		global $conf, $user;
 		$uservolet = new self($this->db);
 		$ret = array(); 
 
-		$sql = "SELECT v.rowid";
+		$sql = "SELECT v.rowid, v.fk_volet";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as v";
-		$sql .= " WHERE v.fk_volet = $this->fk_volet AND v.fk_user = $this->fk_user";
+		$sql .= " WHERE v.fk_user = $this->fk_user";
+		if(!$all) {
+			$sql .= " AND v.fk_volet = $this->fk_volet";
+		}
 		$sql .= " AND v.status = ".self::STATUS_VALIDATED;
-		
+
 		dol_syslog(get_class($this)."::getActiveUserVolet", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while($obj = $this->db->fetch_object($resql)) {
 				if($mode = 1) {
 					$uservolet->fetch($obj->rowid);
-					$ret[$obj->rowid] = clone $uservolet;
+					if($get_fk_volet) {
+						$ret[$obj->fk_volet] = clone $uservolet;
+					}
+					else {
+						$ret[$obj->rowid] = clone $uservolet;
+					}
 				}
 				else {
-					$ret[] = $obj->rowid;
+					if($get_fk_volet) {
+						$ret[] = $obj->fk_volet;
+					}
+					else {
+						$ret[] = $obj->rowid;
+					}
 				}
 			}
 			return $ret;

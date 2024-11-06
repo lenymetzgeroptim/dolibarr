@@ -1466,6 +1466,37 @@ class Volet extends CommonObject
 	}
 
 	/**
+	 * 	Return tous les volets de type $type
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllVoletByType($type)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT v.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_volet as v";
+		$sql .= " WHERE v.status = 1";
+		$sql .= " AND v.typevolet = $type";
+		$sql .= " ORDER BY v.numero";
+
+		dol_syslog(get_class($this)."::getAllVoletByType", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
 	 * 	Return tous les domaines d'application à partir du dictionnaire
 	 *
 	 * 	@return	array						
