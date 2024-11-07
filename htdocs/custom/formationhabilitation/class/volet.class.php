@@ -1525,6 +1525,34 @@ class Volet extends CommonObject
 		}
 	}
 
+	/**
+	 * 	Return toutes les qualifications profesionnelle à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllQualificationProfesionnelle()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT d.rowid, d.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_qualification_profesionnelle as d";
+		$sql .= " WHERE d.active = 1";
+
+		dol_syslog(get_class($this)."::getAllQualificationProfesionnelle", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

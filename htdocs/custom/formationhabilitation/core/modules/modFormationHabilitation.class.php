@@ -206,25 +206,25 @@ class modFormationHabilitation extends DolibarrModules
 			'langs'=>'formationhabilitation@formationhabilitation',
 			'picto'=>'user',
 			// List of tables we want to see into dictonnary editor
-			'tabname'=>array("c_famille_formation", "c_sousdomaine_formation", "c_examen_medical", "c_nature_visite", "c_domaine_application", "c_motif_visite"),
+			'tabname'=>array("c_famille_formation", "c_sousdomaine_formation", "c_examen_medical", "c_nature_visite", "c_domaine_application", "c_motif_visite", "c_qualification_profesionnelle"),
 			// Label of tables
-			'tablib'=>array("FamilleFormation", "SousDomaineFormation", "ExamensMedicaux", "NatureVisite", "DomainesApplication", "MotifVisite"),
+			'tablib'=>array("FamilleFormation", "SousDomaineFormation", "ExamensMedicaux", "NatureVisite", "DomainesApplication", "MotifVisite", "QualificationProfesionnelle"),
 			// Request to select fields
-			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_sousdomaine_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_examen_medical as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_nature_visite as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_domaine_application as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_motif_visite as f'),
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_famille_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_sousdomaine_formation as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_examen_medical as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_nature_visite as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_domaine_application as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_motif_visite as f', 'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_qualification_profesionnelle as f'),
 			// Sort order
-			'tabsqlsort'=>array("label ASC", "label ASC", "label ASC", "label ASC", "label ASC", "label ASC"),
+			'tabsqlsort'=>array("label ASC", "label ASC", "label ASC", "label ASC", "label ASC", "label ASC", "label ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("label", "label", "label", "label", "label", "label"),
+			'tabfield'=>array("label", "label", "label", "label", "label", "label", "label"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("label", "label", "label", "label", "label", "label"),
+			'tabfieldvalue'=>array("label", "label", "label", "label", "label", "label", "label"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("label", "label", "label", "label", "label", "label"),
+			'tabfieldinsert'=>array("label", "label", "label", "label", "label", "label", "label"),
 			// Name of columns with primary key (try to always name it 'rowid')
-			'tabrowid'=>array("rowid", "rowid", "rowid", "rowid", "rowid", "rowid"),
+			'tabrowid'=>array("rowid", "rowid", "rowid", "rowid", "rowid", "rowid", "rowid"),
 			// Condition to show each dictionary
-			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled),
+			'tabcond'=>array($conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled, $conf->formationhabilitation->enabled),
 			// Tooltip for every fields of dictionaries: DO NOT PUT AN EMPTY ARRAY
-			'tabhelp' => array('', '', '', ''),
+			'tabhelp' => array('', '', '', '', '', '', ''),
 		);
 		
 

@@ -68,6 +68,7 @@ FORMTIONHABILITATION_SOUPLESSEFORMATION = Activer la période de souplesse
 UserFormationLines = Formations des collaborateurs
 fa-user-graduate_fas_#1f3d89 = Formations des collaborateurs
 fa-graduation-cap_fas_#1f3d89 = Formations
+QualificationProfesionnelle = Qualifications profesionnelle
 
 
 #
@@ -104,7 +105,7 @@ NommagePDF = Nommage du pdf
 TypeVolet = Type
 ModelPDF = Modèle du pdf
 LongLabel = Libellé long
-
+QualifPro = Qualification profesionnelle
 
 #
 # Attribut Formation

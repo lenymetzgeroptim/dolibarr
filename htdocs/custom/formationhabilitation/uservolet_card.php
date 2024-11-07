@@ -359,6 +359,9 @@ if(!$permissiontoreadCout) {
     unset($arrayfields['t.cout_annexe']);
     unset($arrayfields['t.cout_total']);
 }
+if($object->fk_volet != 6) {
+	unset($object->fields['qualif_pro']);
+}
 
 
 /*

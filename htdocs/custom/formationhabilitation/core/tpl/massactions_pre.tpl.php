@@ -103,11 +103,19 @@ if ($massaction == 'prevalidate' && $permissiontovalidatelines) {
 		}
 		$txt_voletToGenerate = rtrim($txt_voletToGenerate, ', ');
 
+		$qualificationproInfo = $volet->getAllQualificationProfesionnelle();
+
+
 		if($objectlinetmp->element == 'userautorisation') {
-			print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassValidation"), $langs->trans("ConfirmMassValidationAutorisationQuestion", count($toselect), $txt_voletToGenerate, $txt_objectToClose), "validatelines", null, '', 0, 200, 500, 1);
+			$formquestion = array();
+			print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassValidation"), $langs->trans("ConfirmMassValidationAutorisationQuestion", count($toselect), $txt_voletToGenerate, $txt_objectToClose), "validatelines", $formquestion, 'yes', 0, 200, 500, 1);
 		}
 		elseif($objectlinetmp->element == 'userhabilitation') {
-			print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassValidation"), $langs->trans("ConfirmMassValidationHabilitationQuestion", count($toselect), $txt_voletToGenerate, $txt_objectToClose), "validatelines", null, '', 0, 200, 500, 1);
+			//$paramformconfirm .= (GETPOST('toselect', 'array') ? '&toselect='.urlencode(implode(',', GETPOST('toselect'))) : '');
+			$formquestion = array(
+				array('label'=>$langs->trans('QualifPro') ,'type'=>'select', 'name'=>'qualif_pro', 'values'=>$qualificationproInfo, 'select_show_empty'=>1, 'default'=>0),
+			);
+			print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassValidation"), $langs->trans("ConfirmMassValidationHabilitationQuestion", count($toselect), $txt_voletToGenerate, $txt_objectToClose), "validatelines", $formquestion, 'yes', 0, 200, 500, 1);
 		}
 	}
 }

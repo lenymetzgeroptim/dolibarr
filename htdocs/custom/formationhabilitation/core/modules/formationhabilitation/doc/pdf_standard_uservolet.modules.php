@@ -724,6 +724,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$volet = new Volet($this->db);
 		$volet->fetch($object->fk_volet); 
 		$domaineapplicationInfo = $volet->getAllDomaineApplication();
+		$qualificationproInfo = $volet->getAllQualificationProfesionnelle();
 		//$arrayhabilitations = $userhabilitation->getHabilitationsByUser($object->id, $object->fk_volet);
 		$object->getLinkedLinesArray();
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
@@ -732,7 +733,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$x = $pdf->getX();
 		$y = $pdf->getY();
 		//var_dump($pdf->GetLineWidth());
-		$pdf->writeHTMLCell(85, 8, $x, $y, '<span>QUALIFICATION PROFESSIONNELLE (Métier) : <span><br><span align="center"><strong>'.$user_static->job."</strong></span>", array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 1, false, true, '', false);
+		$pdf->writeHTMLCell(85, 8, $x, $y, '<span>QUALIFICATION PROFESSIONNELLE (Métier) : <span><br><span align="center"><strong>'.$qualificationproInfo[$object->qualif_pro]."</strong></span>", array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 1, false, true, '', false);
 		
 					
 		$pdf->SetFont('', '', $default_font_size - 1);
@@ -752,7 +753,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 					// Head
 					$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
 
-					$pdf->writeHTMLCell(85, 8, $x, $y, '<span>QUALIFICATION PROFESSIONNELLE (Métier) : <span><br><span align="center"><strong>'.$user_static->job."</strong></span>", array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 1, false, true, '', false);
+					$pdf->writeHTMLCell(85, 8, $x, $y, '<span>QUALIFICATION PROFESSIONNELLE (Métier) : <span><br><span align="center"><strong>'.$qualificationproInfo[$object->qualif_pro]."</strong></span>", array('LTRB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 1, false, true, '', false);
 
 					$pdf->SetFont('', '', $default_font_size - 1);
 					$pdf->SetTextColor(0, 0, 60);

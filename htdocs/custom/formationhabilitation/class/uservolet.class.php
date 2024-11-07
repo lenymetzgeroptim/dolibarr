@@ -136,7 +136,8 @@ class UserVolet extends CommonObject
 		"fk_volet" => array("type"=>"integer:volet:custom/formationhabilitation/class/volet.class.php:0:(status:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
 		"datedebutvolet" => array("type"=>"date", "label"=>"DateDebutVolet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"datefinvolet" => array("type"=>"date", "label"=>"DateFinVolet", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
-		"commentaire" => array("type"=>"text", "label"=>"Commentaire", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>'$object->fk_volet==6',),
+		"commentaire" => array("type"=>"text", "label"=>"Commentaire", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>'1',),
+		"qualif_pro" => array("type"=>"sellist:c_qualification_profesionnelle:label:rowid::(active:=:1)", "label"=>"QualifPro", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>'1',),
 	);
 	public $rowid;
 	public $ref;
@@ -153,6 +154,7 @@ class UserVolet extends CommonObject
 	public $datedebutvolet;
 	public $datefinvolet;
 	public $commentaire;
+	public $qualif_pro;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -2088,6 +2090,12 @@ class UserVolet extends CommonObject
 						$uservolet->fk_user = $userid;
 						$uservolet->fk_volet = $voletid;
 						$uservolet->status = $uservolet::STATUS_DRAFT;
+						if($voletid == 6) {
+							$uservolet->qualif_pro = GETPOST('qualif_pro', 'int');
+						}
+						else {
+							$uservolet->qualif_pro = '';
+						}
 
 						$resultcreate = $uservolet->create($user);
 
