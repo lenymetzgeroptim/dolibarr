@@ -1868,7 +1868,7 @@ class UserFormation extends CommonObject
 	}
 
 	/**
-	 * 	Est-ce que l'utilisateur $userid possède la formation $formationid
+	 * 	Liste des ids de formation possèdait par l'utilisateur
 	 *
 	 * 	@param  int		$userid       	Id of User
 	 * 	@param  int		$withprogram    include STATUS_PROGRAMMEE

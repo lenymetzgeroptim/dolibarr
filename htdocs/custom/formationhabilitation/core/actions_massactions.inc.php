@@ -194,48 +194,68 @@ if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $con
 			if (!$error) { 
 				$userFormation = new UserFormation($db);
 				$formations_user = $userFormation->getAllFormationsForUser($objecttmp->fk_user);
-		
-				// Récupérer toutes les conditions de prérequis pour cette formation
+				$visiteMedicale = new VisiteMedical($db);
+				$natures_visite_user = $visiteMedicale->getAllNatureVisiteForUser($objecttmp->fk_user);
+
+				// Récupérer toutes les conditions de prérequis 
 				$prerequisConditions = $objectparenttmp->getPrerequis($objectparenttmp->id);
 		
-				foreach ($prerequisConditions as $conditionId => $formationIds) {
-					$conditionMet = false;
-		
+				foreach ($prerequisConditions as $condition_group => $prerequistype) {
+					$conditionMetForFormation = false;
+					$conditionMetForVisiteMedicale = false;
+
 					// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
-					foreach ($formationIds as $formationid) {
-						if (in_array($formationid, $formations_user)) {
-							$conditionMet = true; 
+					foreach ($prerequistype['formation'] as $formationid) {
+						if ($formationid > 0 && in_array($formationid, $formations_user)) {
+							$conditionMetForFormation = true; 
+							break;
+						}
+					}
+
+					// Vérifier si l'utilisateur possède au moins une des nature de visite dans cette condition (condition OR)
+					foreach ($prerequistype['nature_visite'] as $nature_visiteid) {
+						if ($nature_visiteid > 0 && in_array($nature_visiteid, $natures_visite_user)) {
+							$conditionMetForVisiteMedicale = true; 
 							break;
 						}
 					}
 		
 					// Si une condition OR n'est pas remplie, générer un message d'erreur
-					if (!$conditionMet) {
-						setEventMessages($langs->trans('ErrorPrerequisFormation'), null, 'errors');
+					if (!$conditionMetForFormation && !$conditionMetForVisiteMedicale) {
+						if(sizeof($prerequistype['formation']) > 0 && sizeof($prerequistype['nature_visite']) > 0) {
+							setEventMessages($langs->trans('ErrorPrerequisFormationAptitude'), null, 'errors');
+						}
+						elseif(sizeof($prerequistype['formation']) > 0) {
+							setEventMessages($langs->trans('ErrorPrerequisFormation'), null, 'errors');
+						}
+						elseif(sizeof($prerequistype['nature_visite']) > 0) {
+							setEventMessages($langs->trans('ErrorPrerequisAptitude'), null, 'errors');
+						}
 						$error++;
 						break;
 					}
+
 				}
 			}
 
 			// Prérequis aptitude médicale
-			if(!$error) {
-				$visiteMedicale = new VisiteMedical($db);
-				$extrafields = new Extrafields($db);
-				$extrafields->fetch_name_optionals_label('donneesrh_Medecinedutravail');
-				$userField = new UserField($db);
-				$userField->id = $objecttmp->fk_user;
-				$userField->table_element = 'donneesrh_Medecinedutravail';
-				$userField->fetch_optionals();
-				$naturesVisite = explode(',', $userField->array_options['options_naturevisitemedicale']);
-				foreach($naturesVisite as $natureid) {
-					if(!$visiteMedicale->userAsAptitudeMedicale($objecttmp->fk_user, $natureid)) {
-						$nature = $visiteMedicale->getNatureInfo($natureid);
-						setEventMessages($langs->trans('ErrorPrerequisAptitude', $nature['label']), null, 'errors');
-						$error++;
-					}
-				}
-			}	
+			// if(!$error) {
+			// 	$visiteMedicale = new VisiteMedical($db);
+			// 	$extrafields = new Extrafields($db);
+			// 	$extrafields->fetch_name_optionals_label('donneesrh_Medecinedutravail');
+			// 	$userField = new UserField($db);
+			// 	$userField->id = $objecttmp->fk_user;
+			// 	$userField->table_element = 'donneesrh_Medecinedutravail';
+			// 	$userField->fetch_optionals();
+			// 	$naturesVisite = explode(',', $userField->array_options['options_naturevisitemedicale']);
+			// 	foreach($naturesVisite as $natureid) {
+			// 		if(!$visiteMedicale->userAsAptitudeMedicale($objecttmp->fk_user, $natureid)) {
+			// 			$nature = $visiteMedicale->getNatureInfo($natureid);
+			// 			setEventMessages($langs->trans('ErrorPrerequisAptitude', $nature['label']), null, 'errors');
+			// 			$error++;
+			// 		}
+			// 	}
+			// }	
 
 			if(!$error) {
 				$result = $objecttmp->validate($user);

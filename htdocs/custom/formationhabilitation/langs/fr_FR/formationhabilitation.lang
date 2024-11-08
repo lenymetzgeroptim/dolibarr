@@ -235,6 +235,7 @@ ValidateUserVolet = Valider le volet
 ErrorPrerequisFormation = Le collaborateur ne possède pas les formations requises
 ErrorPrerequisAptitude = Le collaborateur ne possède pas l'aptitude médicale %s qui est requise
 ErrorFormationAlreadyExist = Impossible d'ajouter cette formation car le collaborateur la possède déja (Il faut forcer la création)
+ErrorPrerequisFormationAptitude = Le collaborateur ne possède pas les prérequis
 
 
 #
@@ -249,5 +250,8 @@ EMailTextAutorisationCreation = Bonjour,<br><br>Suite à la validation de la for
 #
 ForceCreation = Forcer la création
 PrerequisObjects = Prérequis
+PrerequisObjectsFormation = Prérequis de formation
+PrerequisObjectsVisiteMedicale = Prérequis de nature de visite médicale
+PrerequisObjectsAutre = Prérequis autres
 Suspend = Suspendu
 SuspendLong = Suspendu pour inaptitude médicale

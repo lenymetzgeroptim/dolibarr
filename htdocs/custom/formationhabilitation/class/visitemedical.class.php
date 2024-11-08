@@ -1285,6 +1285,35 @@ class VisiteMedical extends CommonObject
 			return -1;
 		}
 	}
+
+	/**
+	 * 	Liste des nature visite possédait par l'utilisateur
+	 *
+	 * 	@param  int		$userid       	Id of User
+	 * 	@return	array(int)|int			Array with Nature visite		
+	 */
+	function getAllNatureVisiteForUser($userid) {
+		$res = array();
+
+		$sql = "SELECT DISTINCT vm.naturevisite";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
+		$sql .= " WHERE vm.fk_user = $userid";
+		$sql .= " AND (vm.status = ".self::STATUS_APTE." OR vm.status = ".self::STATUS_CONDITIONNEL.")";
+
+		dol_syslog(get_class($this)."::getAllNatureVisiteForUser", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->naturevisite;
+			}
+
+			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

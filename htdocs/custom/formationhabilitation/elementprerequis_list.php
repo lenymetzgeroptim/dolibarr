@@ -247,7 +247,14 @@ $now = dol_now();
 // --------------------------------------------------------------------
 $sql = 'SELECT ';
 $sql .= $elementPrerequis->getFieldList('t');
-// Add fields from extrafields
+$sql .= ", GROUP_CONCAT(CASE WHEN prerequistype = 'formation' THEN prerequisobjects END) AS prerequisobjects_formation,";
+$sql .= " GROUP_CONCAT(CASE WHEN prerequistype = 'nature_visite' THEN prerequisobjects END) AS prerequisobjects_nature_visite,";
+$sql .= " GROUP_CONCAT(CASE WHEN prerequistype = 'autre' THEN prerequisobjects END) AS prerequisobjects_autre,";
+$sql .= " MAX(CASE WHEN prerequistype = 'formation' THEN rowid END) AS id_formation,";
+$sql .= " MAX(CASE WHEN prerequistype = 'nature_visite' THEN rowid END) AS id_nature_visite,";
+$sql .= " MAX(CASE WHEN prerequistype = 'autre' THEN rowid END) AS id_autre";
+
+// Add fields from extrafields;
 if (!empty($extrafields->attributes[$elementPrerequis->table_element]['label'])) {
 	foreach ($extrafields->attributes[$elementPrerequis->table_element]['label'] as $key => $val) {
 		$sql .= ($extrafields->attributes[$elementPrerequis->table_element]['type'][$key] != 'separate' ? ", ef.".$key." as options_".$key : '');
@@ -310,6 +317,9 @@ foreach ($search as $key => $val) {
 }
 if ($search_all) {
 	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
+}
+if($object->id > 0) {
+	$sql .= ' GROUP BY fk_source, condition_group';
 }
 //$sql.= dolSqlDateFilter("t.field", $search_xxxday, $search_xxxmonth, $search_xxxyear);
 // Add where from extra fields
@@ -401,20 +411,37 @@ $num = $db->num_rows($resql);
 if($action != 'editline') {
 	print '<form action="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'" method="POST">'."\n";
 		print '<input type="hidden" name="token" value="'.newToken().'">';
-		print '<input type="hidden" name="action" value="addprerequis">';
+		print '<input type="hidden" name="action" value="addline">';
 
 		print '<table class="noborder centpercent">'."\n";
 			print '<tr class="liste_titre">';
-				print '<td class="titlefield liste_titre">'.$langs->trans("PrerequisObjects").'</td>'."\n".'</td>';
+				print '<td class="titlefield liste_titre">'.$langs->trans("PrerequisObjectsFormation").'</td>'."\n".'</td>';
+				print '<td class="titlefield liste_titre">'.$langs->trans("PrerequisObjectsVisiteMedicale").'</td>'."\n".'</td>';
+				print '<td class="titlefield liste_titre">'.$langs->trans("PrerequisObjectsAutre").'</td>'."\n".'</td>';
 				print '<td class="titlefield liste_titre"></td>';
 			print '</tr>'."\n";
 			
 			print '<tr class="">';
 				print '<td class="">';
-					print $elementPrerequis->showInputField('', 'prerequisobjects', '');
+					$elementPrerequis->fields['prerequisobjects']['type'] = 'chkbxlst:formationhabilitation_formation:label:rowid::(status=1)';
+					print $elementPrerequis->showInputField($elementPrerequis->fields['prerequisobjects'], 'prerequisobjects', '', '', '_formation');
 				print '</td>';
+
+				print '<td class="">';
+					$elementPrerequis->fields['prerequisobjects']['type'] = 'chkbxlst:c_nature_visite:label:rowid::(active=1)';
+					print $elementPrerequis->showInputField($elementPrerequis->fields['prerequisobjects'], 'prerequisobjects', '', '', '_nature_visite');
+				print '</td>';
+
+				print '<td class="">';
+					$elementPrerequis->fields['prerequisobjects']['type'] = 'checkbox';
+					$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = array('1' => 'Intégration');
+					print $elementPrerequis->showInputField($elementPrerequis->fields['prerequisobjects'], 'prerequisobjects', '', '', '_autre');
+				print '</td>';
+
+				$elementPrerequis->fields['prerequisobjects']['type'] = 'varchar(255)';
+				$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = '';
 				print '<td class="" align="right">';
-					print '<input type="submit" class="button reposition" value="'.$langs->trans('Add').'" name="addprerequis" id="addprerequis"></td>';
+					print '<input type="submit" class="button reposition" value="'.$langs->trans('Add').'" name="addline" id="addline"></td>';
 				print '</td>';
 			print '</tr>'."\n";
 		print '</table>';
@@ -482,7 +509,10 @@ print '<input type="hidden" name="token" value="'.newToken().'">';
 print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
 if($action == 'editline') {
     print '<input type="hidden" name="action" value="updateline">';
-	print '<input type="hidden" name="lineid" value="'.$lineid.'">';
+	print '<input type="hidden" name="lineid_formation" value="'.$lineid_formation.'">';
+	print '<input type="hidden" name="lineid_nature_visite" value="'.$lineid_nature_visite.'">';
+	print '<input type="hidden" name="lineid_autre" value="'.$lineid_autre.'">';
+	print '<input type="hidden" name="condition_group" value="'.$condition_group.'">';
 }
 else {
 	print '<input type="hidden" name="action" value="list">';
@@ -637,7 +667,12 @@ foreach ($elementPrerequis->fields as $key => $val) {
 	}
 	$cssforfield = preg_replace('/small\s*/', '', $cssforfield);	// the 'small' css must not be used for the title label
 	if (!empty($arrayfields['t.'.$key]['checked'])) {
-		print getTitleFieldOfList($arrayfields['t.'.$key]['label'], 0, $_SERVER['PHP_SELF'], 't.'.$key, '', $param, ($cssforfield ? 'class="'.$cssforfield.'"' : ''), $sortfield, $sortorder, ($cssforfield ? $cssforfield.' ' : ''), 0, (empty($val['helplist']) ? '' : $val['helplist']))."\n";
+		// if ($key == 'prerequisobjects') { // Afichage des titres des prérequis
+
+		// } 
+		// else {
+			print getTitleFieldOfList($arrayfields['t.'.$key]['label'], 0, $_SERVER['PHP_SELF'], 't.'.$key, '', $param, ($cssforfield ? 'class="'.$cssforfield.'"' : ''), $sortfield, $sortorder, ($cssforfield ? $cssforfield.' ' : ''), 0, (empty($val['helplist']) ? '' : $val['helplist']))."\n";
+		// }
 		$totalarray['nbfield']++;
 	}
 }
@@ -763,14 +798,53 @@ while ($i < $imaxinloop) {
 					print ' title="'.dol_escape_htmltag($elementPrerequis->$key).'"';
 				}
 				print '>';
-				if($action == 'editline' && $elementPrerequis->id == $lineid) {
-					print $elementPrerequis->showInputField($val, $key, $elementPrerequis->$key, '');
+				if($action == 'editline' && ($elementPrerequis->id == $lineid_formation || $elementPrerequis->id == $lineid_nature_visite || $elementPrerequis->id == $lineid_autre)) {
+					if ($key == 'prerequisobjects') { // Afichage des différents prérequis en édition
+						$elementPrerequis->fields['prerequisobjects']['type'] = 'chkbxlst:formationhabilitation_formation:label:rowid::(status=1)';
+						$keytmp = $key.'_formation';
+						print $elementPrerequis->showInputField($val, $key, $obj->$keytmp, '', '_formation');
+						
+						$elementPrerequis->fields['prerequisobjects']['type'] = 'chkbxlst:c_nature_visite:label:rowid::(active=1)';
+						$keytmp = $key.'_nature_visite';
+						print $elementPrerequis->showInputField($val, $key, $obj->$keytmp, '', '_nature_visite');
+						
+						$elementPrerequis->fields['prerequisobjects']['type'] = 'checkbox';
+						$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = array('1' => 'Intégration');
+						$keytmp = $key.'_autre';
+						print $elementPrerequis->showInputField($val, $key, $obj->$keytmp, '', '_autre');
+
+						$elementPrerequis->fields['prerequisobjects']['type'] = 'varchar(255)';
+						$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = '';
+					} 
+					else {
+						print $elementPrerequis->showInputField($val, $key, $elementPrerequis->$key, '');
+					}
 				}
 				else {
 					if ($key == 'status') {
 						print $elementPrerequis->getLibStatut(5);
 					} elseif ($key == 'rowid') {
 						print $elementPrerequis->showOutputField($val, $key, $elementPrerequis->id, '');
+					} elseif ($key == 'prerequisobjects') { // Afichage des différents prérequis en lecture
+						$elementPrerequis->fields['prerequisobjects']['type'] = 'chkbxlst:formationhabilitation_formation:label:rowid::(status=1)';
+						$val['type'] = 'chkbxlst:formationhabilitation_formation:label:rowid::(status=1)';
+						$keytmp = $key.'_formation';
+						print $elementPrerequis->showOutputField($val, $key, $obj->$keytmp);
+						
+						$elementPrerequis->fields['prerequisobjects']['type'] = 'chkbxlst:c_nature_visite:label:rowid::(active=1)';
+						$val['type'] = 'chkbxlst:c_nature_visite:label:rowid::(active=1)';
+						$keytmp = $key.'_nature_visite';
+						print $elementPrerequis->showOutputField($val, $key, $obj->$keytmp);
+						
+						$elementPrerequis->fields['prerequisobjects']['type'] = 'checkbox';
+						$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = array('1' => 'Intégration');
+						$val['type'] = 'checkbox';
+						$val['arrayofkeyval'] = array('1' => 'Intégration');
+						$keytmp = $key.'_autre';
+						print $elementPrerequis->showOutputField($val, $key, $obj->$keytmp);
+
+						$elementPrerequis->fields['prerequisobjects']['type'] = 'varchar(255)';
+						$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = '';
 					} else {
 						print $elementPrerequis->showOutputField($val, $key, $elementPrerequis->$key, '');
 					}
@@ -807,16 +881,16 @@ while ($i < $imaxinloop) {
 		// Action column
 		if (!getDolGlobalString('MAIN_CHECKBOX_LEFT_COLUMN')) {
 			print '<td class="nowrap center">';
-			if($action == 'editline') {
+			if($action == 'editline' && ($elementPrerequis->id == $lineid_formation || $elementPrerequis->id == $lineid_nature_visite || $elementPrerequis->id == $lineid_autre)) {
 				print '<input type="submit" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save" value="'.$langs->trans("Save").'">';
 				print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';				
 			}
 			else {
-				$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&token='.newToken().'&lineid='.$elementPrerequis->id.'#line_'.$line->id;
+				$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editline&token='.newToken().'&lineid_formation='.$obj->id_formation.'&lineid_nature_visite='.$obj->id_nature_visite.'&lineid_autre='.$obj->id_autre.'&condition_group='.$obj->condition_group;
 				print '<a class="editfielda reposition pr-8" href="'.$url.'">';
 				print img_edit().'</a>';
 
-				$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=deleteline&token='.newToken().'&lineid='.$elementPrerequis->id;
+				$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=deleteline&token='.newToken().'&lineid_formation='.$obj->id_formation.'&lineid_nature_visite='.$obj->id_nature_visite.'&lineid_autre='.$obj->id_autre;
 				print '<a class="reposition pr-8" href="'.$url.'">';
 				print img_delete().'</a>';
 

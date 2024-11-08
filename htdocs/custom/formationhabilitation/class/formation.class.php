@@ -1252,21 +1252,30 @@ class Formation extends CommonObject
 	/**
 	 * 	Return tous les prérequis d'une formation
 	 *
-	 * 	@param  int		$formation_id       Id of Formation
+	 * 	@param  int		$autorisation_id       Id of Autorisation
+	 *  @param  int		$prerequistype         Type of prerequis
 	 * 	@return	array(array(int))|int						
 	 */
-	function getPrerequis($formation_id) {
+	function getPrerequis($formation_id, $prerequistype = '') {
 		$res = array();
 
-		$sql = "SELECT rowid, prerequisobjects";
+		$sql = "SELECT rowid, prerequisobjects, prerequistype, condition_group";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
 		$sql .= " WHERE sourcetype = '$this->element' AND fk_source = $formation_id";
+		if(!empty($prerequistype)) {
+			$sql .= " AND prerequistype = $prerequistype";
+		}
 
 		dol_syslog(get_class($this)."::getPrerequis", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$res[$obj->rowid] = explode(',', $obj->prerequisobjects);
+				if(!empty($prerequistype)) {
+					$res[$obj->rowid] = explode(',', $obj->prerequisobjects);
+				}
+				else {
+					$res[$obj->condition_group][$obj->prerequistype] = explode(',', $obj->prerequisobjects);
+				}
 			}
 
 			return $res;

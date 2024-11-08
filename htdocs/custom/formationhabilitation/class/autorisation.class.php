@@ -1309,7 +1309,7 @@ class Autorisation extends CommonObject
 
 		$sql = "SELECT ep.fk_source";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
-		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."$this->table_element as h ON h.rowid = ep.fk_source AND ep.sourcetype = '$this->element'";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."$this->table_element as h ON h.rowid = ep.fk_source AND ep.sourcetype = '$this->element' AND ep.prerequistype = 'formation'";
 		$sql .= " WHERE FIND_IN_SET(".$formationId.", ep.prerequisobjects)";
 		$sql .= " AND h.status = ".self::STATUS_OUVERTE;
 
@@ -1333,20 +1333,29 @@ class Autorisation extends CommonObject
 	 * 	Return tous les prérequis d'une autorisation
 	 *
 	 * 	@param  int		$autorisation_id       Id of Autorisation
+	 *  @param  int		$prerequistype         Type of prerequis
 	 * 	@return	array(array(int))|int						
 	 */
-	function getPrerequis($autorisation_id) {
+	function getPrerequis($autorisation_id, $prerequistype = '') {
 		$res = array();
 
-		$sql = "SELECT rowid, prerequisobjects";
+		$sql = "SELECT rowid, prerequisobjects, prerequistype, condition_group";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
 		$sql .= " WHERE sourcetype = '$this->element' AND fk_source = $autorisation_id";
+		if(!empty($prerequistype)) {
+			$sql .= " AND prerequistype = $prerequistype";
+		}
 
 		dol_syslog(get_class($this)."::getPrerequis", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$res[$obj->rowid] = explode(',', $obj->prerequisobjects);
+				if(!empty($prerequistype)) {
+					$res[$obj->rowid] = explode(',', $obj->prerequisobjects);
+				}
+				else {
+					$res[$obj->condition_group][$obj->prerequistype] = explode(',', $obj->prerequisobjects);
+				}
 			}
 
 			return $res;
@@ -1403,7 +1412,7 @@ class Autorisation extends CommonObject
 
 		// 3. Parcourir chaque habilitation et vérifier les conditions
 		foreach ($autorisations as $autorisation_id) {
-			$conditions = $this->getPrerequis($autorisation_id);
+			$conditions = $this->getPrerequis($autorisation_id, 'formation');
 			$all_conditions_met = true;
 
 			foreach ($conditions as $prerequis) {

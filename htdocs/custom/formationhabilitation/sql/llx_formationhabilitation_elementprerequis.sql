@@ -21,6 +21,7 @@ CREATE TABLE llx_formationhabilitation_elementprerequis(
 	sourcetype varchar(128) NOT NULL, 
 	fk_source integer, 
 	prerequistype varchar(128), 
-	prerequisobjects varchar(255)
+	prerequisobjects varchar(255),
+	condition_group integer NOT NULL
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

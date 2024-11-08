@@ -88,6 +88,10 @@ $action = GETPOST('action', 'aZ09');
 $cancel     = GETPOST('cancel', 'aZ09');
 $backtopage = GETPOST('backtopage', 'alpha');
 $lineid = GETPOST('lineid', 'int');
+$lineid_formation = GETPOST('lineid_formation', 'int');
+$lineid_nature_visite = GETPOST('lineid_nature_visite', 'int');
+$lineid_autre = GETPOST('lineid_autre', 'int');
+$condition_group = GETPOST('condition_group', 'int');
 $confirm    = GETPOST('confirm', 'alpha'); // Result of a confirmation
 
 // Initialize technical objects
@@ -95,7 +99,7 @@ $object = new Habilitation($db);
 $extrafields = new ExtraFields($db);
 $elementPrerequis = new ElementPrerequis($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
-$hookmanager->initHooks(array('habilitationnote', 'globalcard')); // Note that conf->hooks_modules contains array
+$hookmanager->initHooks(array('habilitationprerequis', 'globalcard')); // Note that conf->hooks_modules contains array
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
 
@@ -112,11 +116,9 @@ $enablepermissioncheck = 0;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->rights->formationhabilitation->habilitation->read;
 	$permissiontoadd = $user->rights->formationhabilitation->habilitation->write;
-	$permissionnote = $user->rights->formationhabilitation->habilitation->write; // Used by the include of actions_setnotes.inc.php
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;
-	$permissionnote = 1;
 }
 
 // Security check (enable the most restrictive one)
@@ -138,20 +140,58 @@ if ($reshook < 0) {
 	setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 }
 if (empty($reshook)) {
-	if($action == 'addprerequis' && $object->id > 0 && sizeof(GETPOST('prerequisobjects', 'array')) > 0 && $permissiontoadd) {
+	if($action == 'addline' && $object->id > 0 && $permissiontoadd) {
 		$db->begin();
-	
-		if(!(GETPOST('prerequisobjects'))){
+
+		if(!(GETPOST('prerequisobjects_formation')) && !(GETPOST('prerequisobjects_nature_visite')) && !(GETPOST('prerequisobjects_autre'))){
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("PrerequisObjects")), null, 'errors');
 			$error++;
 		}
 	
-		if (!$error) {
-			$elementPrerequis->sourcetype = $object->element;
-			$elementPrerequis->fk_source = $object->id;
-			$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects', 'array'));
-	
-			$resultcreate = $elementPrerequis->create($user);
+		$elementPrerequis->sourcetype = $object->element;
+		$elementPrerequis->fk_source = $object->id;
+		$elementPrerequis->condition_group = $elementPrerequis->getNextConditionGroup($object->id, $object->element);
+
+		if (!$error && !$errorcreate) { // Prérequis de formation
+			if(sizeof(GETPOST('prerequisobjects_formation', 'array')) > 0) {
+				$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_formation', 'array'));
+				$elementPrerequis->prerequistype = 'formation';
+
+				$resultcreate = $elementPrerequis->create($user);
+
+				if($resultcreate < 0 || $elementPrerequis->condition_group < 1) {
+					setEventMessages("Erreur lors de la création du prérequis de formation", null, 'errors');
+					$errorcreate++;
+				} 
+			}
+		}
+
+		if (!$error && !$errorcreate) { // Prérequis de nature de visite
+			if(sizeof(GETPOST('prerequisobjects_nature_visite', 'array')) > 0) {
+				$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_nature_visite', 'array'));
+				$elementPrerequis->prerequistype = 'nature_visite';
+
+				$resultcreate = $elementPrerequis->create($user);
+
+				if($resultcreate < 0 || $elementPrerequis->condition_group < 1) {
+					setEventMessages("Erreur lors de la création du prérequis de nature de visite", null, 'errors');
+					$errorcreate++;
+				} 
+			}
+		}
+
+		if (!$error && !$errorcreate) { // Prérequis de nature de visite
+			if(sizeof(GETPOST('prerequisobjects_autre', 'array')) > 0) {
+				$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_autre', 'array'));
+				$elementPrerequis->prerequistype = 'autre';
+
+				$resultcreate = $elementPrerequis->create($user);
+
+				if($resultcreate < 0 || $elementPrerequis->condition_group < 1) {
+					setEventMessages("Erreur lors de la création du prérequis autre", null, 'errors');
+					$errorcreate++;
+				} 
+			}
 		}
 	
 		if(!$error && $resultcreate > 0){
@@ -164,33 +204,142 @@ if (empty($reshook)) {
 			$db->rollback();
 			setEventMessages($langs->trans($objectline->error), null, 'errors');
 		}
+		elseif($errorcreate){
+			$db->rollback();
+		}
 	}
 
 	if($action == 'updateline' && !$cancel && $permissiontoadd){
-		if($lineid > 0){
-			$elementPrerequis->fetch($lineid);
-
-			if(!(GETPOST('prerequisobjects'))){
+		if($lineid_formation > 0 || $lineid_nature_visite > 0 || $lineid_autre > 0){
+			if(!(GETPOST('prerequisobjects_formation')) && !(GETPOST('prerequisobjects_nature_visite')) && !(GETPOST('prerequisobjects_autre'))){
 				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("PrerequisObjects")), null, 'errors');
 				$error++;
 			}
 
-			if (!$error) {
-				$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects', 'array'));
-		
-				$resultupdate = $elementPrerequis->update($user);
+			// Prérequis de formation
+			if(!$error && $lineid_formation > 0 && !GETPOST('prerequisobjects_formation', 'array')) {
+				$elementPrerequis->fetch($lineid_formation);
+				$resultdelete = $elementPrerequis->delete($user);
+
+				if($resultdelete < 0) {
+					setEventMessages("Erreur lors de la suppression des prérequis de formation", null, 'errors');
+					$error++;
+				}
+				
+			}
+			elseif(!$error && $lineid_formation > 0) {
+				$elementPrerequis->fetch($lineid_formation);
+
+				if ($elementPrerequis->prerequisobjects != implode(',', GETPOST('prerequisobjects_formation', 'array'))) {
+					$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_formation', 'array'));
+					$resultupdate = $elementPrerequis->update($user);
+
+					if($resultupdate < 0) {
+						setEventMessages("Erreur lors de la modification des prérequis de formation", null, 'errors');
+						$error++;
+					}
+				}
+			}
+			elseif(!$error && GETPOST('prerequisobjects_formation', 'array')) {
+				$elementPrerequis->sourcetype = $object->element;
+				$elementPrerequis->fk_source = $object->id;
+				$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_formation', 'array'));
+				$elementPrerequis->prerequistype = 'formation';
+				$elementPrerequis->condition_group = $condition_group;
+
+				$resultcreate = $elementPrerequis->create($user);
+
+				if($resultcreate < 0) {
+					setEventMessages("Erreur lors de la création des prérequis de formation", null, 'errors');
+					$error++;
+				}
+			}
+
+			// Prérequis de nature de visite
+			if(!$error && $lineid_nature_visite > 0 && !GETPOST('prerequisobjects_nature_visite', 'array')) {
+				$elementPrerequis->fetch($lineid_nature_visite);
+				$resultdelete = $elementPrerequis->delete($user);
+
+				if($resultdelete < 0) {
+					setEventMessages("Erreur lors de la suppression des prérequis de nature de visite", null, 'errors');
+					$error++;
+				}
+				
+			}
+			elseif(!$error && $lineid_nature_visite > 0) {
+				$elementPrerequis->fetch($lineid_nature_visite);
+
+				if ($elementPrerequis->prerequisobjects != implode(',', GETPOST('prerequisobjects_nature_visite', 'array'))) {
+					$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_nature_visite', 'array'));
+					$resultupdate = $elementPrerequis->update($user);
+
+					if($resultupdate < 0) {
+						setEventMessages("Erreur lors de la modification des prérequis de nature de visite", null, 'errors');
+						$error++;
+					}
+				}
+			}
+			elseif(!$error && GETPOST('prerequisobjects_nature_visite', 'array')) {
+				$elementPrerequis->sourcetype = $object->element;
+				$elementPrerequis->fk_source = $object->id;
+				$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_nature_visite', 'array'));
+				$elementPrerequis->prerequistype = 'nature_visite';
+				$elementPrerequis->condition_group = $condition_group;
+
+				$resultcreate = $elementPrerequis->create($user);
+
+				if($resultcreate < 0) {
+					setEventMessages("Erreur lors de la création des prérequis de nature de visite", null, 'errors');
+					$error++;
+				}
+			}
+
+			// Prérequis autres
+			if(!$error && $lineid_autre > 0 && !GETPOST('prerequisobjects_autre', 'array')) {
+				$elementPrerequis->fetch($lineid_autre);
+				$resultdelete = $elementPrerequis->delete($user);
+
+				if($resultdelete < 0) {
+					setEventMessages("Erreur lors de la suppression des prérequis autres", null, 'errors');
+					$error++;
+				}
+				
+			}
+			elseif(!$error && $lineid_autre > 0) {
+				$elementPrerequis->fetch($lineid_autre);
+
+				if ($elementPrerequis->prerequisobjects != implode(',', GETPOST('prerequisobjects_autre', 'array'))) {
+					$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_autre', 'array'));
+					$resultupdate = $elementPrerequis->update($user);
+
+					if($resultupdate < 0) {
+						setEventMessages("Erreur lors de la modification des prérequis autres", null, 'errors');
+						$error++;
+					}
+				}
+			}
+			elseif(!$error && GETPOST('prerequisobjects_autre', 'array')) {
+				$elementPrerequis->sourcetype = $object->element;
+				$elementPrerequis->fk_source = $object->id;
+				$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_autre', 'array'));
+				$elementPrerequis->prerequistype = 'autre';
+				$elementPrerequis->condition_group = $condition_group;
+
+				$resultcreate = $elementPrerequis->create($user);
+
+				if($resultcreate < 0) {
+					setEventMessages("Erreur lors de la création des prérequis autre", null, 'errors');
+					$error++;
+				}
 			}
 	
-			if(!$error && $resultupdate > 0){
+			if(!$error){
 				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 				header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id, true, 303);
 				exit;
 			}
-			elseif(!$error && $resultupdate <= 0){
-				setEventMessages($langs->trans($elementPrerequis->error), null, 'errors');
-			}
 			elseif($error) {
-				header('Location: '.$_SERVER["PHP_SELF"].'?'.$object->id.'&action=editline&lineid='.$lineid.'#line_'.$lineid);
+				header('Location: '.$_SERVER["PHP_SELF"].'?'.$object->id.'&action=editline&lineid_formation='.$lineid_formation.'&lineid_nature_visite='.$lineid_nature_visite.'&lineid_autre='.$lineid_autre);
 				exit;
 			}
 		}
@@ -200,17 +349,42 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'confirm_deleteline' && $lineid > 0 && $confirm == 'yes' && $permissiontoadd) {
-		$elementPrerequis->fetch($lineid);
-		$resultdelete = $elementPrerequis->delete($user);
-		if ($resultdelete > 0) {
+	if ($action == 'confirm_deleteline' && ($lineid_formation > 0 || $lineid_nature_visite > 0 || $lineid_autre > 0) && $confirm == 'yes' && $permissiontoadd) {
+		if($lineid_formation > 0) {
+			$elementPrerequis->fetch($lineid_formation);
+			$resultdelete = $elementPrerequis->delete($user);
+			
+			if($resultdelete < 0) {
+				$error++;
+			}
+		}
+
+		if($lineid_nature_visite > 0) {
+			$elementPrerequis->fetch($lineid_nature_visite);
+			$resultdelete = $elementPrerequis->delete($user);
+
+			if($resultdelete < 0) {
+				$error++;
+			}
+		}
+
+		if($lineid_autre > 0) {
+			$elementPrerequis->fetch($lineid_autre);
+			$resultdelete = $elementPrerequis->delete($user);
+
+			if($resultdelete < 0) {
+				$error++;
+			}
+		}
+		
+		if($error) {
+			setEventMessages($elementPrerequis->error, $elementPrerequis->errors, 'errors');
+		}
+		elseif ($resultdelete > 0) {
 			setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
 			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
 			exit;
-		} else {
-			$error++;
-			setEventMessages($elementPrerequis->error, $elementPrerequis->errors, 'errors');
-		}
+		} 
 		$action = '';
 	}
 }
@@ -237,7 +411,7 @@ if ($id > 0 || !empty($ref)) {
 
 	// Confirmation to delete line
 	if ($action == 'deleteline') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid_formation='.$lineid_formation.'&lineid_nature_visite='.$lineid_nature_visite.'&lineid_autre='.$lineid_autre, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
 	}
 
 	// Print form confirm

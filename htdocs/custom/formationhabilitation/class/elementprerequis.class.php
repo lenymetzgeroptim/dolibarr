@@ -117,8 +117,9 @@ class ElementPrerequis extends CommonObject
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"sourcetype" => array("type"=>"varchar(128)", "label"=>"SourceType", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"0",),
 		"fk_source" => array("type"=>"integer", "label"=>"SourceObject", "enabled"=>"1", 'position'=>11, 'notnull'=>1, "visible"=>"0",),
-		"prerequistype" => array("type"=>"varchar(128)", "label"=>"PrerequisType", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"0", "default"=>"formation",),
-		"prerequisobjects" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid::(status=1)", "label"=>"PrerequisObjects", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1",),
+		"prerequistype" => array("type"=>"varchar(128)", "label"=>"PrerequisType", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"0",),
+		"prerequisobjects" => array("type"=>"varchar(255)", "label"=>"PrerequisObjects", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1",),
+		"condition_group" => array("type"=>"integer", "label"=>"ConditionGroupe", "enabled"=>"1", 'position'=>25, 'notnull'=>1, "visible"=>"0"),
 	);
 	public $rowid;
 	public $import_key;
@@ -126,6 +127,7 @@ class ElementPrerequis extends CommonObject
 	public $fk_source;
 	public $prerequistype;
 	public $prerequisobjects;
+	public $condition_group;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1236,6 +1238,37 @@ class ElementPrerequis extends CommonObject
 		}
 	}
 
+	/**
+	 * 	Return le nombre de prochain condition_group
+	 *
+	 * 	@param  int		$fk_source       			Id de l'objet
+	 *  @param  int		$sourcetype    				type de l'objet
+	 * 	@return	int-mask-of						
+	 */
+	public function getNextConditionGroup($fk_source, $sourcetype)
+	{
+		global $conf, $user;
+
+		$sql = "SELECT MIN(ep.condition_group + 1) AS next_missing_condition_group";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
+		$sql .= " WHERE ep.fk_source = $fk_source AND ep.sourcetype = '$sourcetype'";
+		$sql .= " AND (condition_group + 1) NOT IN (SELECT condition_group FROM llx_formationhabilitation_elementprerequis WHERE fk_source = $fk_source AND sourcetype = '$sourcetype')";
+
+		dol_syslog(get_class($this)."::getNextConditionGroup", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$obj = $this->db->fetch_object($resql);
+			if($obj->next_missing_condition_group > 0) {
+				return $obj->next_missing_condition_group;
+			}
+			else {
+				return 1;
+			}
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 
