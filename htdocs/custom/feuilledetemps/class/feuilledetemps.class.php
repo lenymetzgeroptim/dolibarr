@@ -1561,7 +1561,7 @@ class FeuilleDeTemps extends CommonObject
 					$fdt->fk_user = $user_id;
 					$fdt->status = 0;
 
-					$result = $fdt->create($user, 0);
+					$result = $fdt->create($user_static, 0);
 
 					if($result <= 0) {
 						$this->error .= "Impossible de créer la feuille de temps de $user_static->firstname $user_static->lastname";
