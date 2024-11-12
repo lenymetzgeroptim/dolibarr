@@ -917,9 +917,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// 	$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&token='.newToken().'\', \''.$object->ref.'_'.$usertoprocess->lastname.'_'.$usertoprocess->firstname.'\')" class="butAction classfortooltip" aria-label="Screen" title="Screen">Screen</a>';
 		// }
 
-		if ($object->status == $object::STATUS_VERIFICATION) {
-			$buttonAction .= dolGetButtonAction('Envoyer Mail', $langs->trans('SendMail'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=sendMail&token='.newToken(), '', $permissionToVerification, array('attr' => array('target' => '_blank')));
-		}
+		$buttonAction .= dolGetButtonAction('Envoyer Mail', $langs->trans('SendMail'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=sendMail&token='.newToken(), '', $permissionToVerification, array('attr' => array('target' => '_blank')));
 
 		$buttonAction .= dolGetButtonAction($langs->trans('Modify'), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', ($permissionToVerification && $object->status != FeuilleDeTemps::STATUS_VALIDATED) || (($user->admin || $user->rights->feuilledetemps->feuilledetemps->modify) && $object->status == FeuilleDeTemps::STATUS_VALIDATED));
 
