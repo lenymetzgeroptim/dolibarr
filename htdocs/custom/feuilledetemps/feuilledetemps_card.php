@@ -998,6 +998,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			print '<input type="hidden" name="action" value="savehs50">';
 		}
 	}
+	elseif($permissionToVerification && $object->status == $object::STATUS_EXPORTED) {
+		print '<input type="hidden" name="action" value="updateObservation">';
+	}
 
 	print '<div class="clearboth"></div>';
 

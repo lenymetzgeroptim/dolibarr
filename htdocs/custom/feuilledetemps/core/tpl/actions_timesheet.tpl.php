@@ -842,6 +842,9 @@ if ($action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingsel
 		}
 	}
 
+	var_dump($observationFDT);
+	var_dump($object->observation);
+	exit;
 	if($observationFDT != $object->observation && $permissionToVerification) {
 		$object->oldcopy = dol_clone($object);
 		$object->actiontypecode = 'AC_FDT_VERIF';
@@ -1043,6 +1046,31 @@ if ($action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingsel
 				}
 			}
 		}
+	}
+	
+}
+
+// Modifier l'observation lorsque la feuille de temps est exportée
+if ($action == 'updateObservation' && $permissionToVerification) {
+	$observationFDT = GETPOST('observationFDT');
+
+	if($observationFDT != $object->observation) {
+		$object->oldcopy = dol_clone($object);
+		$object->actiontypecode = 'AC_FDT_VERIF';
+
+		$object->observation = $observationFDT;
+		$result = $object->update($user);
+
+		if($result < 0) {
+			$error++;
+		}
+	}
+
+	if (!$error) {
+		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+		// Redirect to avoid submit twice on back
+		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+		exit;
 	}
 	
 }
