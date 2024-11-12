@@ -34,9 +34,10 @@
 // }
 
 if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == $objectline::STATUS_VALIDE || GETPOST('status') == $objectline::STATUS_PROGRAMMEE)) || ($action == 'addline' && (GETPOST('status') != $objectline::STATUS_VALIDE && GETPOST('status') != $objectline::STATUS_PROGRAMMEE))) && $permissiontoaddline) {
+	$db->begin();
+
 	$formation = new Formation($db);
 	$userFormation = new UserFormation($db);
-	$db->begin();
 
 	if(!(GETPOST('fk_formation') > 0)){
 		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Formation")), null, 'errors');
@@ -103,31 +104,9 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 	}
 
 	// Impossible d'ajouter une formation si l'utilisateur n'a pas les prérequis
-	if (!$error && empty(GETPOST('forcecreation'))) { 
-		$formation->fetch(GETPOST('fk_formation'));
-		$formations_user = $userFormation->getAllFormationsForUser(GETPOST('fk_user', 'int'), 1);
-
-		// Récupérer toutes les conditions de prérequis pour cette formation
-		$prerequisConditions = $formation->getPrerequis($formation->id);
-
-		foreach ($prerequisConditions as $conditionId => $formationIds) {
-			$conditionMet = false;
-
-			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
-			foreach ($formationIds as $formationid) {
-				if (in_array($formationid, $formations_user)) {
-					$conditionMet = true; 
-					break;
-				}
-			}
-
-			// Si une condition OR n'est pas remplie, générer un message d'erreur
-			if (!$conditionMet) {
-				setEventMessages($langs->trans('ErrorPrerequisFormation'), null, 'errors');
-				$error++;
-				break;
-			}
-		}
+	$elementPrerequis = new ElementPrerequis($db);
+	if(!$error && empty(GETPOST('forcecreation')) && $elementPrerequis->gestionPrerequis(GETPOST('fk_user'), $formation_static, 1) < 0) {
+		$error++;
 	}
 
 	if (!$error) {

@@ -27,6 +27,7 @@
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/visitemedical.class.php';
 
 /**
  * Class for ElementPrerequis
@@ -1239,7 +1240,7 @@ class ElementPrerequis extends CommonObject
 	}
 
 	/**
-	 * 	Return le nombre de prochain condition_group
+	 * 	Return le nombre du prochain condition_group
 	 *
 	 * 	@param  int		$fk_source       			Id de l'objet
 	 *  @param  int		$sourcetype    				type de l'objet
@@ -1268,6 +1269,67 @@ class ElementPrerequis extends CommonObject
 			$this->error = $this->db->lasterror();
 			return -1;
 		}
+	}
+
+	/**
+	 * 	Gestion des prérequis
+	 *
+	 * 	@param  int		$fk_source       			Id de l'objet
+	 *  @param  int		$sourcetype    				type de l'objet
+	 * 	@param  int		$withprogram    include STATUS_PROGRAMMEE
+	 * 	@return	int				1 if OK, -1 if KO		
+	 */
+	public function gestionPrerequis($fk_user, $objectparenttmp, $withprogram = 0)
+	{
+		global $conf, $user, $langs;
+
+		$userFormation = new UserFormation($this->db);
+		$formations_user = $userFormation->getAllFormationsForUser($fk_user, $withprogram);
+		$visiteMedicale = new VisiteMedical($this->db);
+		$natures_visite_user = $visiteMedicale->getAllNatureVisiteForUser($fk_user);
+
+		// Récupérer toutes les conditions de prérequis 
+		$prerequisConditions = $objectparenttmp->getPrerequis($objectparenttmp->id);
+		
+		// var_dump($prerequisConditions);
+		// var_dump($formations_user);
+		// var_dump($natures_visite_user);
+
+		foreach ($prerequisConditions as $condition_group => $prerequistype) {
+			$conditionMetForFormation = false;
+			$conditionMetForVisiteMedicale = false;
+
+			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
+			foreach ($prerequistype['formation'] as $formationid) {
+				if ($formationid > 0 && in_array($formationid, $formations_user)) {
+					$conditionMetForFormation = true; 
+					break;
+				}
+			}
+
+			// Vérifier si l'utilisateur possède au moins une des nature de visite dans cette condition (condition OR)
+			foreach ($prerequistype['nature_visite'] as $nature_visiteid) {
+				if ($nature_visiteid > 0 && in_array($nature_visiteid, $natures_visite_user)) {
+					$conditionMetForVisiteMedicale = true; 
+					break;
+				}
+			}
+
+			// Si une condition OR n'est pas remplie, générer un message d'erreur
+			if (!$conditionMetForFormation && !$conditionMetForVisiteMedicale) {
+				if(sizeof($prerequistype['formation']) > 0 && sizeof($prerequistype['nature_visite']) > 0) {
+					setEventMessages($langs->trans('ErrorPrerequisFormationAptitude'), null, 'errors');
+				}
+				elseif(sizeof($prerequistype['formation']) > 0) {
+					setEventMessages($langs->trans('ErrorPrerequisFormation'), null, 'errors');
+				}
+				elseif(sizeof($prerequistype['nature_visite']) > 0) {
+					setEventMessages($langs->trans('ErrorPrerequisAptitude'), null, 'errors');
+				}
+				return -1;
+			}
+		}
+		return 1;
 	}
 }
 

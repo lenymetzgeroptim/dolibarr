@@ -190,52 +190,10 @@ if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $con
 		}
 
 		if ($result > 0) {
-			// Prérequis des formations
-			if (!$error) { 
-				$userFormation = new UserFormation($db);
-				$formations_user = $userFormation->getAllFormationsForUser($objecttmp->fk_user);
-				$visiteMedicale = new VisiteMedical($db);
-				$natures_visite_user = $visiteMedicale->getAllNatureVisiteForUser($objecttmp->fk_user);
-
-				// Récupérer toutes les conditions de prérequis 
-				$prerequisConditions = $objectparenttmp->getPrerequis($objectparenttmp->id);
-		
-				foreach ($prerequisConditions as $condition_group => $prerequistype) {
-					$conditionMetForFormation = false;
-					$conditionMetForVisiteMedicale = false;
-
-					// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
-					foreach ($prerequistype['formation'] as $formationid) {
-						if ($formationid > 0 && in_array($formationid, $formations_user)) {
-							$conditionMetForFormation = true; 
-							break;
-						}
-					}
-
-					// Vérifier si l'utilisateur possède au moins une des nature de visite dans cette condition (condition OR)
-					foreach ($prerequistype['nature_visite'] as $nature_visiteid) {
-						if ($nature_visiteid > 0 && in_array($nature_visiteid, $natures_visite_user)) {
-							$conditionMetForVisiteMedicale = true; 
-							break;
-						}
-					}
-		
-					// Si une condition OR n'est pas remplie, générer un message d'erreur
-					if (!$conditionMetForFormation && !$conditionMetForVisiteMedicale) {
-						if(sizeof($prerequistype['formation']) > 0 && sizeof($prerequistype['nature_visite']) > 0) {
-							setEventMessages($langs->trans('ErrorPrerequisFormationAptitude'), null, 'errors');
-						}
-						elseif(sizeof($prerequistype['formation']) > 0) {
-							setEventMessages($langs->trans('ErrorPrerequisFormation'), null, 'errors');
-						}
-						elseif(sizeof($prerequistype['nature_visite']) > 0) {
-							setEventMessages($langs->trans('ErrorPrerequisAptitude'), null, 'errors');
-						}
-						$error++;
-						break;
-					}
-
-				}
+			// Prérequis
+			$elementPrerequis = new ElementPrerequis($db);
+			if (!$error && $elementPrerequis->gestionPrerequis($objecttmp->fk_user, $objectparenttmp) < 0) { 
+				$error++;
 			}
 
 			// Prérequis aptitude médicale

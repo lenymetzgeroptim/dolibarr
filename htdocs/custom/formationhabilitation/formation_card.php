@@ -149,7 +149,7 @@ $arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
 $arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
 
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 1;
+$enablepermissioncheck = 0;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->rights->formationhabilitation->formation->read;
 	$permissiontoadd = $user->rights->formationhabilitation->formation->write; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
