@@ -183,6 +183,7 @@ if (!$user->rights->feuilledetemps->feuilledetemps->vueensemble) {
 $hookmanager->initHooks(array('projectOverview'));
 
 
+
 /*
  *	View
  */
@@ -982,7 +983,7 @@ print "</table>";
 
 print '<br><br>';
 print '<br>';
-
+$resTotal = array();
 // Detail
 foreach ($listofreferent as $key => $value) {
 	$parameters = array(
@@ -1125,6 +1126,9 @@ foreach ($listofreferent as $key => $value) {
 		} else {
 			print '<td width="120"></td>';
 		}
+		if($tablename =='commande' || $tablename == 'order') {
+		print '<td class="right" width="120">'.$langs->trans("Reste à facturer").'</td>';
+		}
 		// Status
 		if (in_array($tablename, array('projet_task'))) {
 			print '<td class="right" width="200">'.$langs->trans("ProgressDeclared").'</td>';
@@ -1149,6 +1153,7 @@ foreach ($listofreferent as $key => $value) {
 				$elementarray = sortElementsByClientName($elementarray);
 			}
 
+			
 			$num = count($elementarray);
 			for ($i = 0; $i < $num; $i++) {
 				$tmp = explode('_', $elementarray[$i]);
@@ -1440,56 +1445,106 @@ foreach ($listofreferent as $key => $value) {
 					print '<td></td>';
 				}
 
-				// Status
-				print '<td class="right">';
-				if ($tablename == 'expensereport_det') {
-					print $expensereport->getLibStatut(5);
-				} elseif ($element instanceof CommonInvoice) {
-					//This applies for Facture and FactureFournisseur
-					print $element->getLibStatut(5, $element->getSommePaiement());
-				} elseif ($element instanceof Task) {
-					if ($element->progress != '') {
-						print $element->progress.' %';
+				// Reste à facturer - calcul et affichage 
+				$factures = array(); // Initialise $factures en dehors pour la rendre accessible aux deux sections
+				$now = dol_now(); // Définit $now pour la date actuelle
+			
+				if ($tablename == 'commande' || $tablename == 'order') {
+					// Commande validée
+					if (in_array($element->status, array(1, 2))) {
+						
+						// Commande en cours
+						if ($now <= $element->delivery_date) {
+							//calcul nombre de mois entre date de livraison et la date d'ajourd'hui
+						$dateNow = new DateTime('@' . $now);
+						$dateLivraison = new DateTime('@' . $element->delivery_date);
+
+						// Calcul de la différence entre les deux dates en mois
+						$interval = $dateNow->diff($dateLivraison);
+						$nbMonths = ($interval->y * 12) + $interval->m;
+						
+							// Récupération des factures associées à la commande et les stocke dans $factures
+							$factures = getCommandeFactures($element->id);
+								
+
+							// Ajout du montant total TTC de la commande à la somme des commandes
+							$sumCommandes[$element->id] = $element->total_ttc;
+							
+						}
 					}
-				} elseif ($tablename == 'stock_mouvement') {
-					print $element->getLibStatut(3);
-				} else {
-					print $element->getLibStatut(5);
 				}
-				print '</td>';
-
-				print '</tr>';
-
-				if ($qualifiedfortotal) {
-					$total_ht = $total_ht + $total_ht_by_line;
-					$total_ttc = $total_ttc + $total_ttc_by_line;
-
-					$total_ht_by_third += $total_ht_by_line;
-					$total_ttc_by_third += $total_ttc_by_line;
-
-					$total_time = $total_time + $total_time_by_line;
+				
+				
+				if (!empty($factures)) {
+					$commfactures = $factures; 
 				}
-
-				if (canApplySubtotalOn($tablename)) {
-					$breakline = '<tr class="liste_total liste_sub_total">';
-					$breakline .= '<td colspan="2">';
-					$breakline .= '</td>';
-					$breakline .= '<td>';
-					$breakline .= '</td>';
-					$breakline .= '<td class="right">';
-					$breakline .= $langs->trans('SubTotal').' : ';
-					if (is_object($element->thirdparty)) {
-						$breakline .= $element->thirdparty->getNomUrl(0, '', 48);
+			
+				// Calucl et affichage des restes à facturer
+				if (($tablename == 'commande' || $tablename == 'order')) {
+						foreach ($commfactures as $item) {
+							$sumFactureTotalTTC += (float)$item['total_ttc'];
+						}
+						$sumFactureTotalTTC !== null ? $res = ($element->total_ttc - $sumFactureTotalTTC)  : $res = 0.0;
+						// $nbMonths > 0 ? $res = ($element->total_ttc - $sumFactureTotalTTC) / $nbMonths : $res = 0.0;
+					
+						print '<td class="center">';
+						print $res;
+						print '</td>';
+							
 					}
-					$breakline .= '</td>';
-					$breakline .= '<td class="right">'.price($total_ht_by_third).'</td>';
-					$breakline .= '<td class="right">'.price($total_ttc_by_third).'</td>';
-					$breakline .= '<td></td>';
-					$breakline .= '</tr>';
-				}
+					
+					
 
-				//var_dump($element->thirdparty->name.' - '.$saved_third_id.' - '.$element->thirdparty->id);
-			}
+					// Status
+					print '<td class="right">';
+					if ($tablename == 'expensereport_det') {
+						print $expensereport->getLibStatut(5);
+					} elseif ($element instanceof CommonInvoice) {
+						//This applies for Facture and FactureFournisseur
+						print $element->getLibStatut(5, $element->getSommePaiement());
+					} elseif ($element instanceof Task) {
+						if ($element->progress != '') {
+							print $element->progress.' %';
+						}
+					} elseif ($tablename == 'stock_mouvement') {
+						print $element->getLibStatut(3);
+					} else {
+						print $element->getLibStatut(5);
+					}
+					print '</td>';
+
+					print '</tr>';
+
+					if ($qualifiedfortotal) {
+						$total_ht = $total_ht + $total_ht_by_line;
+						$total_ttc = $total_ttc + $total_ttc_by_line;
+
+						$total_ht_by_third += $total_ht_by_line;
+						$total_ttc_by_third += $total_ttc_by_line;
+
+						$total_time = $total_time + $total_time_by_line;
+					}
+
+					if (canApplySubtotalOn($tablename)) {
+						$breakline = '<tr class="liste_total liste_sub_total">';
+						$breakline .= '<td colspan="2">';
+						$breakline .= '</td>';
+						$breakline .= '<td>';
+						$breakline .= '</td>';
+						$breakline .= '<td class="right">';
+						$breakline .= $langs->trans('SubTotal').' : ';
+						if (is_object($element->thirdparty)) {
+							$breakline .= $element->thirdparty->getNomUrl(0, '', 48);
+						}
+						$breakline .= '</td>';
+						$breakline .= '<td class="right">'.price($total_ht_by_third).'</td>';
+						$breakline .= '<td class="right">'.price($total_ttc_by_third).'</td>';
+						$breakline .= '<td></td>';
+						$breakline .= '</tr>';
+					}
+
+					//var_dump($element->thirdparty->name.' - '.$saved_third_id.' - '.$element->thirdparty->id);
+				}
 
 			if ($breakline) {
 				print $breakline;
@@ -1609,3 +1664,48 @@ function sortElementsByClientName($elementarray)
 
 	return $elementarray;
 }
+
+
+	/**
+	 * 
+	 */
+	function getCommandeFactures($commande_id)
+	{
+	global $db;
+	// Commandes associées aux factures 
+	$sql = "SELECT lf.total_ttc, lf.fk_facture 
+	FROM " . MAIN_DB_PREFIX . "facturedet as lf
+	LEFT JOIN " . MAIN_DB_PREFIX . "element_element as ee ON lf.fk_facture = ee.fk_target
+	WHERE ee.fk_source = " . intval($commande_id) . "
+	AND ee.sourcetype = 'commande' 
+	AND ee.targettype = 'facture'";
+
+	$resql = $db->query($sql);
+
+	$facturedItems = [];
+		if ($resql) {
+			while ($obj = $db->fetch_object($resql)) {
+				// var_dump($obj);
+				$facturedItems[$obj->fk_facture] = [
+					'total_ttc' => $obj->total_ttc,
+				];
+			}
+		}
+		return $facturedItems;
+	}
+
+	// function calcultateCommandeRestant($filteredSumCommandes, $nbMonths, $filteredSum)
+	// {
+	// 	if (!empty($filteredSumCommandes) && $nbMonths && !empty($filteredSum) && $i < 1) {
+	// 		// Affiche les valeurs pour le débogage
+	// 		// var_dump(end($filteredSum));
+			
+	// 		// Calcule le total
+	// 		$lastSumCommandes = end($filteredSumCommandes); // Dernière valeur après filtrage
+	// 		$resTotal[] = ($lastSumCommandes - end($filteredSum)) / $nbMonths;
+	// 		$arrResult = array_combine(array_keys($filteredSumCommandes), $resTotal);
+	// 		$commandeIds = array_keys($arr);
+	// 		$commandeId = implode($commandeIds);
+	// 		return $arrResult;
+	// 	}
+	// }
