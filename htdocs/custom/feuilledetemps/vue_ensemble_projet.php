@@ -1468,7 +1468,7 @@ foreach ($listofreferent as $key => $value) {
 								
 
 							// Ajout du montant total TTC de la commande à la somme des commandes
-							$sumCommandes[$element->id] = $element->total_ttc;
+							// $sumCommandes[$element->id] = $element->total_ttc;
 							
 						}
 					}
@@ -1482,13 +1482,13 @@ foreach ($listofreferent as $key => $value) {
 				// Calucl et affichage des restes à facturer
 				if (($tablename == 'commande' || $tablename == 'order')) {
 						foreach ($commfactures as $item) {
-							$sumFactureTotalTTC += (float)$item['total_ttc'];
+							$sumFactureTotalHT += (float)$item['total_ht'];
 						}
-						$sumFactureTotalTTC !== null ? $res = ($element->total_ttc - $sumFactureTotalTTC)  : $res = 0.0;
+						 $res = $element->total_ht - $sumFactureTotalHT;
 						// $nbMonths > 0 ? $res = ($element->total_ttc - $sumFactureTotalTTC) / $nbMonths : $res = 0.0;
 					
 						print '<td class="center">';
-						print $res;
+						print price($res);
 						print '</td>';
 							
 					}
@@ -1673,7 +1673,7 @@ function sortElementsByClientName($elementarray)
 	{
 	global $db;
 	// Commandes associées aux factures 
-	$sql = "SELECT lf.total_ttc, lf.fk_facture 
+	$sql = "SELECT lf.total_ht, lf.fk_facture 
 	FROM " . MAIN_DB_PREFIX . "facturedet as lf
 	LEFT JOIN " . MAIN_DB_PREFIX . "element_element as ee ON lf.fk_facture = ee.fk_target
 	WHERE ee.fk_source = " . intval($commande_id) . "
@@ -1687,7 +1687,7 @@ function sortElementsByClientName($elementarray)
 			while ($obj = $db->fetch_object($resql)) {
 				// var_dump($obj);
 				$facturedItems[$obj->fk_facture] = [
-					'total_ttc' => $obj->total_ttc,
+					'total_ht' => $obj->total_ht,
 				];
 			}
 		}
