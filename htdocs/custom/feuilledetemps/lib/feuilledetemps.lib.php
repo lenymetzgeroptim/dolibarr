@@ -813,7 +813,7 @@ function FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $u
 			}
 
 			print '<td class="center hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-			print $deplacement->showInputField('', 'moyen_transport', $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow], ($disabled ? 'disabled ' : '').'onchange="updateTotal_MoyenTransport('.$nb_jour.', '.$num_first_day.')"', $keysuffix, '', 1);
+			print $deplacement->showInputField('', 'moyen_transport', $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow], ($disabled ? 'disabled ' : '').'onchange="updateTotal_MoyenTransport('.$nb_jour.', '.$num_first_day.'); deleteTypeDeplacementVS('.$idw.')"', $keysuffix, '', 1);
 			print '</td>';
 		}
 		$totalMoyenTransport = $nb_moyen_transport['VS']." VS<br>".$nb_moyen_transport['A']." A<br>".$nb_moyen_transport['T']." T<br>";
