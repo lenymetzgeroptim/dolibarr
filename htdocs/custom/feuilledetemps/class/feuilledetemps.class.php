@@ -125,7 +125,7 @@ class FeuilleDeTemps extends CommonObject
 		'date_debut' => array('type'=>'date', 'label'=>'DateDebut', 'enabled'=>'1', 'position'=>100, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
 		'date_fin' => array('type'=>'date', 'label'=>'DateFin', 'enabled'=>'1', 'position'=>101, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
 		'fk_user' => array('type'=>'integer:User:user/class/user.class.php:0:(t.statut:=:1)', 'label'=>'Utilisateur', 'enabled'=>'1', 'position'=>110, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
-		'observation' => array('type'=>'text', 'label'=>'Observation', 'enabled'=>'1', 'position'=>210, 'notnull'=>0, 'visible'=>4,),
+		'observation' => array('type'=>'text', 'label'=>'Observation', 'enabled'=>'1', 'position'=>210, 'notnull'=>0, 'visible'=>5,),
 		'prime_astreinte' => array('type'=>'price', 'label'=>'PrimeAstreinte', 'enabled'=>'1', 'position'=>150, 'notnull'=>0, 'visible'=>1,),
 		'prime_exceptionnelle' => array('type'=>'price', 'label'=>'PrimeExceptionnelle', 'enabled'=>'1', 'position'=>151, 'notnull'=>0, 'visible'=>1,),
 		'prime_objectif' => array('type'=>'price', 'label'=>'PrimeObjectif', 'enabled'=>'1', 'position'=>152, 'notnull'=>0, 'visible'=>1,),
