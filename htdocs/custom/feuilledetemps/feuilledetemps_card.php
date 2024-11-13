@@ -869,6 +869,17 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// Print form confirm
 	print $formconfirm;
 
+	// Warning if user have refused holiday
+	$filter = " AND cp.date_debut <= '".$db->idate($lastdaytoshow)."' AND cp.date_fin >= '".$db->idate($firstdaytoshow)."' AND cp.statut = ".$holiday::STATUS_REFUSED;
+	$holiday->fetchByUser($usertoprocess->id, '', $filter);
+	$warningHolidayRefused = '';
+	foreach($holiday->holiday as $holidayRefused) {
+		$link = '<a href="'.dol_buildpath('/holidaycustom/card.php', 1).'?id='.$holidayRefused['rowid'].'">'.$holidayRefused['ref'].'</a>';
+		$warningHolidayRefused .= "Congé $link annulé du ".dol_print_date($holidayRefused['date_debut'], "%d/%m/%Y")." au ".dol_print_date($holidayRefused['date_fin'], "%d/%m/%Y");
+	}
+	if(!empty($warningHolidayRefused)) {
+		setEventMessages($warningHolidayRefused, '', 'warnings');
+	}
 
 	// Object card
 	// ------------------------------------------------------------
