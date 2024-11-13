@@ -35,6 +35,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/silae.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedUser.class.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedexport.class.php';
 
 /**
  * Class for FeuilleDeTemps
@@ -3120,6 +3121,122 @@ class FeuilleDeTemps extends CommonObject
 					}
 				}
 
+				if($res) return 0;
+				else return -1;
+			} 
+			else {
+				$this->error = $this->db->lasterror();
+				return -1;
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 *  Envoie un mail avec l'export des temps et des déplacements chaque mois
+	 *
+	 * 	@param	string  $to 	Destinataire du mail
+	 *  @return	int     		resultat
+	 */
+	public function MailFDT_MonthlyExport($to)
+	{
+		global $conf, $user, $dolibarr_main_url_root, $langs, $dirname, $filename;
+		
+		$res = 1;
+		
+		$now = dol_now();
+		$array_now = dol_getdate($now);
+		$day_now = $array_now["mday"];
+		
+		$objexport = new ExtendedExportFDT($this->db);
+
+		$array_selected = [
+			"eu.matricule" => 1,
+			"u.firstname" => 2,
+			"u.lastname" => 3,
+			"eu.antenne" => 4,
+			"element_date" => 5,
+			"SUM(element_duration)/3600 as total_hour" => 6,
+			"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => 7,
+			"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => 8,
+			"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => 9,
+			"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => 10,
+			"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => 11,
+			"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => 12,
+			"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => 13,
+			"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+				COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+				SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>14,
+		];
+	
+		$array_filtervalue = [
+			'element_date' => dol_print_date(dol_time_plus_duree($now, -1, 'd'), '%Y%m'),
+		];
+	
+		$array_export_fields[0] = [
+			"eu.matricule" => "Matricule",
+			"u.firstname" => "Prénom",
+			"u.lastname" => "Nom",
+			"eu.antenne" => "Antenne",
+			"element_date" => "Date",
+			"SUM(element_duration)/3600 as total_hour" => "Total Heure",
+			"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => "Total HS 0%",
+			"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => "Total HS 25%",
+			"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "Total HS 50%",
+			"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => "Total Heure Nuit 50%",
+			"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Total Heure Nuit 75%",
+			"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "Total Heure Nuit 100%",
+			"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "Total Heure Route",
+			"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+				COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+				SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Total Déplacement (km)",
+		];
+	
+		$array_export_TypeFields[0] = [
+			"eu.matricule" => "Numeric",
+			"u.firstname" => "Text",
+			"u.lastname" => "Text",
+			"eu.antenne" => "Text",
+			"element_date" => "Date",
+			"SUM(element_duration)/3600 as total_hour" => "Numeric",
+			"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => "Numeric",
+			"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => "Numeric",
+			"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "Numeric",
+			"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => "Numeric",
+			"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Numeric",
+			"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "Numeric",
+			"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "Numeric",
+			"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+				COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+				SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Numeric",
+		];
+
+		$array_export_special[0] = '';
+
+		dol_syslog(get_class($this)."::MailFDT_MonthlyExport", LOG_DEBUG);
+
+		if($day_now == 1) {
+			// Build export file
+			$result = $objexport->build_file_bis($user, 'excel2007', 'total_hour', $array_selected, $array_filtervalue, '', $array_export_fields, $array_export_TypeFields, $array_export_special);
+
+			if ($result) {
+				$subject = '[OPTIM Industries] Export Feuille de temps';
+				$from = 'erp@optim-industries.fr';
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/feuilledetemps/timesheet.php">'.'ici'.'</a>';
+				$msg = $langs->transnoentitiesnoconv("EMailTextFDTMonthlyExport", $link);
+				$filename_list = array($dirname."/".$filename);
+				$mimetype_list  = array('.xlsx');
+				$mimefilename_list  = array($filename);
+
+				$mail = new CMailFile($subject, $to, $from, $msg, $filename_list, $mimetype_list, $mimefilename_list, '', '', 0, 1);
+
+				if(!empty($to)) {
+					$res = $mail->sendfile();
+				}
+					
 				if($res) return 0;
 				else return -1;
 			} 

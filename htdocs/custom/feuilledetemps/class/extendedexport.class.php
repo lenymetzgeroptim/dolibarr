@@ -21,6 +21,8 @@
  *  \ingroup	core
  */
 
+require_once DOL_DOCUMENT_ROOT.'/exports/class/export.class.php';
+
 /**
  *	Class to manage Dolibarr users
  */
@@ -30,7 +32,7 @@ class ExtendedExportFDT extends Export
 	public function build_file_bis($user, $model, $datatoexport, $array_selected, $array_filterValue, $sqlquery = '', $array_export_fields, $array_export_TypeFields, $array_export_special)
 	{
 		// phpcs:enable
-		global $conf, $langs, $mysoc;
+		global $conf, $langs, $mysoc, $dirname, $filename;
 
 		$indice = 0;
 		asort($array_selected);
