@@ -161,12 +161,7 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				$from = 'erp@optim-industries.fr';
 
 				$to = '';
-				if($object->status == FeuilleDeTemps::STATUS_APPROBATION1) {
-					$list_validation = $object->listApprover2;
-				}
-				else {
-					$list_validation = $object->listApprover1;
-				}
+				$list_validation = $object->listApprover2;
 				foreach($list_validation[2] as $id => $user_static){
 					if(!empty($user_static->email)){
 						$to .= $user_static->email.', ';
@@ -183,6 +178,7 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				else {
 					$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation1", $link);
 				}
+
 				$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 				if (!empty($to)){
 					$res = $mail->sendfile();

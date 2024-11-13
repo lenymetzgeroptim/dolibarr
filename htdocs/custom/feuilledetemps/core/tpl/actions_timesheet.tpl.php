@@ -842,9 +842,6 @@ if ($action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingsel
 		}
 	}
 
-	var_dump($observationFDT);
-	var_dump($object->observation);
-	exit;
 	if($observationFDT != $object->observation && $permissionToVerification) {
 		$object->oldcopy = dol_clone($object);
 		$object->actiontypecode = 'AC_FDT_VERIF';
@@ -852,8 +849,6 @@ if ($action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingsel
 		$object->observation = $observationFDT;
 		$result = $object->update($user);
 	}
-
-
 
 	if (!$error) {
 		$mail_hs = 0;
