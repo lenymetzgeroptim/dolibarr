@@ -36,7 +36,7 @@ CREATE TABLE llx_formationhabilitation_visitemedical(
 	datevisite date NOT NULL, 
 	datefinvalidite date NOT NULL, 
 	coutvisite double, 
-	naturevisite integer NOT NULL, 
+	naturevisite varchar(255) NOT NULL, 
 	fk_user integer NOT NULL
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

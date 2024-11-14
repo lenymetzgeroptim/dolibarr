@@ -227,6 +227,7 @@ ValidateAndGenerateUserVolet = Valider et générer volet
 ConfirmValidateUserVoletWithClose = Êtes-vous sûr de vouloir valider le volet ? <strong>Un volet actif sera clôturé</strong>
 ConfirmValidateUserVolet = Êtes-vous sûr de vouloir valider le volet ?
 ValidateUserVolet = Valider le volet
+ConfirmCloseVM = Êtes-vous sûr de vouloir clôturer la visite médicale ?
 
 
 #

@@ -67,7 +67,9 @@ class VisiteMedical extends CommonObject
 
 	const STATUS_APTE = 1;
 	const STATUS_CONDITIONNEL = 2;
-	const STATUS_INAPTE = 9;
+	const STATUS_INAPTE = 3;
+	const STATUS_EXPIRE = 8;
+	const STATUS_CLOSE = 9;
 
 	/**
 	 *  'type' field format:
@@ -124,7 +126,7 @@ class VisiteMedical extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Resultat", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Apte", "9" => "Inapte", "2" => "Conditionnel"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Resultat", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Apte", "3" => "Inapte", "2" => "Conditionnel", "8" => "Expirée", "9" => "Clôturée"), "validate"=>"1",),
 		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"fk_contact" => array("type"=>"integer:contact:contact/class/contact.class.php:0:(civility:=:'dr')", "label"=>"Medecin", "enabled"=>"1", 'position'=>36, 'notnull'=>1, "visible"=>"1",),
 		"objetvisite" => array("type"=>"varchar(128)", "label"=>"ObjetVisite", "enabled"=>"1", 'position'=>25, 'notnull'=>1, "visible"=>"1",),
@@ -133,7 +135,7 @@ class VisiteMedical extends CommonObject
 		"datevisite" => array("type"=>"date", "label"=>"DateVisite", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
 		"datefinvalidite" => array("type"=>"date", "label"=>"DateFinValidite", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 		"coutvisite" => array("type"=>"price", "label"=>"CoutVisite", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1",),
-		"naturevisite" => array("type"=>"sellist:c_nature_visite:label:rowid::(active:=:1)", "label"=>"NatureVisite", "enabled"=>"1", 'position'=>37, 'notnull'=>1, "visible"=>"1",),
+		"naturevisite" => array("type"=>"chkbxlst:c_nature_visite:label:rowid::(active=1)", "label"=>"NatureVisite", "enabled"=>"1", 'position'=>37, 'notnull'=>1, "visible"=>"1",),
 		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1",),
 	);
 	public $rowid;
@@ -537,209 +539,91 @@ class VisiteMedical extends CommonObject
 
 
 	/**
-	 *	Validate object
+	 *	Expire object
 	 *
 	 *	@param		User	$user     		User making status change
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
 	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	// public function validate($user, $notrigger = 0)
-	// {
-	// 	global $conf, $langs;
+	public function expire($user, $notrigger = 0)
+	{
+		global $conf, $langs;
 
-	// 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
-	// 	$error = 0;
+		$error = 0;
 
-	// 	// Protection
-	// 	if ($this->status == self::STATUS_VALIDATED) {
-	// 		dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
-	// 		return 0;
-	// 	}
+		// Protection
+		if ($this->status == self::STATUS_EXPIRE) {
+			dol_syslog(get_class($this)."::expire action abandonned: already expired", LOG_WARNING);
+			return 0;
+		}
 
-	// 	/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'visitemedical', 'write'))
-	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'visitemedical_advance', 'validate')))
-	// 	 {
-	// 	 $this->error='NotEnoughPermissions';
-	// 	 dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
-	// 	 return -1;
-	// 	 }*/
+		$now = dol_now();
 
-	// 	$now = dol_now();
+		$this->db->begin();
 
-	// 	$this->db->begin();
+		if (!empty($num)) {
+			// Expire
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET status = ".self::STATUS_EXPIRE;
+			$sql .= " WHERE rowid = ".((int) $this->id);
 
-	// 	// Define new ref
-	// 	if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
-	// 		$num = $this->getNextNumRef();
-	// 	} else {
-	// 		$num = $this->ref;
-	// 	}
-	// 	$this->newref = $num;
+			dol_syslog(get_class($this)."::expire()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
 
-	// 	if (!empty($num)) {
-	// 		// Validate
-	// 		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-	// 		$sql .= " SET ref = '".$this->db->escape($num)."',";
-	// 		$sql .= " status = ".self::STATUS_VALIDATED;
-	// 		if (!empty($this->fields['date_validation'])) {
-	// 			$sql .= ", date_validation = '".$this->db->idate($now)."'";
-	// 		}
-	// 		if (!empty($this->fields['fk_user_valid'])) {
-	// 			$sql .= ", fk_user_valid = ".((int) $user->id);
-	// 		}
-	// 		$sql .= " WHERE rowid = ".((int) $this->id);
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger('MYOBJECT_EXPIRE', $user);
+				if ($result < 0) {
+					$error++;
+				}
+				// End call triggers
+			}
+		}
 
-	// 		dol_syslog(get_class($this)."::validate()", LOG_DEBUG);
-	// 		$resql = $this->db->query($sql);
-	// 		if (!$resql) {
-	// 			dol_print_error($this->db);
-	// 			$this->error = $this->db->lasterror();
-	// 			$error++;
-	// 		}
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_EXPIRE;
+		}
 
-	// 		if (!$error && !$notrigger) {
-	// 			// Call trigger
-	// 			$result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
-	// 			if ($result < 0) {
-	// 				$error++;
-	// 			}
-	// 			// End call triggers
-	// 		}
-	// 	}
-
-	// 	if (!$error) {
-	// 		$this->oldref = $this->ref;
-
-	// 		// Rename directory if dir was a temporary ref
-	// 		if (preg_match('/^[\(]?PROV/i', $this->ref)) {
-	// 			// Now we rename also files into index
-	// 			$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'visitemedical/".$this->db->escape($this->newref)."'";
-	// 			$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'visitemedical/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
-	// 			$resql = $this->db->query($sql);
-	// 			if (!$resql) {
-	// 				$error++;
-	// 				$this->error = $this->db->lasterror();
-	// 			}
-	// 			$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filepath = 'visitemedical/".$this->db->escape($this->newref)."'";
-	// 			$sql .= " WHERE filepath = 'visitemedical/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
-	// 			$resql = $this->db->query($sql);
-	// 			if (!$resql) {
-	// 				$error++;
-	// 				$this->error = $this->db->lasterror();
-	// 			}
-
-	// 			// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
-	// 			$oldref = dol_sanitizeFileName($this->ref);
-	// 			$newref = dol_sanitizeFileName($num);
-	// 			$dirsource = $conf->formationhabilitation->dir_output.'/visitemedical/'.$oldref;
-	// 			$dirdest = $conf->formationhabilitation->dir_output.'/visitemedical/'.$newref;
-	// 			if (!$error && file_exists($dirsource)) {
-	// 				dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
-
-	// 				if (@rename($dirsource, $dirdest)) {
-	// 					dol_syslog("Rename ok");
-	// 					// Rename docs starting with $oldref with $newref
-	// 					$listoffiles = dol_dir_list($conf->formationhabilitation->dir_output.'/visitemedical/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
-	// 					foreach ($listoffiles as $fileentry) {
-	// 						$dirsource = $fileentry['name'];
-	// 						$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
-	// 						$dirsource = $fileentry['path'].'/'.$dirsource;
-	// 						$dirdest = $fileentry['path'].'/'.$dirdest;
-	// 						@rename($dirsource, $dirdest);
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-
-	// 	// Set new ref and current status
-	// 	if (!$error) {
-	// 		$this->ref = $num;
-	// 		$this->status = self::STATUS_VALIDATED;
-	// 	}
-
-	// 	if (!$error) {
-	// 		$this->db->commit();
-	// 		return 1;
-	// 	} else {
-	// 		$this->db->rollback();
-	// 		return -1;
-	// 	}
-	// }
-
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
 
 	/**
-	 *	Set draft status
-	 *
-	 *	@param	User	$user			Object user that modify
-	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
-	 *	@return	int						Return integer <0 if KO, >0 if OK
-	 */
-	// public function setDraft($user, $notrigger = 0)
-	// {
-	// 	// Protection
-	// 	if ($this->status <= self::STATUS_DRAFT) {
-	// 		return 0;
-	// 	}
-
-	// 	/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
-	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
-	// 	 {
-	// 	 $this->error='Permission denied';
-	// 	 return -1;
-	// 	 }*/
-
-	// 	return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
-	// }
-
-	/**
-	 *	Set cancel status
+	 *	Set close status
 	 *
 	 *	@param	User	$user			Object user that modify
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						Return integer <0 if KO, 0=Nothing done, >0 if OK
 	 */
-	// public function cancel($user, $notrigger = 0)
-	// {
-	// 	// Protection
-	// 	if ($this->status != self::STATUS_VALIDATED) {
-	// 		return 0;
-	// 	}
+	public function close($user, $notrigger = 0)
+	{
+		// Protection
+		if ($this->status == self::STATUS_CLOSE) {
+			return 0;
+		}
 
-	// 	/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
-	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
-	// 	 {
-	// 	 $this->error='Permission denied';
-	// 	 return -1;
-	// 	 }*/
+		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+		 {
+		 $this->error='Permission denied';
+		 return -1;
+		 }*/
 
-	// 	return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
-	// }
-
-	/**
-	 *	Set back to validated status
-	 *
-	 *	@param	User	$user			Object user that modify
-	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
-	 *	@return	int						Return integer <0 if KO, 0=Nothing done, >0 if OK
-	 */
-	// public function reopen($user, $notrigger = 0)
-	// {
-	// 	// Protection
-	// 	if ($this->status == self::STATUS_VALIDATED) {
-	// 		return 0;
-	// 	}
-
-	// 	/*if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
-	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
-	// 	 {
-	// 	 $this->error='Permission denied';
-	// 	 return -1;
-	// 	 }*/
-
-	// 	return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
-	// }
+		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_VISITEMEDICAL_CLOSE');
+	}
 
 	/**
 	 * getTooltipContentArray
@@ -979,9 +863,13 @@ class VisiteMedical extends CommonObject
 			$this->labelStatus[self::STATUS_APTE] = $langs->transnoentitiesnoconv('Apte');
 			$this->labelStatus[self::STATUS_INAPTE] = $langs->transnoentitiesnoconv('Inapte');
 			$this->labelStatus[self::STATUS_CONDITIONNEL] = $langs->transnoentitiesnoconv('Conditionnel');
+			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
+			$this->labelStatus[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expirée');
 			$this->labelStatusShort[self::STATUS_APTE] = $langs->transnoentitiesnoconv('Apte');
 			$this->labelStatusShort[self::STATUS_INAPTE] = $langs->transnoentitiesnoconv('Inapte');
 			$this->labelStatusShort[self::STATUS_CONDITIONNEL] = $langs->transnoentitiesnoconv('Conditionnel');
+			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
+			$this->labelStatusShort[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expirée');
 		}
 
 		$statusType = 'status'.$status;
@@ -993,6 +881,12 @@ class VisiteMedical extends CommonObject
 		}
 		elseif ($status == self::STATUS_CONDITIONNEL) {
 			$statusType = 'status1';
+		}
+		elseif ($status == self::STATUS_CLOSE) {
+			$statusType = 'status9';
+		}
+		elseif ($status == self::STATUS_EXPIRE) {
+			$statusType = 'status10';
 		}
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
@@ -1221,41 +1115,41 @@ class VisiteMedical extends CommonObject
 	 *  @param  int		$natureid    	Id of Nature
 	 * 	@return	bool						
 	 */
-	public function userAsAptitudeMedicale($userid, $natureid)
-	{
-		global $conf, $user;
-		$res = array();
+	// public function userAsAptitudeMedicale($userid, $natureid)
+	// {
+	// 	global $conf, $user;
+	// 	$res = array();
 
-		if(empty($userid) || empty($natureid)) {
-			$this->error = 'Il faut renseigner les aptitudes médicales nécessaires pour le collaborateur';
-			return -1;
-		}
+	// 	if(empty($userid) || empty($natureid)) {
+	// 		$this->error = 'Il faut renseigner les aptitudes médicales nécessaires pour le collaborateur';
+	// 		return -1;
+	// 	}
 
-		$sql = "SELECT vm.rowid";
-		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
-		$sql .= " WHERE vm.fk_user = $userid";
-		$sql .= " AND vm.naturevisite = $natureid";
-		$sql .= " AND vm.status = ".self::STATUS_APTE;
-		$sql .= " AND vm.datevisite <= '".substr($this->db->idate(dol_now()), 0, 10)."'";
-		$sql .= " AND vm.datefinvalidite >= '".substr($this->db->idate(dol_now()), 0, 10)."'";
+	// 	$sql = "SELECT vm.rowid";
+	// 	$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
+	// 	$sql .= " WHERE vm.fk_user = $userid";
+	// 	$sql .= " AND vm.naturevisite = $natureid";
+	// 	$sql .= " AND vm.status = ".self::STATUS_APTE;
+	// 	$sql .= " AND vm.datevisite <= '".substr($this->db->idate(dol_now()), 0, 10)."'";
+	// 	$sql .= " AND vm.datefinvalidite >= '".substr($this->db->idate(dol_now()), 0, 10)."'";
 
-		dol_syslog(get_class($this)."::userAsAptitudeMedicale", LOG_DEBUG);
-		$resql = $this->db->query($sql);
+	// 	dol_syslog(get_class($this)."::userAsAptitudeMedicale", LOG_DEBUG);
+	// 	$resql = $this->db->query($sql);
 
-		if ($resql) {
-			if($this->db->num_rows($resql)) {
-				$this->db->free($resql);
-				return 1;
-			}
-			else {
-				$this->db->free($resql);
-				return 0;
-			}
-		} else {
-			$this->error = $this->db->lasterror();
-			return -1;
-		}
-	}
+	// 	if ($resql) {
+	// 		if($this->db->num_rows($resql)) {
+	// 			$this->db->free($resql);
+	// 			return 1;
+	// 		}
+	// 		else {
+	// 			$this->db->free($resql);
+	// 			return 0;
+	// 		}
+	// 	} else {
+	// 		$this->error = $this->db->lasterror();
+	// 		return -1;
+	// 	}
+	// }
 
 	/**
 	 * 	Return les informations d'une nature de visite
@@ -1304,7 +1198,9 @@ class VisiteMedical extends CommonObject
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$res[] = $obj->naturevisite;
+				foreach(explode(",", $obj->naturevisite) as $naturevisite) {
+					$res[] = $naturevisite;
+				}
 			}
 
 			return $res;

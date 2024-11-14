@@ -198,6 +198,18 @@ if (empty($reshook)) {
 		}
 	}
 
+	// Action close object
+	if ($action == 'confirm_close' && $confirm == 'yes' && $permissiontoadd) {
+		$result = $object->close($user);
+		if ($result >= 0) {
+			setEventMessages('Visite médical clôturée', '', 'mesgs');
+		} else {
+			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
+		$action = '';
+	}
+
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
@@ -361,6 +373,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// Confirmation to delete line
 	if ($action == 'deleteline') {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
+	}
+
+	// Confirmation to close
+	if ($action == 'close') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Close'), $langs->trans('ConfirmCloseVM'), 'confirm_close', '', 0, 1);
 	}
 
 	// Clone confirmation
@@ -540,8 +557,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		if (empty($reshook)) {
 			// Send
-			if (empty($user->socid)) {
-				print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
+			// if (empty($user->socid)) {
+			// 	print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
+			// }
+
+			// Close
+			if ($object->status != $object::STATUS_CLOSE) {
+				print dolGetButtonAction('', $langs->trans('Close'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=close&token='.newToken(), '', $permissiontoadd);
 			}
 
 			// Modify
