@@ -176,7 +176,7 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation2", $link);
 				}
 				else {
-					$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation1", $link);
+					$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation", $link);
 				}
 
 				$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
