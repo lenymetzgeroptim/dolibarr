@@ -280,7 +280,7 @@ if (empty($reshook)) {
 				$action = 'create';
 			}
 
-			if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') < 7)) {
+			if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 7)) {
 				setEventMessages($langs->trans("ErrorNbHourHoliday"), null, 'errors');
 				$error++;
 				$action = 'create';
@@ -802,7 +802,7 @@ if (empty($reshook)) {
 					exit;
 				}
 
-				if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') < 7)) {
+				if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 7)) {
 					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorNbHourHoliday');
 					exit;
 				}
@@ -2444,7 +2444,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 		print '<td>';
 		if ($cancreate && !$cancreateall) {
 			print img_picto('', 'user').$form->select_dolusers(($fuserid ? $fuserid : $user->id), 'fuserid', 0, '', 0, 'hierarchyme', '', '0,'.$conf->entity, 0, 0, $morefilter, 0, '', 'minwidth200 maxwidth500');
-			print '<input type="hidden" name="fuserid" value="'.($fuserid?$fuserid:$user->id).'">';
+			//print '<input type="hidden" name="fuserid" value="'.($fuserid?$fuserid:$user->id).'">';
 		} else {
 			print img_picto('', 'user').$form->select_dolusers($fuserid ? $fuserid : $user->id, 'fuserid', 0, '', 0, '', '', '0,'.$conf->entity, 0, 0, $morefilter, 0, '', 'minwidth200 maxwidth500');
 		}
