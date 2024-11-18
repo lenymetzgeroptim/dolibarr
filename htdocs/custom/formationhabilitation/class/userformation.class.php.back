@@ -23,7 +23,8 @@
  */
 
 // Put here all includes required by your class file
-require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/uservolet.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/formation.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 
@@ -69,6 +70,7 @@ class UserFormation extends CommonObject
 	const STATUS_PROGRAMMEE = 3; // Equivaut à draft
 	const STATUS_REPROGRAMMEE = 4;
 	const STATUS_EXPIREE = 5;
+	const STATUS_SUSPEND = 8;
 	const STATUS_CLOTUREE = 9;
 
 
@@ -131,8 +133,9 @@ class UserFormation extends CommonObject
 		"interne_externe" => array("type"=>"integer", "label"=>"InterneExterne", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "default"=>"1", "arrayofkeyval"=>array("1" => "Externe", "2" => "Interne"),),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"resultat" => array("type"=>"integer", "label"=>"Résultat", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Non défini", "2" => "Satisfaisant", "3" => "Non satisfaisant"),),
-		"cout_annexe" => array("type"=>"price", "label"=>"CoutAnnexe", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"4",),
+		"cout_annexe" => array("type"=>"price", "label"=>"CoutAnnexe", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
 		"prevupif" => array("type"=>"boolean", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1",),
+		"non_renouvelee" => array("type"=>"boolean", "label"=>"NonRenouvelee", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1", "help"=>"Lorsque la date de fin de validité sera atteinte, la formation sera clôturée et non expirée"),
 	);
 	public $rowid;
 	public $ref;
@@ -162,6 +165,7 @@ class UserFormation extends CommonObject
 	public $resultat;
 	public $cout_annexe;
 	public $prevupif;
+	public $non_renouvelee;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -255,7 +259,18 @@ class UserFormation extends CommonObject
 	{
 		$resultcreate = $this->createCommon($user, $notrigger);
 
-		//$resultvalidate = $this->validate($user, $notrigger);
+		if($resultcreate > 0 && $this->status == self::STATUS_VALIDE){
+			$resultcreate = $this->validate($user);
+		}
+		elseif($resultcreate > 0 && $this->status == self::STATUS_PROGRAMMEE){
+			$resultcreate = $this->program($user);
+		}
+		// elseif($resultcreate > 0 && $this->status == self::STATUS_CLOTUREE){
+		// 	$resultcreate = $this->close($user);
+		// }
+		// elseif($resultcreate > 0 && $this->status == self::STATUS_EXPIREE){
+		// 	$resultcreate = $this->expire($user);
+		// }
 
 		return $resultcreate;
 	}
@@ -383,7 +398,7 @@ class UserFormation extends CommonObject
 	}
 
 	/**
-	 * Load list of formation linked to the volet
+	 * Load list of formation linked to the uservolet
 	 *
 	 * @param  string      $sortorder    Sort Order
 	 * @param  string      $sortfield    Sort field
@@ -391,11 +406,11 @@ class UserFormation extends CommonObject
 	 * @param  int         $offset       Offset
 	 * @param  array       $filter       Filter array. Example array('field'=>'valueforlike', 'customurl'=>...)
 	 * @param  string      $filtermode   Filter mode (AND or OR)
-	 * @param  int     	   $voletid   	 Id of volet
-	 * @param  int     	   $fk_numvoletid Id of c_volet
+	 * @param  int     	   $uservoletid  Id of uservolet
+	 * @param  int     	   $voletid 	 Id of volet
 	 * @return array|int                 int <0 if KO, array of pages if OK
 	 */
-	public function fetchAllLinked($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND', $voletid, $fk_numvoletid)
+	public function fetchAllLinked($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND', $uservoletid, $voletid)
 	{
 		global $conf;
 
@@ -406,8 +421,8 @@ class UserFormation extends CommonObject
 		$sql = "SELECT ";
 		$sql .= $this->getFieldList('t');
 		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
-		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as h ON h.rowid = t.fk_formation AND h.volet = $fk_numvoletid";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON t.rowid = e.fk_source AND e.sourcetype = 'formation' AND e.targettype = 'formationhabilitation_volet' AND e.fk_target = $voletid";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as h ON h.rowid = t.fk_formation AND h.fk_volet = $voletid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON t.rowid = e.fk_source AND e.sourcetype = 'formation' AND e.targettype = 'formationhabilitation_uservolet' AND e.fk_target = $uservoletid";
 		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
 			$sql .= " WHERE t.entity IN (".getEntity($this->table_element).")";
 		} else {
@@ -492,13 +507,13 @@ class UserFormation extends CommonObject
 	}
 
 	/**
-	 *	Cloture object
+	 *	Validate object
 	 *
 	 *	@param		User	$user     		User making status change
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
 	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function cloture($user, $notrigger = 0)
+	public function validate($user, $notrigger = 0)
 	{
 		global $conf, $langs;
 
@@ -507,21 +522,363 @@ class UserFormation extends CommonObject
 		$error = 0;
 
 		// Protection
-		if ($this->status == self::STATUS_CLOTUREE) {
-			dol_syslog(get_class($this)."::cloture action abandonned: already cloture", LOG_WARNING);
-			return 0;
+		// if ($this->status == self::STATUS_VALIDE) {
+		// 	dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
+		// 	return 0;
+		// }
+
+		$now = dol_now();
+
+		$this->db->begin();
+		
+		// Gestion de la cloture des formations de niveau inferieur 
+		$formation = new Formation($this->db);
+		$formation->fetch($this->fk_formation);
+		$voletsCreate = explode(',', $formation->fk_volet);
+		$userFormation = new UserFormation($this->db);
+		$formationToClose = $formation->getFormationToClose($this->fk_user, $this->fk_formation);
+		foreach($formationToClose as $userformation_id => $userformation_ref) {
+			if($userformation_id != $this->id) {
+				$userFormation->fetch($userformation_id);
+				$res = $userFormation->close($user, 0, $voletsCreate);
+
+				if(!$res) {
+					$error++;
+				}
+			}
 		}
+		
+		// Validate
+		if (!$error) {
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET status = ".self::STATUS_VALIDE;
+			if (!empty($this->fields['date_validation'])) {
+				$sql .= ", date_validation = '".$this->db->idate($now)."'";
+			}
+			if (!empty($this->fields['fk_user_valid'])) {
+				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::validate()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERFORMATION_VALIDATE', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_VALIDE;
+		}
+		
+		// Génération du volet de formation
+		if(!$error) {
+			$uservolet = new UserVolet($this->db);
+
+			$resultgenerationvolet = $uservolet->generateNewVoletFormation($this->fk_user, $formation->fk_volet);
+
+			if($resultgenerationvolet < 0) {
+				setEventMessages('Erreur lors de la création du volet de formation', null, 'errors');
+				$error++;
+			}
+		}
+
+		// Création des habilitations et des autorisations 
+		if(!$error){
+			$txtListHabilitation = '';
+			$habilitationStatic = new Habilitation($this->db);
+			$resultcreatelinehabilitations = $habilitationStatic->generateHabilitationsForUser($this->fk_user, $this, $txtListHabilitation);
+	
+			if($resultcreatelinehabilitations < 0) {
+				setEventMessages('Erreur lors de la création des habilitations', null, 'errors');
+				$error++;
+			}
+	
+			// Envoi du mail
+			if($resultcreatelinehabilitations > 0 && !empty($txtListHabilitation)) { 
+				$user_static = new User($this->db);
+				rtrim($txtListHabilitation, ', ');
+	
+				global $dolibarr_main_url_root;
+	
+				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+				$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+	
+				$to = '';
+				if(sizeof($arrayRespAntenneForMail) > 0) {
+					foreach($arrayRespAntenneForMail as $userid) {
+						$user_static->fetch($user_id);
+	
+						if(!empty($user_static->email)) {
+							$to .= $user_static->email.', ';
+						}
+					}
+				}
+				else {
+					$to = 'administratif@optim-industries.fr';
+				}
+				rtrim($to, ', ');
+	
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+	
+				$user_static->fetch($this->fk_user);
+				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'$onglet=habilitation">'.$user_static->login.'</a>';
+				$message = $langs->transnoentitiesnoconv("EMailTextHabilitationCreation", $formation->label, $link, $txtListHabilitation);
+	
+				$trackid = 'formationhabilitation'.$formation->id;
+	
+				$mail = new CMailFile(
+					$subject,
+					$to,
+					$from,
+					$message,
+					array(),
+					array(),
+					array(),
+					'',
+					'',
+					0,
+					1,
+					'',
+					'',
+					$trackid,
+					'',
+					$sendcontext
+				);
+	
+				if(!empty($to)) {
+					$result = $mail->sendfile();
+	
+					if (!$result) {
+						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+					}
+				}
+				
+			}
+	
+			$txtListAutorisation = '';
+			$autorisationStatic = new Autorisation($this->db);
+			$resultcreatelineautorisations = $autorisationStatic->generateAutorisationsForUser($this->fk_user, $this, $txtListAutorisation);
+	
+			if($resultcreatelineautorisations < 0) {
+				setEventMessages('Erreur lors de la création des autorisations', null, 'errors');
+				$error++;
+			}
+	
+			// Envoi du mail
+			if($resultcreatelineautorisations > 0 && !empty($txtListAutorisation)) { 
+				$user_static = new User($this->db);
+				rtrim($txtListAutorisation, ', ');
+	
+				global $dolibarr_main_url_root;
+	
+				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+				$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+	
+				$to = '';
+				if(sizeof($arrayRespAntenneForMail) > 0) {
+					foreach($arrayRespAntenneForMail as $userid) {
+						$user_static->fetch($user_id);
+	
+						if(!empty($user_static->email)) {
+							$to .= $user_static->email.', ';
+						}
+					}
+				}
+				else {
+					$to = 'administratif@optim-industries.fr';
+				}
+				rtrim($to, ', ');
+	
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+	
+				$user_static->fetch($this->fk_user);
+				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'$onglet=autorisation">'.$user_static->login.'</a>';
+				$message = $langs->transnoentitiesnoconv("EMailTextAutorisationCreation", $formation->label, $link, $txtListAutorisation);
+	
+				$trackid = 'formationhabilitation'.$formation->id;
+	
+				$mail = new CMailFile(
+					$subject,
+					$to,
+					$from,
+					$message,
+					array(),
+					array(),
+					array(),
+					'',
+					'',
+					0,
+					1,
+					'',
+					'',
+					$trackid,
+					'',
+					$sendcontext
+				);
+	
+				if(!empty($to)) {
+					$result = $mail->sendfile();
+	
+					if (!$result) {
+						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+					}
+				}
+				
+			}
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	program object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function program($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		// if ($this->status == self::STATUS_PROGRAMMEE) {
+		// 	dol_syslog(get_class($this)."::program action abandonned: already program", LOG_WARNING);
+		// 	return 0;
+		// }
 
 		$now = dol_now();
 
 		$this->db->begin();
 
-		// Validate
+		// Gestion de la reprogrammation des formations équivalente
+		$formation = new Formation($this->db);
+		$userFormation = new UserFormation($this->db);
+		$formationToReprogrammer = $formation->getFormationToReprogrammer($this->fk_user, $this->fk_formation);
+		foreach($formationToReprogrammer as $userformation_id => $userformation_ref) {
+			if($userformation_id != $this->id) {
+				$userFormation->fetch($userformation_id);
+				$userFormation->status = UserFormation::STATUS_REPROGRAMMEE;
+				$res = $userFormation->update($user);
+
+				if(!$res) {
+					$error++;
+				}
+			}
+		}
+
+		
+
+		// Program
+		if(!$error) {
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET status = ".self::STATUS_PROGRAMMEE;
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::program()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger('USERFORMATION_PROGRAM', $user);
+				if ($result < 0) {
+					$error++;
+				}
+				// End call triggers
+			}
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_PROGRAMMEE;
+		}
+
+		if(!$error) {
+			$convocation = new Convocation($this->db);
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$date_debut_convoc = dol_mktime(GETPOST("date_debut_formation_programmerhour", 'int'), GETPOST("date_debut_formation_programmermin", 'int'), -1, GETPOST("date_debut_formation_programmermonth", 'int'), GETPOST("date_debut_formation_programmerday", 'int'), GETPOST("date_debut_formation_programmeryear", 'int'));
+			$date_fin_convoc = dol_mktime(GETPOST("date_fin_formation_programmerhour", 'int'), GETPOST("date_fin_formation_programmermin", 'int'), -1, GETPOST("date_fin_formation_programmermonth", 'int'), GETPOST("date_fin_formation_programmerday", 'int'), GETPOST("date_fin_formation_programmeryear", 'int'));
+
+			$result = $convocation->generationWithFormation($this, $user_static, $date_debut_convoc, $date_fin_convoc);
+			
+			if ($result < 0) {
+				setEventMessages('Erreur lors de la génération de la convocation', null, 'errors');
+				$error++;
+			}
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	close object
+	 *
+	 *	@param		User				$user     			User making status change
+	 *  @param		int					$notrigger			1=Does not execute triggers, 0= execute triggers
+	 *  @param  	array				$voletsCreate		If of UserVolet also create
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function close($user, $notrigger = 0, &$voletsCreate = array())
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		// if ($this->status == self::STATUS_CLOTUREE) {
+		// 	dol_syslog(get_class($this)."::close action abandonned: already close", LOG_WARNING);
+		// 	return 0;
+		// }
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Close
 		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
 		$sql .= " SET status = ".self::STATUS_CLOTUREE;
 		$sql .= " WHERE rowid = ".((int) $this->id);
 
-		dol_syslog(get_class($this)."::cloture()", LOG_DEBUG);
+		dol_syslog(get_class($this)."::close()", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if (!$resql) {
 			dol_print_error($this->db);
@@ -531,7 +888,7 @@ class UserFormation extends CommonObject
 
 		if (!$error && !$notrigger) {
 			// Call trigger
-			$result = $this->call_trigger('USERFORMATION_CLOTURE', $user);
+			$result = $this->call_trigger('USERFORMATION_CLOSE', $user);
 			if ($result < 0) {
 				$error++;
 			}
@@ -541,6 +898,245 @@ class UserFormation extends CommonObject
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_CLOTUREE;
+		}
+
+		// Generate new volet
+		if(!$error && !$nogenerationvolet) {
+			$uservolet = new UserVolet($this->db);
+			$formation = new Formation($this->db);
+			$formation->fetch($this->fk_formation);
+			$result = $uservolet->generateNewVoletFormation($this->fk_user, $formation->fk_volet, $voletsCreate);
+
+			if ($result < 0) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	expire object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function expire($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		// if ($this->status == self::STATUS_EXPIREE) {
+		// 	dol_syslog(get_class($this)."::expire action abandonned: already expire", LOG_WARNING);
+		// 	return 0;
+		// }
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Expire
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_EXPIREE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::expire()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERFORMATION_EXPIRE', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_EXPIREE;
+		}
+
+		// Generate new volet
+		if(!$error) {
+			$uservolet = new UserVolet($this->db);
+			$formation = new Formation($this->db);
+			$formation->fetch($this->fk_formation);
+			$result = $uservolet->generateNewVoletFormation($this->fk_user, $formation->fk_volet);
+
+			if ($result < 0) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	suspend object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function suspend($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_SUSPEND) {
+			dol_syslog(get_class($this)."::suspend action abandonned: already suspended", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Suspend
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_SUSPEND;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::suspend()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERFORMATION_SUSPEND', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_SUSPEND;
+		}
+
+		if(!$error) {
+			$userVolet = new UserVolet($this->db);
+			$voletsToSuspend = $userVolet->getVoletWithLinkedObject($this->id, 'formation', $this->fk_user);
+			foreach($voletsToSuspend as $voletToSuspend) {
+				$resultsuspend = $voletToSuspend->suspend($user);
+
+				if($resultsuspend < 0) {
+					$error++;
+					break;
+				}
+			}
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	unsuspend object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function unsuspend($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status != self::STATUS_SUSPEND) {
+			dol_syslog(get_class($this)."::unsuspend action abandonned: not suspended", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Suspend
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".$this->ex_status;
+		$sql .= ", ex_status = NULL";
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::unsuspend()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERFORMATION_UNSUSPEND', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = $this->ex_status;
+			$this->ex_status = '';
+		}
+
+		if(!$error) {
+			$userVolet = new UserVolet($this->db);
+			$voletsToSuspend = $userVolet->getVoletWithLinkedObject($this->id, 'formation', $this->fk_user);
+			foreach($voletsToSuspend as $voletToSuspend) {
+				$resultsuspend = $voletToSuspend->unsuspend($user);
+
+				if($resultsuspend < 0) {
+					$error++;
+					break;
+				}
+			}
 		}
 
 		if (!$error) {
@@ -741,12 +1337,14 @@ class UserFormation extends CommonObject
 			$this->labelStatus[self::STATUS_REPROGRAMMEE] = $langs->transnoentitiesnoconv('Reprogrammée');
 			$this->labelStatus[self::STATUS_EXPIREE] = $langs->transnoentitiesnoconv('Expirée');
 			$this->labelStatus[self::STATUS_CLOTUREE] = $langs->transnoentitiesnoconv('Cloturée');
+			$this->labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 			$this->labelStatusShort[self::STATUS_VALIDE] = $langs->transnoentitiesnoconv('Valide');
 			$this->labelStatusShort[self::STATUS_A_PROGRAMMER] = $langs->transnoentitiesnoconv("A programmer");
 			$this->labelStatusShort[self::STATUS_PROGRAMMEE] = $langs->transnoentitiesnoconv('Programmée');
 			$this->labelStatusShort[self::STATUS_REPROGRAMMEE] = $langs->transnoentitiesnoconv('Reprogrammée');
 			$this->labelStatusShort[self::STATUS_EXPIREE] = $langs->transnoentitiesnoconv('Expirée');
 			$this->labelStatusShort[self::STATUS_CLOTUREE] = $langs->transnoentitiesnoconv('Cloturée');
+			$this->labelStatusShort[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 		}
 
 		$statusType = 'status'.$status;
@@ -756,6 +1354,7 @@ class UserFormation extends CommonObject
 		if ($status == self::STATUS_REPROGRAMMEE) $statusType = 'status2';
 		if ($status == self::STATUS_EXPIREE) $statusType = 'status8';
 		if ($status == self::STATUS_CLOTUREE) $statusType = 'status6';
+		if ($status == self::STATUS_SUSPEND) $statusType = 'status10';
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
 	}
@@ -1020,24 +1619,32 @@ class UserFormation extends CommonObject
 		$tab_id = array();
 
 		$this->db->begin();
+		$this->output = '';
 
-		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour => Expirée
-		$sql = "SELECT uf.rowid";
+		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée ou Clôturée
+		$sql = "SELECT uf.rowid, uf.ref";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql .= " AND f.periode_souplesse IS NULL";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
-		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
+		$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+		//$sql .= " AND f.periode_recyclage IS NOT NULL";
+		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
+			$sql .= " AND f.periode_souplesse IS NULL";
+		}
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE." OR uf.status = ".self::STATUS_PROGRAMMEE." OR uf.status = ".self::STATUS_SUSPEND.")";
+		$sql .= " AND uf.date_finvalidite_formation < '".substr($this->db->idate($now), 0, 10)."'";
 
-		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour + 6 mois => A programmer
-		$sql2 = "SELECT uf.rowid";
+		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité > DateJour + $delaisprogrammation mois => A programmer
+		$sql2 = "SELECT uf.rowid, uf.ref";
 		$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql2 .= " AND f.periode_souplesse IS NULL";
+		$sql2 .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+		//$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
+		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
+			$sql2 .= " AND f.periode_souplesse IS NULL";
+		}
+		$sql2 .= " AND (uf.non_renouvelee = 0 OR uf.non_renouvelee IS NULL)";
 		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.delaisprogrammation MONTH) <= '".$this->db->idate($now)."'";
+		$sql2 .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL -f.delaisprogrammation MONTH) <= '".substr($this->db->idate($now), 0, 10)."'";
 
 		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
 
@@ -1045,7 +1652,7 @@ class UserFormation extends CommonObject
 		$resql2 = $this->db->query($sql2);
 
 		if ($resql && $resql2) {
-			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour => Expirée
+			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée ou Clôturée
 			$num = $this->db->num_rows($resql);
 			$i = 0;
 			while ($i < $num) {
@@ -1054,36 +1661,56 @@ class UserFormation extends CommonObject
 				$i++;
 			}	
 
-			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour + 6 mois => A programmer
+			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité > DateJour + $delaisprogrammation mois => A programmer
 			$num = $this->db->num_rows($resql2);
 			$i = 0;
 			while ($i < $num) {
 				$obj = $this->db->fetch_object($resql2);
 				if(!in_array($obj->rowid, $tab_id)) {
 					$tab_id2[] = $obj->rowid;
+					$this->output .= "La formation $obj->ref a été passé au statut 'A programmer'<br>";
 				}
 				$i++;
 			}	
 
-			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour => Expirée
+			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée
 			if(!empty($tab_id)){
-				$ID = implode(",", $tab_id);
+				// $ID = implode(",", $tab_id);
 
-				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
-				$sql .= " SET uf.status = ".self::STATUS_EXPIREE;
-				$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+				// $sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
+				// $sql .= " SET uf.status = ".self::STATUS_EXPIREE;
+				// $sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
 
-				$resql = $this->db->query($sql);
-				if ($resql) {
-					$this->db->commit();
-				}
-				else{
-					$this->error = $this->db->lasterror();
-					$error++;
+				// $resql = $this->db->query($sql);
+				// if ($resql) {
+				// 	$this->db->commit();
+				// }
+				// else{
+				// 	$this->error = $this->db->lasterror();
+				// 	$error++;
+				// }
+
+				foreach($tab_id as $userformation_id) {
+					if($userformation_id > 0) {
+						$this->fetch($userformation_id);
+						if($this->non_renouvelee == 1) {
+							$rescloture = $this->close($user);
+							$this->output .= "La formation $this->ref a été passé au statut 'Clôturée'<br>";
+						}
+						else {
+							$rescloture = $this->expire($user);
+							$this->output .= "La formation $this->ref a été passé au statut 'Expirée'<br>";
+						}
+
+						if($rescloture < 0) {
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+					}
 				}
 			}
 
-			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFormation + PeriodeRecyclage > DateJour + 6 mois => A programmer
+			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité > DateJour + $delaisprogrammation mois => A programmer
 			if(!empty($tab_id2)){
 				$ID = implode(",", $tab_id2);
 
@@ -1105,142 +1732,187 @@ class UserFormation extends CommonObject
 			return -1;
 		}
 
-		// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
-		$sql = "SELECT uf.rowid";
-		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql .= " AND f.periode_souplesse IS NOT NULL";
-		$sql .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) <= '".$this->db->idate($now)."'";
+		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
+			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse > DateJour => Expirée ou Cloturée
+			$sql = "SELECT uf.rowid, uf.ref";
+			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
+			$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+			$sql .= " AND f.periode_souplesse IS NOT NULL";
+			$sql .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
+			$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE." OR uf.status = ".self::STATUS_PROGRAMMEE." OR uf.status = ".self::STATUS_SUSPEND.")";
+			$sql .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL f.periode_souplesse MONTH) < '".substr($this->db->idate($now), 0, 10)."'";
 
-		// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => A programmer
-		$sql2 = "SELECT uf.rowid";
-		$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
-		$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql2 .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql2 .= " AND f.periode_souplesse IS NOT NULL";
-		$sql2 .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
-		$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
-		$sql2 .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) > '".$this->db->idate($now)."'";
-		$sql2 .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
+			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => A programmer
+			$sql2 = "SELECT uf.rowid, uf.ref";
+			$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+			$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
+			$sql2 .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+			$sql2 .= " AND f.periode_souplesse IS NOT NULL";
+			$sql2 .= " AND (uf.non_renouvelee = 0 OR uf.non_renouvelee IS NULL)";
+			$sql2 .= " AND (f.periode_souplesse_bloquant IS NULL OR f.periode_souplesse_bloquant = 0)";
+			$sql2 .= " AND (uf.status = ".self::STATUS_VALIDE.")";
+			$sql2 .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL f.periode_souplesse MONTH) > '".substr($this->db->idate($now), 0, 10)."'";
+			$sql2 .= " AND uf.date_finvalidite_formation < '".substr($this->db->idate($now), 0, 10)."'";
 
-		$resql = $this->db->query($sql);
-		$resql2 = $this->db->query($sql2);
+			$resql = $this->db->query($sql);
+			$resql2 = $this->db->query($sql2);
 
-		if ($resql && $resql2) {
-			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
-			$num = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num) {
-				$obj = $this->db->fetch_object($resql);
-				$tab_id[] = $obj->rowid;
-				$i++;
-			}	
+			if ($resql && $resql2) {
+				// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
+				$num = $this->db->num_rows($resql);
+				$i = 0;
+				while ($i < $num) {
+					$obj = $this->db->fetch_object($resql);
+					$tab_id[] = $obj->rowid;
+					$i++;
+				}	
 
-			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => A programmer
-			$num = $this->db->num_rows($resql2);
-			$i = 0;
-			while ($i < $num) {
-				$obj = $this->db->fetch_object($resql2);
-				if(!in_array($obj->rowid, $tab_id)) {
-					$tab_id2[] = $obj->rowid;
+				// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => A programmer
+				$num = $this->db->num_rows($resql2);
+				$i = 0;
+				while ($i < $num) {
+					$obj = $this->db->fetch_object($resql2);
+					if(!in_array($obj->rowid, $tab_id)) {
+						$tab_id2[] = $obj->rowid;
+						$this->output .= "La formation $obj->ref a été passé au statut 'A programmer' (souplesse non restrictive)<br>";
+					}
+					$i++;
+				}	
+
+				// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse > DateJour => Expirée
+				if(!empty($tab_id)){
+					// $ID = implode(",", $tab_id);
+
+					// $sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
+					// $sql .= " SET uf.status = ".self::STATUS_EXPIREE;
+					// $sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+
+					// $resql = $this->db->query($sql);
+					// if ($resql) {
+					// 	$this->db->commit();
+					// }
+					// else{
+					// 	$this->error = $this->db->lasterror();
+					// 	$error++;
+					// }
+
+					foreach($tab_id as $userformation_id) {
+						if($userformation_id > 0) {
+							$this->fetch($userformation_id);
+							if($this->non_renouvelee == 1) {
+								$rescloture = $this->close($user);
+								$this->output .= "La formation $this->ref a été passé au statut 'Clôturée' (souplesse non restrictive)<br>";
+							}
+							else {
+								$rescloture = $this->expire($user);
+								$this->output .= "La formation $this->ref a été passé au statut 'Expirée' (souplesse non restrictive)<br>";
+							}
+	
+							if($rescloture < 0) {
+								$this->error = $this->db->lasterror();
+								$error++;
+							}
+						}
+					}
 				}
-				$i++;
-			}	
 
-			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
-			if(!empty($tab_id)){
-				$ID = implode(",", $tab_id);
+				// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => A programmer
+				if(!empty($tab_id2)){
+					$ID = implode(",", $tab_id2);
 
-				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
-				$sql .= " SET uf.status = ".self::STATUS_EXPIREE;
-				$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+					$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
+					$sql .= " SET uf.status = ".self::STATUS_A_PROGRAMMER;
+					$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
 
-				$resql = $this->db->query($sql);
-				if ($resql) {
-					$this->db->commit();
+					$resql = $this->db->query($sql);
+					if ($resql) {
+						$this->db->commit();
+					}
+					else{
+						$this->error = $this->db->lasterror();
+						$error++;
+					}
 				}
-				else{
-					$this->error = $this->db->lasterror();
-					$error++;
-				}
+			} else {
+				$this->error = $this->db->lasterror();
+				return -1;
 			}
 
-			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => A programmer
-			if(!empty($tab_id2)){
-				$ID = implode(",", $tab_id2);
 
-				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
-				$sql .= " SET uf.status = ".self::STATUS_A_PROGRAMMER;
-				$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée ou Clôturée
+			$sql = "SELECT uf.rowid, uf.ref";
+			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
+			$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
+			$sql .= " AND f.periode_souplesse IS NOT NULL";
+			$sql .= " AND f.periode_souplesse_bloquant = 1";
+			$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE." OR uf.status = ".self::STATUS_PROGRAMMEE." OR uf.status = ".self::STATUS_SUSPEND.")";
+			$sql .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL f.periode_souplesse MONTH) > '".substr($this->db->idate($now), 0, 10)."'";
+			$sql .= " AND uf.date_finvalidite_formation < '".substr($this->db->idate($now), 0, 10)."'";
 
-				$resql = $this->db->query($sql);
-				if ($resql) {
-					$this->db->commit();
-				}
-				else{
-					$this->error = $this->db->lasterror();
-					$error++;
-				}
+			$resql = $this->db->query($sql);
+
+			if ($resql) {
+				// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée
+				$num = $this->db->num_rows($resql);
+				$i = 0;
+				while ($i < $num) {
+					$obj = $this->db->fetch_object($resql);
+					$tab_id[] = $obj->rowid;
+					$this->output .= "La formation $obj->ref a été passé au statut 'Expirée' (souplesse restrictive)<br>";
+					$i++;
+				}	
+
+				// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée
+				if(!empty($tab_id)){
+					// $ID = implode(",", $tab_id);
+
+					// $sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
+					// $sql .= " SET uf.status = ".self::STATUS_EXPIREE;
+					// $sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+
+					// $resql = $this->db->query($sql);
+					// if ($resql) {
+					// 	$this->db->commit();
+					// }
+					// else{
+					// 	$this->error = $this->db->lasterror();
+					// 	$error++;
+					// }
+
+					foreach($tab_id as $userformation_id) {
+						if($userformation_id > 0) {
+							$this->fetch($userformation_id);
+							if($this->non_renouvelee == 1) {
+								$rescloture = $this->close($user);
+								$this->output .= "La formation $this->ref a été passé au statut 'Clôturée' (souplesse restrictive)<br>";
+							}
+							else {
+								$rescloture = $this->expire($user);
+								$this->output .= "La formation $this->ref a été passé au statut 'Expirée' (souplesse restrictive)<br>";
+							}
+	
+							if($rescloture < 0) {
+								$this->error = $this->db->lasterror();
+								$error++;
+							}
+						}
+					}
+				}			
+			} else {
+				$this->error = $this->db->lasterror();
+				return -1;
 			}
-		} else {
-			$this->error = $this->db->lasterror();
-			return -1;
-		}
-
-
-		// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => Expirée
-		$sql = "SELECT uf.rowid";
-		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
-		$sql .= " WHERE f.periode_recyclage IS NOT NULL";
-		$sql .= " AND f.periode_souplesse IS NOT NULL";
-		$sql .= " AND f.periode_souplesse_bloquant = 1";
-		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
-		$sql .= " AND DATE_ADD(DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH), INTERVAL f.periode_souplesse MONTH) > '".$this->db->idate($now)."'";
-		$sql .= " AND DATE_ADD(uf.date_formation, INTERVAL f.periode_recyclage MONTH) <= '".$this->db->idate($now)."'";
-
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => Expirée
-			$num = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num) {
-				$obj = $this->db->fetch_object($resql);
-				$tab_id[] = $obj->rowid;
-				$i++;
-			}	
-
-			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse < DateJour => Expirée
-			if(!empty($tab_id)){
-				$ID = implode(",", $tab_id);
-
-				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
-				$sql .= " SET uf.status = ".self::STATUS_EXPIREE;
-				$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
-
-				$resql = $this->db->query($sql);
-				if ($resql) {
-					$this->db->commit();
-				}
-				else{
-					$this->error = $this->db->lasterror();
-					$error++;
-				}
-			}			
-		} else {
-			$this->error = $this->db->lasterror();
-			return -1;
 		}
 
 
 		if($error == 0) {
+			$this->db->commit();
 			return 0;
 		}
 		else {
+			$this->db->rollback();
 			return 1;
 		}
 	}
@@ -1308,6 +1980,7 @@ class UserFormation extends CommonObject
 		$labelStatus[self::STATUS_A_PROGRAMMER] = $langs->transnoentitiesnoconv('A programmer');
 		$labelStatus[self::STATUS_REPROGRAMMEE] = $langs->transnoentitiesnoconv('Reprogrammée');
 		$labelStatus[self::STATUS_PROGRAMMEE] = $langs->transnoentitiesnoconv('Programmée');
+		$labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 		$labelStatus[self::STATUS_EXPIREE] = $langs->transnoentitiesnoconv('Expirée');
 		$labelStatus[self::STATUS_CLOTUREE] = $langs->transnoentitiesnoconv('Cloturée');
 		
@@ -1348,5 +2021,121 @@ class UserFormation extends CommonObject
 			return -1;
 		}
 	}
+
+	/**
+	 * 	Liste des ids de formation possèdait par l'utilisateur
+	 *
+	 * 	@param  int		$userid       	Id of User
+	 * 	@param  int		$withprogram    include STATUS_PROGRAMMEE
+	 * 	@return	array(int)|int				Array with Id of formation		
+	 */
+	function getAllFormationsForUser($userid, $withprogram = 0) {
+		$res = array();
+
+		$sql = "SELECT DISTINCT uf.fk_formation";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE;
+		if($withprogram) {
+			$sql .= " OR uf.status = ".self::STATUS_PROGRAMMEE;
+		}
+		$sql .= ')';
+
+		dol_syslog(get_class($this)."::getAllFormationsForUser", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->fk_formation;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Est-ce que l'utilisateur $userid possède la formation $formationid
+	 *
+	 * 	@param  int		$userid       	Id of User
+	 *  @param  int		$voletid       	Id of Volet
+	 * 	@return	array(int)|int			Array of UserFormation		
+	 */
+	function getAllFormationsForUserOnVolet($userid, $voletid) {
+		$res = array();
+
+		$sql = "SELECT DISTINCT uf.rowid, uf.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND FIND_IN_SET(".$voletid.", f.fk_volet) > 0";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.')';
+
+		dol_syslog(get_class($this)."::getAllFormationsForUserOnVolet", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->ref;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return les UserFormation qui nécéssite le prérequis
+	 *
+	 * 	@param  int			$userid       		Id of User
+	 *  @param  int			$prerequisid       	Id of prerequis
+	 *  @param  string		$prerequistype      Type of prerequis
+	 * 	@return	array(int)|int			Array of UserFormation		
+	 */
+	function getObjectNeedPrerequis($userid, $prerequisid, $prerequistype) {
+		$res = array();
+		$userFormation = new self($this->db);
+
+		$sql = "SELECT DISTINCT uf.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as e ON e.fk_source = f.rowid AND e.sourcetype = 'formation'";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND FIND_IN_SET(".$prerequisid.", e.prerequisobjects) > 0 AND e.prerequistype = '$prerequistype'";
+		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.')';
+
+		dol_syslog(get_class($this)."::getObjectNeedPrerequis", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$userFormation->fetch($obj->rowid);
+				$res[$obj->rowid] = clone $userFormation;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Format Duration
+	 *
+	 * 	@param  int		$duration       Duration
+	 * 	@return	int						
+	 */
+	public function formatDuration($duration) {
+		return $duration / 3600;
+	}
+
 }
 

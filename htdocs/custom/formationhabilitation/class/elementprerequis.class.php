@@ -1274,12 +1274,13 @@ class ElementPrerequis extends CommonObject
 	/**
 	 * 	Gestion des prérequis
 	 *
-	 * 	@param  int		$fk_source       			Id de l'objet
-	 *  @param  int		$sourcetype    				type de l'objet
-	 * 	@param  int		$withprogram    include STATUS_PROGRAMMEE
+	 * 	@param  int		$fk_user       				Id de l'utilisateur
+	 *  @param  Object	$objectparenttmp    		Objet dont on gère les prérequis
+	 * 	@param  int		$withprogram    			include STATUS_PROGRAMMEE
+	 * 	@param  int		$withMessage    			Display error message
 	 * 	@return	int				1 if OK, -1 if KO		
 	 */
-	public function gestionPrerequis($fk_user, $objectparenttmp, $withprogram = 0)
+	public function gestionPrerequis($fk_user, $objectparenttmp, $withprogram = 0, $withMessage = 1)
 	{
 		global $conf, $user, $langs;
 
@@ -1317,14 +1318,16 @@ class ElementPrerequis extends CommonObject
 
 			// Si une condition OR n'est pas remplie, générer un message d'erreur
 			if (!$conditionMetForFormation && !$conditionMetForVisiteMedicale) {
-				if(sizeof($prerequistype['formation']) > 0 && sizeof($prerequistype['nature_visite']) > 0) {
-					setEventMessages($langs->trans('ErrorPrerequisFormationAptitude'), null, 'errors');
-				}
-				elseif(sizeof($prerequistype['formation']) > 0) {
-					setEventMessages($langs->trans('ErrorPrerequisFormation'), null, 'errors');
-				}
-				elseif(sizeof($prerequistype['nature_visite']) > 0) {
-					setEventMessages($langs->trans('ErrorPrerequisAptitude'), null, 'errors');
+				if($withMessage) {
+					if(sizeof($prerequistype['formation']) > 0 && sizeof($prerequistype['nature_visite']) > 0) {
+						setEventMessages($langs->trans('ErrorPrerequisFormationAptitude'), null, 'errors');
+					}
+					elseif(sizeof($prerequistype['formation']) > 0) {
+						setEventMessages($langs->trans('ErrorPrerequisFormation'), null, 'errors');
+					}
+					elseif(sizeof($prerequistype['nature_visite']) > 0) {
+						setEventMessages($langs->trans('ErrorPrerequisAptitude'), null, 'errors');
+					}
 				}
 				return -1;
 			}

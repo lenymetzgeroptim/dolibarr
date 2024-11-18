@@ -67,6 +67,7 @@ class UserHabilitation extends CommonObject
 	const STATUS_HABILITABLE = 1;
 	const STATUS_HABILITE = 2;
 	const STATUS_NONHABILITE = 3;
+	const STATUS_SUSPEND = 8;
 	const STATUS_CLOSE = 9;
 
 
@@ -792,6 +793,155 @@ class UserHabilitation extends CommonObject
 		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_USERHABILITATION_CANCEL');
 	}
 
+	/**
+	 *	suspend object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function suspend($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_SUSPEND) {
+			dol_syslog(get_class($this)."::suspend action abandonned: already suspended", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Suspend
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_SUSPEND;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::suspend()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERHABILITATION_SUSPEND', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_SUSPEND;
+		}
+
+		// Suspendre le volet dans lequel se trouve l'habilitation
+		if(!$error) {
+			$userVolet = new UserVolet($this->db);
+			$voletsToSuspend = $userVolet->getVoletWithLinkedObject($this->id, 'habilitation', $this->fk_user);
+			foreach($voletsToSuspend as $voletToSuspend) {
+				$resultsuspend = $voletToSuspend->suspend($user);
+
+				if($resultsuspend < 0) {
+					$error++;
+					break;
+				}
+			}
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	unsuspend object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function unsuspend($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status != self::STATUS_SUSPEND) {
+			dol_syslog(get_class($this)."::unsuspend action abandonned: not suspended", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Unsuspend
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_HABILITE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::unsuspend()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERHABILITATION_UNSUSPEND', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_HABILITE;
+		}
+
+		// Désuspendre le volet dans lequel se trouve l'habilitation
+		if(!$error) {
+			$userVolet = new UserVolet($this->db);
+			$voletsToUnsuspend = $userVolet->getVoletSuspendWithLinkedObject($this->id, 'habilitation', $this->fk_user);
+			foreach($voletsToUnsuspend as $voletToUnuspend) {
+				$resultunsuspend = $voletToUnuspend->unsuspend($user);
+
+				if($resultunsuspend < 0) {
+					$error++;
+					break;
+				}
+			}
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
 
 
 	/**
@@ -949,10 +1099,12 @@ class UserHabilitation extends CommonObject
 			$this->labelStatus[self::STATUS_HABILITE] = $langs->transnoentitiesnoconv('Habilité');
 			$this->labelStatus[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Non Habilité');
 			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
+			$this->labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 			$this->labelStatusShort[self::STATUS_HABILITABLE] = $langs->transnoentitiesnoconv('Habilitable');
 			$this->labelStatusShort[self::STATUS_HABILITE] = $langs->transnoentitiesnoconv('Habilité');
 			$this->labelStatusShort[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Non Habilité');
 			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
+			$this->labelStatusShort[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 		}
 
 		$statusType = 'status'.$status;
@@ -960,6 +1112,7 @@ class UserHabilitation extends CommonObject
 		if ($status == self::STATUS_HABILITE) $statusType = 'status4';
 		if ($status == self::STATUS_NONHABILITE) $statusType = 'status8';
 		if ($status == self::STATUS_CLOSE) $statusType = 'status6';
+		if ($status == self::STATUS_SUSPEND) $statusType = 'status10';
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
 	}
@@ -1252,6 +1405,7 @@ class UserHabilitation extends CommonObject
 		$labelStatus[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Non Habilité');
 		$labelStatus[self::STATUS_HABILITABLE] = $langs->transnoentitiesnoconv('Habilitable');
 		$labelStatus[self::STATUS_HABILITE] = $langs->transnoentitiesnoconv('Habilité');
+		$labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv( 'Clôturée');
 
 		return $labelStatus;
@@ -1275,7 +1429,7 @@ class UserHabilitation extends CommonObject
 		$sql .= " WHERE f.fk_user = $userid";
 		$sql .= " AND f.rowid NOT IN (".$this->db->sanitize($userhabilitationsId).")";
 		$sql .= " AND f.fk_habilitation IN (".$this->db->sanitize($habilitationsId).")";
-		$sql .= " AND f.status = ".self::STATUS_HABILITE;
+		$sql .= " AND (f.status = ".self::STATUS_HABILITE." OR f.status = ".self::STATUS_NONHABILITE." OR f.status = ".self::STATUS_SUSPEND.")";
 		$sql .= " ORDER BY f.ref";
 
 		dol_syslog(get_class($this)."::getObjectToClose", LOG_DEBUG);
@@ -1288,6 +1442,80 @@ class UserHabilitation extends CommonObject
 			$this->db->free($resql);
 			return $res;
 		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return les UserHabilitation qui nécéssite le prérequis
+	 *
+	 * 	@param  int			$userid       		Id of User
+	 *  @param  int			$prerequisid       	Id of prerequis
+	 *  @param  string		$prerequistype      Type of prerequis
+	 * 	@return	array(int)|int			Array of UserHabilitation		
+	 */
+	function getObjectNeedPrerequis($userid, $prerequisid, $prerequistype) {
+		$res = array();
+		$userHabilitation = new self($this->db);
+
+		$sql = "SELECT DISTINCT uf.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as f ON f.rowid = uf.fk_habilitation";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as e ON e.fk_source = f.rowid AND e.sourcetype = 'habilitation'";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND FIND_IN_SET(".$prerequisid.", e.prerequisobjects) > 0 AND e.prerequistype = '$prerequistype'";
+		$sql .= " AND (uf.status = ".self::STATUS_HABILITE.')';
+
+		dol_syslog(get_class($this)."::getObjectNeedPrerequis", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$userHabilitation->fetch($obj->rowid);
+				$res[$obj->rowid] = clone $userHabilitation;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return les UserHabilitation qui nécéssite le prérequis et sont suspendues
+	 *
+	 * 	@param  int			$userid       		Id of User
+	 *  @param  int			$prerequisid       	Id of prerequis
+	 *  @param  string		$prerequistype      Type of prerequis
+	 * 	@return	array(int)|int			Array of UserHabilitation		
+	 */
+	function getSuspendObjectNeedPrerequis($userid, $prerequisid, $prerequistype) {
+		$res = array();
+		$userHabilitation = new self($this->db);
+
+		$sql = "SELECT DISTINCT uf.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as f ON f.rowid = uf.fk_habilitation";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as e ON e.fk_source = f.rowid AND e.sourcetype = 'habilitation'";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND FIND_IN_SET(".$prerequisid.", e.prerequisobjects) > 0 AND e.prerequistype = '$prerequistype'";
+		$sql .= " AND (uf.status = ".self::STATUS_SUSPEND.')';
+
+		dol_syslog(get_class($this)."::getSuspendObjectNeedPrerequis", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$userHabilitation->fetch($obj->rowid);
+				$res[$obj->rowid] = clone $userHabilitation;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		}
+		else {
 			$this->error = $this->db->lasterror();
 			return -1;
 		}

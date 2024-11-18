@@ -943,11 +943,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// }
 
 		if (sizeof($object->lines) == 0) {
-			foreach ($arrayfields as $key => $val) {
-				if (!empty($val['checked'])) {
-					$colspan++;
-				}
-			}
+			// foreach ($arrayfields as $key => $val) {
+			// 	if (!empty($val['checked'])) {
+			// 		$colspan++;
+			// 	}
+			// }
 
 			print '<tr>';
 			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';

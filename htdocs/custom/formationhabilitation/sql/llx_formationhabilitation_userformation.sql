@@ -43,7 +43,8 @@ CREATE TABLE llx_formationhabilitation_userformation(
 	nombre_heure integer, 
 	resultat integer, 
 	cout_annexe double, 
-	prevupif boolean,
-	non_renouvelee boolean
+	prevupif boolean, 
+	non_renouvelee boolean, 
+	ex_status integer
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

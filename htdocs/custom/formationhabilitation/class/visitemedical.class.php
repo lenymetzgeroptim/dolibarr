@@ -25,8 +25,12 @@
 
 // Put here all includes required by your class file
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
-//require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
-//require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userformation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/formation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userhabilitation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/habilitation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userautorisation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/autorisation.class.php';
 
 /**
  * Class for VisiteMedical
@@ -253,7 +257,80 @@ class VisiteMedical extends CommonObject
 	{
 		$resultcreate = $this->createCommon($user, $notrigger);
 
-		//$resultvalidate = $this->validate($user, $notrigger);
+		if($resultcreate) {
+			$visitemedicaleToClose = $this->getVisiteMedicaleToClose();
+
+			if($visitemedicaleToClose < 0) {
+				return -1;
+			}
+
+			foreach($visitemedicaleToClose as $visitemedicale) {
+				$resultclose = $visitemedicale->close($user);
+
+				if($resultclose < 0) {
+					return -1;
+				}
+			}
+		}
+
+		if($resultcreate && ($this->status == self::STATUS_APTE || $this->status == self::STATUS_CONDITIONNEL)) {
+			$naturesVisite = explode(",", $this->naturevisite);
+			$elementPrerequis = new ElementPrerequis($this->db);
+
+			// Formations
+			$userFormation = new UserFormation($this->db);
+			$formation = new Formation($this->db);
+			foreach($naturesVisite as $id_naturevisite) {
+				$userFormationToUnsuspend = $userFormation->getSuspendObjectNeedPrerequis($this->fk_user, $id_naturevisite, 'nature_visite');
+				foreach($userFormationToUnsuspend as $user_formation) {
+					$formation->fetch($user_formation->fk_formation);
+					$asPrerequis = $elementPrerequis->gestionPrerequis($this->fk_user, $formation, 0, 0);
+					if($asPrerequis > 0) {
+						$resultsuspen = $user_formation->unsuspend($user);
+
+						if($resultsuspen < 0) {
+							return -1;
+						}
+					}
+				}
+			}
+			
+			// Habilitations
+			$userHabilitation = new UserHabilitation($this->db);
+			$habilitation = new Habilitation($this->db);
+			foreach($naturesVisite as $id_naturevisite) {
+				$userHabilitationToUnsuspend = $userHabilitation->getSuspendObjectNeedPrerequis($this->fk_user, $id_naturevisite, 'nature_visite');
+				foreach($userHabilitationToUnsuspend as $user_habilitation) {
+					$habilitation->fetch($user_habilitation->fk_habilitation);
+					$asPrerequis = $elementPrerequis->gestionPrerequis($this->fk_user, $habilitation, 0, 0);
+					if($asPrerequis > 0) {
+						$resultsuspen = $user_habilitation->unsuspend($user);
+
+						if($resultsuspen < 0) {
+							return -1;
+						}
+					}
+				}
+			}
+
+			// Autorisations
+			$userAutorisation = new UserAutorisation($this->db);
+			$autorisation = new Autorisation($this->db);
+			foreach($naturesVisite as $id_naturevisite) {
+				$userAutorisationToUnsuspend = $userAutorisation->getSuspendObjectNeedPrerequis($this->fk_user, $id_naturevisite, 'nature_visite');
+				foreach($userAutorisationToUnsuspend as $user_autorisation) {
+					$autorisation->fetch($user_autorisation->fk_autorisation);
+					$asPrerequis = $elementPrerequis->gestionPrerequis($this->fk_user, $autorisation, 0, 0);
+					if($asPrerequis > 0) {
+						$resultsuspen = $user_autorisation->unsuspend($user);
+
+						if($resultsuspen < 0) {
+							return -1;
+						}
+					}
+				}
+			}
+		}
 
 		return $resultcreate;
 	}
@@ -503,7 +580,9 @@ class VisiteMedical extends CommonObject
 	 */
 	public function update(User $user, $notrigger = false)
 	{
-		return $this->updateCommon($user, $notrigger);
+		$resultupdate = $this->updateCommon($user, $notrigger);
+
+		return $resultupdate;
 	}
 
 	/**
@@ -558,38 +637,99 @@ class VisiteMedical extends CommonObject
 			dol_syslog(get_class($this)."::expire action abandonned: already expired", LOG_WARNING);
 			return 0;
 		}
+		elseif ($this->status == self::STATUS_CLOSE) {
+			dol_syslog(get_class($this)."::expire action abandonned: already closed", LOG_WARNING);
+			return 0;
+		}
 
 		$now = dol_now();
 
 		$this->db->begin();
 
-		if (!empty($num)) {
-			// Expire
-			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-			$sql .= " SET status = ".self::STATUS_EXPIRE;
-			$sql .= " WHERE rowid = ".((int) $this->id);
+		// Expire
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_EXPIRE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
 
-			dol_syslog(get_class($this)."::expire()", LOG_DEBUG);
-			$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
-
-			if (!$error && !$notrigger) {
-				// Call trigger
-				$result = $this->call_trigger('MYOBJECT_EXPIRE', $user);
-				if ($result < 0) {
-					$error++;
-				}
-				// End call triggers
-			}
+		dol_syslog(get_class($this)."::expire()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
 		}
 
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('MYOBJECT_EXPIRE', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+		
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_EXPIRE;
+		}
+
+		if (!$error) {
+			$naturesVisite = explode(",", $this->naturevisite);
+			$elementPrerequis = new ElementPrerequis($this->db);
+
+			// Formations
+			$userFormation = new UserFormation($this->db);
+			$formation = new Formation($this->db);
+			foreach($naturesVisite as $id_naturevisite) {
+				$userFormationToSuspend = $userFormation->getObjectNeedPrerequis($this->fk_user, $id_naturevisite, 'nature_visite');
+				foreach($userFormationToSuspend as $user_formation) {
+					$formation->fetch($user_formation->fk_formation);
+					$asPrerequis = $elementPrerequis->gestionPrerequis($this->fk_user, $formation, 0, 0);
+					if($asPrerequis < 0) {
+						$resultsuspen = $user_formation->suspend($user);
+
+						if($resultsuspen < 0) {
+							$error++;
+						}
+					}
+				}
+			}
+			
+			// Habilitations
+			$userHabilitation = new UserHabilitation($this->db);
+			$habilitation = new Habilitation($this->db);
+			foreach($naturesVisite as $id_naturevisite) {
+				$userHabilitationToSuspend = $userHabilitation->getObjectNeedPrerequis($this->fk_user, $id_naturevisite, 'nature_visite');
+				foreach($userHabilitationToSuspend as $user_habilitation) {
+					$habilitation->fetch($user_habilitation->fk_habilitation);
+					$asPrerequis = $elementPrerequis->gestionPrerequis($this->fk_user, $habilitation, 0, 0);
+					if($asPrerequis < 0) {
+						$resultsuspen = $user_habilitation->suspend($user);
+
+						if($resultsuspen < 0) {
+							$error++;
+						}
+					}
+				}
+			}
+
+			// Autorisations
+			$userAutorisation = new UserAutorisation($this->db);
+			$autorisation = new Autorisation($this->db);
+			foreach($naturesVisite as $id_naturevisite) {
+				$userAutorisationToSuspend = $userAutorisation->getObjectNeedPrerequis($this->fk_user, $id_naturevisite, 'nature_visite');
+				foreach($userAutorisationToSuspend as $user_autorisation) {
+					$autorisation->fetch($user_autorisation->fk_autorisation);
+					$asPrerequis = $elementPrerequis->gestionPrerequis($this->fk_user, $autorisation, 0, 0);
+					if($asPrerequis < 0) {
+						$resultsuspen = $user_autorisation->suspend($user);
+
+						if($resultsuspen < 0) {
+							$error++;
+						}
+					}
+				}
+			}
 		}
 
 		if (!$error) {
@@ -1077,18 +1217,16 @@ class VisiteMedical extends CommonObject
 	}
 
 	/**
-	 * Action executed by scheduler
-	 * CAN BE A CRON TASK. In such a case, parameters come from the schedule job setup field 'Parameters'
-	 * Use public function doScheduledJob($param1, $param2, ...) to get parameters
+	 * Action executed by cron
+	 * Changement de statut automatique des visite médicale
 	 *
 	 * @return	int			0 if OK, <>0 if KO (this function is used also by cron so only 0 is OK)
 	 */
-	public function doScheduledJob()
+	public function MajStatuts()
 	{
-		//global $conf, $langs;
+		global $conf, $langs, $user;
 
-		//$conf->global->SYSLOG_FILE = 'DOL_DATA_ROOT/dolibarr_mydedicatedlogfile.log';
-
+		$visiteMedicale = new self($this->db);
 		$error = 0;
 		$this->output = '';
 		$this->error = '';
@@ -1099,9 +1237,35 @@ class VisiteMedical extends CommonObject
 
 		$this->db->begin();
 
-		// ...
+		$sql = "SELECT vm.rowid, vm.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
+		$sql .= " WHERE vm.datefinvalidite IS NOT NULL";
+		$sql .= " AND vm.datefinvalidite < '".substr($this->db->idate($now), 0, 10)."'";
+		$sql .= " AND vm.status != ".self::STATUS_CLOSE;
+		$sql .= " AND vm.status != ".self::STATUS_EXPIRE;
 
-		$this->db->commit();
+		$resql = $this->db->query($sql);
+		if($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$visiteMedicale->fetch($obj->rowid);
+				$resultexpire = $visiteMedicale->expire($user);
+
+				if($resultexpire < 0) {
+					$error++;
+					$this->error .= $visiteMedicale->error;
+				}
+				else {
+					$this->output .= "La visite médicale $obj->ref a été passé au statut 'Expirée'<br>";
+				}
+			}
+		}
+
+		if(!$error) {
+			$this->db->commit();
+		}
+		else {
+			$this->db->rollback();
+		}
 
 		dol_syslog(__METHOD__." end", LOG_INFO);
 
@@ -1203,6 +1367,51 @@ class VisiteMedical extends CommonObject
 				}
 			}
 
+			$this->db->free($resql);
+			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Liste des visites médicales à cloturée lors de la création d'une nouvelle
+	 *
+	 * 	@return	array			Array of VisiteMedical object
+	 */
+	function getVisiteMedicaleToClose() {
+		$res = array();
+	
+		$visiteMedicale = new VisiteMedical($this->db);
+		$naturesvisite = array_map('trim', explode(',', $this->naturevisite));
+		$conditions = [];
+		foreach ($naturesvisite as $naturevisite) {
+			$conditions[] = "FIND_IN_SET('$naturevisite', vm.naturevisite) > 0";
+		}
+
+		$sql = "SELECT DISTINCT vm.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
+		$sql .= " WHERE vm.fk_user = $this->fk_user";
+		$sql .= " AND vm.rowid != $this->id";
+		$sql .= " AND (".implode(' OR ', $conditions).")";
+		$sql .= " AND (vm.status = ".self::STATUS_APTE." OR vm.status = ".self::STATUS_CONDITIONNEL." OR vm.status = ".self::STATUS_INAPTE." OR vm.status = ".self::STATUS_EXPIRE.")";
+
+		dol_syslog(get_class($this)."::getVisiteMedicaleToClose", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$visiteMedicale->fetch($obj->rowid);
+				$nature_values = array_map('trim', explode(',', $visiteMedicale->naturevisite));
+				
+				// Vérifier que chaque élément est dans les valeurs autorisées
+				if (array_diff($nature_values, $naturesvisite) === []) {
+					$res[] = clone $visiteMedicale;
+				}
+			}
+
+			$this->db->free($resql);
 			return $res;
 		}
 		else {

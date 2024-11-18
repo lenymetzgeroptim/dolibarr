@@ -192,7 +192,7 @@ if (empty($reshook)) {
 	$triggermodname = 'FORMATIONHABILITATION_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
 
 	if($action == 'add') {
-		if (empty(GETPOST("naturevisite", 'int'))) {
+		if (empty(GETPOST("naturevisite", 'array'))) {
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("NatureVisite")), null, 'errors');
 			$error++;
 		}
@@ -306,7 +306,8 @@ if ($action == 'create') {
 
 	print '<table id="visitemedicaleform" class="border centpercent tableforfieldcreate">'."\n";
 
-	$object->fields['fk_contact']['default'] = 2;
+	unset($object->fields['status']['arrayofkeyval'][8]);
+	unset($object->fields['status']['arrayofkeyval'][9]);
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
 
@@ -343,6 +344,13 @@ if (($id || $ref) && $action == 'edit') {
 
 	print '<table id="visitemedicaleform" class="border centpercent tableforfieldedit">'."\n";
 
+	if($object->status == $object::STATUS_INAPTE || $object->status == $object::STATUS_CLOSE) {
+		unset($object->fields['status']);
+	}
+	else {
+		unset($object->fields['status']['arrayofkeyval'][8]);
+		unset($object->fields['status']['arrayofkeyval'][9]);
+	}
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
 

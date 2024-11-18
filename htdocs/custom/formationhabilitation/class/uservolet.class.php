@@ -75,6 +75,7 @@ class UserVolet extends CommonObject
 	const STATUS_VALIDATION2 = 3;
 	const STATUS_VALIDATION3 = 4;
 	//const STATUS_VALIDATION4 = 5;
+	const STATUS_EXPIRE = 7;
 	const STATUS_SUSPEND = 8;
 	const STATUS_CLOSE = 9;
 
@@ -978,6 +979,67 @@ class UserVolet extends CommonObject
 	}
 
 	/**
+	 *	Expire object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function expire($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_EXPIRE) {
+			dol_syslog(get_class($this)."::expire action abandonned: already expired", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_EXPIRE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::expire()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERVOLET_EXPIRE', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_EXPIRE;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
 	 *	Suspend object
 	 *
 	 *	@param		User	$user     		User making status change
@@ -1002,33 +1064,92 @@ class UserVolet extends CommonObject
 
 		$this->db->begin();
 
-		if (!empty($num)) {
-			// Validate
-			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-			$sql .= " SET status = ".self::STATUS_SUSPEND;
-			$sql .= " WHERE rowid = ".((int) $this->id);
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_SUSPEND;
+		$sql .= " WHERE rowid = ".((int) $this->id);
 
-			dol_syslog(get_class($this)."::suspend()", LOG_DEBUG);
-			$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
+		dol_syslog(get_class($this)."::suspend()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERVOLET_SUSPEND', $user);
+			if ($result < 0) {
 				$error++;
 			}
-
-			if (!$error && !$notrigger) {
-				// Call trigger
-				$result = $this->call_trigger('USERVOLET_SUSPEND', $user);
-				if ($result < 0) {
-					$error++;
-				}
-				// End call triggers
-			}
+			// End call triggers
 		}
 
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_SUSPEND;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	Unsuspend object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function unsuspend($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status != self::STATUS_SUSPEND) {
+			dol_syslog(get_class($this)."::unsuspend action abandonned: not suspended", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_VALIDATED;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::unsuspend()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERVOLET_UNSUSPEND', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_VALIDATED;
 		}
 
 		if (!$error) {
@@ -1408,6 +1529,7 @@ class UserVolet extends CommonObject
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
 			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 			$this->labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('SuspendLong');
+			$this->labelStatus[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expiré');
 
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
@@ -1416,6 +1538,7 @@ class UserVolet extends CommonObject
 			$this->labelStatusShort[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('ApprobationVolet');
 			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 			$this->labelStatusShort[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspend');
+			$this->labelStatusShort[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expiré');
 		}
 
 		if ($status == self::STATUS_VALIDATED) {
@@ -1428,6 +1551,9 @@ class UserVolet extends CommonObject
 			$statusType = 'status6';
 		}
 		elseif ($status == self::STATUS_SUSPEND) {
+			$statusType = 'status10';
+		}
+		elseif ($status == self::STATUS_EXPIRE) {
 			$statusType = 'status8';
 		}
 		else {
@@ -1735,6 +1861,7 @@ class UserVolet extends CommonObject
 		$labelStatus[50] = $langs->transnoentitiesnoconv('ApprobationVolet');
 		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 		$labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspend');
+		$labelStatus[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expiré');
 
 		return $labelStatus;
 	}
@@ -2408,6 +2535,79 @@ class UserVolet extends CommonObject
 			return -1;
 		}
 	}
+
+	/**
+	 * Récupère les volets dont l'objet (UserAutorisation / UserFormation / UserHabilitation) est lié
+	 *
+	 * 	@param  int		$fk_source       	Id of source object
+	 *  @param  int		$fk_source       	type of source object
+	 *  @return	array(UserVolet)|int		> 0 if OK, < 0 if KO
+	 */
+	public function getVoletWithLinkedObject($fk_source, $sourcetype, $fk_user)
+	{
+		global $conf, $user;
+
+		$userVolet = new UserVolet($this->db);
+		$res = array();
+
+		$sql = "SELECT uv.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as uv";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."element_element as e ON e.fk_target = uv.rowid AND e.targettype = '".$this->module."_".$this->element."' AND e.fk_source = $fk_source AND e.sourcetype = '$sourcetype'";
+		$sql .= " WHERE uv.fk_user = $fk_user";
+		$sql .= " AND uv.status = ".self::STATUS_VALIDATED;
+
+		dol_syslog(get_class($this)."::getVoletWithLinkedObject", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$userVolet->fetch($obj->rowid);
+				$res[$obj->rowid] = clone $userVolet;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * Récupère les volets suspendus dont l'objet (UserAutorisation / UserFormation / UserHabilitation) est lié
+	 *
+	 * 	@param  int		$fk_source       	Id of source object
+	 *  @param  int		$fk_source       	type of source object
+	 *  @return	array(UserVolet)|int		> 0 if OK, < 0 if KO
+	 */
+	public function getVoletSuspendWithLinkedObject($fk_source, $sourcetype, $fk_user)
+	{
+		global $conf, $user;
+
+		$userVolet = new UserVolet($this->db);
+		$res = array();
+
+		$sql = "SELECT uv.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as uv";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."element_element as e ON e.fk_target = uv.rowid AND e.targettype = '".$this->module."_".$this->element."' AND e.fk_source = $fk_source AND e.sourcetype = '$sourcetype'";
+		$sql .= " WHERE uv.fk_user = $fk_user";
+		$sql .= " AND uv.status = ".self::STATUS_SUSPEND;
+
+		dol_syslog(get_class($this)."::getVoletWithLinkedObject", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$userVolet->fetch($obj->rowid);
+				$res[$obj->rowid] = clone $userVolet;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
 }
 
 

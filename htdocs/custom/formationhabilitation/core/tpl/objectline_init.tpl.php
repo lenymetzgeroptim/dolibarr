@@ -52,16 +52,16 @@ foreach ($objectline->fields as $key => $val) {
         }
         else {
             if($objectline->element == 'userformation'){
-                $search[$key] =  implode(',', array($objectline::STATUS_VALIDE, $objectline::STATUS_A_PROGRAMMER, $objectline::STATUS_REPROGRAMMEE, $objectline::STATUS_PROGRAMMEE, $objectline::STATUS_EXPIREE));
+                $search[$key] =  implode(',', array($objectline::STATUS_VALIDE, $objectline::STATUS_A_PROGRAMMER, $objectline::STATUS_REPROGRAMMEE, $objectline::STATUS_PROGRAMMEE, $objectline::STATUS_EXPIREE, $objectline::STATUS_SUSPEND));
             }
             elseif($objectline->element == 'userhabilitation'){
-                $search[$key] =  implode(',', array($objectline::STATUS_NONHABILITE, $objectline::STATUS_HABILITABLE, $objectline::STATUS_HABILITE));
+                $search[$key] =  implode(',', array($objectline::STATUS_NONHABILITE, $objectline::STATUS_HABILITABLE, $objectline::STATUS_HABILITE, $objectline::STATUS_SUSPEND));
             }
             elseif($objectline->element == 'userautorisation'){
-                $search[$key] =  implode(',', array($objectline::STATUS_AUTORISABLE, $objectline::STATUS_AUTORISE, $objectline::STATUS_NONAUTORISE));
+                $search[$key] =  implode(',', array($objectline::STATUS_AUTORISABLE, $objectline::STATUS_AUTORISE, $objectline::STATUS_NONAUTORISE, $objectline::STATUS_SUSPEND));
             }
 			elseif($objectline->element == 'uservolet'){
-                $search[$key] =  implode(',', array($objectline::STATUS_VALIDATED, 50));
+                $search[$key] =  implode(',', array($objectline::STATUS_VALIDATED, 50, $objectline::STATUS_SUSPEND));
             }
         }
     }
