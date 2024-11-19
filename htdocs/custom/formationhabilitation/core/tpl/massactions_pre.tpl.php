@@ -107,13 +107,16 @@ if ($massaction == 'prevalidate' && $permissiontovalidatelines) {
 
 
 		if($objectlinetmp->element == 'userautorisation') {
-			$formquestion = array();
+			$formquestion = array(
+				array('label'=>'Commentaire' ,'type'=>'textarea', 'name'=>'commentaire', 'value'=>'')
+			);
 			print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassValidation"), $langs->trans("ConfirmMassValidationAutorisationQuestion", count($toselect), $txt_voletToGenerate, $txt_objectToClose), "validatelines", $formquestion, 'yes', 0, 200, 500, 1);
 		}
 		elseif($objectlinetmp->element == 'userhabilitation') {
 			//$paramformconfirm .= (GETPOST('toselect', 'array') ? '&toselect='.urlencode(implode(',', GETPOST('toselect'))) : '');
 			$formquestion = array(
-				array('label'=>$langs->trans('QualifPro') ,'type'=>'select', 'name'=>'qualif_pro', 'values'=>$qualificationproInfo, 'select_show_empty'=>1, 'default'=>0),
+				array('label'=>$langs->trans('QualifPro') ,'type'=>'select', 'name'=>'qualif_pro', 'values'=>$qualificationproInfo, 'select_show_empty'=>1, 'default'=>0, 'tdclass'=>'width220'),
+				array('label'=>'Commentaire' ,'type'=>'textarea', 'name'=>'commentaire', 'value'=>'')
 			);
 			print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassValidation"), $langs->trans("ConfirmMassValidationHabilitationQuestion", count($toselect), $txt_voletToGenerate, $txt_objectToClose), "validatelines", $formquestion, 'yes', 0, 200, 500, 1);
 		}

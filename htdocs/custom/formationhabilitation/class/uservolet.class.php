@@ -2217,6 +2217,7 @@ class UserVolet extends CommonObject
 						$uservolet->fk_user = $userid;
 						$uservolet->fk_volet = $voletid;
 						$uservolet->status = $uservolet::STATUS_DRAFT;
+						$uservolet->commentaire = GETPOST('commentaire', 'alpha');
 						if($voletid == 6) {
 							$uservolet->qualif_pro = GETPOST('qualif_pro', 'int');
 						}
