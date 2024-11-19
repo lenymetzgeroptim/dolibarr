@@ -132,11 +132,12 @@ class Convocation extends CommonObject
 		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1",),
 		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"OrganismeConvoc", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"fk_contact" => array("type"=>"integer:contact:contact/class/contact.class.php:0:(civility:=:'dr')", "label"=>"Medecin", "enabled"=>"1", 'position'=>44, 'notnull'=>0, "visible"=>"1",),
-		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
-		"naturevisite" => array("type"=>"sellist:c_nature_visite:label:rowid::(active:=:1)", "label"=>"Nature visite", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"1",),
+		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
+		"motifvisite" => array("type"=>"chkbxlst:c_motif_visite:label:rowid::(active:=:1)", "label"=>"MotifVisite", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"1",),
 		"centremedecine" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"CentreMedecine", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
 		"examenrealiser" => array("type"=>"chkbxlst:c_examen_medical:label:rowid::(active=1)", "label"=>"ExamenARéaliser", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"1",),
 		"fk_formation" => array("type"=>"integer:formation:custom/formationhabilitation/class/formation.class.php:0:(t.status:=:1)", "label"=>"Formation", "enabled"=>"1", 'position'=>42, 'notnull'=>0, "visible"=>"1",),
+		"lieu_formation" => array("type"=>"varchar(128)", "label"=>"LieuFormation", "enabled"=>"1", 'position'=>42, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -158,10 +159,11 @@ class Convocation extends CommonObject
 	public $fk_societe;
 	public $fk_contact;
 	public $commentaire;
-	public $naturevisite;
+	public $motifvisite;
 	public $centremedecine;
 	public $examenrealiser;
 	public $fk_formation;
+	public $lieu_formation;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -256,6 +258,48 @@ class Convocation extends CommonObject
 		$resultcreate = $this->createCommon($user, $notrigger);
 
 		//$resultvalidate = $this->validate($user, $notrigger);
+
+		return $resultcreate;
+	}
+
+	/**
+	 * Generation d'une convocation à partir d'une formation programmée
+	 *
+	 * @param  UserFormation $userFormation 
+	 * @param  User $user      		User that creates
+	 * @param  int $date_debut     Date Start of Convocation
+	 * @param  int $date_fin      	Date End of Convocation
+	 * @param  bool $notrigger 		false=launch triggers after, true=disable triggers
+	 * @return int             		Return integer <0 if KO, Id of created object if OK
+	 */
+	 public function generationWithFormation(UserFormation $userFormation, User $user, $date_debut, $date_fin, $notrigger = false)
+	{
+		global $langs; 
+		$error = 0; 
+
+		$userStatic = new User($this->db);
+		$userStatic->fetch($userFormation->fk_user);
+		
+		$formationStatic = new Formation($this->db);
+		$formationStatic->fetch($userFormation->fk_formation);
+
+		$this->ref = 'CONVOC-'.$userStatic->login."-".$formationStatic->ref.'-'.dol_print_date($userFormation->date_debut_formation, "%Y%m%d");
+		$this->fk_user = $userFormation->fk_user;
+		$this->datedebut = $date_debut;
+		$this->datefin = $date_fin;
+		$this->nature = 1;
+		$this->type = $userFormation->interne_externe;
+		$this->lieu_formation = GETPOST("lieu_formation_programmer", 'alpha');
+		if($userFormation->interne_externe == 1) {
+			$this->fk_societe = $userFormation->fk_societe;
+		}
+		elseif($userFormation->interne_externe == 2) {
+			$this->fk_societe = 157;
+		}
+		$this->fk_formation = $userFormation->fk_formation;
+		$this->status = 0;
+
+		$resultcreate = $this->create($user, $notrigger);
 
 		return $resultcreate;
 	}

@@ -122,20 +122,22 @@ class UserFormation extends CommonObject
 		"fk_user" => array("type"=>"integer:User:user\class\user.class.php:0:(statut:=:1)", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 		"date_debut_formation" => array("type"=>"date", "label"=>"DateDebutFormation", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1",),
 		"date_fin_formation" => array("type"=>"date", "label"=>"DateFinFormation", "enabled"=>"1", 'position'=>39, 'notnull'=>1, "visible"=>"1",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "9" => "Cloturée"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "8" => "Suspendue", "9" => "Cloturée"), "validate"=>"1",),
 		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"4",),
 		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>46, 'notnull'=>0, "visible"=>"4",),
 		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"4",),
 		"date_finvalidite_formation" => array("type"=>"date", "label"=>"DateFinValiditeFormation", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"Organisme", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
-		"numero_certificat" => array("type"=>"varchar(20)", "label"=>"Numéro Certificat", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
+		"numero_certificat" => array("type"=>"varchar(20)", "label"=>"Numéro Certificat", "enabled"=>"1", 'position'=>52, 'notnull'=>0, "visible"=>"1",),
 		"formateur" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Formateur", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"interne_externe" => array("type"=>"integer", "label"=>"InterneExterne", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "default"=>"1", "arrayofkeyval"=>array("1" => "Externe", "2" => "Interne"),),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"resultat" => array("type"=>"integer", "label"=>"Résultat", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Non défini", "2" => "Satisfaisant", "3" => "Non satisfaisant"),),
 		"cout_annexe" => array("type"=>"price", "label"=>"CoutAnnexe", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
 		"prevupif" => array("type"=>"boolean", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1",),
-		"non_renouvelee" => array("type"=>"boolean", "label"=>"NonRenouvelee", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1", "help"=>"Lorsque la date de fin de validité sera atteinte, la formation sera clôturée et non expirée"),
+		"non_renouvelee" => array("type"=>"boolean", "label"=>"NonRenouvelee", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1", "help"=>"Lorsque la date de fin de validité sera atteinte, la formation sera clôturée et non expirée",),
+		"ex_status" => array("type"=>"integer", "label"=>"ExStatus", "enabled"=>"1", 'position'=>999, 'notnull'=>0, "visible"=>"0", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "8" => "Suspendue", "9" => "Cloturée"),),
+		"lieu_formation" => array("type"=>"sellist:c_ville:ville:rowid", "label"=>"LieuFormation", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -166,6 +168,8 @@ class UserFormation extends CommonObject
 	public $cout_annexe;
 	public $prevupif;
 	public $non_renouvelee;
+	public $ex_status;
+	public $lieu_formation;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1026,6 +1030,7 @@ class UserFormation extends CommonObject
 		// Suspend
 		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
 		$sql .= " SET status = ".self::STATUS_SUSPEND;
+		$sql .= ", ex_status = ".$this->status;
 		$sql .= " WHERE rowid = ".((int) $this->id);
 
 		dol_syslog(get_class($this)."::suspend()", LOG_DEBUG);
@@ -1047,9 +1052,11 @@ class UserFormation extends CommonObject
 
 		// Set new ref and current status
 		if (!$error) {
+			$this->ex_status = $this->status;
 			$this->status = self::STATUS_SUSPEND;
 		}
 
+		// Suspendre le volet dans lequel se trouve la formation
 		if(!$error) {
 			$userVolet = new UserVolet($this->db);
 			$voletsToSuspend = $userVolet->getVoletWithLinkedObject($this->id, 'formation', $this->fk_user);
@@ -1097,7 +1104,7 @@ class UserFormation extends CommonObject
 
 		$this->db->begin();
 
-		// Suspend
+		// Unsuspend
 		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
 		$sql .= " SET status = ".$this->ex_status;
 		$sql .= ", ex_status = NULL";
@@ -1126,13 +1133,14 @@ class UserFormation extends CommonObject
 			$this->ex_status = '';
 		}
 
+		// Désuspendre le volet dans lequel se trouve la formation
 		if(!$error) {
 			$userVolet = new UserVolet($this->db);
-			$voletsToSuspend = $userVolet->getVoletWithLinkedObject($this->id, 'formation', $this->fk_user);
-			foreach($voletsToSuspend as $voletToSuspend) {
-				$resultsuspend = $voletToSuspend->unsuspend($user);
+			$voletsToUnsuspend = $userVolet->getVoletSuspendWithLinkedObject($this->id, 'formation', $this->fk_user);
+			foreach($voletsToUnsuspend as $voletToUnuspend) {
+				$resultunsuspend = $voletToUnuspend->unsuspend($user);
 
-				if($resultsuspend < 0) {
+				if($resultunsuspend < 0) {
 					$error++;
 					break;
 				}
@@ -2032,7 +2040,7 @@ class UserFormation extends CommonObject
 	function getAllFormationsForUser($userid, $withprogram = 0) {
 		$res = array();
 
-		$sql = "SELECT DISTINCT uf.fk_formation";
+		$sql = "SELECT DISTINCT uf.fk_formation, uf.date_finvalidite_formation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE;
@@ -2040,12 +2048,14 @@ class UserFormation extends CommonObject
 			$sql .= " OR uf.status = ".self::STATUS_PROGRAMMEE;
 		}
 		$sql .= ')';
+		$sql .= " ORDER BY uf.date_finvalidite_formation";
 
 		dol_syslog(get_class($this)."::getAllFormationsForUser", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$res[] = $obj->fk_formation;
+				$res['id'][] = $obj->fk_formation;
+				$res['date_finvalidite'][$obj->fk_formation] = $obj->date_finvalidite_formation;
 			}
 
 			$this->db->free($resql);
@@ -2111,6 +2121,43 @@ class UserFormation extends CommonObject
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.')';
 
 		dol_syslog(get_class($this)."::getObjectNeedPrerequis", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$userFormation->fetch($obj->rowid);
+				$res[$obj->rowid] = clone $userFormation;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return les UserFormation qui nécéssite le prérequis et qui sont suspendues
+	 *
+	 * 	@param  int			$userid       		Id of User
+	 *  @param  int			$prerequisid       	Id of prerequis
+	 *  @param  string		$prerequistype      Type of prerequis
+	 * 	@return	array(int)|int			Array of UserFormation		
+	 */
+	function getSuspendObjectNeedPrerequis($userid, $prerequisid, $prerequistype) {
+		$res = array();
+		$userFormation = new self($this->db);
+
+		$sql = "SELECT DISTINCT uf.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as e ON e.fk_source = f.rowid AND e.sourcetype = 'formation'";
+		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND FIND_IN_SET(".$prerequisid.", e.prerequisobjects) > 0 AND e.prerequistype = '$prerequistype'";
+		$sql .= " AND (uf.status = ".self::STATUS_SUSPEND.')';
+
+		dol_syslog(get_class($this)."::getSuspendObjectNeedPrerequis", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {

@@ -345,6 +345,7 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_type').css('display', '');
 		$('.field_fk_societe').css('display', '');
 		$('.field_fk_formation').css('display', '');
+		$('.field_lieu_formation').css('display', '');
 		$('.field_fk_contact').css('display', 'none');
 		$('.field_motifvisite').css('display', 'none');
 		$('.field_centremedecine').css('display', 'none');
@@ -359,6 +360,7 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_type').css('display', 'none');
 		$('.field_fk_societe').css('display', 'none');
 		$('.field_fk_formation').css('display', 'none');
+		$('.field_lieu_formation').css('display', 'none');
 		$('.field_fk_contact').css('display', '');
 		$('.field_motifvisite').css('display', '');
 		$('.field_centremedecine').css('display', 'none');
@@ -367,6 +369,7 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_type #type').val('').trigger('change');
 		$('.field_fk_societe #fk_societe').val('').trigger('change');
 		$('.field_fk_formation #fk_formation').val('').trigger('change');
+		$('.field_ieu_formation #ieu_formation').val('').trigger('change');
 		$('.field_centremedecine #centremedecine').val('').trigger('change');
 		$('.field_examenrealiser #examenrealiser').val('').trigger('change');
 	}
@@ -374,6 +377,7 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_type').css('display', 'none');
 		$('.field_fk_societe').css('display', 'none');
 		$('.field_fk_formation').css('display', 'none');
+		$('.field_lieu_formation').css('display', 'none');
 		$('.field_fk_contact').css('display', 'none');
 		$('.field_motifvisite').css('display', 'none');
 		$('.field_centremedecine').css('display', '');
@@ -382,6 +386,7 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_type #type').val('').trigger('change');
 		$('.field_fk_societe #fk_societe').val('').trigger('change');
 		$('.field_fk_formation #fk_formation').val('').trigger('change');
+		$('.field_ieu_formation #ieu_formation').val('').trigger('change');
 		$('.field_fk_contact #fk_contact').val('').trigger('change');
 		$('.field_motifvisite #motifvisite').val('').trigger('change');
 	}
@@ -389,6 +394,7 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_type').css('display', 'none');
 		$('.field_fk_societe').css('display', 'none');
 		$('.field_fk_formation').css('display', 'none');
+		$('.field_lieu_formation').css('display', 'none');
 		$('.field_fk_contact').css('display', 'none');
 		$('.field_motifvisite').css('display', 'none');
 		$('.field_centremedecine').css('display', '');
@@ -397,6 +403,7 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_type #type').val('').trigger('change');
 		$('.field_fk_societe #fk_societe').val('').trigger('change');
 		$('.field_fk_formation #fk_formation').val('').trigger('change');
+		$('.field_ieu_formation #ieu_formation').val('').trigger('change');
 		$('.field_fk_contact #fk_contact').val('').trigger('change');
 		$('.field_motifvisite #motifvisite').val('').trigger('change');
 	}
@@ -404,6 +411,7 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_type').css('display', 'none');
 		$('.field_fk_societe').css('display', 'none');
 		$('.field_fk_formation').css('display', 'none');
+		$('.field_lieu_formation').css('display', 'none');
 		$('.field_fk_contact').css('display', 'none');
 		$('.field_motifvisite').css('display', 'none');
 		$('.field_centremedecine').css('display', 'none');
@@ -412,6 +420,7 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_type #type').val('').trigger('change');
 		$('.field_fk_societe #fk_societe').val('').trigger('change');
 		$('.field_fk_formation #fk_formation').val('').trigger('change');
+		$('.field_ieu_formation #ieu_formation').val('').trigger('change');
 		$('.field_fk_contact #fk_contact').val('').trigger('change');
 		$('.field_motifvisite #motifvisite').val('').trigger('change');
 		$('.field_centremedecine #centremedecine').val('').trigger('change');

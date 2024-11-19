@@ -247,6 +247,7 @@ if (empty($reshook)) {
 		elseif($object->nature == 2) {
 			$object->type = '';
 			$object->fk_societe = '';
+			$object->lieu_formation = '';
 			$object->fk_formation = '';
 			$object->centremedecine = '';
 			$object->examenrealiser = '';
@@ -255,6 +256,7 @@ if (empty($reshook)) {
 			$object->type = '';
 			$object->fk_societe = '';
 			$object->fk_formation = '';
+			$object->lieu_formation = '';
 			$object->fk_contact = '';
 			$object->motifvisite = '';
 		}
@@ -262,6 +264,7 @@ if (empty($reshook)) {
 			$object->type = '';
 			$object->fk_societe = '';
 			$object->fk_formation = '';
+			$object->lieu_formation = '';
 			$object->fk_contact = '';
 			$object->motifvisite = '';
 		}
@@ -536,6 +539,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		unset($object->fields['type']);
 		unset($object->fields['fk_societe']);
 		unset($object->fields['fk_formation']);
+		unset($object->fields['lieu_formation']);
 		unset($object->fields['centremedecine']);
 		unset($object->fields['examenrealiser']);
 	}
@@ -543,6 +547,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		unset($object->fields['type']);
 		unset($object->fields['fk_societe']);
 		unset($object->fields['fk_formation']);
+		unset($object->fields['lieu_formation']);
 		unset($object->fields['fk_contact']);
 		unset($object->fields['motifvisite']);
 	}
@@ -550,6 +555,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		unset($object->fields['type']);
 		unset($object->fields['fk_societe']);
 		unset($object->fields['fk_formation']);
+		unset($object->fields['lieu_formation']);
 		unset($object->fields['fk_contact']);
 		unset($object->fields['motifvisite']);
 	}

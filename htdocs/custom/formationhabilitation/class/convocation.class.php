@@ -133,10 +133,11 @@ class Convocation extends CommonObject
 		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"OrganismeConvoc", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"fk_contact" => array("type"=>"integer:contact:contact/class/contact.class.php:0:(civility:=:'dr')", "label"=>"Medecin", "enabled"=>"1", 'position'=>44, 'notnull'=>0, "visible"=>"1",),
 		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
-		"motifvisite" => array("type"=>"chkbxlst:c_motif_visite:label:rowid::(active:=:1)", "label"=>"MotifVisite", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"1",),
+		"motifvisite" => array("type"=>"chkbxlst:c_motif_visite:label:rowid::(active=1)", "label"=>"MotifVisite", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"1",),
 		"centremedecine" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"CentreMedecine", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
 		"examenrealiser" => array("type"=>"chkbxlst:c_examen_medical:label:rowid::(active=1)", "label"=>"ExamenARéaliser", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"1",),
-		"fk_formation" => array("type"=>"integer:formation:custom/formationhabilitation/class/formation.class.php:0:(t.status:=:1)", "label"=>"Formation", "enabled"=>"1", 'position'=>42, 'notnull'=>0, "visible"=>"1",),
+		"fk_formation" => array("type"=>"integer:formation:custom/formationhabilitation/class/formation.class.php:0:(t.status:=:1)", "label"=>"Formation", "enabled"=>"1", 'position'=>43, 'notnull'=>0, "visible"=>"1",),
+		"lieu_formation" => array("type"=>"varchar(128)", "label"=>"LieuFormation", "enabled"=>"1", 'position'=>42, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -162,6 +163,7 @@ class Convocation extends CommonObject
 	public $centremedecine;
 	public $examenrealiser;
 	public $fk_formation;
+	public $lieu_formation;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -287,6 +289,7 @@ class Convocation extends CommonObject
 		$this->datefin = $date_fin;
 		$this->nature = 1;
 		$this->type = $userFormation->interne_externe;
+		$this->lieu_formation = GETPOST("lieu_formation_programmer", 'alpha');
 		if($userFormation->interne_externe == 1) {
 			$this->fk_societe = $userFormation->fk_societe;
 		}

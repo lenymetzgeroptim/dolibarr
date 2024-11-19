@@ -36,9 +36,10 @@ CREATE TABLE llx_formationhabilitation_convocation(
 	fk_societe integer, 
 	fk_contact integer, 
 	commentaire text, 
-	motifvisite varchar(255), 
+	motifvisite chkbxlst, 
 	centremedecine integer, 
-	examenrealiser varchar(255), 
-	fk_formation integer
+	examenrealiser chkbxlst, 
+	fk_formation integer, 
+	lieu_formation varchar(128)
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

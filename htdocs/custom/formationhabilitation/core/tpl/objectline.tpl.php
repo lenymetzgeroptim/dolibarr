@@ -287,6 +287,7 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
             $formquestion = array(
                 array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$date_debut),
                 array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$date_fin),
+                array('label'=>$langs->trans('LieuFormation') ,'type'=>'text', 'name'=>'lieu_formation_programmer', 'value'=>''),
             );
         }
 
