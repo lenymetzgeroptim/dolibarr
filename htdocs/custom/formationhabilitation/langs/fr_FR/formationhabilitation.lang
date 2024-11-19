@@ -218,9 +218,9 @@ ConfirmAddLineWithProgrammation = Êtes-vous sûr de vouloir ajouter cette forma
 ValiderFormation = Valider la formation
 ConfirmValiderFormation = Êtes-vous sûr de vouloir valider la formation ?
 ConfirmValiderFormation2 = Êtes-vous sûr de vouloir valider la formation ? Cela clôturera les formations %s
-ConfirmMassValidationHabilitationQuestion = Etes vous sûrs de vouloir valider les %s enregistrements sélectionnés ? Un nouveau volet %s sera émis<br>Les habilitations suivantes seront clôturées : %s
-ConfirmMassValidationAutorisationQuestion = Etes vous sûrs de vouloir valider les %s enregistrements sélectionnés ? Un nouveau volet %s sera émis<br>Les autorisations suivantes seront clôturées : %s
-RecordsValidated = %s enregistrements validés
+ConfirmMassValidationHabilitationQuestion = Etes vous sûrs de vouloir valider les %s enregistrement(s) sélectionné(s) ? Un nouveau volet %s sera émis<br>Les habilitations suivantes seront clôturées : %s
+ConfirmMassValidationAutorisationQuestion = Etes vous sûrs de vouloir valider les %s enregistrement(s) sélectionné(s) ? Un nouveau volet %s sera émis<br>Les autorisations suivantes seront clôturées : %s
+RecordsValidated = %s enregistrement(s) validés
 RecordValidated = %s enregistrement validé
 NoRecordValidated = Aucun enregistrement validé
 ImpossibleToValidateWithThisStatut = Impossible de valider %s à cause du statut
@@ -229,6 +229,11 @@ ConfirmValidateUserVoletWithClose = Êtes-vous sûr de vouloir valider le volet 
 ConfirmValidateUserVolet = Êtes-vous sûr de vouloir valider le volet ?
 ValidateUserVolet = Valider le volet
 ConfirmCloseVM = Êtes-vous sûr de vouloir clôturer la visite médicale ?
+ConfirmMassCloseQuestion = Etes vous sûrs de vouloir valider les %s enregistrement(s) sélectionné(s) ?
+ConfirmMassClose = Confirmation de clôture en masse
+RecordsClosed=%s enregistrement(s) clôturé(s)
+RecordClosed=Enregistrement clôturée
+NoRecordClosed=Aucun enregistrement clôturé
 
 
 #

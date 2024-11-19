@@ -44,6 +44,10 @@ if ($massaction == 'predelete') {
 	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassDeletion"), $langs->trans("ConfirmMassDeletionQuestion", count($toselect)), "deletelines", null, '', 0, 200, 500, 1);
 }
 
+if ($massaction == 'preclose') {
+	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassClose"), $langs->trans("ConfirmMassCloseQuestion", count($toselect)), "closelines", null, '', 0, 200, 500, 1);
+}
+
 if ($massaction == 'prevalidate' && $permissiontovalidatelines) {
 	$parentobjectid = array();
 	$voletToGenerate = array();

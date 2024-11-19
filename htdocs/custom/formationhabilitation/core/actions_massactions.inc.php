@@ -163,6 +163,61 @@ if (!$error && ($massaction == 'delete' || ($action == 'deletelines' && $confirm
 	//var_dump($listofobjectthirdparties);exit;
 }
 
+// Close record from mass action (massaction = 'close' for direct close, action/confirm='closelines'/'yes' with a confirmation step before)
+if (!$error && ($massaction == 'close' || ($action == 'closelines' && $confirm == 'yes')) && $permissiontoaddline) {
+	$db->begin();
+
+	$objecttmp = new $objectclass($db);
+	$nbok = 0;
+	$TMsg = array();
+
+	//$toselect could contain duplicate entries, cf https://github.com/Dolibarr/dolibarr/issues/26244
+	$unique_arr = array_unique($toselect);
+	foreach ($unique_arr as $toselectid) {
+		$result = $objecttmp->fetch($toselectid);
+		if ($result > 0) {
+			$result = $objecttmp->close($user);
+
+			if (empty($result)) { // if close returns 0, there is at least one object linked
+				$TMsg = array_merge($objecttmp->errors, $TMsg);
+			} elseif ($result < 0) { // if close returns is < 0, there is an error, we break and rollback later
+				setEventMessages($objecttmp->error, $objecttmp->errors, 'errors');
+				$error++;
+				break;
+			} else {
+				$nbok++;
+			}
+		} else {
+			setEventMessages($objecttmp->error, $objecttmp->errors, 'errors');
+			$error++;
+			break;
+		}
+	}
+
+	if (empty($error)) {
+		// Message for elements well close
+		if ($nbok > 1) {
+			setEventMessages($langs->trans("RecordsClosed", $nbok), null, 'mesgs');
+		} elseif ($nbok > 0) {
+			setEventMessages($langs->trans("RecordClosed", $nbok), null, 'mesgs');
+		} else {
+			setEventMessages($langs->trans("NoRecordClosed"), null, 'mesgs');
+		}
+
+		// Message for elements which can't be close
+		if (!empty($TMsg)) {
+			sort($TMsg);
+			setEventMessages('', array_unique($TMsg), 'warnings');
+		}
+
+		$db->commit();
+	} else {
+		$db->rollback();
+	}
+
+	//var_dump($listofobjectthirdparties);exit;
+}
+
 // Validate record from mass action
 if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $confirm == 'yes')) && $permissiontovalidatelines) {
 	$db->begin();

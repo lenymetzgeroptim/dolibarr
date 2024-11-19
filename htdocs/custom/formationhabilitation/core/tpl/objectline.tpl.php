@@ -126,8 +126,11 @@ if ($permissiontoaddline) {
     if($permissiontovalidatelines && $object->element == 'user' && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
         $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("ValidateAndGenerateUserVolet");
     }
+    if($permissiontovalidatelines && $objectline->element == 'userformation'){
+        $arrayofmassactions['preclose'] = img_picto('', 'fontawesome_times', 'class="pictofixedwidth"').$langs->trans("Clôturer");
+    }
 }
-if (GETPOST('nomassaction', 'int') || in_array($massaction, array('presend', 'predelete', 'prevalidate'))) {
+if (GETPOST('nomassaction', 'int') || in_array($massaction, array('presend', 'predelete', 'prevalidate', 'preclose'))) {
     $arrayofmassactions = array();
 }
 $massactionbutton = $form->selectMassAction('', $arrayofmassactions);
