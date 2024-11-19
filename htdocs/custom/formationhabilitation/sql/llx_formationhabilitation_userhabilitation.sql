@@ -31,7 +31,7 @@ CREATE TABLE llx_formationhabilitation_userhabilitation(
 	fk_user integer NOT NULL, 
 	date_habilitation date NOT NULL, 
 	status integer NOT NULL, 
-	date_fin_habilitation date NOT NULL, 
+	date_fin_habilitation date, 
 	domaineapplication integer
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

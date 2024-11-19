@@ -70,7 +70,7 @@ if($action == 'addline' && $permissiontoaddline) {
 
 	// Prérequis
 	$elementPrerequis = new ElementPrerequis($db);
-	if(!$error && empty(GETPOST('forcecreation')) && $elementPrerequis->gestionPrerequis(GETPOST('fk_user'), $autorisation_static, 1) < 0) {
+	if(!$error && empty(GETPOST('forcecreation')) && $elementPrerequis->gestionPrerequis(GETPOST('fk_user'), $autorisation_static, 0) < 0) {
 		$error++;
 	}
 

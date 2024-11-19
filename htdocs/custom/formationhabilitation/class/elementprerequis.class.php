@@ -1243,7 +1243,7 @@ class ElementPrerequis extends CommonObject
 	 * 	Return le nombre du prochain condition_group
 	 *
 	 * 	@param  int		$fk_source       			Id de l'objet
-	 *  @param  int		$sourcetype    				type de l'objet
+	 *  @param  string		$sourcetype    				type de l'objet
 	 * 	@return	int-mask-of						
 	 */
 	public function getNextConditionGroup($fk_source, $sourcetype)
@@ -1275,12 +1275,13 @@ class ElementPrerequis extends CommonObject
 	 * 	Gestion des prérequis
 	 *
 	 * 	@param  int		$fk_user       				Id de l'utilisateur
-	 *  @param  Object	$objectparenttmp    		Objet dont on gère les prérequis
+	 *  @param  Habilitation|Autorisation|Formation	$objectparenttmp    		Objet dont on gère les prérequis
 	 * 	@param  int		$withprogram    			include STATUS_PROGRAMMEE
 	 * 	@param  int		$withMessage    			Display error message
+	 *  @param  int		$date_finvalidite    		Date fin de validité la plus restrictive
 	 * 	@return	int				1 if OK, -1 if KO		
 	 */
-	public function gestionPrerequis($fk_user, $objectparenttmp, $withprogram = 0, $withMessage = 1)
+	public function gestionPrerequis($fk_user, $objectparenttmp, $withprogram = 0, $withMessage = 1, &$date_finvalidite = null)
 	{
 		global $conf, $user, $langs;
 
@@ -1302,9 +1303,13 @@ class ElementPrerequis extends CommonObject
 
 			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
 			foreach ($prerequistype['formation'] as $formationid) {
-				if ($formationid > 0 && in_array($formationid, $formations_user)) {
+				$date_finvalidite_prerequis = '';
+				if ($formationid > 0 && in_array($formationid, $formations_user['id'])) {
 					$conditionMetForFormation = true; 
-					break;
+
+					if($date_finvalidite_prerequis == '' || $date_finvalidite_prerequis < $formations_user['date_finvalidite'][$formationid]) {
+						$date_finvalidite_prerequis = $formations_user['date_finvalidite'][$formationid];
+					}
 				}
 			}
 
@@ -1315,6 +1320,7 @@ class ElementPrerequis extends CommonObject
 					break;
 				}
 			}
+			
 
 			// Si une condition OR n'est pas remplie, générer un message d'erreur
 			if (!$conditionMetForFormation && !$conditionMetForVisiteMedicale) {
@@ -1330,6 +1336,10 @@ class ElementPrerequis extends CommonObject
 					}
 				}
 				return -1;
+			}
+			
+			if(empty($date_finvalidite) || $date_finvalidite > $date_finvalidite_prerequis) {
+				$date_finvalidite = $date_finvalidite_prerequis;
 			}
 		}
 		return 1;

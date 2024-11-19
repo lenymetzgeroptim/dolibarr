@@ -2038,7 +2038,7 @@ class UserFormation extends CommonObject
 	function getAllFormationsForUser($userid, $withprogram = 0) {
 		$res = array();
 
-		$sql = "SELECT DISTINCT uf.fk_formation";
+		$sql = "SELECT DISTINCT uf.fk_formation, uf.date_finvalidite_formation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE;
@@ -2046,12 +2046,14 @@ class UserFormation extends CommonObject
 			$sql .= " OR uf.status = ".self::STATUS_PROGRAMMEE;
 		}
 		$sql .= ')';
+		$sql .= " ORDER BY uf.date_finvalidite_formation";
 
 		dol_syslog(get_class($this)."::getAllFormationsForUser", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$res[] = $obj->fk_formation;
+				$res['id'][] = $obj->fk_formation;
+				$res['date_finvalidite'][$obj->fk_formation] = $obj->date_finvalidite_formation;
 			}
 
 			$this->db->free($resql);

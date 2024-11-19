@@ -105,7 +105,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 
 	// Impossible d'ajouter une formation si l'utilisateur n'a pas les prérequis
 	$elementPrerequis = new ElementPrerequis($db);
-	if(!$error && empty(GETPOST('forcecreation')) && $elementPrerequis->gestionPrerequis(GETPOST('fk_user'), $formation_static, 1) < 0) {
+	if(!$error && empty(GETPOST('forcecreation')) && $elementPrerequis->gestionPrerequis(GETPOST('fk_user'), $formation_static, 0) < 0) {
 		$error++;
 	}
 
@@ -372,11 +372,11 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 
 		if (!$error) {
 			// Changement status de l'ancienne ligne
-			// $objectline->fetch($lineid);
-			// $objectline->status = UserFormation::STATUS_REPROGRAMMEE;
-			// $result == $objectline->update($user);
-			// $userid = $objectline->fk_user; 
-			// $formationid = $objectline->fk_formation;
+			$objectline->fetch($lineid);
+			$objectline->status = UserFormation::STATUS_REPROGRAMMEE;
+			$result == $objectline->update($user);
+			$userid = $objectline->fk_user; 
+			$formationid = $objectline->fk_formation;
 
 			// Création de la nouvelle ligne
 			$user_static = new User($db);

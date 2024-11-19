@@ -1239,7 +1239,7 @@ class Habilitation extends CommonObject
 	 * 	Return tous les prérequis d'une habilitation
 	 *
 	 * 	@param  int		$autorisation_id       Id of Autorisation
-	 *  @param  int		$prerequistype         Type of prerequis
+	 *  @param  string	$prerequistype         Type of prerequis
 	 * 	@return	array(array(int))|int						
 	 */
 	function getPrerequis($habilitation_id, $prerequistype = '') {
@@ -1277,9 +1277,10 @@ class Habilitation extends CommonObject
 	 *
 	 * 	@param  int				$user_id       	   Id of User
 	 *  @param  UserFormation	$userformation     UserFormation object
+	 *  @param  string			$date_finvalidite  Date de fin de validité de l'habilitation => formation la + restrictive
 	 * 	@return	int						<0 if KO, Id of created object if OK				
 	 */
-	function AsignToUser($user_id, $userformation) {
+	function AsignToUser($user_id, $userformation, $date_finvalidite) {
 		global $user; 
 
 		$userHabilitation = new UserHabilitation($this->db);
@@ -1287,7 +1288,7 @@ class Habilitation extends CommonObject
 		$user_static->fetch($user_id);
 
 		$userHabilitation->date_habilitation = $userformation->date_fin_formation;
-		$userHabilitation->date_fin_habilitation = $userformation->date_finvalidite_formation;
+		$userHabilitation->date_fin_habilitation = $date_finvalidite;
 		$userHabilitation->fk_user = $user_id;
 		$userHabilitation->status = UserHabilitation::STATUS_HABILITABLE;
 		$userHabilitation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userformation->date_fin_formation, "%Y%m%d");
@@ -1308,7 +1309,7 @@ class Habilitation extends CommonObject
 	 */
 	function generateHabilitationsForUser($user_id, $userformation, &$txtListHabilitation) { // TODOLeny - gestion des erreurs
 		// 1. Récupérer toutes les formations de l'utilisateur (y compris la nouvelle)
-		$formations_user = $userformation->getAllFormationsForUser($user_id);
+		//$formations_user = $userformation->getAllFormationsForUser($user_id);
 		// if (!in_array($userformation->fk_formation, $formations_user)) {
 		// 	$formations_user[] = $userformation->fk_formation; // Ajouter la nouvelle formation
 		// }
@@ -1318,34 +1319,20 @@ class Habilitation extends CommonObject
 
 		// 3. Parcourir chaque habilitation et vérifier les conditions
 		foreach ($habilitations as $habilitation_id) {
-			$conditions = $this->getPrerequis($habilitation_id, 'formation');
-			$all_conditions_met = true;
-	
-			foreach ($conditions as $prerequis) {
-				$condition_met = false;
-	
-				// Vérifier si l'utilisateur satisfait au moins une formation dans la condition
-				foreach ($prerequis as $formation_id) {
-					if (in_array($formation_id, $formations_user)) {
-						$condition_met = true; // Condition remplie
-						break;
-					}
-				}
-	
-				if (!$condition_met) {
-					$all_conditions_met = false;
-					break; // Condition non remplie, on arrête pour cette habilitation
-				}
-			}
-	
+			$elementPrerequis = new ElementPrerequis($this->db);
+			$habilitation = new self($this->db);
+
+			$date_finvalidite = null;
+			$habilitation->fetch($habilitation_id);
+
+			$all_conditions_met = $elementPrerequis->gestionPrerequis($user_id, $habilitation, 0, 0, $date_finvalidite);
+
 			// Si toutes les conditions sont remplies, attribuer l'habilitation
-			if ($all_conditions_met) {
-				$habilitation = new self($this->db);
-				$habilitation->fetch($habilitation_id);
+			if ($all_conditions_met == 1) {
 				$txtListHabilitation .= $habilitation->label.', ';
 
-				$resultcreate = $habilitation->AsignToUser($user_id, $userformation);
-
+				$resultcreate = $habilitation->AsignToUser($user_id, $userformation, $date_finvalidite);
+				
 				if($resultcreate <= 0) {
 					$this->error = $habilitation->db->lasterror();
 					$this->errors[] = $this->error;
@@ -1353,7 +1340,7 @@ class Habilitation extends CommonObject
 				}
 			}
 		}
-
+		
 		return 1;
 	}
 

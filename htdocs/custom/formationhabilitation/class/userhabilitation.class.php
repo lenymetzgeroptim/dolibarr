@@ -119,7 +119,7 @@ class UserHabilitation extends CommonObject
 		"fk_user" => array("type"=>"integer:User:user\class\user.class.php", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 		"date_habilitation" => array("type"=>"date", "label"=>"DateHabilitation", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Habilitable", "2" => "Habilité", "3" => "Non Habilité", "9" => "Clôturée"), "validate"=>"1",),
-		"date_fin_habilitation" => array("type"=>"date", "label"=>"DateFinHabilitation", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
+		"date_fin_habilitation" => array("type"=>"date", "label"=>"DateFinHabilitation", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
 		"domaineapplication" => array("type"=>"sellist:c_domaine_application:label:rowid::(active:=:1)", "label"=>"DomaineApplication", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
