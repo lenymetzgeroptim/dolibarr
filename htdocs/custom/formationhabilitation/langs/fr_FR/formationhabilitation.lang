@@ -64,11 +64,13 @@ FORMTIONHABILITATION_APPROBATEURVOLET3 = Approbation n°3
 FORMTIONHABILITATION_APPROBATEURVOLET4 = Approbation n°4
 FORMTIONHABILITATION_APPROBATIONVOLET = Approbation(s) réalisée(s) pour le volet %s
 FormationTitle = Formations
+VoletTitle = Volets
 FORMTIONHABILITATION_SOUPLESSEFORMATION = Activer la période de souplesse
 UserFormationLines = Formations des collaborateurs
 fa-user-graduate_fas_#1f3d89 = Formations des collaborateurs
 fa-graduation-cap_fas_#1f3d89 = Formations
 QualificationProfesionnelle = Qualifications profesionnelle
+FORMTIONHABILITATION_VOLETDURATIONMAX = Durée maximale des volets (en mois)
 
 
 #

@@ -2075,7 +2075,7 @@ class UserFormation extends CommonObject
 	function getAllFormationsForUserOnVolet($userid, $voletid) {
 		$res = array();
 
-		$sql = "SELECT DISTINCT uf.rowid, uf.ref";
+		$sql = "SELECT DISTINCT uf.rowid, uf.ref, uf.date_fin_formation, uf.date_finvalidite_formation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE uf.fk_user = $userid";
@@ -2086,7 +2086,9 @@ class UserFormation extends CommonObject
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$res[$obj->rowid] = $obj->ref;
+				$res[$obj->rowid]['ref'] = $obj->ref;
+				$res[$obj->rowid]['date_fin_formation'] = $obj->date_fin_formation;
+				$res[$obj->rowid]['date_finvalidite_formation'] = $obj->date_finvalidite_formation;
 			}
 
 			$this->db->free($resql);

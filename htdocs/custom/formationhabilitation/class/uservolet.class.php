@@ -251,9 +251,11 @@ class UserVolet extends CommonObject
 	{
 		global $conf; 
 
+		$volet = new Volet($this->db);
+		$volet->fetch($this->fk_volet);
+
 		// Crétion des volets ID, SST, Entreprise
 		if($generation_other_volet) {
-			$volet = new Volet($this->db);
 			$user_static = new User($this->db);
 			$user_static->fetch($this->fk_user);
 			$listVoletAutre = $volet->getAllVoletByType(4);
@@ -276,14 +278,10 @@ class UserVolet extends CommonObject
 			}
 		}
 
+		$this->cloture = 1;
+
 		$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$this->fk_volet;
 		$approbationRequire = $conf->global->$variableName;
-
-		$this->cloture = 1;
-		if(empty($approbationRequire)) {
-			$this->datedebutvolet = dol_now();
-		}
-
 		if(strpos($approbationRequire, '1') !== false) { // Il y a l'approbation 1
 			$this->status = self::STATUS_VALIDATION0;
 		}
@@ -1044,6 +1042,15 @@ class UserVolet extends CommonObject
 		if (!$error) {
 			$this->ref = $num;
 			$this->status = self::STATUS_VALIDATED;
+		}
+
+		if (!$error && empty($this->datedebutvolet)) {
+			$this->datedebutvolet = dol_now();
+			$resultupdate = $this->update($user);
+
+			if($resultupdate < 0) {
+				$error++;
+			}
 		}
 
 		if(!$error) {
@@ -2402,6 +2409,15 @@ class UserVolet extends CommonObject
 
 				// Création du nouveau volet
 				if(!in_array($voletid, $voletsCreate) && sizeof($listUserFormations) > 0) {
+					foreach($listUserFormations as $userformation_id => $userformation_res) {
+						if(!empty($userformation_res['date_fin_formation']) && (empty($uservolet->datedebutvolet) || $uservolet->datedebutvolet < $userformation_res['date_fin_formation'])) {
+							$uservolet->datedebutvolet = $userformation_res['date_fin_formation'];
+						}
+						if(!empty($userformation_res['date_finvalidite_formation']) && (empty($uservolet->datefinvolet) || $uservolet->datefinvolet > $userformation_res['date_finvalidite_formation'])) {
+							$uservolet->datefinvolet = $userformation_res['date_finvalidite_formation'];
+						}
+					}
+
 					$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$volet->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
 					$uservolet->fk_user = $userid;
 					$uservolet->fk_volet = $voletid;
@@ -2417,11 +2433,11 @@ class UserVolet extends CommonObject
 					$voletsCreate[] = $voletid;
 					
 					
-					foreach($listUserFormations as $userformation_id => $userformation_ref) {
+					foreach($listUserFormations as $userformation_id => $userformation_res) {
 						$resultLink = $uservolet->add_object_linked('formation', $userformation_id);
 						if($resultLink < 0) {
 							$error++;
-							$this->error = "Impossible de lier la ligne ".$userformation_ref." sur le volet ".$volet->label;
+							$this->error = "Impossible de lier la ligne ".$userformation_res['ref']." sur le volet ".$volet->label;
 							break;
 						}
 					}
@@ -2578,7 +2594,6 @@ class UserVolet extends CommonObject
 	public function getActiveUserVolet($mode = 0, $all = 0, $get_fk_volet = 0)
 	{
 		global $conf, $user;
-		$uservolet = new self($this->db);
 		$ret = array(); 
 
 		$sql = "SELECT v.rowid, v.fk_volet";
@@ -2594,6 +2609,7 @@ class UserVolet extends CommonObject
 		if ($resql) {
 			while($obj = $this->db->fetch_object($resql)) {
 				if($mode = 1) {
+					$uservolet = new self($this->db);
 					$uservolet->fetch($obj->rowid);
 					if($get_fk_volet) {
 						$ret[$obj->fk_volet] = clone $uservolet;
@@ -2715,6 +2731,35 @@ class UserVolet extends CommonObject
 			$this->error = $this->db->lasterror();
 			return -1;
 		}
+	}
+
+	public function getDateFinVolet($volet){
+		global $conf; 
+
+		$date_fin_volet = '';
+
+		if($volet->typevolet == 1) {
+			$name_date = 'date_finvalidite_formation';
+		}
+		elseif($volet->typevolet == 2) {
+			$name_date = 'date_fin_habilitation';
+		}
+		elseif($volet->typevolet == 3) {
+			$name_date = 'date_fin_autorisation';
+		}
+
+		$lines = $this->getLinkedLinesArray();
+		foreach($lines as $line) {
+			if($date_fin_volet == '' || $line->$name_date < $date_fin_volet) {
+				$date_fin_volet = $line->$name_date;
+			}
+		}
+		
+		if($date_fin_volet > dol_time_plus_duree($this->datedebutvolet, $conf->global->FORMTIONHABILITATION_VOLETDURATIONMAX, 'm')) {
+			$date_fin_volet = dol_time_plus_duree($this->datedebutvolet, $conf->global->FORMTIONHABILITATION_VOLETDURATIONMAX, 'm');
+		}
+
+		return $date_fin_volet;
 	}
 
 }

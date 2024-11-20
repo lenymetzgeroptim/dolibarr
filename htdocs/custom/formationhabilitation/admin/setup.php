@@ -129,6 +129,11 @@ $formSetup->newItem('FormationTitle')->setAsTitle();
 $formSetup->newItem('FORMTIONHABILITATION_SOUPLESSEFORMATION')->setAsYesNo();
 
 // Add a title for a new section
+$formSetup->newItem('VoletTitle')->setAsTitle();
+
+$formSetup->newItem('FORMTIONHABILITATION_VOLETDURATIONMAX')->setAsString();
+
+// Add a title for a new section
 $formSetup->newItem('ApprobationVoletTitle')->setAsTitle();
 
 $TField[0] = '';

@@ -530,10 +530,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// Confirmation to validate1
 	if ($action == 'validate1') {
-		$formquestion = array(
-			array('label'=>$langs->trans('DateDebutVolet') ,'type'=>'date', 'name'=>'date_debut_volet', 'value'=>$object->datedebutvolet),
-			array('label'=>$langs->trans('ClotureOtherVolet') ,'type'=>'checkbox', 'name'=>'close_volet', 'value'=>$object->cloture)
-		);
+		$formquestion = array();
+		if($volet->typevolet == 2 || $volet->typevolet == 3) {
+			$formquestion[] = array('label'=>$langs->trans('DateDebutVolet') ,'type'=>'date', 'name'=>'date_debut_volet', 'value'=>$object->datedebutvolet);
+		}
+		$formquestion[] = array('label'=>$langs->trans('ClotureOtherVolet') ,'type'=>'checkbox', 'name'=>'close_volet', 'value'=>$object->cloture);
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ValidateUserVolet'), $langs->trans('ConfirmValidateUserVolet'), 'confirm_validate1', $formquestion, 0, 1);
 	}
 

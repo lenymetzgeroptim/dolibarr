@@ -214,6 +214,8 @@ if ($action == 'dellink' && !empty($permissiondellink) && !$cancellink && $delli
 // Action validate1 object
 if ($action == 'confirm_validate1' && $confirm == 'yes' && $permissiontovalidate1) {
 	$db->begin();
+	$volet = new Volet($db);
+	$volet->fetch($object->fk_volet);
 
 	if (empty(GETPOST("date_debut_voletmonth", 'int')) || empty(GETPOST("date_debut_voletday", 'int')) || empty(GETPOST("date_debut_voletyear", 'int'))) {
 		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateDebutVolet")), null, 'errors');
@@ -223,9 +225,11 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $permissiontovalidate
 
 	if(!$error) {
 		// TODOLENY : Gérer une date de fin en fonction du volet
-		$object->datedebutvolet = $date_debut_volet;
-		$object->datefinvolet = dol_time_plus_duree($object->datedebutvolet, 1, 'y');
-		$object->cloture = GETPOST("close_volet", 'int');
+		if($volet->typevolet == 2 || $volet->typevolet == 3) {
+			$object->datedebutvolet = $date_debut_volet;
+			$object->datefinvolet = $object->getDateFinVolet($volet);
+		}
+		$object->cloture = (!empty(GETPOST("close_volet")) ? 1 : 0);
 
 		$result = $object->update($user);
 
