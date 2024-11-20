@@ -69,12 +69,12 @@ class UserVolet extends CommonObject
 	public $picto = 'fa-book_fas_#004a95';
 
 
-	const STATUS_DRAFT = 0;
-	const STATUS_VALIDATED = 1;
-	const STATUS_VALIDATION1 = 2;
-	const STATUS_VALIDATION2 = 3;
-	const STATUS_VALIDATION3 = 4;
-	//const STATUS_VALIDATION4 = 5;
+	const STATUS_VALIDATION0 = 0;
+	const STATUS_VALIDATION1 = 1;
+	const STATUS_VALIDATION2 = 2;
+	const STATUS_VALIDATION3 = 3;
+	const STATUS_VALIDATION_WITHOUT_USER = 4;
+	const STATUS_VALIDATED = 5;
 	const STATUS_EXPIRE = 7;
 	const STATUS_SUSPEND = 8;
 	const STATUS_CLOSE = 9;
@@ -137,8 +137,9 @@ class UserVolet extends CommonObject
 		"fk_volet" => array("type"=>"integer:volet:custom/formationhabilitation/class/volet.class.php:0:(status:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
 		"datedebutvolet" => array("type"=>"date", "label"=>"DateDebutVolet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"datefinvolet" => array("type"=>"date", "label"=>"DateFinVolet", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
-		"commentaire" => array("type"=>"text", "label"=>"Commentaire", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>'1',),
-		"qualif_pro" => array("type"=>"sellist:c_qualification_profesionnelle:label:rowid::(active:=:1)", "label"=>"QualifPro", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>'1',),
+		"commentaire" => array("type"=>"text", "label"=>"Commentaire", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1",),
+		"qualif_pro" => array("type"=>"sellist:c_qualification_profesionnelle:label:rowid::(active:=:1)", "label"=>"QualifPro", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
+		"cloture" => array("type"=>"boolean", "label"=>"ClotureOtherVolet", "enabled"=>"1", 'position'=>39, 'notnull'=>0, "visible"=>"1", "default"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -156,6 +157,7 @@ class UserVolet extends CommonObject
 	public $datefinvolet;
 	public $commentaire;
 	public $qualif_pro;
+	public $cloture;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -245,37 +247,31 @@ class UserVolet extends CommonObject
 	 * @param  bool $notrigger false=launch triggers after, true=disable triggers
 	 * @return int             Return integer <0 if KO, Id of created object if OK
 	 */
-	public function create(User $user, $notrigger = false)
+	public function create(User $user, $notrigger = false, $generation_other_volet = true)
 	{
 		global $conf; 
 
 		// Crétion des volets ID, SST, Entreprise
-		$volet = new Volet($this->db);
-		$user_static = new User($this->db);
-		$user_static->fetch($this->fk_user);
-		$listVoletAutre = $volet->getAllVoletByType(4);
-		$listUserVolet = $this->getActiveUserVolet(1, 1, 1);
-		foreach($listVoletAutre as $volet_id) {
-			if(!array_key_exists($volet_id, $listUserVolet)) {
-				$uservolet = new UserVolet($this->db);
-				$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$volet_id;
-				$approbationRequire = $conf->global->$variableName;
+		if($generation_other_volet) {
+			$volet = new Volet($this->db);
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$listVoletAutre = $volet->getAllVoletByType(4);
+			$listUserVolet = $this->getActiveUserVolet(1, 1, 1);
+			foreach($listVoletAutre as $volet_id) {
+				if(!array_key_exists($volet_id, $listUserVolet)) {
+					$uservolet = new UserVolet($this->db);
+					$volet->fetch($volet_id);
 
-				$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$listUserVolet[$volet_id]->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
-				$uservolet->fk_user = $this->fk_user;
-				$uservolet->fk_volet = $volet_id;
-				if(empty($approbationRequire)) {
-					$uservolet->datedebutvolet = dol_now();
-				}
-		
-				$resultcreate = $uservolet->createCommon($user, $notrigger);
+					$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$volet->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
+					$uservolet->fk_user = $this->fk_user;
+					$uservolet->fk_volet = $volet_id;
+			
+					$resultcreate = $uservolet->create($user, $notrigger, false);
 
-				if($resultcreate > 0 && empty($approbationRequire)) {
-					$resultcreate = $uservolet->validate4($user);
-				}
-
-				if($resultcreate < 0) {
-					return -1;
+					if($resultcreate < 0) {
+						return -1;
+					}
 				}
 			}
 		}
@@ -283,14 +279,34 @@ class UserVolet extends CommonObject
 		$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$this->fk_volet;
 		$approbationRequire = $conf->global->$variableName;
 
+		$this->cloture = 1;
 		if(empty($approbationRequire)) {
 			$this->datedebutvolet = dol_now();
 		}
 
+		if(strpos($approbationRequire, '1') !== false) { // Il y a l'approbation 1
+			$this->status = self::STATUS_VALIDATION0;
+		}
+		elseif(strpos($approbationRequire, '2') !== false) { // Il y a l'approbation 2
+			$this->status = self::STATUS_VALIDATION1;
+		}
+		elseif(strpos($approbationRequire, '3') !== false) { // Il y a l'approbation 3
+			$this->status = self::STATUS_VALIDATION2;
+		}
+		elseif(strpos($approbationRequire, '4') !== false) { // Il y a l'approbation 4
+			$this->status = self::STATUS_VALIDATION3;
+		}
+		elseif(strpos($approbationRequire, '5') !== false) { // Il y a l'approbation du collaborateur
+			$this->status = self::STATUS_VALIDATION_WITHOUT_USER;
+		}
+		else {
+			$this->status = self::STATUS_VALIDATED;
+		}
+
 		$resultcreate = $this->createCommon($user, $notrigger);
 
-		if($resultcreate > 0 && empty($approbationRequire)) {
-			$resultcreate = $this->validate4($user);
+		if($resultcreate > 0 && $this->status == self::STATUS_VALIDATED) {
+			$this->validate($user, 0, 1);
 		}
 
 		return $resultcreate;
@@ -305,7 +321,7 @@ class UserVolet extends CommonObject
 	 */
 	public function createFromClone(User $user, $fromid)
 	{
-		global $langs, $extrafields;
+		global $langs, $extrafields, $conf;
 		$error = 0;
 
 		dol_syslog(__METHOD__, LOG_DEBUG);
@@ -337,7 +353,27 @@ class UserVolet extends CommonObject
 			$object->label = empty($this->fields['label']['default']) ? $langs->trans("CopyOf")." ".$object->label : $this->fields['label']['default'];
 		}
 		if (property_exists($object, 'status')) {
-			$object->status = self::STATUS_DRAFT;
+			$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$this->fk_volet;
+			$approbationRequire = $conf->global->$variableName;
+
+			if(strpos($approbationRequire, '1') !== false) { // Il y a l'approbation 1
+				$object->status = self::STATUS_VALIDATION0;
+			}
+			elseif(strpos($approbationRequire, '2') !== false) { // Il y a l'approbation 2
+				$object->status = self::STATUS_VALIDATION1;
+			}
+			elseif(strpos($approbationRequire, '3') !== false) { // Il y a l'approbation 3
+				$object->status = self::STATUS_VALIDATION2;
+			}
+			elseif(strpos($approbationRequire, '4') !== false) { // Il y a l'approbation 4
+				$object->status = self::STATUS_VALIDATION3;
+			}
+			elseif(strpos($approbationRequire, '5') !== false) { // Il y a l'approbation du collaborateur
+				$object->status = self::STATUS_VALIDATION_WITHOUT_USER;
+			}
+			else {
+				$object->status = self::STATUS_VALIDATED;
+			}
 		}
 		if (property_exists($object, 'date_creation')) {
 			$object->date_creation = dol_now();
@@ -819,14 +855,13 @@ class UserVolet extends CommonObject
 	}
 
 	/**
-	 *	Last Validation of object
+	 *	Validation without user of object
 	 *
 	 *	@param		User	$user     		User making status change
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
-	 * 	@param		int		$noclose		1=Does not close other volets, 0= close volets
 	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function validate4($user, $notrigger = 0, $noclose = 0)
+	public function validate_without_user($user, $notrigger = 0)
 	{
 		global $conf, $langs;
 
@@ -835,12 +870,81 @@ class UserVolet extends CommonObject
 		$error = 0;
 
 		// Protection
-		if ($this->status == self::STATUS_VALIDATED) {
-			dol_syslog(get_class($this)."::validate4 action abandonned: already validated", LOG_WARNING);
+		if ($this->status == self::STATUS_VALIDATION_WITHOUT_USER) {
+			dol_syslog(get_class($this)."::validate_without_user action abandonned: already validated", LOG_WARNING);
 			return 0;
 		}
 
-		if(!$noclose) {
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_VALIDATION_WITHOUT_USER;
+		if (!empty($this->fields['date_validation'])) {
+			$sql .= ", date_validation = '".$this->db->idate($now)."'";
+		}
+		if (!empty($this->fields['fk_user_valid'])) {
+			$sql .= ", fk_user_valid = ".((int) $user->id);
+		}
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::validate_without_user()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERVOLET_VALIDATE_WITHOUT_USER', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+		
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_VALIDATION_WITHOUT_USER;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	Last Validation of object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 * 	@param		int		$noclose		1=Does not close other volets, 0= close volets
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function validate($user, $notrigger = 0, $forcecreation = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_VALIDATED && !$forcecreation) {
+			dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
+			return 0;
+		}
+
+		if($this->cloture) {
 			$result = $this->closeActiveUserVolet();
 
 			if($result < 0) {
@@ -873,7 +977,7 @@ class UserVolet extends CommonObject
 			}
 			$sql .= " WHERE rowid = ".((int) $this->id);
 
-			dol_syslog(get_class($this)."::validate4()", LOG_DEBUG);
+			dol_syslog(get_class($this)."::validate()", LOG_DEBUG);
 			$resql = $this->db->query($sql);
 			if (!$resql) {
 				dol_print_error($this->db);
@@ -883,7 +987,7 @@ class UserVolet extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
-				$result = $this->call_trigger('USERVOLET_VALIDATE4', $user);
+				$result = $this->call_trigger('USERVOLET_VALIDATE', $user);
 				if ($result < 0) {
 					$error++;
 				}
@@ -918,7 +1022,7 @@ class UserVolet extends CommonObject
 				$dirsource = $conf->formationhabilitation->dir_output.'/uservolet/'.$oldref;
 				$dirdest = $conf->formationhabilitation->dir_output.'/uservolet/'.$newref;
 				if (!$error && file_exists($dirsource)) {
-					dol_syslog(get_class($this)."::validate4() rename dir ".$dirsource." into ".$dirdest);
+					dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
 
 					if (@rename($dirsource, $dirdest)) {
 						dol_syslog("Rename ok");
@@ -1127,7 +1231,7 @@ class UserVolet extends CommonObject
 
 		// Validate
 		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-		$sql .= " SET status = ".self::STATUS_VALIDATED;
+		$sql .= " SET status = ".self::STATUS_VALIDATION_WITHOUT_USER;
 		$sql .= " WHERE rowid = ".((int) $this->id);
 
 		dol_syslog(get_class($this)."::unsuspend()", LOG_DEBUG);
@@ -1149,7 +1253,7 @@ class UserVolet extends CommonObject
 
 		// Set new ref and current status
 		if (!$error) {
-			$this->status = self::STATUS_VALIDATED;
+			$this->status = self::STATUS_VALIDATION_WITHOUT_USER;
 		}
 
 		if (!$error) {
@@ -1161,29 +1265,29 @@ class UserVolet extends CommonObject
 		}
 	}
 
-	/**
-	 *	Set draft status
-	 *
-	 *	@param	User	$user			Object user that modify
-	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
-	 *	@return	int						Return integer <0 if KO, >0 if OK
-	 */
-	public function setDraft($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status <= self::STATUS_DRAFT) {
-			return 0;
-		}
+	// /**
+	//  *	Set draft status
+	//  *
+	//  *	@param	User	$user			Object user that modify
+	//  *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
+	//  *	@return	int						Return integer <0 if KO, >0 if OK
+	//  */
+	// public function setDraft($user, $notrigger = 0)
+	// {
+	// 	// Protection
+	// 	if ($this->status <= self::STATUS_VALIDATION0) {
+	// 		return 0;
+	// 	}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
-		 {
-		 $this->error='Permission denied';
-		 return -1;
-		 }*/
+	// 	/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+	// 	 {
+	// 	 $this->error='Permission denied';
+	// 	 return -1;
+	// 	 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FORMATIONHABILITATION_USERVOLET_UNVALIDATE');
-	}
+	// 	return $this->setStatusCommon($user, self::STATUS_VALIDATION0, $notrigger, 'FORMATIONHABILITATION_USERVOLET_UNVALIDATE');
+	// }
 
 	/**
 	 *	Set close status
@@ -1497,45 +1601,51 @@ class UserVolet extends CommonObject
 			global $langs;
 			//$langs->load("formationhabilitation@formationhabilitation");
 
-			$variableName = 'nameGroup'.($approbationRequire[0]+1);
-			if(!empty($$variableName)) {
-				$this->labelStatus[self::STATUS_DRAFT] = "Approbation du groupe ".$$variableName." en attente";
-			}
-			else {
-				$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
-			}
+			// $variableName = 'nameGroup'.($approbationRequire[0]+1);
+			// if(!empty($$variableName)) {
+			// 	$this->labelStatus[self::STATUS_VALIDATION0] = "Approbation du groupe ".$$variableName." en attente";
+			// }
+			// else {
+			// 	$this->labelStatus[self::STATUS_VALIDATION0] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			// }
 
-			if(!empty($nameGroup2)) {
-				$this->labelStatus[self::STATUS_VALIDATION1] = "Approbation du groupe $nameGroup2 en attente";
-			}
-			else {
-				$this->labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
-			}
+			// if(!empty($nameGroup2)) {
+			// 	$this->labelStatus[self::STATUS_VALIDATION1] = "Approbation du groupe $nameGroup2 en attente";
+			// }
+			// else {
+			// 	$this->labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			// }
 		
-			if(!empty($nameGroup3)) {
-				$this->labelStatus[self::STATUS_VALIDATION2] = "Approbation du groupe $nameGroup3 en attente";
-			}
-			else {
-				$this->labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
-			}
+			// if(!empty($nameGroup3)) {
+			// 	$this->labelStatus[self::STATUS_VALIDATION2] = "Approbation du groupe $nameGroup3 en attente";
+			// }
+			// else {
+			// 	$this->labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			// }
 
-			if(!empty($nameGroup4)) {
-				$this->labelStatus[self::STATUS_VALIDATION3] = "Approbation du groupe $nameGroup4 en attente";
-			}
-			else {
-				$this->labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
-			}
+			// if(!empty($nameGroup4)) {
+			// 	$this->labelStatus[self::STATUS_VALIDATION3] = "Approbation du groupe $nameGroup4 en attente";
+			// }
+			// else {
+			// 	$this->labelStatus[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('ApprobationVoletCollaborateur');
+			// }
 
+			$this->labelStatus[self::STATUS_VALIDATION0] = "Approbation du groupe $nameGroup1 en attente";
+			$this->labelStatus[self::STATUS_VALIDATION1] = "Approbation du groupe $nameGroup2 en attente";
+			$this->labelStatus[self::STATUS_VALIDATION2] = "Approbation du groupe $nameGroup3 en attente";
+			$this->labelStatus[self::STATUS_VALIDATION3] = "Approbation du groupe $nameGroup4 en attente";
+			$this->labelStatus[self::STATUS_VALIDATION_WITHOUT_USER] = "Approbation du collaborateur en attente";
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
 			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 			$this->labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('SuspendLong');
 			$this->labelStatus[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expiré');
 
-			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
+			$this->labelStatusShort[self::STATUS_VALIDATION0] = $langs->transnoentitiesnoconv('ApprobationVolet');
 			$this->labelStatusShort[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('ApprobationVolet');
 			$this->labelStatusShort[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('ApprobationVolet');
 			$this->labelStatusShort[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('ApprobationVolet');
+			$this->labelStatusShort[self::STATUS_VALIDATION_WITHOUT_USER] = $langs->transnoentitiesnoconv('Enabled');
+			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
 			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
 			$this->labelStatusShort[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspend');
 			$this->labelStatusShort[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expiré');
@@ -1544,8 +1654,8 @@ class UserVolet extends CommonObject
 		if ($status == self::STATUS_VALIDATED) {
 			$statusType = 'status4';
 		}
-		elseif ($status == self::STATUS_DRAFT) {
-			$statusType = 'status0';
+		elseif ($status == self::STATUS_VALIDATION_WITHOUT_USER) {
+			$statusType = 'status2';
 		}
 		elseif ($status == self::STATUS_CLOSE) {
 			$statusType = 'status6';
@@ -1852,7 +1962,7 @@ class UserVolet extends CommonObject
 	public function getArrayStatut() {
 		global $langs; 
 
-		//$labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
+		//$labelStatus[self::STATUS_VALIDATION0] = $langs->transnoentitiesnoconv('Draft');
 		$labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
 		// $labelStatus[self::STATUS_VALIDATION1] = $langs->transnoentitiesnoconv('Validation1');
 		// $labelStatus[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('Validation2');
@@ -2216,7 +2326,6 @@ class UserVolet extends CommonObject
 						$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$volet->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
 						$uservolet->fk_user = $userid;
 						$uservolet->fk_volet = $voletid;
-						$uservolet->status = $uservolet::STATUS_DRAFT;
 						$uservolet->commentaire = GETPOST('commentaire', 'alpha');
 						if($voletid == 6) {
 							$uservolet->qualif_pro = GETPOST('qualif_pro', 'int');
@@ -2296,7 +2405,6 @@ class UserVolet extends CommonObject
 					$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$volet->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
 					$uservolet->fk_user = $userid;
 					$uservolet->fk_volet = $voletid;
-					$uservolet->status = $uservolet::STATUS_DRAFT;
 
 					$resultcreate = $uservolet->create($user);
 
@@ -2479,7 +2587,7 @@ class UserVolet extends CommonObject
 		if(!$all) {
 			$sql .= " AND v.fk_volet = $this->fk_volet";
 		}
-		$sql .= " AND v.status = ".self::STATUS_VALIDATED;
+		$sql .= " AND (v.status = ".self::STATUS_VALIDATED." OR v.status = ".self::STATUS_VALIDATION_WITHOUT_USER.")";
 
 		dol_syslog(get_class($this)."::getActiveUserVolet", LOG_DEBUG);
 		$resql = $this->db->query($sql);
@@ -2555,7 +2663,7 @@ class UserVolet extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as uv";
 		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."element_element as e ON e.fk_target = uv.rowid AND e.targettype = '".$this->module."_".$this->element."' AND e.fk_source = $fk_source AND e.sourcetype = '$sourcetype'";
 		$sql .= " WHERE uv.fk_user = $fk_user";
-		$sql .= " AND uv.status = ".self::STATUS_VALIDATED;
+		$sql .= " AND (uv.status = ".self::STATUS_VALIDATED." OR uv.status = ".self::STATUS_VALIDATION_WITHOUT_USER.")";
 
 		dol_syslog(get_class($this)."::getVoletWithLinkedObject", LOG_DEBUG);
 		$resql = $this->db->query($sql);

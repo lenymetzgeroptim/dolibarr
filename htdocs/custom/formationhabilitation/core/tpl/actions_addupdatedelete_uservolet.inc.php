@@ -213,59 +213,42 @@ if ($action == 'dellink' && !empty($permissiondellink) && !$cancellink && $delli
 
 // Action validate1 object
 if ($action == 'confirm_validate1' && $confirm == 'yes' && $permissiontovalidate1) {
-	$result = $object->validate1($user);
-
-	if ($result >= 0) {
-		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
-	} else {
-		$error++;
-		setEventMessages($object->error, $object->errors, 'errors');
-	}
-	$action = '';
-}
-
-// Action validate2 object
-if ($action == 'confirm_validate2' && $confirm == 'yes' && $permissiontovalidate2) {
-	$result = $object->validate2($user);
-
-	if ($result >= 0) {
-		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
-	} else {
-		$error++;
-		setEventMessages($object->error, $object->errors, 'errors');
-	}
-	$action = '';
-}
-
-// Action validate3 object
-if ($action == 'confirm_validate3' && $confirm == 'yes' && $permissiontovalidate2) {
-	$result = $object->validate3($user);
-
-	if ($result >= 0) {
-		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
-	} else {
-		$error++;
-		setEventMessages($object->error, $object->errors, 'errors');
-	}
-	$action = '';
-}
-
-// Action validate4 object
-if ($action == 'confirm_validate4' && $confirm == 'yes' && $permissiontovalidate4) {
 	$db->begin();
 
-	// TODOLENY : Gérer une date de fin en fonction du volet
-	if(empty($object->datedebutvolet)) {
-		$object->datedebutvolet = dol_now();
+	if (empty(GETPOST("date_debut_voletmonth", 'int')) || empty(GETPOST("date_debut_voletday", 'int')) || empty(GETPOST("date_debut_voletyear", 'int'))) {
+		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateDebutVolet")), null, 'errors');
+		$error++;
 	}
-	$object->datefinvolet = dol_time_plus_duree($object->datedebutvolet, 1, 'y');
-	$result = $object->update($user);
+	$date_debut_volet = dol_mktime(-1, -1, -1, GETPOST("date_debut_voletmonth", 'int'), GETPOST("date_debut_voletday", 'int'), GETPOST("date_debut_voletyear", 'int'));
 
-	if($result > 0) {
-		$result = $object->validate4($user);
+	if(!$error) {
+		// TODOLENY : Gérer une date de fin en fonction du volet
+		$object->datedebutvolet = $date_debut_volet;
+		$object->datefinvolet = dol_time_plus_duree($object->datedebutvolet, 1, 'y');
+		$object->cloture = GETPOST("close_volet", 'int');
+
+		$result = $object->update($user);
+
+		if($result > 0) {
+			if($next_status == $object::STATUS_VALIDATION1) {
+				$result = $object->validate1($user);
+			}
+			elseif($next_status == $object::STATUS_VALIDATION2) {
+				$result = $object->validate2($user);
+			}
+			elseif($next_status == $object::STATUS_VALIDATION3) {
+				$result = $object->validate3($user);
+			}
+			elseif($next_status == $object::STATUS_VALIDATION_WITHOUT_USER) {
+				$result = $object->validate_without_user($user);
+			}
+			elseif($next_status == $object::STATUS_VALIDATED) {
+				$result = $object->validate($user);
+			}
+		}
 	}
 
-	if ($result >= 0) {
+	if (!$error && $result >= 0) {
 		$db->commit();
 		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
 	} else {
@@ -275,6 +258,72 @@ if ($action == 'confirm_validate4' && $confirm == 'yes' && $permissiontovalidate
 	}
 	$action = '';
 }
+
+// Action validate object
+if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate) {
+	if($next_status == $object::STATUS_VALIDATION1) {
+		$result = $object->validate1($user);
+	}
+	elseif($next_status == $object::STATUS_VALIDATION2) {
+		$result = $object->validate2($user);
+	}
+	elseif($next_status == $object::STATUS_VALIDATION3) {
+		$result = $object->validate3($user);
+	}
+	elseif($next_status == $object::STATUS_VALIDATION_WITHOUT_USER) {
+		$result = $object->validate_without_user($user);
+	}
+	elseif($next_status == $object::STATUS_VALIDATED) {
+		$result = $object->validate($user);
+	}
+
+	if ($result >= 0) {
+		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+	} else {
+		$error++;
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
+	$action = '';
+}
+
+// // Action validate3 object
+// if ($action == 'confirm_validate3' && $confirm == 'yes' && $permissiontovalidate2) {
+// 	$result = $object->validate3($user);
+
+// 	if ($result >= 0) {
+// 		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+// 	} else {
+// 		$error++;
+// 		setEventMessages($object->error, $object->errors, 'errors');
+// 	}
+// 	$action = '';
+// }
+
+// // Action validate4 object
+// if ($action == 'confirm_validate4' && $confirm == 'yes' && $permissiontovalidate4) {
+// 	$db->begin();
+
+// 	// TODOLENY : Gérer une date de fin en fonction du volet
+// 	if(empty($object->datedebutvolet)) {
+// 		$object->datedebutvolet = dol_now();
+// 	}
+// 	$object->datefinvolet = dol_time_plus_duree($object->datedebutvolet, 1, 'y');
+// 	$result = $object->update($user);
+
+// 	if($result > 0) {
+// 		$result = $object->validate4($user);
+// 	}
+
+// 	if ($result >= 0) {
+// 		$db->commit();
+// 		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+// 	} else {
+// 		$db->rollback();
+// 		$error++;
+// 		setEventMessages($object->error, $object->errors, 'errors');
+// 	}
+// 	$action = '';
+// }
 
 if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline) {
         if ($object->fk_volet < 1) {

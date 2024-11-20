@@ -106,6 +106,8 @@ TypeVolet = Type
 ModelPDF = Modèle du pdf
 LongLabel = Libellé long
 QualifPro = Qualification profesionnelle
+ClotureOtherVolet = Clôture des anciens volets
+
 
 #
 # Attribut Formation

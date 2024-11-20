@@ -131,8 +131,8 @@ $formSetup->newItem('FORMTIONHABILITATION_SOUPLESSEFORMATION')->setAsYesNo();
 // Add a title for a new section
 $formSetup->newItem('ApprobationVoletTitle')->setAsTitle();
 
-$TField = getLabelList('usergroup', 'nom');
-$TField[9999] = 'Le collaborateur'; 
+$TField[0] = '';
+$TField = $TField + getLabelList('usergroup', 'nom');
 
 // Setup conf for a simple combo list
 $formSetup->newItem('FORMTIONHABILITATION_APPROBATEURVOLET1')->setAsSelect($TField);
@@ -144,10 +144,11 @@ $volet = new Volet($db);
 $voletArray = $volet->getAllVolet();
 
 $TField = array(
-	'Approbation n°1',
-	'Approbation n°2',
-	'Approbation n°3',
-	'Approbation n°4',
+	1 => 'Approbation n°1',
+	2 => 'Approbation n°2',
+	3 => 'Approbation n°3',
+	4 => 'Approbation n°4',
+	5 => 'Le collaborateur',
 ); 
 
 foreach($voletArray as $idVolet => $NomVolet) {

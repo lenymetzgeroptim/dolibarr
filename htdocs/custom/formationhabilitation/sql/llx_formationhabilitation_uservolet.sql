@@ -30,7 +30,8 @@ CREATE TABLE llx_formationhabilitation_uservolet(
 	fk_volet integer NOT NULL, 
 	datedebutvolet date, 
 	datefinvolet date, 
-	commentaire text,
-	qualif_pro integer
+	commentaire text, 
+	qualif_pro integer, 
+	cloture boolean DEFAULT 1
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

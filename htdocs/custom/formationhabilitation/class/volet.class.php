@@ -1067,11 +1067,15 @@ class Volet extends CommonObject
 		$search_status = explode(',', $search['status']);
 		foreach(array_keys($search_status, '50', false) as $key) {
 			unset($search_status[$key]);
-			$search_status[] = UserVolet::STATUS_DRAFT;
+			$search_status[] = UserVolet::STATUS_VALIDATION0;
 			$search_status[] = UserVolet::STATUS_VALIDATION1;
 			$search_status[] = UserVolet::STATUS_VALIDATION2;
 			$search_status[] = UserVolet::STATUS_VALIDATION3;
-			//$search_status[] = UserVolet::STATUS_VALIDATION4;
+		}
+		foreach(array_keys($search_status, UserVolet::STATUS_VALIDATED, false) as $key) {
+			unset($search_status[$key]);
+			$search_status[] = UserVolet::STATUS_VALIDATED;
+			$search_status[] = UserVolet::STATUS_VALIDATION_WITHOUT_USER;
 		}
 		$search['status'] = implode(',', $search_status);
 

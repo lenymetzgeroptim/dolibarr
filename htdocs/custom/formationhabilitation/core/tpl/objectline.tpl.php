@@ -146,10 +146,15 @@ if($objectline->element == 'uservolet') {
     $search_status = explode(',', $search['status']);
     foreach(array_keys($search_status, '50', false) as $key) {
         unset($search_status[$key]);
-        $search_status[] = $objectline::STATUS_DRAFT;
+        $search_status[] = $objectline::STATUS_VALIDATION0;
         $search_status[] = $objectline::STATUS_VALIDATION1;
         $search_status[] = $objectline::STATUS_VALIDATION2;
         $search_status[] = $objectline::STATUS_VALIDATION3;
+    }
+    foreach(array_keys($search_status, $objectline::STATUS_VALIDATED, false) as $key) {
+        unset($search_status[$key]);
+        $search_status[] = $objectline::STATUS_VALIDATED;
+        $search_status[] = $objectline::STATUS_VALIDATION_WITHOUT_USER;
     }
     $search['status'] = implode(',', $search_status);
 }

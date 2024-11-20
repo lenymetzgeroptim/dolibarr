@@ -167,40 +167,28 @@ $enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('formationhabilitation', 'uservolet', 'read');
 	$permissiontoadd = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = $user->hasRight('formationhabilitation', 'uservolet', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
+	$permissiontodelete = $user->hasRight('formationhabilitation', 'uservolet', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_VALIDATION0);
 	$permissionnote = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_setnotes.inc.php
 	$permissiondellink = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_dellink.inc.php
 	$permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
 	$permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
 
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == 9999) {
-		$permissiontovalidate1 = $user->id == $object->fk_user;
-	}
-	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 > 0) {
+	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 > 0) {
 		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
 		$permissiontovalidate1 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
 	}
 
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == 9999) {
-		$permissiontovalidate2 = $user->id == $object->fk_user;
-	}
-	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 > 0) {
+	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 > 0) {
 		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
 		$permissiontovalidate2 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
 	}
 
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == 9999) {
-		$permissiontovalidate3 = $user->id == $object->fk_user;
-	}
-	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 > 0) {
+	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 > 0) {
 		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
 		$permissiontovalidate3 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
 	}
 
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == 9999) {
-		$permissiontovalidate4 = $user->id == $object->fk_user;
-	}
-	elseif($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 > 0) {
+	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 > 0) {
 		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
 		$permissiontovalidate4 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
 	}
@@ -217,7 +205,7 @@ $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entit
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();
 //if ($user->socid > 0) $socid = $user->socid;
-//$isdraft = (isset($object->status) && ($object->status == $object::STATUS_DRAFT) ? 1 : 0);
+//$isdraft = (isset($object->status) && ($object->status == $object::STATUS_VALIDATION0) ? 1 : 0);
 //restrictedArea($user, $object->module, $object, $object->table_element, $object->element, 'fk_soc', 'rowid', $isdraft);
 if (!isModEnabled("formationhabilitation")) {
 	accessforbidden();
@@ -245,6 +233,42 @@ include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_ini
 // }
 // // Extra fields
 // include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
+
+$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->fk_volet;
+$approbationRequire = $conf->global->$variableName;
+$approbationRequireArray = explode(',', $conf->global->$variableName);
+
+if($object->status == $object::STATUS_VALIDATION0) {
+	$permissiontovalidate = $permissiontovalidate1;
+}
+elseif($object->status == $object::STATUS_VALIDATION1) {
+	$permissiontovalidate = $permissiontovalidate2;
+}
+elseif($object->status == $object::STATUS_VALIDATION2) {
+	$permissiontovalidate = $permissiontovalidate3;
+}
+elseif($object->status == $object::STATUS_VALIDATION3) {
+	$permissiontovalidate = $permissiontovalidate4;
+}
+elseif($object->status == $object::STATUS_VALIDATION_WITHOUT_USER) {
+	$permissiontovalidate = $user->id = $object->fk_user;
+}
+
+if($object->status < $object::STATUS_VALIDATION1 && strpos($approbationRequire, '2') !== false) { // Il y a l'approbation 2
+	$next_status = $object::STATUS_VALIDATION1;
+}
+elseif($object->status < $object::STATUS_VALIDATION2 && strpos($approbationRequire, '3') !== false) { // Il y a l'approbation 3
+	$next_status = $object::STATUS_VALIDATION2;
+}
+elseif($object->status < $object::STATUS_VALIDATION3 && strpos($approbationRequire, '4') !== false) { // Il y a l'approbation 4
+	$next_status = $object::STATUS_VALIDATION3;
+}
+elseif($object->status < $object::STATUS_VALIDATION_WITHOUT_USER && strpos($approbationRequire, '5') !== false) { // Il y a l'approbation du collaborateur
+	$next_status = $object::STATUS_VALIDATION_WITHOUT_USER;
+}
+elseif($object->status < $object::STATUS_VALIDATED) {
+	$next_status = $object::STATUS_VALIDATED;
+}
 
 /*
  * Actions
@@ -276,6 +300,7 @@ if (empty($reshook)) {
 	$triggermodname = 'FORMATIONHABILITATION_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
 
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
+	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_uservolet.inc.php';
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
 	// Actions when linking object each other
@@ -289,8 +314,6 @@ if (empty($reshook)) {
 
 	// Action to build doc
 	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
-
-	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_uservolet.inc.php';
 
 	if($volet->typevolet == 1) {
 		if(GETPOST('fk_formation') > 0) {
@@ -505,11 +528,21 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
 	}
 
-	// Confirmation to validate
-	if ($action == 'validate4') {
-		$listUserVolet = $object->getActiveUserVolet(0);
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ValidateUserVolet'), (sizeof($listUserVolet) > 0 ? $langs->trans('ConfirmValidateUserVoletWithClose') : $langs->trans('ConfirmValidateUserVolet')), 'confirm_validate4', '', 0, 1);
+	// Confirmation to validate1
+	if ($action == 'validate1') {
+		$formquestion = array(
+			array('label'=>$langs->trans('DateDebutVolet') ,'type'=>'date', 'name'=>'date_debut_volet', 'value'=>$object->datedebutvolet),
+			array('label'=>$langs->trans('ClotureOtherVolet') ,'type'=>'checkbox', 'name'=>'close_volet', 'value'=>$object->cloture)
+		);
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ValidateUserVolet'), $langs->trans('ConfirmValidateUserVolet'), 'confirm_validate1', $formquestion, 0, 1);
 	}
+
+	// Confirmation to validate4
+	// if ($action == 'validate4') {
+	// 	$listUserVolet = $object->getActiveUserVolet(0);
+	// 	$formquestion = array();
+	// 	$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ValidateUserVolet'), (sizeof($listUserVolet) > 0 ? $langs->trans('ConfirmValidateUserVoletWithClose') : $langs->trans('ConfirmValidateUserVolet')), 'confirm_validate4', $formquestion, 0, 1);
+	// }
 
 	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
 	if ($action == 'xxx') {
@@ -631,12 +664,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			// }
 
 			// Back to draft
-			if ($object->status == $object::STATUS_VALIDATED) {
-				print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
-			}
+			// if ($object->status == $object::STATUS_VALIDATED) {
+			// 	print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// }
 
 			// Modify
-			if ($object->status == $object::STATUS_DRAFT) {
+			if ($object->status == $object::STATUS_VALIDATION0) {
 				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
 			}
 
@@ -645,28 +678,43 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}
 
 			// Validate n°1
-			if ($object->status == $object::STATUS_DRAFT) {
-				$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->fk_volet;
-				$approbationRequire = $conf->global->$variableName;
-				$approbationRequireArray = explode(',', $conf->global->$variableName);
+			// if ($object->status == $object::STATUS_VALIDATION0) {
+			// 	$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->fk_volet;
+			// 	$approbationRequire = $conf->global->$variableName;
+			// 	$approbationRequireArray = explode(',', $conf->global->$variableName);
+			// 	if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
+					
+			// 		if(sizeof($approbationRequireArray) == 1) {
+			// 			if(strpos($approbationRequire, '5') !== false) {
+			// 				print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $user->id == $object->fk_user);
+			// 			}
+			// 			else {
+			// 				$permissionName = 'permissiontovalidate'.($approbationRequireArray[0]+1);
+			// 				print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $$permissionName);		
+			// 			}
+			// 		}
+			// 		elseif(strpos($approbationRequire, '1') !== false) { // Il y a l'approbation 2
+			// 			print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate1&token='.newToken(), '', $permissiontovalidate1);
+			// 		}
+			// 		elseif(strpos($approbationRequire, '2') !== false) { // Il y a l'approbation 3
+			// 			print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate2&confirm=yes&token='.newToken(), '', $permissiontovalidate2);
+			// 		}
+			// 		elseif(strpos($approbationRequire, '3') !== false) { // Il y a l'approbation 4
+			// 			print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate3&confirm=yes&token='.newToken(), '', $permissiontovalidate3);
+			// 		}
+			// 		elseif(strpos($approbationRequire, '4') !== false) {
+			// 			print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $permissiontovalidate4);
+			// 		}
+			// 	} else {
+			// 		$langs->load("errors");
+			// 		print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
+			// 	}
+			// }
 
+			// Validate n°1
+			if ($object->status == $object::STATUS_VALIDATION0) {
 				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					if(sizeof($approbationRequireArray) == 1) {
-						$permissionName = 'permissiontovalidate'.($approbationRequireArray[0]+1);
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $$permissionName);
-					}
-					elseif(strpos($approbationRequire, '1') !== false) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate1&confirm=yes&token='.newToken(), '', $permissiontovalidate1);
-					}
-					elseif(strpos($approbationRequire, '2') !== false) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate2&confirm=yes&token='.newToken(), '', $permissiontovalidate2);
-					}
-					elseif(strpos($approbationRequire, '3') !== false) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate3&confirm=yes&token='.newToken(), '', $permissiontovalidate3);
-					}
-					elseif(strpos($approbationRequire, '4') !== false) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $permissiontovalidate4);
-					}
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate1&token='.newToken(), '', $permissiontovalidate1);
 				} else {
 					$langs->load("errors");
 					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
@@ -676,7 +724,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			// Validate n°2
 			if ($object->status == $object::STATUS_VALIDATION1) {
 				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate2&confirm=yes&token='.newToken(), '', $permissiontovalidate2);
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontovalidate2);
 				} else {
 					$langs->load("errors");
 					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
@@ -686,7 +734,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			// Validate n°3
 			if ($object->status == $object::STATUS_VALIDATION2) {
 				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate3&confirm=yes&token='.newToken(), '', $permissiontovalidate3);
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontovalidate3);
 				} else {
 					$langs->load("errors");
 					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
@@ -696,7 +744,17 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			// Validate n°4
 			if ($object->status == $object::STATUS_VALIDATION3) {
 				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate4&token='.newToken(), '', $permissiontovalidate4);
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontovalidate4);
+				} else {
+					$langs->load("errors");
+					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
+				}
+			}
+
+			// Validate User
+			if ($object->status == $object::STATUS_VALIDATION_WITHOUT_USER) {
+				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
+					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $user->id == $object->fk_user);
 				} else {
 					$langs->load("errors");
 					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
@@ -844,7 +902,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	
 
 		print '<div class="">';
-		//if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
+		//if (!empty($object->lines) || ($object->status == $object::STATUS_VALIDATION0 && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 		//}
 
@@ -884,7 +942,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			print '</tr>';
 		}
 
-		//if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
+		//if (!empty($object->lines) || ($object->status == $object::STATUS_VALIDATION0 && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '</table>';
 		//}
 		print '</div>';
@@ -918,7 +976,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	
 
 		print '<div class="">';
-		//if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
+		//if (!empty($object->lines) || ($object->status == $object::STATUS_VALIDATION0 && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 		//}
 
@@ -957,7 +1015,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			print '</tr>';
 		}
 
-		//if (!empty($object->lines) || ($object->status == $object::STATUS_DRAFT && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
+		//if (!empty($object->lines) || ($object->status == $object::STATUS_VALIDATION0 && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '</table>';
 		//}
 		print '</div>';

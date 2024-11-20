@@ -75,6 +75,8 @@ class UserVolet extends CommonObject
 	const STATUS_VALIDATION2 = 3;
 	const STATUS_VALIDATION3 = 4;
 	//const STATUS_VALIDATION4 = 5;
+	const STATUS_EXPIRE = 7;
+	const STATUS_SUSPEND = 8;
 	const STATUS_CLOSE = 9;
 
 	/**
@@ -130,11 +132,13 @@ class UserVolet extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "9" => "Annul&eacute;"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "2" => "En cours d'approbation", "3" => "En cours d'approbation", "4" => "En cours d'approbation", "8" => "Suspendu", "9" => "Clôtur&eacute;"), "validate"=>"1",),
 		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
 		"fk_volet" => array("type"=>"integer:volet:custom/formationhabilitation/class/volet.class.php:0:(status:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
 		"datedebutvolet" => array("type"=>"date", "label"=>"DateDebutVolet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"datefinvolet" => array("type"=>"date", "label"=>"DateFinVolet", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
+		"commentaire" => array("type"=>"text", "label"=>"Commentaire", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>'1',),
+		"qualif_pro" => array("type"=>"sellist:c_qualification_profesionnelle:label:rowid::(active:=:1)", "label"=>"QualifPro", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>'1',),
 	);
 	public $rowid;
 	public $ref;
@@ -150,6 +154,8 @@ class UserVolet extends CommonObject
 	public $fk_volet;
 	public $datedebutvolet;
 	public $datefinvolet;
+	public $commentaire;
+	public $qualif_pro;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -241,9 +247,51 @@ class UserVolet extends CommonObject
 	 */
 	public function create(User $user, $notrigger = false)
 	{
+		global $conf; 
+
+		// Crétion des volets ID, SST, Entreprise
+		$volet = new Volet($this->db);
+		$user_static = new User($this->db);
+		$user_static->fetch($this->fk_user);
+		$listVoletAutre = $volet->getAllVoletByType(4);
+		$listUserVolet = $this->getActiveUserVolet(1, 1, 1);
+		foreach($listVoletAutre as $volet_id) {
+			if(!array_key_exists($volet_id, $listUserVolet)) {
+				$uservolet = new UserVolet($this->db);
+				$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$volet_id;
+				$approbationRequire = $conf->global->$variableName;
+
+				$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$listUserVolet[$volet_id]->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
+				$uservolet->fk_user = $this->fk_user;
+				$uservolet->fk_volet = $volet_id;
+				if(empty($approbationRequire)) {
+					$uservolet->datedebutvolet = dol_now();
+				}
+		
+				$resultcreate = $uservolet->createCommon($user, $notrigger);
+
+				if($resultcreate > 0 && empty($approbationRequire)) {
+					$resultcreate = $uservolet->validate4($user);
+				}
+
+				if($resultcreate < 0) {
+					return -1;
+				}
+			}
+		}
+
+		$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$this->fk_volet;
+		$approbationRequire = $conf->global->$variableName;
+
+		if(empty($approbationRequire)) {
+			$this->datedebutvolet = dol_now();
+		}
+
 		$resultcreate = $this->createCommon($user, $notrigger);
 
-		//$resultvalidate = $this->validate($user, $notrigger);
+		if($resultcreate > 0 && empty($approbationRequire)) {
+			$resultcreate = $this->validate4($user);
+		}
 
 		return $resultcreate;
 	}
@@ -775,9 +823,10 @@ class UserVolet extends CommonObject
 	 *
 	 *	@param		User	$user     		User making status change
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 * 	@param		int		$noclose		1=Does not close other volets, 0= close volets
 	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function validate4($user, $notrigger = 0)
+	public function validate4($user, $notrigger = 0, $noclose = 0)
 	{
 		global $conf, $langs;
 
@@ -791,13 +840,13 @@ class UserVolet extends CommonObject
 			return 0;
 		}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'uservolet', 'write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation', 'uservolet_advance', 'validate')))
-		 {
-		 $this->error='NotEnoughPermissions';
-		 dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
-		 return -1;
-		 }*/
+		if(!$noclose) {
+			$result = $this->closeActiveUserVolet();
+
+			if($result < 0) {
+				$error++;
+			}
+		}
 
 		$now = dol_now();
 
@@ -893,6 +942,33 @@ class UserVolet extends CommonObject
 			$this->status = self::STATUS_VALIDATED;
 		}
 
+		if(!$error) {
+			// Génération du PDF
+			if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+				if (method_exists($this, 'generateDocument')) {
+					$outputlangs = $langs;
+					$newlang = '';
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+						$newlang = GETPOST('lang_id', 'aZ09');
+					}
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+						$newlang = !empty($this->thirdparty->default_lang) ? $this->thirdparty->default_lang : "";
+					}
+					if (!empty($newlang)) {
+						$outputlangs = new Translate("", $conf);
+						$outputlangs->setDefaultLang($newlang);
+					}
+
+					$model = '';
+
+					$retgen = $this->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+					if ($retgen < 0) {
+						setEventMessages($this->error, $this->errors, 'warnings');
+					}
+				}
+			}
+		}
+
 		if (!$error) {
 			$this->db->commit();
 			return 1;
@@ -902,6 +978,188 @@ class UserVolet extends CommonObject
 		}
 	}
 
+	/**
+	 *	Expire object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function expire($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_EXPIRE) {
+			dol_syslog(get_class($this)."::expire action abandonned: already expired", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_EXPIRE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::expire()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERVOLET_EXPIRE', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_EXPIRE;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	Suspend object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function suspend($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_SUSPEND) {
+			dol_syslog(get_class($this)."::suspend action abandonned: already suspend", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_SUSPEND;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::suspend()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERVOLET_SUSPEND', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_SUSPEND;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 *	Unsuspend object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function unsuspend($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status != self::STATUS_SUSPEND) {
+			dol_syslog(get_class($this)."::unsuspend action abandonned: not suspended", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_VALIDATED;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::unsuspend()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERVOLET_UNSUSPEND', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_VALIDATED;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
 
 	/**
 	 *	Set draft status
@@ -1270,6 +1528,8 @@ class UserVolet extends CommonObject
 
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
 			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
+			$this->labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('SuspendLong');
+			$this->labelStatus[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expiré');
 
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
@@ -1277,6 +1537,8 @@ class UserVolet extends CommonObject
 			$this->labelStatusShort[self::STATUS_VALIDATION2] = $langs->transnoentitiesnoconv('ApprobationVolet');
 			$this->labelStatusShort[self::STATUS_VALIDATION3] = $langs->transnoentitiesnoconv('ApprobationVolet');
 			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
+			$this->labelStatusShort[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspend');
+			$this->labelStatusShort[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expiré');
 		}
 
 		if ($status == self::STATUS_VALIDATED) {
@@ -1287,6 +1549,12 @@ class UserVolet extends CommonObject
 		}
 		elseif ($status == self::STATUS_CLOSE) {
 			$statusType = 'status6';
+		}
+		elseif ($status == self::STATUS_SUSPEND) {
+			$statusType = 'status10';
+		}
+		elseif ($status == self::STATUS_EXPIRE) {
+			$statusType = 'status8';
 		}
 		else {
 			$statusType = 'status1';
@@ -1386,7 +1654,7 @@ class UserVolet extends CommonObject
 			$objectline = new UserAutorisation($this->db);
 		}
 
-		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NOT NULL'), 'AND', $this->id, $this->fk_volet);
+		$result = $objectline->fetchAllLinked('ASC', 'h.label', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NOT NULL'), 'AND', $this->id, $this->fk_volet);
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
@@ -1411,7 +1679,7 @@ class UserVolet extends CommonObject
 
 		if($volet->typevolet == 1) {
 			$objectline = new UserFormation($this->db);
-			$status = UserFormation::STATUS_VALIDE;
+			$status = UserFormation::STATUS_VALIDE.', '.UserFormation::STATUS_REPROGRAMMEE.', '.UserFormation::STATUS_A_PROGRAMMER;
 		}
 		elseif($volet->typevolet == 2) {
 			$objectline = new UserHabilitation($this->db);
@@ -1422,7 +1690,7 @@ class UserVolet extends CommonObject
 			$status = UserAutorisation::STATUS_AUTORISE.', '.UserAutorisation::STATUS_AUTORISABLE;
 		}
 
-		$result = $objectline->fetchAllLinked('ASC', '', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL AND t.status IN ('.$this->db->sanitize($this->db->escape($status)).')'), 'AND', $this->id, $this->fk_volet);
+		$result = $objectline->fetchAllLinked('ASC', 'h.label', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL AND t.status IN ('.$this->db->sanitize($this->db->escape($status)).')'), 'AND', $this->id, $this->fk_volet);
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
@@ -1592,7 +1860,9 @@ class UserVolet extends CommonObject
 		// $labelStatus[self::STATUS_VALIDATION4] = $langs->transnoentitiesnoconv('Validation4');
 		$labelStatus[50] = $langs->transnoentitiesnoconv('ApprobationVolet');
 		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Close');
-		
+		$labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspend');
+		$labelStatus[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expiré');
+
 		return $labelStatus;
 	}
 
@@ -1905,36 +2175,30 @@ class UserVolet extends CommonObject
 
 	
 	/**
-	 * 	Génère les volets avec de nouvelles lignes
-	 *
-	 * 	@return	int						
+	 * 	Génère les volets d'habilitation ou d'autorisation avec les lignes sélectionnées
+	 *  @param	string	$objectclass			Object class name
+	 * 	@param	string	$objectparentclass		Object parent class name
+	 * 	@param	array	$validateObjects		List of object validated with massaction
+	 *  @param  int		$userid					Id of user
+	 * 	@return	int								return 1 if OK, -1 if KO
 	 */
-	public function generateNewVolet($objectclass, $validateObjects, $userid)
+	public function generateNewVoletHabilitationAutorisation($objectclass, $objectparentclass, $validateObjects, $userid)
 	{
 		global $conf, $user;
+		$error = 0;
 
 		$objecttmp = new $objectclass($this->db);
-		if($objecttmp->element == 'userformation') {
-			$objectparenttmp = new Formation($this->db);
-		}
-		elseif($objecttmp->element == 'userhabilitation') {
-			$objectparenttmp = new Habilitation($this->db);
-		}
-		elseif($objecttmp->element == 'userautorisation') {
-			$objectparenttmp = new Autorisation($this->db);
-		}
+		$objectparenttmp = new $objectparentclass($this->db);
+
 		$uservolet = new self($this->db);
 		$user_static = new User($this->db);
 		$user_static->fetch($userid);
 
 		$voletsCreate = array(); 
 
-		dol_syslog(get_class($this)."::generateNewVolet", LOG_DEBUG);
+		dol_syslog(get_class($this)."::generateNewVoletHabilitationAutorisation", LOG_DEBUG);
 		foreach($validateObjects as $validateObject) { // On boucle sur toutes les lignes ajouté
-			if($objecttmp->element == 'userformation') {
-				$objectparenttmp->fetch($validateObject->fk_formation);
-			}
-			elseif($objecttmp->element == 'userhabilitation') {
+			if($objecttmp->element == 'userhabilitation') {
 				$objectparenttmp->fetch($validateObject->fk_habilitation);
 			}
 			elseif($objecttmp->element == 'userautorisation') {
@@ -1949,25 +2213,30 @@ class UserVolet extends CommonObject
 
 					// Création du nouveau volet
 					if(!array_key_exists($voletid, $voletsCreate)) {
-						$uservolet->ref = $user_static->login."-Volet".$volet->numero;
+						$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$volet->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
 						$uservolet->fk_user = $userid;
 						$uservolet->fk_volet = $voletid;
 						$uservolet->status = $uservolet::STATUS_DRAFT;
+						$uservolet->commentaire = GETPOST('commentaire', 'alpha');
+						if($voletid == 6) {
+							$uservolet->qualif_pro = GETPOST('qualif_pro', 'int');
+						}
+						else {
+							$uservolet->qualif_pro = '';
+						}
 
 						$resultcreate = $uservolet->create($user);
-						$voletsCreate[$voletid] = clone $uservolet;
 
 						if($resultcreate < 0) {
 							$error++;
 							$this->error = "Impossible de créer le volet ".$volet->label;
 							break;
 						}
+
+						$voletsCreate[$voletid] = clone $uservolet;
 					}
 				
-					if($objecttmp->element == 'userformation') {
-						$addlink = 'formation';
-					}
-					elseif($objecttmp->element == 'userhabilitation') {
+					if($objecttmp->element == 'userhabilitation') {
 						$addlink = 'habilitation';
 					}
 					elseif($objecttmp->element == 'userautorisation') {
@@ -1994,6 +2263,92 @@ class UserVolet extends CommonObject
 	}
 
 	/**
+	 * 	Génère les volets de formation avec l'ensemble des formations actives
+	 *  @param  int					$userid					Id of user
+	 *  @param  int					$fk_volet				Id of Volet
+	 *  @param  array				$voletsCreate			If of UserVolet also create
+	 * 	@param  UserFormation		$userFormation			Object of userFormation validate or close
+	 * 	@return	int								return 1 if OK, -1 if KO				
+	 */
+	public function generateNewVoletFormation($userid, $fk_volet, &$voletsCreate = array())
+	{
+		global $conf, $user;
+		$error = 0;
+
+		$objecttmp = new UserFormation($this->db);
+
+		$uservolet = new self($this->db);
+		$uservolet2 = new self($this->db);
+		$user_static = new User($this->db);
+		$user_static->fetch($userid);
+
+		dol_syslog(get_class($this)."::generateNewVoletFormation", LOG_DEBUG);
+		$voletsForObject = explode(',', $fk_volet);
+		foreach($voletsForObject as $voletid) {
+			if($voletid > 0) {
+				$volet = new Volet($this->db);
+				$volet->fetch($voletid); 
+
+				$listUserFormations = $objecttmp->getAllFormationsForUserOnVolet($userid, $voletid);
+
+				// Création du nouveau volet
+				if(!in_array($voletid, $voletsCreate) && sizeof($listUserFormations) > 0) {
+					$uservolet->ref = $this->getUniqueRef($user_static->login."_VOLET".$volet->nommage.'_'.dol_print_date(dol_now(), '%d%m%Y'));
+					$uservolet->fk_user = $userid;
+					$uservolet->fk_volet = $voletid;
+					$uservolet->status = $uservolet::STATUS_DRAFT;
+
+					$resultcreate = $uservolet->create($user);
+
+					if($resultcreate < 0) {
+						$error++;
+						$this->error = "Impossible de créer le volet ".$volet->label;
+						break;
+					}
+
+					$voletsCreate[] = $voletid;
+					
+					
+					foreach($listUserFormations as $userformation_id => $userformation_ref) {
+						$resultLink = $uservolet->add_object_linked('formation', $userformation_id);
+						if($resultLink < 0) {
+							$error++;
+							$this->error = "Impossible de lier la ligne ".$userformation_ref." sur le volet ".$volet->label;
+							break;
+						}
+					}
+				}				
+			}
+		}
+
+		if (!$error) {
+			return 1;
+		} else {
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Génère une ref unique pour le volet
+	 *  @param  int			$ref					Ref actuelle
+	 *  @param  User		$user_static			Object of User
+	 * 	@param  Volet		$volet					Object of Volet
+	 * 	@return	int							return new Ref			
+	 */
+	public function getUniqueRef($ref) {
+		$userVolet = new self($this->db);
+		$result = $ref;
+		$i = 1;
+
+		while($userVolet->fetch(0, $result) > 0) {
+			$result = $ref.'_'.$i;
+			$i++;
+		}
+
+		return $result;
+	}
+
+	/**
 	 * 	Ajoute un domaine d'application spécifique pour l'habilitation liée au uservolet
 	 *
 	 * 	@param  int		$lineid       				Id of Habilitation
@@ -2008,6 +2363,7 @@ class UserVolet extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_element_fields as f";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON e.rowid = f.fk_element_element AND e.sourcetype = '$sourcetype' AND e.fk_source = $lineid";
 		$sql .= " AND e.targettype = 'formationhabilitation_uservolet' AND e.fk_target = $this->id";
+		$sql .= " WHERE e.rowid > 0";
 
 		dol_syslog(get_class($this)."::updateDomaineApplication", LOG_DEBUG);
 		$resql = $this->db->query($sql);
@@ -2106,18 +2462,23 @@ class UserVolet extends CommonObject
 	/**
 	 * 	Récupère les uservolet actifs
 	 *
-	 *  @param  int		$mode	0 uniquement l'id, 1 les objets uservolet
+	 *  @param  int		$mode			0 uniquement l'id, 1 les objets uservolet
+	 *  @param  int		$all			0 uniquement le volet actuel, 1 tous les volets
+	 *  @param  int		$get_fk_volet	Récupère fk_volet plutot que le rowid
 	 *  @return	array|int		array with uservolet if OK, < 0 if KO
 	 */
-	public function getActiveUserVolet($mode = 0)
+	public function getActiveUserVolet($mode = 0, $all = 0, $get_fk_volet = 0)
 	{
 		global $conf, $user;
 		$uservolet = new self($this->db);
 		$ret = array(); 
 
-		$sql = "SELECT v.rowid";
+		$sql = "SELECT v.rowid, v.fk_volet";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as v";
-		$sql .= " WHERE v.fk_volet = $this->fk_volet AND v.fk_user = $this->fk_user";
+		$sql .= " WHERE v.fk_user = $this->fk_user";
+		if(!$all) {
+			$sql .= " AND v.fk_volet = $this->fk_volet";
+		}
 		$sql .= " AND v.status = ".self::STATUS_VALIDATED;
 
 		dol_syslog(get_class($this)."::getActiveUserVolet", LOG_DEBUG);
@@ -2126,10 +2487,20 @@ class UserVolet extends CommonObject
 			while($obj = $this->db->fetch_object($resql)) {
 				if($mode = 1) {
 					$uservolet->fetch($obj->rowid);
-					$ret[$obj->rowid] = clone $uservolet;
+					if($get_fk_volet) {
+						$ret[$obj->fk_volet] = clone $uservolet;
+					}
+					else {
+						$ret[$obj->rowid] = clone $uservolet;
+					}
 				}
 				else {
-					$ret[] = $obj->rowid;
+					if($get_fk_volet) {
+						$ret[] = $obj->fk_volet;
+					}
+					else {
+						$ret[] = $obj->rowid;
+					}
 				}
 			}
 			return $ret;
@@ -2165,6 +2536,79 @@ class UserVolet extends CommonObject
 			return -1;
 		}
 	}
+
+	/**
+	 * Récupère les volets dont l'objet (UserAutorisation / UserFormation / UserHabilitation) est lié
+	 *
+	 * 	@param  int		$fk_source       	Id of source object
+	 *  @param  int		$fk_source       	type of source object
+	 *  @return	array(UserVolet)|int		> 0 if OK, < 0 if KO
+	 */
+	public function getVoletWithLinkedObject($fk_source, $sourcetype, $fk_user)
+	{
+		global $conf, $user;
+
+		$userVolet = new UserVolet($this->db);
+		$res = array();
+
+		$sql = "SELECT uv.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as uv";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."element_element as e ON e.fk_target = uv.rowid AND e.targettype = '".$this->module."_".$this->element."' AND e.fk_source = $fk_source AND e.sourcetype = '$sourcetype'";
+		$sql .= " WHERE uv.fk_user = $fk_user";
+		$sql .= " AND uv.status = ".self::STATUS_VALIDATED;
+
+		dol_syslog(get_class($this)."::getVoletWithLinkedObject", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$userVolet->fetch($obj->rowid);
+				$res[$obj->rowid] = clone $userVolet;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * Récupère les volets suspendus dont l'objet (UserAutorisation / UserFormation / UserHabilitation) est lié
+	 *
+	 * 	@param  int		$fk_source       	Id of source object
+	 *  @param  int		$fk_source       	type of source object
+	 *  @return	array(UserVolet)|int		> 0 if OK, < 0 if KO
+	 */
+	public function getVoletSuspendWithLinkedObject($fk_source, $sourcetype, $fk_user)
+	{
+		global $conf, $user;
+
+		$userVolet = new UserVolet($this->db);
+		$res = array();
+
+		$sql = "SELECT uv.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as uv";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."element_element as e ON e.fk_target = uv.rowid AND e.targettype = '".$this->module."_".$this->element."' AND e.fk_source = $fk_source AND e.sourcetype = '$sourcetype'";
+		$sql .= " WHERE uv.fk_user = $fk_user";
+		$sql .= " AND uv.status = ".self::STATUS_SUSPEND;
+
+		dol_syslog(get_class($this)."::getVoletWithLinkedObject", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$userVolet->fetch($obj->rowid);
+				$res[$obj->rowid] = clone $userVolet;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
 }
 
 
