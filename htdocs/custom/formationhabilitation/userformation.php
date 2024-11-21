@@ -274,6 +274,18 @@ if ($action == 'programmer_formation') {
                     );
     $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].($param ? '?'.$param : '').'&lineid='.$lineid, $langs->trans('ProgrammerFormation'), $langs->trans('ConfirmProgrammerFormation'), 'confirm_programmer_formation', $formquestion, 0, 2);
 }
+if ($action == 'generation_auto') {
+    if($onglet == 'habilitation'){
+        $object_to_generate = $objectparentline->generateHabilitationsForUser($object->id, null, $txtListHabilitation, 1);
+    }
+    elseif($onglet == 'autorisation'){
+        $object_to_generate = $objectparentline->generateAutorisationsForUser($object->id, null, $txtListAutorisation, 1);
+    }
+    $formquestion = array(
+                        array('label'=>$langs->trans($objectparentline->element.'togenerate') ,'type'=>'multiselect', 'name'=>'object_generate', 'values'=>$object_to_generate, 'default'=>array_keys($object_to_generate)),
+                    );
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].($param ? '?'.$param : ''), $langs->trans('GenerateAuto'), $langs->trans('ConfirmGenerateAuto'.$objectparentline->element), 'confirm_generation_auto', $formquestion, 0, 2, 400, 700);
+}
 if ($action == 'valider_formation') {
     $objectline->fetch($lineid);
 

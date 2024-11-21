@@ -238,6 +238,8 @@ ConfirmMassClose = Confirmation de clôture en masse
 RecordsClosed=%s enregistrement(s) clôturé(s)
 RecordClosed=Enregistrement clôturée
 NoRecordClosed=Aucun enregistrement clôturé
+ConfirmGenerateAutohabilitation = Etes vous sûrs de vouloir générer les habilitation(s) sélectionnée(s) ?
+ConfirmGenerateAutoautorisation = Etes vous sûrs de vouloir générer les autorisation(s) sélectionnée(s) ?
 
 
 #
@@ -266,3 +268,6 @@ PrerequisObjectsVisiteMedicale = Prérequis de nature de visite médicale
 PrerequisObjectsAutre = Prérequis autres
 Suspend = Suspendu
 SuspendLong = Suspendu pour inaptitude médicale
+GenerateAuto = Génération automatique
+habilitationtogenerate = Habilitation(s) à générer
+autorisationtogenerate = Autorisation(s) à générer

@@ -1297,7 +1297,7 @@ class Autorisation extends CommonObject
 	}
 
 	/**
-	 * 	Return toutes les autorisations dont la formation $formationid est requise
+	 * 	Return toutes les autorisations actives dont la formation $formationid est requise
 	 *
 	 * 	@param  int		$formationId       Id of Formation
 	 * 	@return	array(int)|int						
@@ -1310,14 +1310,43 @@ class Autorisation extends CommonObject
 		$sql = "SELECT ep.fk_source";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
 		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."$this->table_element as h ON h.rowid = ep.fk_source AND ep.sourcetype = '$this->element' AND ep.prerequistype = 'formation'";
-		$sql .= " WHERE FIND_IN_SET(".$formationId.", ep.prerequisobjects)";
-		$sql .= " AND h.status = ".self::STATUS_OUVERTE;
+		$sql .= " WHERE h.status = ".self::STATUS_OUVERTE;
+		$sql .= " AND FIND_IN_SET(".$formationId.", ep.prerequisobjects)";
 
 		dol_syslog(get_class($this)."::getAutorisationsWhereFormationIsRequire", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while($obj = $this->db->fetch_object($resql)) {
 				$res[] = $obj->fk_source;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return toutes les autorisations actives
+	 *
+	 * 	@return	array(int)|int						
+	 */
+	public function getAllAutorisations()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."$this->table_element as h";
+		$sql .= " WHERE h.status = ".self::STATUS_OUVERTE;
+
+		dol_syslog(get_class($this)."::getAllAutorisations", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
 			}
 
 			$this->db->free($resql);
@@ -1381,11 +1410,16 @@ class Autorisation extends CommonObject
 		$user_static = new User($this->db);
 		$user_static->fetch($user_id);
 
-		$userAutorisation->date_autorisation = $userformation->date_fin_formation;
+		if($userformation == null) {
+			$userAutorisation->date_autorisation = dol_now();
+		}
+		else {
+			$userAutorisation->date_autorisation = $userformation->date_fin_formation;
+		}
 		$userAutorisation->date_fin_autorisation = $date_finvalidite;
 		$userAutorisation->fk_user = $user_id;
 		$userAutorisation->status = UserAutorisation::STATUS_AUTORISABLE;
-		$userAutorisation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userformation->date_fin_formation, "%Y%m%d");
+		$userAutorisation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userAutorisation->date_autorisation, "%Y%m%d");
 		$userAutorisation->fk_autorisation = $this->id;
 
 		$resultcreate = $userAutorisation->create($user);
@@ -1399,9 +1433,13 @@ class Autorisation extends CommonObject
 	 * 	@param  int				$user_id       			Id of User
 	 *  @param  UserFormation	$userformation     		new UserFormation
 	 * 	@param  string			$txtListAutorisation  	Contain label of autorisation generate
-	 * 	@return	int						<0 if KO, > 0 if OK				
+	 *  @param  int				$disable_generation  	1 to disable generation and return autorisations that can be generated
+	 *  @param  array			$only_autorisations  	Generation only autorisations on this array
+	 * 	@return	int|array						<0 if KO, > 0 if OK				
 	 */
-	function generateAutorisationsForUser($user_id, $userformation, &$txtListAutorisation) { // TODOLeny - gestion des erreurs
+	function generateAutorisationsForUser($user_id, $userformation, &$txtListAutorisation, $disable_generation = 0, $only_autorisations = null) { // TODOLeny - gestion des erreurs
+		$autorisations_ok = array(); 
+
 		// 1. Récupérer toutes les formations de l'utilisateur (y compris la nouvelle)
 		//$formations_user = $userformation->getAllFormationsForUser($user_id);
 		// if (!in_array($userformation->fk_formation, $formations_user)) {
@@ -1409,10 +1447,19 @@ class Autorisation extends CommonObject
 		// }
 
 		// 2. Récupérer toutes les autorisations où la nouvelle formation est un prérequis
-		$autorisations = $this->getAutorisationsWhereFormationIsRequire($userformation->fk_formation);
+		if($userformation == null) {
+			$autorisations = $this->getAllAutorisations();
+		}
+		else {
+			$autorisations = $this->getAutorisationsWhereFormationIsRequire($userformation->fk_formation);
+		}
 
 		// 3. Parcourir chaque autorisation et vérifier les conditions
 		foreach ($autorisations as $autorisation_id) {
+			if($only_autorisations != null && !in_array($autorisation_id, $only_autorisations)) {
+				continue;
+			}
+
 			$elementPrerequis = new ElementPrerequis($this->db);
 			$autorisation = new self($this->db);
 
@@ -1422,7 +1469,7 @@ class Autorisation extends CommonObject
 			$all_conditions_met = $elementPrerequis->gestionPrerequis($user_id, $autorisation, 0, 0, $date_finvalidite);
 	
 			// Si toutes les conditions sont remplies, attribuer l'habilitation
-			if ($all_conditions_met == 1) {
+			if ($all_conditions_met == 1 && !$disable_generation) {
 				$txtListAutorisation .= $autorisation->label.', ';
 
 				$resultcreate = $autorisation->AsignToUser($user_id, $userformation, $date_finvalidite);
@@ -1433,9 +1480,17 @@ class Autorisation extends CommonObject
 					return -1;
 				}
 			}
+			elseif($all_conditions_met == 1 && $disable_generation) {
+				$autorisations_ok[$autorisation->id] = $autorisation->label;
+			}
 		}
 
-		return 1;
+		if(!$disable_generation) {
+			return 1;
+		}
+		else {
+			return $autorisations_ok;
+		}
 	}
 }
 

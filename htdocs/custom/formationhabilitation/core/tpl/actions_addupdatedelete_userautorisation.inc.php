@@ -159,3 +159,38 @@ if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline
     }
     $action = '';
 }
+
+if ($action == 'confirm_generation_auto' && $confirm == 'yes' && $permissiontoaddline) {
+	$db->begin();
+
+	if(!($object->id > 0)){
+		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("User")), null, 'errors');
+		$error++;
+	}
+
+	if(empty(GETPOST('object_generate'))){
+		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv($objectparentline->element.'togenerate')), null, 'errors');
+		$error++;
+	}
+
+	if(!$error) {
+		$txtListAutorisation = '';
+		$resultcreatelineautorisations = $objectparentline->generateAutorisationsForUser($object->id, null, $txtListAutorisation, 0,explode(",", GETPOST('object_generate')));
+
+		if($resultcreatelineautorisations < 0) {
+			setEventMessages('Erreur lors de la création des autorisations', null, 'errors');
+			$error++;
+		}
+	}
+
+	if (!$error) {
+		$db->commit();
+        setEventMessages($langs->trans('RecordSaved'), null, 'mesgs');
+		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
+		exit;
+    } else {
+        $db->rollback();
+        //setEventMessages($object->error, $object->errors, 'errors');
+    }
+    $action = '';
+}

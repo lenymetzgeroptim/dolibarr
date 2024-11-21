@@ -33,7 +33,7 @@
  * $inputalsopricewithtax (0 by default, 1 to also show column with unit price including tax)
  */
 
- global $action, $resultcreate, $cancel, $resultupdate, $object, $objectline;
+ global $action, $resultcreate, $cancel, $resultupdate, $object, $objectline, $param, $permissiontoaddline;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -164,4 +164,5 @@ if($objectline->element != 'uservolet') {
 	print '<input type="checkbox" class="margin5" name="forcecreation" id="forcecreation" form="addline"/><label for="forcecreation">'.$langs->trans('ForceCreation').'</label>';
 }
 print '<input type="submit" class="button reposition" value="'.$langs->trans('Add').'" name="addline" id="addline" form="addline"></td>';
+print '<div style="text-align: center;">'.dolGetButtonAction($langs->trans('GenerateAuto'), '', 'default', $_SERVER["PHP_SELF"].'?'.$param.'&action=generation_auto&token='.newToken(), '', $permissiontoaddline).'</div><br>';
 print '</tr>';
