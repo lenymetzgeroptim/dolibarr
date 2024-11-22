@@ -200,7 +200,7 @@ else {
 		print '</td>';
 	}
 
-	if (empty($enableunlink) && empty($enablelink)) {
+	if ($object->element != 'uservolet') {
 		print '<td class="linecolchkbox nowrap center width20">';
 		if ($massactionbutton || $massaction) { // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
 			$selected = 0;

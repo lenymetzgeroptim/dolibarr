@@ -142,7 +142,7 @@ if($action == 'addline' && $permissiontoaddline) {
 // }
 
 // Link object to another object
-if ($action == 'addlink' && !empty($permissiondellink) && $id > 0 && $addlinkid > 0) {
+if ($action == 'addlink' && !empty($permissiontolinkandunlink) && $id > 0 && $addlinkid > 0) {
 	$db->begin();
 
 	$result = $object->add_object_linked($addlink, $addlinkid);
@@ -175,7 +175,7 @@ if ($action == 'addlink' && !empty($permissiondellink) && $id > 0 && $addlinkid 
 }
 
 // Delete link in table llx_element_element
-if ($action == 'dellink' && !empty($permissiondellink) && !$cancellink && $dellinkid > 0) {
+if ($action == 'dellink' && !empty($permissiontolinkandunlink) && !$cancellink && $dellinkid > 0) {
 	$db->begin();
 
 	$result = $object->deleteDomaineApplication($dellinkid);
@@ -255,6 +255,8 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $permissiontovalidate
 	if (!$error && $result >= 0) {
 		$db->commit();
 		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
+		exit;
 	} else {
 		$db->rollback();
 		$error++;
@@ -283,6 +285,40 @@ if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate)
 
 	if ($result >= 0) {
 		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
+		exit;
+	} else {
+		$error++;
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
+	$action = '';
+}
+
+// Action refuse object
+if ($action == 'confirm_refuse' && $confirm == 'yes' && $permissiontorefuse) {
+	$first_status = min($approbationRequireArray);
+
+	if (empty(GETPOST('motif_refus', 'alpha'))) {
+		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("MotifRefus")), null, 'errors');
+		$error++;
+	}
+
+	if (empty($first_status)) {
+		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Statut")), null, 'errors');
+		$error++;
+	}
+
+	if(!$error) {
+		$object->status = $first_status-1;
+		$object->commentaire .= (!empty($object->commentaire) ? '<br>'.GETPOST('motif_refus', 'alpha') : GETPOST('motif_refus', 'alpha'));
+
+		$result = $object->update($user);
+	}
+	
+	if (!$error && $result > 0) {
+		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
+		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
+		exit;
 	} else {
 		$error++;
 		setEventMessages($object->error, $object->errors, 'errors');

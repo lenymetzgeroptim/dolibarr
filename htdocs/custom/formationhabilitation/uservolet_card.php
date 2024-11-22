@@ -169,7 +169,6 @@ if ($enablepermissioncheck) {
 	$permissiontoadd = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 	$permissiontodelete = $user->hasRight('formationhabilitation', 'uservolet', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_VALIDATION0);
 	$permissionnote = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_setnotes.inc.php
-	$permissiondellink = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_dellink.inc.php
 	$permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
 	$permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
 
@@ -192,12 +191,66 @@ if ($enablepermissioncheck) {
 		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
 		$permissiontovalidate4 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
 	}
+
+	$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->fk_volet;
+	$approbationRequire = $conf->global->$variableName;
+	$approbationRequireArray = explode(',', $conf->global->$variableName);
+
+	if($object->status == $object::STATUS_VALIDATION0) {
+		$permissiontovalidate = $permissiontovalidate1;
+	}
+	elseif($object->status == $object::STATUS_VALIDATION1) {
+		$permissiontovalidate = $permissiontovalidate2;
+	}
+	elseif($object->status == $object::STATUS_VALIDATION2) {
+		$permissiontovalidate = $permissiontovalidate3;
+	}
+	elseif($object->status == $object::STATUS_VALIDATION3) {
+		$permissiontovalidate = $permissiontovalidate4;
+	}
+	elseif($object->status == $object::STATUS_VALIDATION_WITHOUT_USER) {
+		$permissiontovalidate = $user->id = $object->fk_user;
+	}
+
+	if($object->status < $object::STATUS_VALIDATION1 && strpos($approbationRequire, '2') !== false) { // Il y a l'approbation 2
+		$next_status = $object::STATUS_VALIDATION1;
+	}
+	elseif($object->status < $object::STATUS_VALIDATION2 && strpos($approbationRequire, '3') !== false) { // Il y a l'approbation 3
+		$next_status = $object::STATUS_VALIDATION2;
+	}
+	elseif($object->status < $object::STATUS_VALIDATION3 && strpos($approbationRequire, '4') !== false) { // Il y a l'approbation 4
+		$next_status = $object::STATUS_VALIDATION3;
+	}
+	elseif($object->status < $object::STATUS_VALIDATION_WITHOUT_USER && strpos($approbationRequire, '5') !== false) { // Il y a l'approbation du collaborateur
+		$next_status = $object::STATUS_VALIDATION_WITHOUT_USER;
+	}
+	elseif($object->status < $object::STATUS_VALIDATED) {
+		$next_status = $object::STATUS_VALIDATED;
+	}
+
+	$validation_before = 1;
+	if($object->status == $object::STATUS_VALIDATION0) {
+		$validation_before = 0;
+	}
+	elseif($object->status == $object::STATUS_VALIDATION1 && strpos($approbationRequire, '1') === false) { // Il n'y a pas eu l'approbation 1
+		$validation_before = 0;
+	}
+	elseif($object->status == $object::STATUS_VALIDATION2 && strpos($approbationRequire, '1') === false && strpos($approbationRequire, '2') === false) { // Il n'y a pas eu l'approbation 1, ni 2
+		$validation_before = 0;
+	}
+	elseif($object->status == $object::STATUS_VALIDATION3 && strpos($approbationRequire, '1') === false && strpos($approbationRequire, '2') === false && strpos($approbationRequire, '3') === false) { // Il n'y a pas eu l'approbation 1, ni 2, ni 3
+		$validation_before = 0;
+	}
+
+	$permissiontolinkandunlink = $object->status < $object::STATUS_VALIDATION_WITHOUT_USER && $permissiontovalidate && !$validation_before;
+	$permissiontorefuse = $permissiontovalidate && !$permissiontolinkandunlink;
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 	$permissiontodelete = 1;
 	$permissionnote = 1;
-	$permissiondellink = 1;
+	$permissiontolinkandunlink = 1;
+	$permissiontorefuse = 1;
 }
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/uservolet';
@@ -233,42 +286,6 @@ include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_ini
 // }
 // // Extra fields
 // include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
-
-$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->fk_volet;
-$approbationRequire = $conf->global->$variableName;
-$approbationRequireArray = explode(',', $conf->global->$variableName);
-
-if($object->status == $object::STATUS_VALIDATION0) {
-	$permissiontovalidate = $permissiontovalidate1;
-}
-elseif($object->status == $object::STATUS_VALIDATION1) {
-	$permissiontovalidate = $permissiontovalidate2;
-}
-elseif($object->status == $object::STATUS_VALIDATION2) {
-	$permissiontovalidate = $permissiontovalidate3;
-}
-elseif($object->status == $object::STATUS_VALIDATION3) {
-	$permissiontovalidate = $permissiontovalidate4;
-}
-elseif($object->status == $object::STATUS_VALIDATION_WITHOUT_USER) {
-	$permissiontovalidate = $user->id = $object->fk_user;
-}
-
-if($object->status < $object::STATUS_VALIDATION1 && strpos($approbationRequire, '2') !== false) { // Il y a l'approbation 2
-	$next_status = $object::STATUS_VALIDATION1;
-}
-elseif($object->status < $object::STATUS_VALIDATION2 && strpos($approbationRequire, '3') !== false) { // Il y a l'approbation 3
-	$next_status = $object::STATUS_VALIDATION2;
-}
-elseif($object->status < $object::STATUS_VALIDATION3 && strpos($approbationRequire, '4') !== false) { // Il y a l'approbation 4
-	$next_status = $object::STATUS_VALIDATION3;
-}
-elseif($object->status < $object::STATUS_VALIDATION_WITHOUT_USER && strpos($approbationRequire, '5') !== false) { // Il y a l'approbation du collaborateur
-	$next_status = $object::STATUS_VALIDATION_WITHOUT_USER;
-}
-elseif($object->status < $object::STATUS_VALIDATED) {
-	$next_status = $object::STATUS_VALIDATED;
-}
 
 /*
  * Actions
@@ -538,6 +555,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ValidateUserVolet'), $langs->trans('ConfirmValidateUserVolet'), 'confirm_validate1', $formquestion, 0, 1);
 	}
 
+	if ($action == 'refuse') {
+		$formquestion = array(
+			array('label'=>$langs->trans('MotifRefus') ,'type'=>'textarea', 'name'=>'motif_refus', 'value'=>'')
+		);
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('RefuseUserVolet'), $langs->trans('ConfirmRefuseUserVolet'), 'confirm_refuse', $formquestion, 0, 1);
+	}
+
 	// Confirmation to validate4
 	// if ($action == 'validate4') {
 	// 	$listUserVolet = $object->getActiveUserVolet(0);
@@ -767,6 +791,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction('', $langs->trans('ToClone'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.(!empty($object->socid) ? '&socid='.$object->socid : '').'&action=clone&token='.newToken(), '', $permissiontoadd);
 			}
 
+			if ($object->status < $object::STATUS_VALIDATED) {
+				print dolGetButtonAction('', $langs->trans('Refuse'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refuse&token='.newToken(), '', $permissiontorefuse);
+			}
+
 			/*
 			// Disable / Enable
 			if ($permissiontoadd) {
@@ -873,7 +901,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		// Show object lines linked
 		$result = $object->getLinkedLinesArray();
-		$enableunlink = 1; 
+		if($permissiontolinkandunlink) {
+			$enableunlink = 1; 
+		}
+		else {
+			$enableunlink = 0; 
+		}
 		$enablelink = 0; 
 		$disableedit = 1;
 		$disableremove = 1;
@@ -937,7 +970,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 			print '<tr>';
 			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';
-			print '<td class="linecollink center width20"></div>';
+			if($permissiontolinkandunlink) {
+				print '<td class="linecollink center width20"></div>';
+			}
 			// print '<td class="linecoledit center width20"></div>';
 			// print '<td class="linecoldelete center width20"></div>';
 			print '</tr>';
@@ -954,7 +989,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		// Show object lines no linked
 		$result = $object->getNoLinkedLinesArray();
-		$enablelink = 1; 
+		if($permissiontolinkandunlink) {
+			$enablelink = 1; 
+		}
+		else {
+			$enablelink = 0; 
+		}
 		$enableunlink = 0; 
 		$disableedit = 1;
 		$disableremove = 1;
@@ -1010,7 +1050,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 			print '<tr>';
 			print '<td colspan="'.$colspan.'"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td>';
-			print '<td class="linecollink center width20"></div>';
+			if($permissiontolinkandunlink) {
+				print '<td class="linecollink center width20"></div>';
+			}
 			// print '<td class="linecoledit center width20"></div>';
 			// print '<td class="linecoldelete center width20"></div>';
 			print '</tr>';

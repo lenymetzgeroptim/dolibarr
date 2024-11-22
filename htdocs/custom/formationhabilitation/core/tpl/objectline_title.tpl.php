@@ -33,7 +33,7 @@
  * $type, $text, $description, $line
  */
 
-global $sortfield, $sortorder, $selectedfields, $arrayfields, $object, $param, $objectline;
+global $sortfield, $sortorder, $selectedfields, $arrayfields, $object, $param, $objectline, $permissiontolinkandunlink;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -66,12 +66,12 @@ foreach($objectline->fields as $key => $val){
 	}
 }
 
-if ($this->table_element == 'formationhabilitation_uservolet' && $this->id > 0) {
+if ($object->table_element == 'formationhabilitation_uservolet' && $object->id > 0 && $permissiontolinkandunlink) {
 	print '<th class="liste_titre linecollink"></th>';
 	// print '<th class="liste_titre linecoledit"></th>'; 
 	// print '<th class="liste_titre linecoldelete"></th>';
 }
-else {
+elseif($object->table_element != 'formationhabilitation_uservolet') {
 	print getTitleFieldOfList($selectedfields, 0, $_SERVER["PHP_SELF"], '', '', $param, 'class="center" colspan="3"', $sortfield, $sortorder, 'center maxwidthsearch ')."\n";
 }
 
