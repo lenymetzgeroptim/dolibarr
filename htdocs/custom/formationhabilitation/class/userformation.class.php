@@ -601,7 +601,7 @@ class UserFormation extends CommonObject
 		if(!$error){
 			$txtListHabilitation = '';
 			$habilitationStatic = new Habilitation($this->db);
-			$resultcreatelinehabilitations = $habilitationStatic->generateHabilitationsForUser($this->fk_user, $this, $txtListHabilitation);
+			$resultcreatelinehabilitations = $habilitationStatic->generateHabilitationsForUser($this->fk_user, $this, $txtListHabilitation, 0, explode(",", GETPOST('habilitation_generate')));
 	
 			if($resultcreatelinehabilitations < 0) {
 				setEventMessages('Erreur lors de la création des habilitations', null, 'errors');
@@ -673,7 +673,7 @@ class UserFormation extends CommonObject
 	
 			$txtListAutorisation = '';
 			$autorisationStatic = new Autorisation($this->db);
-			$resultcreatelineautorisations = $autorisationStatic->generateAutorisationsForUser($this->fk_user, $this, $txtListAutorisation);
+			$resultcreatelineautorisations = $autorisationStatic->generateAutorisationsForUser($this->fk_user, $this, $txtListAutorisation, 0, explode(",", GETPOST('autorisation_generate')));
 	
 			if($resultcreatelineautorisations < 0) {
 				setEventMessages('Erreur lors de la création des autorisations', null, 'errors');

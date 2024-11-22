@@ -283,7 +283,20 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
             $txt_formationToReprogrammer = rtrim($txt_formationToReprogrammer, ', ');
         }
 
-        if(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
+        if(GETPOST('status') == $objectline::STATUS_VALIDE) {
+            $userFormation = new UserFormation($db);
+            $userFormation->fk_formation = GETPOST('fk_formation');
+            $habilitation = new Habilitation($db);
+            $habilitation_to_generate = $habilitation->generateHabilitationsForUser(GETPOST('fk_user'), $userFormation, $txtListHabilitation, 1);
+            $autorisation = new Autorisation($db);
+            $autorisation_to_generate = $autorisation->generateAutorisationsForUser(GETPOST('fk_user'), $userFormation, $txtListAutorisation, 1);
+
+            $formquestion = array(
+                array('label'=>$langs->trans('habilitationtogenerate') ,'type'=>'multiselect', 'name'=>'habilitation_generate', 'values'=>$habilitation_to_generate, 'default'=>array_keys($habilitation_to_generate)),
+                array('label'=>$langs->trans('autorisationtogenerate') ,'type'=>'multiselect', 'name'=>'autorisation_generate', 'values'=>$autorisation_to_generate, 'default'=>array_keys($autorisation_to_generate)),
+            );
+        }
+        elseif(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
             if (!empty(GETPOST("date_debut_formationmonth", 'int')) && !empty(GETPOST("date_debut_formationday", 'int')) && !empty(GETPOST("date_debut_formationyear", 'int'))) {
                 $date_debut = dol_mktime(-1, -1, -1, GETPOST("date_debut_formationmonth", 'int'), GETPOST("date_debut_formationday", 'int'), GETPOST("date_debut_formationyear", 'int'));
             }
@@ -300,10 +313,10 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
         }
 
         if(GETPOST('status') == $objectline::STATUS_VALIDE) {
-            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$paramformconfirm, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLineWithDeletion', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
+            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$paramformconfirm, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLineWithDeletion', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1, 400, 700);
         }
         elseif(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
-            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$paramformconfirm, $langs->trans('AddLine'), (!empty($txt_formationToReprogrammer) ? $langs->trans('ConfirmAddLineWithProgrammation', $txt_formationToReprogrammer) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1);
+            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$paramformconfirm, $langs->trans('AddLine'), (!empty($txt_formationToReprogrammer) ? $langs->trans('ConfirmAddLineWithProgrammation', $txt_formationToReprogrammer) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1, 400, 700);
         }
 
         print $formconfirm;

@@ -205,20 +205,6 @@ if ($onglet == 'volet') {
     // }
 }
 
-unset($arrayfields['t.formateur']);
-unset($objectline->fields['fk_user']);
-unset($arrayfields['t.fk_user']);
-if(!$permissiontoreadCout) {
-    unset($objectline->fields['cout_pedagogique']);
-    unset($objectline->fields['cout_mobilisation']);
-    unset($objectline->fields['cout_annexe']);
-    unset($objectline->fields['cout_total']);
-    unset($arrayfields['t.cout_pedagogique']);
-    unset($arrayfields['t.cout_mobilisation']);
-    unset($arrayfields['t.cout_annexe']);
-    unset($arrayfields['t.cout_total']);
-}
-
 /*
  * View
  */
@@ -298,13 +284,34 @@ if ($action == 'valider_formation') {
         $txt_formationToClose = rtrim($txt_formationToClose, ', ');
     }
 
+    $habilitation = new Habilitation($db);
+    $habilitation_to_generate = $habilitation->generateHabilitationsForUser($objectline->fk_user, $objectline, $txtListHabilitation, 1);
+    $autorisation = new Autorisation($db);
+    $autorisation_to_generate = $autorisation->generateAutorisationsForUser($objectline->fk_user, $objectline, $txtListAutorisation, 1);
+
     $formquestion = array(array('label'=>'Résultat' ,'type'=>'select', 'name'=>'resultat_valider', 'default'=>$objectline->resultat, 'values' => $objectline->fields['resultat']['arrayofkeyval']),
-                          array('label'=>'Numéro Certificat' ,'type'=>'text', 'name'=>'numero_certificat_valider', 'value'=>$objectline->numero_certificat));
-    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].($param ? '?'.$param : '').'&lineid='.$lineid, $langs->trans('ValiderFormation'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmValiderFormation2', $txt_formationToClose) : $langs->trans('ConfirmValiderFormation')), 'confirm_valider_formation', $formquestion, 0, 2);
+                          array('label'=>'Numéro Certificat' ,'type'=>'text', 'name'=>'numero_certificat_valider', 'value'=>$objectline->numero_certificat),
+                          array('label'=>$langs->trans('habilitationtogenerate') ,'type'=>'multiselect', 'name'=>'habilitation_generate', 'values'=>$habilitation_to_generate, 'default'=>array_keys($habilitation_to_generate)),
+                          array('label'=>$langs->trans('autorisationtogenerate') ,'type'=>'multiselect', 'name'=>'autorisation_generate', 'values'=>$autorisation_to_generate, 'default'=>array_keys($autorisation_to_generate)),
+                        );
+    $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].($param ? '?'.$param : '').'&lineid='.$lineid, $langs->trans('ValiderFormation'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmValiderFormation2', $txt_formationToClose) : $langs->trans('ConfirmValiderFormation')), 'confirm_valider_formation', $formquestion, 0, 2, 400, 700);
 }
 // Print form confirm
 print $formconfirm;
 
+unset($arrayfields['t.formateur']);
+unset($objectline->fields['fk_user']);
+unset($arrayfields['t.fk_user']);
+if(!$permissiontoreadCout) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_mobilisation']);
+    unset($objectline->fields['cout_annexe']);
+    unset($objectline->fields['cout_total']);
+    unset($arrayfields['t.cout_pedagogique']);
+    unset($arrayfields['t.cout_mobilisation']);
+    unset($arrayfields['t.cout_annexe']);
+    unset($arrayfields['t.cout_total']);
+}
 
 dol_banner_tab($object, 'id', $linkback, $user->rights->user->user->lire || $user->admin);
 

@@ -1213,11 +1213,17 @@ class Habilitation extends CommonObject
 		global $conf, $user;
 		$res = array();
 
-		$sql = "SELECT ep.fk_source";
+		$sql = "(SELECT DISTINCT ep.fk_source";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
 		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."$this->table_element as h ON h.rowid = ep.fk_source AND ep.sourcetype = '$this->element' AND ep.prerequistype = 'formation'";
 		$sql .= " WHERE h.status = ".self::STATUS_OUVERTE;
-		$sql .= " AND FIND_IN_SET(".$formationId.", ep.prerequisobjects)";
+		$sql .= " AND FIND_IN_SET(".$formationId.", ep.prerequisobjects))";
+		$sql .= " UNION ";
+		$sql .= " (SELECT DISTINCT h.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_habilitation as h";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep ON h.rowid = ep.fk_source AND ep.prerequistype = 'formation'";
+		$sql .= " WHERE ep.rowid IS NULL";
+		$sql .= " AND h.status = ".self::STATUS_OUVERTE.")";
 
 		dol_syslog(get_class($this)."::getHabilitationsWhereFormationIsRequire", LOG_DEBUG);
 		$resql = $this->db->query($sql);
@@ -1372,7 +1378,7 @@ class Habilitation extends CommonObject
 			$date_finvalidite = null;
 			$habilitation->fetch($habilitation_id);
 
-			$all_conditions_met = $elementPrerequis->gestionPrerequis($user_id, $habilitation, 0, 0, $date_finvalidite);
+			$all_conditions_met = $elementPrerequis->gestionPrerequis($user_id, $habilitation, 0, 0, $date_finvalidite, $userformation->fk_formation);
 
 			// Si toutes les conditions sont remplies, attribuer l'habilitation
 			if ($all_conditions_met == 1 && !$disable_generation) {

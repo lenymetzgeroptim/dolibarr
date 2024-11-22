@@ -1279,9 +1279,10 @@ class ElementPrerequis extends CommonObject
 	 * 	@param  int		$withprogram    			include STATUS_PROGRAMMEE
 	 * 	@param  int		$withMessage    			Display error message
 	 *  @param  int		$date_finvalidite    		Date fin de validité la plus restrictive
+	 *  @param  int		$formation_added    		Formation qui est ajouté à l'utilisateur
 	 * 	@return	int				1 if OK, -1 if KO		
 	 */
-	public function gestionPrerequis($fk_user, $objectparenttmp, $withprogram = 0, $withMessage = 1, &$date_finvalidite = null)
+	public function gestionPrerequis($fk_user, $objectparenttmp, $withprogram = 0, $withMessage = 1, &$date_finvalidite = null, $formation_added = 0)
 	{
 		global $conf, $user, $langs;
 
@@ -1289,6 +1290,10 @@ class ElementPrerequis extends CommonObject
 		$formations_user = $userFormation->getAllFormationsForUser($fk_user, $withprogram);
 		$visiteMedicale = new VisiteMedical($this->db);
 		$natures_visite_user = $visiteMedicale->getAllNatureVisiteForUser($fk_user);
+
+		if($formation_added > 0) {
+			$formations_user['id'][] = $formation_added;
+		}
 
 		// Récupérer toutes les conditions de prérequis 
 		$prerequisConditions = $objectparenttmp->getPrerequis($objectparenttmp->id);

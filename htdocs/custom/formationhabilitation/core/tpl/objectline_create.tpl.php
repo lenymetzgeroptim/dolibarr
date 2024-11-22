@@ -164,5 +164,7 @@ if($objectline->element != 'uservolet') {
 	print '<input type="checkbox" class="margin5" name="forcecreation" id="forcecreation" form="addline"/><label for="forcecreation">'.$langs->trans('ForceCreation').'</label>';
 }
 print '<input type="submit" class="button reposition" value="'.$langs->trans('Add').'" name="addline" id="addline" form="addline"></td>';
-print '<div style="text-align: center;">'.dolGetButtonAction($langs->trans('GenerateAuto'), '', 'default', $_SERVER["PHP_SELF"].'?'.$param.'&action=generation_auto&token='.newToken(), '', $permissiontoaddline).'</div><br>';
+if(($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation') && $object->element == 'user') {
+	print '<div style="text-align: center;">'.dolGetButtonAction($langs->trans('GenerateAuto'), '', 'default', $_SERVER["PHP_SELF"].'?'.$param.'&action=generation_auto&token='.newToken(), '', $permissiontoaddline).'</div><br>';
+}
 print '</tr>';
