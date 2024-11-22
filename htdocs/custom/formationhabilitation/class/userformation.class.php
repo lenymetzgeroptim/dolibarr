@@ -609,7 +609,7 @@ class UserFormation extends CommonObject
 			}
 	
 			// Envoi du mail
-			if($resultcreatelinehabilitations > 0 && !empty($txtListHabilitation)) { 
+			if($resultcreatelinehabilitations > 0 && !empty($txtListHabilitation) && !empty(GETPOST("notification_resp_anetenne"))) { 
 				$user_static = new User($this->db);
 				rtrim($txtListHabilitation, ', ');
 	
@@ -681,7 +681,7 @@ class UserFormation extends CommonObject
 			}
 	
 			// Envoi du mail
-			if($resultcreatelineautorisations > 0 && !empty($txtListAutorisation)) { 
+			if($resultcreatelineautorisations > 0 && !empty($txtListAutorisation) && !empty(GETPOST("notification_resp_anetenne"))) { 
 				$user_static = new User($this->db);
 				rtrim($txtListAutorisation, ', ');
 	

@@ -292,6 +292,7 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
             $autorisation_to_generate = $autorisation->generateAutorisationsForUser(GETPOST('fk_user'), $userFormation, $txtListAutorisation, 1);
 
             $formquestion = array(
+                array('label'=>$langs->trans('NotificationRespAntenne') ,'type'=>'checkbox', 'name'=>'notification_resp_anetenne', 'value'=>1),
                 array('label'=>$langs->trans('habilitationtogenerate') ,'type'=>'multiselect', 'name'=>'habilitation_generate', 'values'=>$habilitation_to_generate, 'default'=>array_keys($habilitation_to_generate)),
                 array('label'=>$langs->trans('autorisationtogenerate') ,'type'=>'multiselect', 'name'=>'autorisation_generate', 'values'=>$autorisation_to_generate, 'default'=>array_keys($autorisation_to_generate)),
             );

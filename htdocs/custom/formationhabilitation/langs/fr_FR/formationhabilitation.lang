@@ -275,3 +275,4 @@ GenerateAuto = Génération automatique
 habilitationtogenerate = Habilitation(s) à générer
 autorisationtogenerate = Autorisation(s) à générer
 Refuse = Refuser
+NotificationRespAntenne = Notifier le responsable d'antenne
