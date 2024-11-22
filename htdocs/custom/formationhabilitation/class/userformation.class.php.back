@@ -128,7 +128,7 @@ class UserFormation extends CommonObject
 		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"4",),
 		"date_finvalidite_formation" => array("type"=>"date", "label"=>"DateFinValiditeFormation", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"Organisme", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
-		"numero_certificat" => array("type"=>"varchar(20)", "label"=>"Numéro Certificat", "enabled"=>"1", 'position'=>52, 'notnull'=>0, "visible"=>"1",),
+		"numero_certificat" => array("type"=>"varchar(20)", "label"=>"Numéro Certificat", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 		"formateur" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Formateur", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"interne_externe" => array("type"=>"integer", "label"=>"InterneExterne", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "default"=>"1", "arrayofkeyval"=>array("1" => "Externe", "2" => "Interne"),),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
@@ -137,7 +137,6 @@ class UserFormation extends CommonObject
 		"prevupif" => array("type"=>"boolean", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1",),
 		"non_renouvelee" => array("type"=>"boolean", "label"=>"NonRenouvelee", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1", "help"=>"Lorsque la date de fin de validité sera atteinte, la formation sera clôturée et non expirée",),
 		"ex_status" => array("type"=>"integer", "label"=>"ExStatus", "enabled"=>"1", 'position'=>999, 'notnull'=>0, "visible"=>"0", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "8" => "Suspendue", "9" => "Cloturée"),),
-		"lieu_formation" => array("type"=>"sellist:c_ville:ville:rowid", "label"=>"LieuFormation", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -169,7 +168,6 @@ class UserFormation extends CommonObject
 	public $prevupif;
 	public $non_renouvelee;
 	public $ex_status;
-	public $lieu_formation;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -603,7 +601,7 @@ class UserFormation extends CommonObject
 		if(!$error){
 			$txtListHabilitation = '';
 			$habilitationStatic = new Habilitation($this->db);
-			$resultcreatelinehabilitations = $habilitationStatic->generateHabilitationsForUser($this->fk_user, $this, $txtListHabilitation);
+			$resultcreatelinehabilitations = $habilitationStatic->generateHabilitationsForUser($this->fk_user, $this, $txtListHabilitation, 0, explode(",", GETPOST('habilitation_generate')));
 	
 			if($resultcreatelinehabilitations < 0) {
 				setEventMessages('Erreur lors de la création des habilitations', null, 'errors');
@@ -675,7 +673,7 @@ class UserFormation extends CommonObject
 	
 			$txtListAutorisation = '';
 			$autorisationStatic = new Autorisation($this->db);
-			$resultcreatelineautorisations = $autorisationStatic->generateAutorisationsForUser($this->fk_user, $this, $txtListAutorisation);
+			$resultcreatelineautorisations = $autorisationStatic->generateAutorisationsForUser($this->fk_user, $this, $txtListAutorisation, 0, explode(",", GETPOST('autorisation_generate')));
 	
 			if($resultcreatelineautorisations < 0) {
 				setEventMessages('Erreur lors de la création des autorisations', null, 'errors');
@@ -2077,7 +2075,7 @@ class UserFormation extends CommonObject
 	function getAllFormationsForUserOnVolet($userid, $voletid) {
 		$res = array();
 
-		$sql = "SELECT DISTINCT uf.rowid, uf.ref";
+		$sql = "SELECT DISTINCT uf.rowid, uf.ref, uf.date_fin_formation, uf.date_finvalidite_formation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE uf.fk_user = $userid";
@@ -2088,7 +2086,9 @@ class UserFormation extends CommonObject
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$res[$obj->rowid] = $obj->ref;
+				$res[$obj->rowid]['ref'] = $obj->ref;
+				$res[$obj->rowid]['date_fin_formation'] = $obj->date_fin_formation;
+				$res[$obj->rowid]['date_finvalidite_formation'] = $obj->date_finvalidite_formation;
 			}
 
 			$this->db->free($resql);

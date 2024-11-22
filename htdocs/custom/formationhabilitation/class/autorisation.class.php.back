@@ -114,7 +114,7 @@ class Autorisation extends CommonObject
 	 */
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "index"=>"1", "searchall"=>"1", "comment"=>"Reference of object"),
 		"label" => array("type"=>"varchar(255)", "label"=>"Label", "enabled"=>"1", 'position'=>30, 'notnull'=>0, "visible"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "validate"=>"1",),
 		"note_public" => array("type"=>"html", "label"=>"NotePublic", "enabled"=>"1", 'position'=>61, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
 		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0", "cssview"=>"wordbreak", "validate"=>"1",),
@@ -126,10 +126,10 @@ class Autorisation extends CommonObject
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "En construction", "1" => "Actif", "5" => "Cloturée"), "validate"=>"1",),
-		"formation" => array("type"=>"chkbxlst:formationhabilitation_formation:label:rowid", "label"=>"Formation", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1",),
 		"fk_volet" => array("type"=>"chkbxlst:formationhabilitation_volet:numero|label:rowid::(status=1)", "label"=>"Volet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"test" => array("type"=>"chkbxlst:formationhabilitation_test:label:rowid::(status=1)", "label"=>"Test", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"domaineapplication" => array("type"=>"sellist:c_domaine_application:label:rowid::(active:=:1)", "label"=>"DomaineApplication", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1",),
+		"commentaire" => array("type"=>"text", "label"=>"Commentaire", "enabled"=>"1", 'position'=>58, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -144,10 +144,10 @@ class Autorisation extends CommonObject
 	public $import_key;
 	public $model_pdf;
 	public $status;
-	public $formation;
 	public $fk_volet;
 	public $test;
 	public $domaineapplication;
+	public $commentaire;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -981,7 +981,7 @@ class Autorisation extends CommonObject
 		}
 
 		if ($withpicto != 2) {
-			$result .= $this->ref;
+			$result .= $this->label;
 		}
 
 		$result .= $linkend;
@@ -1297,7 +1297,7 @@ class Autorisation extends CommonObject
 	}
 
 	/**
-	 * 	Return toutes les autorisations dont la formation $formationid est requise
+	 * 	Return toutes les autorisations actives dont la formation $formationid est requise
 	 *
 	 * 	@param  int		$formationId       Id of Formation
 	 * 	@return	array(int)|int						
@@ -1307,11 +1307,17 @@ class Autorisation extends CommonObject
 		global $conf, $user;
 		$res = array();
 
-		$sql = "SELECT ep.fk_source";
+		$sql = "(SELECT DISTINCT ep.fk_source";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
-		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."$this->table_element as h ON h.rowid = ep.fk_source AND ep.sourcetype = '$this->element'";
-		$sql .= " WHERE FIND_IN_SET(".$formationId.", ep.prerequisobjects)";
-		$sql .= " AND h.status = ".self::STATUS_OUVERTE;
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."$this->table_element as h ON h.rowid = ep.fk_source AND ep.sourcetype = '$this->element' AND ep.prerequistype = 'formation'";
+		$sql .= " WHERE h.status = ".self::STATUS_OUVERTE;
+		$sql .= " AND FIND_IN_SET(".$formationId.", ep.prerequisobjects))";
+		$sql .= " UNION ";
+		$sql .= " (SELECT DISTINCT a.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_autorisation as a";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep ON a.rowid = ep.fk_source AND ep.prerequistype = 'formation'";
+		$sql .= " WHERE ep.rowid IS NULL";
+		$sql .= " AND a.status = ".self::STATUS_OUVERTE.")";
 
 		dol_syslog(get_class($this)."::getAutorisationsWhereFormationIsRequire", LOG_DEBUG);
 		$resql = $this->db->query($sql);
@@ -1328,25 +1334,63 @@ class Autorisation extends CommonObject
 		}
 	}
 
+	/**
+	 * 	Return toutes les autorisations actives
+	 *
+	 * 	@return	array(int)|int						
+	 */
+	public function getAllAutorisations()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."$this->table_element as h";
+		$sql .= " WHERE h.status = ".self::STATUS_OUVERTE;
+
+		dol_syslog(get_class($this)."::getAllAutorisations", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
 	
 	/**
 	 * 	Return tous les prérequis d'une autorisation
 	 *
 	 * 	@param  int		$autorisation_id       Id of Autorisation
+	 *  @param  string		$prerequistype         Type of prerequis
 	 * 	@return	array(array(int))|int						
 	 */
-	function getPrerequis($autorisation_id) {
+	function getPrerequis($autorisation_id, $prerequistype = '') {
 		$res = array();
 
-		$sql = "SELECT rowid, prerequisobjects";
+		$sql = "SELECT rowid, prerequisobjects, prerequistype, condition_group";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_elementprerequis as ep";
 		$sql .= " WHERE sourcetype = '$this->element' AND fk_source = $autorisation_id";
+		if(!empty($prerequistype)) {
+			$sql .= " AND prerequistype = $prerequistype";
+		}
 
 		dol_syslog(get_class($this)."::getPrerequis", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$res[$obj->rowid] = explode(',', $obj->prerequisobjects);
+				if(!empty($prerequistype)) {
+					$res[$obj->rowid] = explode(',', $obj->prerequisobjects);
+				}
+				else {
+					$res[$obj->condition_group][$obj->prerequistype] = explode(',', $obj->prerequisobjects);
+				}
 			}
 
 			return $res;
@@ -1362,20 +1406,26 @@ class Autorisation extends CommonObject
 	 *
 	 * 	@param  int				$user_id       	   Id of User
 	 *  @param  UserFormation	$userformation     UserFormation object
+	 *  @param  string			$date_finvalidite  Date de fin de validité de l'habilitation => formation la + restrictive
 	 * 	@return	int						<0 if KO, Id of created object if OK				
 	 */
-	function AsignToUser($user_id, $userformation) {
+	function AsignToUser($user_id, $userformation, $date_finvalidite) {
 		global $user; 
 
 		$userAutorisation = new UserAutorisation($this->db);
 		$user_static = new User($this->db);
 		$user_static->fetch($user_id);
 
-		$userAutorisation->date_autorisation = $userformation->date_fin_formation;
-		$userAutorisation->date_fin_autorisation = $userformation->date_finvalidite_formation;
+		if($userformation == null) {
+			$userAutorisation->date_autorisation = dol_now();
+		}
+		else {
+			$userAutorisation->date_autorisation = $userformation->date_fin_formation;
+		}
+		$userAutorisation->date_fin_autorisation = $date_finvalidite;
 		$userAutorisation->fk_user = $user_id;
 		$userAutorisation->status = UserAutorisation::STATUS_AUTORISABLE;
-		$userAutorisation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userformation->date_fin_formation, "%Y%m%d");
+		$userAutorisation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userAutorisation->date_autorisation, "%Y%m%d");
 		$userAutorisation->fk_autorisation = $this->id;
 
 		$resultcreate = $userAutorisation->create($user);
@@ -1389,47 +1439,46 @@ class Autorisation extends CommonObject
 	 * 	@param  int				$user_id       			Id of User
 	 *  @param  UserFormation	$userformation     		new UserFormation
 	 * 	@param  string			$txtListAutorisation  	Contain label of autorisation generate
-	 * 	@return	int						<0 if KO, > 0 if OK				
+	 *  @param  int				$disable_generation  	1 to disable generation and return autorisations that can be generated
+	 *  @param  array			$only_autorisations  	Generation only autorisations on this array
+	 * 	@return	int|array						<0 if KO, > 0 if OK				
 	 */
-	function generateAutorisationsForUser($user_id, $userformation, &$txtListAutorisation) { // TODOLeny - gestion des erreurs
+	function generateAutorisationsForUser($user_id, $userformation, &$txtListAutorisation, $disable_generation = 0, $only_autorisations = null) { // TODOLeny - gestion des erreurs
+		$autorisations_ok = array(); 
+
 		// 1. Récupérer toutes les formations de l'utilisateur (y compris la nouvelle)
-		$formations_user = $userformation->getAllFormationsForUser($user_id);
+		//$formations_user = $userformation->getAllFormationsForUser($user_id);
 		// if (!in_array($userformation->fk_formation, $formations_user)) {
 		// 	$formations_user[] = $userformation->fk_formation; // Ajouter la nouvelle formation
 		// }
 
 		// 2. Récupérer toutes les autorisations où la nouvelle formation est un prérequis
-		$autorisations = $this->getAutorisationsWhereFormationIsRequire($userformation->fk_formation);
+		if($userformation == null) {
+			$autorisations = $this->getAllAutorisations();
+		}
+		else {
+			$autorisations = $this->getAutorisationsWhereFormationIsRequire($userformation->fk_formation);
+		}
 
-		// 3. Parcourir chaque habilitation et vérifier les conditions
+		// 3. Parcourir chaque autorisation et vérifier les conditions
 		foreach ($autorisations as $autorisation_id) {
-			$conditions = $this->getPrerequis($autorisation_id);
-			$all_conditions_met = true;
-
-			foreach ($conditions as $prerequis) {
-				$condition_met = false;
-	
-				// Vérifier si l'utilisateur satisfait au moins une formation dans la condition
-				foreach ($prerequis as $formation_id) {
-					if (in_array($formation_id, $formations_user)) {
-						$condition_met = true; // Condition remplie
-						break;
-					}
-				}
-	
-				if (!$condition_met) {
-					$all_conditions_met = false;
-					break; // Condition non remplie, on arrête pour cette habilitation
-				}
+			if($only_autorisations != null && !in_array($autorisation_id, $only_autorisations)) {
+				continue;
 			}
+
+			$elementPrerequis = new ElementPrerequis($this->db);
+			$autorisation = new self($this->db);
+
+			$date_finvalidite = null;
+			$autorisation->fetch($autorisation_id);
+
+			$all_conditions_met = $elementPrerequis->gestionPrerequis($user_id, $autorisation, 0, 0, $date_finvalidite, $userformation->fk_formation);
 	
 			// Si toutes les conditions sont remplies, attribuer l'habilitation
-			if ($all_conditions_met) {
-				$autorisation = new self($this->db);
-				$autorisation->fetch($autorisation_id);
-				$txtListHabilitation .= $autorisation->label.', ';
+			if ($all_conditions_met == 1 && !$disable_generation) {
+				$txtListAutorisation .= $autorisation->label.', ';
 
-				$resultcreate = $autorisation->AsignToUser($user_id, $userformation);
+				$resultcreate = $autorisation->AsignToUser($user_id, $userformation, $date_finvalidite);
 
 				if($resultcreate <= 0) {
 					$this->error = $autorisation->db->lasterror();
@@ -1437,9 +1486,17 @@ class Autorisation extends CommonObject
 					return -1;
 				}
 			}
+			elseif($all_conditions_met == 1 && $disable_generation) {
+				$autorisations_ok[$autorisation->id] = $autorisation->label;
+			}
 		}
 
-		return 1;
+		if(!$disable_generation) {
+			return 1;
+		}
+		else {
+			return $autorisations_ok;
+		}
 	}
 }
 

@@ -131,7 +131,7 @@ class UserAutorisation extends CommonObject
 		"fk_user" => array("type"=>"integer:User:user\class\user.class.php", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 		"date_autorisation" => array("type"=>"date", "label"=>"DateAutorisation", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Autorisable", "2" => "Autorisé", "3" => "Non Autorisé", "9" => "Cloturée"), "validate"=>"1",),
-		"date_fin_autorisation" => array("type"=>"date", "label"=>"DateFinAutorisation", "enabled"=>"1", 'position'=>33, 'notnull'=>1, "visible"=>"1",),
+		"date_fin_autorisation" => array("type"=>"date", "label"=>"DateFinAutorisation", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
 		"domaineapplication" => array("type"=>"sellist:c_domaine_application:label:rowid::(active:=:1)", "label"=>"DomaineApplication", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;

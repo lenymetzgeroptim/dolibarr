@@ -115,7 +115,7 @@ class UserHabilitation extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"fk_habilitation" => array("type"=>"integer:habilitation:custom/formationhabilitation/class/habilitation.class.php:0:(t.status:=:1)", "label"=>"Habilitation", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
+		"fk_habilitation" => array("type"=>"integer:habilitation:custom/formationhabilitation/class/habilitation.class.php:0:(t.status:=:1)", "label"=>"Habilitation", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1", "css"=>"left",),
 		"fk_user" => array("type"=>"integer:User:user\class\user.class.php", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 		"date_habilitation" => array("type"=>"date", "label"=>"DateHabilitation", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Habilitable", "2" => "Habilité", "3" => "Non Habilité", "9" => "Clôturée"), "validate"=>"1",),

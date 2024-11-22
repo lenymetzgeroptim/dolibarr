@@ -45,7 +45,6 @@ CREATE TABLE llx_formationhabilitation_userformation(
 	cout_annexe double, 
 	prevupif boolean, 
 	non_renouvelee boolean, 
-	ex_status integer, 
-	lieu_formation integer
+	ex_status integer
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

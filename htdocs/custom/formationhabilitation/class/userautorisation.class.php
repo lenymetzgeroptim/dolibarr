@@ -127,7 +127,7 @@ class UserAutorisation extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"fk_autorisation" => array("type"=>"integer:autorisation:custom/formationhabilitation/class/autorisation.class.php:0:(t.status:=:1)", "label"=>"Autorisation", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
+		"fk_autorisation" => array("type"=>"integer:autorisation:custom/formationhabilitation/class/autorisation.class.php:0:(t.status:=:1)", "label"=>"Autorisation", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1", "css"=>"left",),
 		"fk_user" => array("type"=>"integer:User:user\class\user.class.php", "label"=>"User", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 		"date_autorisation" => array("type"=>"date", "label"=>"DateAutorisation", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Autorisable", "2" => "Autorisé", "3" => "Non Autorisé", "9" => "Cloturée"), "validate"=>"1",),
