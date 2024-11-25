@@ -146,7 +146,6 @@ $arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
 $societe->fetch($user->array_options['options_antenne']);
 $arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
 // $userIsRespAntenne = in_array($user->id, $arrayUserRespAntenne); // Utilisateur commercial de l'antenne de ratachement
-$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
 
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 0;

@@ -87,7 +87,6 @@ $userInRespAntenneGroup = in_array($user->id, $arrayUserRespAntenneGroup); // Ut
 $societe->fetch($user->array_options['options_antenne']);
 $arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
 $userIsRespAntenne = in_array($user->id, $arrayUserRespAntenne); // Utilisateur commercial de l'antenne de ratachement
-$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
 
 $permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
 $permissiontoreadCout = $user->rights->formationhabilitation->formation->readcout;

@@ -255,6 +255,8 @@ class VisiteMedical extends CommonObject
 	 */
 	public function create(User $user, $notrigger = false)
 	{
+		global $conf, $langs; 
+
 		$resultcreate = $this->createCommon($user, $notrigger);
 
 		if($resultcreate) {
@@ -328,6 +330,73 @@ class VisiteMedical extends CommonObject
 							return -1;
 						}
 					}
+				}
+			}
+		}
+
+		// Envoi d'un mail au responsable Q3SE et responsable d’antenne si VM conditionnel
+		if($resultcreate && $this->status == self::STATUS_CONDITIONNEL) {
+			global $dolibarr_main_url_root;
+	
+			$user_group = New UserGroup($this->db);
+			$user_group->fetch(0, "Responsable d'antenne");
+			$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
+			$societe = New Societe($this->db);
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$societe->fetch($user_static->array_options['options_antenne']);
+			$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
+			$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
+			$user_group->fetch(0, 'Resp. Q3SE');
+			$liste_q3se = $user_group->listUsersForGroup('u.statut=1');
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($arrayRespAntenneForMail as $user_id) {
+				$user_static->fetch($user_id);
+
+				if(!empty($user_static->email)) {
+					$to .= $user_static->email.', ';
+				}
+			}
+
+			foreach($liste_q3se as $q3se){
+				if(!empty($q3se->email)){
+					$to .= $q3se->email.", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'$onglet=habilitation">ici</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextVisiteMedicaleConditionnel", $user_static->firstname, $user_static->lastname, $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 				}
 			}
 		}

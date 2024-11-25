@@ -259,6 +259,7 @@ ErrorPrerequisFormationAptitude = Le collaborateur ne possède pas les prérequi
 #
 EMailTextHabilitationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les habilitations suivantes sont à valider pour %s : %s
 EMailTextAutorisationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les autorisations suivantes sont à valider pour %s : %s
+EMailTextVisiteMedicaleConditionnel = Bonjour,<br><br>La visite médicale de %s %s est conditionnel, vous pouvez la consulter %s
 
 
 #

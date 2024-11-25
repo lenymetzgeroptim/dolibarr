@@ -599,6 +599,16 @@ class UserFormation extends CommonObject
 
 		// Création des habilitations et des autorisations 
 		if(!$error){
+			$user_group = New UserGroup($this->db);
+			$user_group->fetch(0, "Responsable d'antenne");
+			$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
+			$societe = New Societe($this->db);
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$societe->fetch($user_static->array_options['options_antenne']);
+			$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
+			$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
+
 			$txtListHabilitation = '';
 			$habilitationStatic = new Habilitation($this->db);
 			$resultcreatelinehabilitations = $habilitationStatic->generateHabilitationsForUser($this->fk_user, $this, $txtListHabilitation, 0, explode(",", GETPOST('habilitation_generate')));
@@ -610,7 +620,6 @@ class UserFormation extends CommonObject
 	
 			// Envoi du mail
 			if($resultcreatelinehabilitations > 0 && !empty($txtListHabilitation) && !empty(GETPOST("notification_resp_anetenne"))) { 
-				$user_static = new User($this->db);
 				rtrim($txtListHabilitation, ', ');
 	
 				global $dolibarr_main_url_root;
@@ -620,7 +629,7 @@ class UserFormation extends CommonObject
 	
 				$to = '';
 				if(sizeof($arrayRespAntenneForMail) > 0) {
-					foreach($arrayRespAntenneForMail as $userid) {
+					foreach($arrayRespAntenneForMail as $user_id) {
 						$user_static->fetch($user_id);
 	
 						if(!empty($user_static->email)) {
