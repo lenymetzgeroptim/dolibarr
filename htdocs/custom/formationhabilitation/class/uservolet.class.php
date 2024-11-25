@@ -455,6 +455,9 @@ class UserVolet extends CommonObject
 			elseif($volet->typevolet == 3) {
 				$this->table_element_line = 'formationhabilitation_userautorisation';
 			}
+			else {
+				$this->table_element_line = '';
+			}
 		}
 
 		if ($result > 0 && !empty($this->table_element_line) && empty($nolines)) {
@@ -2589,9 +2592,10 @@ class UserVolet extends CommonObject
 	 *  @param  int		$mode			0 uniquement l'id, 1 les objets uservolet
 	 *  @param  int		$all			0 uniquement le volet actuel, 1 tous les volets
 	 *  @param  int		$get_fk_volet	Récupère fk_volet plutot que le rowid
+	 * 	@param  string	$fk_volet		filtre pour le numéro des volets à récupérer
 	 *  @return	array|int		array with uservolet if OK, < 0 if KO
 	 */
-	public function getActiveUserVolet($mode = 0, $all = 0, $get_fk_volet = 0)
+	public function getActiveUserVolet($mode = 0, $all = 0, $get_fk_volet = 0, $fk_volet = '')
 	{
 		global $conf, $user;
 		$ret = array(); 
@@ -2599,8 +2603,11 @@ class UserVolet extends CommonObject
 		$sql = "SELECT v.rowid, v.fk_volet";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as v";
 		$sql .= " WHERE v.fk_user = $this->fk_user";
-		if(!$all) {
+		if(!$all && empty($fk_volet)) {
 			$sql .= " AND v.fk_volet = $this->fk_volet";
+		}
+		elseif(!$all && !empty($fk_volet)) {
+			$sql .= " AND v.fk_volet IN (".$this->db->sanitize($this->db->escape($fk_volet)).")";
 		}
 		$sql .= " AND (v.status = ".self::STATUS_VALIDATED." OR v.status = ".self::STATUS_VALIDATION_WITHOUT_USER.")";
 
@@ -2637,14 +2644,15 @@ class UserVolet extends CommonObject
 	/**
 	 * 	Clôture les uservolet actifs lors de la validation d'un nouveau uservolet
 	 *
+	 *  @param  string	$fk_volet		filtre pour le numéro des volets à récupérer
 	 *  @return	int		> 0 if OK, < 0 if KO
 	 */
-	public function closeActiveUserVolet()
+	public function closeActiveUserVolet($fk_volet = '')
 	{
 		global $conf, $user;
 
-		$listUserVolet = $this->getActiveUserVolet(1);
-
+		$listUserVolet = $this->getActiveUserVolet(1, 0, 0, $fk_volet);
+		
 		if (is_array($listUserVolet)) {
 			foreach($listUserVolet as $uservolet) {
 				$result = $uservolet->close($user);

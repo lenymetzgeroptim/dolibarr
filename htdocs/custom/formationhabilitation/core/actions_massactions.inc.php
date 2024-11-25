@@ -170,13 +170,17 @@ if (!$error && ($massaction == 'close' || ($action == 'closelines' && $confirm =
 	$objecttmp = new $objectclass($db);
 	$nbok = 0;
 	$TMsg = array();
+	$voletsCreate = array();
+	$objectsClose = array();
 
 	//$toselect could contain duplicate entries, cf https://github.com/Dolibarr/dolibarr/issues/26244
 	$unique_arr = array_unique($toselect);
 	foreach ($unique_arr as $toselectid) {
 		$result = $objecttmp->fetch($toselectid);
 		if ($result > 0) {
-			$result = $objecttmp->close($user);
+			$objectsClose[] = clone $objecttmp;
+
+			$result = $objecttmp->close($user, 0, $voletsCreate, 1);
 
 			if (empty($result)) { // if close returns 0, there is at least one object linked
 				$TMsg = array_merge($objecttmp->errors, $TMsg);
@@ -191,6 +195,32 @@ if (!$error && ($massaction == 'close' || ($action == 'closelines' && $confirm =
 			setEventMessages($objecttmp->error, $objecttmp->errors, 'errors');
 			$error++;
 			break;
+		}
+	}
+
+	if(empty($error) && !empty(GETPOST("generation_volet_formation"))) {
+		$uservolet = new UserVolet($db);
+		$formation = new Formation($db);
+		foreach($objectsClose as $objectClose) {
+			$uservolet->fk_user = $objectClose->fk_user;
+
+			$formation->fetch($objectClose->fk_formation);
+
+			$result = $uservolet->closeActiveUserVolet($formation->fk_volet);
+
+			if($result < 0) { // if close returns is < 0, there is an error, we break and rollback later
+				setEventMessages($uservolet->error, $uservolet->errors, 'errors');
+				$error++;
+				break;
+			} 
+
+			$result = $uservolet->generateNewVoletFormation($objectClose->fk_user, $formation->fk_volet, $voletsCreate);
+
+			if($result < 0) { // if close returns is < 0, there is an error, we break and rollback later
+				setEventMessages($uservolet->error, $uservolet->errors, 'errors');
+				$error++;
+				break;
+			} 
 		}
 	}
 

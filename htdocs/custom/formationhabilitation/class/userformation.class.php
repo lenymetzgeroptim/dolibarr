@@ -586,7 +586,7 @@ class UserFormation extends CommonObject
 		}
 		
 		// Génération du volet de formation
-		if(!$error) {
+		if(!$error && !empty(GETPOST("generation_volet_formation"))) {
 			$uservolet = new UserVolet($this->db);
 
 			$resultgenerationvolet = $uservolet->generateNewVoletFormation($this->fk_user, $formation->fk_volet);
@@ -857,7 +857,7 @@ class UserFormation extends CommonObject
 	 *  @param  	array				$voletsCreate		If of UserVolet also create
 	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function close($user, $notrigger = 0, &$voletsCreate = array())
+	public function close($user, $notrigger = 0, &$voletsCreate = array(), $nogenerationvolet = 0)
 	{
 		global $conf, $langs;
 

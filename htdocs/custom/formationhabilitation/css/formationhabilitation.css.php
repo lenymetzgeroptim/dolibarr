@@ -144,3 +144,12 @@ td.linecolstatus a[aria-label="Programmer"] {
 .width220 {
 	width: 220px;
 }
+
+.formationhabilitation #dialog-confirm.validate .tagtd {
+	display: unset;
+}
+
+.formationhabilitation #dialog-confirm.validate .tagtr {
+	display: table;
+	margin-bottom: 10px;
+}

@@ -126,7 +126,7 @@ if ($permissiontoaddline) {
     if($permissiontovalidatelines && $object->element == 'user' && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
         $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("ValidateAndGenerateUserVolet");
     }
-    if($permissiontovalidatelines && $objectline->element == 'userformation'){
+    if($permissiontoaddline && $objectline->element == 'userformation'){
         $arrayofmassactions['preclose'] = img_picto('', 'fontawesome_times', 'class="pictofixedwidth"').$langs->trans("Clôturer");
     }
 }
@@ -292,6 +292,7 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
             $autorisation_to_generate = $autorisation->generateAutorisationsForUser(GETPOST('fk_user'), $userFormation, $txtListAutorisation, 1);
 
             $formquestion = array(
+                array('label'=>$langs->trans('GenerationVoletFormation') ,'type'=>'checkbox', 'name'=>'generation_volet_formation', 'value'=>1),
                 array('label'=>$langs->trans('NotificationRespAntenne') ,'type'=>'checkbox', 'name'=>'notification_resp_anetenne', 'value'=>1),
                 array('label'=>$langs->trans('habilitationtogenerate') ,'type'=>'multiselect', 'name'=>'habilitation_generate', 'values'=>$habilitation_to_generate, 'default'=>array_keys($habilitation_to_generate)),
                 array('label'=>$langs->trans('autorisationtogenerate') ,'type'=>'multiselect', 'name'=>'autorisation_generate', 'values'=>$autorisation_to_generate, 'default'=>array_keys($autorisation_to_generate)),
@@ -314,7 +315,7 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
         }
 
         if(GETPOST('status') == $objectline::STATUS_VALIDE) {
-            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$paramformconfirm, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLineWithDeletion', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1, 400, 700);
+            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$paramformconfirm, $langs->trans('AddLine'), (!empty($txt_formationToClose) ? $langs->trans('ConfirmAddLineWithDeletion', $txt_formationToClose) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1, 400, 700, 0, 'Yes', 'No', 'validate');
         }
         elseif(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
             $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet='.$onglet.$paramformconfirm, $langs->trans('AddLine'), (!empty($txt_formationToReprogrammer) ? $langs->trans('ConfirmAddLineWithProgrammation', $txt_formationToReprogrammer) : $langs->trans('ConfirmAddLine')), 'confirm_addline', $formquestion, 0, 1, 400, 700);

@@ -276,3 +276,5 @@ habilitationtogenerate = Habilitation(s) à générer
 autorisationtogenerate = Autorisation(s) à générer
 Refuse = Refuser
 NotificationRespAntenne = Notifier le responsable d'antenne
+GenerationVoletFormation = Génération du volet de formation
+GenerationAndCloseVoletFormation = Génération(s) et clôture(s) des volets de formation
