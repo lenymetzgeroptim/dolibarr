@@ -92,7 +92,12 @@ foreach($objectline->fields as $key => $val){
 			}
 		}
 		elseif($key == 'ref'){
-			print $line->getNomUrl(0, 'nolink', 1);
+			if($objectline->element == 'userformation') {
+				print $line->getNomUrl(0, '', 1);
+			}
+			else {
+				print $line->getNomUrl(0, 'nolink', 1);
+			}
 		}
 		elseif((($key == 'date_finvalidite_formation' && $action == 'edit_datefinvalidite') || ($key == 'cout_pedagogique' && $action == 'edit_coutpedagogique') 
 		|| ($key == 'cout_mobilisation' && $action == 'edit_coutmobilisation') || ($key == 'domaineapplication' && $action == 'edit_domaineapplication')) && $permissiontoaddline && $line->id == $lineid) {
