@@ -240,7 +240,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			$dir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
 			$file = $dir."/".$user_static->lastname."_".$volet->nommage."_".dol_print_date($now, "%Y%m%d").".pdf";
 			// Appeler la fonction pour obtenir un chemin de fichier unique
-			$file = $this->getUniqueFilename($file);
+			if($object->status >= $object::STATUS_VALIDATED) {
+				$file = $this->getUniqueFilename($file);
+			}
 			if (!file_exists($dir)) {
 				if (dol_mkdir($dir) < 0) {
 					$this->error = $langs->transnoentities("ErrorCanNotCreateDir", $dir);

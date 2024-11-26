@@ -249,7 +249,7 @@ class UserVolet extends CommonObject
 	 */
 	public function create(User $user, $notrigger = false, $generation_other_volet = true)
 	{
-		global $conf; 
+		global $conf, $langs; 
 
 		$volet = new Volet($this->db);
 		$volet->fetch($this->fk_volet);
@@ -305,6 +305,32 @@ class UserVolet extends CommonObject
 
 		if($resultcreate > 0 && $this->status == self::STATUS_VALIDATED) {
 			$this->validate($user, 0, 1);
+		}
+		elseif($resultcreate > 0) {
+			// Génération du PDF
+			if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+				if (method_exists($this, 'generateDocument')) {
+					$outputlangs = $langs;
+					$newlang = '';
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+						$newlang = GETPOST('lang_id', 'aZ09');
+					}
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+						$newlang = !empty($this->thirdparty->default_lang) ? $this->thirdparty->default_lang : "";
+					}
+					if (!empty($newlang)) {
+						$outputlangs = new Translate("", $conf);
+						$outputlangs->setDefaultLang($newlang);
+					}
+
+					$model = '';
+
+					$retgen = $this->generateDocument($model, $outputlangs, 0, 0, 0);
+					if ($retgen < 0) {
+						setEventMessages($this->error, $this->errors, 'warnings');
+					}
+				}
+			}
 		}
 
 		return $resultcreate;
@@ -682,6 +708,33 @@ class UserVolet extends CommonObject
 			}
 		}
 
+		if(!$error) {
+			// Génération du PDF
+			if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+				if (method_exists($this, 'generateDocument')) {
+					$outputlangs = $langs;
+					$newlang = '';
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+						$newlang = GETPOST('lang_id', 'aZ09');
+					}
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+						$newlang = !empty($this->thirdparty->default_lang) ? $this->thirdparty->default_lang : "";
+					}
+					if (!empty($newlang)) {
+						$outputlangs = new Translate("", $conf);
+						$outputlangs->setDefaultLang($newlang);
+					}
+
+					$model = '';
+
+					$retgen = $this->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+					if ($retgen < 0) {
+						setEventMessages($this->error, $this->errors, 'warnings');
+					}
+				}
+			}
+		}
+
 		// Set new ref and current status
 		if (!$error) {
 			$this->ref = $num;
@@ -758,6 +811,33 @@ class UserVolet extends CommonObject
 					$error++;
 				}
 				// End call triggers
+			}
+		}
+
+		if(!$error) {
+			// Génération du PDF
+			if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+				if (method_exists($this, 'generateDocument')) {
+					$outputlangs = $langs;
+					$newlang = '';
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+						$newlang = GETPOST('lang_id', 'aZ09');
+					}
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+						$newlang = !empty($this->thirdparty->default_lang) ? $this->thirdparty->default_lang : "";
+					}
+					if (!empty($newlang)) {
+						$outputlangs = new Translate("", $conf);
+						$outputlangs->setDefaultLang($newlang);
+					}
+
+					$model = '';
+
+					$retgen = $this->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+					if ($retgen < 0) {
+						setEventMessages($this->error, $this->errors, 'warnings');
+					}
+				}
 			}
 		}
 
@@ -840,6 +920,33 @@ class UserVolet extends CommonObject
 			}
 		}
 
+		if(!$error) {
+			// Génération du PDF
+			if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+				if (method_exists($this, 'generateDocument')) {
+					$outputlangs = $langs;
+					$newlang = '';
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+						$newlang = GETPOST('lang_id', 'aZ09');
+					}
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+						$newlang = !empty($this->thirdparty->default_lang) ? $this->thirdparty->default_lang : "";
+					}
+					if (!empty($newlang)) {
+						$outputlangs = new Translate("", $conf);
+						$outputlangs->setDefaultLang($newlang);
+					}
+
+					$model = '';
+
+					$retgen = $this->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+					if ($retgen < 0) {
+						setEventMessages($this->error, $this->errors, 'warnings');
+					}
+				}
+			}
+		}
+
 		// Set new ref and current status
 		if (!$error) {
 			$this->ref = $num;
@@ -907,8 +1014,34 @@ class UserVolet extends CommonObject
 			}
 			// End call triggers
 		}
-		
 
+		if(!$error) {
+			// Génération du PDF
+			if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+				if (method_exists($this, 'generateDocument')) {
+					$outputlangs = $langs;
+					$newlang = '';
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+						$newlang = GETPOST('lang_id', 'aZ09');
+					}
+					if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+						$newlang = !empty($this->thirdparty->default_lang) ? $this->thirdparty->default_lang : "";
+					}
+					if (!empty($newlang)) {
+						$outputlangs = new Translate("", $conf);
+						$outputlangs->setDefaultLang($newlang);
+					}
+
+					$model = '';
+
+					$retgen = $this->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+					if ($retgen < 0) {
+						setEventMessages($this->error, $this->errors, 'warnings');
+					}
+				}
+			}
+		}
+		
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_VALIDATION_WITHOUT_USER;
@@ -1041,21 +1174,6 @@ class UserVolet extends CommonObject
 			}
 		}
 
-		// Set new ref and current status
-		if (!$error) {
-			$this->ref = $num;
-			$this->status = self::STATUS_VALIDATED;
-		}
-
-		if (!$error && empty($this->datedebutvolet)) {
-			$this->datedebutvolet = dol_now();
-			$resultupdate = $this->update($user);
-
-			if($resultupdate < 0) {
-				$error++;
-			}
-		}
-
 		if(!$error) {
 			// Génération du PDF
 			if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
@@ -1080,6 +1198,21 @@ class UserVolet extends CommonObject
 						setEventMessages($this->error, $this->errors, 'warnings');
 					}
 				}
+			}
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->ref = $num;
+			$this->status = self::STATUS_VALIDATED;
+		}
+
+		if (!$error && empty($this->datedebutvolet)) {
+			$this->datedebutvolet = dol_now();
+			$resultupdate = $this->update($user);
+
+			if($resultupdate < 0) {
+				$error++;
 			}
 		}
 
