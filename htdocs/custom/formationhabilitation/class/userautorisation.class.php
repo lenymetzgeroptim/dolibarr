@@ -242,7 +242,17 @@ class UserAutorisation extends CommonObject
 	 */
 	public function create(User $user, $notrigger = false)
 	{
-		$resultcreate = $this->createCommon($user, $notrigger);
+		global $langs; 
+		$autorisation = new Autorisation($this->db);
+
+		if(!$this->UserHasSameUserAutorisation()) {
+			$resultcreate = $this->createCommon($user, $notrigger);
+		}
+		else {
+			$autorisation->fetch($this->fk_autorisation); 
+			setEventMessages($langs->trans('ErrorUserHasSameUserAutorisation', $autorisation->label), null, 'warnings');
+			return 1;
+		}
 
 		//$resultvalidate = $this->validate($user, $notrigger);
 
@@ -1631,6 +1641,43 @@ class UserAutorisation extends CommonObject
 
 			$this->db->free($resql);
 			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Est-ce que l'utilisateur possède déja l'autorisation
+	 *
+	 * 	@return	int			1 si oui, 0 sinon		
+	 */
+	function UserHasSameUserAutorisation() {
+		$sql = "SELECT uh.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userautorisation as uh";
+		$sql .= " WHERE uh.fk_user = $this->fk_user";
+		$sql .= " AND uh.fk_autorisation = $this->fk_autorisation";
+		$sql .= " AND uh.date_autorisation = '".substr($this->db->idate($this->date_autorisation), 0, 10)."'";
+		if(!empty($this->date_fin_autorisation)) {
+			$sql .= " AND uh.date_fin_autorisation = '".substr($this->db->idate($this->date_fin_autorisation), 0, 10)."'";
+		}
+		else {
+			$sql .= " AND uh.date_fin_autorisation IS NULL";
+		}
+		$sql .= " AND (uh.status = ".self::STATUS_AUTORISE." OR uh.status = ".self::STATUS_AUTORISABLE.')';
+
+		dol_syslog(get_class($this)."::UserHasSameUserAutorisation", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			if($this->db->num_rows($resql) > 0) {
+				$this->db->free($resql);
+				return 1;
+			}
+			else {
+				$this->db->free($resql);
+				return 0;
+			}
 		}
 		else {
 			$this->error = $this->db->lasterror();

@@ -198,6 +198,8 @@ DateFinAutorisation = Date de fin de validité de l'autorisation
 DateDebutVolet = Date début
 DateFinVolet = Date de fin de validité
 MotifRefus = Motif du refus
+DateDebutPrimo = Date début primo intervenant
+DateFinPrimo = Date fin primo intervenant
 
 
 #
@@ -252,6 +254,8 @@ ErrorPrerequisFormation = Le collaborateur ne possède pas les formations requis
 ErrorPrerequisAptitude = Le collaborateur ne possède pas l'aptitude médicale %s qui est requise
 ErrorFormationAlreadyExist = Impossible d'ajouter cette formation car le collaborateur la possède déja (Il faut forcer la création)
 ErrorPrerequisFormationAptitude = Le collaborateur ne possède pas les prérequis
+ErrorUserHasSameUserHabilitation = Le collaborateur possède déja l'habilitation %s avec les mêmes dates
+ErrorUserHasSameUserAutorisation = Le collaborateur possède déja l'autorisation %s avec les mêmes dates
 
 
 #

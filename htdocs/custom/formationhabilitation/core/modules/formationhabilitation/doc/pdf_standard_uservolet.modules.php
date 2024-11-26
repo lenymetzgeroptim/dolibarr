@@ -487,6 +487,21 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		if(!empty($userField->array_options['options_carnetdaccsn'])) {
 			$pdf->writeHTML('<p style="border-bottom: 1px black solid;">CARNET D\'ACCES N° : '.$userField->array_options['options_carnetdaccsn'].'</p>');
 		}
+
+		if(!empty($user_static->array_options['options_datedebut_primo'])) {
+			$now = dol_print_date(dol_now(), '%d-%m-%Y');
+			$datedebut_primo = dol_print_date($user_static->array_options['options_datedebut_primo'], '%d-%m-%Y');
+			$datefin_primo = dol_print_date($user_static->array_options['options_datefin_primo'], '%d-%m-%Y');
+			if($volet->numero == 7 && $now >= $datedebut_primo && (empty($user_static->array_options['options_datefin_primo']) || $now <= $datefin_primo)) {
+				$x = $pdf->getX();
+				$y = $pdf->getY();
+				$txt = '<p style="allign: center; font-size: 18; color: red;">PRIMO<br>INTERVENANT</p>';
+				$pdf->writeHTMLCell(50, 15, 45, 18, $txt, array('LTRB' => array('width' => 1, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(255, 0, 0))), 0, false, true, "C");
+				$pdf->SetXY($x, $y);
+			}
+		}
+		
+
 		//return $top_shift;
 	}
 

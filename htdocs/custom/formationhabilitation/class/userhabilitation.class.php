@@ -230,7 +230,17 @@ class UserHabilitation extends CommonObject
 	 */
 	public function create(User $user, $notrigger = false)
 	{
-		$resultcreate = $this->createCommon($user, $notrigger);
+		global $langs; 
+		$habilitation = new Habilitation($this->db);
+
+		if(!$this->UserHasSameUserHabilitation()) {
+			$resultcreate = $this->createCommon($user, $notrigger);
+		}
+		else {
+			$habilitation->fetch($this->fk_habilitation); 
+			setEventMessages($langs->trans('ErrorUserHasSameUserHabilitation', $habilitation->label), null, 'warnings');
+			return 1;
+		}
 
 		//$resultvalidate = $this->validate($user, $notrigger);
 
@@ -1514,6 +1524,43 @@ class UserHabilitation extends CommonObject
 
 			$this->db->free($resql);
 			return $res;
+		}
+		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Est-ce que l'utilisateur possède déja l'habilitation
+	 *
+	 * 	@return	int			1 si oui, 0 sinon		
+	 */
+	function UserHasSameUserHabilitation() {
+		$sql = "SELECT uh.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uh";
+		$sql .= " WHERE uh.fk_user = $this->fk_user";
+		$sql .= " AND uh.fk_habilitation = $this->fk_habilitation";
+		$sql .= " AND uh.date_habilitation = '".substr($this->db->idate($this->date_habilitation), 0, 10)."'";
+		if(!empty($this->date_fin_habilitation)) {
+			$sql .= " AND uh.date_fin_habilitation = '".substr($this->db->idate($this->date_fin_habilitation), 0, 10)."'";
+		}
+		else {
+			$sql .= " AND uh.date_fin_habilitation IS NULL";
+		}
+		$sql .= " AND (uh.status = ".self::STATUS_HABILITE." OR uh.status = ".self::STATUS_HABILITABLE.')';
+
+		dol_syslog(get_class($this)."::UserHasSameUserHabilitation", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			if($this->db->num_rows($resql) > 0) {
+				$this->db->free($resql);
+				return 1;
+			}
+			else {
+				$this->db->free($resql);
+				return 0;
+			}
 		}
 		else {
 			$this->error = $this->db->lasterror();
