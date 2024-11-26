@@ -859,6 +859,87 @@ class UserFormation extends CommonObject
 	}
 
 	/**
+	 *	to_program object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function to_program($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_A_PROGRAMMER) {
+			dol_syslog(get_class($this)."::to_program action abandonned: already to_program", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Gestion de la cloture des formations de niveau inferieur 
+		$formation = new Formation($this->db);
+		$formation->fetch($this->fk_formation);
+		$voletsCreate = explode(',', $formation->fk_volet);
+		$userFormation = new UserFormation($this->db);
+		$formationToClose = $formation->getFormationToClose($this->fk_user, $this->fk_formation);
+		foreach($formationToClose as $userformation_id => $userformation_ref) {
+			if($userformation_id != $this->id) {
+				$userFormation->fetch($userformation_id);
+				$res = $userFormation->close($user, 0, $voletsCreate);
+
+				if(!$res) {
+					$error++;
+				}
+			}
+		}
+
+		// To Program
+		if(!$error){
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET status = ".self::STATUS_A_PROGRAMMER;
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::to_program()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('USERFORMATION_TO_PROGRAM', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+		
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_A_PROGRAMMER;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
 	 *	close object
 	 *
 	 *	@param		User				$user     			User making status change
@@ -2018,6 +2099,7 @@ class UserFormation extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND uf.fk_formation = $formationid";
+		$sql .= " AND uf.resultat != 3";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
 
 		dol_syslog(get_class($this)."::userAsFormation", LOG_DEBUG);
@@ -2050,6 +2132,7 @@ class UserFormation extends CommonObject
 		$sql = "SELECT DISTINCT uf.fk_formation, uf.date_finvalidite_formation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " WHERE uf.fk_user = $userid";
+		$sql .= " AND uf.resultat != 3";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE;
 		if($withprogram) {
 			$sql .= " OR uf.status = ".self::STATUS_PROGRAMMEE;
@@ -2090,6 +2173,7 @@ class UserFormation extends CommonObject
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND FIND_IN_SET(".$voletid.", f.fk_volet) > 0";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.')';
+		$sql .= " AND uf.resultat != 3";
 
 		dol_syslog(get_class($this)."::getAllFormationsForUserOnVolet", LOG_DEBUG);
 		$resql = $this->db->query($sql);
@@ -2128,6 +2212,7 @@ class UserFormation extends CommonObject
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND FIND_IN_SET(".$prerequisid.", e.prerequisobjects) > 0 AND e.prerequistype = '$prerequistype'";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.')';
+		$sql .= " AND uf.resultat != 3";
 
 		dol_syslog(get_class($this)."::getObjectNeedPrerequis", LOG_DEBUG);
 		$resql = $this->db->query($sql);

@@ -77,6 +77,12 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$error++;
 	}
 
+	if(GETPOST('status') == $objectline::STATUS_VALIDE && GETPOST('resultat') == 3) {
+		setEventMessages($langs->trans('ErrorFormationUnsatisfate'), null, 'errors');
+		$error++;
+	}
+
+
 	if(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
 		if (empty(GETPOST("date_debut_formation_programmerhour", 'int')) || empty(GETPOST("date_debut_formation_programmermin", 'int')) || 
 		(GETPOST("date_debut_formation_programmerhour", 'int') == '00' && GETPOST("date_debut_formation_programmermin", 'int') == '00')) {
@@ -127,7 +133,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$objectline->numero_certificat = GETPOST('numero_certificat');
 		$objectline->prevupif = GETPOST('prevupif', 'int');
 		$objectline->resultat = GETPOST('resultat');
-		$objectline->status = GETPOST('status'); // TODOLény -> Gestion de l'appel à validate et programmer()
+		$objectline->status = GETPOST('status'); 
 
 		$resultcreate = $objectline->create($user);
 	}
@@ -428,7 +434,7 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 	$db->begin();
 
 	if($lineid > 0){
-		if(empty(GETPOST('numero_certificat_valider'))){
+		if(empty(GETPOST('numero_certificat_valider')) && GETPOST('resultat_valider') != 3){
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("NumeroCertificat")), null, 'errors');
 			$error++;
 		}
@@ -467,7 +473,12 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 			$result = $objectline->update($user);
 
 			if($result) {
-				$result = $objectline->validate($user);
+				if(GETPOST('resultat_valider') == 3) {
+					$result = $objectline->to_program($user);
+				}
+				else {
+					$result = $objectline->validate($user);
+				}
 			}
 		}
 

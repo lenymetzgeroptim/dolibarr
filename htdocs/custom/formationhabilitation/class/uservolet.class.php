@@ -1943,7 +1943,12 @@ class UserVolet extends CommonObject
 			$status = UserAutorisation::STATUS_AUTORISE.', '.UserAutorisation::STATUS_AUTORISABLE;
 		}
 
-		$result = $objectline->fetchAllLinked('ASC', 'h.label', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL AND t.status IN ('.$this->db->sanitize($this->db->escape($status)).')'), 'AND', $this->id, $this->fk_volet);
+		if($volet->typevolet == 1) {
+			$result = $objectline->fetchAllLinked('ASC', 'h.label', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL AND t.resultat != 3 AND t.status IN ('.$this->db->sanitize($this->db->escape($status)).')'), 'AND', $this->id, $this->fk_volet);
+		}
+		else {
+			$result = $objectline->fetchAllLinked('ASC', 'h.label', 0, 0, array('customsql'=>'fk_user = '.((int) $this->fk_user).' AND e.fk_target IS NULL AND t.status IN ('.$this->db->sanitize($this->db->escape($status)).')'), 'AND', $this->id, $this->fk_volet);
+		}
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);

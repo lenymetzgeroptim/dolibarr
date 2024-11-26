@@ -126,7 +126,8 @@ $(document).ready(function() {
 		if ($("#dialog-confirm .confirmquestions").length) { // Si le popup pour programmer une ligne apparait
 			var initialFormationIdPopup = $('#dialog-confirm .confirmquestions #fk_formation_programmer').val();	
 			var initialOrganismeIdPopup = $('#dialog-confirm .confirmquestions #fk_societe_programmer').val();	
-			loadOrganismeAndDurationPopup(initialFormationIdPopup, initialOrganismeIdPopup, 1);
+			var initialOrganismeInput = $('#dialog-confirm .confirmquestions #fk_societe_programmer').html();	
+			loadOrganismeAndDurationPopup(initialFormationIdPopup, initialOrganismeInput, initialOrganismeIdPopup, 1);
 		}
 	}
 	else if ($("#convocationformcreate").length) { // Création d'une convocation
@@ -231,7 +232,7 @@ function loadOrganismeAndDuration(formationId, initialOrganismeInput, organismeI
 	}
 }
 
-function loadOrganismeAndDurationPopup(formationId, organismeId, firstLoad) {
+function loadOrganismeAndDurationPopup(formationId, initialOrganismeInput, organismeId, firstLoad) {
 	if (formationId > 0) {
 		$.ajax({
 			type: 'POST',
@@ -239,7 +240,13 @@ function loadOrganismeAndDurationPopup(formationId, organismeId, firstLoad) {
 			data: { formationId: formationId, organismeId: organismeId },
 			success: function(response) {
 				var data = JSON.parse(response);
-                $('#dialog-confirm .confirmquestions #fk_societe_programmer').html(data.fk_societe);
+
+				if(data.fk_societe) {
+					$('#dialog-confirm .confirmquestions #fk_societe_programmer').html(data.fk_societe);
+				}
+				else {
+					$('#dialog-confirm .confirmquestions #fk_societe_programmer').html(initialOrganismeInput);
+				}
 			}
 		});
 	} else {

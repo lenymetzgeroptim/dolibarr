@@ -256,7 +256,7 @@ ErrorFormationAlreadyExist = Impossible d'ajouter cette formation car le collabo
 ErrorPrerequisFormationAptitude = Le collaborateur ne possède pas les prérequis
 ErrorUserHasSameUserHabilitation = Le collaborateur possède déja l'habilitation %s avec les mêmes dates
 ErrorUserHasSameUserAutorisation = Le collaborateur possède déja l'autorisation %s avec les mêmes dates
-
+ErrorFormationUnsatisfate = Impossible de valider la formation car le résultat est non satisfaisant
 
 #
 # Email
