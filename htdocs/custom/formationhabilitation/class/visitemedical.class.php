@@ -275,6 +275,7 @@ class VisiteMedical extends CommonObject
 			}
 		}
 
+		// Si VM apte => Unsuspend les lignes
 		if($resultcreate && ($this->status == self::STATUS_APTE || $this->status == self::STATUS_CONDITIONNEL)) {
 			$naturesVisite = explode(",", $this->naturevisite);
 			$elementPrerequis = new ElementPrerequis($this->db);
@@ -328,6 +329,64 @@ class VisiteMedical extends CommonObject
 
 						if($resultsuspen < 0) {
 							return -1;
+						}
+					}
+				}
+			}
+		}
+		elseif ($resultcreate && $this->status == self::STATUS_INAPTE) {
+			$naturesVisite = explode(",", $this->naturevisite);
+			$elementPrerequis = new ElementPrerequis($this->db);
+
+			// Formations
+			$userFormation = new UserFormation($this->db);
+			$formation = new Formation($this->db);
+			foreach($naturesVisite as $id_naturevisite) {
+				$userFormationToSuspend = $userFormation->getObjectNeedPrerequis($this->fk_user, $id_naturevisite, 'nature_visite');
+				foreach($userFormationToSuspend as $user_formation) {
+					$formation->fetch($user_formation->fk_formation);
+					$asPrerequis = $elementPrerequis->gestionPrerequis($this->fk_user, $formation, 0, 0);
+					if($asPrerequis < 0) {
+						$resultsuspen = $user_formation->suspend($user);
+
+						if($resultsuspen < 0) {
+							$error++;
+						}
+					}
+				}
+			}
+			
+			// Habilitations
+			$userHabilitation = new UserHabilitation($this->db);
+			$habilitation = new Habilitation($this->db);
+			foreach($naturesVisite as $id_naturevisite) {
+				$userHabilitationToSuspend = $userHabilitation->getObjectNeedPrerequis($this->fk_user, $id_naturevisite, 'nature_visite');
+				foreach($userHabilitationToSuspend as $user_habilitation) {
+					$habilitation->fetch($user_habilitation->fk_habilitation);
+					$asPrerequis = $elementPrerequis->gestionPrerequis($this->fk_user, $habilitation, 0, 0);
+					if($asPrerequis < 0) {
+						$resultsuspen = $user_habilitation->suspend($user);
+
+						if($resultsuspen < 0) {
+							$error++;
+						}
+					}
+				}
+			}
+
+			// Autorisations
+			$userAutorisation = new UserAutorisation($this->db);
+			$autorisation = new Autorisation($this->db);
+			foreach($naturesVisite as $id_naturevisite) {
+				$userAutorisationToSuspend = $userAutorisation->getObjectNeedPrerequis($this->fk_user, $id_naturevisite, 'nature_visite');
+				foreach($userAutorisationToSuspend as $user_autorisation) {
+					$autorisation->fetch($user_autorisation->fk_autorisation);
+					$asPrerequis = $elementPrerequis->gestionPrerequis($this->fk_user, $autorisation, 0, 0);
+					if($asPrerequis < 0) {
+						$resultsuspen = $user_autorisation->suspend($user);
+
+						if($resultsuspen < 0) {
+							$error++;
 						}
 					}
 				}
@@ -400,6 +459,8 @@ class VisiteMedical extends CommonObject
 				}
 			}
 		}
+
+		
 
 		return $resultcreate;
 	}
