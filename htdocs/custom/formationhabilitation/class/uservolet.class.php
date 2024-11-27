@@ -3067,6 +3067,9 @@ class UserVolet extends CommonObject
 		elseif($volet->typevolet == 3) {
 			$name_date = 'date_fin_autorisation';
 		}
+		elseif($volet->typevolet == 4) {
+			return '';
+		}
 
 		$lines = $this->getLinkedLinesArray();
 		foreach($lines as $line) {
@@ -3075,11 +3078,72 @@ class UserVolet extends CommonObject
 			}
 		}
 		
-		if($date_fin_volet > dol_time_plus_duree($this->datedebutvolet, $conf->global->FORMTIONHABILITATION_VOLETDURATIONMAX, 'm')) {
+		if($date_fin_volet == '' || $date_fin_volet > dol_time_plus_duree($this->datedebutvolet, $conf->global->FORMTIONHABILITATION_VOLETDURATIONMAX, 'm')) {
 			$date_fin_volet = dol_time_plus_duree($this->datedebutvolet, $conf->global->FORMTIONHABILITATION_VOLETDURATIONMAX, 'm');
 		}
 
 		return $date_fin_volet;
+	}
+
+	/**
+	 * 	Utilisé par une tâche Cron : Permet de changer automatiquement le statut des volets
+	 *
+	 * 	@return	int						0 si réussi, -1 sinon
+	 */
+	public function MajStatuts()
+	{
+		global $conf, $user;
+
+		$error = 0;
+		$now = dol_now();
+
+		$this->db->begin();
+		$this->output = '';
+
+		// Gestion des volets valide avec DateFinValidité < DateJour => Expirée
+		$sql = "SELECT uv.rowid, uv.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as uv";
+		$sql .= " WHERE uv.datefinvolet IS NOT NULL";
+		$sql .= " AND (uv.status != ".self::STATUS_EXPIRE." AND uv.status != ".self::STATUS_CLOSE.")";
+		$sql .= " AND uv.datefinvolet < '".substr($this->db->idate($now), 0, 10)."'";
+
+		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			// Gestion des volets avec DateFinValidité < DateJour => Expirée
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				
+				if($obj->rowid > 0) {
+					$this->fetch($obj->rowid );
+					$res = $this->expire($user);
+					$this->output .= "Le volet $obj->ref a été passé au statut 'Expiré'<br>";
+
+					if($res < 0) {
+						$this->error = $this->db->lasterror();
+						$error++;
+					}
+				}
+
+				$i++;
+			}	
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+
+		if($error == 0) {
+			$this->db->commit();
+			return 0;
+		}
+		else {
+			$this->db->rollback();
+			return 1;
+		}
 	}
 
 }

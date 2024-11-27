@@ -66,7 +66,7 @@ class UserHabilitation extends CommonObject
 
 	const STATUS_HABILITABLE = 1;
 	const STATUS_HABILITE = 2;
-	const STATUS_NONHABILITE = 3;
+	const STATUS_NONHABILITE = 3; // Expire
 	const STATUS_SUSPEND = 8;
 	const STATUS_CLOSE = 9;
 
@@ -780,6 +780,30 @@ class UserHabilitation extends CommonObject
 	}
 
 	/**
+	 *	Set expire status
+	 *
+	 *	@param	User	$user			Object user that modify
+	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
+	 *	@return	int						<0 if KO, 0=Nothing done, >0 if OK
+	 */
+	public function expire($user, $notrigger = 0)
+	{
+		// Protection
+		if ($this->status != self::STATUS_HABILITE) {
+			return 0;
+		}
+
+		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+		 {
+		 $this->error='Permission denied';
+		 return -1;
+		 }*/
+
+		return $this->setStatusCommon($user, self::STATUS_NONHABILITE, $notrigger, 'FORMATIONHABILITATION_USERHABILITATION_CANCEL');
+	}
+
+	/**
 	 *	Set close status
 	 *
 	 *	@param	User	$user			Object user that modify
@@ -1107,12 +1131,12 @@ class UserHabilitation extends CommonObject
 			//$langs->load("formationhabilitation@formationhabilitation");
 			$this->labelStatus[self::STATUS_HABILITABLE] = $langs->transnoentitiesnoconv('Habilitable');
 			$this->labelStatus[self::STATUS_HABILITE] = $langs->transnoentitiesnoconv('Habilité');
-			$this->labelStatus[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Non Habilité');
+			$this->labelStatus[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Expirée');
 			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
 			$this->labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 			$this->labelStatusShort[self::STATUS_HABILITABLE] = $langs->transnoentitiesnoconv('Habilitable');
 			$this->labelStatusShort[self::STATUS_HABILITE] = $langs->transnoentitiesnoconv('Habilité');
-			$this->labelStatusShort[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Non Habilité');
+			$this->labelStatusShort[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Expirée');
 			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
 			$this->labelStatusShort[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 		}
@@ -1412,7 +1436,7 @@ class UserHabilitation extends CommonObject
 	public function getArrayStatut() {
 		global $langs; 
 
-		$labelStatus[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Non Habilité');
+		$labelStatus[self::STATUS_NONHABILITE] = $langs->transnoentitiesnoconv('Expirée');
 		$labelStatus[self::STATUS_HABILITABLE] = $langs->transnoentitiesnoconv('Habilitable');
 		$labelStatus[self::STATUS_HABILITE] = $langs->transnoentitiesnoconv('Habilité');
 		$labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
@@ -1568,6 +1592,103 @@ class UserHabilitation extends CommonObject
 		}
 	}
 
+	/**
+	 * 	Utilisé par une tâche Cron : Permet de changer automatiquement le statut des habilitations
+	 *
+	 * 	@return	int						0 si réussi, -1 sinon
+	 */
+	public function MajStatuts()
+	{
+		global $conf, $user;
+
+		$error = 0;
+		$now = dol_now();
+
+		$this->db->begin();
+		$this->output = '';
+
+		// Gestion des habilitations valide avec DateFinValidité < DateJour => Expirée
+		$sql = "SELECT uh.rowid, uh.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uh";
+		$sql .= " WHERE uh.date_fin_habilitation IS NOT NULL";
+		$sql .= " AND (uh.status = ".self::STATUS_HABILITE." OR uh.status = ".self::STATUS_SUSPEND.")";
+		$sql .= " AND uh.date_fin_habilitation < '".substr($this->db->idate($now), 0, 10)."'";
+
+		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			// Gestion des habilitations avec DateFinValidité < DateJour => Expirée
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				
+				if($obj->rowid > 0) {
+					$this->fetch($obj->rowid );
+					$res = $this->expire($user);
+					$this->output .= "L'habilitation $obj->ref a été passé au statut 'Expirée'<br>";
+
+					if($res < 0) {
+						$this->error = $this->db->lasterror();
+						$error++;
+					}
+				}
+
+				$i++;
+			}	
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+
+		// Gestion des habilitations non valide avec DateFinValidité < DateJour => Clôturée
+		$sql = "SELECT uh.rowid, uh.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uh";
+		$sql .= " WHERE uh.date_fin_habilitation IS NOT NULL";
+		$sql .= " AND (uh.status = ".self::STATUS_HABILITABLE.")";
+		$sql .= " AND uh.date_fin_habilitation < '".substr($this->db->idate($now), 0, 10)."'";
+
+		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			// Gestion des habilitations non valide avec DateFinValidité < DateJour => Clôturée
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				
+				if($obj->rowid > 0) {
+					$this->fetch($obj->rowid );
+					$res = $this->close($user);
+					$this->output .= "L'habilitation $obj->ref a été passé au statut 'Clôturée'<br>";
+
+					if($res < 0) {
+						$this->error = $this->db->lasterror();
+						$error++;
+					}
+				}
+
+				$i++;
+			}	
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+
+
+		if($error == 0) {
+			$this->db->commit();
+			return 0;
+		}
+		else {
+			$this->db->rollback();
+			return 1;
+		}
+	}
 }
 
 

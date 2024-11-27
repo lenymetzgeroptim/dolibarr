@@ -277,10 +277,36 @@ if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate)
 		$result = $object->validate3($user);
 	}
 	elseif($next_status == $object::STATUS_VALIDATION_WITHOUT_USER) {
-		$result = $object->validate_without_user($user);
+		$volet = new Volet($db);
+		$volet->fetch($object->fk_volet);
+		if(empty($object->datefinvolet)) {
+			$object->datefinvolet = $object->getDateFinVolet($volet);
+			$result = $object->update($user);
+
+			if($result < 0) {
+				$error++;
+			}
+		}
+
+		if(!$error) {
+			$result = $object->validate_without_user($user);
+		}
 	}
 	elseif($next_status == $object::STATUS_VALIDATED) {
-		$result = $object->validate($user);
+		$volet = new Volet($db);
+		$volet->fetch($object->fk_volet);
+		if(empty($object->datefinvolet)) {
+			$object->datefinvolet = $object->getDateFinVolet($volet);
+			$result = $object->update($user);
+
+			if($result < 0) {
+				$error++;
+			}
+		}
+
+		if(!$error) {
+			$result = $object->validate($user);
+		}
 	}
 
 	if ($result >= 0) {

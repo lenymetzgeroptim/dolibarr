@@ -67,7 +67,7 @@ class UserAutorisation extends CommonObject
 
 	const STATUS_AUTORISABLE = 1;
 	const STATUS_AUTORISE = 2;
-	const STATUS_NONAUTORISE = 3;
+	const STATUS_NONAUTORISE = 3; // Expire
 	const STATUS_SUSPEND = 8;
 	const STATUS_CLOSE = 9;
 
@@ -935,13 +935,13 @@ class UserAutorisation extends CommonObject
 	}
 
 	/**
-	 *	Set cancel status
+	 *	Set expire status
 	 *
 	 *	@param	User	$user			Object user that modify
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						<0 if KO, 0=Nothing done, >0 if OK
 	 */
-	public function cancel($user, $notrigger = 0)
+	public function expire($user, $notrigger = 0)
 	{
 		// Protection
 		if ($this->status != self::STATUS_AUTORISE) {
@@ -1234,12 +1234,12 @@ class UserAutorisation extends CommonObject
 			//$langs->load("formationhabilitation@formationhabilitation");
 			$this->labelStatus[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Autorisable');
 			$this->labelStatus[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Autorisé');
-			$this->labelStatus[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Autorisé');
+			$this->labelStatus[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Expirée');
 			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
 			$this->labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 			$this->labelStatusShort[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Autorisable');
 			$this->labelStatusShort[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Autorisé');
-			$this->labelStatusShort[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Autorisé');
+			$this->labelStatusShort[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Expirée');
 			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
 			$this->labelStatusShort[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 		}
@@ -1531,7 +1531,7 @@ class UserAutorisation extends CommonObject
 
 		$labelStatus[self::STATUS_AUTORISABLE] = $langs->transnoentitiesnoconv('Autorisable');
 		$labelStatus[self::STATUS_AUTORISE] = $langs->transnoentitiesnoconv('Autorisé');
-		$labelStatus[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Non Autorisé');
+		$labelStatus[self::STATUS_NONAUTORISE] = $langs->transnoentitiesnoconv('Expirée');
 		$labelStatus[self::STATUS_SUSPEND] = $langs->transnoentitiesnoconv('Suspendue');
 		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
 
@@ -1682,6 +1682,104 @@ class UserAutorisation extends CommonObject
 		else {
 			$this->error = $this->db->lasterror();
 			return -1;
+		}
+	}
+
+	/**
+	 * 	Utilisé par une tâche Cron : Permet de changer automatiquement le statut des autorisations
+	 *
+	 * 	@return	int						0 si réussi, -1 sinon
+	 */
+	public function MajStatuts()
+	{
+		global $conf, $user;
+
+		$error = 0;
+		$now = dol_now();
+
+		$this->db->begin();
+		$this->output = '';
+
+		// Gestion des autorisations valide avec DateFinValidité < DateJour => Expirée
+		$sql = "SELECT ua.rowid, ua.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userautorisation as ua";
+		$sql .= " WHERE ua.date_fin_autorisation IS NOT NULL";
+		$sql .= " AND (ua.status = ".self::STATUS_AUTORISE." OR ua.status = ".self::STATUS_SUSPEND.")";
+		$sql .= " AND ua.date_fin_autorisation < '".substr($this->db->idate($now), 0, 10)."'";
+
+		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			// Gestion des autorisations avec DateFinValidité < DateJour => Expirée
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				
+				if($obj->rowid > 0) {
+					$this->fetch($obj->rowid );
+					$res = $this->expire($user);
+					$this->output .= "L'autorisation $obj->ref a été passé au statut 'Expirée'<br>";
+
+					if($res < 0) {
+						$this->error = $this->db->lasterror();
+						$error++;
+					}
+				}
+
+				$i++;
+			}	
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+
+		// Gestion des autorisations non valide avec DateFinValidité < DateJour => Clôturée
+		$sql = "SELECT ua.rowid, ua.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userautorisation as ua";
+		$sql .= " WHERE ua.date_fin_autorisation IS NOT NULL";
+		$sql .= " AND (ua.status = ".self::STATUS_AUTORISABLE.")";
+		$sql .= " AND ua.date_fin_autorisation < '".substr($this->db->idate($now), 0, 10)."'";
+
+		dol_syslog(get_class($this)."::MajStatuts", LOG_DEBUG);
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			// Gestion des autorisations non valide avec DateFinValidité < DateJour => Clôturée
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				
+				if($obj->rowid > 0) {
+					$this->fetch($obj->rowid );
+					$res = $this->close($user);
+					$this->output .= "L'autorisation $obj->ref a été passé au statut 'Clôturée'<br>";
+
+					if($res < 0) {
+						$this->error = $this->db->lasterror();
+						$error++;
+					}
+				}
+
+				$i++;
+			}	
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+
+
+		if($error == 0) {
+			$this->db->commit();
+			return 0;
+		}
+		else {
+			$this->db->rollback();
+			return 1;
 		}
 	}
 }

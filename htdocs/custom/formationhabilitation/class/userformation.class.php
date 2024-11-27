@@ -1712,7 +1712,6 @@ class UserFormation extends CommonObject
 
 		$error = 0;
 		$now = dol_now();
-		$tab_id = array();
 
 		$this->db->begin();
 		$this->output = '';
@@ -1746,6 +1745,8 @@ class UserFormation extends CommonObject
 
 		$resql = $this->db->query($sql);
 		$resql2 = $this->db->query($sql2);
+		$tab_id = array();
+		$tab_id2 = array();
 
 		if ($resql && $resql2) {
 			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée ou Clôturée
@@ -1853,6 +1854,8 @@ class UserFormation extends CommonObject
 
 			$resql = $this->db->query($sql);
 			$resql2 = $this->db->query($sql2);
+			$tab_id = array();
+			$tab_id2 = array(); 
 
 			if ($resql && $resql2) {
 				// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFormation + PeriodeRecyclage + PeriodeSouplesse > DateJour => Expirée
@@ -1948,7 +1951,9 @@ class UserFormation extends CommonObject
 			$sql .= " AND uf.date_finvalidite_formation < '".substr($this->db->idate($now), 0, 10)."'";
 
 			$resql = $this->db->query($sql);
-
+			$tab_id = array();
+			$tab_id2 = array();
+			
 			if ($resql) {
 				// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée
 				$num = $this->db->num_rows($resql);
