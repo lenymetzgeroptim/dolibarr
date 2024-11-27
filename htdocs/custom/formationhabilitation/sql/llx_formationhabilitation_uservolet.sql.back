@@ -30,7 +30,13 @@ CREATE TABLE llx_formationhabilitation_uservolet(
 	fk_volet integer NOT NULL, 
 	datedebutvolet date, 
 	datefinvolet date, 
-	commentaire text,
-	qualif_pro integer
+	commentaire text, 
+	qualif_pro integer, 
+	cloture boolean DEFAULT 1, 
+	date_valid_employeur datetime, 
+	date_valid_intervenant datetime, 
+	fk_user_valid_employeur integer, 
+	fk_user_valid_intervenant integer, 
+	actionvalidationemployeur integer
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

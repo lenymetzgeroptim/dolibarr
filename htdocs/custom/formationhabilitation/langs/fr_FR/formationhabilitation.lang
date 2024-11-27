@@ -267,6 +267,12 @@ EMailTextVisiteMedicaleConditionnel = Bonjour,<br><br>La visite médicale de %s 
 
 
 #
+# Evenement Agenda
+#
+FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr = Validation du volet %s
+
+
+#
 # Autres
 #
 ForceCreation = Forcer la création

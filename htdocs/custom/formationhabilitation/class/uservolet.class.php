@@ -140,6 +140,12 @@ class UserVolet extends CommonObject
 		"commentaire" => array("type"=>"text", "label"=>"Commentaire", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1",),
 		"qualif_pro" => array("type"=>"sellist:c_qualification_profesionnelle:label:rowid::(active:=:1)", "label"=>"QualifPro", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"cloture" => array("type"=>"boolean", "label"=>"ClotureOtherVolet", "enabled"=>"1", 'position'=>39, 'notnull'=>0, "visible"=>"1", "default"=>"1",),
+		"date_valid_employeur" => array("type"=>"datetime", "label"=>"DateValidationEmployeur", "enabled"=>"1", 'position'=>550, 'notnull'=>-1, "visible"=>"-2",),
+		"date_valid_intervenant" => array("type"=>"datetime", "label"=>"DateValidationIntervenant", "enabled"=>"1", 'position'=>560, 'notnull'=>-1, "visible"=>"-2",),
+		"fk_user_valid_employeur" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserValidationEmployeur", "enabled"=>"1", 'position'=>551, 'notnull'=>-1, "visible"=>"-2",),
+		"fk_user_valid_intervenant" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserValidationIntervenant", "enabled"=>"1", 'position'=>561, 'notnull'=>-1, "visible"=>"-2",),
+		"fk_action_valid_employeur" => array("type"=>"integer:commaction:comm/action/class/commaction.class.php", "label"=>"ActionValidationEmployeur", "enabled"=>"1", 'position'=>552, 'notnull'=>-1, "visible"=>"-2",),
+		"fk_action_valid_intervenant" => array("type"=>"integer:commaction:comm/action/class/commaction.class.php", "label"=>"ActionValidationIntervenant", "enabled"=>"1", 'position'=>562, 'notnull'=>-1, "visible"=>"-2",),
 	);
 	public $rowid;
 	public $ref;
@@ -158,6 +164,12 @@ class UserVolet extends CommonObject
 	public $commentaire;
 	public $qualif_pro;
 	public $cloture;
+	public $date_valid_employeur;
+	public $date_valid_intervenant;
+	public $fk_user_valid_employeur;
+	public $fk_user_valid_intervenant;
+	public $fk_action_valid_employeur;
+	public $fk_action_valid_intervenant;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -304,7 +316,7 @@ class UserVolet extends CommonObject
 		$resultcreate = $this->createCommon($user, $notrigger);
 
 		if($resultcreate > 0 && $this->status == self::STATUS_VALIDATED) {
-			$this->validate($user, 0, 1);
+			$this->validate($user, 0, 1, 1);
 		}
 		elseif($resultcreate > 0) {
 			// Génération du PDF
@@ -659,6 +671,10 @@ class UserVolet extends CommonObject
 
 		$error = 0;
 
+		$user_group = New UserGroup($this->db);
+		$user_group->fetch(0, "Direction");
+		$arrayUserDirection = $user_group->listUsersForGroup('', 1);
+
 		// Protection
 		if ($this->status == self::STATUS_VALIDATION1) {
 			dol_syslog(get_class($this)."::validate1 action abandonned: already validated", LOG_WARNING);
@@ -669,24 +685,49 @@ class UserVolet extends CommonObject
 
 		$this->db->begin();
 
-		// Define new ref
-		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
-			$num = $this->getNextNumRef();
-		} else {
-			$num = $this->ref;
-		}
-		$this->newref = $num;
+		// Evenement Agenda
+		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		$actioncomm = new ActionComm($this->db);
+		$actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+		$actioncomm->code        = 'AC_VOLET_VALIDATE';
+		$actioncomm->label       =  $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Label of event
+		$actioncomm->note_private = $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Description
+		$actioncomm->fk_project  = '';
+		$actioncomm->datep       = $now;
+		$actioncomm->datef       = $now;
+		$actioncomm->percentage  = -1; // Not applicable
+		$actioncomm->socid       = '';
+		$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+		$actioncomm->authorid    = $user->id; // User saving action
+		$actioncomm->userownerid = $user->id; // Owner of action
+		$actioncomm->fk_element  = $this->id;
+		$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
 
-		if (!empty($num)) {
+		$ret = $actioncomm->create($user); // User creating action
+		
+		if($ret < 0) {
+			$error++;
+		}
+
+		if(!$error) {
 			// Validate
 			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_VALIDATION1;
+			$sql .= " SET status = ".self::STATUS_VALIDATION1;
 			if (!empty($this->fields['date_validation'])) {
 				$sql .= ", date_validation = '".$this->db->idate($now)."'";
 			}
 			if (!empty($this->fields['fk_user_valid'])) {
 				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			// if($this->fk_user == $user->id) {
+			// 	$sql .= ", date_valid_intervenant = '".$this->db->idate($now)."'";
+			// 	$sql .= ", fk_user_valid_intervenant = ".((int) $user->id);
+			// 	$sql .= ", fk_action_valid_intervenant = ".((int) $ret);
+			// }
+			if(in_array($user->id, $arrayUserDirection) && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == $user_group->id) {
+				$sql .= ", date_valid_employeur = '".$this->db->idate($now)."'";
+				$sql .= ", fk_user_valid_employeur = ".((int) $user->id);
+				$sql .= ", fk_action_valid_employeur = ".((int) $ret);
 			}
 			$sql .= " WHERE rowid = ".((int) $this->id);
 
@@ -737,7 +778,6 @@ class UserVolet extends CommonObject
 
 		// Set new ref and current status
 		if (!$error) {
-			$this->ref = $num;
 			$this->status = self::STATUS_VALIDATION1;
 		}
 
@@ -765,6 +805,10 @@ class UserVolet extends CommonObject
 
 		$error = 0;
 
+		$user_group = New UserGroup($this->db);
+		$user_group->fetch(0, "Direction");
+		$arrayUserDirection = $user_group->listUsersForGroup('', 1);
+
 		// Protection
 		if ($this->status == self::STATUS_VALIDATION2) {
 			dol_syslog(get_class($this)."::validate2 action abandonned: already validated", LOG_WARNING);
@@ -775,24 +819,44 @@ class UserVolet extends CommonObject
 
 		$this->db->begin();
 
-		// Define new ref
-		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
-			$num = $this->getNextNumRef();
-		} else {
-			$num = $this->ref;
-		}
-		$this->newref = $num;
+		// Evenement Agenda
+		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		$actioncomm = new ActionComm($this->db);
+		$actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+		$actioncomm->code        = 'AC_VOLET_VALIDATE';
+		$actioncomm->label       =  $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Label of event
+		$actioncomm->note_private = $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Description
+		$actioncomm->fk_project  = '';
+		$actioncomm->datep       = $now;
+		$actioncomm->datef       = $now;
+		$actioncomm->percentage  = -1; // Not applicable
+		$actioncomm->socid       = '';
+		$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+		$actioncomm->authorid    = $user->id; // User saving action
+		$actioncomm->userownerid = $user->id; // Owner of action
+		$actioncomm->fk_element  = $this->id;
+		$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
 
-		if (!empty($num)) {
+		$ret = $actioncomm->create($user); // User creating action
+		
+		if($ret < 0) {
+			$error++;
+		}
+
+		if(!$error) {
 			// Validate
 			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_VALIDATION2;
+			$sql .= " SET status = ".self::STATUS_VALIDATION2;
 			if (!empty($this->fields['date_validation'])) {
 				$sql .= ", date_validation = '".$this->db->idate($now)."'";
 			}
 			if (!empty($this->fields['fk_user_valid'])) {
 				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			if(in_array($user->id, $arrayUserDirection) && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == $user_group->id) {
+				$sql .= ", date_valid_employeur = '".$this->db->idate($now)."'";
+				$sql .= ", fk_user_valid_employeur = ".((int) $user->id);
+				$sql .= ", fk_action_valid_employeur = ".((int) $ret);
 			}
 			$sql .= " WHERE rowid = ".((int) $this->id);
 
@@ -843,7 +907,6 @@ class UserVolet extends CommonObject
 
 		// Set new ref and current status
 		if (!$error) {
-			$this->ref = $num;
 			$this->status = self::STATUS_VALIDATION2;
 		}
 
@@ -871,6 +934,10 @@ class UserVolet extends CommonObject
 
 		$error = 0;
 
+		$user_group = New UserGroup($this->db);
+		$user_group->fetch(0, "Direction");
+		$arrayUserDirection = $user_group->listUsersForGroup('', 1);
+
 		// Protection
 		if ($this->status == self::STATUS_VALIDATION3) {
 			dol_syslog(get_class($this)."::validate3 action abandonned: already validated", LOG_WARNING);
@@ -881,24 +948,49 @@ class UserVolet extends CommonObject
 
 		$this->db->begin();
 
-		// Define new ref
-		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
-			$num = $this->getNextNumRef();
-		} else {
-			$num = $this->ref;
-		}
-		$this->newref = $num;
+		// Evenement Agenda
+		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		$actioncomm = new ActionComm($this->db);
+		$actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+		$actioncomm->code        = 'AC_VOLET_VALIDATE';
+		$actioncomm->label       =  $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Label of event
+		$actioncomm->note_private = $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Description
+		$actioncomm->fk_project  = '';
+		$actioncomm->datep       = $now;
+		$actioncomm->datef       = $now;
+		$actioncomm->percentage  = -1; // Not applicable
+		$actioncomm->socid       = '';
+		$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+		$actioncomm->authorid    = $user->id; // User saving action
+		$actioncomm->userownerid = $user->id; // Owner of action
+		$actioncomm->fk_element  = $this->id;
+		$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
 
-		if (!empty($num)) {
+		$ret = $actioncomm->create($user); // User creating action
+		
+		if($ret < 0) {
+			$error++;
+		}
+
+		if(!$error) {
 			// Validate
 			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_VALIDATION3;
+			$sql .= " SET status = ".self::STATUS_VALIDATION3;
 			if (!empty($this->fields['date_validation'])) {
 				$sql .= ", date_validation = '".$this->db->idate($now)."'";
 			}
 			if (!empty($this->fields['fk_user_valid'])) {
 				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			// if($this->fk_user == $user->id) {
+			// 	$sql .= ", date_valid_intervenant = '".$this->db->idate($now)."'";
+			// 	$sql .= ", fk_user_valid_intervenant = ".((int) $user->id);
+			// 	$sql .= ", fk_action_valid_intervenant = ".((int) $ret);
+			// }
+			if(in_array($user->id, $arrayUserDirection) && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == $user_group->id) {
+				$sql .= ", date_valid_employeur = '".$this->db->idate($now)."'";
+				$sql .= ", fk_user_valid_employeur = ".((int) $user->id);
+				$sql .= ", fk_action_valid_employeur = ".((int) $ret);
 			}
 			$sql .= " WHERE rowid = ".((int) $this->id);
 
@@ -949,7 +1041,6 @@ class UserVolet extends CommonObject
 
 		// Set new ref and current status
 		if (!$error) {
-			$this->ref = $num;
 			$this->status = self::STATUS_VALIDATION3;
 		}
 
@@ -977,6 +1068,10 @@ class UserVolet extends CommonObject
 
 		$error = 0;
 
+		$user_group = New UserGroup($this->db);
+		$user_group->fetch(0, "Direction");
+		$arrayUserDirection = $user_group->listUsersForGroup('', 1);
+
 		// Protection
 		if ($this->status == self::STATUS_VALIDATION_WITHOUT_USER) {
 			dol_syslog(get_class($this)."::validate_without_user action abandonned: already validated", LOG_WARNING);
@@ -987,32 +1082,69 @@ class UserVolet extends CommonObject
 
 		$this->db->begin();
 
-		// Validate
-		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-		$sql .= " SET status = ".self::STATUS_VALIDATION_WITHOUT_USER;
-		if (!empty($this->fields['date_validation'])) {
-			$sql .= ", date_validation = '".$this->db->idate($now)."'";
-		}
-		if (!empty($this->fields['fk_user_valid'])) {
-			$sql .= ", fk_user_valid = ".((int) $user->id);
-		}
-		$sql .= " WHERE rowid = ".((int) $this->id);
+		// Evenement Agenda
+		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		$actioncomm = new ActionComm($this->db);
+		$actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+		$actioncomm->code        = 'AC_VOLET_VALIDATE';
+		$actioncomm->label       =  $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Label of event
+		$actioncomm->note_private = $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Description
+		$actioncomm->fk_project  = '';
+		$actioncomm->datep       = $now;
+		$actioncomm->datef       = $now;
+		$actioncomm->percentage  = -1; // Not applicable
+		$actioncomm->socid       = '';
+		$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+		$actioncomm->authorid    = $user->id; // User saving action
+		$actioncomm->userownerid = $user->id; // Owner of action
+		$actioncomm->fk_element  = $this->id;
+		$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
 
-		dol_syslog(get_class($this)."::validate_without_user()", LOG_DEBUG);
-		$resql = $this->db->query($sql);
-		if (!$resql) {
-			dol_print_error($this->db);
-			$this->error = $this->db->lasterror();
+		$ret = $actioncomm->create($user); // User creating action
+		
+		if($ret < 0) {
 			$error++;
 		}
 
-		if (!$error && !$notrigger) {
-			// Call trigger
-			$result = $this->call_trigger('USERVOLET_VALIDATE_WITHOUT_USER', $user);
-			if ($result < 0) {
+		// Validate
+		if(!$error) {
+			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " SET status = ".self::STATUS_VALIDATION_WITHOUT_USER;
+			if (!empty($this->fields['date_validation'])) {
+				$sql .= ", date_validation = '".$this->db->idate($now)."'";
+			}
+			if (!empty($this->fields['fk_user_valid'])) {
+				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			// if($this->fk_user == $user->id) {
+			// 	$sql .= ", date_valid_intervenant = '".$this->db->idate($now)."'";
+			// 	$sql .= ", fk_user_valid_intervenant = ".((int) $user->id);
+			// 	$sql .= ", fk_action_valid_intervenant = ".((int) $ret);
+			// }
+			if(in_array($user->id, $arrayUserDirection) && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == $user_group->id) {
+				$sql .= ", date_valid_employeur = '".$this->db->idate($now)."'";
+				$sql .= ", fk_user_valid_employeur = ".((int) $user->id);
+				$sql .= ", fk_action_valid_employeur = ".((int) $ret);
+			}
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::validate_without_user()", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
 				$error++;
 			}
-			// End call triggers
+		
+
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger('USERVOLET_VALIDATE_WITHOUT_USER', $user);
+				if ($result < 0) {
+					$error++;
+				}
+				// End call triggers
+			}
 		}
 
 		if(!$error) {
@@ -1061,16 +1193,22 @@ class UserVolet extends CommonObject
 	 *
 	 *	@param		User	$user     		User making status change
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
-	 * 	@param		int		$noclose		1=Does not close other volets, 0= close volets
 	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function validate($user, $notrigger = 0, $forcecreation = 0)
+	public function validate($user, $notrigger = 0, $forcecreation = 0, $nosigning = 0)
 	{
 		global $conf, $langs;
 
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 		$error = 0;
+
+		$user_group = New UserGroup($this->db);
+		$user_group->fetch(0, "Direction");
+		$arrayUserDirection = $user_group->listUsersForGroup('', 1);
+		$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$this->fk_volet;
+		$approbationRequire = $conf->global->$variableName;
+		$approbationRequireArray = explode(',', $conf->global->$variableName);
 
 		// Protection
 		if ($this->status == self::STATUS_VALIDATED && !$forcecreation) {
@@ -1090,6 +1228,30 @@ class UserVolet extends CommonObject
 
 		$this->db->begin();
 
+		// Evenement Agenda
+		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		$actioncomm = new ActionComm($this->db);
+		$actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+		$actioncomm->code        = 'AC_VOLET_VALIDATE';
+		$actioncomm->label       =  $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Label of event
+		$actioncomm->note_private = $langs->transnoentities("FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr", $this->ref);		// Description
+		$actioncomm->fk_project  = '';
+		$actioncomm->datep       = $now;
+		$actioncomm->datef       = $now;
+		$actioncomm->percentage  = -1; // Not applicable
+		$actioncomm->socid       = '';
+		$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+		$actioncomm->authorid    = $user->id; // User saving action
+		$actioncomm->userownerid = $user->id; // Owner of action
+		$actioncomm->fk_element  = $this->id;
+		$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
+
+		$ret = $actioncomm->create($user); // User creating action
+		
+		if($ret < 0) {
+			$error++;
+		}
+
 		// Define new ref
 		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
 			$num = $this->getNextNumRef();
@@ -1098,7 +1260,7 @@ class UserVolet extends CommonObject
 		}
 		$this->newref = $num;
 
-		if (!empty($num)) {
+		if (!empty($num) && !$error) {
 			// Validate
 			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
 			$sql .= " SET ref = '".$this->db->escape($num)."',";
@@ -1108,6 +1270,18 @@ class UserVolet extends CommonObject
 			}
 			if (!empty($this->fields['fk_user_valid'])) {
 				$sql .= ", fk_user_valid = ".((int) $user->id);
+			}
+			if(!$nosigning) {
+				if($this->fk_user == $user->id && strpos($approbationRequire, '5') !== false) {
+					$sql .= ", date_valid_intervenant = '".$this->db->idate($now)."'";
+					$sql .= ", fk_user_valid_intervenant = ".((int) $user->id);
+					$sql .= ", fk_action_valid_intervenant = ".((int) $ret);
+				}
+				elseif(in_array($user->id, $arrayUserDirection)) {
+					$sql .= ", date_valid_employeur = '".$this->db->idate($now)."'";
+					$sql .= ", fk_user_valid_employeur = ".((int) $user->id);
+					$sql .= ", fk_action_valid_employeur = ".((int) $ret);
+				}
 			}
 			$sql .= " WHERE rowid = ".((int) $this->id);
 

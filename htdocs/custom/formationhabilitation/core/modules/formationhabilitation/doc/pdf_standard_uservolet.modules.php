@@ -37,6 +37,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
 
 
 /**
@@ -1031,15 +1032,27 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	protected function writeSignature(&$pdf, $object, $outputlangs, $outputlangsbis = null)
 	{
 		global $db; 
+		global $dolibarr_main_url_root;
+
+		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+		$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 
 		$x = $pdf->getX();
 		$y = $pdf->getY();
 		$societe = new Societe($db);
 		$societe->fetch(157);
 		$user_static = new User($db);
-		$user_static->fetch($object->fk_user);
+		$actioncomm = new ActionComm($this->db);
+		$object->fetch($object->id); // Reload for last diff
 
-		$cachet1 = '<span>Date : '.dol_print_date(dol_now(), '%d/%m/%Y').'</span><br><p style="font-size: 6.5pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>';
+		$cachet1 = '<span>Date : '.dol_print_date(dol_now(), '%d/%m/%Y').'</span><p style="font-size: 6pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>';
+		if(!empty($object->date_valid_employeur) && !empty($object->fk_user_valid_employeur) && !empty($object->fk_action_valid_employeur)) {
+			$user_static->fetch($object->fk_user_valid_employeur);
+			$actioncomm->fetch($object->fk_action_valid_employeur);
+			$cachet1 .= '<p style="font-size: 7pt"><strong>Signature informatique réalisé par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_employeur, "%d-%m-%Y")."</strong>";
+			$cachet1 .= ' <a href="'.$urlwithroot.'/comm/action/card.php?id='.$object->fk_action_valid_employeur.'">('.$actioncomm->ref.')</a>';
+			$cachet1 .= "</p>";
+		}
 		$pdf->writeHTMLCell(30, 35, $x, $y, $cachet1, array('LTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
 
 		//$pdf->setCellHeightRatio(1.25);
@@ -1049,9 +1062,15 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		//$pdf->setCellHeightRatio(1);
 		//$pdf->SetFont('', '', $default_font_size);
 
-		$signature = $user_static->firstname." ".$user_static->lastname;
-		$cachet3 = '<p>Signature intervenant</p>'.$signature;
-		$pdf->writeHTMLCell(30, 35, $x + 55, $y, $cachet3, array('RTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+		if(!empty($object->date_valid_intervenant) && !empty($object->fk_user_valid_intervenant) && !empty($object->fk_action_valid_intervenant)) {
+			$user_static->fetch($object->fk_user_valid_intervenant);
+			$actioncomm->fetch($object->fk_action_valid_intervenant);
+			$signature = '<p style="font-size: 7pt"><strong>Signature informatique réalisé par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_intervenant, "%d-%m-%Y")."</strong>";
+			$signature .= ' <a href="'.$urlwithroot.'/comm/action/card.php?id='.$object->fk_action_valid_intervenant.'">('.$actioncomm->ref.')</a>';
+			$signature .= "</p>";
+			$cachet3 = '<p>Signature intervenant</p>'.$signature;
+			$pdf->writeHTMLCell(30, 35, $x + 55, $y, $cachet3, array('RTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+		}
 	}
 
 	/**
