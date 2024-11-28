@@ -324,60 +324,80 @@ class modFormationHabilitation extends DolibarrModules
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 1);
-		$this->rights[$r][1] = 'Lire les Formations';
+		$this->rights[$r][1] = 'Lire les Formations (catalogue)';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'read';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 2);
-		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des collaborateurs';
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Formations (catalogue)';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Supprimer les Formations (catalogue)';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'delete';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
+		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des utilisateurs';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'readcout';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Créer/Modifier les Formations';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'write';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 2);
-		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des Utilisateurs liés à une formation';
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
+		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des formations liées à des utilisateurs';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'addline';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Supprimer les Formations';
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
+		$this->rights[$r][1] = 'Forcer la création des formations liées à des utilisateurs';
 		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'delete';
+		$this->rights[$r][5] = 'forceline';
 		$r++;
+
+
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 0 + 1);
-		$this->rights[$r][1] = 'Lire les Habilitations';
-		$this->rights[$r][4] = 'habilitation';
+		$this->rights[$r][1] = 'Lire les Habilitations et Autorisations (catalogue)';
+		$this->rights[$r][4] = 'habilitation_autorisation';
 		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Créer/Modifier les Habilitations';
-		$this->rights[$r][4] = 'habilitation';
+		$this->rights[$r][1] = 'Créer/Modifier les Habilitations et Autorisations (catalogue)';
+		$this->rights[$r][4] = 'habilitation_autorisation';
 		$this->rights[$r][5] = 'write';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Supprimer les Habilitations';
-		$this->rights[$r][4] = 'habilitation';
+		$this->rights[$r][1] = 'Supprimer les Habilitations et Autorisations (catalogue)';
+		$this->rights[$r][4] = 'habilitation_autorisation';
 		$this->rights[$r][5] = 'delete';
 		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 4 + 1);
+		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des habilitations et des autorisations liées à des utilisateurs';
+		$this->rights[$r][4] = 'habilitation_autorisation';
+		$this->rights[$r][5] = 'addline';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 5 + 1);
+		$this->rights[$r][1] = 'Forcer la création des habilitations et des autorisations liées à des utilisateurs';
+		$this->rights[$r][4] = 'habilitation_autorisation';
+		$this->rights[$r][5] = 'forceline';
+		$r++;
+
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Read UserVolet object of FormationHabilitation';
-		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][4] = 'volet';
 		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Create/Update UserVolet object of FormationHabilitation';
-		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][4] = 'volet';
 		$this->rights[$r][5] = 'write';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Delete UserVolet object of FormationHabilitation';
-		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][4] = 'volet';
 		$this->rights[$r][5] = 'delete';
 		$r++;
+
+
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Read VisiteMedical object of FormationHabilitation';
 		$this->rights[$r][4] = 'visitemedical';
@@ -393,6 +413,8 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][4] = 'visitemedical';
 		$this->rights[$r][5] = 'delete';
 		$r++;
+
+
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Read Convocation object of FormationHabilitation';
 		$this->rights[$r][4] = 'convocation';
@@ -406,21 +428,6 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Delete Convocation object of FormationHabilitation';
 		$this->rights[$r][4] = 'convocation';
-		$this->rights[$r][5] = 'delete';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (5 * 10) + 0 + 1);
-		$this->rights[$r][1] = 'Read Volet object of FormationHabilitation';
-		$this->rights[$r][4] = 'volet';
-		$this->rights[$r][5] = 'read';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (5 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Create/Update Volet object of FormationHabilitation';
-		$this->rights[$r][4] = 'volet';
-		$this->rights[$r][5] = 'write';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (5 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Delete Volet object of FormationHabilitation';
-		$this->rights[$r][4] = 'volet';
 		$this->rights[$r][5] = 'delete';
 		$r++;
 		
