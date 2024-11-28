@@ -29,8 +29,8 @@ CREATE TABLE llx_formationhabilitation_habilitation(
 	import_key varchar(14), 
 	model_pdf varchar(255), 
 	status integer NOT NULL, 
-	fk_volet chkbxlst, 
-	test chkbxlst, 
+	fk_volet varchar(255), 
+	test varchar(255), 
 	domaineapplication integer, 
 	commentaire text
 	-- END MODULEBUILDER FIELDS
