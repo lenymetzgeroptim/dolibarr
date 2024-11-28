@@ -1312,8 +1312,6 @@ class ElementPrerequis extends CommonObject
 			$conditionMetForFormation = false;
 			$conditionMetForVisiteMedicale = false;
 
-			$text_for_prerequis = '';
-
 			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
 			foreach ($prerequistype['formation'] as $formationid) {
 				$date_finvalidite_prerequis = '';
@@ -1350,27 +1348,25 @@ class ElementPrerequis extends CommonObject
 				}
 				
 				if($return_text) {
-					$text_for_prerequis .= '<li>';
+					$prerequis_array = array();
 					if(!$conditionMetForFormation && sizeof($prerequistype['formation']) > 0) {
 						foreach ($prerequistype['formation'] as $formationid) {
 							if ($formationid > 0) {
 								$formation->fetch($formationid);
-								$text_for_prerequis .= $formation->label.' OU ';
+								$prerequis_array[] = $formation->label;
 							}
 						}
 					}
 					if(!$conditionMetForVisiteMedicale && sizeof($prerequistype['nature_visite']) > 0) {
 						foreach ($prerequistype['nature_visite'] as $nature_visiteid) {
 							if ($nature_visiteid > 0) {
-								$text_for_prerequis .= $natureVM[$nature_visiteid].' OU ';
+								$prerequis_array[] = $natureVM[$nature_visiteid];
 							}
 						}
 					}
-					rtrim($text_for_prerequis, ' OU ');
-					$text_for_prerequis .= '</li>';
 
-					if($text_for_prerequis != '<li></li>') {
-						$text_for_return .= $text_for_prerequis;
+					if(!empty($prerequis_array)) {
+						$text_for_return .= '<li>'.implode(' OU ', $prerequis_array).'</li>';
 					}
 				}
 

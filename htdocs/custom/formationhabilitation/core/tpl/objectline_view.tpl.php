@@ -39,7 +39,7 @@
  */
 
 global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline;
-global $disableedit, $disableremove, $enableunlink, $enablelink, $db;
+global $disableedit, $disableremove, $enableunlink, $enablelink, $db, $objectparentline;
 
 $form = new Form($db);
 $elementPrerequis = new ElementPrerequis($db);
@@ -125,12 +125,14 @@ foreach($objectline->fields as $key => $val){
 		}
 
 		if($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') {
-			$ddd = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentline)
+			$date_finvalidite - null;
+			$objectparentline->id = $line->$key;
+			$prerequis_manquant = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentline, 0, 0, $date_finvalidite, 0, 1);
 			if(empty($prerequis_manquant)) {
 				print $form->textwithpicto('', 'Le collaborateur possède l\'ensemble des prérequis', 1, 'info');
 			}
-			else {
-				print $form->textwithpicto('', 'Des prérequis sont manquants :<br>'.$prerequis_manquant, 1, 'warning');
+			elseif($prerequis_manquant != '1') {
+				print $form->textwithpicto('', 'Des prérequis sont manquants :<ul>'.$prerequis_manquant.'</ul>', 1, 'warning');
 			}
 		}
 
