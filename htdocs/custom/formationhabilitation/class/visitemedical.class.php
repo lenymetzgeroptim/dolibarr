@@ -1475,6 +1475,35 @@ class VisiteMedical extends CommonObject
 	}
 
 	/**
+	 * 	Return toutes les natures de VM à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllNature()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT v.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_nature_visite as v";
+		$sql .= " WHERE v.active = 1";
+
+		dol_syslog(get_class($this)."::getAllNature", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
 	 * 	Liste des nature visite possédait par l'utilisateur
 	 *
 	 * 	@param  int		$userid       	Id of User

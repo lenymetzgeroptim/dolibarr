@@ -1280,16 +1280,22 @@ class ElementPrerequis extends CommonObject
 	 * 	@param  int		$withMessage    			Display error message
 	 *  @param  int		$date_finvalidite    		Date fin de validité la plus restrictive
 	 *  @param  int		$formation_added    		Formation qui est ajouté à l'utilisateur
-	 * 	@return	int				1 if OK, -1 if KO		
+	 *  @param  int		$return_text    			Si = 1 : Return un texte avec les prérequis manquant
+	 * 	@return	int|string				1 if OK, -1 if KO		
 	 */
-	public function gestionPrerequis($fk_user, $objectparenttmp, $withprogram = 0, $withMessage = 1, &$date_finvalidite = null, $formation_added = 0)
+	public function gestionPrerequis($fk_user, $objectparenttmp, $withprogram = 0, $withMessage = 1, &$date_finvalidite = null, $formation_added = 0, $return_text = 0)
 	{
 		global $conf, $user, $langs;
+
+		$text_for_return = '';
 
 		$userFormation = new UserFormation($this->db);
 		$formations_user = $userFormation->getAllFormationsForUser($fk_user, $withprogram);
 		$visiteMedicale = new VisiteMedical($this->db);
 		$natures_visite_user = $visiteMedicale->getAllNatureVisiteForUser($fk_user);
+		$formation = new Formation($this->db);
+		$visite_medicale = new VisiteMedical($this->db);
+		$natureVM = $visite_medicale->getAllNature();
 
 		if($formation_added > 0) {
 			$formations_user['id'][] = $formation_added;
@@ -1305,6 +1311,8 @@ class ElementPrerequis extends CommonObject
 		foreach ($prerequisConditions as $condition_group => $prerequistype) {
 			$conditionMetForFormation = false;
 			$conditionMetForVisiteMedicale = false;
+
+			$text_for_prerequis = '';
 
 			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
 			foreach ($prerequistype['formation'] as $formationid) {
@@ -1340,14 +1348,51 @@ class ElementPrerequis extends CommonObject
 						setEventMessages($langs->trans('ErrorPrerequisAptitude'), null, 'errors');
 					}
 				}
-				return -1;
+				
+				if($return_text) {
+					$text_for_prerequis .= '<li>';
+					if(!$conditionMetForFormation && sizeof($prerequistype['formation']) > 0) {
+						foreach ($prerequistype['formation'] as $formationid) {
+							if ($formationid > 0) {
+								$formation->fetch($formationid);
+								$text_for_prerequis .= $formation->label.' OU ';
+							}
+						}
+					}
+					if(!$conditionMetForVisiteMedicale && sizeof($prerequistype['nature_visite']) > 0) {
+						foreach ($prerequistype['nature_visite'] as $nature_visiteid) {
+							if ($nature_visiteid > 0) {
+								$text_for_prerequis .= $natureVM[$nature_visiteid].' OU ';
+							}
+						}
+					}
+					rtrim($text_for_prerequis, ' OU ');
+					$text_for_prerequis .= '</li>';
+
+					if($text_for_prerequis != '<li></li>') {
+						$text_for_return .= $text_for_prerequis;
+					}
+				}
+
+				if(!$return_text) {
+					return -1;
+				}
 			}
 			
 			if(empty($date_finvalidite) || $date_finvalidite > $date_finvalidite_prerequis) {
 				$date_finvalidite = $date_finvalidite_prerequis;
 			}
 		}
-		return 1;
+
+		if(!$return_text) {
+			return 1;
+		}
+		elseif($return_text && sizeof($prerequisConditions) == 0) {
+			return '1';
+		}
+		elseif($return_text && sizeof($prerequisConditions) != 0) {
+			return $text_for_return;
+		}
 	}
 }
 

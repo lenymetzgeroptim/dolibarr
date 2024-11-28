@@ -1049,7 +1049,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		if(!empty($object->date_valid_employeur) && !empty($object->fk_user_valid_employeur) && !empty($object->fk_action_valid_employeur)) {
 			$user_static->fetch($object->fk_user_valid_employeur);
 			$actioncomm->fetch($object->fk_action_valid_employeur);
-			$cachet1 .= '<p style="font-size: 7pt"><strong>Signature informatique réalisé par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_employeur, "%d-%m-%Y")."</strong>";
+			$cachet1 .= '<p style="font-size: 7pt"><strong>Signature informatique réalisée par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_employeur, "%d-%m-%Y")."</strong>";
 			$cachet1 .= ' <a href="'.$urlwithroot.'/comm/action/card.php?id='.$object->fk_action_valid_employeur.'">('.$actioncomm->ref.')</a>';
 			$cachet1 .= "</p>";
 		}
@@ -1065,7 +1065,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		if(!empty($object->date_valid_intervenant) && !empty($object->fk_user_valid_intervenant) && !empty($object->fk_action_valid_intervenant)) {
 			$user_static->fetch($object->fk_user_valid_intervenant);
 			$actioncomm->fetch($object->fk_action_valid_intervenant);
-			$signature = '<p style="font-size: 7pt"><strong>Signature informatique réalisé par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_intervenant, "%d-%m-%Y")."</strong>";
+			$signature = '<p style="font-size: 7pt"><strong>Signature informatique réalisée par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_intervenant, "%d-%m-%Y")."</strong>";
 			$signature .= ' <a href="'.$urlwithroot.'/comm/action/card.php?id='.$object->fk_action_valid_intervenant.'">('.$actioncomm->ref.')</a>';
 			$signature .= "</p>";
 			$cachet3 = '<p>Signature intervenant</p>'.$signature;

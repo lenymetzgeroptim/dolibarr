@@ -39,7 +39,10 @@
  */
 
 global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline;
-global $disableedit, $disableremove, $enableunlink, $enablelink;
+global $disableedit, $disableremove, $enableunlink, $enablelink, $db;
+
+$form = new Form($db);
+$elementPrerequis = new ElementPrerequis($db);
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -119,6 +122,16 @@ foreach($objectline->fields as $key => $val){
 		}
 		elseif($object->element == 'uservolet' && $key == 'domaineapplication' && $permissiontoaddline && $action != 'edit_domaineapplication' && $enableunlink) {
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_domaineapplication&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+		}
+
+		if($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') {
+			$ddd = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentline)
+			if(empty($prerequis_manquant)) {
+				print $form->textwithpicto('', 'Le collaborateur possède l\'ensemble des prérequis', 1, 'info');
+			}
+			else {
+				print $form->textwithpicto('', 'Des prérequis sont manquants :<br>'.$prerequis_manquant, 1, 'warning');
+			}
 		}
 
 		print '</td>';
