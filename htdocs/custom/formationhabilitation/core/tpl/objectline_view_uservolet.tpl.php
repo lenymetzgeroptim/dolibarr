@@ -33,12 +33,12 @@
  * $outputalsopricetotalwithtax
  * $usemargins (0 to disable all margins columns, 1 to show according to margin setup)
  * $object_rights->creer initialized from = $object->getRights()
- * $disableedit, $disablemove, $disableremove
  *
  * $text, $description, $line
  */
 
-global $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline;
+global $permissiontoaddline, $permissiontoreadline;
+global $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -46,9 +46,8 @@ if (empty($object) || !is_object($object)) {
 	exit;
 }
 
-if(!$user->rights->formationhabilitation->formation->addline){
-	$disableedit = 1;
-	$disableremove = 1;
+if (!$permissiontoreadline) {
+	exit;
 }
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
@@ -56,28 +55,27 @@ $url = dol_buildpath('/formationhabilitation/uservolet_card.php', 1).'?id='.$lin
 
 print '<div class="col">';
 	print '<div class="card">';
-		print '<a class="customhover" href="'.$url.'">';
-			//print '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEdw67K7dC_tAz6cwn64PyZRirAHi8Vdgd-A&s" class="card-img-top" alt="Image UserVolet">';
-			print '<div class="card-body">';
-				print $line->getNomUrl(0, 'nolink', 1, 'uservoletcardtitle');
-				print '<div class="statusref" style="margin-top: 0px;">'.$line->getLibStatut(5).'</div><br><br>';
+		print '<a class="customhover stretched-link" href="'.$url.'"></a>';
+		//print '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEdw67K7dC_tAz6cwn64PyZRirAHi8Vdgd-A&s" class="card-img-top" alt="Image UserVolet">';
+		print '<div class="card-body">';
+			print $line->getNomUrl(0, 'nolink', 1, 'uservoletcardtitle');
+			print '<div class="statusref" style="margin-top: 0px;">'.$line->getLibStatut(5).'</div><br><br>';
 
-				foreach($objectline->fields as $key => $val){
-					if($key == 'ref' || $key == 'status' || $key == 'fk_user'){
-						continue;
-					}
-					if (abs($val['visible']) != 1 && abs($val['visible']) != 2 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
-						continue;
-					}
-				
-					if (!empty($arrayfields['t.'.$key]['checked'])) {
-						$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');
-						print '<span style="font-weight: bold;" class="mb-0 '.$cssforfield.'">'.$langs->trans($val['label']).' : '.'</span>';
-						print '<span class="mb-0 '.$cssforfield.'">'.$line->showOutputField($val, $key, $line->$key).'</span><br>';
-					}
+			foreach($objectline->fields as $key => $val){
+				if($key == 'ref' || $key == 'status' || $key == 'fk_user'){
+					continue;
 				}
-			print '</div>';
-		print '</a>';
+				if (abs($val['visible']) != 1 && abs($val['visible']) != 2 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
+					continue;
+				}
+			
+				if (!empty($arrayfields['t.'.$key]['checked'])) {
+					$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');
+					print '<span style="font-weight: bold;" class="mb-0 '.$cssforfield.'">'.$langs->trans($val['label']).' : '.'</span>';
+					print '<span class="mb-0 '.$cssforfield.'">'.$line->showOutputField($val, $key, $line->$key).'</span><br>';
+				}
+			}
+		print '</div>';
 	print '</div>';
 print '</div>';
 

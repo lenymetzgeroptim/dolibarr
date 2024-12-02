@@ -158,7 +158,52 @@ class modFormationHabilitation extends DolibarrModules
 		// Example: $this->const=array(1 => array('FORMATIONHABILITATION_MYNEWCONST1', 'chaine', 'myvalue', 'This is a constant to add', 1),
 		//                             2 => array('FORMATIONHABILITATION_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
 		// );
-		$this->const = array();
+		$this->const = array(
+				1 => array('MAIN_AGENDA_ACTIONAUTO_FORMATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				2 => array('MAIN_AGENDA_ACTIONAUTO_FORMATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				3 => array('MAIN_AGENDA_ACTIONAUTO_FORMATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				4 => array('MAIN_AGENDA_ACTIONAUTO_FORMATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+
+				5 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				6 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				7 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				8 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+
+				9 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				10 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				11 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				12 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+
+				13 => array('MAIN_AGENDA_ACTIONAUTO_USERFORMATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				14 => array('MAIN_AGENDA_ACTIONAUTO_USERFORMATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				15 => array('MAIN_AGENDA_ACTIONAUTO_USERFORMATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				16 => array('MAIN_AGENDA_ACTIONAUTO_USERFORMATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+
+				17 => array('MAIN_AGENDA_ACTIONAUTO_USERHABILITATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				18 => array('MAIN_AGENDA_ACTIONAUTO_USERHABILITATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				19 => array('MAIN_AGENDA_ACTIONAUTO_USERHABILITATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				20 => array('MAIN_AGENDA_ACTIONAUTO_USERHABILITATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+
+				21 => array('MAIN_AGENDA_ACTIONAUTO_USERAUTORISATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				22 => array('MAIN_AGENDA_ACTIONAUTO_USERAUTORISATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				23 => array('MAIN_AGENDA_ACTIONAUTO_USERAUTORISATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				24 => array('MAIN_AGENDA_ACTIONAUTO_USERAUTORISATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+
+				25 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				26 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				27 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				28 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+
+				29 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				30 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				31 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				32 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+
+				33 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				34 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				35 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				36 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+			);
 
 		// Some keys to add into the overwriting translation tables
 		/*$this->overwrite_translation = array(
@@ -173,7 +218,7 @@ class modFormationHabilitation extends DolibarrModules
 
 		// Array to add new pages in new tabs
 		$this->tabs = array(
-			'data'=>'user:+userformation:Formation - Habilitation:formationhabilitation@formationhabilitation:$user->rights->formationhabilitation->formation->addline||$user->id==$object->id:/formationhabilitation/userformation.php?id=__ID__'
+			'data'=>'user:+userformation:Formation - Habilitation:formationhabilitation@formationhabilitation:$user->rights->formationhabilitation->formation->readline||$user->rights->formationhabilitation->habilitation_autorisation->readline||$user->rights->formationhabilitation->volet->readline||$user->id==$object->id:/formationhabilitation/userformation.php?id=__ID__'
 		);
 		// Example:
 		// $this->tabs[] = array('data'=>'objecttype:+tabname1:Title1:mylangfile@formationhabilitation:$user->rights->formationhabilitation->read:/formationhabilitation/mynewtab1.php?id=__ID__');  					// To add a new tab identified by code tabname1
@@ -338,20 +383,30 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
-		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations des utilisateurs';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'readcout';
-		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
-		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des formations liées à des utilisateurs';
+		$this->rights[$r][1] = 'Lire les Formations (assignées aux collaborateurs)';
 		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'addline';
+		$this->rights[$r][5] = 'readline';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 6 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Formations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'writeline';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
-		$this->rights[$r][1] = 'Forcer la création des formations liées à des utilisateurs';
+		$this->rights[$r][1] = 'Forcer la création des formations (assignées aux collaborateurs)';
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'forceline';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 7 + 1);
+		$this->rights[$r][1] = 'Supprimer les Formations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'deleteline';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
+		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'readcout';
 		$r++;
 
 
@@ -370,67 +425,92 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][4] = 'habilitation_autorisation';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 4 + 1);
-		$this->rights[$r][1] = 'Ajouter/Modifier/Supprimer des habilitations et des autorisations liées à des utilisateurs';
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 3 + 1);
+		$this->rights[$r][1] = 'Lire les Habilitations et Autorisations (assignées aux collaborateurs)';
 		$this->rights[$r][4] = 'habilitation_autorisation';
-		$this->rights[$r][5] = 'addline';
+		$this->rights[$r][5] = 'readline';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 5 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Habilitations et Autorisations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'habilitation_autorisation';
+		$this->rights[$r][5] = 'writeline';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 4 + 1);
 		$this->rights[$r][1] = 'Forcer la création des habilitations et des autorisations liées à des utilisateurs';
 		$this->rights[$r][4] = 'habilitation_autorisation';
 		$this->rights[$r][5] = 'forceline';
 		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 6 + 1);
+		$this->rights[$r][1] = 'Supprimer les Habilitations et Autorisations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'habilitation_autorisation';
+		$this->rights[$r][5] = 'deleteline';
+		$r++;
+
 
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 0 + 1);
-		$this->rights[$r][1] = 'Read UserVolet object of FormationHabilitation';
+		$this->rights[$r][1] = 'Lire les Volets (catalogue)';
 		$this->rights[$r][4] = 'volet';
 		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Create/Update UserVolet object of FormationHabilitation';
+		$this->rights[$r][1] = 'Créer/Modifier les Volets (catalogue)';
 		$this->rights[$r][4] = 'volet';
 		$this->rights[$r][5] = 'write';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Delete UserVolet object of FormationHabilitation';
+		$this->rights[$r][1] = 'Supprimer les Volets (catalogue)';
 		$this->rights[$r][4] = 'volet';
 		$this->rights[$r][5] = 'delete';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 3 + 1);
+		$this->rights[$r][1] = 'Lire les Volets (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'volet';
+		$this->rights[$r][5] = 'readline';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 4 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Volets (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'volet';
+		$this->rights[$r][5] = 'writeline';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 5 + 1);
+		$this->rights[$r][1] = 'Supprimer les Volets (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'volet';
+		$this->rights[$r][5] = 'deleteline';
 		$r++;
 
 
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 0 + 1);
-		$this->rights[$r][1] = 'Read VisiteMedical object of FormationHabilitation';
+		$this->rights[$r][1] = 'Lire les Visites médicales';
 		$this->rights[$r][4] = 'visitemedical';
 		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Create/Update VisiteMedical object of FormationHabilitation';
+		$this->rights[$r][1] = 'Créer/Modifier les Visites médicales';
 		$this->rights[$r][4] = 'visitemedical';
 		$this->rights[$r][5] = 'write';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Delete VisiteMedical object of FormationHabilitation';
+		$this->rights[$r][1] = 'Supprimer les Visites médicales';
 		$this->rights[$r][4] = 'visitemedical';
 		$this->rights[$r][5] = 'delete';
 		$r++;
 
 
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 0 + 1);
-		$this->rights[$r][1] = 'Read Convocation object of FormationHabilitation';
+		$this->rights[$r][1] = 'Lire les Convocations';
 		$this->rights[$r][4] = 'convocation';
 		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Create/Update Convocation object of FormationHabilitation';
+		$this->rights[$r][1] = 'Créer/Modifier les Convocations';
 		$this->rights[$r][4] = 'convocation';
 		$this->rights[$r][5] = 'write';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Delete Convocation object of FormationHabilitation';
+		$this->rights[$r][1] = 'Supprimer les Convocations';
 		$this->rights[$r][4] = 'convocation';
 		$this->rights[$r][5] = 'delete';
-		$r++;
-		
+		$r++;		
 		/* END MODULEBUILDER PERMISSIONS */
 
 		// Main menu entries to add
@@ -449,7 +529,7 @@ class modFormationHabilitation extends DolibarrModules
 			'langs'=>'formationhabilitation@formationhabilitation', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1000 + $r,
 			'enabled'=>'$conf->formationhabilitation->enabled', // Define condition to show or hide menu entry. Use '$conf->formationhabilitation->enabled' if entry must be visible if module is enabled.
-			'perms'=>'1', // Use 'perms'=>'$user->rights->formationhabilitation->formation->read' if you want your menu with a permission rules
+			'perms'=>'', // Use 'perms'=>'$user->rights->formationhabilitation->formation->read' if you want your menu with a permission rules
 			'target'=>'',
 			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
 		);
@@ -466,7 +546,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '1',
+			 'perms' => '$user->rights->formationhabilitation->formation->read',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -482,7 +562,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '1',
+			 'perms' => '$user->rights->formationhabilitation->formation->write',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -498,7 +578,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '1',
+			 'perms' => '$user->rights->formationhabilitation->formation->readline',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -514,7 +594,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '1',
+			 'perms' => '$user->rights->formationhabilitation->habilitation_autorisation->read',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -530,7 +610,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '1',
+			 'perms' => '$user->rights->formationhabilitation->habilitation_autorisation->write',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -546,7 +626,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '1',
+			 'perms' => '$user->rights->formationhabilitation->habilitation_autorisation->readline',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -562,7 +642,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '1',
+			 'perms' => '$user->rights->formationhabilitation->habilitation_autorisation->read',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -578,7 +658,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '1',
+			 'perms' => '$user->rights->formationhabilitation->habilitation_autorisation->write',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -594,7 +674,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '1',
+			 'perms' => '$user->rights->formationhabilitation->habilitation_autorisation->readline',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -616,20 +696,20 @@ class modFormationHabilitation extends DolibarrModules
 		);
 		/* END LEFTMENU VOLETS */
 		/* LEFTMENU NOUVEAU VOLET D'UN COLLABORATEUR */
-		$this->menu[$r++]=array(
-			 'fk_menu' => 'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
-			 'type' => 'left',
-			 'titre' => 'Nouveau volet d\'un collaborateur',
-			 'mainmenu' => 'formationhabilitation',
-			 'leftmenu' => 'formationhabilitation_uservolet_new',
-			 'url' => '/formationhabilitation/uservolet_card.php?action=create',
-			 'langs' => 'formationhabilitation@formationhabilitation',
-			 'position' => 1000,
-			 'enabled' => 'isModEnabled(\'formationhabilitation\')',
-			 'perms' => '$user->hasRight(\'formationhabilitation\', \'uservolet\', \'write\')',
-			 'target' => '',
-			 'user' => 2,
-		);
+		// $this->menu[$r++]=array(
+		// 	 'fk_menu' => 'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
+		// 	 'type' => 'left',
+		// 	 'titre' => 'Nouveau volet d\'un collaborateur',
+		// 	 'mainmenu' => 'formationhabilitation',
+		// 	 'leftmenu' => 'formationhabilitation_uservolet_new',
+		// 	 'url' => '/formationhabilitation/uservolet_card.php?action=create',
+		// 	 'langs' => 'formationhabilitation@formationhabilitation',
+		// 	 'position' => 1000,
+		// 	 'enabled' => 'isModEnabled(\'formationhabilitation\')',
+		// 	 'perms' => '$user->hasRight(\'formationhabilitation\', \'volet\', \'writeline\')',
+		// 	 'target' => '',
+		// 	 'user' => 2,
+		// );
 		/* END LEFTMENU NOUVEAU VOLET D'UN COLLABORATEUR */
 		/* LEFTMENU VOLETS DES COLLABORATEURS */
 		$this->menu[$r++]=array(
@@ -642,27 +722,11 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => 'isModEnabled(\'formationhabilitation\')',
-			 'perms' => '$user->hasRight(\'formationhabilitation\', \'uservolet\', \'read\')',
+			 'perms' => '$user->hasRight(\'formationhabilitation\', \'volet\', \'readline\')',
 			 'target' => '',
 			 'user' => 2,
 		);
 		/* END LEFTMENU VOLETS DES COLLABORATEURS */
-		/* LEFTMENU LISTE PRéREQUIS */
-		$this->menu[$r++]=array(
-			 'fk_menu' => 'fk_mainmenu=formationhabilitation,fk_leftmenu=volet',
-			 'type' => 'left',
-			 'titre' => 'Liste Prérequis',
-			 'mainmenu' => 'formationhabilitation',
-			 'leftmenu' => 'formationhabilitation_elementprerequis_list',
-			 'url' => '/formationhabilitation/elementprerequis_list.php',
-			 'langs' => 'formationhabilitation@formationhabilitation',
-			 'position' => 1000,
-			 'enabled' => 'isModEnabled(\'formationhabilitation\')',
-			 'perms' => '$user->hasRight(\'formationhabilitation\', \'volet\', \'read\')',
-			 'target' => '',
-			 'user' => 2,
-		);
-		/* END LEFTMENU LISTE PRéREQUIS */
 		/* LEFTMENU VISITES MéDICALES */
 		$this->menu[$r++]=array(
 			 'fk_menu' => 'fk_mainmenu=formationhabilitation',

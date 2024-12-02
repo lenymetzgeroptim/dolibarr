@@ -123,21 +123,12 @@ if (empty($action) && empty($id) && empty($ref)) {
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->formationhabilitation->userformation->read;
-	$permissiontoadd = $user->rights->formationhabilitation->userformation->write; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = $user->rights->formationhabilitation->userformation->delete || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
-	$permissionnote = $user->rights->formationhabilitation->userformation->write; // Used by the include of actions_setnotes.inc.php
-	$permissiondellink = $user->rights->formationhabilitation->userformation->write; // Used by the include of actions_dellink.inc.php
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = 1;
-	$permissionnote = 1;
-	$permissiondellink = 1;
-}
+$permissiontoread = $user->rights->formationhabilitation->formation->readline || $object->fk_user == $user->id;
+$permissiontoadd = $user->rights->formationhabilitation->formation->writeline; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontodelete = $user->rights->formationhabilitation->formation->deleteline;
+// $permissionnote = $user->rights->formationhabilitation->formation->writeline; // Used by the include of actions_setnotes.inc.php
+// $permissiondellink = $user->rights->formationhabilitation->formation->writeline; // Used by the include of actions_dellink.inc.php
+
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/userformation';
 

@@ -133,21 +133,10 @@ if (empty($action) && empty($id) && empty($ref)) {
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'read');
-	$permissiontoadd = $user->hasRight('formationhabilitation', 'visitemedical', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = $user->hasRight('formationhabilitation', 'visitemedical', 'delete');
-	$permissionnote = $user->hasRight('formationhabilitation', 'visitemedical', 'write'); // Used by the include of actions_setnotes.inc.php
-	$permissiondellink = $user->hasRight('formationhabilitation', 'visitemedical', 'write'); // Used by the include of actions_dellink.inc.php
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = 1;
-	$permissionnote = 1;
-	$permissiondellink = 1;
-}
+$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'read');
+$permissiontoadd = $user->hasRight('formationhabilitation', 'visitemedical', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontodelete = $user->hasRight('formationhabilitation', 'visitemedical', 'delete');
+
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/visitemedical';
 
@@ -214,10 +203,10 @@ if (empty($reshook)) {
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
 	// Actions when linking object each other
-	include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
+	// include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
 
 	// Actions when printing a doc from card
-	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
+	// include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
 
 	// Action to move up and down lines of object
 	//include DOL_DOCUMENT_ROOT.'/core/actions_lineupdown.inc.php';
@@ -225,18 +214,18 @@ if (empty($reshook)) {
 	// Action to build doc
 	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
 
-	if ($action == 'set_thirdparty' && $permissiontoadd) {
-		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
-	}
-	if ($action == 'classin' && $permissiontoadd) {
-		$object->setProject(GETPOST('projectid', 'int'));
-	}
+	// if ($action == 'set_thirdparty' && $permissiontoadd) {
+	// 	$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
+	// }
+	// if ($action == 'classin' && $permissiontoadd) {
+	// 	$object->setProject(GETPOST('projectid', 'int'));
+	// }
 
-	// Actions to send emails
-	$triggersendname = 'FORMATIONHABILITATION_MYOBJECT_SENTBYMAIL';
-	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
-	$trackid = 'visitemedical'.$object->id;
-	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
+	// // Actions to send emails
+	// $triggersendname = 'FORMATIONHABILITATION_MYOBJECT_SENTBYMAIL';
+	// $autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
+	// $trackid = 'visitemedical'.$object->id;
+	// include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
 

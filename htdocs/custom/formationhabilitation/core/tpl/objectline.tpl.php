@@ -121,12 +121,14 @@ $arrayofmassactions = array(
     //'builddoc'=>img_picto('', 'pdf', 'class="pictofixedwidth"').$langs->trans("PDFMerge"),
     //'presend'=>img_picto('', 'email', 'class="pictofixedwidth"').$langs->trans("SendByMail"),
 );
-if ($permissiontoaddline) {
+if($permissiontodeleteline) {
     $arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"').$langs->trans("Delete");
-    if($permissiontovalidatelines && $object->element == 'user' && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
+}
+if ($permissiontoaddline) {
+    if($permissiontovalidateline && $object->element == 'user' && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
         $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("ValidateAndGenerateUserVolet");
     }
-    if($permissiontoaddline && $objectline->element == 'userformation'){
+    if($objectline->element == 'userformation'){
         $arrayofmassactions['preclose'] = img_picto('', 'fontawesome_times', 'class="pictofixedwidth"').$langs->trans("Clôturer");
     }
 }

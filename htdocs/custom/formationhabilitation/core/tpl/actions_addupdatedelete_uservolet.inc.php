@@ -422,31 +422,31 @@ if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline)
                 }
             }
         }
-    }
+}
 
-	if ($action == 'updatedomaineapplication' && !$cancel && $permissiontoaddline) {
-		$db->begin();
-	
-		if($lineid > 0){
-			$result = $object->updateDomaineApplication($lineid, GETPOST('domaineapplication', 'int'), ($objectline->element == 'userhabilitation' ? 'habilitation' : 'autorisation'));
+if ($action == 'updatedomaineapplication' && !$cancel && $permissiontoaddline) {
+	$db->begin();
 
-			if ($result) {
-				$db->commit();
-				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-				$urltogo = $backtopage ? str_replace('__ID__', $result, $backtopage) : $backurlforlist;
-				$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $urltogo); // New method to autoselect project after a New on another form object creation
-				if ($urltogo && empty($noback)) {
-					header("Location: " . $urltogo);
-					exit;
-				}
-			} else {
-				$db->rollback();
-				setEventMessages($objectline->error, $objectline->errors, 'warnings');
-				$action = 'edit_domaineapplication';
+	if($lineid > 0){
+		$result = $object->updateDomaineApplication($lineid, GETPOST('domaineapplication', 'int'), ($objectline->element == 'userhabilitation' ? 'habilitation' : 'autorisation'));
+
+		if ($result) {
+			$db->commit();
+			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+			$urltogo = $backtopage ? str_replace('__ID__', $result, $backtopage) : $backurlforlist;
+			$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $urltogo); // New method to autoselect project after a New on another form object creation
+			if ($urltogo && empty($noback)) {
+				header("Location: " . $urltogo);
+				exit;
 			}
-		}
-		else {
-			$langs->load("errors");
-			setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+		} else {
+			$db->rollback();
+			setEventMessages($objectline->error, $objectline->errors, 'warnings');
+			$action = 'edit_domaineapplication';
 		}
 	}
+	else {
+		$langs->load("errors");
+		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+	}
+}

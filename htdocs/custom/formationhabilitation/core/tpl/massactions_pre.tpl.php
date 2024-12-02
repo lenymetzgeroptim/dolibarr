@@ -40,11 +40,11 @@ if (!empty($sall) || !empty($search_all)) {
 // 	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassDraftDeletion"), $langs->trans("ConfirmMassDeletionQuestion", count($toselect)), "deleteline", null, '', 0, 200, 500, 1);
 // }
 
-if ($massaction == 'predelete') {
+if ($massaction == 'predelete' && $permissiontodeleteline) {
 	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassDeletion"), $langs->trans("ConfirmMassDeletionQuestion", count($toselect)), "deletelines", null, '', 0, 200, 500, 1);
 }
 
-if ($massaction == 'preclose') {
+if ($massaction == 'preclose' && $permissiontoaddline) {
 	$objectlinetmp = new $objectclass($db);
 	if($objectlinetmp->element == 'userformation') {
 		$formquestion = array(array('label'=>$langs->trans('GenerationAndCloseVoletFormation') ,'type'=>'checkbox', 'name'=>'generation_volet_formation', 'value'=>1, 'tdclass'=>'width220'));
@@ -56,7 +56,7 @@ if ($massaction == 'preclose') {
 	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassClose"), $langs->trans("ConfirmMassCloseQuestion", count($toselect)), "closelines", $formquestion, '', 0, 200, 500, 1);
 }
 
-if ($massaction == 'prevalidate' && $permissiontovalidatelines) {
+if ($massaction == 'prevalidate' && $permissiontovalidateline) {
 	$parentobjectid = array();
 	$voletToGenerate = array();
 	$uservolet = new UserVolet($db);

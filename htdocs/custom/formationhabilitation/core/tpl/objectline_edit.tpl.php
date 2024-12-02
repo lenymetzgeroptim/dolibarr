@@ -32,11 +32,16 @@
  * $canchangeproduct (0 by default, 1 to allow to change the product if it is a predefined product)
  */
 
- global $object, $objectline;
+global $object, $objectline;
+global $permissiontoaddline;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
 	print "Error, template page can't be called as URL";
+	exit;
+}
+
+if (!$permissiontoaddline) {
 	exit;
 }
 

@@ -139,15 +139,9 @@ if ($id > 0 || !empty($ref)) {
 
 // Permissions
 // (There are several ways to check permission.)
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'userformation', 'read');
-	$permissiontoadd  = $user->hasRight('formationhabilitation', 'userformation', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd  = 1;
-}
+$permissiontoread = $user->hasRight('formationhabilitation', 'formation', 'readline') || $object->fk_user == $user->id;
+$permissiontoadd  = $user->hasRight('formationhabilitation', 'formation', 'writeline'); // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
+
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();

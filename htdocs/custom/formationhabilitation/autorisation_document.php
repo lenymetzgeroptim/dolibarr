@@ -123,15 +123,9 @@ if ($id > 0 || !empty($ref)) {
 }
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->formationhabilitation->autorisation->read;
-	$permissiontoadd = $user->rights->formationhabilitation->autorisation->write; // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-}
+$permissiontoread = $user->rights->formationhabilitation->habilitation_autorisation->read;
+$permissiontoadd = $user->rights->formationhabilitation->habilitation_autorisation->write; // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
+
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();
@@ -244,10 +238,8 @@ print '</div>';
 print dol_get_fiche_end();
 
 $modulepart = 'formationhabilitation';
-//$permissiontoadd = $user->rights->formationhabilitation->autorisation->write;
-$permissiontoadd = 1;
-//$permtoedit = $user->rights->formationhabilitation->autorisation->write;
-$permtoedit = 1;
+$permissiontoadd = $user->rights->formationhabilitation->autorisation->write;
+$permtoedit = $user->rights->formationhabilitation->autorisation->write;
 $param = '&id='.$object->id;
 
 //$relativepathwithnofile='autorisation/' . dol_sanitizeFileName($object->id).'/';

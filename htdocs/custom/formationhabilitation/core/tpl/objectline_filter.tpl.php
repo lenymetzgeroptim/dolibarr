@@ -35,6 +35,10 @@ if (empty($object) || !is_object($object)) {
 	exit;
 }
 
+if (!$permissiontoreadline) {
+	exit;
+}
+
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
 print "<!-- BEGIN PHP TEMPLATE objectline_filter.tpl.php -->\n";

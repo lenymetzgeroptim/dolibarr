@@ -228,7 +228,7 @@ class UserVolet extends CommonObject
 		}
 
 		// Example to show how to set values of fields definition dynamically
-		/*if ($user->hasRight('formationhabilitation', 'uservolet', 'read')) {
+		/*if ($user->hasRight('formationhabilitation', 'volet', 'read')) {
 			$this->fields['myfield']['visible'] = 1;
 			$this->fields['myfield']['noteditable'] = 0;
 		}*/

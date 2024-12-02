@@ -162,96 +162,86 @@ elseif($volet->typevolet == 3) {
 $objectparentline = new UserVolet($db);
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 1;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'uservolet', 'read');
-	$permissiontoadd = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = $user->hasRight('formationhabilitation', 'uservolet', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_VALIDATION0);
-	$permissionnote = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_setnotes.inc.php
-	$permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
-	$permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
+$permissiontoread = $user->hasRight('formationhabilitation', 'volet', 'readline') || $object->fk_user == $user->id;
+$permissiontoadd = $user->hasRight('formationhabilitation', 'volet', 'writeline'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontodelete = $user->hasRight('formationhabilitation', 'volet', 'deleteline') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_VALIDATION0);
+$permissiontoaddline = $user->rights->formationhabilitation->formation->writeline;
+$permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
+$permissiontoreadline = $permissiontoread;
 
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 > 0) {
-		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
-		$permissiontovalidate1 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
-	}
-
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 > 0) {
-		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
-		$permissiontovalidate2 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
-	}
-
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 > 0) {
-		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
-		$permissiontovalidate3 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
-	}
-
-	if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 > 0) {
-		$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
-		$permissiontovalidate4 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
-	}
-
-	$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->fk_volet;
-	$approbationRequire = $conf->global->$variableName;
-	$approbationRequireArray = explode(',', $conf->global->$variableName);
-
-	if($object->status == $object::STATUS_VALIDATION0) {
-		$permissiontovalidate = $permissiontovalidate1;
-	}
-	elseif($object->status == $object::STATUS_VALIDATION1) {
-		$permissiontovalidate = $permissiontovalidate2;
-	}
-	elseif($object->status == $object::STATUS_VALIDATION2) {
-		$permissiontovalidate = $permissiontovalidate3;
-	}
-	elseif($object->status == $object::STATUS_VALIDATION3) {
-		$permissiontovalidate = $permissiontovalidate4;
-	}
-	elseif($object->status == $object::STATUS_VALIDATION_WITHOUT_USER) {
-		$permissiontovalidate = $user->id = $object->fk_user;
-	}
-
-	if($object->status < $object::STATUS_VALIDATION1 && strpos($approbationRequire, '2') !== false) { // Il y a l'approbation 2
-		$next_status = $object::STATUS_VALIDATION1;
-	}
-	elseif($object->status < $object::STATUS_VALIDATION2 && strpos($approbationRequire, '3') !== false) { // Il y a l'approbation 3
-		$next_status = $object::STATUS_VALIDATION2;
-	}
-	elseif($object->status < $object::STATUS_VALIDATION3 && strpos($approbationRequire, '4') !== false) { // Il y a l'approbation 4
-		$next_status = $object::STATUS_VALIDATION3;
-	}
-	elseif($object->status < $object::STATUS_VALIDATION_WITHOUT_USER && strpos($approbationRequire, '5') !== false) { // Il y a l'approbation du collaborateur
-		$next_status = $object::STATUS_VALIDATION_WITHOUT_USER;
-	}
-	elseif($object->status < $object::STATUS_VALIDATED) {
-		$next_status = $object::STATUS_VALIDATED;
-	}
-
-	$validation_before = 1;
-	if($object->status == $object::STATUS_VALIDATION0) {
-		$validation_before = 0;
-	}
-	elseif($object->status == $object::STATUS_VALIDATION1 && strpos($approbationRequire, '1') === false) { // Il n'y a pas eu l'approbation 1
-		$validation_before = 0;
-	}
-	elseif($object->status == $object::STATUS_VALIDATION2 && strpos($approbationRequire, '1') === false && strpos($approbationRequire, '2') === false) { // Il n'y a pas eu l'approbation 1, ni 2
-		$validation_before = 0;
-	}
-	elseif($object->status == $object::STATUS_VALIDATION3 && strpos($approbationRequire, '1') === false && strpos($approbationRequire, '2') === false && strpos($approbationRequire, '3') === false) { // Il n'y a pas eu l'approbation 1, ni 2, ni 3
-		$validation_before = 0;
-	}
-
-	$permissiontolinkandunlink = $object->status < $object::STATUS_VALIDATION_WITHOUT_USER && $permissiontovalidate && !$validation_before;
-	$permissiontorefuse = $permissiontovalidate && !$permissiontolinkandunlink;
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = 1;
-	$permissionnote = 1;
-	$permissiontolinkandunlink = 1;
-	$permissiontorefuse = 1;
+if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 > 0) {
+	$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+	$permissiontovalidate1 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
 }
+
+if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 > 0) {
+	$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+	$permissiontovalidate2 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+}
+
+if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 > 0) {
+	$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+	$permissiontovalidate3 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+}
+
+if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 > 0) {
+	$usergroup->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+	$permissiontovalidate4 = array_key_exists($usergroup->id, $usergroup->listGroupsForUser($user->id, false));
+}
+
+$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$object->fk_volet;
+$approbationRequire = $conf->global->$variableName;
+$approbationRequireArray = explode(',', $conf->global->$variableName);
+
+if($object->status == $object::STATUS_VALIDATION0) {
+	$permissiontovalidate = $permissiontovalidate1;
+}
+elseif($object->status == $object::STATUS_VALIDATION1) {
+	$permissiontovalidate = $permissiontovalidate2;
+}
+elseif($object->status == $object::STATUS_VALIDATION2) {
+	$permissiontovalidate = $permissiontovalidate3;
+}
+elseif($object->status == $object::STATUS_VALIDATION3) {
+	$permissiontovalidate = $permissiontovalidate4;
+}
+elseif($object->status == $object::STATUS_VALIDATION_WITHOUT_USER) {
+	$permissiontovalidate = $user->id = $object->fk_user;
+}
+
+if($object->status < $object::STATUS_VALIDATION1 && strpos($approbationRequire, '2') !== false) { // Il y a l'approbation 2
+	$next_status = $object::STATUS_VALIDATION1;
+}
+elseif($object->status < $object::STATUS_VALIDATION2 && strpos($approbationRequire, '3') !== false) { // Il y a l'approbation 3
+	$next_status = $object::STATUS_VALIDATION2;
+}
+elseif($object->status < $object::STATUS_VALIDATION3 && strpos($approbationRequire, '4') !== false) { // Il y a l'approbation 4
+	$next_status = $object::STATUS_VALIDATION3;
+}
+elseif($object->status < $object::STATUS_VALIDATION_WITHOUT_USER && strpos($approbationRequire, '5') !== false) { // Il y a l'approbation du collaborateur
+	$next_status = $object::STATUS_VALIDATION_WITHOUT_USER;
+}
+elseif($object->status < $object::STATUS_VALIDATED) {
+	$next_status = $object::STATUS_VALIDATED;
+}
+
+$validation_before = 1;
+if($object->status == $object::STATUS_VALIDATION0) {
+	$validation_before = 0;
+}
+elseif($object->status == $object::STATUS_VALIDATION1 && strpos($approbationRequire, '1') === false) { // Il n'y a pas eu l'approbation 1
+	$validation_before = 0;
+}
+elseif($object->status == $object::STATUS_VALIDATION2 && strpos($approbationRequire, '1') === false && strpos($approbationRequire, '2') === false) { // Il n'y a pas eu l'approbation 1, ni 2
+	$validation_before = 0;
+}
+elseif($object->status == $object::STATUS_VALIDATION3 && strpos($approbationRequire, '1') === false && strpos($approbationRequire, '2') === false && strpos($approbationRequire, '3') === false) { // Il n'y a pas eu l'approbation 1, ni 2, ni 3
+	$validation_before = 0;
+}
+
+$permissiontolinkandunlink = $object->status < $object::STATUS_VALIDATION_WITHOUT_USER && $permissiontovalidate && !$validation_before;
+$permissiontorefuse = $permissiontovalidate && !$permissiontolinkandunlink;
+
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/uservolet';
 
@@ -324,7 +314,7 @@ if (empty($reshook)) {
 	//include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
 
 	// Actions when printing a doc from card
-	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
+	// include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
 
 	// Action to move up and down lines of object
 	//include DOL_DOCUMENT_ROOT.'/core/actions_lineupdown.inc.php';
@@ -372,24 +362,24 @@ if (empty($reshook)) {
 		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userautorisation.inc.php';
 	}
 
-	if ($action == 'set_thirdparty' && $permissiontoadd) {
-		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
-	}
-	if ($action == 'classin' && $permissiontoadd) {
-		$object->setProject(GETPOST('projectid', 'int'));
-	}
+	// if ($action == 'set_thirdparty' && $permissiontoadd) {
+	// 	$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
+	// }
+	// if ($action == 'classin' && $permissiontoadd) {
+	// 	$object->setProject(GETPOST('projectid', 'int'));
+	// }
 
-	// Actions to send emails
-	$triggersendname = 'FORMATIONHABILITATION_MYOBJECT_SENTBYMAIL';
-	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
-	$trackid = 'uservolet'.$object->id;
-	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
+	// // Actions to send emails
+	// $triggersendname = 'FORMATIONHABILITATION_MYOBJECT_SENTBYMAIL';
+	// $autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
+	// $trackid = 'uservolet'.$object->id;
+	// include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
 unset($arrayfields['t.formateur']);
 unset($objectline->fields['fk_user']);
 unset($arrayfields['t.fk_user']);
-if(!$permissiontoreadCout) {
+if(!$permissiontoreadcost) {
     unset($objectline->fields['cout_pedagogique']);
     unset($objectline->fields['cout_mobilisation']);
     unset($objectline->fields['cout_annexe']);

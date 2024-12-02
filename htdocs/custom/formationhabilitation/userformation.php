@@ -75,27 +75,6 @@ $userid = GETPOST('id', 'integer');
 $lineid   = GETPOST('lineid', 'int');
 $onglet = GETPOST('onglet', 'aZ09');
 
-
-//Permissions
-$user_group = New UserGroup($db);
-$societe = New Societe($db);
-
-$user_group->fetch(0, "Responsable d'antenne");
-$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
-$userInRespAntenneGroup = in_array($user->id, $arrayUserRespAntenneGroup); // Utilisateur dans le groupe Responsable d'antenne
-
-$societe->fetch($user->array_options['options_antenne']);
-$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
-$userIsRespAntenne = in_array($user->id, $arrayUserRespAntenne); // Utilisateur commercial de l'antenne de ratachement
-
-$permissiontoaddline = $user->rights->formationhabilitation->formation->addline;
-$permissiontoreadCout = $user->rights->formationhabilitation->formation->readcout;
-$permissiontovalidatelines = $userInRespAntenneGroup && $userIsRespAntenne;
-
-
-
-if (empty($conf->formationhabilitation->enabled)) accessforbidden();
-
 $object = New ExtendedUser3($db);
 if($userid > 0){
     $object->fetch($userid);
@@ -118,6 +97,48 @@ elseif($onglet == 'volet'){
     $objectline = new UserVolet($db);
     $objectparentline = new Volet($db);
 }
+
+//Permissions
+$user_group = New UserGroup($db);
+$societe = New Societe($db);
+
+$user_group->fetch(0, "Responsable d'antenne");
+$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
+$userInRespAntenneGroup = in_array($user->id, $arrayUserRespAntenneGroup); // Utilisateur dans le groupe Responsable d'antenne
+
+$societe->fetch($user->array_options['options_antenne']);
+$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
+$userIsRespAntenne = in_array($user->id, $arrayUserRespAntenne); // Utilisateur commercial de l'antenne de ratachement
+if($onglet == 'formation' || empty($onglet)) {
+    $permissiontoreadline = $user->rights->formationhabilitation->formation->readline || $object->id == $user->id;
+    $permissiontoaddline = $user->rights->formationhabilitation->formation->writeline;
+    $permissiontodeleteline = $user->rights->formationhabilitation->formation->deleteline;
+    $permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
+    $permissiontovalidateline = $userInRespAntenneGroup && $userIsRespAntenne;
+    $permissiontoforceline = $user->rights->formationhabilitation->formation->forceline;
+}
+elseif($onglet == 'habilitation'){
+    $permissiontoreadline = $user->rights->formationhabilitation->habilitation_autorisation->readline || $object->id == $user->id;
+    $permissiontoaddline = $user->rights->formationhabilitation->habilitation_autorisation->writeline;
+    $permissiontodeleteline = $user->rights->formationhabilitation->habilitation_autorisation->deleteline;
+    $permissiontovalidateline = $userInRespAntenneGroup && $userIsRespAntenne;
+    $permissiontoforceline = $user->rights->formationhabilitation->habilitation_autorisation->forceline;
+}
+elseif($onglet == 'autorisation'){
+    $permissiontoreadline = $user->rights->formationhabilitation->habilitation_autorisation->readline || $object->id == $user->id;
+    $permissiontoaddline = $user->rights->formationhabilitation->habilitation_autorisation->writeline;
+    $permissiontodeleteline = $user->rights->formationhabilitation->habilitation_autorisation->deleteline;
+    $permissiontovalidateline = $userInRespAntenneGroup && $userIsRespAntenne;
+    $permissiontoforceline = $user->rights->formationhabilitation->habilitation_autorisation->forceline;
+}
+elseif($onglet == 'volet'){
+    $permissiontoreadline = $user->rights->formationhabilitation->volet->readline || $object->id == $user->id;
+    $permissiontoaddline = $user->rights->formationhabilitation->volet->writeline;
+    $permissiontodeleteline = $user->rights->formationhabilitation->volet->deleteline;
+}
+
+
+if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 
 // Default sort order (if not yet defined by previous GETPOST)
 if (!$sortfield) {
@@ -303,7 +324,7 @@ print $formconfirm;
 unset($arrayfields['t.formateur']);
 unset($objectline->fields['fk_user']);
 unset($arrayfields['t.fk_user']);
-if(!$permissiontoreadCout) {
+if(!$permissiontoreadcost) {
     unset($objectline->fields['cout_pedagogique']);
     unset($objectline->fields['cout_mobilisation']);
     unset($objectline->fields['cout_annexe']);
@@ -344,35 +365,111 @@ $h++;
 if(empty($onglet) || $onglet == 'formation'){
     print dol_get_fiche_head($head2, 'formation', $title, -1, 'user');
 
-    $contextpage = 'userformation';
-    $css_table = 'min-height: 450px;';
-    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
-    print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    if (empty($permissiontoreadline)) {
+        $langs->loadLangs(array("main", "errors"));
+        print '<div class="error">';
+        if (empty($message)) {
+            print $langs->trans("ErrorForbidden");
+        } else {
+            print $langs->trans($message);
+        }
+        print '</div>';
+        if ($user->login) {
+            print $langs->trans("CurrentLogin").': <span class="error">'.$user->login.'</span><br>';
+            print $langs->trans("ErrorForbidden2", $langs->transnoentitiesnoconv("Home"), $langs->transnoentitiesnoconv("Users"));
+            print $langs->trans("ErrorForbidden4");
+        } else {
+            print $langs->trans("ErrorForbidden3");
+        }
+    }
+    else {
+        $contextpage = 'userformation';
+        $css_table = 'min-height: 450px;';
+        include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+        print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    }
 }
 elseif($onglet == 'habilitation'){
     print dol_get_fiche_head($head2, 'habilitation', $title, -1, 'user');
 
-    $contextpage = 'userhabilitation';
-    $css_table = 'min-height: 450px;';
-    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
-    print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
-    print '<input type="hidden" form="searchline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    if (empty($permissiontoreadline)) {
+        $langs->loadLangs(array("main", "errors"));
+        print '<div class="error">';
+        if (empty($message)) {
+            print $langs->trans("ErrorForbidden");
+        } else {
+            print $langs->trans($message);
+        }
+        print '</div>';
+        if ($user->login) {
+            print $langs->trans("CurrentLogin").': <span class="error">'.$user->login.'</span><br>';
+            print $langs->trans("ErrorForbidden2", $langs->transnoentitiesnoconv("Home"), $langs->transnoentitiesnoconv("Users"));
+            print $langs->trans("ErrorForbidden4");
+        } else {
+            print $langs->trans("ErrorForbidden3");
+        }
+    }
+    else {
+        $contextpage = 'userhabilitation';
+        $css_table = 'min-height: 450px;';
+        include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+        print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+        print '<input type="hidden" form="searchline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    }
 }
 elseif($onglet == 'autorisation'){
     print dol_get_fiche_head($head2, 'autorisation', $title, -1, 'user');
 
-    $contextpage = 'userautorisation';
-    $css_table = 'min-height: 450px;';
-    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
-    print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
-    print '<input type="hidden" form="searchline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    if (empty($permissiontoreadline)) {
+        $langs->loadLangs(array("main", "errors"));
+        print '<div class="error">';
+        if (empty($message)) {
+            print $langs->trans("ErrorForbidden");
+        } else {
+            print $langs->trans($message);
+        }
+        print '</div>';
+        if ($user->login) {
+            print $langs->trans("CurrentLogin").': <span class="error">'.$user->login.'</span><br>';
+            print $langs->trans("ErrorForbidden2", $langs->transnoentitiesnoconv("Home"), $langs->transnoentitiesnoconv("Users"));
+            print $langs->trans("ErrorForbidden4");
+        } else {
+            print $langs->trans("ErrorForbidden3");
+        }
+    }
+    else {
+        $contextpage = 'userautorisation';
+        $css_table = 'min-height: 450px;';
+        include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+        print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+        print '<input type="hidden" form="searchline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    }
 }
 elseif($onglet == 'volet') {
     print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
 
-    $contextpage = 'uservolet';
-    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
-    print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    if (empty($permissiontoreadline)) {
+        $langs->loadLangs(array("main", "errors"));
+        print '<div class="error">';
+        if (empty($message)) {
+            print $langs->trans("ErrorForbidden");
+        } else {
+            print $langs->trans($message);
+        }
+        print '</div>';
+        if ($user->login) {
+            print $langs->trans("CurrentLogin").': <span class="error">'.$user->login.'</span><br>';
+            print $langs->trans("ErrorForbidden2", $langs->transnoentitiesnoconv("Home"), $langs->transnoentitiesnoconv("Users"));
+            print $langs->trans("ErrorForbidden4");
+        } else {
+            print $langs->trans("ErrorForbidden3");
+        }
+    }
+    else {
+        $contextpage = 'uservolet';
+        include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+        print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    }
 }
 
 print '</div>';

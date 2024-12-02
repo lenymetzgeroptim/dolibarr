@@ -100,7 +100,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 	}
 
 	// Impossible d'ajouter une formation si une ligne avec la même formation existe déja (hors cloturée et expirée)
-	if(!$error && empty(GETPOST('forcecreation')) && GETPOST('status') != $objectline::STATUS_VALIDE && GETPOST('status') != $objectline::STATUS_EXPIREE && GETPOST('status') != $objectline::STATUS_CLOTUREE){ 
+	if(!$error && (empty(GETPOST('forcecreation')) || !$permissiontoforceline) && GETPOST('status') != $objectline::STATUS_VALIDE && GETPOST('status') != $objectline::STATUS_EXPIREE && GETPOST('status') != $objectline::STATUS_CLOTUREE){ 
 		$formationEnCours = $formation->getFormationEnCours(GETPOST('fk_user'), GETPOST('fk_formation'));
 
 		if(sizeof($formationEnCours) >= 1){
@@ -111,7 +111,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 
 	// Impossible d'ajouter une formation si l'utilisateur n'a pas les prérequis
 	$elementPrerequis = new ElementPrerequis($db);
-	if(!$error && empty(GETPOST('forcecreation')) && $elementPrerequis->gestionPrerequis(GETPOST('fk_user'), $formation_static, 0) < 0) {
+	if(!$error && (empty(GETPOST('forcecreation')) || !$permissiontoforceline) && $elementPrerequis->gestionPrerequis(GETPOST('fk_user'), $formation_static, 0) < 0) {
 		$error++;
 	}
 
@@ -240,7 +240,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 	}
 }
 
-if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) { // TODOLény -> Pouvoir supprimer des lignes que dans certains cas
+if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontodeleteline) { // TODOLény -> Pouvoir supprimer des lignes que dans certains cas
     $resultdelete = $object->deleteLine($user, $lineid);
     if ($resultdelete > 0) {
         setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');

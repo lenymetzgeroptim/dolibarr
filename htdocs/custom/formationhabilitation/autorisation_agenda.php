@@ -132,15 +132,9 @@ if ($id > 0 || !empty($ref)) {
 }
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->formationhabilitation->autorisation->read;
-	$permissiontoadd = $user->rights->formationhabilitation->autorisation->write;
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-}
+$permissiontoread = $user->rights->formationhabilitation->habilitation_autorisation->read;
+$permissiontoadd = $user->rights->formationhabilitation->habilitation_autorisation->write;
+
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();

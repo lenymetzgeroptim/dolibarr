@@ -105,17 +105,10 @@ if ($id > 0 || !empty($ref)) {
 
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'uservolet', 'read');
-	$permissiontoadd = $user->hasRight('formationhabilitation', 'uservolet', 'write');
-	$permissionnote = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_setnotes.inc.php
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-	$permissionnote = 1;
-}
+$permissiontoread = $user->hasRight('formationhabilitation', 'volet', 'readline') || $object->id == $user->id;
+$permissiontoadd = $user->hasRight('formationhabilitation', 'volet', 'writeline');
+$permissionnote = $user->hasRight('formationhabilitation', 'volet', 'writeline'); // Used by the include of actions_setnotes.inc.php
+
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();

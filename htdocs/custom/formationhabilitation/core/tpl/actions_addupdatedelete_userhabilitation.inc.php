@@ -70,7 +70,7 @@ if($action == 'addline' && $permissiontoaddline) {
 
 	// Prérequis
 	$elementPrerequis = new ElementPrerequis($db);
-	if(!$error && empty(GETPOST('forcecreation')) && $elementPrerequis->gestionPrerequis(GETPOST('fk_user'), $habilitation_static, 0) < 0) {
+	if(!$error && (empty(GETPOST('forcecreation')) || !$permissiontoforceline) && $elementPrerequis->gestionPrerequis(GETPOST('fk_user'), $habilitation_static, 0) < 0) {
 		$error++;
 	}
 
@@ -146,7 +146,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 	}
 }
 
-if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) {
+if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontodeleteline) {
     $resultdelete = $object->deleteLine($user, $lineid);
     if ($resultdelete > 0) {
         setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');

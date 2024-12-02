@@ -71,7 +71,7 @@ if (!$error && isset($toselect) && is_array($toselect) && count($toselect) > $ma
 }
 
 // Delete record from mass action (massaction = 'delete' for direct delete, action/confirm='deletelines'/'yes' with a confirmation step before)
-if (!$error && ($massaction == 'delete' || ($action == 'deletelines' && $confirm == 'yes')) && $permissiontoaddline) {
+if (!$error && ($massaction == 'delete' || ($action == 'deletelines' && $confirm == 'yes')) && $permissiontodeleteline) {
 	$db->begin();
 
 	$objecttmp = new $objectclass($db);
@@ -249,7 +249,7 @@ if (!$error && ($massaction == 'close' || ($action == 'closelines' && $confirm =
 }
 
 // Validate record from mass action
-if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $confirm == 'yes')) && $permissiontovalidatelines) {
+if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $confirm == 'yes')) && $permissiontovalidateline) {
 	$db->begin();
 
 	$objecttmp = new $objectclass($db);

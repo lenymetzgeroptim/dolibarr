@@ -33,11 +33,16 @@
  * $inputalsopricewithtax (0 by default, 1 to also show column with unit price including tax)
  */
 
- global $action, $resultcreate, $cancel, $resultupdate, $object, $objectline, $param, $permissiontoaddline;
+global $action, $resultcreate, $cancel, $resultupdate, $object, $objectline, $param;
+global $permissiontoaddline, $permissiontoforceline;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
 	print "Error: this template page cannot be called directly as an URL";
+	exit;
+}
+
+if (!$permissiontoaddline) {
 	exit;
 }
 
@@ -160,7 +165,7 @@ foreach($objectline->fields as $key => $val){
 }
 
 print '<td class="nobottom linecoledit center valignmiddle" colspan="3">';
-if($objectline->element != 'uservolet') {
+if($objectline->element != 'uservolet' && $permissiontoforceline) {
 	print '<input type="checkbox" class="margin5" name="forcecreation" id="forcecreation" form="addline"/><label for="forcecreation">'.$langs->trans('ForceCreation').'</label>';
 }
 print '<input type="submit" class="button reposition" value="'.$langs->trans('Add').'" name="addline" id="addline" form="addline"></td>';

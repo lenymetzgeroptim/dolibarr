@@ -142,24 +142,13 @@ $search['fk_autorisation'] = $object->id;
 $objectparentline = $object;
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 1;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'habilitation', 'read');
-	$permissiontoadd = $user->hasRight('formationhabilitation', 'habilitation', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = $user->hasRight('formationhabilitation', 'habilitation', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_CONSTRUCTION);
-	$permissionnote = $user->hasRight('formationhabilitation', 'habilitation', 'write'); // Used by the include of actions_setnotes.inc.php
-	$permissiondellink = $user->hasRight('formationhabilitation', 'habilitation', 'write'); // Used by the include of actions_dellink.inc.php
-	$permissiontoaddline = $user->hasRight('formationhabilitation', 'formation', 'addline');
-	$permissiontovalidate = $permissiontoaddline;
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = 1;
-	$permissionnote = 1;
-	$permissiondellink = 1;
-	$permissiontoaddline = 1;
-}
+$permissiontoread = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'read');
+$permissiontoadd = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontodelete = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_CONSTRUCTION);
+$permissiontoreadline = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'readline');
+$permissiontoaddline = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'writeline');
+$permissiontodeleteline = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'deleteline');
+$permissiontoforceline = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'forceline');
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/autorisation';
 
@@ -220,25 +209,25 @@ if (empty($reshook)) {
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
 	// Actions when linking object each other
-	include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
+	// include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
 
 	// Actions when printing a doc from card
-	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
+	// include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
 
 	// Action to move up and down lines of object
 	//include DOL_DOCUMENT_ROOT.'/core/actions_lineupdown.inc.php';
 
 	// Action to build doc
-	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
+	// include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
 
 	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userautorisation.inc.php';
 
-	if ($action == 'set_thirdparty' && $permissiontoadd) {
-		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
-	}
-	if ($action == 'classin' && $permissiontoadd) {
-		$object->setProject(GETPOST('projectid', 'int'));
-	}
+	// if ($action == 'set_thirdparty' && $permissiontoadd) {
+	// 	$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
+	// }
+	// if ($action == 'classin' && $permissiontoadd) {
+	// 	$object->setProject(GETPOST('projectid', 'int'));
+	// }
 
 	// Action close object
 	if ($action == 'confirm_cloture' && $confirm == 'yes' && $permissiontoadd) {
@@ -252,10 +241,10 @@ if (empty($reshook)) {
 	}
 
 	// Actions to send emails
-	$triggersendname = 'FORMATIONHABILITATION_MYOBJECT_SENTBYMAIL';
-	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
-	$trackid = 'autorisation'.$object->id;
-	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
+	// $triggersendname = 'FORMATIONHABILITATION_MYOBJECT_SENTBYMAIL';
+	// $autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
+	// $trackid = 'autorisation'.$object->id;
+	// include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
 unset($objectline->fields['fk_autorisation']);
@@ -508,7 +497,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			print dolGetButtonAction($langs->trans('ToClone'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.(!empty($object->socid)?'&socid='.$object->socid:'').'&action=clone&token='.newToken(), '', $permissiontoadd);
 
 			// Delete (need delete permission, or if draft, just need create/modify permission)
-			print dolGetButtonAction($langs->trans('Delete'), '', 'delete', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=delete&token='.newToken(), '', $permissiontodelete || ($object->status == $object::STATUS_CONSTRUCTION && $permissiontoadd));
+			print dolGetButtonAction($langs->trans('Delete'), '', 'delete', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=delete&token='.newToken(), '', $permissiontodelete);
 		}
 		print '</div>'."\n";
 	}
@@ -516,7 +505,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	/*
 	* Lines
 	*/
-	if (!empty($object->table_element_line)  && $object->status != $object::STATUS_CONSTRUCTION) {
+	if (!empty($object->table_element_line)  && $object->status != $object::STATUS_CONSTRUCTION && $permissiontoreadline) {
 		$css_table = 'min-height: 450px;';
 		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
 		print '<input type="hidden" form="addline" id="fk_autorisation" name="fk_autorisation" value="' . $object->id.'">';

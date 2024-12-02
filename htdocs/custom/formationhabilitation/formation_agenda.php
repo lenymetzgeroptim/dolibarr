@@ -17,9 +17,9 @@
  */
 
 /**
- *  \file       htdocs/modulebuilder/template/myobject_agenda.php
- *  \ingroup    mymodule
- *  \brief      Tab of events on MyObject
+ *  \file       htdocs/modulebuilder/template/formation_agenda.php
+ *  \ingroup    formationhabilitation
+ *  \brief      Tab of events on formation
  */
 
 //if (! defined('NOREQUIREDB'))              define('NOREQUIREDB', '1');				// Do not create database handler $db
@@ -85,10 +85,10 @@ dol_include_once('/formationhabilitation/class/userautorisation.class.php');
 dol_include_once('/formationhabilitation/class/userformation.class.php');
 dol_include_once('/formationhabilitation/class/userhabilitation.class.php');
 dol_include_once('/formationhabilitation/class/uservolet.class.php');
-dol_include_once('/mymodule/lib/mymodule_myobject.lib.php');
+dol_include_once('/formationhabilitation/lib/formationhabilitation_formation.lib.php');
 
 // Load translation files required by the page
-$langs->loadLangs(array("mymodule@mymodule", "other"));
+$langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"));
 
 // Get parameters
 $id = GETPOST('id', 'int');
@@ -127,9 +127,9 @@ if (!$sortorder) {
 }
 
 // Initialize technical objects
-$object = new MyObject($db);
+$object = new Formation($db);
 $extrafields = new ExtraFields($db);
-$diroutputmassaction = $conf->mymodule->dir_output.'/temp/massgeneration/'.$user->id;
+$diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($object->element.'agenda', 'globalcard')); // Note that conf->hooks_modules contains array
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
@@ -137,26 +137,19 @@ $extrafields->fetch_name_optionals_label($object->table_element);
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once  // Must be include, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
 if ($id > 0 || !empty($ref)) {
-	$upload_dir = $conf->mymodule->multidir_output[!empty($object->entity) ? $object->entity : $conf->entity]."/".$object->id;
+	$upload_dir = $conf->formationhabilitation->multidir_output[!empty($object->entity) ? $object->entity : $conf->entity]."/".$object->id;
 }
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('mymodule', 'myobject', 'read');
-	$permissiontoadd = $user->hasRight('mymodule', 'myobject', 'write');
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-}
+$permissiontoread = $user->hasRight('formationhabilitation', 'formation', 'read');
+$permissiontoadd = $user->hasRight('formationhabilitation', 'formation', 'write');
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();
 //if ($user->socid > 0) $socid = $user->socid;
 //$isdraft = (($object->status == $object::STATUS_DRAFT) ? 1 : 0);
 //restrictedArea($user, $object->module, $object->id, $object->table_element, $object->element, 'fk_soc', 'rowid', $isdraft);
-if (!isModEnabled("mymodule")) {
+if (!isModEnabled("formationhabilitation")) {
 	accessforbidden();
 }
 if (!$permissiontoread) {
@@ -197,23 +190,23 @@ if (empty($reshook)) {
 $form = new Form($db);
 
 if ($object->id > 0) {
-	$title = $langs->trans("MyObject")." - ".$langs->trans('Agenda');
+	$title = $langs->trans("Formation")." - ".$langs->trans('Agenda');
 	//$title = $object->ref." - ".$langs->trans("Agenda");
 	$help_url = 'EN:Module_Agenda_En|DE:Modul_Terminplanung';
 
-	llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-mymodule page-card_agenda');
+	llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-card_agenda');
 
 	if (isModEnabled('notification')) {
 		$langs->load("mails");
 	}
-	$head = myobjectPrepareHead($object);
+	$head = formationPrepareHead($object);
 
 
-	print dol_get_fiche_head($head, 'agenda', $langs->trans("MyObject"), -1, $object->picto);
+	print dol_get_fiche_head($head, 'agenda', $langs->trans("formation"), -1, $object->picto);
 
 	// Object card
 	// ------------------------------------------------------------
-	$linkback = '<a href="'.dol_buildpath('/mymodule/myobject_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/formation_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*
@@ -319,7 +312,7 @@ if ($object->id > 0) {
 		// Try to know count of actioncomm from cache
 		$nbEvent = 0;
 		//require_once DOL_DOCUMENT_ROOT.'/core/lib/memory.lib.php';
-		//$cachekey = 'count_events_myobject_'.$object->id;
+		//$cachekey = 'count_events_formation_'.$object->id;
 		//$nbEvent = dol_getcache($cachekey);
 		$titlelist = $langs->trans("Actions").(is_numeric($nbEvent) ? '<span class="opacitymedium colorblack paddingleft">('.$nbEvent.')</span>' : '');
 

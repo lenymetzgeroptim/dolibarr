@@ -38,7 +38,8 @@
  * $text, $description, $line
  */
 
-global $permissiontoreadCout, $permissiontoaddline, $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline;
+global $permissiontoreadcost, $permissiontoaddline, $permissiontoreadline, $permissiontodeleteline;
+global $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline;
 global $disableedit, $disableremove, $enableunlink, $enablelink, $db;
 
 $form = new Form($db);
@@ -50,9 +51,8 @@ if (empty($object) || !is_object($object)) {
 	exit;
 }
 
-if(!$user->rights->formationhabilitation->formation->addline){
-	$disableedit = 1;
-	$disableremove = 1;
+if (!$permissiontoreadline) {
+	exit;
 }
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
@@ -87,10 +87,10 @@ foreach($objectline->fields as $key => $val){
 		}
 		elseif($key == 'status'){
 			print $line->getLibStatut(2);
-			if($action != 'editline' && $objectline->element == 'userformation' && ($line->status == UserFormation::STATUS_A_PROGRAMMER || $line->status == UserFormation::STATUS_VALIDE || $line->status == UserFormation::STATUS_EXPIREE)) {
+			if($action != 'editline' && $permissiontoaddline && $objectline->element == 'userformation' && ($line->status == UserFormation::STATUS_A_PROGRAMMER || $line->status == UserFormation::STATUS_VALIDE || $line->status == UserFormation::STATUS_EXPIREE)) {
 				print dolGetButtonAction($langs->trans('Programmer'), $langs->trans('Programmer'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=programmer_formation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id, '', $permissiontoaddline);
 			}
-			elseif($action != 'editline' && $objectline->element == 'userformation' && $line->status == UserFormation::STATUS_PROGRAMMEE) {
+			elseif($action != 'editline' && $permissiontoaddline && $objectline->element == 'userformation' && $line->status == UserFormation::STATUS_PROGRAMMEE) {
 				print dolGetButtonAction($langs->trans('Valider'), $langs->trans('Valider'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=valider_formation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id, '', $permissiontoaddline);
 			}
 		}
@@ -124,15 +124,15 @@ foreach($objectline->fields as $key => $val){
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_domaineapplication&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
 
-		if($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') {
-			$ddd = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentline)
-			if(empty($prerequis_manquant)) {
-				print $form->textwithpicto('', 'Le collaborateur possède l\'ensemble des prérequis', 1, 'info');
-			}
-			else {
-				print $form->textwithpicto('', 'Des prérequis sont manquants :<br>'.$prerequis_manquant, 1, 'warning');
-			}
-		}
+		// if($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') {
+		// 	$ddd = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentline)
+		// 	if(empty($prerequis_manquant)) {
+		// 		print $form->textwithpicto('', 'Le collaborateur possède l\'ensemble des prérequis', 1, 'info');
+		// 	}
+		// 	else {
+		// 		print $form->textwithpicto('', 'Des prérequis sont manquants :<br>'.$prerequis_manquant, 1, 'warning');
+		// 	}
+		// }
 
 		print '</td>';
 	}
@@ -191,7 +191,7 @@ else {
 		print '</td>';
 	}
 
-	if (empty($disableedit)) {
+	if (empty($disableedit) && $permissiontoaddline) {
 		print '<td class="linecoledit center width20">';
 			if($object->element == 'user'){
 				$url = $_SERVER["PHP_SELF"].'?'.$param.'&action=editline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id;
@@ -204,7 +204,7 @@ else {
 		print '</td>';
 	}
 
-	if (empty($disableremove)) { 
+	if (empty($disableremove) && $permissiontodeleteline) { 
 		print '<td class="linecoldelete center width20">';
 			if($object->element == 'user'){
 				$url = $_SERVER["PHP_SELF"].'?'.$param.'&action=deleteline&onglet='.GETPOST('onglet', 'aZ09').'&token='.newToken().'&lineid='.$line->id;

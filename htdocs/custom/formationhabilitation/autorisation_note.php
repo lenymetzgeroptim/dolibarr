@@ -101,17 +101,10 @@ if ($id > 0 || !empty($ref)) {
 
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->formationhabilitation->autorisation->read;
-	$permissiontoadd = $user->rights->formationhabilitation->autorisation->write;
-	$permissionnote = $user->rights->formationhabilitation->autorisation->write; // Used by the include of actions_setnotes.inc.php
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-	$permissionnote = 1;
-}
+$permissiontoread = $user->rights->formationhabilitation->habilitation_autorisation->read;
+$permissiontoadd = $user->rights->formationhabilitation->habilitation_autorisation->write;
+$permissionnote = $user->rights->formationhabilitation->habilitation_autorisation->write; // Used by the include of actions_setnotes.inc.php
+
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();

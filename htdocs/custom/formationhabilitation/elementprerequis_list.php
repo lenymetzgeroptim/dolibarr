@@ -156,17 +156,9 @@ $elementPrerequis->fields = dol_sort_array($elementPrerequis->fields, 'position'
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('formationhabilitation', 'elementprerequis', 'read');
-	$permissiontoadd = $user->hasRight('formationhabilitation', 'elementprerequis', 'write');
-	$permissiontodelete = $user->hasRight('formationhabilitation', 'elementprerequis', 'delete');
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-	$permissiontodelete = 1;
-}
+$permissiontoread = 1;
+$permissiontoadd = 1;
+$permissiontodelete = 1;
 
 // Security check (enable the most restrictive one)
 if ($user->socid > 0) {
