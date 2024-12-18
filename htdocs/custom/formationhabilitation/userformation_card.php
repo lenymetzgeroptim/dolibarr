@@ -128,6 +128,7 @@ $permissiontoadd = $user->rights->formationhabilitation->formation->writeline; /
 $permissiontodelete = $user->rights->formationhabilitation->formation->deleteline;
 // $permissionnote = $user->rights->formationhabilitation->formation->writeline; // Used by the include of actions_setnotes.inc.php
 // $permissiondellink = $user->rights->formationhabilitation->formation->writeline; // Used by the include of actions_dellink.inc.php
+$permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
 
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/userformation';
@@ -198,7 +199,12 @@ if (empty($reshook)) {
 }
 
 
-
+if(!$permissiontoreadcost) {
+    unset($object->fields['cout_pedagogique']);
+    unset($object->fields['cout_mobilisation']);
+    unset($object->fields['cout_annexe']);
+    unset($object->fields['cout_total']);
+}
 
 /*
  * View
@@ -411,7 +417,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Common attributes
-	$keyforbreak='cout_pedagogique';	// We change column just before this field
+	if(!$permissiontoreadcost) {
+		$keyforbreak='nombre_heure';	// We change column just before this field
+	}
+	else {
+		$keyforbreak='cout_pedagogique';	// We change column just before this field
+	}
 	if($object->interne_externe == 1) {
 		unset($object->fields['formateur']);	
 	}
@@ -544,58 +555,58 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 
 	// Select mail models is same action as presend
-	if (GETPOST('modelselected')) {
-		$action = 'presend';
-	}
+	// if (GETPOST('modelselected')) {
+	// 	$action = 'presend';
+	// }
 
-	if ($action != 'presend') {
-		print '<div class="fichecenter"><div class="fichehalfleft">';
-		print '<a name="builddoc"></a>'; // ancre
+	// if ($action != 'presend') {
+	// 	print '<div class="fichecenter"><div class="fichehalfleft">';
+	// 	print '<a name="builddoc"></a>'; // ancre
 
-		$includedocgeneration = 0;
+	// 	$includedocgeneration = 0;
 
-		// Documents
-		if ($includedocgeneration) {
-			$objref = dol_sanitizeFileName($object->ref);
-			$relativepath = $objref.'/'.$objref.'.pdf';
-			$filedir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
-			$urlsource = $_SERVER["PHP_SELF"]."?id=".$object->id;
-			$genallowed = $permissiontoread; // If you can read, you can build the PDF to read content
-			$delallowed = $permissiontoadd; // If you can create/edit, you can remove a file on card
-			print $formfile->showdocuments('formationhabilitation:UserFormation', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
-		}
+	// 	// Documents
+	// 	if ($includedocgeneration) {
+	// 		$objref = dol_sanitizeFileName($object->ref);
+	// 		$relativepath = $objref.'/'.$objref.'.pdf';
+	// 		$filedir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
+	// 		$urlsource = $_SERVER["PHP_SELF"]."?id=".$object->id;
+	// 		$genallowed = $permissiontoread; // If you can read, you can build the PDF to read content
+	// 		$delallowed = $permissiontoadd; // If you can create/edit, you can remove a file on card
+	// 		print $formfile->showdocuments('formationhabilitation:UserFormation', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
+	// 	}
 
-		// Show links to link elements
-		$linktoelem = $form->showLinkToObjectBlock($object, null, array('userformation'));
-		$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
+	// 	// Show links to link elements
+	// 	$linktoelem = $form->showLinkToObjectBlock($object, null, array('userformation'));
+	// 	$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 
 
-		print '</div><div class="fichehalfright">';
+	// 	print '</div><div class="fichehalfright">';
 
-		$MAXEVENT = 10;
+	// 	$MAXEVENT = 10;
 
-		$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-list-alt imgforviewmode', dol_buildpath('/formationhabilitation/userformation_agenda.php', 1).'?id='.$object->id);
+	// 	$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-list-alt imgforviewmode', dol_buildpath('/formationhabilitation/userformation_agenda.php', 1).'?id='.$object->id);
 
-		// List of actions on element
-		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
-		$formactions = new FormActions($db);
-		$somethingshown = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
+	// 	// List of actions on element
+	// 	include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
+	// 	$formactions = new FormActions($db);
+	// 	$somethingshown = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
 
-		print '</div></div>';
-	}
+	// 	print '</div></div>';
+	// }
 
-	//Select mail models is same action as presend
-	if (GETPOST('modelselected')) {
-		$action = 'presend';
-	}
+	// //Select mail models is same action as presend
+	// if (GETPOST('modelselected')) {
+	// 	$action = 'presend';
+	// }
 
-	// Presend form
-	$modelmail = 'userformation';
-	$defaulttopic = 'InformationMessage';
-	$diroutput = $conf->formationhabilitation->dir_output;
-	$trackid = 'userformation'.$object->id;
+	// // Presend form
+	// $modelmail = 'userformation';
+	// $defaulttopic = 'InformationMessage';
+	// $diroutput = $conf->formationhabilitation->dir_output;
+	// $trackid = 'userformation'.$object->id;
 
-	include DOL_DOCUMENT_ROOT.'/core/tpl/card_presend.tpl.php';
+	// include DOL_DOCUMENT_ROOT.'/core/tpl/card_presend.tpl.php';
 }
 
 // End of page

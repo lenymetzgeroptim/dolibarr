@@ -115,11 +115,10 @@ class modFormationHabilitation extends DolibarrModules
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
-				//   'data' => array(
-				//       'hookcontext1',
-				//       'hookcontext2',
-				//   ),
-				//   'entity' => '0',
+				   'data' => array(
+				       'formationagenda',
+				   ),
+				   'entity' => '0',
 			),
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -163,46 +162,50 @@ class modFormationHabilitation extends DolibarrModules
 				2 => array('MAIN_AGENDA_ACTIONAUTO_FORMATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
 				3 => array('MAIN_AGENDA_ACTIONAUTO_FORMATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
 				4 => array('MAIN_AGENDA_ACTIONAUTO_FORMATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				5 => array('MAIN_AGENDA_ACTIONAUTO_FORMATION_CLOTURE', 'chaine', '1', '', 0), // Lors de la clôture
+				6 => array('MAIN_AGENDA_ACTIONAUTO_FORMATION_REOPEN', 'chaine', '1', '', 0), // Lors de la reouverture
 
-				5 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
-				6 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
-				7 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				8 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				7 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				8 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				9 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				10 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				11 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_CLOTURE', 'chaine', '1', '', 0), // Lors de la clôture
+				12 => array('MAIN_AGENDA_ACTIONAUTO_HABILITATION_REOPEN', 'chaine', '1', '', 0), // Lors de la reouverture
 
-				9 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
-				10 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
-				11 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				12 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				13 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				14 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				15 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				16 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				17 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_CLOTURE', 'chaine', '1', '', 0), // Lors de la clôture
+				18 => array('MAIN_AGENDA_ACTIONAUTO_AUTORISATION_REOPEN', 'chaine', '1', '', 0), // Lors de la reouverture
 
-				13 => array('MAIN_AGENDA_ACTIONAUTO_USERFORMATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
-				14 => array('MAIN_AGENDA_ACTIONAUTO_USERFORMATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
-				15 => array('MAIN_AGENDA_ACTIONAUTO_USERFORMATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				16 => array('MAIN_AGENDA_ACTIONAUTO_USERFORMATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				19 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				20 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				21 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				22 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_CLOSE', 'chaine', '1', '', 0), // Lors de la clôture
+				23 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_EXPIRE', 'chaine', '1', '', 0), // Lors de l'expiration
 
-				17 => array('MAIN_AGENDA_ACTIONAUTO_USERHABILITATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
-				18 => array('MAIN_AGENDA_ACTIONAUTO_USERHABILITATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
-				19 => array('MAIN_AGENDA_ACTIONAUTO_USERHABILITATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				20 => array('MAIN_AGENDA_ACTIONAUTO_USERHABILITATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				24 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				25 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				26 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				27 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				//28 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_CLOSE', 'chaine', '1', '', 0), // Lors de la validation
+				//29 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_CANCEL', 'chaine', '1', '', 0), // Lors de la validation
 
-				21 => array('MAIN_AGENDA_ACTIONAUTO_USERAUTORISATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
-				22 => array('MAIN_AGENDA_ACTIONAUTO_USERAUTORISATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
-				23 => array('MAIN_AGENDA_ACTIONAUTO_USERAUTORISATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				24 => array('MAIN_AGENDA_ACTIONAUTO_USERAUTORISATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				30 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_CREATE', 'chaine', '1', '', 0), // Lors de la création
+				31 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
+				32 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_DELETE', 'chaine', '1', '', 0), // Lors de la supression
+				33 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE1', 'chaine', '1', '', 0), // Lors de la validation
+				34 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE2', 'chaine', '1', '', 0), // Lors de la validation
+				35 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE3', 'chaine', '1', '', 0), // Lors de la validation
+				36 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE_WITHOUT_USER', 'chaine', '1', '', 0), // Lors de la validation
+				37 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				38 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_EXPIRE', 'chaine', '1', '', 0), // Lors de l'expiration
+				39 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_SUSPEND', 'chaine', '1', '', 0), // Lors de la suspension
+				40 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_UNSUSPEND', 'chaine', '1', '', 0), // Lors de la non suspensio,
+				41 => array('MAIN_AGENDA_ACTIONAUTO_OBJECT_LINK_INSERT', 'chaine', '1', '', 0), // Lors de l'ajout d'une ligne
+				42 => array('MAIN_AGENDA_ACTIONAUTO_OBJECT_LINK_DELETE', 'chaine', '1', '', 0), // Lors de la suppression d'une ligne
 
-				25 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_CREATE', 'chaine', '1', '', 0), // Lors de la création
-				26 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
-				27 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				28 => array('MAIN_AGENDA_ACTIONAUTO_VISITEMEDICAL_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
-
-				29 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_CREATE', 'chaine', '1', '', 0), // Lors de la création
-				30 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
-				31 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				32 => array('MAIN_AGENDA_ACTIONAUTO_CONVOCATION_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
-
-				33 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_CREATE', 'chaine', '1', '', 0), // Lors de la création
-				34 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
-				35 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				36 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
 			);
 
 		// Some keys to add into the overwriting translation tables

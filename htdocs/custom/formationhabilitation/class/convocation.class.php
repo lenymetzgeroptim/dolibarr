@@ -27,6 +27,7 @@
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
 
 /**
  * Class for Convocation
@@ -255,6 +256,7 @@ class Convocation extends CommonObject
 	 */
 	public function create(User $user, $notrigger = false)
 	{
+		$this->actionmsg = msgAgendaUpdate($this, 0);
 		$resultcreate = $this->createCommon($user, $notrigger);
 
 		//$resultvalidate = $this->validate($user, $notrigger);
@@ -552,6 +554,7 @@ class Convocation extends CommonObject
 	 */
 	public function update(User $user, $notrigger = false)
 	{
+		$this->actionmsg = msgAgendaUpdate($this, 1);
 		return $this->updateCommon($user, $notrigger);
 	}
 
@@ -564,6 +567,7 @@ class Convocation extends CommonObject
 	 */
 	public function delete(User $user, $notrigger = false)
 	{
+		$this->actionmsg = msgAgendaUpdate($this, 0);
 		return $this->deleteCommon($user, $notrigger);
 		//return $this->deleteCommon($user, $notrigger, 1);
 	}
@@ -651,7 +655,7 @@ class Convocation extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
-				$result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+				$result = $this->call_trigger('CONVOCATION_VALIDATE', $user);
 				if ($result < 0) {
 					$error++;
 				}
@@ -741,7 +745,7 @@ class Convocation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
+		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'CONVOCATION_UNVALIDATE');
 	}
 
 	/**
@@ -765,7 +769,7 @@ class Convocation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'CONVOCATION_CANCEL');
 	}
 
 	/**
@@ -789,7 +793,7 @@ class Convocation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
+		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'CONVOCATION_REOPEN');
 	}
 
 	/**
@@ -1036,7 +1040,7 @@ class Convocation extends CommonObject
 		}
 
 		$statusType = 'status'.$status;
-		//if ($status == self::STATUS_VALIDATED) $statusType = 'status1';
+		if ($status == self::STATUS_VALIDATED) $statusType = 'status4';
 		if ($status == self::STATUS_CANCELED) {
 			$statusType = 'status6';
 		}
@@ -1205,7 +1209,7 @@ class Convocation extends CommonObject
 		global $conf, $langs;
 
 		$result = 0;
-		$includedocgeneration = 1;
+		$includedocgeneration = 0;
 
 		$langs->load("formationhabilitation@formationhabilitation");
 

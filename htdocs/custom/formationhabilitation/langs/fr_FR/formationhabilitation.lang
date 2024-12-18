@@ -215,7 +215,11 @@ DeleteFormation = Supprimer la formation
 DeleteHabilitation = Supprimer l'habilitation
 DeleteAutorisation = Supprimer l'autorisation
 ClotureFormation = Clôturer la formation
+ClotureHabilitation = Clôturer l'habilitation
+ClotureAutorisation = Clôturer l'autorisation
 ConfirmCloseFormation = Êtes-vous sûr de vouloir clôturer la formation ?
+ConfirmCloseHabilitation = Êtes-vous sûr de vouloir clôturer l'habilitation ?
+ConfirmCloseAutorisation = Êtes-vous sûr de vouloir clôturer l'autorisation ?
 ProgrammerFormation = Programmer la formation
 ConfirmProgrammerFormation = Êtes-vous sûr de vouloir programmer la formation ?
 AddLine = Ajout d'une formation au collaborateur
@@ -270,6 +274,63 @@ EMailTextVisiteMedicaleConditionnel = Bonjour,<br><br>La visite médicale de %s 
 # Evenement Agenda
 #
 FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr = Validation du volet %s
+FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr = Validation du volet %s par le collaborateur
+FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr = Validation du volet %s par le groupe %s
+CLOTUREInDolibarr = Enregistrement %s clôturé
+REOPENInDolibarr = Enregistrement %s rouvert
+CLOSEInDolibarr = Enregistrement %s clôturé
+EXPIREInDolibarr = Enregistrement %s expiré
+SUSPENDInDolibarr = Enregistrement %s suspendu
+UNSUSPENDInDolibarr = Enregistrement %s non suspendu
+FORMATIONHABILITATION_PREREQUISFOMRATION_CREATEInDolibarr = Création d'un prérequis
+FORMATIONHABILITATION_PREREQUISFOMRATION_MODIFYInDolibarr = Modification d'un prérequis
+FORMATIONHABILITATION_PREREQUISFOMRATION_DELETEInDolibarr = Suppression d'un prérequis
+FORMATIONHABILITATION_USERVOLET_ADDLINKFormationInDolibarr = Liaison de la formation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_ADDLINKHabilitationInDolibarr = Liaison de l'habilitation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_ADDLINKAutorisationInDolibarr = Liaison de l'autorisation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_DELLINKFormationInDolibarr = Suppression de la liaison de la formation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_DELLINKHabilitationInDolibarr = Suppression de la liaison de l'habilitation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_DELLINKAutorisationInDolibarr = Suppression de la liaison de l'autorisation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_REFUSInDolibarr = Refus du volet pour la raison suivante : %s
+FORMATIONHABILITATION_UPDATEDOMAINEAPPLICATION_InDolibarr = Modification du domaine d'application de la ligne %s
+
+USERFORMATION_CREATE_InDolibarr = Formation %s attribuée à %s
+USERFORMATION_UPDATE_InDolibarr = La formation %s de %s a été modifiée
+USERFORMATION_VALIDATE_InDolibarr = La formation %s de %s a été validée
+USERFORMATION_PROGRAM_InDolibarr = La formation %s de %s a été programmée
+USERFORMATION_TOPROGRAM_InDolibarr = La formation %s de %s est à programmer
+USERFORMATION_CLOSE_InDolibarr = La formation %s de %s a été clôturée
+USERFORMATION_EXPIRE_InDolibarr = La formation %s de %s a expirée
+USERFORMATION_SUSPEND_InDolibarr = La formation %s de %s a été suspendue
+USERFORMATION_UNSUSPEND_InDolibarr = La formation %s de %s n'est plus suspendue
+USERFORMATION_DELETE_InDolibarr = La formation %s de %s a été supprimée
+
+USERHABILITATION_CREATE_InDolibarr = Habilitation %s attribuée à %s
+USERHABILITATION_FORCECREATE_InDolibarr = Habilitation %s attribuée à %s (Création forcé)
+USERHABILITATION_AUTOCREATE_InDolibarr = Habilitation %s automatiquement attribuée à %s
+USERHABILITATION_UPDATE_InDolibarr = L'habilitation %s de %s a été modifiée
+USERHABILITATION_VALIDATE_InDolibarr = L'habilitation %s de %s a été validée
+USERHABILITATION_CLOSE_InDolibarr = L'habilitation %s de %s a été clôturée
+USERHABILITATION_EXPIRE_InDolibarr = L'habilitation %s de %s a expirée
+USERHABILITATION_SUSPEND_InDolibarr = L'habilitation %s de %s a été suspendue
+USERHABILITATION_UNSUSPEND_InDolibarr = L'habilitation %s de %s n'est plus suspendue
+USERHABILITATION_DELETE_InDolibarr = L'habilitation %s de %s a été supprimée
+
+USERAUTORISATION_CREATE_InDolibarr = Autorisation %s attribuée à %s
+USERAUTORISATION_FORCECREATE_InDolibarr = Habilitation %s attribuée à %s (Création forcé)
+USERAUTORISATION_AUTOCREATE_InDolibarr = Autorisation %s automatiquement attribuée à %s
+USERAUTORISATION_UPDATE_InDolibarr = L'autorisation %s de %s a été modifiée
+USERAUTORISATION_VALIDATE_InDolibarr = L'autorisation %s de %s a été validée
+USERAUTORISATION_CLOSE_InDolibarr = L'autorisation %s de %s a été clôturée
+USERAUTORISATION_EXPIRE_InDolibarr = L'autorisation %s de %s a expirée
+USERAUTORISATION_SUSPEND_InDolibarr = L'autorisation %s de %s a été suspendue
+USERAUTORISATION_UNSUSPEND_InDolibarr = L'autorisation %s de %s n'est plus suspendue
+USERAUTORISATION_DELETE_InDolibarr = L'autorisation %s de %s a été supprimée
+
+ActionAC_USERFORMATION = Formation du collaborateur
+ActionAC_USERAUTORISATION = Autorisation du collaborateur
+ActionAC_USERHABILITATION = Habilitation du collaborateur
+
 
 
 #

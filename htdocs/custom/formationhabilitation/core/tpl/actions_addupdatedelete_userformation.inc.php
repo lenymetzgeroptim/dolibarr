@@ -115,7 +115,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$error++;
 	}
 
-	if (!$error) {
+	if (!$error) {		
 		$objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date_fin, "%Y%m%d");
 		$objectline->fk_user = GETPOST('fk_user');
 		$objectline->fk_formation = GETPOST('fk_formation');
@@ -126,7 +126,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$objectline->nombre_heure = $nombre_heure;
 		$objectline->cout_pedagogique = $formation_static->cout;
 		$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
-		$objectline->cout_annexe = GETPOST('cout_annexe');
+		$objectline->cout_annexe = (float)GETPOST('cout_annexe', 'alphanohtml');
 		$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 		$objectline->fk_societe = GETPOST('fk_societe');
 		$objectline->formateur = GETPOST('formateur');
@@ -135,7 +135,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$objectline->resultat = GETPOST('resultat');
 		$objectline->status = GETPOST('status'); 
 
-		$resultcreate = $objectline->create($user);
+		$resultcreate = $objectline->create($user, false, false, !empty(GETPOST('forcecreation')));
 	}
 
 	if(!$error && $resultcreate > 0){
@@ -154,6 +154,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 if($action == 'updateline' && !$cancel && $permissiontoaddline){
 	if($lineid > 0){
 		$objectline->fetch($lineid);
+		$objectline->oldcopy = clone $objectline;
 
 		if (empty(GETPOST("date_debut_formationmonth", 'int')) || empty(GETPOST("date_debut_formationday", 'int')) || empty(GETPOST("date_debut_formationyear", 'int'))) {
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateDebutFormation")), null, 'errors');
@@ -198,7 +199,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 			if(empty($objectline->cout_mobilisation) || $nombre_heure_before != $nombre_heure) {
 				$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
 			}
-			$objectline->cout_annexe = GETPOST('cout_annexe');
+			$objectline->cout_annexe = (float)GETPOST('cout_annexe', 'alphanohtml');
 			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 			$objectline->fk_societe = (GETPOST('interne_externe') != 2 ? GETPOST('fk_societe') : '');
 			$objectline->formateur = (GETPOST('interne_externe') == 2 ? GETPOST('formateur') : '');
@@ -258,6 +259,8 @@ if ($action == 'updatedatefinvalidite' && !$cancel && $permissiontoaddline) {
 
 	if($lineid > 0){
 		$objectline->fetch($lineid);
+		$objectline->oldcopy = clone $objectline;
+
 		if (empty(GETPOST("date_finvalidite_formationmonth", 'int')) || empty(GETPOST("date_finvalidite_formationday", 'int')) || empty(GETPOST("date_finvalidite_formationyear", 'int'))) {
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFinValiditeFormation")), null, 'errors');
 			$error++;
@@ -291,10 +294,11 @@ if ($action == 'updatecoutpedagogique' && !$cancel && $permissiontoaddline) {
 
 	if($lineid > 0){
 		$objectline->fetch($lineid);
+		$objectline->oldcopy = clone $objectline;
 
 		if(!$error) {
 			$objectline->cout_pedagogique = GETPOST('cout_pedagogique');
-			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 			$objectline->update($user);
 		}
 		
@@ -320,10 +324,11 @@ if ($action == 'updatecoutmobilisation' && !$cancel && $permissiontoaddline) {
 
 	if($lineid > 0){
 		$objectline->fetch($lineid);
+		$objectline->oldcopy = clone $objectline;
 
 		if(!$error) {
 			$objectline->cout_mobilisation = GETPOST('cout_mobilisation');
-			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation;
+			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
 			$objectline->update($user);
 		}
 		
@@ -379,8 +384,9 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 		if (!$error) {
 			// Changement status de l'ancienne ligne
 			$objectline->fetch($lineid);
+			$objectline->oldcopy = clone $objectline;
 			$objectline->status = UserFormation::STATUS_REPROGRAMMEE;
-			$result == $objectline->update($user);
+			$result == $objectline->update($user, 0, 1);
 			$userid = $objectline->fk_user; 
 			$formationid = $objectline->fk_formation;
 
@@ -391,6 +397,7 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 			$formation_static->fetch($formationid);
 
 			$objectline = New UserFormation($db);
+			$objectline->oldcopy = clone $objectline;
 			$objectline->ref = $user_static->login."-".$formation_static->ref.'-'.dol_print_date($date_fin, "%Y%m%d");
 			$objectline->fk_formation = $formationid;
 			$objectline->fk_user = $userid;
@@ -406,7 +413,7 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 			$objectline->fk_societe = GETPOST('fk_societe_programmer');
 			$objectline->formateur = GETPOST('formateur_programmer');
 			$objectline->status = UserFormation::STATUS_PROGRAMMEE;
-			$result = $objectline->create($user);
+			$result = $objectline->create($user, 0, 1);
 		}
 
 		if(!$error && $result > 0){
@@ -446,6 +453,7 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 
 		if (!$error) {
 			$objectline->fetch($lineid);
+			$objectline->oldcopy = clone $objectline;
 			// $userid = $objectline->fk_user; 
 			// $formationid = $objectline->fk_formation;
 
@@ -470,7 +478,7 @@ if($action == 'confirm_valider_formation' && $confirm == 'yes' && $permissiontoa
 			$objectline->numero_certificat = GETPOST('numero_certificat_valider');
 			$objectline->resultat = GETPOST('resultat_valider');
 
-			$result = $objectline->update($user);
+			$result = $objectline->update($user, 0, 1);
 
 			if($result) {
 				if(GETPOST('resultat_valider') == 3) {

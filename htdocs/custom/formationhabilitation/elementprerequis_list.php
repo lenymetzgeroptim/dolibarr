@@ -156,9 +156,7 @@ $elementPrerequis->fields = dol_sort_array($elementPrerequis->fields, 'position'
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // There is several ways to check permission.
-$permissiontoread = 1;
-$permissiontoadd = 1;
-$permissiontodelete = 1;
+$permissiontodelete = $permissiontoadd;
 
 // Security check (enable the most restrictive one)
 if ($user->socid > 0) {
@@ -400,7 +398,7 @@ $num = $db->num_rows($resql);
 // });
 // </script>';
 
-if($action != 'editline') {
+if($action != 'editline' && $permissiontoadd) {
 	print '<form action="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'" method="POST">'."\n";
 		print '<input type="hidden" name="token" value="'.newToken().'">';
 		print '<input type="hidden" name="action" value="addline">';

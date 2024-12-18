@@ -27,6 +27,7 @@
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/autorisation.class.php';
 
 /**
  * Class for UserAutorisation
@@ -151,6 +152,7 @@ class UserAutorisation extends CommonObject
 	public $status;
 	public $date_fin_autorisation;
 	public $domaineapplication;
+	private $type_code = 'AC_USERAUTORISATION';
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -240,13 +242,51 @@ class UserAutorisation extends CommonObject
 	 * @param  bool $notrigger false=launch triggers after, true=disable triggers
 	 * @return int             <0 if KO, Id of created object if OK
 	 */
-	public function create(User $user, $notrigger = false)
+	public function create(User $user, $notrigger = false, $generationauto = false, $forcecreation = false)
 	{
 		global $langs; 
 		$autorisation = new Autorisation($this->db);
 
 		if(!$this->UserHasSameUserAutorisation()) {
 			$resultcreate = $this->createCommon($user, $notrigger);
+
+			// Evenement Agenda
+			$msgAgenda = msgAgendaUpdate($this, 0);
+			if($resultcreate) {
+				$user_static = new User($this->db);
+				$autorisation_static = new Autorisation($this->db);
+				$user_static->fetch($this->fk_user);
+				$autorisation_static->fetch($this->fk_autorisation);
+
+				require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+				$actioncomm = new ActionComm($this->db);
+				$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+				$actioncomm->code        = $this->type_code.'_CREATE';
+				if($generationauto){
+					$actioncomm->label = $langs->transnoentities("USERAUTORISATION_AUTOCREATE_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+				}
+				elseif($forcecreation){
+					$actioncomm->label = $langs->transnoentities("USERAUTORISATION_FORCECREATE_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+				}
+				else {
+					$actioncomm->label = $langs->transnoentities("USERAUTORISATION_CREATE_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+				}
+				$actioncomm->note_private = $msgAgenda;	// Description
+				$actioncomm->fk_project  = '';
+				$actioncomm->datep       = $now;
+				$actioncomm->datef       = $now;
+				$actioncomm->percentage  = -1; // Not applicable
+				$actioncomm->socid       = '';
+				$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+				$actioncomm->authorid    = $user->id; // User saving action
+				$actioncomm->userownerid = $user->id; // Owner of action
+				$actioncomm->fk_element  = $this->fk_autorisation;
+				$actioncomm->elementtype = 'autorisation'.($this->module ? '@'.$this->module : '');
+				$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+				$actioncomm->array_options['options_elementtype2'] = 'user';
+				$actioncomm->array_options['options_fk_userautorisation'] = $this->id;
+				$ret = $actioncomm->create($user); // User creating action
+			}
 		}
 		else {
 			$autorisation->fetch($this->fk_autorisation); 
@@ -266,97 +306,97 @@ class UserAutorisation extends CommonObject
 	 * @param  	int 	$fromid     Id of object to clone
 	 * @return 	mixed 				New object created, <0 if KO
 	 */
-	public function createFromClone(User $user, $fromid)
-	{
-		global $langs, $extrafields;
-		$error = 0;
+	// public function createFromClone(User $user, $fromid)
+	// {
+	// 	global $langs, $extrafields;
+	// 	$error = 0;
 
-		dol_syslog(__METHOD__, LOG_DEBUG);
+	// 	dol_syslog(__METHOD__, LOG_DEBUG);
 
-		$object = new self($this->db);
+	// 	$object = new self($this->db);
 
-		$this->db->begin();
+	// 	$this->db->begin();
 
-		// Load source object
-		$result = $object->fetchCommon($fromid);
-		if ($result > 0 && !empty($object->table_element_line)) {
-			$object->fetchLines();
-		}
+	// 	// Load source object
+	// 	$result = $object->fetchCommon($fromid);
+	// 	if ($result > 0 && !empty($object->table_element_line)) {
+	// 		$object->fetchLines();
+	// 	}
 
-		// get lines so they will be clone
-		//foreach($this->lines as $line)
-		//	$line->fetch_optionals();
+	// 	// get lines so they will be clone
+	// 	//foreach($this->lines as $line)
+	// 	//	$line->fetch_optionals();
 
-		// Reset some properties
-		unset($object->id);
-		unset($object->fk_user_creat);
-		unset($object->import_key);
+	// 	// Reset some properties
+	// 	unset($object->id);
+	// 	unset($object->fk_user_creat);
+	// 	unset($object->import_key);
 
-		// Clear fields
-		if (property_exists($object, 'ref')) {
-			$object->ref = empty($this->fields['ref']['default']) ? "Copy_Of_".$object->ref : $this->fields['ref']['default'];
-		}
-		if (property_exists($object, 'label')) {
-			$object->label = empty($this->fields['label']['default']) ? $langs->trans("CopyOf")." ".$object->label : $this->fields['label']['default'];
-		}
-		if (property_exists($object, 'status')) {
-			$object->status = self::STATUS_AUTORISABLE;
-		}
-		if (property_exists($object, 'date_creation')) {
-			$object->date_creation = dol_now();
-		}
-		if (property_exists($object, 'date_modification')) {
-			$object->date_modification = null;
-		}
-		// ...
-		// Clear extrafields that are unique
-		if (is_array($object->array_options) && count($object->array_options) > 0) {
-			$extrafields->fetch_name_optionals_label($this->table_element);
-			foreach ($object->array_options as $key => $option) {
-				$shortkey = preg_replace('/options_/', '', $key);
-				if (!empty($extrafields->attributes[$this->table_element]['unique'][$shortkey])) {
-					//var_dump($key);
-					//var_dump($clonedObj->array_options[$key]); exit;
-					unset($object->array_options[$key]);
-				}
-			}
-		}
+	// 	// Clear fields
+	// 	if (property_exists($object, 'ref')) {
+	// 		$object->ref = empty($this->fields['ref']['default']) ? "Copy_Of_".$object->ref : $this->fields['ref']['default'];
+	// 	}
+	// 	if (property_exists($object, 'label')) {
+	// 		$object->label = empty($this->fields['label']['default']) ? $langs->trans("CopyOf")." ".$object->label : $this->fields['label']['default'];
+	// 	}
+	// 	if (property_exists($object, 'status')) {
+	// 		$object->status = self::STATUS_AUTORISABLE;
+	// 	}
+	// 	if (property_exists($object, 'date_creation')) {
+	// 		$object->date_creation = dol_now();
+	// 	}
+	// 	if (property_exists($object, 'date_modification')) {
+	// 		$object->date_modification = null;
+	// 	}
+	// 	// ...
+	// 	// Clear extrafields that are unique
+	// 	if (is_array($object->array_options) && count($object->array_options) > 0) {
+	// 		$extrafields->fetch_name_optionals_label($this->table_element);
+	// 		foreach ($object->array_options as $key => $option) {
+	// 			$shortkey = preg_replace('/options_/', '', $key);
+	// 			if (!empty($extrafields->attributes[$this->table_element]['unique'][$shortkey])) {
+	// 				//var_dump($key);
+	// 				//var_dump($clonedObj->array_options[$key]); exit;
+	// 				unset($object->array_options[$key]);
+	// 			}
+	// 		}
+	// 	}
 
-		// Create clone
-		$object->context['createfromclone'] = 'createfromclone';
-		$result = $object->createCommon($user);
-		if ($result < 0) {
-			$error++;
-			$this->setErrorsFromObject($object);
-		}
+	// 	// Create clone
+	// 	$object->context['createfromclone'] = 'createfromclone';
+	// 	$result = $object->createCommon($user);
+	// 	if ($result < 0) {
+	// 		$error++;
+	// 		$this->setErrorsFromObject($object);
+	// 	}
 
-		if (!$error) {
-			// copy internal contacts
-			if ($this->copy_linked_contact($object, 'internal') < 0) {
-				$error++;
-			}
-		}
+	// 	if (!$error) {
+	// 		// copy internal contacts
+	// 		if ($this->copy_linked_contact($object, 'internal') < 0) {
+	// 			$error++;
+	// 		}
+	// 	}
 
-		if (!$error) {
-			// copy external contacts if same company
-			if (!empty($object->socid) && property_exists($this, 'fk_soc') && $this->fk_soc == $object->socid) {
-				if ($this->copy_linked_contact($object, 'external') < 0) {
-					$error++;
-				}
-			}
-		}
+	// 	if (!$error) {
+	// 		// copy external contacts if same company
+	// 		if (!empty($object->socid) && property_exists($this, 'fk_soc') && $this->fk_soc == $object->socid) {
+	// 			if ($this->copy_linked_contact($object, 'external') < 0) {
+	// 				$error++;
+	// 			}
+	// 		}
+	// 	}
 
-		unset($object->context['createfromclone']);
+	// 	unset($object->context['createfromclone']);
 
-		// End
-		if (!$error) {
-			$this->db->commit();
-			return $object;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-	}
+	// 	// End
+	// 	if (!$error) {
+	// 		$this->db->commit();
+	// 		return $object;
+	// 	} else {
+	// 		$this->db->rollback();
+	// 		return -1;
+	// 	}
+	// }
 
 	/**
 	 * Load object in memory from the database
@@ -502,7 +542,7 @@ class UserAutorisation extends CommonObject
 		$sql = "SELECT ef.domaineapplication as ef_domaineapplication, ";
 		$sql .= $this->getFieldList('t');
 		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
-		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_autorisation as h ON h.rowid = t.fk_autorisation AND h.fk_volet = $voletid";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_autorisation as h ON h.rowid = t.fk_autorisation AND FIND_IN_SET($voletid, h.fk_volet ) > 0";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON t.rowid = e.fk_source AND e.sourcetype = 'autorisation' AND e.targettype = 'formationhabilitation_uservolet' AND e.fk_target = $uservoletid";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_element_fields as ef ON e.rowid = ef.fk_element_element";
 		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
@@ -589,7 +629,41 @@ class UserAutorisation extends CommonObject
 	 */
 	public function update(User $user, $notrigger = false)
 	{
-		return $this->updateCommon($user, $notrigger);
+		global $langs; 
+
+		$resultupdate = $this->updateCommon($user, $notrigger);
+
+		// Evenement Agenda
+		$msgAgenda = msgAgendaUpdate($this, 1);
+		if($resultupdate && !empty($msgAgenda)) {
+			$user_static = new User($this->db);
+			$autorisation_static = new Autorisation($this->db);
+			$user_static->fetch($this->fk_user);
+			$autorisation_static->fetch($this->fk_autorisation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_UPDATE';
+			$actioncomm->label = $langs->transnoentities("USERAUTORISATION_UPDATE_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_autorisation;
+			$actioncomm->elementtype = 'autorisation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userautorisation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
+		return $resultupdate;
 	}
 
 	/**
@@ -601,8 +675,40 @@ class UserAutorisation extends CommonObject
 	 */
 	public function delete(User $user, $notrigger = false)
 	{
-		return $this->deleteCommon($user, $notrigger);
+		global $langs; 
+
+		$resultdelete = $this->deleteCommon($user, $notrigger);
 		//return $this->deleteCommon($user, $notrigger, 1);
+
+		// Evenement Agenda
+		$msgAgenda = msgAgendaUpdate($this, 0);
+		if($resultdelete) {
+			$user_static = new User($this->db);
+			$autorisation_static = new Autorisation($this->db);
+			$user_static->fetch($this->fk_user);
+			$autorisation_static->fetch($this->fk_autorisation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_DELETE';
+			$actioncomm->label 		 = $langs->transnoentities("USERAUTORISATION_DELETE_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_autorisation;
+			$actioncomm->elementtype = 'autorisation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			// $actioncomm->array_options['options_fk_userautorisation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
 	}
 
 	/**
@@ -750,6 +856,36 @@ class UserAutorisation extends CommonObject
 			$this->status = self::STATUS_AUTORISE;
 		}
 
+		// Evenement Agenda
+		// $msgAgenda = msgAgendaUpdate($this, 1);
+		if(!$error) {
+			$user_static = new User($this->db);
+			$autorisation_static = new Autorisation($this->db);
+			$user_static->fetch($this->fk_user);
+			$autorisation_static->fetch($this->fk_autorisation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_VALIDATE';
+			$actioncomm->label = $langs->transnoentities("USERAUTORISATION_VALIDATE_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			// $actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_autorisation;
+			$actioncomm->elementtype = 'autorisation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userautorisation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
 		if (!$error) {
 			$this->db->commit();
 			return 1;
@@ -767,22 +903,22 @@ class UserAutorisation extends CommonObject
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						<0 if KO, >0 if OK
 	 */
-	public function setDraft($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status <= self::STATUS_AUTORISABLE) {
-			return 0;
-		}
+	// public function setDraft($user, $notrigger = 0)
+	// {
+	// 	// Protection
+	// 	if ($this->status <= self::STATUS_AUTORISABLE) {
+	// 		return 0;
+	// 	}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
-		 {
-		 $this->error='Permission denied';
-		 return -1;
-		 }*/
+	// 	/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+	// 	 {
+	// 	 $this->error='Permission denied';
+	// 	 return -1;
+	// 	 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_AUTORISABLE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
-	}
+	// 	return $this->setStatusCommon($user, self::STATUS_AUTORISABLE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
+	// }
 
 	/**
 	 *	suspend object
@@ -834,6 +970,36 @@ class UserAutorisation extends CommonObject
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_SUSPEND;
+		}
+
+		// Evenement Agenda
+		// $msgAgenda = msgAgendaUpdate($this, 1);
+		if(!$error) {
+			$user_static = new User($this->db);
+			$autorisation_static = new Autorisation($this->db);
+			$user_static->fetch($this->fk_user);
+			$autorisation_static->fetch($this->fk_autorisation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_SUSPEND';
+			$actioncomm->label = $langs->transnoentities("USERAUTORISATION_SUSPEND_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			// $actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_autorisation;
+			$actioncomm->elementtype = 'autorisation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userautorisation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
 		}
 
 		// Suspendre le volet dans lequel se trouve l'autorisation
@@ -911,6 +1077,36 @@ class UserAutorisation extends CommonObject
 			$this->status = self::STATUS_AUTORISE;
 		}
 
+		// Evenement Agenda
+		// $msgAgenda = msgAgendaUpdate($this, 1);
+		if(!$error) {
+			$user_static = new User($this->db);
+			$autorisation_static = new Autorisation($this->db);
+			$user_static->fetch($this->fk_user);
+			$autorisation_static->fetch($this->fk_autorisation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_UNSUSPEND';
+			$actioncomm->label = $langs->transnoentities("USERAUTORISATION_UNSUSPEND_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			// $actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_autorisation;
+			$actioncomm->elementtype = 'autorisation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userautorisation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
 		// Désuspendre le volet dans lequel se trouve l'autorisation
 		if(!$error) {
 			$userVolet = new UserVolet($this->db);
@@ -943,6 +1139,8 @@ class UserAutorisation extends CommonObject
 	 */
 	public function expire($user, $notrigger = 0)
 	{
+		global $langs; 
+
 		// Protection
 		if ($this->status != self::STATUS_AUTORISE) {
 			return 0;
@@ -955,7 +1153,38 @@ class UserAutorisation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_NONAUTORISE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+		$resultexpire = $this->setStatusCommon($user, self::STATUS_NONAUTORISE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+
+		// Evenement Agenda
+		if($resultexpire) {
+			$user_static = new User($this->db);
+			$autorisation_static = new Autorisation($this->db);
+			$user_static->fetch($this->fk_user);
+			$autorisation_static->fetch($this->fk_autorisation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_EXPIRE';
+			$actioncomm->label = $langs->transnoentities("USERAUTORISATION_EXPIRE_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			// $actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_autorisation;
+			$actioncomm->elementtype = 'autorisation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userautorisation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
+		$resultexpire;
 	}
 
 	/**
@@ -967,6 +1196,8 @@ class UserAutorisation extends CommonObject
 	 */
 	public function close($user, $notrigger = 0)
 	{
+		global $langs; 
+
 		// Protection
 		// if ($this->status != self::STATUS_VALIDATED) {
 		// 	return 0;
@@ -979,7 +1210,38 @@ class UserAutorisation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_USERAUTORISATION_CANCEL');
+		$resultclose = $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_USERAUTORISATION_CANCEL');
+
+		// Evenement Agenda
+		if($resultclose) {
+			$user_static = new User($this->db);
+			$autorisation_static = new Autorisation($this->db);
+			$user_static->fetch($this->fk_user);
+			$autorisation_static->fetch($this->fk_autorisation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_CLOSE';
+			$actioncomm->label = $langs->transnoentities("USERAUTORISATION_CLOSE_InDolibarr", $autorisation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			// $actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_autorisation;
+			$actioncomm->elementtype = 'autorisation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userautorisation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
+		return $resultclose;
 	}
 
 	/**
@@ -989,22 +1251,22 @@ class UserAutorisation extends CommonObject
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						<0 if KO, 0=Nothing done, >0 if OK
 	 */
-	public function reopen($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status == self::STATUS_AUTORISE) {
-			return 0;
-		}
+	// public function reopen($user, $notrigger = 0)
+	// {
+	// 	// Protection
+	// 	if ($this->status == self::STATUS_AUTORISE) {
+	// 		return 0;
+	// 	}
 
-		/*if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
-		 {
-		 $this->error='Permission denied';
-		 return -1;
-		 }*/
+	// 	/*if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
+	// 	 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','formationhabilitation_advance','validate'))))
+	// 	 {
+	// 	 $this->error='Permission denied';
+	// 	 return -1;
+	// 	 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_AUTORISE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
-	}
+	// 	return $this->setStatusCommon($user, self::STATUS_AUTORISE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
+	// }
 
 	/**
 	 * getTooltipContentArray

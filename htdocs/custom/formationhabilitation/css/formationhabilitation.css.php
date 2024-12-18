@@ -153,3 +153,7 @@ td.linecolstatus a[aria-label="Programmer"] {
 	display: table;
 	margin-bottom: 10px;
 }
+
+#description_action_formationhabilitation span div {
+	display: inline;
+}

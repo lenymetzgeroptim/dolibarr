@@ -78,12 +78,12 @@ if($action == 'addline' && $permissiontoaddline) {
 		$objectline->ref = $user_static->login."-".$habilitation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 		$objectline->fk_habilitation = GETPOST('fk_habilitation');
 		$objectline->date_habilitation = $date;
-		$objectline->date_fin_habilitation = dol_time_plus_duree(dol_time_plus_duree($date, $habilitation_static->validite_employeur, 'd'), -1, 'd');
+		$objectline->date_fin_habilitation = $elementPrerequis->getDatePrerequis(GETPOST('fk_user'), $habilitation_static, 0);
 		$objectline->fk_user = GETPOST('fk_user');
 		$objectline->domaineapplication = GETPOST('domaineapplication', 'int');
 		$objectline->status = GETPOST('status');
 
-		$resultcreate = $objectline->create($user);
+		$resultcreate = $objectline->create($user, false, false, !empty(GETPOST('forcecreation')));
 	}
 
 	if(!$error && $resultcreate){
@@ -103,6 +103,7 @@ if($action == 'addline' && $permissiontoaddline) {
 if($action == 'updateline' && !$cancel && $permissiontoaddline){
 	if($lineid > 0){
 		$objectline->fetch($lineid);
+		$objectline->oldcopy = clone $objectline;
 
 		if (empty(GETPOST("date_habilitationmonth", 'int')) || empty(GETPOST("date_habilitationday", 'int')) || empty(GETPOST("date_habilitationyear", 'int'))) {
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateHabilitation")), null, 'errors');

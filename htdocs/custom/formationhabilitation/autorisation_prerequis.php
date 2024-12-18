@@ -134,6 +134,14 @@ if ($reshook < 0) {
 }
 if (empty($reshook)) {
 	if($action == 'addline' && $object->id > 0 && $permissiontoadd) {
+		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		$actioncomm = new ActionComm($db);
+		$actioncomm->note_private = ''; // Description
+		$formation = new Formation($db);
+		$visitemedicale = new VisiteMedical($db);
+		$natureVM = $visitemedicale->getAllNature();
+		$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = array('1' => 'Intégration');
+
 		$db->begin();
 
 		if(!(GETPOST('prerequisobjects_formation')) && !(GETPOST('prerequisobjects_nature_visite')) && !(GETPOST('prerequisobjects_autre'))){
@@ -152,6 +160,12 @@ if (empty($reshook)) {
 
 				$resultcreate = $elementPrerequis->create($user);
 
+				// Agenda
+				foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+					$formation->fetch($prerequisid);
+					$actioncomm->note_private .= '<li>Ajout de la formation <strong>'.$formation->label.'</strong></li>';
+				}
+
 				if($resultcreate < 0 || $elementPrerequis->condition_group < 1) {
 					setEventMessages("Erreur lors de la création du prérequis de formation", null, 'errors');
 					$errorcreate++;
@@ -165,6 +179,11 @@ if (empty($reshook)) {
 				$elementPrerequis->prerequistype = 'nature_visite';
 
 				$resultcreate = $elementPrerequis->create($user);
+
+				// Agenda
+				foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+					$actioncomm->note_private .= '<li>Ajout de la nature de visite <strong>'.$natureVM[$prerequisid].'</strong></li>';
+				}
 
 				if($resultcreate < 0 || $elementPrerequis->condition_group < 1) {
 					setEventMessages("Erreur lors de la création du prérequis de nature de visite", null, 'errors');
@@ -180,10 +199,41 @@ if (empty($reshook)) {
 
 				$resultcreate = $elementPrerequis->create($user);
 
+				// Agenda
+				foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+					$actioncomm->note_private .= '<li>Ajout de <strong>'.$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'][$prerequisid].'</strong></li>';
+				}
+
 				if($resultcreate < 0 || $elementPrerequis->condition_group < 1) {
 					setEventMessages("Erreur lors de la création du prérequis autre", null, 'errors');
 					$errorcreate++;
 				} 
+			}
+		}
+
+		$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = '';
+		// Evenement Agenda
+		if(!$error) {
+			$now = dol_now();
+
+			$actioncomm->type_code   = 'AC_OTH_AUTO'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = 'AC_PREREQUIS_CREATE';
+			$actioncomm->label       =  $langs->transnoentities("FORMATIONHABILITATION_PREREQUISFOMRATION_CREATEInDolibarr");		// Label of event
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $object->id;
+			$actioncomm->elementtype = $object->element.($object->module ? '@'.$object->module : '');
+
+			$ret = $actioncomm->create($user); // User creating action
+
+			if($ret < 0) {
+				$error++;
 			}
 		}
 	
@@ -203,6 +253,16 @@ if (empty($reshook)) {
 	}
 
 	if($action == 'updateline' && !$cancel && $permissiontoadd){
+		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		$actioncomm = new ActionComm($db);
+		$actioncomm->note_private = ''; // Description
+		$formation = new Formation($db);
+		$visitemedicale = new VisiteMedical($db);
+		$natureVM = $visitemedicale->getAllNature();
+		$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = array('1' => 'Intégration');
+
+		$db->begin();
+
 		if($lineid_formation > 0 || $lineid_nature_visite > 0 || $lineid_autre > 0){
 			if(!(GETPOST('prerequisobjects_formation')) && !(GETPOST('prerequisobjects_nature_visite')) && !(GETPOST('prerequisobjects_autre'))){
 				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("PrerequisObjects")), null, 'errors');
@@ -212,6 +272,13 @@ if (empty($reshook)) {
 			// Prérequis de formation
 			if(!$error && $lineid_formation > 0 && !GETPOST('prerequisobjects_formation', 'array')) {
 				$elementPrerequis->fetch($lineid_formation);
+
+				// Agenda
+				foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+					$formation->fetch($prerequisid);
+					$actioncomm->note_private .= '<li>Suppression de la formation <strong>'.$formation->label.'</strong></li>';
+				}
+
 				$resultdelete = $elementPrerequis->delete($user);
 
 				if($resultdelete < 0) {
@@ -223,9 +290,30 @@ if (empty($reshook)) {
 			elseif(!$error && $lineid_formation > 0) {
 				$elementPrerequis->fetch($lineid_formation);
 
+				$copy_prerequisobjects = explode(',', $elementPrerequis->prerequisobjects);
 				if ($elementPrerequis->prerequisobjects != implode(',', GETPOST('prerequisobjects_formation', 'array'))) {
+					// Agenda
+					foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+						if(in_array($prerequisid, GETPOST('prerequisobjects_formation', 'array'))) {
+							continue;
+						}
+
+						$formation->fetch($prerequisid);
+						$actioncomm->note_private .= '<li>Suppression de la formation <strong>'.$formation->label.'</strong></li>';
+					}
+
 					$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_formation', 'array'));
 					$resultupdate = $elementPrerequis->update($user);
+
+					// Agenda
+					foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+						if(in_array($prerequisid, $copy_prerequisobjects)) {
+							continue;
+						}
+
+						$formation->fetch($prerequisid);
+						$actioncomm->note_private .= '<li>Ajout de la formation <strong>'.$formation->label.'</strong></li>';
+					}
 
 					if($resultupdate < 0) {
 						setEventMessages("Erreur lors de la modification des prérequis de formation", null, 'errors');
@@ -242,6 +330,12 @@ if (empty($reshook)) {
 
 				$resultcreate = $elementPrerequis->create($user);
 
+				// Agenda
+				foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+					$formation->fetch($prerequisid);
+					$actioncomm->note_private .= '<li>Ajout de la formation <strong>'.$formation->label.'</strong></li>';
+				}
+
 				if($resultcreate < 0) {
 					setEventMessages("Erreur lors de la création des prérequis de formation", null, 'errors');
 					$error++;
@@ -253,6 +347,11 @@ if (empty($reshook)) {
 				$elementPrerequis->fetch($lineid_nature_visite);
 				$resultdelete = $elementPrerequis->delete($user);
 
+				// Agenda
+				foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+					$actioncomm->note_private .= '<li>Suppression de la nature de visite <strong>'.$natureVM[$prerequisid].'</strong></li>';
+				}
+
 				if($resultdelete < 0) {
 					setEventMessages("Erreur lors de la suppression des prérequis de nature de visite", null, 'errors');
 					$error++;
@@ -262,9 +361,28 @@ if (empty($reshook)) {
 			elseif(!$error && $lineid_nature_visite > 0) {
 				$elementPrerequis->fetch($lineid_nature_visite);
 
+				$copy_prerequisobjects = explode(',', $elementPrerequis->prerequisobjects);
 				if ($elementPrerequis->prerequisobjects != implode(',', GETPOST('prerequisobjects_nature_visite', 'array'))) {
+					// Agenda
+					foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+						if(in_array($prerequisid, GETPOST('prerequisobjects_nature_visite', 'array'))) {
+							continue;
+						}
+
+						$actioncomm->note_private .= '<li>Suppression de la nature de visite <strong>'.$natureVM[$prerequisid].'</strong></li>';
+					}
+
 					$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_nature_visite', 'array'));
 					$resultupdate = $elementPrerequis->update($user);
+
+					// Agenda
+					foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+						if(in_array($prerequisid, $copy_prerequisobjects)) {
+							continue;
+						}
+
+						$actioncomm->note_private .= '<li>Ajout de la nature de visite <strong>'.$natureVM[$prerequisid].'</strong></li>';
+					}
 
 					if($resultupdate < 0) {
 						setEventMessages("Erreur lors de la modification des prérequis de nature de visite", null, 'errors');
@@ -281,6 +399,11 @@ if (empty($reshook)) {
 
 				$resultcreate = $elementPrerequis->create($user);
 
+				// Agenda
+				foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+					$actioncomm->note_private .= '<li>Ajout de la nature de visite <strong>'.$natureVM[$prerequisid].'</strong></li>';
+				}
+
 				if($resultcreate < 0) {
 					setEventMessages("Erreur lors de la création des prérequis de nature de visite", null, 'errors');
 					$error++;
@@ -292,6 +415,11 @@ if (empty($reshook)) {
 				$elementPrerequis->fetch($lineid_autre);
 				$resultdelete = $elementPrerequis->delete($user);
 
+				// Agenda
+				foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+					$actioncomm->note_private .= '<li>Suppression de <strong>'.$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'][$prerequisid].'</strong></li>';
+				}
+
 				if($resultdelete < 0) {
 					setEventMessages("Erreur lors de la suppression des prérequis autres", null, 'errors');
 					$error++;
@@ -301,9 +429,28 @@ if (empty($reshook)) {
 			elseif(!$error && $lineid_autre > 0) {
 				$elementPrerequis->fetch($lineid_autre);
 
+				$copy_prerequisobjects = explode(',', $elementPrerequis->prerequisobjects);
 				if ($elementPrerequis->prerequisobjects != implode(',', GETPOST('prerequisobjects_autre', 'array'))) {
+					// Agenda
+					foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+						if(in_array($prerequisid, GETPOST('prerequisobjects_autre', 'array'))) {
+							continue;
+						}
+
+						$actioncomm->note_private .= '<li>Suppression de <strong>'.$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'][$prerequisid].'</strong></li>';
+					}
+
 					$elementPrerequis->prerequisobjects = implode(',', GETPOST('prerequisobjects_autre', 'array'));
 					$resultupdate = $elementPrerequis->update($user);
+
+					// Agenda
+					foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+						if(in_array($prerequisid, $copy_prerequisobjects)) {
+							continue;
+						}
+
+						$actioncomm->note_private .= '<li>Ajout de <strong>'.$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'][$prerequisid].'</strong></li>';
+					}
 
 					if($resultupdate < 0) {
 						setEventMessages("Erreur lors de la modification des prérequis autres", null, 'errors');
@@ -320,18 +467,51 @@ if (empty($reshook)) {
 
 				$resultcreate = $elementPrerequis->create($user);
 
+				// Agenda
+				foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+					$actioncomm->note_private .= '<li>Ajout de <strong>'.$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'][$prerequisid].'</strong></li>';
+				}
+
 				if($resultcreate < 0) {
 					setEventMessages("Erreur lors de la création des prérequis autre", null, 'errors');
 					$error++;
 				}
 			}
+
+			$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = '';
+			// Evenement Agenda
+			if(!$error) {
+				$now = dol_now();
+
+				$actioncomm->type_code   = 'AC_OTH_AUTO'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+				$actioncomm->code        = 'AC_PREREQUIS_MODIFY';
+				$actioncomm->label       =  $langs->transnoentities("FORMATIONHABILITATION_PREREQUISFOMRATION_MODIFYInDolibarr");		// Label of event
+				$actioncomm->fk_project  = '';
+				$actioncomm->datep       = $now;
+				$actioncomm->datef       = $now;
+				$actioncomm->percentage  = -1; // Not applicable
+				$actioncomm->socid       = '';
+				$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+				$actioncomm->authorid    = $user->id; // User saving action
+				$actioncomm->userownerid = $user->id; // Owner of action
+				$actioncomm->fk_element  = $object->id;
+				$actioncomm->elementtype = $object->element.($object->module ? '@'.$object->module : '');
+
+				$ret = $actioncomm->create($user); // User creating action
+
+				if($ret < 0) {
+					$error++;
+				}
+			}
 	
 			if(!$error){
+				$db->commit();
 				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 				header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id, true, 303);
 				exit;
 			}
 			elseif($error) {
+				$db->rollback();
 				header('Location: '.$_SERVER["PHP_SELF"].'?'.$object->id.'&action=editline&lineid_formation='.$lineid_formation.'&lineid_nature_visite='.$lineid_nature_visite.'&lineid_autre='.$lineid_autre);
 				exit;
 			}
@@ -343,10 +523,26 @@ if (empty($reshook)) {
 	}
 
 	if ($action == 'confirm_deleteline' && ($lineid_formation > 0 || $lineid_nature_visite > 0 || $lineid_autre > 0) && $confirm == 'yes' && $permissiontoadd) {
+		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		$actioncomm = new ActionComm($db);
+		$actioncomm->note_private = ''; // Description
+		$formation = new Formation($db);
+		$visitemedicale = new VisiteMedical($db);
+		$natureVM = $visitemedicale->getAllNature();
+		$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = array('1' => 'Intégration');
+
+		$db->begin();
+
 		if($lineid_formation > 0) {
 			$elementPrerequis->fetch($lineid_formation);
 			$resultdelete = $elementPrerequis->delete($user);
 			
+			// Agenda
+			foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+				$formation->fetch($prerequisid);
+				$actioncomm->note_private .= '<li>Suppression de la formation <strong>'.$formation->label.'</strong></li>';
+			}
+
 			if($resultdelete < 0) {
 				$error++;
 			}
@@ -355,6 +551,11 @@ if (empty($reshook)) {
 		if($lineid_nature_visite > 0) {
 			$elementPrerequis->fetch($lineid_nature_visite);
 			$resultdelete = $elementPrerequis->delete($user);
+
+			// Agenda
+			foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+				$actioncomm->note_private .= '<li>Suppression de la nature de visite <strong>'.$natureVM[$prerequisid].'</strong></li>';
+			}
 
 			if($resultdelete < 0) {
 				$error++;
@@ -365,15 +566,48 @@ if (empty($reshook)) {
 			$elementPrerequis->fetch($lineid_autre);
 			$resultdelete = $elementPrerequis->delete($user);
 
+			// Agenda
+			foreach(explode(',', $elementPrerequis->prerequisobjects) as $prerequisid) {
+				$actioncomm->note_private .= '<li>Suppression de <strong>'.$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'][$prerequisid].'</strong></li>';
+			}
+
 			if($resultdelete < 0) {
+				$error++;
+			}
+		}
+
+		$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = '';
+		// Evenement Agenda
+		if(!$error) {
+			$now = dol_now();
+
+			$actioncomm->type_code   = 'AC_OTH_AUTO'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = 'AC_PREREQUIS_DELETE';
+			$actioncomm->label       =  $langs->transnoentities("FORMATIONHABILITATION_PREREQUISFOMRATION_DELETEInDolibarr");		// Label of event
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $object->id;
+			$actioncomm->elementtype = $object->element.($object->module ? '@'.$object->module : '');
+
+			$ret = $actioncomm->create($user); // User creating action
+
+			if($ret < 0) {
 				$error++;
 			}
 		}
 		
 		if($error) {
+			$db->rollback();
 			setEventMessages($elementPrerequis->error, $elementPrerequis->errors, 'errors');
 		}
 		elseif ($resultdelete > 0) {
+			$db->commit();
 			setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
 			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
 			exit;

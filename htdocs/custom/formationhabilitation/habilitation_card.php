@@ -193,6 +193,10 @@ if (empty($reshook)) {
 		}
 	}
 
+	if($action == 'update') {
+		$object->oldcopy = clone $object;
+	}
+
 	$triggermodname = 'FORMATIONHABILITATION_HABILITATION_MODIFY'; // Name of trigger action code to execute when we modify record
 
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
@@ -346,7 +350,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 	// Confirmation to close
 	if ($action == 'cloture') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ClotureHabilitation'), $langs->trans('ConfirmCloseObject'), 'confirm_cloture', '', 0, 1);
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ClotureHabilitation'), $langs->trans('ConfirmCloseHabilitation'), 'confirm_cloture', '', 0, 1);
 	}
 	// Confirmation to delete line
 	if ($action == 'deleteline') {
@@ -430,7 +434,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction($langs->trans('Clôture'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=cloture&token='.newToken(), '', $permissiontoadd);
 			} 
 			elseif ($object->status == $object::STATUS_CLOTURE) {
-				print dolGetButtonAction($langs->trans('Re-Open'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=reopen&token='.newToken(), '', $permissiontoadd);
+				print dolGetButtonAction($langs->trans('Re-Open'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_reopen&confirm=yes&token='.newToken(), '', $permissiontoadd);
 			}
 
 			// Clone

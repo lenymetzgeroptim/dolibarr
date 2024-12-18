@@ -28,6 +28,7 @@
  */
 
 global $sortfield, $sortorder, $search, $langs;
+global $permissiontoreadline; 
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {

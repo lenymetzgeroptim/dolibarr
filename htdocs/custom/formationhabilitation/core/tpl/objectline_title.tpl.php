@@ -33,7 +33,8 @@
  * $type, $text, $description, $line
  */
 
-global $sortfield, $sortorder, $selectedfields, $arrayfields, $object, $param, $objectline, $permissiontolinkandunlink;
+global $sortfield, $sortorder, $selectedfields, $arrayfields, $object, $param, $objectline;
+global $permissiontoreadline, $permissiontolinkandunlink;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {

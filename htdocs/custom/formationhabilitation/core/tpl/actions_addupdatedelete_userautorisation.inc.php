@@ -78,12 +78,12 @@ if($action == 'addline' && $permissiontoaddline) {
 		$objectline->ref = $user_static->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 		$objectline->fk_autorisation = GETPOST('fk_autorisation');
 		$objectline->date_autorisation = $date;
-		$objectline->date_fin_autorisation = dol_time_plus_duree(dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd'), -1, 'd');
+		$objectline->date_fin_autorisation =  $elementPrerequis->getDatePrerequis(GETPOST('fk_user'), $autorisation_static, 0);
 		$objectline->fk_user = GETPOST('fk_user');
 		$objectline->domaineapplication = GETPOST('domaineapplication', 'int');
 		$objectline->status = GETPOST('status');
 
-		$resultcreate = $objectline->create($user);
+		$resultcreate = $objectline->create($user, false, false, !empty(GETPOST('forcecreation')));
 	}
 
 	if(!$error && $resultcreate){
@@ -103,6 +103,7 @@ if($action == 'addline' && $permissiontoaddline) {
 if($action == 'updateline' && !$cancel && $permissiontoaddline){
 	if($lineid > 0){
 		$objectline->fetch($lineid);
+		$objectline->oldcopy = clone $objectline;
 
 		if (empty(GETPOST("date_autorisationmonth", 'int')) || empty(GETPOST("date_autorisationday", 'int')) || empty(GETPOST("date_autorisationyear", 'int'))) {
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateAutorisation")), null, 'errors');
@@ -119,7 +120,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 		if (!$error) {
 			$objectline->ref = $user_static->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 			$objectline->date_autorisation = $date;
-			$objectline->date_fin_autorisation = dol_time_plus_duree(dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd'), -1, 'd');
+			//$objectline->date_fin_autorisation = dol_time_plus_duree(dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd'), -1, 'd');
 			$objectline->domaineapplication = GETPOST('domaineapplication', 'int');
 			//$objectline->status = GETPOST('status');
 

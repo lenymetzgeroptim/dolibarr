@@ -500,6 +500,9 @@ class Autorisation extends CommonObject
 	 */
 	public function update(User $user, $notrigger = false)
 	{
+		require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
+		$this->actionmsg = msgAgendaUpdate($this, 1);
+		
 		return $this->updateCommon($user, $notrigger);
 	}
 
@@ -599,7 +602,7 @@ class Autorisation extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
-				$result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+				$result = $this->call_trigger('AUTORISATION_VALIDATE', $user);
 				if ($result < 0) {
 					$error++;
 				}
@@ -702,7 +705,7 @@ class Autorisation extends CommonObject
 			// Validate
 			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
 			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_OUVERTE;
+			$sql .= " status = ".self::STATUS_CLOTURE;
 			if (!empty($this->fields['date_validation'])) {
 				$sql .= ", date_validation = '".$this->db->idate($now)."'";
 			}
@@ -802,7 +805,7 @@ class Autorisation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CONSTRUCTION, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_UNVALIDATE');
+		return $this->setStatusCommon($user, self::STATUS_CONSTRUCTION, $notrigger, 'FORMATIONHABILITATION_AUTORISATION_UNVALIDATE');
 	}
 
 	/**
@@ -826,7 +829,7 @@ class Autorisation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CLOTURE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CLOTURE, $notrigger, 'FORMATIONHABILITATION_AUTORISATION_CANCEL');
 	}
 
 	/**
@@ -850,7 +853,7 @@ class Autorisation extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_OUVERTE, $notrigger, 'FORMATIONHABILITATION_MYOBJECT_REOPEN');
+		return $this->setStatusCommon($user, self::STATUS_OUVERTE, $notrigger, 'AUTORISATION_REOPEN');
 	}
 
 	/**
@@ -1428,7 +1431,7 @@ class Autorisation extends CommonObject
 		$userAutorisation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userAutorisation->date_autorisation, "%Y%m%d");
 		$userAutorisation->fk_autorisation = $this->id;
 
-		$resultcreate = $userAutorisation->create($user);
+		$resultcreate = $userAutorisation->create($user, 0, 1);
 
 		return $resultcreate;
 	}

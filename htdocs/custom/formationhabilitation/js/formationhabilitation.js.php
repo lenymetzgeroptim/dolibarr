@@ -140,16 +140,16 @@ $(document).ready(function() {
 			loadDoctorAndNature(initialUserId, initialNatureInput, 0, 1);
 		}
 	}
-	// else if ($("#convocationformupdate").length) { // Modification d'une convocation
-	// 	var initialNatureConvoc = $('#convocationformupdate #nature').val();	
-	// 	hideConvocationInput(initialNatureConvoc);
-	// 	var initialNatureInput = $('#naturevisite').html();	
+	else if ($("#convocationformupdate").length) { // Modification d'une convocation
+		var initialNatureConvoc = $('#convocationformupdate #nature').val();	
+		hideConvocationInput(initialNatureConvoc);
+	 	var initialNatureInput = $('#naturevisite').html();	
 
-	// 	if(initialNatureConvoc == 2) {
-	// 		var initialUserId = $('#convocationformupdate #fk_user').val();	
-	// 		loadDoctorAndNature(initialUserId, initialNatureInput, 1);
-	// 	}
-	// }
+	 	if(initialNatureConvoc == 2) {
+	 		var initialUserId = $('#convocationformupdate #fk_user').val();	
+	 		loadDoctorAndNature(initialUserId, initialNatureInput, 1);
+	 	}
+	}
 
 
 	//
@@ -283,7 +283,7 @@ function loadDoctorAndNature(userId, initialNatureInput, onlyNatureVisite, onlyD
 					}
 					else {
 						$('#naturevisite').html(initialNatureInput);
-						$('#naturevisite').val('').trigger('change');
+						//$('#naturevisite').val('').trigger('change');
 					}
 				}
 				else if(onlyDoctor) {
@@ -291,14 +291,14 @@ function loadDoctorAndNature(userId, initialNatureInput, onlyNatureVisite, onlyD
 						$('#fk_contact').val(data.fk_contact).trigger('change');
 					}
 					else {
-						$('#fk_contact').val('').trigger('change');
+						//$('#fk_contact').val('').trigger('change');
 					}
 	
 					if(data.centremedecine) {
 						$('#centremedecine').val(data.centremedecine).trigger('change');
 					}
 					else {
-						$('#centremedecine').val('').trigger('change');
+						//$('#centremedecine').val('').trigger('change');
 					}
 				}
 				else {
@@ -306,14 +306,14 @@ function loadDoctorAndNature(userId, initialNatureInput, onlyNatureVisite, onlyD
 						$('#fk_contact').val(data.fk_contact).trigger('change');
 					}
 					else {
-						$('#fk_contact').val('').trigger('change');
+						//$('#fk_contact').val('').trigger('change');
 					}
 	
 					if(data.centremedecine) {
 						$('#centremedecine').val(data.centremedecine).trigger('change');
 					}
 					else {
-						$('#centremedecine').val('').trigger('change');
+						//$('#centremedecine').val('').trigger('change');
 					}
 	
 					if(data.naturevisite) {
@@ -335,7 +335,7 @@ function loadDoctorAndNature(userId, initialNatureInput, onlyNatureVisite, onlyD
 					}
 					else {
 						$('#naturevisite').html(initialNatureInput);
-						$('#naturevisite').val('').trigger('change');
+						//$('#naturevisite').val('').trigger('change');
 					}
 				}
 			}

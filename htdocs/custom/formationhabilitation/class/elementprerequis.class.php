@@ -1394,6 +1394,50 @@ class ElementPrerequis extends CommonObject
 			return $text_for_return;
 		}
 	}
+
+	/**
+	 * 	Retourne la date la + réstrictive des prérequis
+	 *
+	 * 	@param  int		$fk_user       				Id de l'utilisateur
+	 *  @param  Habilitation|Autorisation|Formation	$objectparenttmp    		Objet dont on gère les prérequis
+	 * 	@param  int		$withprogram    			include STATUS_PROGRAMMEE
+	 *  @param  int		$formation_added    		Formation qui est ajouté à l'utilisateur
+	 * 	@return	string								Date de fin de validité
+	 */
+	public function getDatePrerequis($fk_user, $objectparenttmp, $withprogram = 0, $formation_added = 0)
+	{
+		global $conf, $user, $langs;
+
+		$date_finvalidite = '';
+
+		$userFormation = new UserFormation($this->db);
+		$formations_user = $userFormation->getAllFormationsForUser($fk_user, $withprogram);
+
+		if($formation_added > 0) {
+			$formations_user['id'][] = $formation_added;
+		}
+
+		// Récupérer toutes les conditions de prérequis 
+		$prerequisConditions = $objectparenttmp->getPrerequis($objectparenttmp->id);
+
+		foreach ($prerequisConditions as $condition_group => $prerequistype) {
+			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
+			foreach ($prerequistype['formation'] as $formationid) {
+				$date_finvalidite_prerequis = '';
+				if ($formationid > 0 && in_array($formationid, $formations_user['id'])) {
+					if($date_finvalidite_prerequis == '' || $date_finvalidite_prerequis < $formations_user['date_finvalidite'][$formationid]) {
+						$date_finvalidite_prerequis = $formations_user['date_finvalidite'][$formationid];
+					}
+				}
+			}
+			
+			if(empty($date_finvalidite) || $date_finvalidite > $date_finvalidite_prerequis) {
+				$date_finvalidite = $date_finvalidite_prerequis;
+			}
+		}
+
+		return $date_finvalidite;
+	}
 }
 
 

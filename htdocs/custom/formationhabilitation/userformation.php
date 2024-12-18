@@ -58,6 +58,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/convocation.
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/extendedhtml.form.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/uservolet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/volet.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
 
 
 // Translations
@@ -274,6 +275,7 @@ if ($action == 'programmer_formation') {
                         array('label'=>$langs->trans('Formation') ,'type'=>'hidden', 'name'=>'fk_formation_programmer', 'value'=>$objectline->fk_formation),
                         array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
                         array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation),
+                        array('label'=>$langs->trans('LieuFormation') ,'type'=>'text', 'name'=>'lieu_formation_programmer', 'value'=>''),
                         array('label'=>$langs->trans('InterneExterne') ,'type'=>'select', 'name'=>'interne_externe_programmer', 'values'=>$objectline->fields['interne_externe']['arrayofkeyval'], 'select_show_empty'=>0, 'default'=>1),
                         array('label'=>$langs->trans('Organisme') ,'type'=>'link', 'code'=>'fk_societe', 'name'=>'fk_societe_programmer', 'options'=>$objectline->fields['fk_societe']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module),
                         array('label'=>$langs->trans('Formateur') ,'type'=>'link', 'code'=>'formateur', 'name'=>'formateur_programmer', 'options'=>$objectline->fields['formateur']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module, 'hidden'=>1)
@@ -339,31 +341,10 @@ dol_banner_tab($object, 'id', $linkback, $user->rights->user->user->lire || $use
 
 print '<div class="fichecenter"><div class="underbanner clearboth"></div><br>';
 
-$h = 0;
-$head2 = array();
-
-$head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=formation';
-$head2[$h][1] = $langs->trans("Formations");
-$head2[$h][2] = 'formation';
-$h++;
-
-$head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=habilitation';
-$head2[$h][1] = $langs->trans("Habilitations");
-$head2[$h][2] = 'habilitation';
-$h++;
-
-$head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=autorisation';
-$head2[$h][1] = $langs->trans("Autorisations");
-$head2[$h][2] = 'autorisation';
-$h++;
-
-$head2[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=volet';
-$head2[$h][1] = $langs->trans("Volets");
-$head2[$h][2] = 'volet';
-$h++;
+$head = formationhabilitationUserPrepareHead($object);
 
 if(empty($onglet) || $onglet == 'formation'){
-    print dol_get_fiche_head($head2, 'formation', $title, -1, 'user');
+    print dol_get_fiche_head($head, 'formation', $title, -1, 'user');
 
     if (empty($permissiontoreadline)) {
         $langs->loadLangs(array("main", "errors"));
@@ -390,7 +371,7 @@ if(empty($onglet) || $onglet == 'formation'){
     }
 }
 elseif($onglet == 'habilitation'){
-    print dol_get_fiche_head($head2, 'habilitation', $title, -1, 'user');
+    print dol_get_fiche_head($head, 'habilitation', $title, -1, 'user');
 
     if (empty($permissiontoreadline)) {
         $langs->loadLangs(array("main", "errors"));
@@ -418,7 +399,7 @@ elseif($onglet == 'habilitation'){
     }
 }
 elseif($onglet == 'autorisation'){
-    print dol_get_fiche_head($head2, 'autorisation', $title, -1, 'user');
+    print dol_get_fiche_head($head, 'autorisation', $title, -1, 'user');
 
     if (empty($permissiontoreadline)) {
         $langs->loadLangs(array("main", "errors"));
@@ -446,7 +427,7 @@ elseif($onglet == 'autorisation'){
     }
 }
 elseif($onglet == 'volet') {
-    print dol_get_fiche_head($head2, 'volet', $title, -1, 'user');
+    print dol_get_fiche_head($head, 'volet', $title, -1, 'user');
 
     if (empty($permissiontoreadline)) {
         $langs->loadLangs(array("main", "errors"));

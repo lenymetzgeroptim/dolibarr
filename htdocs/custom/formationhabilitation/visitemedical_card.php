@@ -199,6 +199,10 @@ if (empty($reshook)) {
 		$action = '';
 	}
 
+	if($action == 'update') {
+		$object->oldcopy = clone $object;
+	}
+	
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 

@@ -771,6 +771,8 @@ while ($i < $imaxinloop) {
 					print $object->getLibStatut(5);
 				} elseif ($key == 'rowid') {
 					print $object->showOutputField($val, $key, $object->id, '');
+				} elseif ($key == 'ref') {
+					print $object->getNomUrl(1, 'nolink', 0, '', 1);
 				} else {
 					print $object->showOutputField($val, $key, $object->$key, '');
 				}

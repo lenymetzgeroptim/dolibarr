@@ -491,6 +491,9 @@ class Habilitation extends CommonObject
 	 */
 	public function update(User $user, $notrigger = false)
 	{
+		require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
+		$this->actionmsg = msgAgendaUpdate($this, 1);
+
 		return $this->updateCommon($user, $notrigger);
 	}
 
@@ -679,7 +682,7 @@ class Habilitation extends CommonObject
 			// Validate
 			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
 			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_OUVERTE;
+			$sql .= " status = ".self::STATUS_CLOTURE;
 			if (!empty($this->fields['date_validation'])) {
 				$sql .= ", date_validation = '".$this->db->idate($now)."'";
 			}
@@ -1183,7 +1186,7 @@ class Habilitation extends CommonObject
 
 		$sql = "SELECT f.rowid, f.label";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_habilitation as f";
-		$sql .= " WHERE f.fk_volet = $voletid";
+		$sql .= " WHERE FIND_IN_SET($voletid, f.fk_volet ) > 0";
 		$sql .= " ORDER BY f.label";
 
 		dol_syslog(get_class($this)."::getHabilitationsByVolet", LOG_DEBUG);
@@ -1334,7 +1337,7 @@ class Habilitation extends CommonObject
 		$userHabilitation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userHabilitation->date_habilitation, "%Y%m%d");
 		$userHabilitation->fk_habilitation = $this->id;
 
-		$resultcreate = $userHabilitation->create($user);
+		$resultcreate = $userHabilitation->create($user, 0, 1);
 
 		return $resultcreate;
 	}

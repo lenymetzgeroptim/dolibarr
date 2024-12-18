@@ -510,6 +510,33 @@ class Formation extends CommonObject
 	 */
 	public function update(User $user, $notrigger = false)
 	{
+		require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
+		$this->actionmsg = msgAgendaUpdate($this, 1, array('cout'));
+
+		$msgAgendaCost = msgAgendaUpdate($this, 1, array(), array('cout'));
+		if(!empty($msgAgendaCost)) {
+			global $langs; 
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = 'AC_OTH_AUTO'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = 'AC_FORMATION_UPDATE';
+			$actioncomm->label       = $langs->transnoentities("MODIFYInDolibarr");		// Label of event
+			$actioncomm->note_private = $msgAgendaCost;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->id;
+			$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
+			$actioncomm->extraparams  = 'cost';
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
 		return $this->updateCommon($user, $notrigger);
 	}
 
@@ -1114,7 +1141,7 @@ class Formation extends CommonObject
 
 		$sql = "SELECT f.rowid, f.label";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_formation as f";
-		$sql .= " WHERE f.fk_volet = $voletid";
+		$sql .= " WHERE FIND_IN_SET($voletid, f.fk_volet ) > 0";
 		$sql .= " ORDER BY f.label";
 
 		dol_syslog(get_class($this)."::getFormationsByVolet", LOG_DEBUG);
@@ -1228,7 +1255,8 @@ class Formation extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE uf.fk_user = $userid AND uf.fk_formation = $formationid";
-		$sql .= " AND (uf.status != ".UserFormation::STATUS_CLOTUREE." OR uf.status != ".UserFormation::STATUS_EXPIREE.")";
+		$sql .= " AND uf.status != ".UserFormation::STATUS_CLOTUREE;
+		$sql .= " AND uf.status != ".UserFormation::STATUS_EXPIREE;
 		if($userformation_exclude) {
 			$sql .= " AND uf.rowid != $userformation_exclude";
 		}

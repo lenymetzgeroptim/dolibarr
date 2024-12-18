@@ -82,73 +82,30 @@ if($action == 'addline' && $permissiontoaddline) {
 	}
 }
 
-// if($action == 'updateline' && !$cancel && $permissiontoaddline){
-// 	if($lineid > 0){
-// 		$objectline->fetch($lineid);
-
-// 		if (empty(GETPOST("date_autorisationmonth", 'int')) || empty(GETPOST("date_autorisationday", 'int')) || empty(GETPOST("date_autorisationyear", 'int'))) {
-// 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateAutorisation")), null, 'errors');
-// 			$error++;
-// 		}
-// 		$date = dol_mktime(-1, -1, -1, GETPOST("date_autorisationmonth", 'int'), GETPOST("date_autorisationday", 'int'), GETPOST("date_autorisationyear", 'int'));
-
-
-// 		if(GETPOST('status') == -1 || empty(GETPOST('status'))){
-// 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
-// 			$error++;
-// 		}
-
-// 		if (!$error) {
-// 			$objectline->ref = $user_static->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
-// 			$objectline->date_autorisation = $date;
-// 			$objectline->date_fin_autorisation = dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd');
-// 			$objectline->status = GETPOST('status');
-
-// 			$resultupdate = $objectline->update($user);
-// 		}
-
-// 		if(!$error && $resultupdate){
-// 			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
-// 			// header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
-// 			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
-// 			exit;
-// 		}
-// 		elseif(!$error && !$resultupdate){
-// 			setEventMessages($langs->trans($objectline->error), null, 'errors');
-// 		}
-// 		elseif($error) {
-// 			header('Location: '.$_SERVER["PHP_SELF"].'?'.($param ? $param : '').'&action=editline&lineid='.$lineid.'#line_'.GETPOST('lineid', 'int'));
-// 			exit;
-// 		}
-// 	}
-// 	else {
-// 		$langs->load("errors");
-// 		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
-// 	}
-// }
-
-// if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontoaddline) {
-//     $resultdelete = $object->deleteLine($user, $lineid);
-//     if ($resultdelete > 0) {
-//         setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
-//         // header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));
-// 		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
-// 		exit;
-//     } else {
-//         $error++;
-//         setEventMessages($object->error, $object->errors, 'errors');
-//     }
-//     $action = '';
-// }
-
 // Link object to another object
 if ($action == 'addlink' && !empty($permissiontolinkandunlink) && $id > 0 && $addlinkid > 0) {
 	$db->begin();
 
+	if($volet->typevolet == 1) {
+		$objectline->fetch($addlinkid);
+		$object->actionmsg = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_ADDLINKFormationInDolibarr", $objectline->ref, $object->ref);
+		$object->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_ADDLINKFormationInDolibarr", $objectline->ref, $object->ref);
+	}
+	elseif($volet->typevolet == 2) {
+		$objectline->fetch($addlinkid);
+		$object->actionmsg = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_ADDLINKHabilitationInDolibarr", $objectline->ref, $object->ref);
+		$object->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_ADDLINKHabilitationInDolibarr", $objectline->ref, $object->ref);
+	}
+	elseif($volet->typevolet == 3) {
+		$objectline->fetch($addlinkid);
+		$object->actionmsg = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_ADDLINKAutorisationInDolibarr", $objectline->ref, $object->ref);
+		$object->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_ADDLINKAutorisationInDolibarr", $objectline->ref, $object->ref);
+	}
+
 	$result = $object->add_object_linked($addlink, $addlinkid);
 
 	if($result > 0) {
-		$objectline->fetch($addlinkid);
+		$objectline->oldcopy = clone $objectline;
 		if($objectline->element == 'userhabilitation') {
 			$objectline->status = $objectline::STATUS_HABILITE;
 		}
@@ -186,6 +143,7 @@ if ($action == 'dellink' && !empty($permissiontolinkandunlink) && !$cancellink &
 	
 	if($result > 0) {
 		$objectline->fetch($dellinkid);
+		$objectline->oldcopy = clone $objectline;
 		if($objectline->element == 'userhabilitation') {
 			$objectline->status = $objectline::STATUS_HABILITABLE;
 		}
@@ -215,7 +173,7 @@ if ($action == 'dellink' && !empty($permissiontolinkandunlink) && !$cancellink &
 if ($action == 'confirm_validate1' && $confirm == 'yes' && $permissiontovalidate1) {
 	$db->begin();
 	$volet = new Volet($db);
-	$volet->fetch($object->fk_volet);
+	$volet->fetch($object->fk_volet);	$object->oldcopy = clone $object;
 
 	if (empty(GETPOST("date_debut_voletmonth", 'int')) || empty(GETPOST("date_debut_voletday", 'int')) || empty(GETPOST("date_debut_voletyear", 'int'))) {
 		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateDebutVolet")), null, 'errors');
@@ -267,6 +225,8 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $permissiontovalidate
 
 // Action validate object
 if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate) {
+	$object->oldcopy = clone $object;
+
 	if($next_status == $object::STATUS_VALIDATION1) {
 		$result = $object->validate1($user);
 	}
@@ -338,7 +298,7 @@ if ($action == 'confirm_refuse' && $confirm == 'yes' && $permissiontorefuse) {
 		$object->status = $first_status-1;
 		$object->commentaire .= (!empty($object->commentaire) ? '<br>'.GETPOST('motif_refus', 'alpha') : GETPOST('motif_refus', 'alpha'));
 
-		$result = $object->update($user);
+		$result = $object->update($user, 0, 1);
 	}
 	
 	if (!$error && $result > 0) {
@@ -426,6 +386,7 @@ if($action == 'confirm_genererPdf' && $confirm == 'yes' && $permissiontoaddline)
 
 if ($action == 'updatedomaineapplication' && !$cancel && $permissiontoaddline) {
 	$db->begin();
+	$object->oldcopy = clone $object;
 
 	if($lineid > 0){
 		$result = $object->updateDomaineApplication($lineid, GETPOST('domaineapplication', 'int'), ($objectline->element == 'userhabilitation' ? 'habilitation' : 'autorisation'));

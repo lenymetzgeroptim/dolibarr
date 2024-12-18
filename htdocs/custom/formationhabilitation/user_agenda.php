@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2017 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) ---Put here your own copyright and developer email---
+ * Copyright (C) 2024 METZGER Leny <test@optim-industries.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  */
 
 /**
- *  \file       htdocs/modulebuilder/template/formation_agenda.php
+ *  \file       user_agenda.php
  *  \ingroup    formationhabilitation
- *  \brief      Tab of events on formation
+ *  \brief      Tab of events on User for formation - habilitation - autorisation
  */
 
 //if (! defined('NOREQUIREDB'))              define('NOREQUIREDB', '1');				// Do not create database handler $db
@@ -50,8 +50,7 @@ if (!$res && !empty($_SERVER["CONTEXT_DOCUMENT_ROOT"])) {
 // Try main.inc.php into web root detected using web root calculated from SCRIPT_FILENAME
 $tmp = empty($_SERVER['SCRIPT_FILENAME']) ? '' : $_SERVER['SCRIPT_FILENAME']; $tmp2 = realpath(__FILE__); $i = strlen($tmp) - 1; $j = strlen($tmp2) - 1;
 while ($i > 0 && $j > 0 && isset($tmp[$i]) && isset($tmp2[$j]) && $tmp[$i] == $tmp2[$j]) {
-	$i--;
-	$j--;
+	$i--; $j--;
 }
 if (!$res && $i > 0 && file_exists(substr($tmp, 0, ($i + 1))."/main.inc.php")) {
 	$res = @include substr($tmp, 0, ($i + 1))."/main.inc.php";
@@ -77,19 +76,9 @@ require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 dol_include_once('/formationhabilitation/class/autorisation.class.php');
-dol_include_once('/formationhabilitation/class/convocation.class.php');
-dol_include_once('/formationhabilitation/class/elementprerequis.class.php');
-dol_include_once('/formationhabilitation/class/formation.class.php');
-dol_include_once('/formationhabilitation/class/habilitation.class.php');
-dol_include_once('/formationhabilitation/class/test.class.php');
-dol_include_once('/formationhabilitation/class/theme.class.php');
-dol_include_once('/formationhabilitation/class/userautorisation.class.php');
-dol_include_once('/formationhabilitation/class/userformation.class.php');
-dol_include_once('/formationhabilitation/class/userhabilitation.class.php');
-dol_include_once('/formationhabilitation/class/uservolet.class.php');
-dol_include_once('/formationhabilitation/class/visitemedical.class.php');
-dol_include_once('/formationhabilitation/class/volet.class.php');
-dol_include_once('/formationhabilitation/lib/formationhabilitation_formation.lib.php');
+dol_include_once('/formationhabilitation/lib/formationhabilitation_autorisation.lib.php');
+require_once DOL_DOCUMENT_ROOT.'/core/lib/usergroups.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("formationhabilitation@formationhabilitation", "other"));
@@ -131,10 +120,10 @@ if (!$sortorder) {
 }
 
 // Initialize technical objects
-$object = new Formation($db);
+$object = new User($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->formationhabilitation->dir_output.'/temp/massgeneration/'.$user->id;
-$hookmanager->initHooks(array($object->element.'agenda', 'globalcard')); // Note that conf->hooks_modules contains array
+$hookmanager->initHooks(array('userformationhabilitationagenda')); // Note that conf->hooks_modules contains array
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
 
@@ -145,8 +134,9 @@ if ($id > 0 || !empty($ref)) {
 }
 
 // There is several ways to check permission.
-$permissiontoread = $user->hasRight('formationhabilitation', 'formation', 'read');
-$permissiontoadd = $user->hasRight('formationhabilitation', 'formation', 'write');
+$permissiontoread = $user->rights->formationhabilitation->habilitation_autorisation->read;
+$permissiontoadd = $user->rights->formationhabilitation->habilitation_autorisation->write;
+
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();
@@ -156,9 +146,7 @@ $permissiontoadd = $user->hasRight('formationhabilitation', 'formation', 'write'
 if (!isModEnabled("formationhabilitation")) {
 	accessforbidden();
 }
-if (!$permissiontoread) {
-	accessforbidden();
-}
+if (!$permissiontoread) accessforbidden();
 
 
 /*
@@ -194,80 +182,34 @@ if (empty($reshook)) {
 $form = new Form($db);
 
 if ($object->id > 0) {
-	$title = $langs->trans("Formation")." - ".$langs->trans('Agenda');
-	//$title = $object->ref." - ".$langs->trans("Agenda");
 	$help_url = 'EN:Module_Agenda_En|DE:Modul_Terminplanung';
+	$page_name = "Formation - Habilitation";
 
-	llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-card_agenda');
+	llxHeader('', $page_name, $help_url, '', 0, 0, '', '', '', 'formationhabilitation classforhorizontalscrolloftabs');
 
-	if (isModEnabled('notification')) {
-		$langs->load("mails");
+	// Check if user has rights
+	if (empty($conf->global->MULTICOMPANY_TRANSVERSE_MODE)) {
+		$object->getrights();
+		if (empty($object->nb_rights) && $object->statut != 0 && empty($object->admin)) {
+			setEventMessages($langs->trans('UserHasNoPermissions'), null, 'warnings');
+		}
 	}
-	$head = formationPrepareHead($object);
 
+	$head = user_prepare_head($object);
 
-	print dol_get_fiche_head($head, 'agenda', $langs->trans("formation"), -1, $object->picto);
+	print dol_get_fiche_head($head, 'userformation', $title, -1, 'user');
 
 	// Object card
 	// ------------------------------------------------------------
-	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/formation_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	dol_banner_tab($object, 'id', $linkback, $user->rights->user->user->lire || $user->admin);
 
-	$morehtmlref = '<div class="refidno">';
-	/*
-	// Ref customer
-	$morehtmlref.=$form->editfieldkey("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', 0, 1);
-	$morehtmlref.=$form->editfieldval("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', null, null, '', 1);
-	// Thirdparty
-	$morehtmlref.='<br>'.$langs->trans('ThirdParty') . ' : ' . (is_object($object->thirdparty) ? $object->thirdparty->getNomUrl(1) : '');
-	// Project
-	if (isModEnabled('project')) {
-		$langs->load("projects");
-		$morehtmlref.='<br>'.$langs->trans('Project') . ' ';
-		if ($permissiontoadd) {
-			if ($action != 'classify') {
-				//$morehtmlref.='<a class="editfielda" href="' . $_SERVER['PHP_SELF'] . '?action=classify&token='.newToken().'&id=' . $object->id . '">' . img_edit($langs->transnoentitiesnoconv('SetProject')) . '</a> : ';
-			}
-			$morehtmlref.=' : ';
-			if ($action == 'classify') {
-				//$morehtmlref.=$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'projectid', 0, 0, 1, 1);
-				$morehtmlref.='<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'">';
-				$morehtmlref.='<input type="hidden" name="action" value="classin">';
-				$morehtmlref.='<input type="hidden" name="token" value="'.newToken().'">';
-				$morehtmlref.=$formproject->select_projects($object->socid, $object->fk_project, 'projectid', $maxlength, 0, 1, 0, 1, 0, 0, '', 1);
-				$morehtmlref.='<input type="submit" class="button valignmiddle" value="'.$langs->trans("Modify").'">';
-				$morehtmlref.='</form>';
-			} else {
-				$morehtmlref.=$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'none', 0, 0, 0, 1);
-			}
-		} else {
-			if (!empty($object->fk_project)) {
-				$proj = new Project($db);
-				$proj->fetch($object->fk_project);
-				$morehtmlref .= ': '.$proj->getNomUrl();
-			} else {
-				$morehtmlref .= '';
-			}
-		}
-	}*/
-	$morehtmlref .= '</div>';
+	print '<div class="fichecenter"><div class="underbanner clearboth"></div><br>';
 
-
-	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
-
-	print '<div class="fichecenter">';
-	print '<div class="underbanner clearboth"></div>';
-
-	$object->info($object->id);
-	dol_print_object_info($object, 1);
-
-	print '</div>';
-
-	print dol_get_fiche_end();
-
+	$head = formationhabilitationUserPrepareHead($object);
+    print dol_get_fiche_head($head, 'agenda', $title, -1, 'user');
 
 
 	// Actions buttons
-
 	$objthirdparty = $object;
 	$objcon = new stdClass();
 
@@ -288,12 +230,12 @@ if ($object->id > 0) {
 
 	$morehtmlright = '';
 
-	//$messagingUrl = DOL_URL_ROOT.'/societe/messaging.php?socid='.$object->id;
-	//$morehtmlright .= dolGetButtonTitle($langs->trans('ShowAsConversation'), '', 'fa fa-comments imgforviewmode', $messagingUrl, '', 1);
-	//$messagingUrl = DOL_URL_ROOT.'/societe/agenda.php?socid='.$object->id;
-	//$morehtmlright .= dolGetButtonTitle($langs->trans('MessageListViewType'), '', 'fa fa-bars imgforviewmode', $messagingUrl, '', 2);
+	$messagingUrl = DOL_URL_ROOT.'/custom/formationhabilitation/user_messaging.php?id='.$object->id;
+	$morehtmlright .= dolGetButtonTitle($langs->trans('ShowAsConversation'), '', 'fa fa-comments imgforviewmode', $messagingUrl, '', 1);
+	$messagingUrl = DOL_URL_ROOT.'/custom/formationhabilitation/user_agenda.php?id='.$object->id;
+	$morehtmlright .= dolGetButtonTitle($langs->trans('MessageListViewType'), '', 'fa fa-bars imgforviewmode', $messagingUrl, '', 2);
 
-	if (isModEnabled('agenda')) {
+	if (isModEnabled('agenda') && $permissiontoadd) {
 		if ($user->hasRight('agenda', 'myactions', 'create') || $user->hasRight('agenda', 'allactions', 'create')) {
 			$morehtmlright .= dolGetButtonTitle($langs->trans('AddAction'), '', 'fa fa-plus-circle', DOL_URL_ROOT.'/comm/action/card.php?action=create'.$out);
 		} else {
@@ -301,35 +243,34 @@ if ($object->id > 0) {
 		}
 	}
 
-
-	if (isModEnabled('agenda') && ($user->hasRight('agenda', 'myactions', 'read') || $user->hasRight('agenda', 'allactions', 'read'))) {
-		print '<br>';
-
-		$param = '&id='.$object->id.(!empty($socid) ? '&socid='.$socid : '');
-		if (!empty($contextpage) && $contextpage != $_SERVER["PHP_SELF"]) {
-			$param .= '&contextpage='.urlencode($contextpage);
-		}
-		if ($limit > 0 && $limit != $conf->liste_limit) {
-			$param .= '&limit='.((int) $limit);
-		}
-
-		// Try to know count of actioncomm from cache
-		$nbEvent = 0;
-		//require_once DOL_DOCUMENT_ROOT.'/core/lib/memory.lib.php';
-		//$cachekey = 'count_events_formation_'.$object->id;
-		//$nbEvent = dol_getcache($cachekey);
-		$titlelist = $langs->trans("Actions").(is_numeric($nbEvent) ? '<span class="opacitymedium colorblack paddingleft">('.$nbEvent.')</span>' : '');
-
-		print_barre_liste($titlelist, 0, $_SERVER["PHP_SELF"], '', $sortfield, $sortorder, '', 0, -1, '', 0, $morehtmlright, '', 0, 1, 0);
-
-		// List of all actions
-		$filters = array();
-		$filters['search_agenda_label'] = $search_agenda_label;
-		$filters['search_rowid'] = $search_rowid;
-
-		// TODO Replace this with same code than into list.php
-		show_actions_done($conf, $langs, $db, $object, null, 0, $actioncode, '', $filters, $sortfield, $sortorder, property_exists($object, 'module') ? $object->module : '');
+	// print '<br>';
+	$param = '&id='.$object->id.(!empty($socid) ? '&socid='.$socid : '');
+	if (!empty($contextpage) && $contextpage != $_SERVER["PHP_SELF"]) {
+		$param .= '&contextpage='.urlencode($contextpage);
 	}
+	if ($limit > 0 && $limit != $conf->liste_limit) {
+		$param .= '&limit='.((int) $limit);
+	}
+
+	// Try to know count of actioncomm from cache
+	/*require_once DOL_DOCUMENT_ROOT.'/core/lib/memory.lib.php';
+	$cachekey = 'count_events_autorisation_'.$object->id;
+	$nbEvent = dol_getcache($cachekey);
+
+	print_barre_liste($langs->trans("Actions").(is_numeric($nbEvent) ? '<span class="opacitymedium colorblack paddingleft">('.$nbEvent.')</span>': ''), 0, $_SERVER["PHP_SELF"], '', $sortfield, $sortorder, '', 0, -1, '', 0, $morehtmlright, '', 0, 1, 1);
+	*/
+	print_barre_liste($langs->trans("Actions"), 0, $_SERVER["PHP_SELF"], '', $sortfield, $sortorder, '', 0, -1, '', 0, $morehtmlright, '', 0, 1, 0);
+
+	// List of all actions
+	$filters = array();
+	$filters['search_agenda_label'] = $search_agenda_label;
+	$filters['search_rowid'] = $search_rowid;
+
+	// TODO Replace this with same code than into list.php
+	// List of actions on element
+	show_actions_done_formationhabilitation($conf, $langs, $db, $object, null, 0, $actioncode, '', $filters, $sortfield, $sortorder, property_exists($object, 'module') ? $object->module : '');
+
+	print '</div>';
 }
 
 // End of page

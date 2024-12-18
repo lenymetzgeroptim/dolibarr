@@ -168,6 +168,7 @@ class UserFormation extends CommonObject
 	public $prevupif;
 	public $non_renouvelee;
 	public $ex_status;
+	private $type_code = 'AC_USERFORMATION';
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -257,15 +258,17 @@ class UserFormation extends CommonObject
 	 * @param  bool $notrigger false=launch triggers after, true=disable triggers
 	 * @return int             <0 if KO, Id of created object if OK
 	 */
-	public function create(User $user, $notrigger = false)
+	public function create(User $user, $notrigger = false, $noaddline = false)
 	{
+		global $langs;
+		
 		$resultcreate = $this->createCommon($user, $notrigger);
 
 		if($resultcreate > 0 && $this->status == self::STATUS_VALIDE){
-			$resultcreate = $this->validate($user);
+			$resultcreate = $this->validate($user, 0, 1);
 		}
 		elseif($resultcreate > 0 && $this->status == self::STATUS_PROGRAMMEE){
-			$resultcreate = $this->program($user);
+			$resultcreate = $this->program($user, 0, 1);
 		}
 		// elseif($resultcreate > 0 && $this->status == self::STATUS_CLOTUREE){
 		// 	$resultcreate = $this->close($user);
@@ -273,6 +276,83 @@ class UserFormation extends CommonObject
 		// elseif($resultcreate > 0 && $this->status == self::STATUS_EXPIREE){
 		// 	$resultcreate = $this->expire($user);
 		// }
+
+		// Evenement Agenda
+		$msgAgenda = msgAgendaUpdate($this, 0, array('cout_pedagogique', 'cout_mobilisation', 'cout_annexe', 'cout_total'));
+		if($resultcreate) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_CREATE';
+			if($this->status == self::STATUS_PROGRAMMEE && $noaddline){
+				$actioncomm->label = $langs->transnoentities("USERFORMATION_PROGRAM_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			}
+			else {
+				$actioncomm->label = $langs->transnoentities("USERFORMATION_CREATE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			}
+			$actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+
+			// $actioncomm->fk_element  = $this->fk_user;
+			// $actioncomm->elementtype = 'user';
+			// $actioncomm->extraparams = $this->module;
+			// $ret = $actioncomm->create($user); // User creating action
+		}
+
+		$msgAgendaCost = msgAgendaUpdate($this, 0, array(), array('cout_pedagogique', 'cout_mobilisation', 'cout_annexe', 'cout_total'));
+		if($resultcreate && !empty($msgAgendaCost)) {
+			global $langs; 
+
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_CREATE';
+			if($this->status == self::STATUS_PROGRAMMEE && $noaddline){
+				$actioncomm->label = $langs->transnoentities("USERFORMATION_PROGRAM_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			}
+			else {
+				$actioncomm->label = $langs->transnoentities("USERFORMATION_CREATE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			}			
+			$actioncomm->note_private = $msgAgendaCost;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->extraparams  = 'cost';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
 
 		return $resultcreate;
 	}
@@ -423,7 +503,7 @@ class UserFormation extends CommonObject
 		$sql = "SELECT ";
 		$sql .= $this->getFieldList('t');
 		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
-		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as h ON h.rowid = t.fk_formation AND h.fk_volet = $voletid";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as h ON h.rowid = t.fk_formation AND FIND_IN_SET($voletid, h.fk_volet ) > 0";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON t.rowid = e.fk_source AND e.sourcetype = 'formation' AND e.targettype = 'formationhabilitation_uservolet' AND e.fk_target = $uservoletid";
 		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
 			$sql .= " WHERE t.entity IN (".getEntity($this->table_element).")";
@@ -503,9 +583,79 @@ class UserFormation extends CommonObject
 	 * @param  bool $notrigger false=launch triggers after, true=disable triggers
 	 * @return int             <0 if KO, >0 if OK
 	 */
-	public function update(User $user, $notrigger = false)
+	public function update(User $user, $notrigger = false, $noaction = false)
 	{
-		return $this->updateCommon($user, $notrigger);
+		global $langs; 
+
+		$resultupdate = $this->updateCommon($user, $notrigger);
+
+		// Evenement Agenda
+		$msgAgenda = msgAgendaUpdate($this, 1, array('cout_pedagogique', 'cout_mobilisation', 'cout_annexe', 'cout_total'));
+		if($resultupdate && !empty($msgAgenda) && !$noaction) {
+
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_UPDATE';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_UPDATE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+
+			// $actioncomm->fk_element  = $this->fk_user;
+			// $actioncomm->elementtype = 'user';
+			// $actioncomm->extraparams = $this->module;
+			// $ret = $actioncomm->create($user); // User creating action
+		}
+
+		$msgAgendaCost = msgAgendaUpdate($this, 1, array(), array('cout_pedagogique', 'cout_mobilisation', 'cout_annexe', 'cout_total'));
+		if($resultupdate && !empty($msgAgendaCost) && !$noaction) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_UPDATE';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_UPDATE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgendaCost;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->extraparams  = 'cost';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
+		return $resultupdate;
 	}
 
 	/**
@@ -515,7 +665,7 @@ class UserFormation extends CommonObject
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
 	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function validate($user, $notrigger = 0)
+	public function validate($user, $notrigger = 0, $noaction = 0)
 	{
 		global $conf, $langs;
 
@@ -583,6 +733,36 @@ class UserFormation extends CommonObject
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_VALIDE;
+		}
+
+		// Agenda 
+		$msgAgenda = msgAgendaUpdate($this, 1);
+		if(!$error && !$noaction) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_VALIDATE';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_VALIDATE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
 		}
 		
 		// Génération du volet de formation
@@ -769,7 +949,7 @@ class UserFormation extends CommonObject
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
 	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function program($user, $notrigger = 0)
+	public function program($user, $notrigger = 0, $noaction = 0)
 	{
 		global $conf, $langs;
 
@@ -832,6 +1012,36 @@ class UserFormation extends CommonObject
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_PROGRAMMEE;
+		}
+
+		// Agenda
+		$msgAgenda = msgAgendaUpdate($this, 1);
+		if(!$error && !$noaction) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_PROGRAM';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_PROGRAM_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
 		}
 
 		if(!$error) {
@@ -930,6 +1140,36 @@ class UserFormation extends CommonObject
 			$this->status = self::STATUS_A_PROGRAMMER;
 		}
 
+		// Agenda
+		$msgAgenda = msgAgendaUpdate($this, 1);
+		if(!$error) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_TOPROGRAM';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_TOPROGRAM_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
 		if (!$error) {
 			$this->db->commit();
 			return 1;
@@ -990,6 +1230,35 @@ class UserFormation extends CommonObject
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_CLOTUREE;
+		}
+		
+		// Agenda
+		if(!$error) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_CLOSE';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_CLOSE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			//$actioncomm->note_private = $this->getNomUrl(1, '', 1);	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
 		}
 
 		// Generate new volet
@@ -1065,6 +1334,35 @@ class UserFormation extends CommonObject
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_EXPIREE;
+		}
+
+		// Agenda
+		if(!$error) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_EXPIRE';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_EXPIRE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			//$actioncomm->note_private = $this->getNomUrl(1, '', 1);	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
 		}
 
 		// Generate new volet
@@ -1144,6 +1442,35 @@ class UserFormation extends CommonObject
 			$this->status = self::STATUS_SUSPEND;
 		}
 
+		// Agenda
+		if(!$error) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_SUSPEND';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_SUSPEND_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			//$actioncomm->note_private = $this->getNomUrl(1, '', 1);	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
 		// Suspendre le volet dans lequel se trouve la formation
 		if(!$error) {
 			$userVolet = new UserVolet($this->db);
@@ -1221,6 +1548,35 @@ class UserFormation extends CommonObject
 			$this->ex_status = '';
 		}
 
+		// Agenda
+		if(!$error) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_UNSUSPEND';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_UNSUSPEND_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			//$actioncomm->note_private = $this->getNomUrl(1, '', 1);	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
 		// Désuspendre le volet dans lequel se trouve la formation
 		if(!$error) {
 			$userVolet = new UserVolet($this->db);
@@ -1253,8 +1609,44 @@ class UserFormation extends CommonObject
 	 */
 	public function delete(User $user, $notrigger = false)
 	{
-		return $this->deleteCommon($user, $notrigger);
+		global $langs;
+
+		$resultdelete = $this->deleteCommon($user, $notrigger);
 		//return $this->deleteCommon($user, $notrigger, 1);
+
+		// Agenda
+		$msgAgenda = msgAgendaUpdate($this, 0);
+		if($resultdelete) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_DELETE';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_DELETE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgenda;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			//$actioncomm->array_options['options_fk_userformation'] = $this->id;
+
+			$ret = $actioncomm->create($user); // User creating action
+
+		}
+
+		return $resultdelete;
 	}
 
 	/**

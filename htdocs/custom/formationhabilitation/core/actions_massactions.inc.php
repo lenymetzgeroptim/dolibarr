@@ -206,21 +206,23 @@ if (!$error && ($massaction == 'close' || ($action == 'closelines' && $confirm =
 
 			$formation->fetch($objectClose->fk_formation);
 
-			$result = $uservolet->closeActiveUserVolet($formation->fk_volet);
+			if($formation->fk_volet > 0) {
+				$result = $uservolet->closeActiveUserVolet($formation->fk_volet);
 
-			if($result < 0) { // if close returns is < 0, there is an error, we break and rollback later
-				setEventMessages($uservolet->error, $uservolet->errors, 'errors');
-				$error++;
-				break;
-			} 
+				if($result < 0) { // if close returns is < 0, there is an error, we break and rollback later
+					setEventMessages($uservolet->error, $uservolet->errors, 'errors');
+					$error++;
+					break;
+				} 
 
-			$result = $uservolet->generateNewVoletFormation($objectClose->fk_user, $formation->fk_volet, $voletsCreate);
+				$result = $uservolet->generateNewVoletFormation($objectClose->fk_user, $formation->fk_volet, $voletsCreate);
 
-			if($result < 0) { // if close returns is < 0, there is an error, we break and rollback later
-				setEventMessages($uservolet->error, $uservolet->errors, 'errors');
-				$error++;
-				break;
-			} 
+				if($result < 0) { // if close returns is < 0, there is an error, we break and rollback later
+					setEventMessages($uservolet->error, $uservolet->errors, 'errors');
+					$error++;
+					break;
+				} 
+			}
 		}
 	}
 
@@ -277,8 +279,9 @@ if (!$error && ($massaction == 'validate' || ($action == 'validatelines' && $con
 		if ($result > 0) {
 			// Prérequis
 			$elementPrerequis = new ElementPrerequis($db);
-			if (!$error && $elementPrerequis->gestionPrerequis($objecttmp->fk_user, $objectparenttmp) < 0) { 
-				$error++;
+			if (!$error && $elementPrerequis->gestionPrerequis($objecttmp->fk_user, $objectparenttmp, 0, 0) < 0) {
+				setEventMessages($langs->trans('ErrorPrerequisFormationAptitude'), null, 'warnings'); 
+				//$error++;
 			}
 
 			// Prérequis aptitude médicale
