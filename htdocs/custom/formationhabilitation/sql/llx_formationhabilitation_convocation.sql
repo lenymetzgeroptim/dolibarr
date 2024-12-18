@@ -36,9 +36,9 @@ CREATE TABLE llx_formationhabilitation_convocation(
 	fk_societe integer, 
 	fk_contact integer, 
 	commentaire text, 
-	motifvisite chkbxlst, 
+	motifvisite varchar(255), 
 	centremedecine integer, 
-	examenrealiser chkbxlst, 
+	examenrealiser varchar(255), 
 	fk_formation integer, 
 	lieu_formation varchar(128)
 	-- END MODULEBUILDER FIELDS

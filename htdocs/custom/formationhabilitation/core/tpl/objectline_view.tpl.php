@@ -39,7 +39,7 @@
  */
 
 global $permissiontoreadcost, $permissiontoaddline, $permissiontoreadline, $permissiontodeleteline;
-global $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline;
+global $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline, $objectparentline;
 global $disableedit, $disableremove, $enableunlink, $enablelink, $db;
 
 $form = new Form($db);
@@ -124,15 +124,17 @@ foreach($objectline->fields as $key => $val){
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_domaineapplication&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
 
-		// if($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') {
-		// 	$ddd = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentline)
-		// 	if(empty($prerequis_manquant)) {
-		// 		print $form->textwithpicto('', 'Le collaborateur possède l\'ensemble des prérequis', 1, 'info');
-		// 	}
-		// 	else {
-		// 		print $form->textwithpicto('', 'Des prérequis sont manquants :<br>'.$prerequis_manquant, 1, 'warning');
-		// 	}
-		// }
+		if($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') {
+			$date_finvalidite - null;
+			$objectparentline->id = $line->$key;
+			$prerequis_manquant = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentline, 0, 0, $date_finvalidite, 0, 1);
+			if(empty($prerequis_manquant)) {
+				print $form->textwithpicto('', 'Le collaborateur possède l\'ensemble des prérequis', 1, 'info');
+			}
+			elseif($prerequis_manquant != '1') {
+				print $form->textwithpicto('', 'Des prérequis sont manquants :<ul>'.$prerequis_manquant.'</ul>', 1, 'warning');
+			}
+		}
 
 		print '</td>';
 	}
