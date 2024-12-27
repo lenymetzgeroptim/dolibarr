@@ -111,9 +111,9 @@ $candelete = 0;
 if (!empty($user->rights->holidaycustom->delete)) {
 	$candelete = 1;
 }
-if ($object->statut == Holiday::STATUS_DRAFT && $user->rights->holidaycustom->write && in_array($object->fk_user, $childids)) {
-	$candelete = 1;
-}
+// if ($object->statut == Holiday::STATUS_DRAFT && $user->rights->holidaycustom->write && in_array($object->fk_user, $childids)) {
+// 	$candelete = 1;
+// }
 
 // Protection if external user
 if ($user->socid) {
@@ -243,15 +243,6 @@ if (empty($reshook)) {
 				$action = 'create';
 			}
 
-			$needHour = $object->holidayTypeNeedHour($type);
-
-			// If no hour and hour is required
-			if (empty($duration_hour) && $needHour == 1 && $date_debut == $date_fin) {
-				setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Hour")), null, 'errors');
-				$error++;
-				$action = 'create';
-			}
-
 			// Check if there is already holiday for this period
 			$verifCP = $object->verifDateHolidayCP($fuserid, $date_debut, $date_fin, $halfday);
 			if (!$verifCP) {
@@ -268,6 +259,15 @@ if (empty($reshook)) {
 				$action = 'create';
 			}
 
+			$needHour = $object->holidayTypeNeedHour($type);
+
+			// If no hour and hour is required
+			if (empty($duration_hour) && $needHour == 1 && $date_debut == $date_fin) {
+				setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Hour")), null, 'errors');
+				$error++;
+				$action = 'create';
+			}
+
 			if($needHour && date("W", $date_debut) != date("W", $date_fin)) {
 				setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
 				$error++;
@@ -276,6 +276,24 @@ if (empty($reshook)) {
 
 			if($needHour && $date_debut != $date_fin && $halfday != 0) {
 				setEventMessages($langs->trans("ErrorHalfdayHoliday"), null, 'errors');
+				$error++;
+				$action = 'create';
+			}
+
+			if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 7)) {
+				setEventMessages($langs->trans("ErrorNbHourHoliday"), null, 'errors');
+				$error++;
+				$action = 'create';
+			}
+
+			if($needHour && !empty($duration_hour) && (GETPOSTINT('hourmin') != 0 && GETPOSTINT('hourmin') != 30)) {
+				setEventMessages($langs->trans("ErrorNbMinHoliday"), null, 'errors');
+				$error++;
+				$action = 'create';
+			}
+
+			if($needHour && !empty($duration_hour) && $duration_hour > 3600*7) {
+				setEventMessages($langs->trans("ErrorMaxHourHoliday"), null, 'errors');
 				$error++;
 				$action = 'create';
 			}
@@ -360,7 +378,7 @@ if (empty($reshook)) {
 				}
 				elseif($needHour && $date_debut != $date_fin) {
 					$nbDay = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1);
-					$duration_hour = $nbDay * 7.3 * 60 * 60;
+					$duration_hour = $nbDay * 7 * 3600;
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 
@@ -784,6 +802,21 @@ if (empty($reshook)) {
 					exit;
 				}
 
+				if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 7)) {
+					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorNbHourHoliday');
+					exit;
+				}
+	
+				if($needHour && !empty($duration_hour) && (GETPOSTINT('hourmin') != 0 && GETPOSTINT('hourmin') != 30)) {
+					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorNbMinHoliday');
+					exit;
+				}
+	
+				if($needHour && !empty($duration_hour) && $duration_hour > 3600*7) {
+					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorMaxHourHoliday');
+					exit;
+				}
+
 				if($object->date_debut != $date_debut || $object->date_fin != $date_fin) {
 					$res = $object->deleteAllApprobation();
 					if ($res <= 0) {
@@ -882,7 +915,7 @@ if (empty($reshook)) {
 				}
 				elseif($needHour && $date_debut != $date_fin) {
 					$nbDay = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $halfday);
-					$duration_hour = $nbDay * 7.3 * 60 * 60;
+					$duration_hour = $nbDay * 7 * 3600;
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 
@@ -902,7 +935,7 @@ if (empty($reshook)) {
 				// Update
 				$verif = $object->update($user);
 
-				if(!$error && $verif && $object->array_options['options_statutfdt'] > 1) {
+				if(!$error && $verif && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -947,11 +980,14 @@ if (empty($reshook)) {
 		// If this is a rough draft, canceled or refused
 		if ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED) {
 			$options_statutfdt =  $object->array_options['options_statutfdt'];
+			$date_debut = $object->date_debut;
+			$date_fin = $object->date_fin;
 			$object_fk_user = $object->fk_user;
-			
+			$object_ref = $object->ref;
+
 			$result = $object->delete($user);
 
-			if(!$error && $result && $options_statutfdt > 1) {
+			if(!$error && $result &&  ($options_statutfdt == 2 || $options_statutfdt == 3)) {
 				global $dolibarr_main_url_root;
 				$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 				$from = 'erp@optim-industries.fr';
@@ -962,8 +998,8 @@ if (empty($reshook)) {
 
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-				$link = $object->ref;
-				$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerDelete2" : "EMailTextCongesRegulerDelete3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_fin, '%d/%m/%Y'), $link);
+				$link = $object_ref;
+				$msg = $langs->transnoentitiesnoconv(($options_statutfdt == 2 ? "EMailTextCongesRegulerDelete2" : "EMailTextCongesRegulerDelete3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($date_debut, '%d/%m/%Y'), dol_print_date($date_fin, '%d/%m/%Y'), $link);
 				$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 				$res = $mail->sendfile();
 			}
@@ -1816,7 +1852,7 @@ if (empty($reshook)) {
 					$action = '';
 				}
 
-				if(!$error && $verif && $object->array_options['options_statutfdt'] > 1) {
+				if(!$error && $verif && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -1850,45 +1886,45 @@ if (empty($reshook)) {
 	}
 
 	// If the request is validated
-	if ($action == 'confirm_draft' && GETPOST('confirm') == 'yes') {
-		$error = 0;
+	// if ($action == 'confirm_draft' && GETPOST('confirm') == 'yes') {
+	// 	$error = 0;
 
-		$object->fetch($id);
+	// 	$object->fetch($id);
 
-		if($object->array_options['options_statutfdt'] == 4 && ($object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED) && $object->fk_type != 4) {
-			$object->array_options['options_statutfdt'] = 1;
-		}
+	// 	if($object->array_options['options_statutfdt'] == 4 && ($object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED) && $object->fk_type != 4) {
+	// 		$object->array_options['options_statutfdt'] = 1;
+	// 	}
 
-		$oldstatus = $object->statut;
-		$object->statut = Holiday::STATUS_DRAFT;
+	// 	$oldstatus = $object->statut;
+	// 	$object->statut = Holiday::STATUS_DRAFT;
 
-		$result = $object->update($user);
-		if ($result < 0) {
-			$error++;
-			setEventMessages($langs->trans('ErrorBackToDraft').' '.$object->error, $object->errors, 'errors');
-		}
+	// 	$result = $object->update($user);
+	// 	if ($result < 0) {
+	// 		$error++;
+	// 		setEventMessages($langs->trans('ErrorBackToDraft').' '.$object->error, $object->errors, 'errors');
+	// 	}
 
-		if(!$error) {
-			$list_validation1 = $object->listApprover1;
-			foreach($list_validation1[2] as $userid => $user_static){
-				$result = $object->updateApprobation($userid, 1, 0, 1);
-			}
+	// 	if(!$error) {
+	// 		$list_validation1 = $object->listApprover1;
+	// 		foreach($list_validation1[2] as $userid => $user_static){
+	// 			$result = $object->updateApprobation($userid, 1, 0, 1);
+	// 		}
 
-			$list_validation2 = $object->listApprover2;
-			foreach($list_validation2[2] as $userid => $user_static){
-				$result = $object->updateApprobation($userid, 1, 0, 2);
-			}
-		}
+	// 		$list_validation2 = $object->listApprover2;
+	// 		foreach($list_validation2[2] as $userid => $user_static){
+	// 			$result = $object->updateApprobation($userid, 1, 0, 2);
+	// 		}
+	// 	}
 
-		if (!$error) {
-			$db->commit();
+	// 	if (!$error) {
+	// 		$db->commit();
 
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-			exit;
-		} else {
-			$db->rollback();
-		}
-	}
+	// 		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+	// 		exit;
+	// 	} else {
+	// 		$db->rollback();
+	// 	}
+	// }
 
 	// If confirmation of cancellation
 	if ($action == 'confirm_cancel' && GETPOST('confirm') == 'yes') {
@@ -2123,7 +2159,7 @@ if (empty($reshook)) {
 					}*/
 				}
 
-				if(!$error && $result && $object->array_options['options_statutfdt'] > 1) {
+				if(!$error && $result && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -2151,7 +2187,22 @@ if (empty($reshook)) {
 					// To
 					$destinataire = new User($db);
 					$destinataire->fetch($object->fk_user);
-					$emailTo = $destinataire->email;
+					if(!empty($destinataire->email)) {
+						$emailTo = $destinataire->email.', ';
+					}
+					$list_validation = $object->listApprover1;
+					foreach($list_validation[2] as $userid => $user_static){
+						if(!empty($user_static->email)){
+							$emailTo .= $user_static->email.', ';
+						}
+					}
+					$list_validation = $object->listApprover2;
+					foreach($list_validation[2] as $userid => $user_static){
+						if(!empty($user_static->email)){
+							$emailTo .= $user_static->email.', ';
+						}
+					}
+					$emailTo = rtrim($emailTo, ", ");
 
 					if (!$emailTo) {
 						header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
@@ -2288,6 +2339,15 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 				case 'ErrorHalfdayHoliday':
 					$errors[] = $langs->trans('ErrorHalfdayHoliday');
 					break;
+				case 'ErrorNbHourHoliday':
+					$errors[] = $langs->trans('ErrorNbHourHoliday');
+					break;
+				case 'ErrorNbMinHoliday':
+					$errors[] = $langs->trans('ErrorNbMinHoliday');
+					break;
+				case 'ErrorMaxHourHoliday':
+					$errors[] = $langs->trans('ErrorMaxHourHoliday');
+					break;
 				case 'Hour':
 					$errors[] = $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Hour"));
 					break;
@@ -2384,7 +2444,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 		print '<td>';
 		if ($cancreate && !$cancreateall) {
 			print img_picto('', 'user').$form->select_dolusers(($fuserid ? $fuserid : $user->id), 'fuserid', 0, '', 0, 'hierarchyme', '', '0,'.$conf->entity, 0, 0, $morefilter, 0, '', 'minwidth200 maxwidth500');
-			print '<input type="hidden" name="fuserid" value="'.($fuserid?$fuserid:$user->id).'">';
+			//print '<input type="hidden" name="fuserid" value="'.($fuserid?$fuserid:$user->id).'">';
 		} else {
 			print img_picto('', 'user').$form->select_dolusers($fuserid ? $fuserid : $user->id, 'fuserid', 0, '', 0, '', '', '0,'.$conf->entity, 0, 0, $morefilter, 0, '', 'minwidth200 maxwidth500');
 		}
@@ -2554,8 +2614,14 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 					case 'ErrorWeekHoliday':
 						$errors[] = $langs->trans('ErrorWeekHoliday');
 						break;
-					case 'ErrorHalfdayHoliday':
-						$errors[] = $langs->trans('ErrorHalfdayHoliday');
+					case 'ErrorNbHourHoliday':
+						$errors[] = $langs->trans('ErrorNbHourHoliday');
+						break;
+					case 'ErrorNbMinHoliday':
+						$errors[] = $langs->trans('ErrorNbMinHoliday');
+						break;
+					case 'ErrorMaxHourHoliday':
+						$errors[] = $langs->trans('ErrorMaxHourHoliday');
 						break;
 					case 'Hour':
 						$errors[] = $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Hour"));
@@ -2931,9 +2997,9 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 				}
 
 				// Si back to draft
-				if ($action == 'backtodraft') {
-					print $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id, $langs->trans("TitleSetToDraft"), $langs->trans("ConfirmSetToDraft"), "confirm_draft", '', 1, 1);
-				}
+				// if ($action == 'backtodraft') {
+				// 	print $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id, $langs->trans("TitleSetToDraft"), $langs->trans("ConfirmSetToDraft"), "confirm_draft", '', 1, 1);
+				// }
 
 				if (($action == 'edit' && $object->statut == Holiday::STATUS_DRAFT) || ($action == 'editvalidator1') || ($action == 'editvalidator2')) {
 					if ($action == 'edit' && $object->statut == Holiday::STATUS_DRAFT) {
@@ -3016,10 +3082,10 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 						}
 					}
 
-					if (($cancreate || $cancreateall) && $object->statut == Holiday::STATUS_CANCELED || (($cancreate || $cancreateall) && $object->statut > Holiday::STATUS_DRAFT)) {
-						print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=backtodraft" class="butAction">'.$langs->trans("SetToDraft").'</a>';
-					}
-					if ($candelete && ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED)) {	// If draft or canceled or refused
+					// if (($cancreate || $cancreateall) && $object->statut == Holiday::STATUS_CANCELED || (($cancreate || $cancreateall) && $object->statut > Holiday::STATUS_DRAFT)) {
+					// 	print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=backtodraft" class="butAction">'.$langs->trans("SetToDraft").'</a>';
+					// }
+					if ($candelete && $object->statut == Holiday::STATUS_DRAFT) {	// If draft or canceled or refused
 						print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=delete&token='.newToken().'" class="butActionDelete">'.$langs->trans("DeleteCP").'</a>';
 					}
 					

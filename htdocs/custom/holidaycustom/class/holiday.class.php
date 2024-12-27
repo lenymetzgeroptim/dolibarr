@@ -27,6 +27,7 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/holidaycustom/class/extendedhtml.form.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/includes/phpoffice/phpspreadsheet/src/autoloader.php';
@@ -2828,11 +2829,9 @@ class Holiday extends CommonObject
 
 	public function showOptionals_custom($extrafields, $mode = 'view', $params = null, $keysuffix = '', $keyprefix = '', $onetrtd = 0, $display_type = 'card', $fk_validator2 = 0)
 	{
-		global $db, $conf, $langs, $action, $form, $hookmanager, $user;
+		global $db, $conf, $langs, $action, $hookmanager, $user;
 
-		if (!is_object($form)) {
-			$form = new Form($db);
-		}
+		$form = new ExtendedFormHoliday($db);
 
 		$out = '';
 
@@ -3066,7 +3065,9 @@ class Holiday extends CommonObject
 								break;
 							case "create":
 								if ($key == 'hour'){
-									$out .= $form->select_duration('hour', $value, 0, 'text', 0, 1);
+									$duration_hour = (GETPOSTINT('hourhour') ? GETPOSTINT('hourhour') : 0) * 60 * 60;
+									$duration_hour += (GETPOSTINT('hourmin') ? GETPOSTINT('hourmin') : 0) * 60;	
+									$out .= $form->select_duration('hour', $duration_hour, 0, 'select', 0, 1);
 								}
 								elseif($key != 'client_informe'){
 									$out .= $extrafields->showInputField($key, $value, '', $keysuffix, '', 0, $this->id, $this->table_element);
@@ -3096,7 +3097,8 @@ class Holiday extends CommonObject
 									$out .= $extrafields->showInputField($key, $value, 'onchange="afficherNomClient('.$nom.')"', $keysuffix, '', 0, $this->id, $this->table_element);
 								}
 								elseif ($key == 'hour'){
-									$out .= $form->select_duration('hour', $value, 0, 'text', 0, 1);
+									$duration_hour = $this->array_options['options_'.$key];
+									$out .= $form->select_duration('hour', $duration_hour, 0, 'select', 0, 1);
 								}
 								else {
 									$out .= $extrafields->showInputField($key, $value, '', $keysuffix, '', 0, $this->id, $this->table_element);
