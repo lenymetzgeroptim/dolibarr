@@ -201,14 +201,17 @@ print '<td>';
 $moreforfilter = '';
 $moreforfilter .= '<div class="divsearchfield">';
 $moreforfilter .= '<div class="inline-block hideonsmartphone"></div>';
-/*$projectListResp = $project->getProjectsAuthorizedForUser($user, 1, 1, 0, " AND ec.fk_c_type_contact = 160");
+$projectListResp = $project->getProjectsAuthorizedForUser($user, 1, 1, 0, " AND ec.fk_c_type_contact = 160");
 $userList = $projectstatic->getUserForProjectLeader($projectListResp);
-$includeonly = array_merge($userList, $user->getAllChildIds(1));
-if (empty($user->rights->user->user->lire)) {
-	$includeonly = array($user->id);
-}*/
+// $includeonly = array_merge($userList, $user->getAllChildIds(1));
+if(!$user->rights->feuilledetemps->feuilledetemps->modify_verification) {
+    $includeonly = $user->getAllChildIds(1);
+}
+// if (empty($user->rights->user->user->lire)) {
+// 	$includeonly = array($user->id);
+// }
 $exlude = $extendedUser->get_full_treeIds("statut <> 1");
-$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class="paddingright pictofixedwidth"').$form->select_dolusers($userIdSelected, 'search_usertoprocessid', 0, $exlude, 0, $includeonly, null, 0, 0, 0, '', 1, '', 'maxwidth200');
+$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class="paddingright pictofixedwidth"').$form->select_dolusers($userIdSelected, 'search_usertoprocessid', 0, $exlude, 0, $includeonly, null, 0, 0, 0, '', $user->rights->feuilledetemps->feuilledetemps->modify_verification, '', 'maxwidth200');
 $moreforfilter .= '</div>';
 print $moreforfilter;
 

@@ -591,7 +591,7 @@ function setTypeDeplacement(idw, typeDeplacement) {
     if (typeDeplacement == 'petitDeplacement' && select[1].selected == false && select[2].selected == false && select[3].selected == false && select[4].selected == false && select[5].selected == false && select[6].selected == false && select[7].selected == false && select[8].selected == false && select[9].selected == false) {
         select[1].selected = true;
     }
-    else if (typeDeplacement == 'grandDeplacement' && select[1].selected == false && select[2].selected == false && select[3].selected == false && select[4].selected == false && select[5].selected == false && select[6].selected == false) {
+    else if (typeDeplacement == 'grandDeplacement' && select[1].selected == false && select[2].selected == false && select[3].selected == false && select[4].selected == false && select[5].selected == false && select[6].selected == false && select[7].selected == false && select[8].selected == false && select[9].selected == false) {
         select[5].selected = true;
     }
 }
@@ -603,6 +603,9 @@ function deleteTypeDeplacement(idw, typeDeplacement) {
     }
     else if (typeDeplacement == 'grandDeplacement' && select[5].selected == true) {
         select[5].selected = false;
+    }
+    else if (typeDeplacement == '') {
+        select[0].selected = true;
     }
 }
 
@@ -1398,6 +1401,13 @@ function updateTotal_MoyenTransport(nb_jour, num_first_day, type_deplacement) {
     }
     else {
         totalMoyenTransport.classList.remove('noNull')
+    }
+}
+
+function deleteTypeDeplacementVS(idw) {
+    select = $("[name='moyen_transport[" + idw + "]']")[0];
+    if(select[1].selected == true) {
+        deleteTypeDeplacement(idw, '');
     }
 }
 

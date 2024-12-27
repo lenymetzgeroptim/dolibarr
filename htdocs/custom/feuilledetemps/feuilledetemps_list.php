@@ -164,13 +164,18 @@ foreach ($object->fields as $key => $val) {
 }
 
 // Definition of array of fields for columns
+if(!$user->rights->feuilledetemps->feuilledetemps->modify_verification) {
+	unset($object->fields['prime_astreinte']);
+	unset($object->fields['prime_exceptionnelle']);
+	unset($object->fields['prime_objectif']);
+	unset($object->fields['prime_variable']);
+	unset($object->fields['prime_amplitude']);
+	unset($object->fields['observation']);
+}
 $arrayfields = array();
 foreach ($object->fields as $key => $val) {
-	if(!$user->rights->feuilledetemps->feuilledetemps->modify_verification && ($key == 'prime_astreinte' || $key == 'prime_exceptionnelle' || $key == 'prime_objectif' || $key == 'prime_variable' || $key == 'prime_amplitude')) {
-		continue;
-	}
 	// If $val['visible']==0, then we never show the field
-	if (!empty($val['visible']) && $key != 'observation') {
+	if (!empty($val['visible'])) {
 		$visible = (int) dol_eval($val['visible'], 1);
 		$arrayfields['t.'.$key] = array(
 			'label'=>$val['label'],

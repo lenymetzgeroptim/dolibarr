@@ -869,6 +869,17 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// Print form confirm
 	print $formconfirm;
 
+	// Warning if user have refused holiday
+	$filter = " AND cp.date_debut <= '".$db->idate($lastdaytoshow)."' AND cp.date_fin >= '".$db->idate($firstdaytoshow)."' AND cp.statut = ".$holiday::STATUS_REFUSED;
+	$holiday->fetchByUser($usertoprocess->id, '', $filter);
+	$warningHolidayRefused = '';
+	foreach($holiday->holiday as $holidayRefused) {
+		$link = '<a href="'.dol_buildpath('/holidaycustom/card.php', 1).'?id='.$holidayRefused['rowid'].'">'.$holidayRefused['ref'].'</a>';
+		$warningHolidayRefused .= "Congé $link annulé du ".dol_print_date($holidayRefused['date_debut'], "%d/%m/%Y")." au ".dol_print_date($holidayRefused['date_fin'], "%d/%m/%Y");
+	}
+	if(!empty($warningHolidayRefused)) {
+		setEventMessages($warningHolidayRefused, '', 'warnings');
+	}
 
 	// Object card
 	// ------------------------------------------------------------
@@ -917,9 +928,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// 	$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&token='.newToken().'\', \''.$object->ref.'_'.$usertoprocess->lastname.'_'.$usertoprocess->firstname.'\')" class="butAction classfortooltip" aria-label="Screen" title="Screen">Screen</a>';
 		// }
 
-		if ($object->status == $object::STATUS_VERIFICATION) {
-			$buttonAction .= dolGetButtonAction('Envoyer Mail', $langs->trans('SendMail'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=sendMail&token='.newToken(), '', $permissionToVerification, array('attr' => array('target' => '_blank')));
-		}
+		$buttonAction .= dolGetButtonAction('Envoyer Mail', $langs->trans('SendMail'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=sendMail&token='.newToken(), '', $permissionToVerification, array('attr' => array('target' => '_blank')));
 
 		$buttonAction .= dolGetButtonAction($langs->trans('Modify'), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', ($permissionToVerification && $object->status != FeuilleDeTemps::STATUS_VALIDATED) || (($user->admin || $user->rights->feuilledetemps->feuilledetemps->modify) && $object->status == FeuilleDeTemps::STATUS_VALIDATED));
 
@@ -999,6 +1008,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		elseif($action == 'ediths50') {
 			print '<input type="hidden" name="action" value="savehs50">';
 		}
+	}
+	elseif($permissionToVerification && $object->status == $object::STATUS_EXPORTED) {
+		print '<input type="hidden" name="action" value="updateObservation">';
 	}
 
 	print '<div class="clearboth"></div>';
@@ -1426,13 +1438,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			if(dol_print_date($tmpday, '%a') == 'Dim' || dol_print_date($tmpday, '%d/%m/%Y') == dol_print_date($lastdaytoshow, '%d/%m/%Y')) {
 				$weekNumber = date("W", $tmpday);
 				if($weekNumber == date("W", $firstdaytoshow)) {
-					print ' updateTotalWeek('.($temps_prec ? $temps_prec : 0).', 0, \''.$weekNumber.'\', '.($timeHoliday[$weekNumber] ? $timeHoliday[$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek('.($temps_prec ? $temps_prec : 0).', 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 				elseif($weekNumber == date("W", $lastdaytoshow)) {
-					print ' updateTotalWeek(0, '.($temps_suiv ? $temps_suiv : 0).', \''.$weekNumber.'\', '.($timeHoliday[$weekNumber] ? $timeHoliday[$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(0, '.($temps_suiv ? $temps_suiv : 0).', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 				else {
-					print ' updateTotalWeek(0, 0, \''.$weekNumber.'\', '.($timeHoliday[$weekNumber] ? $timeHoliday[$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 			}
 		}

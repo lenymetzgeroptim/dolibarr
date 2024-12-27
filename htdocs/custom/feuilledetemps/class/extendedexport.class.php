@@ -21,6 +21,8 @@
  *  \ingroup	core
  */
 
+require_once DOL_DOCUMENT_ROOT.'/exports/class/export.class.php';
+
 /**
  *	Class to manage Dolibarr users
  */
@@ -30,7 +32,7 @@ class ExtendedExportFDT extends Export
 	public function build_file_bis($user, $model, $datatoexport, $array_selected, $array_filterValue, $sqlquery = '', $array_export_fields, $array_export_TypeFields, $array_export_special)
 	{
 		// phpcs:enable
-		global $conf, $langs, $mysoc;
+		global $conf, $langs, $mysoc, $dirname, $filename;
 
 		$indice = 0;
 		asort($array_selected);
@@ -468,17 +470,18 @@ class ExtendedExportFDT extends Export
 							// 	$obj->type = 'H';
 							// 	$obj->valeur = $obj->hef_hour / 3600;
 							// }
-							if($obj->ht_in_hour == 1 || $obj->ht_code_silae == 'AB-620') {
+
+							if($obj->ht_in_hour == 1) {
 								$obj->type = 'H';
 								$obj->valeur = $obj->hef_hour / 3600;
 							}
 							else {
 								$obj->type = 'J';
-								//$obj->valeur = num_open_day(dol_stringtotime($obj->h_date_debut), dol_stringtotime($obj->h_date_fin), 0, 1, $obj->h_halfday);
 								$obj->valeur = '';
 							}
 	
-							if(empty($obj->drh_pasdroitrtt) && empty($obj->ht_droit_rtt)) {
+							//if(empty($obj->drh_pasdroitrtt) && empty($obj->ht_droit_rtt)) {
+							if($obj->ht_in_hour == 1){ // Gestion des congés en heure qui sont sur plusieurs jours
 								$date_debut = dol_mktime(-1, -1, -1, substr($obj->h_date_debut, 3, 2), substr($obj->h_date_debut, 0, 2), substr($obj->h_date_debut, 6, 4));
 								$nb_jour = num_between_day($date_debut, dol_mktime(-1, -1, -1, substr($obj->h_date_fin, 3, 2), substr($obj->h_date_fin, 0, 2), substr($obj->h_date_fin, 6, 4)) + 3600, 1); 
 								$heure = $obj->valeur;
@@ -490,15 +493,14 @@ class ExtendedExportFDT extends Export
 										$obj->h_date_debut = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
 										$obj->h_date_fin = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
 	
-										if($heure > 7.3) {
-											$obj->valeur = 7.3;
+										if($heure > 7) {
+											$obj->valeur = 7;
 										}
 										else {
 											$obj->valeur = $heure;
 										}
 	
 										$heure -= $obj->valeur;
-										$obj->valeur -= 0.3;
 	
 										$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
 									}
