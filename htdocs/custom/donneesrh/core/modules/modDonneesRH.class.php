@@ -501,6 +501,37 @@ class modDonneesRH extends DolibarrModules
 		$this->import_run_sql_after_array[$r] = array();
 		$r++; 
 
+		$this->import_code[$r] = $this->rights_class.'_'.$r;
+		$this->import_label[$r] = 'Données RH Medecine du travail des utilisateurs';
+		$this->import_icon[$r] = 'user';
+		$this->import_entities_array[$r] = array(); // We define here only fields that use another icon that the one defined into import_icon
+		$this->import_tables_array[$r] = array('u'=>MAIN_DB_PREFIX.'donneesrh_Medecinedutravail_extrafields'); // List of tables to insert into (insert done in same order)
+		$this->import_fields_array[$r] = array(
+			'u.fk_object'=>"Matricule", 'u.rqth'=>"RQTH", 'u.pourcetagerqth'=>"Pourcentage RQTH",
+			'u.echeancereconnaissancerqth'=>"Échéance RQTH", 'u.categorie'=>"Catégorie RQTH", 'u.medecinedutravail'=>"Médecine du travail",
+			'u.docteur'=>"Docteur", 'u.carnetdaccsn'=>"Carnet d'accès N°", 'u.datedattribution'=>"Date d'attribution carnet d'accès", 'u.datedattributionduplicata'=>"Date d'attribution du duplicata du carnet d'accès",
+			'u.catrgoriemdicale'=>"Catérgorie médicale", 'u.datedebutcategorisation'=>"Date début catégorisation", 'u.naturevisitemedicale'=>"Nature visite médicale",
+		);
+		// $this->import_fieldshidden_array[$r] = array('u.tms'=>'334'); // aliastable.field => ('user->id' or 'lastrowid-'.tableparent)
+		$this->import_examplevalues_array[$r] = array(
+			'u.fk_object'=>"389", 'u.rqth'=>"0", 'u.pourcetagerqth'=>"0",
+			'u.echeancereconnaissancerqth'=>"21/09/2024", 'u.categorie'=>"1", 'u.medecinedutravail'=>"1",
+			'u.docteur'=>"1", 'u.carnetdaccsn'=>"111111", 'u.datedattribution'=>"21/09/2024", 'u.datedattributionduplicata'=>"21/09/2024",
+			'u.catrgoriemdicale'=>"1", 'u.datedebutcategorisation'=>"21/08/2024", 'u.naturevisitemedicale'=>"1,2",
+		);
+		$this->import_updatekeys_array[$r] = array('u.fk_object'=>'Matricule');
+		$this->import_regex_array[$r] = array(
+			//'u.datedapplicationsysteme'=>'^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$',
+		);
+		$this->import_convertvalue_array[$r] = array(
+			'u.fk_object' => array('rule' => 'fetchidfromcodeunits', 'file' => '/custom/feuilledetemps/class/extendedUser.class.php', 'class' => 'ExtendedUser3', 'method' => 'fetchIdWithMatricule', 'element' => 'user'),
+			'u.echeancereconnaissancerqth' => array('rule' => 'compute', 'file' => '/custom/donneesrh/class/userfield.class.php', 'class' => 'UserField', 'method' => 'formatDateExcel'),
+			'u.datedattribution' => array('rule' => 'compute', 'file' => '/custom/donneesrh/class/userfield.class.php', 'class' => 'UserField', 'method' => 'formatDateExcel'),
+			'u.datedattributionduplicata' => array('rule' => 'compute', 'file' => '/custom/donneesrh/class/userfield.class.php', 'class' => 'UserField', 'method' => 'formatDateExcel'),
+			'u.datedebutcategorisation' => array('rule' => 'compute', 'file' => '/custom/donneesrh/class/userfield.class.php', 'class' => 'UserField', 'method' => 'formatDateExcel'),
+		);
+		$this->import_run_sql_after_array[$r] = array();
+		$r++; 
 		/* END MODULEBUILDER IMPORT ONGLETDONNEESRH */
 	}
 
