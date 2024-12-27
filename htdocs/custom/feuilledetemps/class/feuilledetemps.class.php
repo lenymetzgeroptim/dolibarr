@@ -1593,8 +1593,8 @@ class FeuilleDeTemps extends CommonObject
 
 		$sql = "SELECT rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps";
-		$sql .= " WHERE DATE_FORMAT(date_debut, '%m') = ".$mois;
-		$sql .= " AND DATE_FORMAT(date_fin, '%m') = ".$mois;
+		$sql .= " WHERE DATE_FORMAT(date_debut, '%m%Y') = ".$mois;
+		$sql .= " AND DATE_FORMAT(date_fin, '%m%Y') = ".$mois;
 		if(gettype($utilisateur) == 'string') {
 			$sql .= " AND fk_user = ".$utilisateur;
 		}
@@ -2389,7 +2389,7 @@ class FeuilleDeTemps extends CommonObject
 
 		if ($resql) {
 			while($obj = $this->db->fetch_object($resql)) {
-				$result[$obj->week_number] = $obj->temps;
+				$result[(int)$obj->week_number] = $obj->temps;
 			}
 			$this->db->free($resql);
 		} else {
@@ -3409,7 +3409,7 @@ class FeuilleDeTemps extends CommonObject
 
 		$now = dol_now();
 
-		$sql = "SELECT v.fk_feuilledetemps";
+		$sql = "SELECT DISTINCT v.fk_feuilledetemps";
 		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_task_validation as v";
 		$sql .= " WHERE v.fk_user_validation = ".$user->id;
 		$sql .= " AND v.validation = 0 AND v.validation_number = 1";
@@ -3450,7 +3450,7 @@ class FeuilleDeTemps extends CommonObject
 
 		$now = dol_now();
 
-		$sql = "SELECT v.fk_feuilledetemps";
+		$sql = "SELECT DISTINCT v.fk_feuilledetemps";
 		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_task_validation as v";
 		$sql .= " WHERE v.fk_user_validation = ".$user->id;
 		$sql .= " AND v.validation = 0 AND v.validation_number = 2";
@@ -3491,7 +3491,7 @@ class FeuilleDeTemps extends CommonObject
 
 		$now = dol_now();
 
-		$sql = "SELECT f.rowid";
+		$sql = "SELECT DISTINCT f.rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps as f";
 		$sql .= " WHERE f.status = ".self::STATUS_VERIFICATION;
 

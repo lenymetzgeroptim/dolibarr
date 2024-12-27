@@ -1450,48 +1450,42 @@ foreach ($listofreferent as $key => $value) {
 				$now = dol_now(); // Définit $now pour la date actuelle
 			
 				if ($tablename == 'commande' || $tablename == 'order') {
-					// Commande validée
-					if (in_array($element->status, array(1, 2))) {
-						
-						// Commande en cours
-						if ($now <= $element->delivery_date) {
-							//calcul nombre de mois entre date de livraison et la date d'ajourd'hui
-						$dateNow = new DateTime('@' . $now);
-						$dateLivraison = new DateTime('@' . $element->delivery_date);
+						// $dateNow = new DateTime('@' . $now);
+						// $dateLivraison = new DateTime('@' . $element->delivery_date);
 
-						// Calcul de la différence entre les deux dates en mois
-						$interval = $dateNow->diff($dateLivraison);
-						$nbMonths = ($interval->y * 12) + $interval->m;
-						
-							// Récupération des factures associées à la commande et les stocke dans $factures
-							$factures = getCommandeFactures($element->id);
-								
+						// // Calcul de la différence entre les deux dates en mois
+						// $interval = $dateNow->diff($dateLivraison);
+						// $nbMonths = ($interval->y * 12) + $interval->m;
 
-							// Ajout du montant total TTC de la commande à la somme des commandes
-							// $sumCommandes[$element->id] = $element->total_ttc;
-							
-						}
-					}
+					// Récupération des factures associées à la commande et les stocke dans $factures
+					$factures = getCommandeFactures($element->id);		
 				}
 				
 				
 				if (!empty($factures)) {
+					
 					$commfactures = $factures; 
 				}
 			
 				// Calucl et affichage des restes à facturer
 				if (($tablename == 'commande' || $tablename == 'order')) {
-						foreach ($commfactures as $item) {
-							$sumFactureTotalHT += (float)$item['total_ht'];
+					$sumFactureTotalHT = 0.0;
+
+					foreach ($commfactures as $item) {
+						if (isset($item['total_ht'])) {
+							$sumFactureTotalHT += (float)$item['total_ht']; // Convertir en float avant d'ajouter
 						}
-						 $res = $element->total_ht - $sumFactureTotalHT;
-						// $nbMonths > 0 ? $res = ($element->total_ttc - $sumFactureTotalTTC) / $nbMonths : $res = 0.0;
-					
-						print '<td class="center">';
-						print price($res);
-						print '</td>';
-							
 					}
+					
+					// $sumFactureTotalHT == null ? $sumFactureTotalHT = 0 : $sumFactureTotalHT = $sumFactureTotalHT;
+					$res = $element->total_ht - $sumFactureTotalHT;
+					// $nbMonths > 0 ? $res = ($element->total_ttc - $sumFactureTotalTTC) / $nbMonths : $res = 0.0;
+				
+					print '<td class="center">';
+					print price($res);
+					print '</td>';
+							
+				}
 					
 					
 
@@ -1673,11 +1667,14 @@ function sortElementsByClientName($elementarray)
 	{
 	global $db;
 	// Commandes associées aux factures 
-	$sql = "SELECT lf.total_ht, lf.fk_facture 
+	$sql = "SELECT f.total_ht, lf.fk_facture 
 	FROM " . MAIN_DB_PREFIX . "facturedet as lf
 	LEFT JOIN " . MAIN_DB_PREFIX . "element_element as ee ON lf.fk_facture = ee.fk_target
+	LEFT JOIN " . MAIN_DB_PREFIX . "facture as f ON lf.fk_facture = f.rowid
+	LEFT JOIN " . MAIN_DB_PREFIX . "facture_extrafields as ef ON ef.fk_object = f.rowid
 	WHERE ee.fk_source = " . intval($commande_id) . "
 	AND ee.sourcetype = 'commande' 
+	AND ef.pv_reception = '1'
 	AND ee.targettype = 'facture'";
 
 	$resql = $db->query($sql);
