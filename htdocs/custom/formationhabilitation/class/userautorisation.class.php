@@ -28,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/autorisation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
 
 /**
  * Class for UserAutorisation
@@ -291,7 +292,7 @@ class UserAutorisation extends CommonObject
 		else {
 			$autorisation->fetch($this->fk_autorisation); 
 			setEventMessages($langs->trans('ErrorUserHasSameUserAutorisation', $autorisation->label), null, 'warnings');
-			return 0;
+			return 1;
 		}
 
 		//$resultvalidate = $this->validate($user, $notrigger);

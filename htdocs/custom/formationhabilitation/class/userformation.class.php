@@ -27,6 +27,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/uservolet.cl
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/formation.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
 
 /**
  * Class for UserFormation
@@ -134,7 +135,7 @@ class UserFormation extends CommonObject
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"resultat" => array("type"=>"integer", "label"=>"Résultat", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Non défini", "2" => "Satisfaisant", "3" => "Non satisfaisant"),),
 		"cout_annexe" => array("type"=>"price", "label"=>"CoutAnnexe", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
-		"prevupif" => array("type"=>"integer", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("{1:Oui" => "2:Non,3:Non applicable}"),),
+		"prevupif" => array("type"=>"integer", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non", "3" => "Non applicable"),),
 		"non_renouvelee" => array("type"=>"boolean", "label"=>"NonRenouvelee", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1", "help"=>"Lorsque la date de fin de validité sera atteinte, la formation sera clôturée et non expirée",),
 		"ex_status" => array("type"=>"integer", "label"=>"ExStatus", "enabled"=>"1", 'position'=>999, 'notnull'=>0, "visible"=>"0", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "8" => "Suspendue", "9" => "Cloturée"),),
 	);

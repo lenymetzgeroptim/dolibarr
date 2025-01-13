@@ -27,6 +27,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/habilitation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
 
 /**
  * Class for UserHabilitation
@@ -279,7 +280,7 @@ class UserHabilitation extends CommonObject
 		else {
 			$habilitation->fetch($this->fk_habilitation); 
 			setEventMessages($langs->trans('ErrorUserHasSameUserHabilitation', $habilitation->label), null, 'warnings');
-			return 0;
+			return 1;
 		}
 
 		//$resultvalidate = $this->validate($user, $notrigger);

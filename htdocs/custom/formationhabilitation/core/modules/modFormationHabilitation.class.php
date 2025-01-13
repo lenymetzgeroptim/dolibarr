@@ -985,6 +985,27 @@ class modFormationHabilitation extends DolibarrModules
 		);
 		$this->import_run_sql_after_array[$r] = array();
 		$r++;
+
+		$this->import_code[$r]=$this->rights_class.'_'.$r;
+		$this->import_label[$r]='VisiteMedical';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		$this->import_icon[$r]='fa-hospital-alt_fas_#b4161b';
+		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX.'formationhabilitation_visitemedical');
+		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_creat'); // Fields to store import user id
+		$import_sample = array();
+		$keyforclass = 'VisiteMEdical'; $keyforclassfile='/formationhabilitation/class/visitemedical.class.php'; $keyforelement='visitemedical@formationhabilitation';
+		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
+		$import_extrafield_sample = array();
+		$keyforselect='visitemedical'; $keyforaliasextra='extra'; $keyforelement='visitemedical@formationhabilitation';
+		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinimport.inc.php';
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.MAIN_DB_PREFIX.'formationhabilitation_visitemedical');
+		$this->import_regex_array[$r] = array();
+		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
+		$this->import_updatekeys_array[$r] = array('t.ref' => 'Ref');
+		$this->import_convertvalue_array[$r] = array(
+			't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
+		);
+		$this->import_run_sql_after_array[$r] = array();
+		$r++;
 		/* END MODULEBUILDER IMPORT FORMATION */
 	}
 
