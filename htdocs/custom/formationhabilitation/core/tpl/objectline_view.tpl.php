@@ -126,8 +126,25 @@ foreach($objectline->fields as $key => $val){
 
 		if($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') {
 			$date_finvalidite - null;
-			$objectparentline->id = $line->$key;
-			$prerequis_manquant = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentline, 0, 0, $date_finvalidite, 0, 1);
+			if($this->element == 'uservolet') {
+				$volet = new Volet($this->db);
+				$volet->fetch($this->fk_volet); 
+				if($volet->typevolet == 1) {
+					$objectparentlinetmp = new Formation($db);
+				}
+				elseif($volet->typevolet == 2) {
+					$objectparentlinetmp = new Habilitation($db);
+				}
+				elseif($volet->typevolet == 3) {
+					$objectparentlinetmp = new Autorisation($db);
+				}
+				$objectparentlinetmp->id = $line->$key;
+				$prerequis_manquant = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentlinetmp, 0, 0, $date_finvalidite, 0, 1);
+			}
+			else {
+				$objectparentline->id = $line->$key;
+				$prerequis_manquant = $elementPrerequis->gestionPrerequis($line->fk_user, $objectparentline, 0, 0, $date_finvalidite, 0, 1);
+			}
 			if(empty($prerequis_manquant)) {
 				print $form->textwithpicto('', 'Le collaborateur possède l\'ensemble des prérequis', 1, 'info');
 			}

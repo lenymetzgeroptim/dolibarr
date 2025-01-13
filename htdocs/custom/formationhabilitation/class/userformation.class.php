@@ -134,7 +134,7 @@ class UserFormation extends CommonObject
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"resultat" => array("type"=>"integer", "label"=>"Résultat", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Non défini", "2" => "Satisfaisant", "3" => "Non satisfaisant"),),
 		"cout_annexe" => array("type"=>"price", "label"=>"CoutAnnexe", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
-		"prevupif" => array("type"=>"boolean", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1",),
+		"prevupif" => array("type"=>"integer", "label"=>"PrevuPIF", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("{1:Oui" => "2:Non,3:Non applicable}"),),
 		"non_renouvelee" => array("type"=>"boolean", "label"=>"NonRenouvelee", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1", "help"=>"Lorsque la date de fin de validité sera atteinte, la formation sera clôturée et non expirée",),
 		"ex_status" => array("type"=>"integer", "label"=>"ExStatus", "enabled"=>"1", 'position'=>999, 'notnull'=>0, "visible"=>"0", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "8" => "Suspendue", "9" => "Cloturée"),),
 	);
@@ -168,6 +168,7 @@ class UserFormation extends CommonObject
 	public $prevupif;
 	public $non_renouvelee;
 	public $ex_status;
+
 	private $type_code = 'AC_USERFORMATION';
 	// END MODULEBUILDER PROPERTIES
 
@@ -310,7 +311,6 @@ class UserFormation extends CommonObject
 			$actioncomm->array_options['options_elementtype2'] = 'user';
 			$actioncomm->array_options['options_fk_userformation'] = $this->id;
 			$ret = $actioncomm->create($user); // User creating action
-
 			// $actioncomm->fk_element  = $this->fk_user;
 			// $actioncomm->elementtype = 'user';
 			// $actioncomm->extraparams = $this->module;
@@ -435,7 +435,7 @@ class UserFormation extends CommonObject
 						}
 					} elseif ($key == 'customsql') {
 						$sqlwhere[] = $value;
-					} elseif (strpos($value, '%') === false) {
+					} elseif (strpos($value, '%') === false && str_contains($this->fields[$key]['type'], 'varchar') === false && $this->fields[$key]['type'] != 'price') {
 						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
 					} else {
 						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
@@ -800,8 +800,8 @@ class UserFormation extends CommonObject
 	
 			// Envoi du mail
 			if($resultcreatelinehabilitations > 0 && !empty($txtListHabilitation) && !empty(GETPOST("notification_resp_anetenne"))) { 
-				rtrim($txtListHabilitation, ', ');
-	
+				$txtListHabilitation = rtrim($txtListHabilitation, ', ');
+
 				global $dolibarr_main_url_root;
 	
 				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
@@ -826,7 +826,7 @@ class UserFormation extends CommonObject
 				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 	
 				$user_static->fetch($this->fk_user);
-				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'$onglet=habilitation">'.$user_static->login.'</a>';
+				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'&onglet=habilitation">'.$user_static->login.'</a>';
 				$message = $langs->transnoentitiesnoconv("EMailTextHabilitationCreation", $formation->label, $link, $txtListHabilitation);
 	
 				$trackid = 'formationhabilitation'.$formation->id;
@@ -872,7 +872,7 @@ class UserFormation extends CommonObject
 			// Envoi du mail
 			if($resultcreatelineautorisations > 0 && !empty($txtListAutorisation) && !empty(GETPOST("notification_resp_anetenne"))) { 
 				$user_static = new User($this->db);
-				rtrim($txtListAutorisation, ', ');
+				$txtListAutorisation = rtrim($txtListAutorisation, ', ');
 	
 				global $dolibarr_main_url_root;
 	
@@ -898,7 +898,7 @@ class UserFormation extends CommonObject
 				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 	
 				$user_static->fetch($this->fk_user);
-				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'$onglet=autorisation">'.$user_static->login.'</a>';
+				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'&onglet=autorisation">'.$user_static->login.'</a>';
 				$message = $langs->transnoentitiesnoconv("EMailTextAutorisationCreation", $formation->label, $link, $txtListAutorisation);
 	
 				$trackid = 'formationhabilitation'.$formation->id;
@@ -1044,6 +1044,7 @@ class UserFormation extends CommonObject
 			$ret = $actioncomm->create($user); // User creating action
 		}
 
+		// Convocation
 		if(!$error) {
 			$convocation = new Convocation($this->db);
 			$user_static = new User($this->db);
@@ -1997,33 +1998,33 @@ class UserFormation extends CommonObject
 	 *  @param      null|array  $moreparams     Array to provide more information
 	 *  @return     int         				0 if KO, 1 if OK
 	 */
-	public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
-	{
-		global $conf, $langs;
+	// public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
+	// {
+	// 	global $conf, $langs;
 
-		$result = 0;
-		$includedocgeneration = 0;
+	// 	$result = 0;
+	// 	$includedocgeneration = 0;
 
-		$langs->load("formationhabilitation@formationhabilitation");
+	// 	$langs->load("formationhabilitation@formationhabilitation");
 
-		if (!dol_strlen($modele)) {
-			$modele = 'standard_userformation';
+	// 	if (!dol_strlen($modele)) {
+	// 		$modele = 'standard_userformation';
 
-			if (!empty($this->model_pdf)) {
-				$modele = $this->model_pdf;
-			} elseif (!empty($conf->global->USERFORMATION_ADDON_PDF)) {
-				$modele = $conf->global->USERFORMATION_ADDON_PDF;
-			}
-		}
+	// 		if (!empty($this->model_pdf)) {
+	// 			$modele = $this->model_pdf;
+	// 		} elseif (!empty($conf->global->USERFORMATION_ADDON_PDF)) {
+	// 			$modele = $conf->global->USERFORMATION_ADDON_PDF;
+	// 		}
+	// 	}
 
-		$modelpath = "core/modules/formationhabilitation/doc/";
+	// 	$modelpath = "core/modules/formationhabilitation/doc/";
 
-		if ($includedocgeneration && !empty($modele)) {
-			$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
-		}
+	// 	if ($includedocgeneration && !empty($modele)) {
+	// 		$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
+	// 	}
 
-		return $result;
-	}
+	// 	return $result;
+	// }
 
 	/**
 	 * Action executed by scheduler
@@ -2100,7 +2101,8 @@ class UserFormation extends CommonObject
 	 */
 	public function MajStatuts()
 	{
-		global $conf, $user;
+		global $conf, $user, $langs;
+		global $dolibarr_main_url_root;
 
 		$error = 0;
 		$now = dol_now();
@@ -2109,7 +2111,7 @@ class UserFormation extends CommonObject
 		$this->output = '';
 
 		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée ou Clôturée
-		$sql = "SELECT uf.rowid, uf.ref";
+		$sql = "SELECT uf.rowid, uf.ref, uf.fk_user";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
@@ -2121,7 +2123,7 @@ class UserFormation extends CommonObject
 		$sql .= " AND uf.date_finvalidite_formation < '".substr($this->db->idate($now), 0, 10)."'";
 
 		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité > DateJour + $delaisprogrammation mois => A programmer
-		$sql2 = "SELECT uf.rowid, uf.ref";
+		$sql2 = "SELECT uf.rowid, uf.ref, uf.fk_user";
 		$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql2 .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
@@ -2184,11 +2186,109 @@ class UserFormation extends CommonObject
 						$this->fetch($userformation_id);
 						if($this->non_renouvelee == 1) {
 							$rescloture = $this->close($user);
-							$this->output .= "La formation $this->ref a été passé au statut 'Clôturée'<br>";
+
+							if($rescloture) {
+								$this->output .= "La formation $this->ref a été passé au statut 'Clôturée'<br>";
+
+								$user_static = new User($this->db);
+								$user_static->fetch($obj->fk_user);
+								
+								$user_group = new UserGroup($this->db);
+								$user_group->fetch(0, 'Administratif');
+								$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+								$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+								$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+								$to = '';
+								foreach($liste_user as $uservalide){
+									if(!empty($uservalide->email)){
+										$to .= $uservalide->email.", ";
+									}
+								}
+								if(!empty($user_static->email)) {
+									$to .= $user_static->email.", ";
+								}
+								rtrim($to, ', ');
+								
+								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+								$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+								$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=formation">ici</a>';
+								$message = $langs->transnoentitiesnoconv("EMailTextFormationClose",  $this->ref, $link);
+
+								$mail = new CMailFile(
+									$subject,
+									$to,
+									$from,
+									$message,
+									array(),
+									array(),
+									array(),
+									'',
+									'',
+									0,
+									1,
+									'',
+									''
+								);
+
+								if(!empty($to)) {
+									$resultmail = $mail->sendfile();
+								}
+							}
 						}
 						else {
 							$rescloture = $this->expire($user);
-							$this->output .= "La formation $this->ref a été passé au statut 'Expirée'<br>";
+
+							if($rescloture) {
+								$this->output .= "La formation $this->ref a été passé au statut 'Expirée'<br>";
+
+								$user_static = new User($this->db);
+								$user_static->fetch($obj->fk_user);
+								
+								$user_group = new UserGroup($this->db);
+								$user_group->fetch(0, 'Administratif');
+								$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+								$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+								$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+								$to = '';
+								foreach($liste_user as $uservalide){
+									if(!empty($uservalide->email)){
+										$to .= $uservalide->email.", ";
+									}
+								}
+								if(!empty($user_static->email)) {
+									$to .= $user_static->email.", ";
+								}
+								rtrim($to, ', ');
+								
+								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+								$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+								$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=formation">ici</a>';
+								$message = $langs->transnoentitiesnoconv("EMailTextFormationExpire",  $this->ref, $link);
+
+								$mail = new CMailFile(
+									$subject,
+									$to,
+									$from,
+									$message,
+									array(),
+									array(),
+									array(),
+									'',
+									'',
+									0,
+									1,
+									'',
+									''
+								);
+
+								if(!empty($to)) {
+									$resultmail = $mail->sendfile();
+								}
+							}
 						}
 
 						if($rescloture < 0) {
@@ -2210,6 +2310,49 @@ class UserFormation extends CommonObject
 				$resql = $this->db->query($sql);
 				if ($resql) {
 					$this->db->commit();
+
+					$user_static = new User($this->db);
+					$user_static->fetch($obj->fk_user);
+					
+					$user_group = new UserGroup($this->db);
+					$user_group->fetch(0, 'Administratif');
+					$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+					$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+					$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+					$to = '';
+					foreach($liste_user as $uservalide){
+						if(!empty($uservalide->email)){
+							$to .= $uservalide->email.", ";
+						}
+					}
+					rtrim($to, ', ');
+					
+					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+					$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=formation">ici</a>';
+					$message = $langs->transnoentitiesnoconv("EMailTextFormationToProgram",  $this->ref, $link);
+
+					$mail = new CMailFile(
+						$subject,
+						$to,
+						$from,
+						$message,
+						array(),
+						array(),
+						array(),
+						'',
+						'',
+						0,
+						1,
+						'',
+						''
+					);
+
+					if(!empty($to)) {
+						$resultmail = $mail->sendfile();
+					}
 				}
 				else{
 					$this->error = $this->db->lasterror();
@@ -2223,7 +2366,7 @@ class UserFormation extends CommonObject
 
 		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
 			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse > DateJour => Expirée ou Cloturée
-			$sql = "SELECT uf.rowid, uf.ref";
+			$sql = "SELECT uf.rowid, uf.ref, uf.fk_user";
 			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 			$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
@@ -2233,7 +2376,7 @@ class UserFormation extends CommonObject
 			$sql .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL f.periode_souplesse MONTH) < '".substr($this->db->idate($now), 0, 10)."'";
 
 			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => A programmer
-			$sql2 = "SELECT uf.rowid, uf.ref";
+			$sql2 = "SELECT uf.rowid, uf.ref, uf.fk_user";
 			$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 			$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 			$sql2 .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
@@ -2332,7 +2475,7 @@ class UserFormation extends CommonObject
 
 
 			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée ou Clôturée
-			$sql = "SELECT uf.rowid, uf.ref";
+			$sql = "SELECT uf.rowid, uf.ref, uf.fk_user";
 			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 			$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";

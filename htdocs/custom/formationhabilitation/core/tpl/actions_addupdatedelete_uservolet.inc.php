@@ -175,12 +175,14 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $permissiontovalidate
 	$volet = new Volet($db);
 	$volet->fetch($object->fk_volet);	$object->oldcopy = clone $object;
 
-	if (empty(GETPOST("date_debut_voletmonth", 'int')) || empty(GETPOST("date_debut_voletday", 'int')) || empty(GETPOST("date_debut_voletyear", 'int'))) {
-		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateDebutVolet")), null, 'errors');
-		$error++;
+	if($volet->typevolet == 2 || $volet->typevolet == 3) {
+		if (empty(GETPOST("date_debut_voletmonth", 'int')) || empty(GETPOST("date_debut_voletday", 'int')) || empty(GETPOST("date_debut_voletyear", 'int'))) {
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateDebutVolet")), null, 'errors');
+			$error++;
+		}
+		$date_debut_volet = dol_mktime(-1, -1, -1, GETPOST("date_debut_voletmonth", 'int'), GETPOST("date_debut_voletday", 'int'), GETPOST("date_debut_voletyear", 'int'));
 	}
-	$date_debut_volet = dol_mktime(-1, -1, -1, GETPOST("date_debut_voletmonth", 'int'), GETPOST("date_debut_voletday", 'int'), GETPOST("date_debut_voletyear", 'int'));
-
+	
 	if(!$error) {
 		// TODOLENY : Gérer une date de fin en fonction du volet
 		if($volet->typevolet == 2 || $volet->typevolet == 3) {

@@ -79,7 +79,7 @@ else {
 
 if($objectline->element == 'userformation') {
 	unset($objectline->fields['status']['arrayofkeyval'][4]);
-	unset($objectline->fields['status']['arrayofkeyval'][5]);
+	unset($objectline->fields['status']['arrayofkeyval'][8]);
 	unset($objectline->fields['status']['arrayofkeyval'][9]);
 }
 elseif($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation') {
@@ -87,13 +87,14 @@ elseif($objectline->element == 'userhabilitation' || $objectline->element == 'us
 	unset($objectline->fields['status']['arrayofkeyval'][3]);
 	unset($objectline->fields['status']['arrayofkeyval'][9]);
 }
-elseif($objectline->element == 'uservolet') {
-	unset($objectline->fields['status']['arrayofkeyval'][1]);
-	unset($objectline->fields['status']['arrayofkeyval'][2]);
-	unset($objectline->fields['status']['arrayofkeyval'][3]);
-	unset($objectline->fields['status']['arrayofkeyval'][4]);
-	unset($objectline->fields['status']['arrayofkeyval'][9]);
-}
+// elseif($objectline->element == 'uservolet') {
+// 	unset($objectline->fields['status']['arrayofkeyval'][1]);
+// 	unset($objectline->fields['status']['arrayofkeyval'][2]);
+// 	unset($objectline->fields['status']['arrayofkeyval'][3]);
+// 	unset($objectline->fields['status']['arrayofkeyval'][4]);
+// 	unset($objectline->fields['status']['arrayofkeyval'][8]);
+// 	unset($objectline->fields['status']['arrayofkeyval'][9]);
+// }
 
 foreach($objectline->fields as $key => $val){
 	if($objectline->element == 'uservolet' && $key != 'fk_volet') {

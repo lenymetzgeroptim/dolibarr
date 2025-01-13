@@ -115,21 +115,21 @@ if($onglet == 'formation' || empty($onglet)) {
     $permissiontoaddline = $user->rights->formationhabilitation->formation->writeline;
     $permissiontodeleteline = $user->rights->formationhabilitation->formation->deleteline;
     $permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
-    $permissiontovalidateline = $userInRespAntenneGroup && $userIsRespAntenne;
+    $permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne) || $user->rights->formationhabilitation->formation->validateline;
     $permissiontoforceline = $user->rights->formationhabilitation->formation->forceline;
 }
 elseif($onglet == 'habilitation'){
     $permissiontoreadline = $user->rights->formationhabilitation->habilitation_autorisation->readline || $object->id == $user->id;
     $permissiontoaddline = $user->rights->formationhabilitation->habilitation_autorisation->writeline;
     $permissiontodeleteline = $user->rights->formationhabilitation->habilitation_autorisation->deleteline;
-    $permissiontovalidateline = $userInRespAntenneGroup && $userIsRespAntenne;
+    $permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne) || $user->rights->formationhabilitation->formation->validateline;
     $permissiontoforceline = $user->rights->formationhabilitation->habilitation_autorisation->forceline;
 }
 elseif($onglet == 'autorisation'){
     $permissiontoreadline = $user->rights->formationhabilitation->habilitation_autorisation->readline || $object->id == $user->id;
     $permissiontoaddline = $user->rights->formationhabilitation->habilitation_autorisation->writeline;
     $permissiontodeleteline = $user->rights->formationhabilitation->habilitation_autorisation->deleteline;
-    $permissiontovalidateline = $userInRespAntenneGroup && $userIsRespAntenne;
+    $permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne) || $user->rights->formationhabilitation->formation->validateline;
     $permissiontoforceline = $user->rights->formationhabilitation->habilitation_autorisation->forceline;
 }
 elseif($onglet == 'volet'){

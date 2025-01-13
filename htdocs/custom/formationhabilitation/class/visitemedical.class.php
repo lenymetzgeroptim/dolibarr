@@ -131,7 +131,7 @@ class VisiteMedical extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Resultat", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Apte", "3" => "Inapte", "2" => "Conditionnel", "8" => "Expirée", "9" => "Clôturée"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Resultat", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Apte", "3" => "Inapte", "2" => "Conditionnelle", "8" => "Expirée", "9" => "Clôturée"), "validate"=>"1",),
 		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"fk_contact" => array("type"=>"integer:contact:contact/class/contact.class.php:0:(civility:=:'dr')", "label"=>"Medecin", "enabled"=>"1", 'position'=>36, 'notnull'=>1, "visible"=>"1",),
 		"objetvisite" => array("type"=>"varchar(128)", "label"=>"ObjetVisite", "enabled"=>"1", 'position'=>25, 'notnull'=>1, "visible"=>"1",),
@@ -434,7 +434,7 @@ class VisiteMedical extends CommonObject
 			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 
 			$user_static->fetch($this->fk_user);
-			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'$onglet=habilitation">ici</a>';
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/visitemedical_card.php?id='.$this->id.'">ici</a>';
 			$message = $langs->transnoentitiesnoconv("EMailTextVisiteMedicaleConditionnel", $user_static->firstname, $user_static->lastname, $link);
 
 			$mail = new CMailFile(
@@ -461,8 +461,6 @@ class VisiteMedical extends CommonObject
 				}
 			}
 		}
-
-		
 
 		return $resultcreate;
 	}
@@ -1440,33 +1438,33 @@ class VisiteMedical extends CommonObject
 	 *  @param      null|array  $moreparams     Array to provide more information
 	 *  @return     int         				0 if KO, 1 if OK
 	 */
-	public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
-	{
-		global $conf, $langs;
+	// public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
+	// {
+	// 	global $conf, $langs;
 
-		$result = 0;
-		$includedocgeneration = 1;
+	// 	$result = 0;
+	// 	$includedocgeneration = 1;
 
-		$langs->load("formationhabilitation@formationhabilitation");
+	// 	$langs->load("formationhabilitation@formationhabilitation");
 
-		if (!dol_strlen($modele)) {
-			$modele = 'standard_visitemedical';
+	// 	if (!dol_strlen($modele)) {
+	// 		$modele = 'standard_visitemedical';
 
-			if (!empty($this->model_pdf)) {
-				$modele = $this->model_pdf;
-			} elseif (getDolGlobalString('MYOBJECT_ADDON_PDF')) {
-				$modele = getDolGlobalString('MYOBJECT_ADDON_PDF');
-			}
-		}
+	// 		if (!empty($this->model_pdf)) {
+	// 			$modele = $this->model_pdf;
+	// 		} elseif (getDolGlobalString('MYOBJECT_ADDON_PDF')) {
+	// 			$modele = getDolGlobalString('MYOBJECT_ADDON_PDF');
+	// 		}
+	// 	}
 
-		$modelpath = "core/modules/formationhabilitation/doc/";
+	// 	$modelpath = "core/modules/formationhabilitation/doc/";
 
-		if ($includedocgeneration && !empty($modele)) {
-			$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
-		}
+	// 	if ($includedocgeneration && !empty($modele)) {
+	// 		$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
+	// 	}
 
-		return $result;
-	}
+	// 	return $result;
+	// }
 
 	/**
 	 * Action executed by cron
@@ -1489,7 +1487,7 @@ class VisiteMedical extends CommonObject
 
 		$this->db->begin();
 
-		$sql = "SELECT vm.rowid, vm.ref";
+		$sql = "SELECT vm.rowid, vm.ref, vm.fk_user";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
 		$sql .= " WHERE vm.datefinvalidite IS NOT NULL";
 		$sql .= " AND vm.datefinvalidite < '".substr($this->db->idate($now), 0, 10)."'";
@@ -1508,6 +1506,54 @@ class VisiteMedical extends CommonObject
 				}
 				else {
 					$this->output .= "La visite médicale $obj->ref a été passé au statut 'Expirée'<br>";
+
+					global $dolibarr_main_url_root;
+
+					$user_static = new User($this->db);
+					$user_static->fetch($obj->fk_user);
+					
+					$user_group = new UserGroup($this->db);
+					$user_group->fetch(0, 'Administratif');
+					$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+					$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+					$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+					$to = '';
+					foreach($liste_user as $uservalide){
+						if(!empty($uservalide->email)){
+							$to .= $uservalide->email.", ";
+						}
+					}
+					if(!empty($user_static->email)) {
+						$to .= $user_static->email.", ";
+					}
+					rtrim($to, ', ');
+					
+					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+					$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/visitemedical_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
+					$message = $langs->transnoentitiesnoconv("EMailTextVMExpire", $link);
+
+					$mail = new CMailFile(
+						$subject,
+						$to,
+						$from,
+						$message,
+						array(),
+						array(),
+						array(),
+						'',
+						'',
+						0,
+						1,
+						'',
+						''
+					);
+
+					if(!empty($to)) {
+						$resultmail = $mail->sendfile();
+					}
 				}
 			}
 		}

@@ -43,7 +43,7 @@ CREATE TABLE llx_formationhabilitation_userformation(
 	nombre_heure integer, 
 	resultat integer, 
 	cout_annexe double, 
-	prevupif boolean, 
+	prevupif integer, 
 	non_renouvelee boolean, 
 	ex_status integer
 	-- END MODULEBUILDER FIELDS

@@ -448,6 +448,11 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][4] = 'habilitation_autorisation';
 		$this->rights[$r][5] = 'deleteline';
 		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 7 + 1);
+		$this->rights[$r][1] = 'Valider les Habilitations et Autorisations (assignées aux collaborateurs) à la place du responsable d\'antenne';
+		$this->rights[$r][4] = 'habilitation_autorisation';
+		$this->rights[$r][5] = 'validateline';
+		$r++;
 
 
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 0 + 1);

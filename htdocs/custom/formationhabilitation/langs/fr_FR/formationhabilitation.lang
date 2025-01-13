@@ -265,11 +265,23 @@ ErrorFormationUnsatisfate = Impossible de valider la formation car le résultat 
 #
 # Email
 #
-EMailTextHabilitationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les habilitations suivantes sont à valider pour %s : %s
-EMailTextAutorisationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les autorisations suivantes sont à valider pour %s : %s
-EMailTextVisiteMedicaleConditionnel = Bonjour,<br><br>La visite médicale de %s %s est conditionnel, vous pouvez la consulter %s
-
-
+EMailTextHabilitationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les habilitations suivantes sont à valider pour %s : %s<br><br>Cordialement
+EMailTextAutorisationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les autorisations suivantes sont à valider pour %s : %s<br><br>Cordialement
+EMailTextVisiteMedicaleConditionnel = Bonjour,<br><br>La visite médicale de %s %s est conditionnelle, vous pouvez la consulter %s<br><br>Cordialement
+EMailTextUserVoletCreate = Bonjour,<br><br>Le volet %s de %s a été créé. Un membre du groupe %s doit le valider %s<br><br>Cordialement
+EMailTextUserVoletNeedValidate = Bonjour,<br><br>Le volet %s de %s a été validé. Un membre du groupe %s doit le valider %s<br><br>Cordialement
+EMailTextUserVoletValidate = Bonjour,<br><br>Votre volet %s a été validé<br><br>Cordialement
+EMailTextUserVoletValidateUser = Bonjour,<br><br>Vous devez valider votre volet %s<br><br>Cordialement
+EMailTextUserVoletRefus = Bonjour,<br><br>Le volet %s a été refusé par %s pour le motif suivant : %s<br><br>Cordialement
+EMailTextVMExpire = Bonjour,<br><br>La visite médicale %s a expirée<br><br>Cordialement
+EMailTextUserVoletExpire = Bonjour,<br><br>Le volet %s a expiré<br><br>Cordialement
+EMailTextFormationClose = Bonjour,<br><br>Le formation %s a été cloturée, vous pouvez consulter la liste des formations %s<br><br>Cordialement
+EMailTextFormationExpire = Bonjour,<br><br>Le formation %s a expirée, vous pouvez consulter la liste des formations %s<br><br>Cordialement
+EMailTextFormationToProgram = Bonjour,<br><br>Le formation %s est a programmer, vous pouvez consulter la liste des formations %s<br><br>Cordialement
+EMailTextAutorisationClose = Bonjour,<br><br>L'autorisation %s a été cloturée, vous pouvez consulter la liste des autorisations %s<br><br>Cordialement
+EMailTextAutorisationExpire = Bonjour,<br><br>L'autorisation %s a expirée, vous pouvez consulter la liste des autorisations %s<br><br>Cordialement
+EMailTextHabilitationClose = Bonjour,<br><br>L'habilitation %s a été cloturée, vous pouvez consulter la liste des habilitations %s<br><br>Cordialement
+EMailTextHabilitationExpire = Bonjour,<br><br>L'habilitation %s a expirée, vous pouvez consulter la liste des habilitations %s<br><br>Cordialement
 #
 # Evenement Agenda
 #
@@ -347,6 +359,6 @@ GenerateAuto = Génération automatique
 habilitationtogenerate = Habilitation(s) à générer
 autorisationtogenerate = Autorisation(s) à générer
 Refuse = Refuser
-NotificationRespAntenne = Notifier le responsable d'antenne
+NotificationRespAntenne = Notifier le responsable d'antenne de la creation d'habilitations/autorisation
 GenerationVoletFormation = Génération du volet de formation
 GenerationAndCloseVoletFormation = Génération(s) et clôture(s) des volets de formation

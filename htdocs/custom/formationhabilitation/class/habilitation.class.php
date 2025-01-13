@@ -1115,33 +1115,33 @@ class Habilitation extends CommonObject
 	 *  @param      null|array  $moreparams     Array to provide more information
 	 *  @return     int         				0 if KO, 1 if OK
 	 */
-	public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
-	{
-		global $conf, $langs;
+	// public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
+	// {
+	// 	global $conf, $langs;
 
-		$result = 0;
-		$includedocgeneration = 0;
+	// 	$result = 0;
+	// 	$includedocgeneration = 0;
 
-		$langs->load("formationhabilitation@formationhabilitation");
+	// 	$langs->load("formationhabilitation@formationhabilitation");
 
-		if (!dol_strlen($modele)) {
-			$modele = 'standard_habilitation';
+	// 	if (!dol_strlen($modele)) {
+	// 		$modele = 'standard_habilitation';
 
-			if (!empty($this->model_pdf)) {
-				$modele = $this->model_pdf;
-			} elseif (!empty($conf->global->HABILITATION_ADDON_PDF)) {
-				$modele = $conf->global->HABILITATION_ADDON_PDF;
-			}
-		}
+	// 		if (!empty($this->model_pdf)) {
+	// 			$modele = $this->model_pdf;
+	// 		} elseif (!empty($conf->global->HABILITATION_ADDON_PDF)) {
+	// 			$modele = $conf->global->HABILITATION_ADDON_PDF;
+	// 		}
+	// 	}
 
-		$modelpath = "core/modules/formationhabilitation/doc/";
+	// 	$modelpath = "core/modules/formationhabilitation/doc/";
 
-		if ($includedocgeneration && !empty($modele)) {
-			$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
-		}
+	// 	if ($includedocgeneration && !empty($modele)) {
+	// 		$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
+	// 	}
 
-		return $result;
-	}
+	// 	return $result;
+	// }
 
 	/**
 	 * Action executed by scheduler
@@ -1385,14 +1385,15 @@ class Habilitation extends CommonObject
 
 			// Si toutes les conditions sont remplies, attribuer l'habilitation
 			if ($all_conditions_met == 1 && !$disable_generation) {
-				$txtListHabilitation .= $habilitation->label.', ';
-
 				$resultcreate = $habilitation->AsignToUser($user_id, $userformation, $date_finvalidite);
 				
-				if($resultcreate <= 0) {
+				if($resultcreate < 0) {
 					$this->error = $habilitation->db->lasterror();
 					$this->errors[] = $this->error;
 					return -1;
+				}
+				elseif($resultcreate > 0) {
+					$txtListHabilitation .= $habilitation->label.', ';
 				}
 			}
 			elseif($all_conditions_met == 1 && $disable_generation) {

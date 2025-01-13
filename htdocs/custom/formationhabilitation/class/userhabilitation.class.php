@@ -279,7 +279,7 @@ class UserHabilitation extends CommonObject
 		else {
 			$habilitation->fetch($this->fk_habilitation); 
 			setEventMessages($langs->trans('ErrorUserHasSameUserHabilitation', $habilitation->label), null, 'warnings');
-			return 1;
+			return 0;
 		}
 
 		//$resultvalidate = $this->validate($user, $notrigger);
@@ -464,7 +464,7 @@ class UserHabilitation extends CommonObject
 						}
 					} elseif ($key == 'customsql') {
 						$sqlwhere[] = $value;
-					} elseif (strpos($value, '%') === false) {
+					} elseif (strpos($value, '%') === false && str_contains($this->fields[$key]['type'], 'varchar') === false && $this->fields[$key]['type'] != 'price') {
 						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
 					} else {
 						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
@@ -1563,33 +1563,33 @@ class UserHabilitation extends CommonObject
 	 *  @param      null|array  $moreparams     Array to provide more information
 	 *  @return     int         				0 if KO, 1 if OK
 	 */
-	public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
-	{
-		global $conf, $langs;
+	// public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
+	// {
+	// 	global $conf, $langs;
 
-		$result = 0;
-		$includedocgeneration = 0;
+	// 	$result = 0;
+	// 	$includedocgeneration = 0;
 
-		$langs->load("formationhabilitation@formationhabilitation");
+	// 	$langs->load("formationhabilitation@formationhabilitation");
 
-		if (!dol_strlen($modele)) {
-			$modele = 'standard_userhabilitation';
+	// 	if (!dol_strlen($modele)) {
+	// 		$modele = 'standard_userhabilitation';
 
-			if (!empty($this->model_pdf)) {
-				$modele = $this->model_pdf;
-			} elseif (!empty($conf->global->USERHABILITATION_ADDON_PDF)) {
-				$modele = $conf->global->USERHABILITATION_ADDON_PDF;
-			}
-		}
+	// 		if (!empty($this->model_pdf)) {
+	// 			$modele = $this->model_pdf;
+	// 		} elseif (!empty($conf->global->USERHABILITATION_ADDON_PDF)) {
+	// 			$modele = $conf->global->USERHABILITATION_ADDON_PDF;
+	// 		}
+	// 	}
 
-		$modelpath = "core/modules/formationhabilitation/doc/";
+	// 	$modelpath = "core/modules/formationhabilitation/doc/";
 
-		if ($includedocgeneration && !empty($modele)) {
-			$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
-		}
+	// 	if ($includedocgeneration && !empty($modele)) {
+	// 		$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
+	// 	}
 
-		return $result;
-	}
+	// 	return $result;
+	// }
 
 	/**
 	 * Action executed by scheduler
@@ -1861,7 +1861,8 @@ class UserHabilitation extends CommonObject
 	 */
 	public function MajStatuts()
 	{
-		global $conf, $user;
+		global $conf, $user, $langs;
+		global $dolibarr_main_url_root;
 
 		$error = 0;
 		$now = dol_now();
@@ -1870,7 +1871,7 @@ class UserHabilitation extends CommonObject
 		$this->output = '';
 
 		// Gestion des habilitations valide avec DateFinValidité < DateJour => Expirée
-		$sql = "SELECT uh.rowid, uh.ref";
+		$sql = "SELECT uh.rowid, uh.ref, uh.fk_user";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uh";
 		$sql .= " WHERE uh.date_fin_habilitation IS NOT NULL";
 		$sql .= " AND (uh.status = ".self::STATUS_HABILITE." OR uh.status = ".self::STATUS_SUSPEND.")";
@@ -1890,11 +1891,59 @@ class UserHabilitation extends CommonObject
 				if($obj->rowid > 0) {
 					$this->fetch($obj->rowid );
 					$res = $this->expire($user);
-					$this->output .= "L'habilitation $obj->ref a été passé au statut 'Expirée'<br>";
 
 					if($res < 0) {
 						$this->error = $this->db->lasterror();
 						$error++;
+					}
+					else {
+						$this->output .= "L'habilitation $obj->ref a été passé au statut 'Expirée'<br>";
+
+						$user_static = new User($this->db);
+						$user_static->fetch($obj->fk_user);
+						
+						$user_group = new UserGroup($this->db);
+						$user_group->fetch(0, 'Administratif');
+						$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+						$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+						$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+						$to = '';
+						foreach($liste_user as $uservalide){
+							if(!empty($uservalide->email)){
+								$to .= $uservalide->email.", ";
+							}
+						}
+						if(!empty($user_static->email)) {
+							$to .= $user_static->email.", ";
+						}
+						rtrim($to, ', ');
+						
+						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=habilitation">ici</a>';
+						$message = $langs->transnoentitiesnoconv("EMailTextHabilitationExpire",  $this->ref, $link);
+
+						$mail = new CMailFile(
+							$subject,
+							$to,
+							$from,
+							$message,
+							array(),
+							array(),
+							array(),
+							'',
+							'',
+							0,
+							1,
+							'',
+							''
+						);
+
+						if(!empty($to)) {
+							$resultmail = $mail->sendfile();
+						}
 					}
 				}
 
@@ -1906,7 +1955,7 @@ class UserHabilitation extends CommonObject
 		}
 
 		// Gestion des habilitations non valide avec DateFinValidité < DateJour => Clôturée
-		$sql = "SELECT uh.rowid, uh.ref";
+		$sql = "SELECT uh.rowid, uh.ref, uh.fk_user";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as uh";
 		$sql .= " WHERE uh.date_fin_habilitation IS NOT NULL";
 		$sql .= " AND (uh.status = ".self::STATUS_HABILITABLE.")";
@@ -1926,11 +1975,59 @@ class UserHabilitation extends CommonObject
 				if($obj->rowid > 0) {
 					$this->fetch($obj->rowid );
 					$res = $this->close($user);
-					$this->output .= "L'habilitation $obj->ref a été passé au statut 'Clôturée'<br>";
 
 					if($res < 0) {
 						$this->error = $this->db->lasterror();
 						$error++;
+					}
+					else {
+						$this->output .= "L'habilitation $obj->ref a été passé au statut 'Clôturée'<br>";
+
+						$user_static = new User($this->db);
+						$user_static->fetch($obj->fk_user);
+						
+						$user_group = new UserGroup($this->db);
+						$user_group->fetch(0, 'Administratif');
+						$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+						$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+						$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+						$to = '';
+						foreach($liste_user as $uservalide){
+							if(!empty($uservalide->email)){
+								$to .= $uservalide->email.", ";
+							}
+						}
+						if(!empty($user_static->email)) {
+							$to .= $user_static->email.", ";
+						}
+						rtrim($to, ', ');
+						
+						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=habilitation">ici</a>';
+						$message = $langs->transnoentitiesnoconv("EMailTextHabilitationClose",  $this->ref, $link);
+
+						$mail = new CMailFile(
+							$subject,
+							$to,
+							$from,
+							$message,
+							array(),
+							array(),
+							array(),
+							'',
+							'',
+							0,
+							1,
+							'',
+							''
+						);
+
+						if(!empty($to)) {
+							$resultmail = $mail->sendfile();
+						}
 					}
 				}
 

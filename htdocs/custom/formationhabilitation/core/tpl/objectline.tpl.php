@@ -189,7 +189,7 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
                     }
                 } elseif ($key == 'customsql') {
                     $sqlwhere[] = $value;
-                } elseif (strpos($value, '%') === false) {
+                } elseif (strpos($value, '%') === false && str_contains($objectline->fields[$key]['type'], 'varchar') === false && $objectline->fields[$key]['type'] != 'price') {
                     $sqlwhere[] = $key." IN (".$db->sanitize($db->escape($value)).")";
                 } else {
                     $sqlwhere[] = $key." LIKE '%".$db->escape($value)."%'";
@@ -293,12 +293,18 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
             $autorisation = new Autorisation($db);
             $autorisation_to_generate = $autorisation->generateAutorisationsForUser(GETPOST('fk_user'), $userFormation, $txtListAutorisation, 1);
 
-            $formquestion = array(
-                array('label'=>$langs->trans('GenerationVoletFormation') ,'type'=>'checkbox', 'name'=>'generation_volet_formation', 'value'=>1),
-                array('label'=>$langs->trans('NotificationRespAntenne') ,'type'=>'checkbox', 'name'=>'notification_resp_anetenne', 'value'=>1),
-                array('label'=>$langs->trans('habilitationtogenerate') ,'type'=>'multiselect', 'name'=>'habilitation_generate', 'values'=>$habilitation_to_generate, 'default'=>array_keys($habilitation_to_generate)),
-                array('label'=>$langs->trans('autorisationtogenerate') ,'type'=>'multiselect', 'name'=>'autorisation_generate', 'values'=>$autorisation_to_generate, 'default'=>array_keys($autorisation_to_generate)),
-            );
+            $formquestion = array();
+            if(GETPOST('fk_formation') > 0) {
+                $formation = new Formation($db);
+                $formation->fetch(GETPOST('fk_formation'));
+                if(!empty($formation->fk_volet) && GETPOST('resultat') != 3) {
+                    $formquestion[] = array('label'=>$langs->trans('GenerationVoletFormation') ,'type'=>'checkbox', 'name'=>'generation_volet_formation', 'value'=>1);
+                }
+            }
+
+            $formquestion[] = array('label'=>$langs->trans('NotificationRespAntenne') ,'type'=>'checkbox', 'name'=>'notification_resp_anetenne', 'value'=>1);
+            $formquestion[] = array('label'=>$langs->trans('habilitationtogenerate') ,'type'=>'multiselect', 'name'=>'habilitation_generate', 'values'=>$habilitation_to_generate, 'default'=>array_keys($habilitation_to_generate));
+            $formquestion[] = array('label'=>$langs->trans('autorisationtogenerate') ,'type'=>'multiselect', 'name'=>'autorisation_generate', 'values'=>$autorisation_to_generate, 'default'=>array_keys($autorisation_to_generate));
         }
         elseif(GETPOST('status') == $objectline::STATUS_PROGRAMMEE) {
             if (!empty(GETPOST("date_debut_formationmonth", 'int')) && !empty(GETPOST("date_debut_formationday", 'int')) && !empty(GETPOST("date_debut_formationyear", 'int'))) {

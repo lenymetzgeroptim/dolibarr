@@ -206,7 +206,7 @@ elseif($object->status == $object::STATUS_VALIDATION3) {
 	$permissiontovalidate = $permissiontovalidate4;
 }
 elseif($object->status == $object::STATUS_VALIDATION_WITHOUT_USER) {
-	$permissiontovalidate = $user->id = $object->fk_user;
+	$permissiontovalidate = $user->id == $object->fk_user;
 }
 
 if($object->status < $object::STATUS_VALIDATION1 && strpos($approbationRequire, '2') !== false) { // Il y a l'approbation 2

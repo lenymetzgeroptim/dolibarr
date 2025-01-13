@@ -265,7 +265,6 @@ class UserVolet extends CommonObject
 		global $conf, $langs; 
 
 		$volet = new Volet($this->db);
-		$volet->fetch($this->fk_volet);
 
 		// Crétion des volets ID, SST, Entreprise
 		if($generation_other_volet) {
@@ -292,6 +291,7 @@ class UserVolet extends CommonObject
 		}
 
 		$this->cloture = 1;
+		$volet->fetch($this->fk_volet);
 
 		$variableName = 'FORMTIONHABILITATION_APPROBATIONVOLET'.$this->fk_volet;
 		$approbationRequire = $conf->global->$variableName;
@@ -343,6 +343,244 @@ class UserVolet extends CommonObject
 					if ($retgen < 0) {
 						setEventMessages($this->error, $this->errors, 'warnings');
 					}
+				}
+			}
+		}
+
+		// Gestion du mail 
+		$user_group = new UserGroup($this->db);
+		if($this->status == self::STATUS_VALIDATION0) {
+			global $dolibarr_main_url_root;
+	
+			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+			$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($liste_user as $uservalide){
+				if(!empty($uservalide->email)){
+					$to .= $uservalide->email.", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+				}
+			}
+		}
+		elseif($this->status == self::STATUS_VALIDATION1) {
+			global $dolibarr_main_url_root;
+	
+			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+			$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($liste_user as $uservalide){
+				if(!empty($uservalide->email)){
+					$to .= $uservalide->email.", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+				}
+			}
+		}
+		elseif($this->status == self::STATUS_VALIDATION2) {
+			global $dolibarr_main_url_root;
+	
+			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+			$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($liste_user as $uservalide){
+				if(!empty($uservalide->email)){
+					$to .= $uservalide->email.", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+				}
+			}
+		}
+		elseif($this->status == self::STATUS_VALIDATION3) {
+			global $dolibarr_main_url_root;
+	
+			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+			$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($liste_user as $uservalide){
+				if(!empty($uservalide->email)){
+					$to .= $uservalide->email.", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+				}
+			}
+		}
+		elseif($this->status == self::STATUS_VALIDATION_WITHOUT_USER) {
+			global $dolibarr_main_url_root;
+	
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$to = $user_static->email;
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">'.$this->ref.'</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidateUser", $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 				}
 			}
 		}
@@ -572,7 +810,7 @@ class UserVolet extends CommonObject
 						}
 					} elseif ($key == 'customsql') {
 						$sqlwhere[] = $value;
-					} elseif (strpos($value, '%') === false) {
+					} elseif (strpos($value, '%') === false && str_contains($this->fields[$key]['type'], 'varchar') === false && $this->fields[$key]['type'] != 'price') {
 						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
 					} else {
 						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
@@ -625,7 +863,7 @@ class UserVolet extends CommonObject
 	 */
 	public function update(User $user, $notrigger = false, $refus = false)
 	{
-		global $langs; 
+		global $langs, $conf; 
 
 		if($refus) {
 			$this->actionmsg = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_REFUSInDolibarr", GETPOST('motif_refus', 'alpha'));
@@ -634,7 +872,75 @@ class UserVolet extends CommonObject
 		else {
 			$this->actionmsg = msgAgendaUpdate($this, 1);
 		}
-		return $this->updateCommon($user, $notrigger);
+		
+		$resultupdate = $this->updateCommon($user, $notrigger);
+
+		if($resultupdate && $refus) {
+			$user_group = new UserGroup($this->db);
+			global $dolibarr_main_url_root;
+	
+			if($this->status == self::STATUS_VALIDATION0) {
+				$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+			}
+			elseif($this->status == self::STATUS_VALIDATION1) {
+				$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+			}
+			elseif($this->status == self::STATUS_VALIDATION2) {
+				$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+			}
+			elseif($this->status == self::STATUS_VALIDATION3) {
+				$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+			}
+			$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($liste_user as $uservalide){
+				if(!empty($uservalide->email)){
+					$to .= $uservalide->email.", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$volet = new Volet($this->db);
+			$volet->fetch($this->fk_volet);
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">'.$this->ref.'</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletRefus", $link, $user_static->firstname." ".$user_static->lastname, GETPOST('motif_refus', 'alpha'));
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+				}
+			}
+			
+		}
+
+		return $resultupdate;
 	}
 
 	/**
@@ -809,6 +1115,59 @@ class UserVolet extends CommonObject
 			}
 		}
 
+		// Mail
+		$volet = new Volet($this->db);
+		$volet->fetch($this->fk_volet);
+		if(!$error) {
+			global $dolibarr_main_url_root;
+	
+			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+			$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($liste_user as $uservalide){
+				if(!empty($uservalide->email)){
+					$to .= $uservalide->email.", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletNeedValidate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+				}
+			}
+		}
+
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_VALIDATION1;
@@ -930,6 +1289,59 @@ class UserVolet extends CommonObject
 					if ($retgen < 0) {
 						setEventMessages($this->error, $this->errors, 'warnings');
 					}
+				}
+			}
+		}
+
+		// Mail
+		$volet = new Volet($this->db);
+		$volet->fetch($this->fk_volet);
+		if(!$error) {
+			global $dolibarr_main_url_root;
+	
+			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+			$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($liste_user as $uservalide){
+				if(!empty($uservalide->email)){
+					$to .= $uservalide->email.", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletNeedValidate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 				}
 			}
 		}
@@ -1064,6 +1476,59 @@ class UserVolet extends CommonObject
 			}
 		}
 
+		// Mail
+		$volet = new Volet($this->db);
+		$volet->fetch($this->fk_volet);
+		if(!$error) {
+			global $dolibarr_main_url_root;
+	
+			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+			$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($liste_user as $uservalide){
+				if(!empty($uservalide->email)){
+					$to .= $uservalide->email.", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletNeedValidate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+				}
+			}
+		}
+
 		// Set new ref and current status
 		if (!$error) {
 			$this->status = self::STATUS_VALIDATION3;
@@ -1191,6 +1656,47 @@ class UserVolet extends CommonObject
 					if ($retgen < 0) {
 						setEventMessages($this->error, $this->errors, 'warnings');
 					}
+				}
+			}
+		}
+
+		// Mail 
+		if(!$error) {
+			global $dolibarr_main_url_root;
+	
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$to = $user_static->email;
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">'.$this->ref.'</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidate", $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 				}
 			}
 		}
@@ -1396,6 +1902,47 @@ class UserVolet extends CommonObject
 		if (!$error) {
 			$this->ref = $num;
 			$this->status = self::STATUS_VALIDATED;
+		}
+
+		// Mail
+		if(!$error) {
+			global $dolibarr_main_url_root;
+	
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static = new User($this->db);
+			$user_static->fetch($this->fk_user);
+			$to = $user_static->email;
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">'.$this->ref.'</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidate", $link);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+				}
+			}
 		}
 
 		if (!$error && empty($this->datedebutvolet)) {
@@ -3187,7 +3734,7 @@ class UserVolet extends CommonObject
 	 */
 	public function MajStatuts()
 	{
-		global $conf, $user;
+		global $conf, $user, $langs;
 
 		$error = 0;
 		$now = dol_now();
@@ -3196,7 +3743,7 @@ class UserVolet extends CommonObject
 		$this->output = '';
 
 		// Gestion des volets valide avec DateFinValidité < DateJour => Expirée
-		$sql = "SELECT uv.rowid, uv.ref";
+		$sql = "SELECT uv.rowid, uv.ref, uv.fk_user";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as uv";
 		$sql .= " WHERE uv.datefinvolet IS NOT NULL";
 		$sql .= " AND (uv.status != ".self::STATUS_EXPIRE." AND uv.status != ".self::STATUS_CLOSE.")";
@@ -3216,11 +3763,61 @@ class UserVolet extends CommonObject
 				if($obj->rowid > 0) {
 					$this->fetch($obj->rowid );
 					$res = $this->expire($user);
-					$this->output .= "Le volet $obj->ref a été passé au statut 'Expiré'<br>";
 
 					if($res < 0) {
 						$this->error = $this->db->lasterror();
 						$error++;
+					}
+					else {
+						$this->output .= "Le volet $obj->ref a été passé au statut 'Expiré'<br>";
+
+						global $dolibarr_main_url_root;
+
+						$user_static = new User($this->db);
+						$user_static->fetch($obj->fk_user);
+						
+						$user_group = new UserGroup($this->db);
+						$user_group->fetch(0, 'Administratif');
+						$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+						$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+						$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+						$to = '';
+						foreach($liste_user as $uservalide){
+							if(!empty($uservalide->email)){
+								$to .= $uservalide->email.", ";
+							}
+						}
+						if(!empty($user_static->email)) {
+							$to .= $user_static->email.", ";
+						}
+						rtrim($to, ', ');
+						
+						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
+						$message = $langs->transnoentitiesnoconv("EMailTextUserVoletExpire", $link);
+
+						$mail = new CMailFile(
+							$subject,
+							$to,
+							$from,
+							$message,
+							array(),
+							array(),
+							array(),
+							'',
+							'',
+							0,
+							1,
+							'',
+							''
+						);
+
+						if(!empty($to)) {
+							$resultmail = $mail->sendfile();
+						}
 					}
 				}
 

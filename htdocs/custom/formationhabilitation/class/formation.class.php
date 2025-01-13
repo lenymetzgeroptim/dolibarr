@@ -1069,33 +1069,33 @@ class Formation extends CommonObject
 	 *  @param      null|array  $moreparams     Array to provide more information
 	 *  @return     int         				0 if KO, 1 if OK
 	 */
-	public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
-	{
-		global $conf, $langs;
+	// public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
+	// {
+	// 	global $conf, $langs;
 
-		$result = 0;
-		$includedocgeneration = 1;
+	// 	$result = 0;
+	// 	$includedocgeneration = 1;
 
-		$langs->load("formationhabilitation@formationhabilitation");
+	// 	$langs->load("formationhabilitation@formationhabilitation");
 
-		if (!dol_strlen($modele)) {
-			$modele = 'standard_formation';
+	// 	if (!dol_strlen($modele)) {
+	// 		$modele = 'standard_formation';
 
-			if (!empty($this->model_pdf)) {
-				$modele = $this->model_pdf;
-			} elseif (!empty($conf->global->FORMATION_ADDON_PDF)) {
-				$modele = $conf->global->FORMATION_ADDON_PDF;
-			}
-		}
+	// 		if (!empty($this->model_pdf)) {
+	// 			$modele = $this->model_pdf;
+	// 		} elseif (!empty($conf->global->FORMATION_ADDON_PDF)) {
+	// 			$modele = $conf->global->FORMATION_ADDON_PDF;
+	// 		}
+	// 	}
 
-		$modelpath = "core/modules/formationhabilitation/doc/";
+	// 	$modelpath = "core/modules/formationhabilitation/doc/";
 
-		if ($includedocgeneration && !empty($modele)) {
-			$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
-		}
+	// 	if ($includedocgeneration && !empty($modele)) {
+	// 		$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
+	// 	}
 
-		return $result;
-	}
+	// 	return $result;
+	// }
 
 	/**
 	 * Action executed by scheduler

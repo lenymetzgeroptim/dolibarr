@@ -424,7 +424,7 @@ if($action != 'editline' && $permissiontoadd) {
 
 				print '<td class="">';
 					$elementPrerequis->fields['prerequisobjects']['type'] = 'checkbox';
-					$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = array('1' => 'Intégration');
+					//$elementPrerequis->fields['prerequisobjects']['arrayofkeyval'] = array('1' => 'Intégration');
 					print $elementPrerequis->showInputField($elementPrerequis->fields['prerequisobjects'], 'prerequisobjects', '', '', '_autre');
 				print '</td>';
 
