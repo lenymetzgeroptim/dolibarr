@@ -130,7 +130,7 @@ class UserFormation extends CommonObject
 		"date_finvalidite_formation" => array("type"=>"date", "label"=>"DateFinValiditeFormation", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
 		"fk_societe" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"Organisme", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"numero_certificat" => array("type"=>"varchar(20)", "label"=>"Numéro Certificat", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
-		"formateur" => array("type"=>"integer:user:user/class/user.class.php:0:(statut:=:1)", "label"=>"Formateur", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
+		"formateur" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Formateur", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"interne_externe" => array("type"=>"integer", "label"=>"InterneExterne", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1", "default"=>"1", "arrayofkeyval"=>array("1" => "Externe", "2" => "Interne"),),
 		"nombre_heure" => array("type"=>"duration", "label"=>"NombreHeure", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1",),
 		"resultat" => array("type"=>"integer", "label"=>"Résultat", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Non défini", "2" => "Satisfaisant", "3" => "Non satisfaisant"),),
@@ -852,10 +852,10 @@ class UserFormation extends CommonObject
 				);
 	
 				if(!empty($to)) {
-					$result = $mail->sendfile();
+					//$result = $mail->sendfile();
 	
 					if (!$result) {
-						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+						//setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 					}
 				}
 				
@@ -924,10 +924,10 @@ class UserFormation extends CommonObject
 				);
 	
 				if(!empty($to)) {
-					$result = $mail->sendfile();
+					//$result = $mail->sendfile();
 	
 					if (!$result) {
-						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+						//setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 					}
 				}
 				
@@ -2207,9 +2207,9 @@ class UserFormation extends CommonObject
 										$to .= $uservalide->email.", ";
 									}
 								}
-								if(!empty($user_static->email)) {
-									$to .= $user_static->email.", ";
-								}
+								// if(!empty($user_static->email)) {
+								// 	$to .= $user_static->email.", ";
+								// }
 								rtrim($to, ', ');
 								
 								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
@@ -2260,9 +2260,9 @@ class UserFormation extends CommonObject
 										$to .= $uservalide->email.", ";
 									}
 								}
-								if(!empty($user_static->email)) {
-									$to .= $user_static->email.", ";
-								}
+								// if(!empty($user_static->email)) {
+								// 	$to .= $user_static->email.", ";
+								// }
 								rtrim($to, ', ');
 								
 								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));

@@ -1,4 +1,4 @@
--- Copyright (C) 2024 METZGER Leny <l.metzger@optim-industries.fr>
+-- Copyright (C) 2024 METZGER Leny 
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ CREATE TABLE llx_formationhabilitation_visitemedical(
 	status integer NOT NULL, 
 	commentaire text, 
 	fk_contact integer NOT NULL, 
-	objetvisite varchar(128) NOT NULL, 
+	objetvisite varchar(128), 
 	motifvisite integer NOT NULL, 
 	demandeurvisite integer NOT NULL, 
 	datevisite date NOT NULL, 

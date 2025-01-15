@@ -134,7 +134,7 @@ class VisiteMedical extends CommonObject
 		"status" => array("type"=>"integer", "label"=>"Resultat", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Apte", "3" => "Inapte", "2" => "Conditionnelle", "8" => "Expirée", "9" => "Clôturée"), "validate"=>"1",),
 		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
 		"fk_contact" => array("type"=>"integer:contact:contact/class/contact.class.php:0:(civility:=:'dr')", "label"=>"Medecin", "enabled"=>"1", 'position'=>36, 'notnull'=>1, "visible"=>"1",),
-		"objetvisite" => array("type"=>"varchar(128)", "label"=>"ObjetVisite", "enabled"=>"1", 'position'=>25, 'notnull'=>1, "visible"=>"1",),
+		"objetvisite" => array("type"=>"varchar(128)", "label"=>"ObjetVisite", "enabled"=>"1", 'position'=>25, 'notnull'=>0, "visible"=>"1",),
 		"motifvisite" => array("type"=>"sellist:c_motif_visite:label:rowid::(active:=:1)", "label"=>"MotifVisite", "enabled"=>"1", 'position'=>26, 'notnull'=>1, "visible"=>"1",),
 		"demandeurvisite" => array("type"=>"integer", "label"=>"DemandeurVisite", "enabled"=>"1", 'position'=>27, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Employeur", "1" => "Médecin", "2" => "Salarié", "3" => "Autre"),),
 		"datevisite" => array("type"=>"date", "label"=>"DateVisite", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
@@ -454,10 +454,10 @@ class VisiteMedical extends CommonObject
 			);
 
 			if(!empty($to)) {
-				$resultmail = $mail->sendfile();
+				//$resultmail = $mail->sendfile();
 
 				if (!$resultmail) {
-					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+					//setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 				}
 			}
 		}
@@ -1525,9 +1525,9 @@ class VisiteMedical extends CommonObject
 							$to .= $uservalide->email.", ";
 						}
 					}
-					if(!empty($user_static->email)) {
-						$to .= $user_static->email.", ";
-					}
+					// if(!empty($user_static->email)) {
+					// 	$to .= $user_static->email.", ";
+					// }
 					rtrim($to, ', ');
 					
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));

@@ -1916,9 +1916,9 @@ class UserHabilitation extends CommonObject
 								$to .= $uservalide->email.", ";
 							}
 						}
-						if(!empty($user_static->email)) {
-							$to .= $user_static->email.", ";
-						}
+						// if(!empty($user_static->email)) {
+						// 	$to .= $user_static->email.", ";
+						// }
 						rtrim($to, ', ');
 						
 						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
@@ -2000,9 +2000,9 @@ class UserHabilitation extends CommonObject
 								$to .= $uservalide->email.", ";
 							}
 						}
-						if(!empty($user_static->email)) {
-							$to .= $user_static->email.", ";
-						}
+						// if(!empty($user_static->email)) {
+						// 	$to .= $user_static->email.", ";
+						// }
 						rtrim($to, ', ');
 						
 						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
