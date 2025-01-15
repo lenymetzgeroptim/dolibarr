@@ -242,7 +242,6 @@ $first_day_month = $object->date_debut;
 
 $nb_jour =  num_between_day($firstdaytoshow, $lastdaytoshow+3600) + 1; 
 $ecart_jour = num_between_day($firstdaytoshow, $object->date_debut + 3600);
-$month_now = date('m');
 
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = dol_time_plus_duree($firstdaytoshow, $idw, 'd');
@@ -263,15 +262,15 @@ $userField_deplacement->table_element = 'donneesrh_Deplacement';
 $userField_deplacement->fetch_optionals();
 
 $userInDeplacement = 0;
-$typeDeplacement = 'none';
+$type_deplacement = 'none';
 $userInGrandDeplacement = 0;
 if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
 	$userInDeplacement = 1;
-	$typeDeplacement = 'petitDeplacement';
+	$type_deplacement = 'petitDeplacement';
 }
 if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
 	$userInGrandDeplacement = 1;
-	$typeDeplacement = 'grandDeplacement';
+	$type_deplacement = 'grandDeplacement';
 }
 
 // Gestion des repas de l'utilisateur
@@ -1308,8 +1307,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		// Affichage de l'interieur du tableau
 		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek($j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
-															$nb_jour, $modifier, $css, $ecart_jour, $typeDeplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
-															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $month_now, $timeHoliday, $heure_semaine, $heure_semaine_hs, $usertoprocess);
+															$modifier, $css, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
+															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, $usertoprocess);
 	} else {
 		print '<tr><td colspan="'.(4 + $addcolspan + $nb_jour).'"><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
 	}
@@ -1380,7 +1379,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $usertoprocess, $css, $css_holiday, $ecart_jour, !$modifier, $userInDeplacement, $userInGrandDeplacement, $dayinloopfromfirstdaytoshow_array);
 	}
 	else {
-		FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $usertoprocess, $css, $ecart_jour, !$modifier, $addcolspan, $dayinloopfromfirstdaytoshow_array, $month_now);
+		FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $usertoprocess, $css, $ecart_jour, !$modifier, $addcolspan, $dayinloopfromfirstdaytoshow_array);
 	}
 	
 	print "</table>";

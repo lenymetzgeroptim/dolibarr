@@ -154,7 +154,6 @@ else {
 	$object->date_fin = $lastdaytoshow;
 }
 
-$month_now = date('m');
 $nb_jour = num_between_day($firstdaytoshow, $lastdaytoshow - 3600) + 1; // Nombre de jour total à affiché
 
 $timeHoliday = $object->timeHolidayWeek($usertoprocess->id);
@@ -197,15 +196,15 @@ $userField_deplacement->fetch_optionals();
 
 // Gestion des types de déplacement
 $userInDeplacement = 0;
-$typeDeplacement = 'none';
+$type_deplacement = 'none';
 $userInGrandDeplacement = 0;
 if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
 	$userInDeplacement = 1;
-	$typeDeplacement = 'petitDeplacement';
+	$type_deplacement = 'petitDeplacement';
 }
 if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
 	$userInGrandDeplacement = 1;
-	$typeDeplacement = 'grandDeplacement';
+	$type_deplacement = 'grandDeplacement';
 }
 
 
@@ -514,193 +513,6 @@ foreach ($arrayfields as $key => $val) {
 }
 
 
-print '<div class="div-table-responsive" style="min-height: 0px">';
-print '<table class="tagtable liste '.($moreforfilter ? " listwithfilterbefore" : "").'" id="tablelines_fdt">'."\n";
-print '<thead>';
-print '<tr class="liste_titre favoris">';
-print '<th class="fixed" colspan="'.(2 + $addcolspan).'" style="min-width: 500px;"></th>';
-
-
-// Affichage des jours de la semaine
-for ($idw = 0; $idw < $nb_jour; $idw++) {
-	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-
-	if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-		print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none; border-top: none !important; z-index:1;" width="9%"></th>';
-	}
-
-	print '<th width="9%" align="center" style="min-width: 90px; z-index: 1" class="bold hide'.$idw.' day">';
-	print dol_print_date($dayinloopfromfirstdaytoshow, '%a');
-	print '<br>'.dol_print_date($dayinloopfromfirstdaytoshow, 'dayreduceformat').'</th>';
-}
-print '<th class="fixed total_title" width="9%" style="min-width: 90px;"><strong>TOTAL</strong></th>';
-print "</tr>";
-
-
-// Affichage de la ligne avec le total de chaque semaine
-print '<tr class="liste_titre fixed favoris">';
-print '<th class="fixed" colspan="'.(2 + $addcolspan).'"></th>';
-$semaine = 1;
-for ($idw = 0; $idw < $nb_jour; $idw++) {			
-	$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-	$ecart_lundi = ecart_lundi($tmpday);
-	$weekNumber = date("W", $tmpday);
-
-	if ($idw == 0) {
-		$taille = 7-$ecart_lundi;
-	}
-	elseif (dol_print_date($tmpday, '%a') == 'Lun' && $nb_jour - $idw < 7 && $idw-$ecart_lundi > 23 && dol_print_date($lastdaytoshow, '%a') != 'Dim'){
-		$taille = $nb_jour - $idw;
-	}
-	elseif (dol_print_date($tmpday, '%a') == 'Lun' && $idw != 0) {	
-		$taille = 7;
-		$date = dol_time_plus_duree($tmpday, 7, 'd');
-
-		if($first_day_month == $tmpday){
-			print '<th style="min-width: 90px; border-left: 1px solid var(--colortopbordertitle1); border-bottom: none; border-top: none !important; z-index:1;" width="9%"></th>';
-		}
-		elseif($first_day_month > $tmpday && $first_day_month < $date){
-			$taille++;
-			$idw--;
-		}
-	}
-
-	$premier_jour = $idw;
-	$dernier_jour = $idw+$taille-1;
-
-	print '<th class="liste_total_semaine_'.$semaine.'" align="center" colspan='.$taille.'><strong>Semaine '.$weekNumber.' : <span class="totalSemaine" name="totalSemaine'.$weekNumber.'" id="totalSemaine'.$semaine.'_'.$premier_jour.'_'.$dernier_jour.'">&nbsp</span></strong></td>';
-	$semaine++;
-	$idw += $taille - 1;
-}
-print '<th class="fixed total_week"></th>';
-print '</tr>';
-
-
-// Affichage de la ligne des congés
-$holiday = new extendedHoliday($db);
-$typeleaves = $holiday->getTypesNoCP(-1, -1);
-$arraytypeleaves = array();
-foreach ($typeleaves as $key => $val) {
-	$labeltoshow = $val['code'];
-	$arraytypeleaves[$val['rowid']] = $labeltoshow;
-}	
-	
-$conges_texte = $holiday->getArrayHoliday($usertoprocess->id, 0, 1);
-$cpt = 0; 
-
-print '<tr class="nostrong liste_titre fixed conges">';
-	print '<th colspan="'.(2 + $addcolspan).'" '.($multiple_holiday ? 'rowspan="2"' : '').' class="fixed"><strong>Congés</strong>';
-	print $form->textwithpicto('', $conges_texte);
-	print '</th>';
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-		$keysuffix = '['.$idw.']';
-
-		if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-			print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
-		}
-
-		if(!empty($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][0])) {
-			$holiday->fetch((int)$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
-			$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-			$droit_rtt = $holiday->holidayTypeDroitRTT();
-				
-			if(!empty($holiday->array_options['options_hour'])) {
-				$durationHoliday = $holiday->array_options['options_hour'];
-			}
-			else {
-				$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-				$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-				if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += 3.5 * 3600;
-				}
-				elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-				}
-				elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-				}
-				$durationHoliday = $duration_hour;
-			}
-
-			if($idw + $numberDay > $nb_jour) {
-				$numberDay = $nb_jour - $idw;
-			}
-			
-			print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
-
-			print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
-			print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
-
-			$idw += $numberDay - 1;
-			$cpt++;
-		}
-		else {
-			print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
-		}
-
-		print '</th>';
-	}
-	print '<th class="liste_total center fixed total_holiday"></th>';
-print '</tr>';
-
-if($multiple_holiday) {
-	print '<tr class="nostrong liste_titre conges">';
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-		$keysuffix = '['.$idw.']';
-
-		if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-			print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
-		}
-
-		if(!empty($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][1])) {
-			$holiday->fetch((int)$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][1]);
-			$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-			$droit_rtt = $holiday->holidayTypeDroitRTT();
-				
-			if(!empty($holiday->array_options['options_hour'])) {
-				$durationHoliday = $holiday->array_options['options_hour'];
-			}
-			else {
-				$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-				$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-				if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += 3.5 * 3600;
-				}
-				elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-				}
-				elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-				}
-				$durationHoliday = $duration_hour;
-			}
-
-			if($idw + $numberDay > $nb_jour) {
-				$numberDay = $nb_jour - $idw;
-			}
-			
-			print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
-
-			print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
-			print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
-
-			$idw += $numberDay - 1;
-			$cpt++;
-		}
-		else {
-			print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'">';
-		}
-
-		print '</th>';
-	}
-	print '<th class="liste_total center fixed total_holiday"></th>';
-	print '</tr>';
-}
-
-print '</thead>';
-
 $tasksarray = $taskstatic->getTasksArray(0, 0, 0, $socid, 0, $search_project_ref, $onlyopenedproject, $morewherefilter, 0, 0, $extrafields); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
 
 // Calculate total for all tasks
@@ -748,78 +560,24 @@ if (count($tasksarray) > 0) {
 	$otherTime = $projet_task_time_other->getOtherTime($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 
 	// Affichage de l'interieur du tableau
-	$totalforvisibletasks = FeuilleDeTempsLinesPerWeek($j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
-														$nb_jour, $can_modify_fdt, $css, $ecart_jour, $typeDeplacement, $dayinloopfromfirstdaytoshow_array, 0, 
-														$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $month_now, $timeHoliday, $heure_semaine, $heure_semaine_hs, $usertoprocess, $favoris, $param);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek($j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
+															$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
+															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
+															$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
+															$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday);
+	}
+	else {
+		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek_Sigedi($j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
+																$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
+																$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
+																$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs,
+																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday);
+	}
 } else {
 	print '<tr><td colspan="'.(4 + $addcolspan + $nb_jour).'"><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
 }
 
-// Is there a diff between selected/filtered tasks and all tasks ?
-$isdiff = 0;
-if (count($totalforeachday)) {
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-		$timeonothertasks = ($totalforeachday[$tmpday] - $totalforvisibletasks[$tmpday]);
-		if ($timeonothertasks) {
-			$isdiff = 1;
-			break;
-		}
-	}
-}
-
-// There is a diff between total shown on screen and total spent by user, so we add a line with all other cumulated time of user
-if ($isdiff) {
-	print '<tr class="oddeven othertaskwithtime favoris">';
-	print '<td class="nowrap fixed" colspan="'.(2 + $addcolspan).'">'.$langs->trans("OtherFilteredTasks").'</td>';
-
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-
-		if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-			print '<td></td>';
-		}
-
-		print '<td class="center hide'.$idw.' '.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-		$timeonothertasks = ($totalforeachday[$dayinloopfromfirstdaytoshow] - $totalforvisibletasks[$dayinloopfromfirstdaytoshow]);
-		if ($timeonothertasks) {
-			print '<span class="timesheetalreadyrecorded" title="texttoreplace"><input type="text" class="center smallpadd time_'.$idw.'" size="2" disabled id="timespent[-1]['.$idw.']" name="task[-1]['.$idw.']" value="';
-			print convertSecondToTime($timeonothertasks, 'allhourmin');
-			print '"></span>';
-		}
-		print '</td>';
-	}
-
-	print ' <td class="liste_total fixed"></td>';
-	print '</tr>';
-}
-
-// Affichage du total
-if ($conf->use_javascript_ajax) {
-	print '<tr class="trforbreak favoris">';
-	print '<td class="fixed" colspan="'.(2 + $addcolspan).'">';
-	print $langs->trans("Total");
-	print '<span class="opacitymediumbycolor">  - '.$langs->trans("ExpectedWorkedHours").': <strong>'.price($usertoprocess->weeklyhours, 1, $langs, 0, 0).'</strong></span>';
-	print '</td>';
-
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-		
-		if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-			print '<td style="border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;"></td>';
-		}
-
-		$total = (convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') != '0' ? convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') : '00:00');
-		print '<td class="liste_total hide'.$idw.($total != '00:00' ? ' bold' : '').'" align="center"><div class="totalDay'.$idw.'" '.(!empty($style) ? $style : '').'>'.$total.'</div></td>';
-	}
-	print '<td class="liste_total center fixed"><div class="totalDayAll">&nbsp;</div></td>';
-	print '</tr>';
-}
-
-FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $usertoprocess, $css, $ecart_jour, !$can_modify_fdt, $addcolspan, $dayinloopfromfirstdaytoshow_array, $month_now);
-
-print "</table>";
-print '</div>';
 
 // Tableau Full Screen
 print '<div id="fullscreenContainer" tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-dialog-buttons ui-draggable" aria-describedby="dialog-confirm" aria-labelledby="ui-id-1" style="height: calc(100vh - 62px); width: calc(100vw - 9px); top: 53px; display: none;">';

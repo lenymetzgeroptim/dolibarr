@@ -596,7 +596,7 @@ function setTypeDeplacement(idw, typeDeplacement) {
     }
 }
 
-function deleteTypeDeplacement(idw, typeDeplacement) {
+function deleteTypeDeplacement(idw, typeDeplacement, nb_jour, num_first_day) {
     select = $("[name='type_deplacement[" + idw + "]']")[0];
     if (typeDeplacement == 'petitDeplacement' && select[1].selected == true) {
         select[1].selected = false;
@@ -607,6 +607,7 @@ function deleteTypeDeplacement(idw, typeDeplacement) {
     else if (typeDeplacement == '') {
         select[0].selected = true;
     }
+    updateTotal_TypeDeplacement(nb_jour, num_first_day);
 }
 
 
@@ -649,7 +650,7 @@ function validateTime(object, idw, jour_ecart, mode_input, nb_jour, temps, typeD
             setTypeDeplacement(idw, typeDeplacement);
         }
         else if (document.getElementsByClassName('totalDay' + idw)[0].innerHTML == '00:00') {
-            deleteTypeDeplacement(idw, typeDeplacement);
+            deleteTypeDeplacement(idw, typeDeplacement, nb_jour, jour_ecart);
         }
     }
 }
@@ -1318,6 +1319,7 @@ function updateTotal_DeplacementPonctuel(nb_jour, num_first_day) {
 
 // Permet de mettre à jour le total de type de déplacement
 function updateTotal_TypeDeplacement(nb_jour, num_first_day) {
+    console.log('test');
     arrayTotalTypeDeplacement = { 'D1': 0, 'D2': 0, 'D3': 0, 'D4': 0, 'GD1': 0, 'GD2': 0, 'DOM': 0 };
     arrayTitle = { 1: 'D1', 2: 'D2', 3: 'D3', 4: 'D4', 5: 'GD1', 6: 'GD2', 7: 'DOM', 8: 'GD1', 9: 'GD1' }
 
@@ -1404,10 +1406,10 @@ function updateTotal_MoyenTransport(nb_jour, num_first_day, type_deplacement) {
     }
 }
 
-function deleteTypeDeplacementVS(idw) {
+function deleteTypeDeplacementVS(idw, nb_jour, num_first_day) {
     select = $("[name='moyen_transport[" + idw + "]']")[0];
     if(select[1].selected == true) {
-        deleteTypeDeplacement(idw, '');
+        deleteTypeDeplacement(idw, '', nb_jour, num_first_day);
     }
 }
 

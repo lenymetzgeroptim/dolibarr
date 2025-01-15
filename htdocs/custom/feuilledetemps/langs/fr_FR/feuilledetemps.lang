@@ -52,6 +52,9 @@ HOLIDAY_VALIDATED_COLOR = Couleur pour les congés validés
 JOUR_ANTICIPES = Nombre de jours anticipés
 Couleur = Paramètre des couleurs
 Congés = Paramètre des congés
+AutreParamFDT = Autres paramètres
+FDT_DISPLAY_COLUMN = Affichage des feuilles de temps en format colonne
+
 
 #
 # About page

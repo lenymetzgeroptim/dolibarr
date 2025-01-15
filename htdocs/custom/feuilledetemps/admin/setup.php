@@ -134,15 +134,6 @@ foreach ($typeleaves as $key => $val) {
 $item->setAsMultiSelect($arraytypeleaves);
 
 
-
-// Titre FDT
-$formSetup->newItem('Paramètre feuille de temps')->setAsTitle();
-
-// JOUR_ANTICIPES
-$item = $formSetup->newItem('JOUR_ANTICIPES')->setAsString();
-
-
-
 // Titre Couleur
 $formSetup->newItem('Couleur')->setAsTitle();
 
@@ -165,6 +156,17 @@ $item->defaultFieldValue = '#aed6f1';
 $item = $formSetup->newItem('HOLIDAY_VALIDATED_COLOR');
 $item->setAsColor();
 $item->defaultFieldValue = '#abebc6';
+
+
+
+// Titre FDT
+$formSetup->newItem('AutreParamFDT')->setAsTitle();
+
+// JOUR_ANTICIPES
+$item = $formSetup->newItem('JOUR_ANTICIPES')->setAsString();
+
+// FDT_DISPLAY_COLUMN
+$item = $formSetup->newItem('FDT_DISPLAY_COLUMN')->setAsYesNo();
 
 
 $setupnotempty += count($formSetup->items);
