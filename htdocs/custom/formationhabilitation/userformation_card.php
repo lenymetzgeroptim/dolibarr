@@ -123,11 +123,11 @@ if (empty($action) && empty($id) && empty($ref)) {
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
 
 // There is several ways to check permission.
-$permissiontoread = $user->rights->formationhabilitation->formation->readline || $object->fk_user == $user->id;
-$permissiontoadd = $user->rights->formationhabilitation->formation->writeline; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-$permissiontodelete = $user->rights->formationhabilitation->formation->deleteline;
-// $permissionnote = $user->rights->formationhabilitation->formation->writeline; // Used by the include of actions_setnotes.inc.php
-// $permissiondellink = $user->rights->formationhabilitation->formation->writeline; // Used by the include of actions_dellink.inc.php
+$permissiontoread = $user->rights->formationhabilitation->userformation->readall || ($object->fk_user == $user->id && $user->rights->formationhabilitation->userformation->read);
+$permissiontoadd = $user->rights->formationhabilitation->userformation->write; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontodelete = $user->rights->formationhabilitation->userformation->delete;
+// $permissionnote = $user->rights->formationhabilitation->userformation->write; // Used by the include of actions_setnotes.inc.php
+// $permissiondellink = $user->rights->formationhabilitation->userformation->write; // Used by the include of actions_dellink.inc.php
 $permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
 
 

@@ -111,31 +111,31 @@ $societe->fetch($user->array_options['options_antenne']);
 $arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
 $userIsRespAntenne = in_array($user->id, $arrayUserRespAntenne); // Utilisateur commercial de l'antenne de ratachement
 if($onglet == 'formation' || empty($onglet)) {
-    $permissiontoreadline = $user->rights->formationhabilitation->formation->readline || $object->id == $user->id;
-    $permissiontoaddline = $user->rights->formationhabilitation->formation->writeline;
-    $permissiontodeleteline = $user->rights->formationhabilitation->formation->deleteline;
+    $permissiontoreadline = $user->rights->formationhabilitation->userformation->readall || ($object->id == $user->id && $user->rights->formationhabilitation->userformation->read);
+    $permissiontoaddline = $user->rights->formationhabilitation->userformation->write;
+    $permissiontodeleteline = $user->rights->formationhabilitation->userformation->delete;
     $permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
-    $permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne) || $user->rights->formationhabilitation->habilitation_autorisation->validateline;
-    $permissiontoforceline = $user->rights->formationhabilitation->formation->forceline;
+    //$permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne);
+    $permissiontoforceline = $user->rights->formationhabilitation->userformation->force;
 }
 elseif($onglet == 'habilitation'){
-    $permissiontoreadline = $user->rights->formationhabilitation->habilitation_autorisation->readline || $object->id == $user->id;
-    $permissiontoaddline = $user->rights->formationhabilitation->habilitation_autorisation->writeline;
-    $permissiontodeleteline = $user->rights->formationhabilitation->habilitation_autorisation->deleteline;
-    $permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne) || $user->rights->formationhabilitation->habilitation_autorisation->validateline;
-    $permissiontoforceline = $user->rights->formationhabilitation->habilitation_autorisation->forceline;
+    $permissiontoreadline = $user->rights->formationhabilitation->userhabilitation_autorisation->readall || ($object->id == $user->id && $user->rights->formationhabilitation->userhabilitation_autorisation->read);
+    $permissiontoaddline = $user->rights->formationhabilitation->userhabilitation_autorisation->write;
+    $permissiontodeleteline = $user->rights->formationhabilitation->userhabilitation_autorisation->delete;
+    $permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne) || $user->rights->formationhabilitation->userhabilitation_autorisation->validate;
+    $permissiontoforceline = $user->rights->formationhabilitation->userhabilitation_autorisation->force;
 }
 elseif($onglet == 'autorisation'){
-    $permissiontoreadline = $user->rights->formationhabilitation->habilitation_autorisation->readline || $object->id == $user->id;
-    $permissiontoaddline = $user->rights->formationhabilitation->habilitation_autorisation->writeline;
-    $permissiontodeleteline = $user->rights->formationhabilitation->habilitation_autorisation->deleteline;
-    $permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne) || $user->rights->formationhabilitation->habilitation_autorisation->validateline;
-    $permissiontoforceline = $user->rights->formationhabilitation->habilitation_autorisation->forceline;
+    $permissiontoreadline = $user->rights->formationhabilitation->userhabilitation_autorisation->readall || ($object->id == $user->id && $user->rights->formationhabilitation->userhabilitation_autorisation->read);
+    $permissiontoaddline = $user->rights->formationhabilitation->userhabilitation_autorisation->write;
+    $permissiontodeleteline = $user->rights->formationhabilitation->userhabilitation_autorisation->delete;
+    $permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne) || $user->rights->formationhabilitation->userhabilitation_autorisation->validate;
+    $permissiontoforceline = $user->rights->formationhabilitation->userhabilitation_autorisation->force;
 }
 elseif($onglet == 'volet'){
-    $permissiontoreadline = $user->rights->formationhabilitation->volet->readline || $object->id == $user->id;
-    $permissiontoaddline = $user->rights->formationhabilitation->volet->writeline;
-    $permissiontodeleteline = $user->rights->formationhabilitation->volet->deleteline;
+    $permissiontoreadline = $user->rights->formationhabilitation->uservolet->readall || ($object->id == $user->id && $user->rights->formationhabilitation->uservolet->read);
+    $permissiontoaddline = $user->rights->formationhabilitation->uservolet->write;
+    $permissiontodeleteline = $user->rights->formationhabilitation->uservolet->delete;
 }
 
 

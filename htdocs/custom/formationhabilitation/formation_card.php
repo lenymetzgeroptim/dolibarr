@@ -152,11 +152,11 @@ $permissiontoadd = $user->rights->formationhabilitation->formation->write; // Us
 $permissiontodelete = $user->rights->formationhabilitation->formation->delete || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_CONSTRUCTION);
 // $permissionnote = $user->rights->formationhabilitation->formation->write; // Used by the include of actions_setnotes.inc.php
 // $permissiondellink = $user->rights->formationhabilitation->formation->write; // Used by the include of actions_dellink.inc.php
-$permissiontoreadline = $user->rights->formationhabilitation->formation->readline;
-$permissiontoaddline = $user->rights->formationhabilitation->formation->writeline;
-$permissiontodeleteline = $user->rights->formationhabilitation->formation->deleteline;
+$permissiontoreadline = $user->rights->formationhabilitation->userformation->readall;
+$permissiontoaddline = $user->rights->formationhabilitation->userformation->write;
+$permissiontodeleteline = $user->rights->formationhabilitation->userformation->delete;
 $permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
-$permissiontoforceline = $user->rights->formationhabilitation->formation->forceline;
+$permissiontoforceline = $user->rights->formationhabilitation->userformation->force;
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/formation';
 

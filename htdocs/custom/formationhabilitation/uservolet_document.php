@@ -127,8 +127,8 @@ if ($id > 0 || !empty($ref)) {
 
 // Permissions
 // (There are several ways to check permission.)
-$permissiontoread = $user->hasRight('formationhabilitation', 'volet', 'readline') || $object->fk_user == $user->id;
-$permissiontoadd  = $user->hasRight('formationhabilitation', 'volet', 'writeline'); // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
+$permissiontoread = $user->hasRight('formationhabilitation', 'uservolet', 'readall') || ($object->fk_user == $user->id && $user->hasRight('formationhabilitation', 'uservolet', 'read'));
+$permissiontoadd  = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();

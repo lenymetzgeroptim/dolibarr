@@ -190,9 +190,9 @@ $object->fields = dol_sort_array($object->fields, 'position');
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // There is several ways to check permission.
-$permissiontoread = $user->hasRight('formationhabilitation', 'volet', 'readline');
-$permissiontoadd = $user->hasRight('formationhabilitation', 'volet', 'writeline');
-$permissiontodelete = $user->hasRight('formationhabilitation', 'volet', 'deleteline');
+$permissiontoread = $user->hasRight('formationhabilitation', 'uservolet', 'readall');
+$permissiontoadd = $user->hasRight('formationhabilitation', 'uservolet', 'write');
+$permissiontodelete = $user->hasRight('formationhabilitation', 'uservolet', 'delete');
 
 
 // Security check (enable the most restrictive one)

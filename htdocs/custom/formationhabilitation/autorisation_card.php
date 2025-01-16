@@ -145,10 +145,10 @@ $objectparentline = $object;
 $permissiontoread = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'read');
 $permissiontoadd = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 $permissiontodelete = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_CONSTRUCTION);
-$permissiontoreadline = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'readline');
-$permissiontoaddline = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'writeline');
-$permissiontodeleteline = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'deleteline');
-$permissiontoforceline = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'forceline');
+$permissiontoreadline = $user->hasRight('formationhabilitation', 'userhabilitation_autorisation', 'read');
+$permissiontoaddline = $user->hasRight('formationhabilitation', 'userhabilitation_autorisation', 'write');
+$permissiontodeleteline = $user->hasRight('formationhabilitation', 'userhabilitation_autorisation', 'delete');
+$permissiontoforceline = $user->hasRight('formationhabilitation', 'userhabilitation_autorisation', 'force');
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/autorisation';
 

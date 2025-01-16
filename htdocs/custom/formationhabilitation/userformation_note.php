@@ -117,9 +117,9 @@ if ($id > 0 || !empty($ref)) {
 
 
 // There is several ways to check permission.
-$permissiontoread = $user->hasRight('formationhabilitation', 'formation', 'readline') || $object->fk_user == $user->id;
-$permissiontoadd = $user->hasRight('formationhabilitation', 'formation', 'writeline');
-$permissionnote = $user->hasRight('formationhabilitation', 'formation', 'writeline'); // Used by the include of actions_setnotes.inc.php
+$permissiontoread = $user->hasRight('formationhabilitation', 'userformation', 'readall') || ($object->fk_user == $user->id && $user->hasRight('formationhabilitation', 'userformation', 'read'));
+$permissiontoadd = $user->hasRight('formationhabilitation', 'userformation', 'write');
+$permissionnote = $user->hasRight('formationhabilitation', 'userformation', 'write'); // Used by the include of actions_setnotes.inc.php
 
 
 // Security check (enable the most restrictive one)

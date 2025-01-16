@@ -763,7 +763,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			if($nb_habilitation % $nb_habilitation_max == 0) {
 				if($nb_habilitation > 0) {
 					// Footer
-					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis);
+					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, '<p style="font-size: 6pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>');
 
 					$pdf->AddPage();
 					$pagenb++;
@@ -815,7 +815,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		}
 
 		//$pdf->SetFont('', 'B', $default_font_size - 2);
-		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis);
+		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, '<p style="font-size: 6pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>');
 	}
 
 	/**
@@ -959,7 +959,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 
 				if($nb_autorisation > 0) {
 					// Footer
-					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis);
+					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, ($volet->numero == 9 ? '<p style="font-size: 6pt">L\'autorisation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>' : ''));
 
 					// Ajout de la page avec la liste des autorisations
 					$pdf->AddPage();
@@ -1017,7 +1017,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		}
 
 		//$pdf->SetFont('', 'B', $default_font_size - 2);
-		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis);
+		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, ($volet->numero == 9 ? '<p style="font-size: 6pt">L\'autorisation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>' : ''));
 	}
 
 	/**
@@ -1029,7 +1029,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	void
 	 */
-	protected function writeSignature(&$pdf, $object, $outputlangs, $outputlangsbis = null)
+	protected function writeSignature(&$pdf, $object, $outputlangs, $outputlangsbis = null, $textecachet1 = '')
 	{
 		global $db; 
 		global $dolibarr_main_url_root;
@@ -1045,7 +1045,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$actioncomm = new ActionComm($this->db);
 		$object->fetch($object->id); // Reload for last diff
 
-		$cachet1 = '<span>Date : '.dol_print_date(dol_now(), '%d/%m/%Y').'</span><p style="font-size: 6pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>';
+		$cachet1 = '<span>Date : '.dol_print_date(dol_now(), '%d/%m/%Y').'</span>'.$textecachet1;
 		if(!empty($object->date_valid_employeur) && !empty($object->fk_user_valid_employeur) && !empty($object->fk_action_valid_employeur)) {
 			$user_static->fetch($object->fk_user_valid_employeur);
 			$actioncomm->fetch($object->fk_action_valid_employeur);
@@ -1062,15 +1062,17 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		//$pdf->setCellHeightRatio(1);
 		//$pdf->SetFont('', '', $default_font_size);
 
+		$signature = '';
 		if(!empty($object->date_valid_intervenant) && !empty($object->fk_user_valid_intervenant) && !empty($object->fk_action_valid_intervenant)) {
 			$user_static->fetch($object->fk_user_valid_intervenant);
 			$actioncomm->fetch($object->fk_action_valid_intervenant);
-			$signature = '<p style="font-size: 7pt"><strong>Signature informatique réalisée par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_intervenant, "%d-%m-%Y")."</strong>";
+			$signature .= '<p style="font-size: 7pt"><strong>Signature informatique réalisée par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_intervenant, "%d-%m-%Y")."</strong>";
 			$signature .= ' <a href="'.$urlwithroot.'/comm/action/card.php?id='.$object->fk_action_valid_intervenant.'">('.$actioncomm->ref.')</a>';
 			$signature .= "</p>";
 			$cachet3 = '<p>Signature intervenant</p>'.$signature;
-			$pdf->writeHTMLCell(30, 35, $x + 55, $y, $cachet3, array('RTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
 		}
+		$cachet3 = '<p>Signature intervenant</p>'.$signature;
+		$pdf->writeHTMLCell(30, 35, $x + 55, $y, $cachet3, array('RTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
 	}
 
 	/**
@@ -1089,7 +1091,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$societe = new Societe($db);
 		$user_static = new User($db);
 		$user_static->fetch($object->fk_user);
-		$societe->fetch($user_static->array_options['options_fk_employeur']);
+		$societe->fetch(157);
 
 		return '<p style="font-size: '.($font_size - 1.5).'px"><span style="font-size: '.$font_size.'px"><strong>'.$societe->name."</strong></span><br>".$societe->address."<br>".$societe->zip." ".$societe->town."<br> Tél. : ".$societe->phone."<br>Fax : ".$societe->phone."<br>SIRET ".$societe->idprof2." - APE ".$societe->idprof3."<br>Code TVA : ".$societe->tva_intra."</p>";
 	}

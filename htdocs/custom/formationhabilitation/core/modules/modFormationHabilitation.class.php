@@ -221,7 +221,7 @@ class modFormationHabilitation extends DolibarrModules
 
 		// Array to add new pages in new tabs
 		$this->tabs = array(
-			'data'=>'user:+userformation:Formation - Habilitation:formationhabilitation@formationhabilitation:$user->rights->formationhabilitation->formation->readline||$user->rights->formationhabilitation->habilitation_autorisation->readline||$user->rights->formationhabilitation->volet->readline||$user->id==$object->id:/formationhabilitation/userformation.php?id=__ID__'
+			'data'=>'user:+userformation:Formation - Habilitation:formationhabilitation@formationhabilitation:$user->rights->formationhabilitation->userformation->readall||$user->rights->formationhabilitation->userhabilitation_autorisation->readall||$user->rights->formationhabilitation->uservolet->readall||$user->id==$object->id:/formationhabilitation/userformation.php?id=__ID__'
 		);
 		// Example:
 		// $this->tabs[] = array('data'=>'objecttype:+tabname1:Title1:mylangfile@formationhabilitation:$user->rights->formationhabilitation->read:/formationhabilitation/mynewtab1.php?id=__ID__');  					// To add a new tab identified by code tabname1
@@ -387,24 +387,29 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][5] = 'delete';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
-		$this->rights[$r][1] = 'Lire les Formations (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'readline';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 6 + 1);
-		$this->rights[$r][1] = 'Créer/Modifier les Formations (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'writeline';
+		$this->rights[$r][1] = 'Lire ses propres Formations assignées';
+		$this->rights[$r][4] = 'userformation';
+		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
-		$this->rights[$r][1] = 'Forcer la création des formations (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'forceline';
+		$this->rights[$r][1] = 'Lire toutes les Formations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'userformation';
+		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 7 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Formations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'userformation';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 6 + 1);
+		$this->rights[$r][1] = 'Forcer la création des formations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'userformation';
+		$this->rights[$r][5] = 'force';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 8 + 1);
 		$this->rights[$r][1] = 'Supprimer les Formations (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'deleteline';
+		$this->rights[$r][4] = 'userformation';
+		$this->rights[$r][5] = 'delete';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
 		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations';
@@ -429,29 +434,34 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][5] = 'delete';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 3 + 1);
-		$this->rights[$r][1] = 'Lire les Habilitations et Autorisations (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'habilitation_autorisation';
-		$this->rights[$r][5] = 'readline';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 5 + 1);
-		$this->rights[$r][1] = 'Créer/Modifier les Habilitations et Autorisations (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'habilitation_autorisation';
-		$this->rights[$r][5] = 'writeline';
+		$this->rights[$r][1] = 'Lire ses propres Habilitations et Autorisations assignées';
+		$this->rights[$r][4] = 'userhabilitation_autorisation';
+		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 4 + 1);
-		$this->rights[$r][1] = 'Forcer la création des habilitations et des autorisations liées à des utilisateurs';
-		$this->rights[$r][4] = 'habilitation_autorisation';
-		$this->rights[$r][5] = 'forceline';
+		$this->rights[$r][1] = 'Lire toutes les Habilitations et Autorisations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'userhabilitation_autorisation';
+		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 6 + 1);
-		$this->rights[$r][1] = 'Supprimer les Habilitations et Autorisations (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'habilitation_autorisation';
-		$this->rights[$r][5] = 'deleteline';
+		$this->rights[$r][1] = 'Créer/Modifier les Habilitations et Autorisations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'userhabilitation_autorisation';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 5 + 1);
+		$this->rights[$r][1] = 'Forcer la création des habilitations et des autorisations liées à des utilisateurs';
+		$this->rights[$r][4] = 'userhabilitation_autorisation';
+		$this->rights[$r][5] = 'force';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 7 + 1);
+		$this->rights[$r][1] = 'Supprimer les Habilitations et Autorisations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'userhabilitation_autorisation';
+		$this->rights[$r][5] = 'delete';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (1 * 10) + 8 + 1);
 		$this->rights[$r][1] = 'Valider les Habilitations et Autorisations (assignées aux collaborateurs) à la place du responsable d\'antenne';
-		$this->rights[$r][4] = 'habilitation_autorisation';
-		$this->rights[$r][5] = 'validateline';
+		$this->rights[$r][4] = 'userhabilitation_autorisation';
+		$this->rights[$r][5] = 'validate';
 		$r++;
 
 
@@ -471,19 +481,24 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][5] = 'delete';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 3 + 1);
-		$this->rights[$r][1] = 'Lire les Volets (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'volet';
-		$this->rights[$r][5] = 'readline';
+		$this->rights[$r][1] = 'Lire ses propres Volets assignées';
+		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 4 + 1);
-		$this->rights[$r][1] = 'Créer/Modifier les Volets (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'volet';
-		$this->rights[$r][5] = 'writeline';
+		$this->rights[$r][1] = 'Lire tous les Volets (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 5 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Volets (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (2 * 10) + 6 + 1);
 		$this->rights[$r][1] = 'Supprimer les Volets (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'volet';
-		$this->rights[$r][5] = 'deleteline';
+		$this->rights[$r][4] = 'uservolet';
+		$this->rights[$r][5] = 'delete';
 		$r++;
 
 
@@ -537,7 +552,7 @@ class modFormationHabilitation extends DolibarrModules
 			'langs'=>'formationhabilitation@formationhabilitation', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1000 + $r,
 			'enabled'=>'$conf->formationhabilitation->enabled', // Define condition to show or hide menu entry. Use '$conf->formationhabilitation->enabled' if entry must be visible if module is enabled.
-			'perms'=>'', // Use 'perms'=>'$user->rights->formationhabilitation->formation->read' if you want your menu with a permission rules
+			'perms'=>'$user->rights->formationhabilitation->formation->read||$user->rights->formationhabilitation->formation->write||$user->rights->formationhabilitation->userformation->readall||$user->rights->formationhabilitation->habilitation_autorisation->read||$user->rights->formationhabilitation->habilitation_autorisation->write||$user->rights->formationhabilitation->userhabilitation_autorisation->readall||$user->hasRight(\'formationhabilitation\', \'volet\', \'read\')||$user->hasRight(\'formationhabilitation\', \'uservolet\', \'readall\')||$user->hasRight(\'formationhabilitation\', \'visitemedical\', \'read\')||$user->hasRight(\'formationhabilitation\', \'visitemedical\', \'write\')||$user->hasRight(\'formationhabilitation\', \'convocation\', \'read\')||$user->hasRight(\'formationhabilitation\', \'convocation\', \'write\')', // Use 'perms'=>'$user->rights->formationhabilitation->formation->read' if you want your menu with a permission rules
 			'target'=>'',
 			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
 		);
@@ -586,7 +601,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '$user->rights->formationhabilitation->formation->readline',
+			 'perms' => '$user->rights->formationhabilitation->userformation->readall',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -634,7 +649,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '$user->rights->formationhabilitation->habilitation_autorisation->readline',
+			 'perms' => '$user->rights->formationhabilitation->userhabilitation_autorisation->readall',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -682,7 +697,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => '$conf->formationhabilitation->enabled',
-			 'perms' => '$user->rights->formationhabilitation->habilitation_autorisation->readline',
+			 'perms' => '$user->rights->formationhabilitation->userhabilitation_autorisation->readall',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -730,7 +745,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => 'isModEnabled(\'formationhabilitation\')',
-			 'perms' => '$user->hasRight(\'formationhabilitation\', \'volet\', \'readline\')',
+			 'perms' => '$user->hasRight(\'formationhabilitation\', \'uservolet\', \'readall\')',
 			 'target' => '',
 			 'user' => 2,
 		);

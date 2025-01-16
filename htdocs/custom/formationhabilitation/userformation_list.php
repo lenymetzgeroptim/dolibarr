@@ -177,9 +177,9 @@ $object->fields = dol_sort_array($object->fields, 'position');
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // There is several ways to check permission.
-$permissiontoread = $user->rights->formationhabilitation->formation->readline;
-$permissiontoadd = $user->rights->formationhabilitation->formation->writeline;
-$permissiontodelete = $user->rights->formationhabilitation->formation->deleteline;
+$permissiontoread = $user->rights->formationhabilitation->userformation->readall;
+$permissiontoadd = $user->rights->formationhabilitation->userformation->write;
+$permissiontodelete = $user->rights->formationhabilitation->userformation->delete;
 
 // Security check (enable the most restrictive one)
 if ($user->socid > 0) accessforbidden();

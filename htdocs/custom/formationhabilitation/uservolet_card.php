@@ -162,10 +162,10 @@ elseif($volet->typevolet == 3) {
 $objectparentline = new UserVolet($db);
 
 // There is several ways to check permission.
-$permissiontoread = $user->hasRight('formationhabilitation', 'volet', 'readline') || $object->fk_user == $user->id;
-$permissiontoadd = $user->hasRight('formationhabilitation', 'volet', 'writeline'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-$permissiontodelete = $user->hasRight('formationhabilitation', 'volet', 'deleteline') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_VALIDATION0);
-$permissiontoaddline = $user->rights->formationhabilitation->formation->writeline;
+$permissiontoread = $user->hasRight('formationhabilitation', 'uservolet', 'readall') || ($object->fk_user == $user->id && $user->hasRight('formationhabilitation', 'uservolet', 'read'));
+$permissiontoadd = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontodelete = $user->hasRight('formationhabilitation', 'uservolet', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_VALIDATION0);
+$permissiontoaddline = $user->rights->formationhabilitation->userformation->write;
 $permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
 $permissiontoreadline = $permissiontoread;
 
@@ -393,7 +393,7 @@ if(!$permissiontoreadcost) {
     unset($arrayfields['t.cout_annexe']);
     unset($arrayfields['t.cout_total']);
 }
-if($object->fk_volet != 6) {
+if($object->fk_volet != 7) {
 	unset($object->fields['qualif_pro']);
 }
 

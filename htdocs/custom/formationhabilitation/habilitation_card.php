@@ -139,10 +139,10 @@ $objectparentline = $object;
 $permissiontoread = $user->rights->formationhabilitation->habilitation_autorisation->read;
 $permissiontoadd = $user->rights->formationhabilitation->habilitation_autorisation->write; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 $permissiontodelete = $user->rights->formationhabilitation->habilitation_autorisation->delete || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_CONSTRUCTION);
-$permissiontoreadline = $user->rights->formationhabilitation->habilitation_autorisation->readline;
-$permissiontoaddline = $user->rights->formationhabilitation->habilitation_autorisation->writeline;
-$permissiontodeleteline = $user->rights->formationhabilitation->habilitation_autorisation->deleteline;
-$permissiontoforceline = $user->rights->formationhabilitation->habilitation_autorisation->forceline;
+$permissiontoreadline = $user->rights->formationhabilitation->userhabilitation_autorisation->readall;
+$permissiontoaddline = $user->rights->formationhabilitation->userhabilitation_autorisation->write;
+$permissiontodeleteline = $user->rights->formationhabilitation->userhabilitation_autorisation->delete;
+$permissiontoforceline = $user->rights->formationhabilitation->userhabilitation_autorisation->force;
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/habilitation';
 
