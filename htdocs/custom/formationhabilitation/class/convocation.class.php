@@ -136,7 +136,7 @@ class Convocation extends CommonObject
 		"commentaire" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"1",),
 		"motifvisite" => array("type"=>"chkbxlst:c_motif_visite:label:rowid::(active=1)", "label"=>"MotifVisite", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"1",),
 		"centremedecine" => array("type"=>"integer:societe:societe/class/societe.class.php", "label"=>"CentreMedecine", "enabled"=>"1", 'position'=>47, 'notnull'=>0, "visible"=>"1",),
-		"examenrealiser" => array("type"=>"chkbxlst:c_examen_medical:label:rowid::(active=1)", "label"=>"ExamenARéaliser", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"1",),
+		"examenrealiser" => array("type"=>"varchar(128)", "label"=>"ExamenARéaliser", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"1",),
 		"fk_formation" => array("type"=>"integer:formation:custom/formationhabilitation/class/formation.class.php:0:(t.status:=:1)", "label"=>"Formation", "enabled"=>"1", 'position'=>43, 'notnull'=>0, "visible"=>"1",),
 		"lieu_formation" => array("type"=>"varchar(128)", "label"=>"LieuFormation", "enabled"=>"1", 'position'=>42, 'notnull'=>0, "visible"=>"1",),
 	);

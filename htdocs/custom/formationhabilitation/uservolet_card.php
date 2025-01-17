@@ -688,13 +688,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			// }
 
 			// Modify
-			if ($object->status == $object::STATUS_VALIDATION0) {
+			if ($object->status != $object::STATUS_VALIDATED && $permissiontoadd) {
 				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
 			}
 
-			//if ($object->status == $object::STATUS_VALIDATED) {
+			if (($permissiontovalidate1 && $object->status == $object::STATUS_VALIDATION0) || ($permissiontovalidate2 && $object->status == $object::STATUS_VALIDATION1) || ($permissiontovalidate3 && $object->status == $object::STATUS_VALIDATION2) || $permissiontovalidate4 && ($object->status == $object::STATUS_VALIDATION3) || $object->status == $object::STATUS_VALIDATED) {
 				print dolGetButtonAction($langs->trans('GeneratePDF'), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererPdf&confirm=yes&token='.newToken(), '', $permissiontoadd);
-			//}
+			}
 
 			// Validate n°1
 			// if ($object->status == $object::STATUS_VALIDATION0) {

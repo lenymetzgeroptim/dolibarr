@@ -1431,6 +1431,7 @@ class Autorisation extends CommonObject
 		$userAutorisation->status = UserAutorisation::STATUS_AUTORISABLE;
 		$userAutorisation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userAutorisation->date_autorisation, "%Y%m%d");
 		$userAutorisation->fk_autorisation = $this->id;
+		$userAutorisation->domaineapplication = $this->domaineapplication;
 
 		$resultcreate = $userAutorisation->create($user, 0, 1);
 

@@ -490,9 +490,10 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		}
 
 		if(!empty($user_static->array_options['options_datedebut_primo'])) {
-			$now = dol_print_date(dol_now(), '%d-%m-%Y');
-			$datedebut_primo = dol_print_date($user_static->array_options['options_datedebut_primo'], '%d-%m-%Y');
-			$datefin_primo = dol_print_date($user_static->array_options['options_datefin_primo'], '%d-%m-%Y');
+			$now = dol_now();
+			$datedebut_primo = $user_static->array_options['options_datedebut_primo'];
+			$datefin_primo = $user_static->array_options['options_datefin_primo'];
+
 			if($volet->numero == 7 && $now >= $datedebut_primo && (empty($user_static->array_options['options_datefin_primo']) || $now <= $datefin_primo)) {
 				$x = $pdf->getX();
 				$y = $pdf->getY();
@@ -537,7 +538,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		if($langs->transnoentities($user_static->gender) == 'man') {
 			$gender = 'M';
 		}
-		elseif($langs->transnoentities($user_static->gender) == 'women') {
+		elseif($langs->transnoentities($user_static->gender) == 'woman') {
 			$gender = 'F';
 		}
 
@@ -763,7 +764,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			if($nb_habilitation % $nb_habilitation_max == 0) {
 				if($nb_habilitation > 0) {
 					// Footer
-					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, '<p style="font-size: 6pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>');
+					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, '<p style="font-size: 6pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale</p><br>');
 
 					$pdf->AddPage();
 					$pagenb++;
@@ -792,7 +793,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			$html .= 
 			'<tr>
 				<td width="30%" style="font-size: 7pt">'.$habilitation->label.'</td>
-				<td width="30%" style="font-size: 7pt">'.dol_print_date($userhabilitation->date_fin_habilitation, '%d/%m/%Y').'</td>
+				<td width="30%" style="font-size: 7pt">'.(!empty($userhabilitation->date_fin_habilitation) ? dol_print_date($userhabilitation->date_fin_habilitation, '%d/%m/%Y') : dol_print_date($object->datefinvolet, '%d/%m/%Y')).'</td>
 				<td width="40%" style="font-size: 7pt">'.$domaineapplicationInfo[$userhabilitation->domaineapplication].'</td>
 			</tr>';
 
@@ -815,7 +816,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		}
 
 		//$pdf->SetFont('', 'B', $default_font_size - 2);
-		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, '<p style="font-size: 6pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>');
+		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, '<p style="font-size: 6pt">L\'habilitation est soumise<br>au renouvellement de<br>l\'aptitude médicale</p><br>');
 	}
 
 	/**
@@ -959,7 +960,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 
 				if($nb_autorisation > 0) {
 					// Footer
-					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, ($volet->numero == 9 ? '<p style="font-size: 6pt">L\'autorisation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>' : ''));
+					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, ($volet->numero == 9 ? '<p style="font-size: 6pt">L\'autorisation est soumise<br>au renouvellement de<br>l\'aptitude médicale</p><br>' : ''));
 
 					// Ajout de la page avec la liste des autorisations
 					$pdf->AddPage();
@@ -994,7 +995,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			$html .= 
 			'<tr>
 				<td width="30%" style="font-size: 7pt">'.$autorisation->label.'</td>
-				<td width="30%" style="font-size: 7pt">'.dol_print_date($userautorisation->date_fin_autorisation, '%d/%m/%Y').'</td>
+				<td width="30%" style="font-size: 7pt">'.(!empty($userautorisation->date_fin_habilitation) ? dol_print_date($userautorisation->date_fin_habilitation, '%d/%m/%Y') : dol_print_date($object->datefinvolet, '%d/%m/%Y')).'</td>
 				<td width="40%" style="font-size: 7pt">'.$domaineapplicationInfo[$userautorisation->domaineapplication].'</td>
 			</tr>';
 
@@ -1017,7 +1018,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		}
 
 		//$pdf->SetFont('', 'B', $default_font_size - 2);
-		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, ($volet->numero == 9 ? '<p style="font-size: 6pt">L\'autorisation est soumise<br>au renouvellement de<br>l\'aptitude médicale et à la date la plus restrictive</p><br>' : ''));
+		$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, ($volet->numero == 9 ? '<p style="font-size: 6pt">L\'autorisation est soumise<br>au renouvellement de<br>l\'aptitude médicale</p><br>' : ''));
 	}
 
 	/**
@@ -1037,15 +1038,25 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 		$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 
-		$x = $pdf->getX();
-		$y = $pdf->getY();
 		$societe = new Societe($db);
 		$societe->fetch(157);
 		$user_static = new User($db);
 		$actioncomm = new ActionComm($this->db);
 		$object->fetch($object->id); // Reload for last diff
 
-		$cachet1 = '<span>Date : '.dol_print_date(dol_now(), '%d/%m/%Y').'</span>'.$textecachet1;
+		if($object->fk_volet == 10) {
+			$txt_date = '<span>Date : '.dol_print_date($object->datedebutvolet, '%d/%m/%Y').'</span>';
+		}
+		else {
+			$txt_date = '<span>Volet valide du '.dol_print_date($object->datedebutvolet, '%d/%m/%Y').' au '.dol_print_date($object->datefinvolet, '%d/%m/%Y').'</span>';
+		}
+		$y = $pdf->setY($pdf->getY() - 4);
+		$pdf->writeHTML($txt_date, true, false, false, false, '');
+
+		$x = $pdf->getX();
+		$y = $pdf->getY() + 1;
+
+		$cachet1 = $textecachet1;
 		if(!empty($object->date_valid_employeur) && !empty($object->fk_user_valid_employeur) && !empty($object->fk_action_valid_employeur)) {
 			$user_static->fetch($object->fk_user_valid_employeur);
 			$actioncomm->fetch($object->fk_action_valid_employeur);

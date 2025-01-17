@@ -182,14 +182,14 @@ LieuFormation = Lieu de formation
 # Attribut User Habilitation
 # 
 DateHabilitation = Date d'obtention de l'habilitation
-DateFinHabilitation = Date de fin de validité de l'habilitation
+DateFinHabilitation = Date de fin de validité de la formation
 
 
 #
 # Attribut User Autorisation
 # 
 DateAutorisation = Date d'obtention de l'autorisation
-DateFinAutorisation = Date de fin de validité de l'autorisation
+DateFinAutorisation = Date de fin de validité de la formation
 
 
 #

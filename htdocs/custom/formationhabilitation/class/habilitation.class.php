@@ -1337,6 +1337,7 @@ class Habilitation extends CommonObject
 		$userHabilitation->status = UserHabilitation::STATUS_HABILITABLE;
 		$userHabilitation->ref = $user_static->login."-".$this->ref.'-'.dol_print_date($userHabilitation->date_habilitation, "%Y%m%d");
 		$userHabilitation->fk_habilitation = $this->id;
+		$userHabilitation->domaineapplication = $this->domaineapplication;
 
 		$resultcreate = $userHabilitation->create($user, 0, 1);
 

@@ -214,10 +214,10 @@ if (empty($reshook)) {
 			}
 		}
 		elseif (GETPOST("nature", 'int') == '3' || GETPOST("nature", 'int') == '4') {
-			if(empty(GETPOST("examenrealiser"))) {
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("ExamenARéaliser")), null, 'errors');
-				$error++;
-			}
+			// if(empty(GETPOST("examenrealiser"))) {
+			// 	setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("ExamenARéaliser")), null, 'errors');
+			// 	$error++;
+			// }
 			if(GETPOST("centremedecine", 'int') <= 0) {
 				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("CentreMedecine")), null, 'errors');
 				$error++;
