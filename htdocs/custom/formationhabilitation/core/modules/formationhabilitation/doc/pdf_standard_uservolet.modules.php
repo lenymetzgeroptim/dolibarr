@@ -933,7 +933,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		global $conf, $langs, $db, $pagenb;
 
 		$nb_autorisation = 0;
-		$nb_autorisation_max = 7;
+		$nb_autorisation_max = 5;
 		$autorisation = new Autorisation($db);
 		$volet = new Volet($this->db);
 		$volet->fetch($object->fk_volet); 
@@ -955,9 +955,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$pdf->MultiCell(0, 1, '');
 		$html = "";
 		foreach($object->lines as $userautorisation) {
-			if($nb_autorisation % $nb_autorisation_max == 0) {
-				$autorisation->fetch($userautorisation->fk_autorisation);
+			$autorisation->fetch($userautorisation->fk_autorisation);
 
+			if($nb_autorisation % $nb_autorisation_max == 0) {
 				if($nb_autorisation > 0) {
 					// Footer
 					$this->writeSignature($pdf, $object, $outputlangs, $outputlangsbis, ($volet->numero == 9 ? '<p style="font-size: 6pt">L\'autorisation est soumise<br>au renouvellement de<br>l\'aptitude médicale</p><br>' : ''));
@@ -980,24 +980,46 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 					$pdf->SetTextColor(0, 0, 60);
 					$pdf->MultiCell(0, 1, '');
 				}
-				$html .= 
-				'<table cellpadding="2" cellspacing="0" border="1" align="center">
-					<thead>
-						<tr>
-							<td width="30%" style="font-size: 7pt"><strong>AUTORISATION</strong></td>
-							<td width="30%" style="font-size: 7pt"><strong>FIN DE VALIDITE</strong></td>
-							<td width="40%" style="font-size: 7pt"><strong>DOMAINE D\'APPLICATION</strong></td>
-						</tr>
-					</thead>
-					<tbody>';
+				if($volet->id == 10) {
+					$html .= 
+					'<table cellpadding="2" cellspacing="0" border="1" align="center">
+						<thead>
+							<tr>
+								<td width="70%" style="font-size: 7pt"><strong>AUTORISATION</strong></td>
+								<td width="30%" style="font-size: 7pt"><strong>FIN DE VALIDITE</strong></td>
+							</tr>
+						</thead>
+						<tbody>';
+				}
+				else {
+					$html .= 
+					'<table cellpadding="2" cellspacing="0" border="1" align="center">
+						<thead>
+							<tr>
+								<td width="45%" style="font-size: 7pt"><strong>AUTORISATION</strong></td>
+								<td width="25%" style="font-size: 7pt"><strong>FIN DE VALIDITE</strong></td>
+								<td width="30%" style="font-size: 7pt"><strong>DOMAINE D\'APPLICATION</strong></td>
+							</tr>
+						</thead>
+						<tbody>';
+				}
 			}
 
-			$html .= 
-			'<tr>
-				<td width="30%" style="font-size: 7pt">'.$autorisation->label.'</td>
-				<td width="30%" style="font-size: 7pt">'.(!empty($userautorisation->date_fin_habilitation) ? dol_print_date($userautorisation->date_fin_habilitation, '%d/%m/%Y') : dol_print_date($object->datefinvolet, '%d/%m/%Y')).'</td>
-				<td width="40%" style="font-size: 7pt">'.$domaineapplicationInfo[$userautorisation->domaineapplication].'</td>
-			</tr>';
+			if($volet->id == 10) {
+				$html .= 
+				'<tr>
+					<td width="70%" style="font-size: 7pt">'.$autorisation->label.'</td>
+					<td width="30%" style="font-size: 7pt">'.(!empty($userautorisation->date_fin_autorisation) ? dol_print_date($userautorisation->date_fin_autorisation, '%d/%m/%Y') : dol_print_date($object->datefinvolet, '%d/%m/%Y')).'</td>
+				</tr>';
+			}
+			else {
+				$html .= 
+				'<tr>
+					<td width="45%" style="font-size: 7pt">'.$autorisation->label.'</td>
+					<td width="25%" style="font-size: 7pt">'.(!empty($userautorisation->date_fin_autorisation) ? dol_print_date($userautorisation->date_fin_autorisation, '%d/%m/%Y') : dol_print_date($object->datefinvolet, '%d/%m/%Y')).'</td>
+					<td width="30%" style="font-size: 7pt">'.$domaineapplicationInfo[$userautorisation->domaineapplication].'</td>
+				</tr>';
+			}
 
 			$nb_autorisation++;
 
