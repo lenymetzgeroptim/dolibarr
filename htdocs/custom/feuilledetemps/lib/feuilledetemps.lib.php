@@ -99,6 +99,7 @@ function timesheet_prepare_head($mode, $fuser = null)
 /**
  * Output a task line into a perday intput mode
  *
+ * @param	string	   	$mode								Mode d'affichage
  * @param	string	   	$inc								Line output identificator (start to 0, then increased by recursive call)
  * @param	int			$firstdaytoshow						First day to show
  * @param	int			$lastdaytoshow						Last day to show
@@ -143,13 +144,13 @@ function timesheet_prepare_head($mode, $fuser = null)
  * @param   int 	 	$nb_appel							Nombre d'appel récursif pour gérer le header du tableau
  * @return  array				Array with time spent for $fuser for each day of week on tasks in $lines and substasks
  */
-function FeuilleDeTempsLinesPerWeek(&$inc, $firstdaytoshow, $lastdaytoshow, $fuser, $parent, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null, 
+function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytoshow, $fuser, $parent, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null, 
 									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
 									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, &$appel_actif = 0, &$nb_appel = 0){
 	global $conf, $db, $user, $langs;
-	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object;
+	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
 
 	$numlines = count($lines);
 	$lastprojectid = 0;
@@ -185,7 +186,12 @@ function FeuilleDeTempsLinesPerWeek(&$inc, $firstdaytoshow, $lastdaytoshow, $fus
 		print '<table class="tagtable liste listwithfilterbefore" id="tablelines_fdt">'."\n";
 		print '<thead>';
 		print '<tr class="liste_titre favoris">';
-		print '<th class="fixed" colspan="'.(2 + $addcolspan).'" style="min-width: 500px;"></th>';
+		print '<th class="fixed" colspan="'.(2 + $addcolspan).'" style="min-width: 500px;">';
+		if($mode == 'card') {
+			print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>';
+			print $fuser->getNomUrl(1);
+		}
+		print '</th>';
 
 		// Affichage des jours de la semaine
 		for ($idw = 0; $idw < $nb_jour; $idw++) {
@@ -253,7 +259,11 @@ function FeuilleDeTempsLinesPerWeek(&$inc, $firstdaytoshow, $lastdaytoshow, $fus
 		$cpt = 0; 
 
 		print '<tr class="nostrong liste_titre fixed conges">';
-			print '<th colspan="'.(2 + $addcolspan).'" '.($multiple_holiday ? 'rowspan="2"' : '').' class="fixed"><strong>Congés</strong>';
+			print '<th colspan="'.(2 + $addcolspan).'" '.($multiple_holiday ? 'rowspan="2"' : '').' class="fixed">';
+			if($mode == 'card' && $displayVerification) {
+				print '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
+			}
+			print '<strong>Congés</strong>';
 			print $form->textwithpicto('', $conges_texte);
 			print '</th>';
 			for ($idw = 0; $idw < $nb_jour; $idw++) {
@@ -291,10 +301,29 @@ function FeuilleDeTempsLinesPerWeek(&$inc, $firstdaytoshow, $lastdaytoshow, $fus
 						$numberDay = $nb_jour - $idw;
 					}
 					
-					print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					if($mode == 'card') {
+						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					}
+					else {
+						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					}
+
+					if($mode == 'card' && $displayVerification) {
+						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+					}
 
 					print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
-					print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					
+					if($mode == 'card') {
+						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					
+						if($modify && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
+							print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
+						}
+					}
+					else {
+						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					}
 
 					$idw += $numberDay - 1;
 					$cpt++;
@@ -345,10 +374,28 @@ function FeuilleDeTempsLinesPerWeek(&$inc, $firstdaytoshow, $lastdaytoshow, $fus
 						$numberDay = $nb_jour - $idw;
 					}
 					
-					print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					if($mode == 'card') {
+						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					}
+					else {
+						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					}
+
+					if($mode == 'card' && $displayVerification) {
+						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+					}
 		
 					print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
-					print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					
+					if($mode == 'card') {
+						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+						if($modify && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
+							print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
+						}
+					}
+					else {
+						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					}
 		
 					$idw += $numberDay - 1;
 					$cpt++;
@@ -678,7 +725,7 @@ function FeuilleDeTempsLinesPerWeek(&$inc, $firstdaytoshow, $lastdaytoshow, $fus
 						$tableCell .= ' onfocus="this.oldvalue = this.value; this.oldvalue_focus = this.value;"';
 						$tableCell .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\')"';
 						$tableCell .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\','.$inc.', '.$num_first_day.'); this.oldvalue = this.value; updateTotalWeek('.$hn_prec.', '.$hn_suiv.', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');"';
-						$tableCell .= ' onblur="regexEvent_TS(this,event,\''.$modeinput.'\'); validateTime(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.','.$temps.',\''.$type_deplacement.'\', '.$tmp_heure_semaine_hs.', '.($fuser->id == $user->id).'); updateTotal_TS(this, '.$idw.',\''.$modeinput.'\','.$inc.', '.$num_first_day.'); updateTotalWeek('.$hn_prec.', '.$hn_suiv.', \''.$weekNumber.'\', '.($timeHoliday[$weekNumber] ? $timeHoliday[$weekNumber] : 0).', '.$tmp_heure_semaine.'); validateTime_HS(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.','.$inc.','.$temps.','.$hs_25.','.$hs_50.', '.$tmp_heure_semaine_hs.');" />';
+						$tableCell .= ' onblur="regexEvent_TS(this,event,\''.$modeinput.'\'); validateTime(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.','.$temps.',\''.$type_deplacement.'\', '.$tmp_heure_semaine_hs.', '.($fuser->id == $user->id).'); updateTotal_TS(this, '.$idw.',\''.$modeinput.'\','.$inc.', '.$num_first_day.'); updateTotalWeek('.$hn_prec.', '.$hn_suiv.', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.'); validateTime_HS(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.','.$inc.','.$temps.','.$hs_25.','.$hs_50.', '.$tmp_heure_semaine_hs.');" />';
 
 						// On récupère le total de la semaine pour savoir s'il faut afficher ou non les cases des heures sup
 						if($dayinloopfromfirstdaytoshow == $firstdaytoshow || dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Lun'){
@@ -801,7 +848,7 @@ function FeuilleDeTempsLinesPerWeek(&$inc, $firstdaytoshow, $lastdaytoshow, $fus
 			$level++;
 			$nb_appel++;
 			if ($lines[$i]->id > 0) {				
-				$ret = FeuilleDeTempsLinesPerWeek($inc, $firstdaytoshow, $lastdaytoshow, $fuser, $lines[$i]->id, ($parent == 0 ? $lineswithoutlevel0 : $lines), $level, $projectsrole, $tasksrole, $mine, $restricteditformytask, $isavailable, $oldprojectforbreak, $arrayfields, $extrafields, 
+				$ret = FeuilleDeTempsLinesPerWeek($mode, $inc, $firstdaytoshow, $lastdaytoshow, $fuser, $lines[$i]->id, ($parent == 0 ? $lineswithoutlevel0 : $lines), $level, $projectsrole, $tasksrole, $mine, $restricteditformytask, $isavailable, $oldprojectforbreak, $arrayfields, $extrafields, 
 				$modify, $css, $css_holiday, $num_first_day, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, $temps_prec, $temps_suiv, 
 				$temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, $favoris, $param,
 				$totalforeachday, $holiday_without_canceled, $multiple_holiday, $appel_actif, $nb_appel);
@@ -876,8 +923,855 @@ function FeuilleDeTempsLinesPerWeek(&$inc, $firstdaytoshow, $lastdaytoshow, $fus
 			print '</tr>';
 		}
 
-		FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $num_first_day, !$modify, $addcolspan, $dayinloopfromfirstdaytoshow_array);
-   
+		if($mode == 'card' && $displayVerification) {
+			FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $css_holiday, $num_first_day, !$modify, $dayinloopfromfirstdaytoshow_array);
+		}
+		else {
+			FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $num_first_day, !$modify, $addcolspan, $dayinloopfromfirstdaytoshow_array);
+		}
+
+		print "</table>";
+		print '</div>';
+	}
+
+	return $totalforvisibletasks;
+}
+
+/**
+ * Output a task line into a perday intput mode
+ *
+ * @param	string	   	$mode								Mode d'affichage
+ * @param	string	   	$inc								Line output identificator (start to 0, then increased by recursive call)
+ * @param	int			$firstdaytoshow						First day to show
+ * @param	int			$lastdaytoshow						Last day to show
+ * @param	User|null	$fuser								Restrict list to user if defined
+ * @param   string		$parent								Id of parent task to show (0 to show all)
+ * @param   Task[]		$lines								Array of lines (list of tasks but we will show only if we have a specific role on task)
+ * @param   int			$level								Level (start to 0, then increased/decrease by recursive call)
+ * @param   string		$projectsrole						Array of roles user has on project
+ * @param   string		$tasksrole							Array of roles user has on task
+ * @param	string		$mine								Show only task lines I am assigned to
+ * @param   int			$restricteditformytask				0=No restriction, 1=Enable add time only if task is assigned to me, 2=Enable add time only if tasks is assigned to me and hide others
+ * @param   array       $isavailable						Array with data that say if user is available for several days for morning and afternoon
+ * @param	int			$oldprojectforbreak					Old project id of last project break
+ * @param	array		$arrayfields		   				Array of additional column
+ * @param	Extrafields	$extrafields		    			Object extrafields
+ * @param 	int			$modify								1 si les cases sont modifiables, 0 sinon 
+ * @param   string[]    $css								css pour la couleur des cases
+ * @param   string[]    $css_holiday						css pour la couleur des cases
+ * @param   int 	 	$num_first_day						Numero du 1er jour du mois (0 si celui-ci n'est pas présent dans les dates affichées)
+ * @param   string 	 	$type_deplacement					Type de déplacement de l'utilisateur : 'none', 'petitDeplacement' ou 'grandDeplacement'
+ * @param   int[] 	 	$dayinloopfromfirstdaytoshow_array	Tableau avec l'ensemble des jours a afficher (amélioration de la performance)
+ * @param   int 	 	$modifier_jour_conges				Droit de modifier les jours de congés
+ * @param   double 	 	$temps_prec							Temps précédent de la semaine coupée de début de pointage 
+ * @param   double 	 	$temps_suiv							Temps suivant de la semaine coupée de fin de pointage 
+ * @param   double 	 	$temps_prec_hs25					Temps des HS à 25% précédent de la semaine coupée de début de pointage 
+ * @param   double 	 	$temps_suiv_hs25					Temps des HS à 25% suivant de la semaine coupée de fin de pointage 
+ * @param   double 	 	$temps_prec_hs50					Temps des HS à 50% précédent de la semaine coupée de début de pointage 
+ * @param   double 	 	$temps_suiv_hs50					Temps des HS à 50% suivant de la semaine coupée de fin de pointage 
+ * @param   string[] 	$notes								Tableau des notes de la feuille de temps
+ * @param   double[] 	$otherTime							Autres temps : port EPI / Heure de nuit
+ * @param   double[] 	$timeSpentMonth						Temps consommés du mois
+ * @param   double[] 	$timeSpentWeek						Temps consommés pour chaque semaine du mois
+ * @param   double[] 	$timeHoliday						Temps des congés
+ * @param   double 	 	$heure_semaine						Heures travaillées par l'utilisateur dans la semaine
+ * @param   double 	 	$heure_semaine_hs					Heures travaillées à partir desquelles l'utilisateur à droit à des HS dans la semaine
+ * @param   int[] 	 	$favoris							Tâches ajoutées en favoris
+ * @param   string 	 	$param								Paramètres pour les liens
+ * @param   double[] 	$totalforeachday					Total des heures par jour pour la différence avec les tâches affichées
+ * @param   array	 	$holiday_without_canceled			Tableau avec les congés non annulés de l'utilisateur
+ * @param   int	 		$multiple_holiday					Est-ce qu'il faut 2 lignes pour les congés ?
+ * @param   int 	 	$appel_actif						Numéro d'appel récursif pour gérer le footer du tableau
+ * @param   int 	 	$nb_appel							Nombre d'appel récursif pour gérer le header du tableau
+ * @return  array				Array with time spent for $fuser for each day of week on tasks in $lines and substasks
+ */
+function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastdaytoshow, $fuser, $parent, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null, 
+									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
+									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
+									$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
+									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, &$appel_actif = 0, &$nb_appel = 0){
+	global $conf, $db, $user, $langs;
+	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
+
+	$table = array();
+	$numlines = count($lines);
+	$lastprojectid = 0;
+	$workloadforid = array();
+	$totalforvisibletasks = array();
+	$lineswithoutlevel0 = array();
+	$u = 0;
+	$total_hs25 = 0;
+	$total_hs50 = 0;
+	$nb_jour = sizeof($dayinloopfromfirstdaytoshow_array);
+	$appel_actif++;
+	$first_day_month = dol_time_plus_duree($firstdaytoshow, $num_first_day, 'd');
+
+	// Header
+	if($nb_appel == 0) {
+		$addcolspan = 0;
+		if (!empty($arrayfields['t.planned_workload']['checked'])) {
+			$addcolspan++;
+		}
+		if (!empty($arrayfields['t.progress']['checked'])) {
+			$addcolspan++;
+		}
+		if (!empty($arrayfields['timeconsumed']['checked'])) {
+			$addcolspan += 2;
+		}
+		foreach ($arrayfields as $key => $val) {
+			if ($val['checked'] && substr($key, 0, 5) == 'efpt.') {
+				$addcolspan++;
+			}
+		}
+
+		print '<div class="div-table-responsive" style="min-height: 0px">';
+		print '<table class="tagtable liste listwithfilterbefore" id="tablelines_fdt">'."\n";
+		print '<thead>';
+		print '<tr class="liste_titre favoris">';
+		print '<th class="fixed" colspan="'.(2 + $addcolspan).'" style="min-width: 500px;">';
+		if($mode == 'card') {
+			print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>';
+			print $fuser->getNomUrl(1);
+		}
+		print '</th>';
+
+		// Affichage des jours de la semaine
+		for ($idw = 0; $idw < $nb_jour; $idw++) {
+			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+
+			if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
+				print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none; border-top: none !important; z-index:1;" width="9%"></th>';
+			}
+
+			print '<th width="9%" align="center" style="min-width: 90px; z-index: 1" class="bold hide'.$idw.' day">';
+			print dol_print_date($dayinloopfromfirstdaytoshow, '%a');
+			print '<br>'.dol_print_date($dayinloopfromfirstdaytoshow, 'dayreduceformat').'</th>';
+		}
+		print '<th class="fixed total_title" width="9%" style="min-width: 90px;"><strong>TOTAL</strong></th>';
+		print "</tr>";
+
+		// Affichage de la ligne avec le total de chaque semaine
+		print '<tr class="liste_titre fixed favoris">';
+		print '<th class="fixed" colspan="'.(2 + $addcolspan).'"></th>';
+		$semaine = 1;
+		for ($idw = 0; $idw < $nb_jour; $idw++) {			
+			$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
+			$ecart_lundi = ecart_lundi($tmpday);
+			$weekNumber = date("W", $tmpday);
+
+			if ($idw == 0) {
+				$taille = 7-$ecart_lundi;
+			}
+			elseif (dol_print_date($tmpday, '%a') == 'Lun' && $nb_jour - $idw < 7 && $idw-$ecart_lundi > 23 && dol_print_date($lastdaytoshow, '%a') != 'Dim'){
+				$taille = $nb_jour - $idw;
+			}
+			elseif (dol_print_date($tmpday, '%a') == 'Lun' && $idw != 0) {	
+				$taille = 7;
+				$date = dol_time_plus_duree($tmpday, 7, 'd');
+
+				if($first_day_month == $tmpday){
+					print '<th style="min-width: 90px; border-left: 1px solid var(--colortopbordertitle1); border-bottom: none; border-top: none !important; z-index:1;" width="9%"></th>';
+				}
+				elseif($first_day_month > $tmpday && $first_day_month < $date){
+					$taille++;
+					$idw--;
+				}
+			}
+
+			$premier_jour = $idw;
+			$dernier_jour = $idw+$taille-1;
+
+			print '<th class="liste_total_semaine_'.$semaine.'" align="center" colspan='.$taille.'><strong>Semaine '.$weekNumber.' : <span class="totalSemaine" name="totalSemaine'.$weekNumber.'" id="totalSemaine'.$semaine.'_'.$premier_jour.'_'.$dernier_jour.'">&nbsp</span></strong></td>';
+			$semaine++;
+			$idw += $taille - 1;
+		}
+		print '<th class="fixed total_week"></th>';
+		print '</tr>';
+
+		// Affichage de la ligne des congés
+		$holiday = new extendedHoliday($db);
+		$typeleaves = $holiday->getTypesNoCP(-1, -1);
+		$arraytypeleaves = array();
+		foreach ($typeleaves as $key => $val) {
+			$labeltoshow = $val['code'];
+			$arraytypeleaves[$val['rowid']] = $labeltoshow;
+		}	
+			
+		$conges_texte = $holiday->getArrayHoliday($fuser->id, 0, 1);
+		$cpt = 0; 
+
+		print '<tr class="nostrong liste_titre fixed conges">';
+			print '<th colspan="'.(2 + $addcolspan).'" '.($multiple_holiday ? 'rowspan="2"' : '').' class="fixed">';
+			if($mode == 'card' && $displayVerification) {
+				print '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
+			}
+			print '<strong>Congés</strong>';
+			print $form->textwithpicto('', $conges_texte);
+			print '</th>';
+			for ($idw = 0; $idw < $nb_jour; $idw++) {
+				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+				$keysuffix = '['.$idw.']';
+
+				if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
+					print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
+				}
+
+				if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0])) {
+					$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
+					$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
+					$droit_rtt = $holiday->holidayTypeDroitRTT();
+						
+					if(!empty($holiday->array_options['options_hour'])) {
+						$durationHoliday = $holiday->array_options['options_hour'];
+					}
+					else {
+						$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
+						$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+						if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+							$duration_hour += 3.5 * 3600;
+						}
+						elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+							$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
+						}
+						elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+							$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
+						}
+						$durationHoliday = $duration_hour;
+					}
+
+					if($idw + $numberDay > $nb_jour) {
+						$numberDay = $nb_jour - $idw;
+					}
+					
+					if($mode == 'card') {
+						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					}
+					else {
+						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					}
+
+					if($mode == 'card' && $displayVerification) {
+						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+					}
+
+					print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
+					
+					if($mode == 'card') {
+						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					
+						if($modify && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
+							print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
+						}
+					}
+					else {
+						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					}
+
+					$idw += $numberDay - 1;
+					$cpt++;
+				}
+				else {
+					print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
+				}
+
+				print '</th>';
+			}
+			print '<th class="liste_total center fixed total_holiday"></th>';
+		print '</tr>';
+
+		if($multiple_holiday) {
+			print '<tr class="nostrong liste_titre conges">';
+			for ($idw = 0; $idw < $nb_jour; $idw++) {
+				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+				$keysuffix = '['.$idw.']';
+		
+				if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
+					print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
+				}
+		
+				if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][1])) {
+					$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][1]);
+					$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
+					$droit_rtt = $holiday->holidayTypeDroitRTT();
+						
+					if(!empty($holiday->array_options['options_hour'])) {
+						$durationHoliday = $holiday->array_options['options_hour'];
+					}
+					else {
+						$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
+						$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+						if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+							$duration_hour += 3.5 * 3600;
+						}
+						elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+							$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
+						}
+						elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+							$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
+						}
+						$durationHoliday = $duration_hour;
+					}
+		
+					if($idw + $numberDay > $nb_jour) {
+						$numberDay = $nb_jour - $idw;
+					}
+					
+					if($mode == 'card') {
+						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					}
+					else {
+						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
+					}
+
+					if($mode == 'card' && $displayVerification) {
+						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+					}
+		
+					print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
+					
+					if($mode == 'card') {
+						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+						if($modify && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
+							print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
+						}
+					}
+					else {
+						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					}
+		
+					$idw += $numberDay - 1;
+					$cpt++;
+				}
+				else {
+					print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'">';
+				}
+		
+				print '</th>';
+			}
+			print '<th class="liste_total center fixed total_holiday"></th>';
+			print '</tr>';
+		}
+		
+		print '</thead>';
+	}
+
+	// Create a smaller array with sublevels only to be used later. This increase dramatically performances.
+	if ($parent == 0) { // Always and only if at first level
+		for ($i = 0; $i < $numlines; $i++) {
+			if ($lines[$i]->fk_task_parent) {
+				$lineswithoutlevel0[] = $lines[$i];
+			}
+		}
+	}
+
+	if (empty($oldprojectforbreak)) {
+		$oldprojectforbreak = (empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT) ? 0 : -1); // 0 = start break, -1 = never break
+	}
+
+	// Boucle sur les taches
+	for ($i = 0; $i < $numlines; $i++) {
+		if ($parent == 0) {
+			$level = 0;
+		}
+
+		if ($lines[$i]->fk_task_parent == $parent) {
+			$obj = &$lines[$i]; // To display extrafields
+
+			// If we want all or we have a role on task, we show it
+			if (empty($mine) || str_contains($tasksrole[$lines[$i]->id], 'TASKCONTRIBUTOR')) {
+					// Break on a new project
+					if ($parent == 0 && $lines[$i]->fk_project != $lastprojectid) {
+						$lastprojectid = $lines[$i]->fk_project;
+						$projectstatic->id = $lines[$i]->fk_project;
+					}
+
+					if (empty($workloadforid[$projectstatic->id])) {
+						$projectstatic->weekWorkLoad = $timeSpentMonth[$projectstatic->id]['weekWorkLoad'];
+						$projectstatic->weekWorkLoadPerTask = $timeSpentMonth[$projectstatic->id]['weekWorkLoadPerTask'];
+						$workloadforid[$projectstatic->id] = 1;
+					}
+
+					$noTimespentInTask = 1;
+					for ($idw = 0; $idw < $nb_jour; $idw++) {
+						$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
+		
+						if(!empty($projectstatic->weekWorkLoadPerTask[$dayinloopfromfirstdaytoshow][$lines[$i]->id])) {
+							$noTimespentInTask = 0;
+							break;
+						}
+					}
+
+				if(!$noTimespentInTask || ($object->status != $object::STATUS_VALIDATED && $object->status!= $object::STATUS_VERIFICATION && $object->status != $object::STATUS_EXPORTED)) {
+					if ($restricteditformytask == 2 && !str_contains($tasksrole[$lines[$i]->id], 'TASKCONTRIBUTOR') && $noTimespentInTask) {	// we have no role on task and we request to hide such cases
+						continue;
+					}
+
+					$projectstatic->id = $lines[$i]->fk_project;
+					$projectstatic->ref = $lines[$i]->projectref;
+					$projectstatic->title = $lines[$i]->projectlabel;
+					$projectstatic->public = $lines[$i]->public;
+					$projectstatic->thirdparty_name = $lines[$i]->thirdparty_name;
+					$projectstatic->status = $lines[$i]->projectstatus;
+					
+					$taskstatic->id = $lines[$i]->id;
+					$taskstatic->ref = ($lines[$i]->ref ? $lines[$i]->ref : $lines[$i]->id);
+					$taskstatic->label = $lines[$i]->label;
+					$taskstatic->date_start = $lines[$i]->date_start;
+					$taskstatic->date_end = $lines[$i]->date_end;
+
+					$thirdpartystatic->id = $lines[$i]->thirdparty_id;
+					$thirdpartystatic->name = $lines[$i]->thirdparty_name;
+					$thirdpartystatic->email = $lines[$i]->thirdparty_email;
+
+					if (empty($oldprojectforbreak) || ($oldprojectforbreak != -1 && $oldprojectforbreak != $projectstatic->id)) {
+						$addcolspan = 0;
+						if (!empty($arrayfields['t.planned_workload']['checked'])) {
+							$addcolspan++;
+						}
+						if (!empty($arrayfields['t.progress']['checked'])) {
+							$addcolspan++;
+						}
+						if (!empty($arrayfields['timeconsumed']['checked'])) {
+							$addcolspan += 2;
+						}
+						foreach ($arrayfields as $key => $val) {
+							if ($val['checked'] && substr($key, 0, 5) == 'efpt.') {
+								$addcolspan++;
+							}
+						}
+
+						// Affichage de la ligne avec le projet
+						print '<tr class="oddeven trforbreak nostrong project">'."\n";
+						print '<td colspan="'.(2 + $addcolspan + $nb_jour + 2).'">';
+
+						print '<div style="position: sticky; width: fit-content; left: 8px;">';
+						print $projectstatic->getNomUrl(1, '', 0, '<strong>'.$langs->transnoentitiesnoconv("YourRole").':</strong> '.$projectsrole[$lines[$i]->fk_project], ' - ', 0, -1, 'valignmiddle');
+						$projectstatic->fetch($projectstatic->id);
+						if ($projectstatic->array_options['options_tiers_secondaire'] > 0) {
+							$thirdpartystatic->fetch($projectstatic->array_options['options_tiers_secondaire']);
+							print ' - '.$thirdpartystatic->getNomUrl(1);
+						}
+						if ($projectstatic->title) {
+							print ' - ';
+							print '<span class="secondary valignmiddle">'.$projectstatic->title.'</span>';
+						}
+						print '</div>';
+						print '</td>';
+						//print '<td colspan="'.($nb_jour + 2).'"></td>';
+						print '</tr>';
+					}
+
+					if ($oldprojectforbreak != -1) {
+						$oldprojectforbreak = $projectstatic->id;
+					}
+
+					$disabledproject = 1;
+					$disabledtask = 1;
+
+					// If at least one role for project
+					if ($lines[$i]->public || !empty($projectsrole[$lines[$i]->fk_project]) || $user->rights->projet->all->creer) {
+						$disabledproject = 0;
+						$disabledtask = 0;
+					}
+					// If $restricteditformytask is on and I have no role on task, i disable edit
+					if ($restricteditformytask && !str_contains($tasksrole[$lines[$i]->id], 'TASKCONTRIBUTOR')) {
+						$disabledtask = 1;
+					}
+
+					// Affichage de la ligne avec la tache 
+					print '<tr class="oddeven task'.(in_array($taskstatic->id, $favoris) ? ' favoris' : '').'" data-taskid="'.$lines[$i]->id.'">'."\n";
+
+					// Ref
+					print '<td class="fixed" colspan="2">';
+					print '<!-- Task id = '.$lines[$i]->id.' -->';
+					for ($k = 0; $k < $level; $k++) {
+						print '<div class="marginleftonly">';
+					}
+					print $taskstatic->getNomUrl(1, 'withproject', 'task');
+					// Label task
+					print '<span class="opacitymedium"> '.$taskstatic->label.'</span>';
+					if($favoris != -1) {
+						print '<a href="?action='.(in_array($taskstatic->id, $favoris) ? 'removeFavoris' : 'addFavoris').'&taskid='.$taskstatic->id.$param.'"><button type="button" title=" Ajouter / Supprimer favoris" onmouseover="mouseOverFav(this)" onmouseout="mouseOutFav(this)" onclick="clickFav(this)" name="Favoris" class="nobordertransp button_search_x'.(in_array($taskstatic->id, $favoris) ? ' clicked' : '').'"><span class="'.(in_array($taskstatic->id, $favoris) ? 'fas' : 'far').' fa-star" style="font-size: initial; color: var(--colorbackhmenu1);"></span></button></a>';;
+					}
+
+					$has_heure_nuit = (empty($otherTime['heure_nuit'][$lines[$i]->id]) ? 0 : 1);
+					$has_port_epi = (empty($otherTime['port_epi'][$lines[$i]->id]) ? 0 : 1);
+
+					// Colonne avec les cases à cocher
+					print '<div id="div_otherhour">';
+					print '<input type="checkbox" '.($has_heure_nuit ? 'checked ' : '').'id="heure_nuit_chkb_'.$lines[$i]->id.'" name="heure_nuit_chkb"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="heure_nuit_chkb_'.$lines[$i]->id.'"> dont Heures de nuit (21h/6h)</label></span>';
+					print '<input type="checkbox" '.($has_port_epi ? 'checked ' : '').'id="port_epi_chkb_'.$lines[$i]->id.'" name="port_epi_chkb"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="port_epi_chkb_'.$lines[$i]->id.'"> dont Port EPI respiratoire</label></span>';
+					print '</div></td>';
+
+					for ($k = 0; $k < $level; $k++) {
+						print "</div>";
+					}
+
+					// TASK extrafields
+					$extrafieldsobjectkey = 'projet_task';
+					$extrafieldsobjectprefix = 'efpt.';
+					include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_print_fields.tpl.php';
+
+					// Planned Workload
+					if (!empty($arrayfields['t.planned_workload']['checked'])) {
+						print '<td class="leftborder plannedworkload right">';
+						if ($lines[$i]->planned_workload) {
+							print convertSecondToTime($lines[$i]->planned_workload, 'allhourmin');
+						} else {
+							print '--:--';
+						}
+						print '</td>';
+					}
+
+					if (!empty($arrayfields['t.progress']['checked'])) {
+						// Progress declared %
+						print '<td class="right">';
+						print $formother->select_percent($lines[$i]->progress, $lines[$i]->id.'progress');
+						print '</td>';
+					}
+
+					if (!empty($arrayfields['timeconsumed']['checked'])) {
+						// Time spent by everybody
+						print '<td class="right">';
+						// $lines[$i]->duration is a denormalised field = summ of time spent by everybody for task. What we need is time consummed by user
+						if ($lines[$i]->duration) {
+							print '<a href="'.DOL_URL_ROOT.'/projet/tasks/time.php?id='.$lines[$i]->id.'">';
+							print convertSecondToTime($lines[$i]->duration, 'allhourmin');
+							print '</a>';
+						} else {
+							print '--:--';
+						}
+						print "</td>\n";
+
+						// Time spent by user
+						print '<td class="right">';
+						$tmptimespent = $taskstatic->getSummaryOfTimeSpent($fuser->id);
+						if ($tmptimespent['total_duration']) {
+							print convertSecondToTime($tmptimespent['total_duration'], 'allhourmin');
+						} else {
+							print '--:--';
+						}
+						print "</td>\n";
+					}
+
+					// Fields to show current time
+					$tableCell = '';
+					$total_work_task = 0;
+					$total_heureCompagnonnage = 0;
+					$total_heureNuit = 0;
+					$total_heureRoute = 0;
+					$total_heureEPI = 0;
+					$modeinput = 'hours';
+					for ($idw = 0; $idw < $nb_jour; $idw++) { // Gestion des cases de chaque jour
+						$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
+
+						if($idw > 0 && $idw == $num_first_day){
+							print '<td style="border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;"></td>';
+						}
+
+						if($disabledtask = 0 || $disabledtask = 2)
+						if ((!empty($taskstatic->date_end) && $dayinloopfromfirstdaytoshow > $taskstatic->date_end) || (!empty($taskstatic->date_start) && $dayinloopfromfirstdaytoshow < $taskstatic->date_start)) {
+							$disabledtask = 2;
+						}
+						else $disabledtask = 0;
+
+						//var_dump($projectstatic->weekWorkLoadPerTask);
+						$tmparray = dol_getdate($dayinloopfromfirstdaytoshow);
+						$dayWorkLoad = $projectstatic->weekWorkLoadPerTask[$dayinloopfromfirstdaytoshow][$lines[$i]->id];
+						$totalforvisibletasks[$dayinloopfromfirstdaytoshow] += $dayWorkLoad;
+
+						$alreadyspent = '';
+						if ($dayWorkLoad > 0) {
+							$alreadyspent = convertSecondToTime($dayWorkLoad, 'allhourmin');
+						}
+						if($idw >= $num_first_day) {
+							$total_work_task += (int)$dayWorkLoad;
+						}
+						$alttitle = $langs->trans("AddHereTimeSpentForDay", $tmparray['day'], $tmparray['mon']);
+						
+						// Est-ce que l'utilisateur est en congé sur le jour actuel => Utilisé pour bloquer l'input
+						if($isavailable[$dayinloopfromfirstdaytoshow]['morning'] == false && $isavailable[$dayinloopfromfirstdaytoshow]['morning_reason'] == "leave_request" 
+								&& $isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] == false && $isavailable[$dayinloopfromfirstdaytoshow]['afternoon_reason'] == "leave_request" && str_contains($css[$dayinloopfromfirstdaytoshow], 'onholidayallday')){
+							$user_conges = 1;
+						}
+						else{
+							$user_conges = 0;
+						}
+
+						// Est-ce qu'on désactive l'input ou non ?
+						$disabled = 0;
+						if(!$modify || $disabledtask || ($user_conges && !$modifier_jour_conges && empty($alreadyspent))) {
+							$disabled = 1;
+						}
+
+						$tableCell = '<td class="center hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+
+						// Note 
+						$note = $notes[$lines[$i]->id][$dayinloopfromfirstdaytoshow];
+						$tableCell .= img_picto('Note', (empty($note) ? 'note_vide@feuilledetemps' : 'note_plein@feuilledetemps'), ' id="img_note_'.$lines[$i]->id.'_'.$idw.'" style="display:inline-block; padding: 6px; vertical-align: middle;" onClick="openNote(\'note_'.$lines[$i]->id.'_'.$idw.'\')"');
+						$tableCell .= '<div class="modal" id="note_'.$lines[$i]->id.'_'.$idw.'">';
+						$tableCell .= '<div class = "modal-content">';
+						$tableCell .= '<span class="close" onclick="closeNotes(this)">&times;</span>';
+						$tableCell .= '<a>'.$langs->trans('Note').' ('.$taskstatic->label.' : '.dol_print_date($dayinloopfromfirstdaytoshow, '%a %d/%m/%y').")".'</a><br><br>';
+						$tableCell .= '<textarea class = "flat"  rows = "3"'.($disabled ? ' disabled' : '').' style = "width:350px; top:10px; max-width: 350px; min-width: 350px;"';
+						$tableCell .= ' name = "note['.$lines[$i]->id.']['.$idw.']"';
+						$tableCell .= '>'.$note.'</textarea>';
+						$tableCell .= '</div></div>';
+
+						// Time
+						// Gestion des heures et des heures sup pour la 1ère et la dernière semaine
+						$ecart_lundi = ecart_lundi($dayinloopfromfirstdaytoshow);
+						$weekNumber = date('W', $dayinloopfromfirstdaytoshow);
+						if ($idw < 6 && $idw-$ecart_lundi < 0 && dol_print_date($firstdaytoshow, '%a') != 'Lun'){
+							$temps = $temps_prec;
+						}
+						else if ($nb_jour - $idw < 7 && $idw-$ecart_lundi > 23 && dol_print_date($lastdaytoshow, '%a') != 'Dim'){
+							$temps = $temps_suiv;
+						}
+						else $temps = 0;
+
+						if ($idw < 6 && $idw-$ecart_lundi < 0 && dol_print_date($firstdaytoshow, '%a') != 'Lun'){
+							$hs_25 = $temps_prec_hs25;
+							$hs_50 = $temps_prec_hs50;
+							$hn_prec = $temps_prec;
+							$hn_suiv = 0;
+						}
+						else if ($nb_jour - $idw < 7 && $idw-$ecart_lundi > 23 && dol_print_date($lastdaytoshow, '%a') != 'Dim'){
+							$hs_25 = $temps_suiv_hs25;
+							$hs_50 = $temps_suiv_hs50;
+							$hn_suiv = $temps_suiv;
+							$hn_prec = 0;
+						}
+						else {
+							$hs_25 = 0;
+							$hs_50 = 0;
+							$hn_prec = 0;
+							$hn_suiv = 0;
+						}
+
+						if(dol_print_date($dayinloopfromfirstdaytoshow, '%Y-%m-%d') < '2024-06-03' && $heure_semaine == $conf->global->HEURE_SEMAINE) {
+							$tmp_heure_semaine = 35;
+						}
+						else {
+							$tmp_heure_semaine = $heure_semaine;
+						}
+
+						if(dol_print_date($dayinloopfromfirstdaytoshow, '%Y-%m-%d') < '2024-06-03' && $heure_semaine_hs == $conf->global->HEURE_SEMAINE) {
+							$tmp_heure_semaine_hs = 35;
+						}
+						else {
+							$tmp_heure_semaine_hs = $heure_semaine_hs;
+						}
+
+						$tableCell .= '<input type="text" style="border: 1px solid grey;" alt="'.($disabledtask ? '' : $alttitle).'" title="'.($disabledtask ? '' : $alttitle).'" '.($disabled ? 'disabled' : '').' class="center smallpadd time_'.$idw.'" size="2" id="timeadded['.$inc.']['.$idw.']" name="task['.$lines[$i]->id.']['.$idw.']" value="'.$alreadyspent.'" cols="2"  maxlength="5"';
+						$tableCell .= ' onfocus="this.oldvalue = this.value; this.oldvalue_focus = this.value;"';
+						$tableCell .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\')"';
+						$tableCell .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\','.$inc.', '.$num_first_day.'); this.oldvalue = this.value; updateTotalWeek('.$hn_prec.', '.$hn_suiv.', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');"';
+						$tableCell .= ' onblur="regexEvent_TS(this,event,\''.$modeinput.'\'); validateTime(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.','.$temps.',\''.$type_deplacement.'\', '.$tmp_heure_semaine_hs.', '.($fuser->id == $user->id).'); updateTotal_TS(this, '.$idw.',\''.$modeinput.'\','.$inc.', '.$num_first_day.'); updateTotalWeek('.$hn_prec.', '.$hn_suiv.', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.'); validateTime_HS(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.','.$inc.','.$temps.','.$hs_25.','.$hs_50.', '.$tmp_heure_semaine_hs.');" />';
+
+						// On récupère le total de la semaine pour savoir s'il faut afficher ou non les cases des heures sup
+						if($dayinloopfromfirstdaytoshow == $firstdaytoshow || dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Lun'){
+							$temps_cons_semaine = $timeSpentWeek[date('W', $dayinloopfromfirstdaytoshow)];
+						}
+
+						// S'il y a + de 35h sur la semaine, on affiche les cases des heures sup
+						if($temps_cons_semaine > $tmp_heure_semaine_hs && dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Dim' && !$disabledtask && $alreadyspent){
+							$heure_sup = new Projet_task_time_heure_sup($db);
+
+							$hs_25_alreadyspent = '';
+							$hs_50_alreadyspent = '';
+							$hs_Load = $heure_sup->getHeureSup($dayinloopfromfirstdaytoshow, $lines[$i]->id, $fuser);
+
+							if($hs_Load['25'] > 0){
+								$hs_25_alreadyspent = convertSecondToTime($hs_Load['25'], 'allhourmin');
+								$total_hs25 += $hs_Load['25'];
+							}
+							if($hs_Load['50'] > 0){
+								$hs_50_alreadyspent = convertSecondToTime($hs_Load['50'], 'allhourmin');
+								$total_hs50 += $hs_Load['50'];
+							}
+
+							// Cases Heure sup 
+							$tableCell .= '<br><input type="text"'.($disabled ? ' disabled' : '').' alt="Ajoutez ici les heures sup entre '.$tmp_heure_semaine_hs.' et '.$conf->global->HEURE_SUP1.'h" title="Ajoutez ici les heures sup entre '.$tmp_heure_semaine_hs.' et '.$conf->global->HEURE_SUP1.'h" 
+											name="hs25_task['.$lines[$i]->id.']['.$idw.']" class="center smallpadd hs25 time_hs_'.$idw.' time_hs_'.$inc.'_'.$idw.'" size="2" 
+											id="timeaddedhs['.$inc.']['.$idw.']" value="'.$hs_25_alreadyspent.'" cols="2"  maxlength="5" 
+											onkeypress="return regexEvent_TS(this,event,\'timeChar\')"
+											onblur="regexEvent_TS(this,event,\'hours\'); validateTime_HS(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.','.$inc.','.$temps.','.$hs_25.','.$hs_50.', '.$tmp_heure_semaine_hs.');" />';
+							$tableCell .= '<input type="text"'.($temps_cons_semaine <= $conf->global->HEURE_SUP1 || $disabled ? ' disabled' : '').' alt="Ajoutez ici les heures sup entre '.$conf->global->HEURE_SUP1.' et 48h"
+											title="Ajoutez ici les heures sup entre '.$conf->global->HEURE_SUP1.' et 48h" name="hs50_task['.$lines[$i]->id.']['.$idw.']" 
+											class="center smallpadd hs50 time_hs_'.$idw.' time_hs_'.$inc.'_'.$idw.'" size="2" id="timeaddedhs['.$inc.']['.$idw.']" 
+											value="'.$hs_50_alreadyspent.'" cols="2"  maxlength="5" onkeypress="return regexEvent_TS(this,event,\'timeChar\')" 
+											onblur="regexEvent_TS(this,event,\'hours\'); validateTime_HS(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.','.$inc.','.$temps.','.$hs_25.','.$hs_50.', '.$tmp_heure_semaine_hs.');" />';
+
+						}
+
+
+						// Cases des heures de nuit
+						if($has_heure_nuit) {
+							$heure_nuit_nf = $otherTime['heure_nuit'][$lines[$i]->id][$dayinloopfromfirstdaytoshow];
+
+							$heure_nuit = '';
+							if ($heure_nuit_nf > 0) {
+								$heure_nuit = $heure_nuit_nf / 3600;
+							}
+
+							if($idw >= $num_first_day) {
+								$total_heureNuit += $heure_nuit_nf;
+							}
+
+							$tableCell .= '<div id="time_heure_nuit_'.$lines[$i]->id.'_'.$idw.'" style="display: inline;"><br><input type="text"'.($disabled ? ' disabled' : '').' 
+										alt="Ajoutez ici les heures de nuit" title="Ajoutez ici les heures de nuit" name="heure_nuit['.$lines[$i]->id."][".$idw.']" 
+										class="center smallpadd heure_nuit time_heure_nuit_'.$lines[$i]->id.'_'.$idw.'" size="2" id="time_heure_nuit['.$lines[$i]->id.']['.$idw.']" 
+										value="'.$heure_nuit.'" cols="2"  maxlength="5" 
+										onkeypress="return regexEvent_TS(this,event,\'timeChar\')" 
+										onblur="validateTime_HeureNuit(this, '.$inc.', '.$idw.'); updateTotal_OtherHours('.$nb_jour.', '.$inc.', '.$num_first_day.', '.$lines[$i]->id.')"/></div>';
+						}
+
+						// Cases des ports d'epi
+						if($has_port_epi) {
+							$port_epi_nf = $otherTime['port_epi'][$lines[$i]->id][$dayinloopfromfirstdaytoshow];
+
+							$port_epi = '';
+							if ($port_epi_nf > 0) {
+								$port_epi = $port_epi_nf / 3600;
+							}
+
+							if($idw >= $num_first_day) {
+								$total_heureEPI += $port_epi_nf;
+							}
+
+							$tableCell .= '<div id="time_epi_'.$lines[$i]->id.'_'.$idw.'" style="display: inline;"><br><input type="text"'.($disabled ? ' disabled' : '').' 
+							alt="Ajoutez ici les EPI respiratoire" title="Ajoutez ici les EPI respiratoire" name="epi['.$lines[$i]->id."][".$idw.']" 
+							class="center smallpadd heure_epi time_epi_'.$lines[$i]->id.'_'.$idw.'" size="2" id="time_epi['.$lines[$i]->id.']['.$idw.']" value="'.$port_epi.'" cols="2"  maxlength="5" 
+							onkeypress="return regexEvent_TS(this,event,\'timeChar\')" 
+							onblur="validateTime_EPI(this, '.$inc.', '.$idw.'); updateTotal_OtherHours('.$nb_jour.', '.$inc.', '.$num_first_day.', '.$lines[$i]->id.')"/></div>';
+						}
+
+						$tableCell .= '</td>';
+						print $tableCell;
+
+						$u++;
+					}
+
+					print '<td class="liste_total_task fixed">';
+					print '<span id="total_task['.$inc.']">'.(convertSecondToTime($total_work_task, 'allhourmin') != '0' ? convertSecondToTime($total_work_task, 'allhourmin') : '00:00').'</span>';
+					if($has_heure_nuit) {
+						print '<br><span class="total_heureNuit txt_heure_nuit" id="total_heureNuit['.$inc.']">'.(convertSecondToTime($total_heureNuit, 'allhourmin') != '0' ? convertSecondToTime($total_heureNuit, 'allhourmin') : '00:00').'</span>';
+					}
+					if($has_port_epi) {
+						print '<br><span class="total_heureEPI txt_heure_epi" id="total_heureEPI['.$inc.']">'.(convertSecondToTime($total_heureEPI, 'allhourmin') != '0' ? convertSecondToTime($total_heureEPI, 'allhourmin') : '00:00').'</span>';
+					}
+					print '</td>';
+
+					// Warning
+					if ((!$lines[$i]->public) && $disabledproject) {
+						print '<td class="right">';
+						print $form->textwithpicto('', $langs->trans("UserIsNotContactOfProject"));
+						print '</td>';
+					} elseif ($disabledtask == 1) {
+						$titleassigntask = $langs->trans("AssignTaskToMe");
+						if ($fuser->id != $user->id) {
+							$titleassigntask = $langs->trans("AssignTaskToUser", '...');
+						}
+
+						print '<td class="right">';
+						print $form->textwithpicto('', $langs->trans("TaskIsNotAssignedToUser", $titleassigntask));
+						print '</td>';
+					}
+
+					print "</tr>\n";
+
+					$inc++;
+				}
+			}
+
+			// Call to show task with a lower level (task under the current task)
+			//$inc++;
+			$level++;
+			$nb_appel++;
+			if ($lines[$i]->id > 0) {				
+				$ret = FeuilleDeTempsLinesPerWeek($mode, $inc, $firstdaytoshow, $lastdaytoshow, $fuser, $lines[$i]->id, ($parent == 0 ? $lineswithoutlevel0 : $lines), $level, $projectsrole, $tasksrole, $mine, $restricteditformytask, $isavailable, $oldprojectforbreak, $arrayfields, $extrafields, 
+				$modify, $css, $css_holiday, $num_first_day, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, $temps_prec, $temps_suiv, 
+				$temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, $favoris, $param,
+				$totalforeachday, $holiday_without_canceled, $multiple_holiday, $appel_actif, $nb_appel);
+				foreach ($ret as $key => $val) {
+					$totalforvisibletasks[$key] += $val;
+				}
+			}
+			$level--;
+		} 
+	}
+
+	$appel_actif--;
+	if ($appel_actif === 0) {
+        // Is there a diff between selected/filtered tasks and all tasks ?
+		$isdiff = 0;
+		if (count($totalforeachday)) {
+			for ($idw = 0; $idw < $nb_jour; $idw++) {
+				$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
+				$timeonothertasks = ($totalforeachday[$tmpday] - $totalforvisibletasks[$tmpday]);
+				if ($timeonothertasks) {
+					$isdiff = 1;
+					break;
+				}
+			}
+		}
+
+		// There is a diff between total shown on screen and total spent by user, so we add a line with all other cumulated time of user
+		if ($isdiff) {
+			print '<tr class="oddeven othertaskwithtime favoris">';
+			print '<td class="nowrap fixed" colspan="'.(2 + $addcolspan).'">'.$langs->trans("OtherFilteredTasks").'</td>';
+
+			for ($idw = 0; $idw < $nb_jour; $idw++) {
+				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+
+				if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
+					print '<td></td>';
+				}
+
+				print '<td class="center hide'.$idw.' '.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+				$timeonothertasks = ($totalforeachday[$dayinloopfromfirstdaytoshow] - $totalforvisibletasks[$dayinloopfromfirstdaytoshow]);
+				if ($timeonothertasks) {
+					print '<span class="timesheetalreadyrecorded" title="texttoreplace"><input type="text" class="center smallpadd time_'.$idw.'" size="2" disabled id="timespent[-1]['.$idw.']" name="task[-1]['.$idw.']" value="';
+					print convertSecondToTime($timeonothertasks, 'allhourmin');
+					print '"></span>';
+				}
+				print '</td>';
+			}
+
+			print ' <td class="liste_total fixed"></td>';
+			print '</tr>';
+		}
+
+		// Affichage du total
+		if ($conf->use_javascript_ajax) {
+			print '<tr class="trforbreak favoris">';
+			print '<td class="fixed" colspan="'.(2 + $addcolspan).'">';
+			print $langs->trans("Total");
+			print '<span class="opacitymediumbycolor">  - '.$langs->trans("ExpectedWorkedHours").': <strong>'.price($fuser->weeklyhours, 1, $langs, 0, 0).'</strong></span>';
+			print '</td>';
+
+			for ($idw = 0; $idw < $nb_jour; $idw++) {
+				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+				
+				if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
+					print '<td style="border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;"></td>';
+				}
+
+				$total = (convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') != '0' ? convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') : '00:00');
+				print '<td class="liste_total hide'.$idw.($total != '00:00' ? ' bold' : '').'" align="center"><div class="totalDay'.$idw.'" '.(!empty($style) ? $style : '').'>'.$total.'</div></td>';
+			}
+			print '<td class="liste_total center fixed"><div class="totalDayAll">&nbsp;</div></td>';
+			print '</tr>';
+		}
+
+		if($mode == 'card' && $displayVerification) {
+			FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $css_holiday, $num_first_day, !$modify, $dayinloopfromfirstdaytoshow_array);
+		}
+		else {
+			FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $num_first_day, !$modify, $addcolspan, $dayinloopfromfirstdaytoshow_array);
+		}
+
 		print "</table>";
 		print '</div>';
 	}
@@ -1137,7 +2031,7 @@ function FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $f
  * @param   int         $num_first_day			Numéro du 1er jour du mois (0 si celui-ci n'apparait pas sur les dates affichées)
  * @return  array								Tableau avec le nombre de chaque type de déplacement
  */
-function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $css_holiday, $num_first_day, $disabled, $userInDeplacement = 0, $userInGrandDeplacement = 0, $dayinloopfromfirstdaytoshow_array) {
+function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $css_holiday, $num_first_day, $disabled, $dayinloopfromfirstdaytoshow_array) {
 	global $conf, $db, $user, $langs, $form, $object;
 
 	$silae = New Silae($db);
@@ -1160,6 +2054,23 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 	$nb_moyen_transport = array('VS' => 0, 'A' => 0, 'T' => 0);
 
 	$array_deplacement = $deplacement->getAllDeplacements($firstdaytoshow, $lastdaytoshow, $fuser->id);
+
+	// Gestion des types de déplacement de l'utilisateur
+	$extrafields = new ExtraFields($db);
+	$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
+	$userField_deplacement = new UserField($db);
+	$userField_deplacement->id = $object->fk_user;
+	$userField_deplacement->table_element = 'donneesrh_Deplacement';
+	$userField_deplacement->fetch_optionals();
+
+	$userInDeplacement = 0;
+	$userInGrandDeplacement = 0;
+	if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
+		$userInDeplacement = 1;
+	}
+	if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
+		$userInGrandDeplacement = 1;
+	}
 
 	// Note 
 	print '<tr class="oddeven nostrong">';
