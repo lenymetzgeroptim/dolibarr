@@ -237,7 +237,7 @@ if (! empty($conf->formationhabilitation->enabled) && $user->rights->formationha
 	$dateformatinput2 = 'standard';
 
 	$date_start = dol_get_first_day(dol_print_date($now, 'Y'), dol_print_date($now, 'm'));
-	$date_end = dol_get_last_day(dol_print_date($now, 'Y') + 1, dol_print_date($now, 'm'));
+	$date_end = dol_get_last_day(dol_print_date($now, 'Y') + 2, dol_print_date($now, 'm'));
 
 	if (count($linearray) > 0) { // Show Gant diagram from $userhabilitationarray using JSGantt
 		$dateformat = $langs->trans("FormatDateShortJQuery"); // Used by include ganttchart.inc.php later
@@ -271,7 +271,7 @@ if (! empty($conf->formationhabilitation->enabled) && $user->rights->formationha
 
 			$habilitationcursor++;
 
-			if($val->date_fin_habilitation <= $date_start || $val->date_habilitation >= $date_end) { // Uniquement une barre rouge car l'habilitation est déja échue ou pas encoré obtenue
+			if(($val->date_fin_habilitation <= $date_start && !empty($val->date_fin_habilitation)) || $val->date_habilitation >= $date_end) { // Uniquement une barre rouge car l'habilitation est déja échue ou pas encoré obtenue
 				$lines[$habilitationcursor]['line_id'] = ($habilitationcursor + 1);
 				$lines[$habilitationcursor]['line_alternate_id'] = ($habilitationcursor + 1);
 				$lines[$habilitationcursor]['line_habilitation_id'] = $val->fk_habilitation;
@@ -288,7 +288,7 @@ if (! empty($conf->formationhabilitation->enabled) && $user->rights->formationha
 
 				$habilitationcursor++;
 			}
-			elseif(($val->date_habilitation <= $date_start && $val->date_fin_habilitation >= $date_end)) { // Uniquement une barre verte 
+			elseif(($val->date_habilitation <= $date_start && ($val->date_fin_habilitation >= $date_end || empty($val->date_fin_habilitation)))) { // Uniquement une barre verte 
 				$lines[$habilitationcursor]['line_id'] = ($habilitationcursor + 1);
 				$lines[$habilitationcursor]['line_alternate_id'] = ($habilitationcursor + 1);
 				$lines[$habilitationcursor]['line_habilitation_id'] = $val->fk_habilitation;
@@ -338,7 +338,7 @@ if (! empty($conf->formationhabilitation->enabled) && $user->rights->formationha
 
 				$habilitationcursor++;
 			}
-			elseif(($val->date_habilitation > $date_start && $val->date_fin_habilitation >= $date_end)) { // Barre rouge puis verte
+			elseif($val->date_habilitation > $date_start && ($val->date_fin_habilitation >= $date_end || empty($val->date_fin_habilitation))) { // Barre rouge puis verte
 				$lines[$habilitationcursor]['line_id'] = ($habilitationcursor + 1);
 				$lines[$habilitationcursor]['line_alternate_id'] = ($habilitationcursor + 1);
 				$lines[$habilitationcursor]['line_habilitation_id'] = $val->fk_habilitation;
@@ -350,7 +350,7 @@ if (! empty($conf->formationhabilitation->enabled) && $user->rights->formationha
 				//$lines[$habilitationcursor]['line_percent_complete'] = $val->progress;
 				$lines[$habilitationcursor]['line_name'] = $val->ref;
 				$lines[$habilitationcursor]['line_start_date'] = $date_start;
-				$lines[$habilitationcursor]['line_end_date'] = $val->date_fin_habilitation;
+				$lines[$habilitationcursor]['line_end_date'] = $val->date_habilitation;
 				$lines[$habilitationcursor]['note'] = 'test_note';
 
 				$habilitationcursor++;
@@ -365,7 +365,7 @@ if (! empty($conf->formationhabilitation->enabled) && $user->rights->formationha
 				$lines[$habilitationcursor]['line_milestone'] = '0';
 				//$lines[$habilitationcursor]['line_percent_complete'] = $val->progress;
 				$lines[$habilitationcursor]['line_name'] = $val->ref;
-				$lines[$habilitationcursor]['line_start_date'] = $val->date_fin_habilitation;
+				$lines[$habilitationcursor]['line_start_date'] = $val->date_habilitation;
 				$lines[$habilitationcursor]['line_end_date'] = $date_end;
 				$lines[$habilitationcursor]['note'] = 'test_note';
 

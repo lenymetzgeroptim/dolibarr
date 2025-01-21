@@ -281,6 +281,10 @@ if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate)
 	}
 	$action = '';
 }
+elseif ($action == 'confirm_validate' && $confirm == 'yes' && !$permissiontovalidate) {
+	setEventMessages('Vous ne pouvez pas valider le volet', '', 'errors');
+	$action = '';
+}
 
 // Action refuse object
 if ($action == 'confirm_refuse' && $confirm == 'yes' && $permissiontorefuse) {

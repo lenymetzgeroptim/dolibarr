@@ -310,6 +310,10 @@ if (empty($reshook)) {
 		$object->oldcopy = clone $object;
 	}
 
+	if($action == 'edit' && $object->status == $object::STATUS_VALIDATED) {
+		$action = '';
+	}
+	
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_uservolet.inc.php';
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';

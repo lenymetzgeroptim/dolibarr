@@ -120,7 +120,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 		if (!$error) {
 			$objectline->ref = $user_static->login."-".$habilitation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 			$objectline->date_habilitation = $date;
-			$objectline->date_fin_habilitation = dol_time_plus_duree(dol_time_plus_duree($date, $habilitation_static->validite_employeur, 'd'), -1, 'd');
+			//$objectline->date_fin_habilitation = dol_time_plus_duree(dol_time_plus_duree($date, $habilitation_static->validite_employeur, 'd'), -1, 'd');
 			$objectline->domaineapplication = GETPOST('domaineapplication');
 			//$objectline->status = GETPOST('status');
 
