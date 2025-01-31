@@ -14,11 +14,16 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
--- BEGIN MODULEBUILDER INDEXES
-ALTER TABLE llx_feuilledetemps_projet_task_time_other ADD INDEX idx_feuilledetemps_projet_task_time_other_rowid (rowid);
--- END MODULEBUILDER INDEXES
-
---ALTER TABLE llx_feuilledetemps_projet_task_time_other ADD UNIQUE INDEX uk_feuilledetemps_projet_task_time_other_fieldxy(fieldx, fieldy);
-
---ALTER TABLE llx_feuilledetemps_projet_task_time_other ADD CONSTRAINT llx_feuilledetemps_projet_task_time_other_fk_field FOREIGN KEY (fk_field) REFERENCES llx_feuilledetemps_myotherobject(rowid);
-
+CREATE TABLE llx_feuilledetemps_projet_task_time_other(
+	-- BEGIN MODULEBUILDER FIELDS
+	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
+	date_creation datetime NOT NULL, 
+	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+	fk_user_creat integer NOT NULL, 
+	fk_user_modif integer, 
+	fk_projet_task_time integer NOT NULL, 
+	heure_nuit double, 
+	port_epi double, 
+	site varchar(128)
+	-- END MODULEBUILDER FIELDS
+) ENGINE=innodb;

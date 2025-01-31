@@ -246,7 +246,7 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 			case 'USER_ENABLEDISABLE':
 				if($object->status == 0) {
 					$fdt = new FeuilleDeTemps($this->db);
-					$object_id = $fdt->ExisteDeja(dol_print_date(dol_now(), '%m'), $object->id);
+					$object_id = $fdt->ExisteDeja(dol_print_date(dol_now(), '%m%Y'), $object->id);
 
 					if($object_id == 0) {
 						$this->db->begin();

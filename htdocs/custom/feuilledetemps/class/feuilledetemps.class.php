@@ -1548,7 +1548,7 @@ class FeuilleDeTemps extends CommonObject
 			$fdt = new FeuilleDeTemps($this->db);
 			$form = new Form($this->db);
 			$users_array = $user_static->get_full_treeIds('u.statut = 1');
-			$month = dol_print_date(dol_now(), '%m');
+			$month = dol_print_date(dol_now(), '%m%Y');
 			$fdt->date_debut = dol_get_first_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
 			$fdt->date_fin = dol_get_last_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
 

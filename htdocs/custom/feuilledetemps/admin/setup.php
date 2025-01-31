@@ -168,6 +168,17 @@ $item = $formSetup->newItem('JOUR_ANTICIPES')->setAsString();
 // FDT_DISPLAY_COLUMN
 $item = $formSetup->newItem('FDT_DISPLAY_COLUMN')->setAsYesNo();
 
+// FDT_DECIMAL_HOUR_FORMAT
+$item = $formSetup->newItem('FDT_DECIMAL_HOUR_FORMAT')->setAsYesNo();
+
+// FDT_USE_HS_CASE
+$item = $formSetup->newItem('FDT_USE_HS_CASE')->setAsYesNo();
+
+// FDT_DISPLAY_FULL_WEEK
+$item = $formSetup->newItem('FDT_DISPLAY_FULL_WEEK')->setAsYesNo();
+
+// FDT_COLUMN_MAX_TASK_DAY
+$item = $formSetup->newItem('FDT_COLUMN_MAX_TASK_DAY')->setAsString();
 
 $setupnotempty += count($formSetup->items);
 

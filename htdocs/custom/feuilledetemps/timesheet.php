@@ -63,6 +63,7 @@ if ($mode == 'mine') {
 	$mine = 1;
 }
 
+$modeinput = ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? 'hours_decimal' : 'hours');
 $socid = 0;
 $now = dol_now();
 
@@ -123,12 +124,22 @@ $next_year  = $next['year'];
 $next_month = $next['month'];
 
 $first_day_month = dol_get_first_day($year, $month);
+$last_day_month = dol_get_last_day($year, $month);
 $firstdaytoshow = dol_time_plus_duree($first_day_month, -$conf->global->JOUR_ANTICIPES, 'd');
+if($conf->global->FDT_DISPLAY_FULL_WEEK) {
+	$firstdayweek = dol_get_first_day_week(dol_print_date($firstdaytoshow, '%d'), dol_print_date($firstdaytoshow, '%m'), dol_print_date($firstdaytoshow, '%Y'));
+	$firstdaytoshow = dol_mktime(0, 0, 0, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
+}
 $firstdaytoshowgmt = dol_mktime(0, 0, 0, dol_print_date($firstdaytoshow, '%m'), dol_print_date($firstdaytoshow, '%d'), dol_print_date($firstdaytoshow, '%Y'), 'gmt');
 $lastdaytoshow = dol_get_last_day($year, $month);
+$month_fdt = date('mY', $lastdaytoshow);
+if($conf->global->FDT_DISPLAY_FULL_WEEK) {
+	$lastdaytoshow = dol_time_plus_duree($lastdaytoshow, 1, 'w');
+	$firstdayweek = dol_get_first_day_week(dol_print_date($lastdaytoshow, '%d'), dol_print_date($lastdaytoshow, '%m'), dol_print_date($lastdaytoshow, '%Y'));
+	$lastdaytoshow = dol_mktime(0, 0, 0, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
+}
 
 $ecart_jour = num_between_day($firstdaytoshow, $first_day_month + 3600); // Nombre de jour à anticiper
-$month_fdt = date('mY', $lastdaytoshow);
 
 
 // Chargement de la feuille de temps et Vérification de la possibilité de modifier la FDT
@@ -351,7 +362,7 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$css[$dayinloopfromfirstdaytoshow] .= ' weekend';
 	}
 
-	if($dayinloopfromfirstdaytoshow < $first_day_month){
+	if($dayinloopfromfirstdaytoshow < $first_day_month || $dayinloopfromfirstdaytoshow > $last_day_month){
 		$css[$dayinloopfromfirstdaytoshow] .= ' before';
 	}
 
@@ -553,25 +564,25 @@ if (count($tasksarray) > 0) {
 	$favoris = $object->getFavoris($usertoprocess->id);
 
 	// Récupération des notes
-	$notes = $task->fetchAllNotes($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+	$notes = $task->fetchAllNotes($firstdaytoshow, $lastdaytoshow, $usertoprocess->id, ($conf->global->FDT_DISPLAY_COLUMN ? 1 : 0));
 
 	// Récupération des autres temps (compagnonnage/heure de nuit/heure de route/epi respiratoire)
 	$projet_task_time_other = New Projet_task_time_other($db);
-	$otherTime = $projet_task_time_other->getOtherTime($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+	$otherTaskTime = $projet_task_time_other->getOtherTime($firstdaytoshow, $lastdaytoshow, $usertoprocess->id, ($conf->global->FDT_DISPLAY_COLUMN ? 'column' : ''));
 
 	// Affichage de l'interieur du tableau
 	if(!$conf->global->FDT_DISPLAY_COLUMN) {
 		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek('timesheet', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
 															$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
 															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
-															$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
+															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
 															$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday);
 	}
 	else {
 		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek_Sigedi('timesheet', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
 																$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
 																$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
-																$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs,
+																$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs,
 																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday);
 	}
 } else {
@@ -597,19 +608,18 @@ print '<br><div class="center" style="margin-top: 14px;">';
 
 // Affichage du bouton "ENREGISTRER"
 if($can_modify_fdt){
-	print '<input onclick="disableNullInput()" type="submit" class="butAction" name="save" value="'.dol_escape_htmltag($langs->trans("Save")).'" style="margin-right: 0px;height: 40px;accent-color: ;">';
+	print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butAction" name="save" value="'.dol_escape_htmltag($langs->trans("Save")).'" style="margin-right: 0px;height: 40px;accent-color: ;">';
 }
 
 // Affichage du bouton "TRANSMETRE"
 if($object->id == 0 || ($object->id > 0 && $object->status == FeuilleDeTemps::STATUS_DRAFT)){
-	print '<input onclick="disableNullInput()" type="submit" class="butActionDelete" name="transmettre" value="Transmettre" style="margin-right: 0px;height: 40px;accent-color: ;">';
+	print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butActionDelete" name="transmettre" value="Transmettre" style="margin-right: 0px;height: 40px;accent-color: ;">';
 }
 
 print '</div>';
 print '</form>'."\n\n";
 
 // Appel des fonctions JS
-$modeinput = 'hours';
 if ($conf->use_javascript_ajax) {	
 	print "\n<!-- JS CODE TO ENABLE Tooltips on all object with class classfortooltip -->\n";
 	print '<script type="text/javascript">'."\n";
@@ -659,13 +669,13 @@ if ($conf->use_javascript_ajax) {
 			if(dol_print_date($tmpday, '%a') == 'Dim' || dol_print_date($tmpday, '%d/%m/%Y') == dol_print_date($lastdaytoshow, '%d/%m/%Y')) {
 				$weekNumber = date("W", $tmpday);
 				if($weekNumber == date("W", $firstdaytoshow)) {
-					print ' updateTotalWeek('.($temps_prec ? $temps_prec : 0).', 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(\''.$modeinput.'\', '.($temps_prec ? $temps_prec : 0).', 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 				elseif($weekNumber == date("W", $lastdaytoshow)) {
-					print ' updateTotalWeek(0, '.($temps_suiv ? $temps_suiv : 0).', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(\''.$modeinput.'\', 0, '.($temps_suiv ? $temps_suiv : 0).', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 				else {
-					print ' updateTotalWeek(0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 			}
 		}

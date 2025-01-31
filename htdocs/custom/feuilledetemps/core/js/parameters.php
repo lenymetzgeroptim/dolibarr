@@ -33,6 +33,8 @@ echo 'var ERR_HEURE_MAX_SEMAINE_DEPASSEMENT = "'.rtrim($langs->transnoentitiesno
 echo 'var WRN_HEURE_JOUR_DEPASSEMENT = "'.rtrim($langs->transnoentitiesnoconv('WRN_HEURE_JOUR_DEPASSEMENT'))."\";\n";
 echo 'var WRN_35H_DEPASSEMENT = "'.rtrim($langs->transnoentitiesnoconv('WRN_35H_DEPASSEMENT'))."\";\n";
 echo 'var WRN_PUBLIC_HOLIDAY = "'.rtrim($langs->transnoentitiesnoconv('WRN_PUBLIC_HOLIDAY'))."\";\n";
+echo 'var USE_HS_CASE ='.null2zero($conf->global->FDT_USE_HS_CASE).";\n";
+echo 'var FDT_COLUMN_MAX_TASK_DAY ='.null2zero($conf->global->FDT_COLUMN_MAX_TASK_DAY).";\n";
 
 
 /** function to avoid null returned for an int

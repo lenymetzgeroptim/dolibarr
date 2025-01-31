@@ -15,6 +15,121 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+function forceUppercase(input) {
+    input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '');
+}
+
+function addTimespentLine(button, idw, cpt) {
+    document.querySelectorAll(`.line_${idw}_${cpt + 1}`).forEach(el => {
+        el.classList.remove('displaynone');
+
+        button.classList.add('visibilityhidden');
+        const span = el.querySelector(`span.fa-plus.visibilityhidden`);
+        if (span && cpt + 2 < FDT_COLUMN_MAX_TASK_DAY) {
+            span.classList.remove('visibilityhidden');
+        }
+    });  
+
+    // const parent = button.parentNode;
+    // const clonedParent = parent.cloneNode(true);
+
+    // const oldIdImgNote = clonedParent.querySelector('[id^="img_note_"]');
+    // if (oldIdImgNote) {
+    //     const newId = `img_note_${cpt + 1}_${idw}`;
+    //     oldIdImgNote.id = newId;
+
+    //     const oldOnClick = oldIdImgNote.getAttribute('onClick');
+    //     if (oldOnClick) {
+    //         const newOnClick = `openNote('note_${cpt + 1}_${idw}')`;
+    //         oldIdImgNote.setAttribute('onClick', newOnClick);
+    //     }
+    // }
+
+    // const oldIdNote = clonedParent.querySelector('[id^="note_"]');
+    // if (oldIdNote) {
+    //     const newId = `note_${cpt + 1}_${idw}`;
+    //     oldIdNote.id = newId;
+    // }
+
+    // const textareaElement = clonedParent.querySelector(`textarea[name="note[${idw}][${cpt}]"]`);
+    // if (textareaElement) {
+    //     // Mettre à jour le name et vider son contenu
+    //     textareaElement.name = `note[${idw}][${cpt + 1}]`;
+    //     textareaElement.value = '';
+    // }
+
+    // const oldIdTimespent = clonedParent.querySelector('[id^="timeadded["]');
+    // if (oldIdTimespent) {
+    //     oldIdTimespent.id = `timeadded[${idw}][${cpt + 1}]`;
+    //     oldIdTimespent.value = '';
+    //     oldIdTimespent.name = `task[${idw}][${cpt + 1}]`;
+    // }
+
+    // const spanElement = parent.querySelector('span.fas.fa-plus[onclick]');
+    // const spanElementCloned = clonedParent.querySelector('span.fas.fa-plus[onclick]');
+    // if (spanElement) {
+    //     spanElement.style.visibility = 'hidden';
+    // }
+    // if(cpt + 2 >= FDT_COLUMN_MAX_TASK_DAY) {
+    //     if (spanElementCloned) {
+    //         spanElementCloned.style.visibility = 'hidden';
+    //     }
+    // }
+    // else {
+    //     const oldOnClickSpan = spanElementCloned.getAttribute('onClick');
+    //     if (oldOnClickSpan) {
+    //         const newOnClickSpan = `addTimespentLine(this, ${idw}, ${cpt + 1})`;
+    //         spanElementCloned.setAttribute('onClick', newOnClickSpan);
+    //     }
+    // }
+
+    // const heureNuit = document.querySelector(`input[id^="time_heure_nuit[${idw}][${cpt}]"]`);
+    // const parentheureNuit = heureNuit.parentNode;
+    // const clonedheureNuitParent = parentheureNuit.cloneNode(true);
+
+    // const oldIdHeureNuit = clonedheureNuitParent.querySelector('[id^="time_heure_nuit["]');
+    // if (oldIdHeureNuit) {
+    //     oldIdHeureNuit.id = `time_heure_nuit[${idw}][${cpt + 1}]`;
+    //     oldIdHeureNuit.value = '';
+    //     oldIdHeureNuit.name = `heure_nuit[${idw}][${cpt + 1}]`;
+
+    //     const newClass = `time_heure_nuit_${cpt + 1}_${idw}`;
+    //     oldIdHeureNuit.className = oldIdHeureNuit.className.replace(
+    //         new RegExp(`time_heure_nuit_${cpt}_${idw}`),
+    //         newClass
+    //     );
+    // }
+
+    // const site = document.querySelector(`input[id^="site[${idw}][${cpt}]"]`);
+    // const parentsite = site.parentNode;
+    // const clonedsiteParent = parentsite.cloneNode(true);
+
+    // const oldIdSite = clonedsiteParent.querySelector('[id^="site["]');
+    // if (oldIdSite) {
+    //     oldIdSite.id = `site[${idw}][${cpt + 1}]`;
+    //     oldIdSite.value = '';
+    //     oldIdSite.name = `site[${idw}][${cpt + 1}]`;
+    // }
+
+    // const selectTask = document.querySelector(`select[id^="fk_task_${idw}_${cpt}"]`);
+    // const parentselectTask = selectTask.parentNode;
+    // const clonedselectTaskParent = parentselectTask.cloneNode(true);
+    
+    // const oldIdAffaire = clonedselectTaskParent.querySelector('select[name^="fk_task["]');
+    // if (oldIdAffaire) {
+    //     oldIdAffaire.id = `fk_task_${idw}_${cpt + 1}`;
+    //     oldIdAffaire.value = '';
+    //     oldIdAffaire.name = `fk_task[${idw}][${cpt + 1}]`;
+    //     oldIdAffaire.setAttribute('data-select2-id', `fk_task_${idw}_${cpt + 1}`);
+    // }
+
+    // // Insère le parent cloné après l'original
+    // parent.parentNode.insertBefore(clonedParent, parent.nextSibling);
+    // parentselectTask.parentNode.insertBefore(clonedselectTaskParent, parentselectTask.nextSibling);
+    // parentheureNuit.parentNode.insertBefore(clonedheureNuitParent, parentheureNuit.nextSibling);
+    // parentsite.parentNode.insertBefore(clonedsiteParent, parentsite.nextSibling);
+}
+
 function displayFav() {
     if ($('#seeFavoris span').hasClass('fas')) {
         $('#seeFavoris span').removeClass('fas');
@@ -125,17 +240,31 @@ function screenFDT(url, name) {
     });
 }
 
-function disableNullInput() {
-    $('form[name="addtime"] input[type="text"][id^="timeadded"], form[name="addtime"] input[type="text"] input[id^="time_heure_nuit"], form[name="addtime"] input[type="text"] input[id^="time_epi"]').each(function (index, obj) {
-        if (obj.defaultValue == obj.value) {
-            $(obj).prop('disabled', true);;
-        }
-    });
+function disableNullInput(columnmode) {
+    if(columnmode) {
+        $('form[name="addtime"] input[type="text"][id^="timeadded"], form[name="addtime"] input[type="text"][id^="time_heure_nuit"], form[name="addtime"] input[type="text"][id^="site"], form[name="addtime"] input[type="text"], form[name="addtime"] input[type="checkbox"]').each(function (index, obj) {
+            if (obj.defaultValue == obj.value) {
+                $(obj).prop('disabled', true);
+            }
+        });
+
+        $('form[name="addtime"] textarea[name^="note"]').each(function (index, obj) {
+            if (obj.defaultValue == obj.value) {
+                $(obj).prop('disabled', true);
+            }
+        });
+    }
+    else {
+        $('form[name="addtime"] input[type="text"][id^="timeadded"], form[name="addtime"] input[type="text"][id^="time_heure_nuit"], form[name="addtime"] input[type="text"][id^="time_epi"]').each(function (index, obj) {
+            if (obj.defaultValue == obj.value) {
+                $(obj).prop('disabled', true);
+            }
+        });
+    }
+
     $('form[name="addtime"] textarea[name^="note"]').each(function (index, obj) {
         if (obj.defaultValue == obj.value) {
-            console.log(obj.defaultValue);
-            console.log(obj.value);
-            $(obj).prop('disabled', true);;
+            $(obj).prop('disabled', true);
         }
     });
 }
@@ -191,25 +320,27 @@ function regexEvent_TS(objet, evt, type, negative = 0) {
                 else
                     objet.value = '';
             }
-            // else {
-            //     split = objet.value.split(':');
-            //     if (parseInt(split[1]) < 8) {
-            //         objet.value = parseInt(split[0]) + ':00';
-            //     }
-            //     else if (parseInt(split[1]) >= 8 && parseInt(split[1]) < 23) {
-            //         objet.value = parseInt(split[0]) + ':15';
-            //     }
-            //     else if (parseInt(split[1]) >= 23 && parseInt(split[1]) < 38) {
-            //         objet.value = parseInt(split[0]) + ':30';
-            //     }
-            //     else if (parseInt(split[1]) >= 38 && parseInt(split[1]) < 53) {
-            //         objet.value = parseInt(split[0]) + ':45';
-            //     }
-            //     else {
-            //         objet.value = parseInt(split[0]) + 1 + ':00';
-            //     }
-            // }
-            /* alert(jQuery("#"+id).val()); */
+            break;
+        case 'hours_decimal':
+            var regex = /^[0-9]{1,2}:[0-9]{2}$/;
+            var regex2 = /^[0-9]{1,2}$/;
+            var regex3 = /^[0-9]{1,2}[.,]{1}[0-9]{2}?$/;
+            var regex4 = /^[0-9]{1}([.,]{1}[0-9]{1,3})?$/;
+            if (!regex3.test(objet.value)) {
+                if (regex2.test(objet.value))
+                    objet.value = objet.value + '.00';
+                else if (regex.test(objet.value)) {
+                    var tmp = parseFloat(objet.value.replace(':', '.'));
+                    var rnd = Math.trunc(tmp);
+
+                    objet.value = parseFloat(rnd + (100 * (tmp - rnd) / 60)).toFixed(2);;
+                }
+                else if (regex4.test(objet.value)) {
+                    objet.value = parseFloat(objet.value).toFixed(2);;
+                }
+                else
+                    objet.value = '';
+            }
             break;
         case 'timeChar':
             //var regex= /^[0-9:]{1}$/;
@@ -327,6 +458,7 @@ function updateAllTotalLoad_TS(mode, nb_jour, num_first_day = 0) {
 // }
 
 /* Update total. days = column nb starting from 0 */
+// totalDay, totalDayAll, total_task
 function updateTotal_TS(object, days, mode, num_task, num_first_day = 0) {
     if (mode == "hours") {
         var total = new Date(0);
@@ -433,6 +565,88 @@ function updateTotal_TS(object, days, mode, num_task, num_first_day = 0) {
             }
         }
     }
+    else if (mode == "hours_decimal") {
+        var total = 0;
+        if (object.value != object.oldvalue) {
+            total += parseFloat(jQuery('.totalDay' + days).text());
+            if(object.oldvalue) total -= parseFloat(parseFloat(object.oldvalue).toFixed(2));
+            if(object.value) total += parseFloat(parseFloat(object.value).toFixed(2));
+
+            /* Output total in top of column */
+            if (total > 0.00) jQuery('.totalDay' + days).addClass("bold");
+            else jQuery('.totalDay' + days).removeClass("bold");
+            var texttoshow = parseFloat(total).toFixed(2);
+            jQuery('.totalDay' + days).text(texttoshow);
+
+            // /* Output total of all total */
+            // if (days >= num_first_day) {
+            //     total.setHours(0);
+            //     total.setMinutes(0);
+
+            //     result = parseTime(jQuery('.totalDayAll').text(), taskTime);
+            //     if (result >= 0) {
+            //         nbextradays = nbextradays + Math.floor((total.getHours() + taskTime.getHours() + result * 24) / 24);
+            //         total.setHours(total.getHours() + taskTime.getHours());
+            //         total.setMinutes(total.getMinutes() + taskTime.getMinutes());
+            //     }
+
+            //     result = parseTime(object.oldvalue, oldtaskTime);
+            //     if (result >= 0) {
+            //         if (total.getHours() - oldtaskTime.getHours() < 0) {
+            //             nbextradays--;
+            //         }
+            //         total.setHours(total.getHours() - oldtaskTime.getHours());
+            //         total.setMinutes(total.getMinutes() - oldtaskTime.getMinutes());
+            //     }
+
+            //     result = parseTime(object.value, newtaskTime);
+            //     if (result >= 0) {
+            //         nbextradays = nbextradays + Math.floor((total.getHours() + newtaskTime.getHours() + result * 24) / 24);
+            //         total.setHours(total.getHours() + newtaskTime.getHours());
+            //         total.setMinutes(total.getMinutes() + newtaskTime.getMinutes());
+            //     }
+
+            //     if (total.getHours() || total.getMinutes()) jQuery('.totalDayAll').addClass("bold");
+            //     else jQuery('.totalDayAll').removeClass("bold");
+            //     var texttoshow = pad(nbextradays * 24 + total.getHours()) + ':' + pad(total.getMinutes());
+            //     jQuery('.totalDayAll').text(texttoshow);
+            // }
+
+            // // Mise à jour du total d'heure de la tache
+            // if (num_task >= 0 && (days >= num_first_day)) {
+            //     var nbextradays = 0;
+            //     total.setHours(0);
+            //     total.setMinutes(0);
+
+            //     var total_tache = document.getElementById('total_task[' + num_task + ']').innerText;
+            //     result = parseTime(total_tache, taskTime);
+            //     if (result >= 0) {
+            //         nbextradays = nbextradays + Math.floor((total.getHours() + taskTime.getHours() + result * 24) / 24);
+            //         total.setHours(total.getHours() + taskTime.getHours());
+            //         total.setMinutes(total.getMinutes() + taskTime.getMinutes());
+            //     }
+
+            //     result = parseTime(object.oldvalue, oldtaskTime);
+            //     if (result >= 0) {
+            //         if (total.getHours() - oldtaskTime.getHours() < 0) {
+            //             nbextradays--;
+            //         }
+            //         total.setHours(total.getHours() - oldtaskTime.getHours());
+            //         total.setMinutes(total.getMinutes() - oldtaskTime.getMinutes());
+            //     }
+
+            //     result = parseTime(object.value, newtaskTime);
+            //     if (result >= 0) {
+            //         nbextradays = nbextradays + Math.floor((total.getHours() + newtaskTime.getHours() + result * 24) / 24);
+            //         total.setHours(total.getHours() + newtaskTime.getHours());
+            //         total.setMinutes(total.getMinutes() + newtaskTime.getMinutes());
+            //     }
+
+            //     var texttoshow = pad(nbextradays * 24 + total.getHours()) + ':' + pad(total.getMinutes());
+            //     document.getElementById('total_task[' + num_task + ']').innerText = texttoshow;
+            // }
+        }
+    }
     else {
         var total = 0;
         var nbline = document.getElementById('numberOfLines').value;
@@ -460,33 +674,46 @@ function updateTotal_TS(object, days, mode, num_task, num_first_day = 0) {
 }
 
 // -TODO : Améliorer la fonction
-function updateTotalWeek(temps_prec = 0, temps_suiv = 0, weekNumber, timeHoliday, heure_semaine) {
+function updateTotalWeek($mode, temps_prec = 0, temps_suiv = 0, weekNumber, timeHoliday, heure_semaine) {
     var modal = document.getElementsByName("totalSemaine" + weekNumber)[0];
     split = modal.id.split('_');
     premier_jour = split[1]
     dernier_jour = split[2];
     totalhour = 0;
     totalmin = 0;
+    total_hour_week = 0;
 
     if (temps_prec) {
         totalmin = temps_prec;
+        total_hour_week = temps_prec / 60;
     }
     else if (temps_suiv) {
         totalmin = temps_suiv;
+        total_hour_week = temps_suiv / 60;
     }
 
     for (var i = parseInt(premier_jour); i <= parseInt(dernier_jour); i++) {
-        var taskTime = new Date(0);
-        result = parseTime(jQuery('.totalDay' + i).text(), taskTime);
-        if (result >= 0) {
-            totalhour = totalhour + taskTime.getHours() + result * 24;
-            totalmin = totalmin + taskTime.getMinutes();
+        if($mode == 'hours_decimal') {
+            total_hour_week += parseFloat(jQuery('.totalDay' + i).text());
+        }
+        else {
+            var taskTime = new Date(0);
+            result = parseTime(jQuery('.totalDay' + i).text(), taskTime);
+            if (result >= 0) {
+                totalhour = totalhour + taskTime.getHours() + result * 24;
+                totalmin = totalmin + taskTime.getMinutes();
+            }
         }
     }
+    if($mode == 'hours_decimal') {
+        diff = total_hour_week - parseFloat((heure_semaine - timeHoliday));
+    }
+    else {
+        morehours = Math.floor(totalmin / 60);
+        totalmin = totalmin % 60;
+        diff = ((morehours + totalhour) * 60 + totalmin) - parseInt((heure_semaine - timeHoliday) * 60);
+    }
 
-    morehours = Math.floor(totalmin / 60);
-    totalmin = totalmin % 60;
-    diff = ((morehours + totalhour) * 60 + totalmin) - parseInt((heure_semaine - timeHoliday) * 60);
 
     // Gestion des couleurs
     var color = "";
@@ -497,14 +724,29 @@ function updateTotalWeek(temps_prec = 0, temps_suiv = 0, weekNumber, timeHoliday
         color = "#3d85c6";
     }
 
-    if (diff < 0) {
-        jQuery('#' + modal.id).text(pad(morehours + totalhour) + ':' + pad(totalmin) + " (" + (diff / 60) + "h ➔ -" + time_convert(Math.abs(diff)) + ")");
-    }
-    else if (diff > 0) {
-        jQuery('#' + modal.id).text(pad(morehours + totalhour) + ':' + pad(totalmin) + " (+" + (diff / 60) + "h ➔ +" + time_convert(Math.abs(diff)) + ")");
+    if($mode == 'hours_decimal') {
+        total_hour_week = total_hour_week.toFixed(2)
+        diff = diff.toFixed(2)
+        if (diff < 0) {
+            jQuery('#' + modal.id).text(pad(total_hour_week) + " (" + diff + "h)");
+        }
+        else if (diff > 0) {
+            jQuery('#' + modal.id).text(pad(total_hour_week) + " (+" + diff + "h)");
+        }
+        else {
+            jQuery('#' + modal.id).text(pad(total_hour_week));
+        }
     }
     else {
-        jQuery('#' + modal.id).text(pad(morehours + totalhour) + ':' + pad(totalmin));
+        if (diff < 0) {
+            jQuery('#' + modal.id).text(pad(morehours + totalhour) + ':' + pad(totalmin) + " (" + (diff / 60) + "h ➔ -" + time_convert(Math.abs(diff)) + ")");
+        }
+        else if (diff > 0) {
+            jQuery('#' + modal.id).text(pad(morehours + totalhour) + ':' + pad(totalmin) + " (+" + (diff / 60) + "h ➔ +" + time_convert(Math.abs(diff)) + ")");
+        }
+        else {
+            jQuery('#' + modal.id).text(pad(morehours + totalhour) + ':' + pad(totalmin));
+        }
     }
 
     jQuery('#' + modal.id).parent().css('color', color);
@@ -524,6 +766,18 @@ function closeNotes(object) {
     var icon = (modalbox.firstChild.lastChild.value.length > 0) ? "note_plein" : "note_vide";
     var imgnote = document.getElementById("img_" + modalbox.id);
     imgnote.src = imgnote.src.replace(patt, "$'" + icon + ".png");
+}
+
+function closeNotes2(object) {
+    var patt = /(\w+)\.png$/gi
+    var modalbox = object.parentNode.parentNode;
+    modalbox.style.display = "none";
+    var icon = (modalbox.firstChild.lastChild.value.length > 0) ? "fas" : "far";
+    var imgnote = document.getElementById("img_" + modalbox.id);
+    imgnote.src = imgnote.classList.remove('far');
+    imgnote.src = imgnote.classList.remove('fas');
+    imgnote.src = imgnote.classList.add(icon);
+
 }
 
 // Redimensionne le tableau et certains éléments pour adapter à la taille de l'écran
@@ -625,7 +879,7 @@ function deleteTypeDeplacement(idw, typeDeplacement, nb_jour, num_first_day) {
  */
 function validateTime(object, idw, jour_ecart, mode_input, nb_jour, temps, typeDeplacement, heure_semaine_hs, modifyTypeDeplacement) {
     updated = false;
-    if (validateTotal(idw) < 0) {
+    if (validateTotal(idw, mode_input) < 0) {
         object.value = "";
         object.style.backgroundColor = "#ff000078";
         return 0;
@@ -634,7 +888,7 @@ function validateTime(object, idw, jour_ecart, mode_input, nb_jour, temps, typeD
         object.style.backgroundColor = "white";
     }
 
-    if (validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_semaine_hs) < 0) {
+    if (validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_semaine_hs, mode_input) < 0) {
         object.value = "";
         object.style.backgroundColor = "#ff000078";
         return 0;
@@ -656,15 +910,23 @@ function validateTime(object, idw, jour_ecart, mode_input, nb_jour, temps, typeD
 }
 
 // Valide le total des heures pointées
-function validateTotal(idw) {
+function validateTotal(idw, mode_input) {
     var total = 0;
     try {
         //var Total = document.getElementsByClassName('TotalColumn_'+idw);
         var col = document.getElementsByClassName('time_' + idw);
-        for (var i = 0; i < col.length; i++) {
-            if (col[i].value) {
-                taskTime = parseTimeInt(col[i].value);
-                total += taskTime.minutes + 60 * taskTime.hours;
+        var Total = document.getElementsByClassName('totalDay' + idw);
+        if($mode_input = 'hours_decimal') {
+            if (Total[0].innerHTML) {
+                total += parseFloat(Total[0].innerHTML * 60);
+            }
+        }
+        else {
+            for (var i = 0; i < col.length; i++) {
+                if (col[i].value) {
+                    taskTime = parseTimeInt(col[i].value);
+                    total += taskTime.minutes + 60 * taskTime.hours;
+                }
             }
         }
         var hours = total / 60;
@@ -679,7 +941,7 @@ function validateTotal(idw) {
     return 1;
 }
 
-function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_semaine_hs) {
+function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_semaine_hs, mode_input) {
     var total = 0;
     var heureCase = 0;
     var total_hs = 0;
@@ -696,15 +958,25 @@ function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_sem
         }
         for (var i = debut; i < fin; i++) {
             var Total = document.getElementsByClassName('totalDay' + i);
-            if (Total[0].innerHTML) {
+            if(mode_input == 'hours_decimal' && Total[0].innerHTML) {
+                totalDay = 60 * parseFloat(Total[0].innerHTML);
+
+                if (totalDay <= 600) {
+                    total += totalDay;
+                    if (Total[0].parentNode.className.indexOf('onholidayallday') !== -1) {
+                        total_hs += totalDay;
+                    }
+                }
+            }
+            else if (Total[0].innerHTML) {
                 var taskTime = new Date(0);
                 parseTime(Total[0].innerHTML, taskTime);
                 totalDay = taskTime.getMinutes() + 60 * taskTime.getHours();
 
                 if (totalDay <= 600) {
-                    total += taskTime.getMinutes() + 60 * taskTime.getHours();
+                    total += totalDay;
                     if (Total[0].parentNode.className.indexOf('onholidayallday') !== -1) {
-                        total_hs += taskTime.getMinutes() + 60 * taskTime.getHours();
+                        total_hs += totalDay;
                     }
                 }
             }
@@ -722,7 +994,10 @@ function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_sem
             fin -= 1;
         }
 
-        if (object.value) {
+        if(mode_input == 'hours_decimal' && object.value) {
+            heureCase = 60 * parseFloat(object.value);
+        }
+        else if (object.value) {
             var tempsCase = new Date(0);
             parseTime(object.value, tempsCase);
             heureCase = tempsCase.getMinutes() / 60 + tempsCase.getHours();
@@ -732,21 +1007,23 @@ function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_sem
             $.jnotify(WRN_35H_DEPASSEMENT, 'warning', false);
         }
 
-        if (hours > heure_semaine_hs) {
-            ajouterCaseHS(debut, fin, idw, jour_ecart, 'hours', nb_jour, temps, heure_semaine_hs);
-        }
-
-        if (hours > HEURE_SUP1 /*&& (hours - heureCase <= HEURE_SUP1)*/) {
-            ActiverCaseHS_50(debut, fin);
-        }
-
-        var hs = document.getElementsByClassName('hs25');
-        if (hs.length != 0) {
-            if (hours <= heure_semaine_hs) {
-                supprimerCaseHS(debut, fin);
+        if(USE_HS_CASE && mode_input != 'hours_decimal') {
+            if (hours > heure_semaine_hs) {
+                ajouterCaseHS(debut, fin, idw, jour_ecart, 'hours', nb_jour, temps, heure_semaine_hs);
             }
-            else if (hours <= HEURE_SUP1) {
-                DesactiverCaseHS_50(debut, fin);
+
+            if (hours > HEURE_SUP1 /*&& (hours - heureCase <= HEURE_SUP1)*/) {
+                ActiverCaseHS_50(debut, fin);
+            }
+
+            var hs = document.getElementsByClassName('hs25');
+            if (hs.length != 0) {
+                if (hours <= heure_semaine_hs) {
+                    supprimerCaseHS(debut, fin);
+                }
+                else if (hours <= HEURE_SUP1) {
+                    DesactiverCaseHS_50(debut, fin);
+                }
             }
         }
     }

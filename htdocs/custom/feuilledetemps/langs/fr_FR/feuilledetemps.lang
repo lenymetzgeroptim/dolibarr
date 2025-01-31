@@ -54,6 +54,10 @@ Couleur = Paramètre des couleurs
 Congés = Paramètre des congés
 AutreParamFDT = Autres paramètres
 FDT_DISPLAY_COLUMN = Affichage des feuilles de temps en format colonne
+FDT_DECIMAL_HOUR_FORMAT = Heures au format décimal
+FDT_USE_HS_CASE = Ajout des cases d'heures sup pour les collaborateurs
+FDT_DISPLAY_FULL_WEEK = Afficher les semaines completes dans les feuilles de temps
+FDT_COLUMN_MAX_TASK_DAY = Si le format colonne est utilisé : Nombre de tâche maximum sur une journée
 
 
 #
@@ -92,8 +96,16 @@ PrimeExceptionnelle = Prime Exceptionnelle
 PrimeObjectif = Prime Objectif
 PrimeVariable = Prime Variable 
 PrimeAmplitude = Prime Amplitude
-
-
+IndKM_0_40 = IndKM_0.40€
+IndGD_50 = IndGD_50€
+IndGD_84 = IndGD_84€
+IndGD_37 = IndGD_37€
+H_Nuit_100 = H_Nuit_100%
+PrimePoste_2_8 = PrimePoste_2x8
+PrimePoste_3_8 = PrimePoste_3x8
+H_Dim_75 = H_Dim_75%
+H_Dim_50 = H_Dim_50%
+SiteFDT = Site
 
 #
 # Autres

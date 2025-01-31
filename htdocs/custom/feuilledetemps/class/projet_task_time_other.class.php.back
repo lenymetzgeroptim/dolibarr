@@ -105,12 +105,12 @@ class Projet_task_time_other extends CommonObject
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
-		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2",),
+		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0",),
 		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
 		"fk_projet_task_time" => array("type"=>"integer", "label"=>"ProjetTaskTime", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1",),
 		"heure_nuit" => array("type"=>"double", "label"=>"HeureNuit", "enabled"=>"1", 'position'=>52, 'notnull'=>0, "visible"=>"1",),
 		"port_epi" => array("type"=>"double", "label"=>"double", "enabled"=>"1", 'position'=>54, 'notnull'=>0, "visible"=>"1",),
-		"site" => array("type"=>"varchar(20)", "label"=>"Site", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"1",),
+		"site" => array("type"=>"varchar(128)", "label"=>"Site", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $date_creation;
@@ -1102,7 +1102,6 @@ class Projet_task_time_other extends CommonObject
         $sql .= " t.fk_projet_task_time,";
         $sql .= " t.heure_nuit,";
         $sql .= " t.port_epi,";
-		$sql .= " t.site,";
 		$sql .= " t.date_creation,";
         $sql .= " t.tms,";
 		$sql .= " t.fk_user_creat,";
@@ -1111,8 +1110,8 @@ class Projet_task_time_other extends CommonObject
         $sql .= ' WHERE t.fk_projet_task_time = '.((int) $project_task_time);
   
 		dol_syslog(get_class($this)."::fetchWithoutId", LOG_DEBUG);
-        $resql = $this->db->query($sql);
-        if ($resql) {
+        $res = $this->db->query($sql);
+        if ($res) {
             if ($this->db->num_rows($resql)) {
                 $obj = $this->db->fetch_object($resql);
 
@@ -1122,8 +1121,6 @@ class Projet_task_time_other extends CommonObject
                 $this->fk_projet_task_time = $obj->fk_projet_task_time;
 				$this->heure_nuit = $obj->heure_nuit;
 				$this->port_epi = $obj->port_epi;
-				$this->site = $obj->site;
-
 				$this->fk_user_creat = $obj->fk_user_creat;
 				$this->fk_user_modif = $obj->fk_user_modif;
 
@@ -1138,7 +1135,6 @@ class Projet_task_time_other extends CommonObject
 		else {
             $this->error = $this->db->lasterror();
             $this->errors[] = $this->error;
-			var_dump($this->error);
             return -1;
         }
     }

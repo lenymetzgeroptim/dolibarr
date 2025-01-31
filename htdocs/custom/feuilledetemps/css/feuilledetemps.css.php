@@ -260,6 +260,10 @@ div.mainmenu.feuilledetemps {
 	background-color: #eee !important;
 }
 
+th.daycolumn {
+	background-color: var(--colorbacktitle1);
+}
+
 tr.conges th.statut1 {
 	border: red 4px solid !important;
 }
@@ -490,7 +494,7 @@ tr > th:last-child.fixed {
 	border-top: 1px solid var(--colortopbordertitle1);
 }
 
-.feuilledetemps [class^="liste_total_semaine"]:not(.liste_total_semaine_1) {
+.feuilledetemps [class^="liste_total_semaine"]:not(.liste_total_semaine_1):not(.totalweekcolumn) {
 	border-left: 1px solid var(--colortopbordertitle1);
 }
 
@@ -509,6 +513,21 @@ tr > th:last-child.fixed {
 	border-bottom: 1px solid var(--colortopbordertitle1);
 	display: inline-table;
 	width: 100%
+}
+
+#tablelines_fdt> tbody > tr > td.totalweekcolumn {
+	border-right: 1px solid var(--colortopbordertitle1);
+	background-color: #f0f0f0;
+}
+
+#tablelines_fdt> tbody > tr > td.holidaycolumn {
+	border-right: 1px solid rgb(82, 82, 82);
+	border-bottom: none;
+	background-color: #f0f0f0;
+}
+
+#tablelines_fdt> thead > tr > th.columntitle {
+	border-bottom: 1px solid var(--colortopbordertitle1);
 }
 
 
@@ -713,4 +732,25 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 .feuilledetemps .titlefield {
 	min-width: unset !important;
  	width: fit-content;
+}
+
+#tablelines_fdt > tbody > tr > td > div.multipleLineColumn {
+	margin-bottom: 4px;
+  	margin-top: 4px;
+}
+
+.feuilledetemps .displaynone {
+	display: none;
+}
+
+.feuilledetemps .visibilityhidden {
+	visibility: hidden;
+}
+
+.feuilledetemps .mt0 {
+	margin-top: 0px; !important
+}
+
+.feuilledetemps .ml0 {
+	margin-left: 0px; !important
 }
