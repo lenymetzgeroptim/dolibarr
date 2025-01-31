@@ -308,6 +308,17 @@ if (empty($reshook)) {
 
 	if($action == 'update') {
 		$object->oldcopy = clone $object;
+
+		if($object->status == $object::STATUS_VALIDATED && GETPOST('status') != $object::STATUS_VALIDATED) {
+			$object->date_valid_intervenant = '';
+			$object->fk_user_valid_intervenant = '';
+			$object->fk_action_valid_intervenant = '';
+		}
+		if($object->status >= $object::STATUS_VALIDATION3 && GETPOST('status') < $object::STATUS_VALIDATION3) {
+			$object->date_valid_employeur = '';
+			$object->fk_user_valid_employeur = '';
+			$object->fk_action_valid_employeur = '';
+		}
 	}
 
 	if($action == 'edit' && $object->status == $object::STATUS_VALIDATED) {
@@ -696,7 +707,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
 			}
 
-			if (($permissiontovalidate1 && $object->status == $object::STATUS_VALIDATION0) || ($permissiontovalidate2 && $object->status == $object::STATUS_VALIDATION1) || ($permissiontovalidate3 && $object->status == $object::STATUS_VALIDATION2) || $permissiontovalidate4 && ($object->status == $object::STATUS_VALIDATION3) || $object->status == $object::STATUS_VALIDATED) {
+			if (($permissiontovalidate1 && $object->status == $object::STATUS_VALIDATION0) || ($permissiontovalidate2 && $object->status == $object::STATUS_VALIDATION1) || ($permissiontovalidate3 && $object->status == $object::STATUS_VALIDATION2) || $permissiontovalidate4 && ($object->status == $object::STATUS_VALIDATION3) || $object->status == $object::STATUS_VALIDATION_WITHOUT_USER || $object->status == $object::STATUS_VALIDATED) {
 				print dolGetButtonAction($langs->trans('GeneratePDF'), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererPdf&confirm=yes&token='.newToken(), '', $permissiontoadd);
 			}
 

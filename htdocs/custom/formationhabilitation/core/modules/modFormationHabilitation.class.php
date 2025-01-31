@@ -205,7 +205,7 @@ class modFormationHabilitation extends DolibarrModules
 				40 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_UNSUSPEND', 'chaine', '1', '', 0), // Lors de la non suspensio,
 				41 => array('MAIN_AGENDA_ACTIONAUTO_OBJECT_LINK_INSERT', 'chaine', '1', '', 0), // Lors de l'ajout d'une ligne
 				42 => array('MAIN_AGENDA_ACTIONAUTO_OBJECT_LINK_DELETE', 'chaine', '1', '', 0), // Lors de la suppression d'une ligne
-
+				43 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_CANCEL', 'chaine', '1', '', 0), // Lors de la clôture
 			);
 
 		// Some keys to add into the overwriting translation tables

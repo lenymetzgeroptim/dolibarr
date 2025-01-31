@@ -653,6 +653,13 @@ class UserVolet extends CommonObject
 		unset($object->id);
 		unset($object->fk_user_creat);
 		unset($object->import_key);
+		unset($object->datefinvolet);
+		unset($object->date_valid_employeur);
+		unset($object->date_valid_intervenant);
+		unset($object->fk_user_valid_employeur);
+		unset($object->fk_user_valid_intervenant);
+		unset($object->fk_action_valid_employeur);
+		unset($object->fk_action_valid_intervenant);
 
 		// Clear fields
 		if (property_exists($object, 'ref')) {
@@ -1755,7 +1762,7 @@ class UserVolet extends CommonObject
 			$user_static->fetch($this->fk_user);
 			$to = $user_static->email;
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">'.$this->ref.'</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidate", $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidateUser", $link);
 
 			$mail = new CMailFile(
 				$subject,
@@ -2296,7 +2303,7 @@ class UserVolet extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'FORMATIONHABILITATION_USERVOLET_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'USERVOLET_CANCEL');
 	}
 
 	/**
@@ -3702,9 +3709,10 @@ class UserVolet extends CommonObject
 	 *  @param  int		$all			0 uniquement le volet actuel, 1 tous les volets
 	 *  @param  int		$get_fk_volet	Récupère fk_volet plutot que le rowid
 	 * 	@param  string	$fk_volet		filtre pour le numéro des volets à récupérer
+	 * 	@param  int		$no_this		Exclure $this->id 
 	 *  @return	array|int		array with uservolet if OK, < 0 if KO
 	 */
-	public function getActiveUserVolet($mode = 0, $all = 0, $get_fk_volet = 0, $fk_volet = '')
+	public function getActiveUserVolet($mode = 0, $all = 0, $get_fk_volet = 0, $fk_volet = '', $no_this = 0)
 	{
 		global $conf, $user;
 		$ret = array(); 
@@ -3712,6 +3720,9 @@ class UserVolet extends CommonObject
 		$sql = "SELECT v.rowid, v.fk_volet";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as v";
 		$sql .= " WHERE v.fk_user = $this->fk_user";
+		if(!empty($this->id) && $no_this) {
+			$sql .= " AND v.rowid <> $this->id";
+		}
 		if(!$all && empty($fk_volet)) {
 			$sql .= " AND v.fk_volet = $this->fk_volet";
 		}
@@ -3760,7 +3771,7 @@ class UserVolet extends CommonObject
 	{
 		global $conf, $user;
 
-		$listUserVolet = $this->getActiveUserVolet(1, 0, 0, $fk_volet);
+		$listUserVolet = $this->getActiveUserVolet(1, 0, 0, $fk_volet, 1);
 		
 		if (is_array($listUserVolet)) {
 			foreach($listUserVolet as $uservolet) {

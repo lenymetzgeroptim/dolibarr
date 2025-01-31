@@ -111,6 +111,8 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 		}
 		$date = dol_mktime(-1, -1, -1, GETPOST("date_autorisationmonth", 'int'), GETPOST("date_autorisationday", 'int'), GETPOST("date_autorisationyear", 'int'));
 
+		$date_fin = dol_mktime(-1, -1, -1, GETPOST("date_fin_autorisationmonth", 'int'), GETPOST("date_fin_autorisationday", 'int'), GETPOST("date_fin_autorisationyear", 'int'));
+
 
 		// if(GETPOST('status') == -1 || empty(GETPOST('status'))){
 		// 	setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Status")), null, 'errors');
@@ -120,7 +122,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 		if (!$error) {
 			$objectline->ref = $user_static->login."-".$autorisation_static->ref.'-'.dol_print_date($date, "%Y%m%d");
 			$objectline->date_autorisation = $date;
-			//$objectline->date_fin_autorisation = dol_time_plus_duree(dol_time_plus_duree($date, $autorisation_static->validite_employeur, 'd'), -1, 'd');
+			$objectline->date_fin_autorisation = (!empty($date_fin) && $date_fin > $date ? $date_fin : '');
 			$objectline->domaineapplication = GETPOST('domaineapplication', 'int');
 			//$objectline->status = GETPOST('status');
 

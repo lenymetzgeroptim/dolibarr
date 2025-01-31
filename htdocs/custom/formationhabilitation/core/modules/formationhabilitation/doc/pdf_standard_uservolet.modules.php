@@ -485,9 +485,9 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			$pdf->writeHTML('<p style="border-bottom: 1px black solid;">PRENOMS : '.$user_static->firstname." ".$userField->array_options['options_secondprenom'].'</p>');
 		}
 		$pdf->SetFont('', 'B', $default_font_size);
-		if(!empty($userField->array_options['options_carnetdaccsn'])) {
+		//if(!empty($userField->array_options['options_carnetdaccsn'])) {
 			$pdf->writeHTML('<p style="border-bottom: 1px black solid;">CARNET D\'ACCES N° : '.$userField->array_options['options_carnetdaccsn'].'</p>');
-		}
+		//}
 
 		if(!empty($user_static->array_options['options_datedebut_primo'])) {
 			$now = dol_now();
@@ -865,7 +865,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$pdf->writeHTML('<p style="">NOM DU SERVICE DE<br><br>MEDECINE DU TRAVAIL<br><br>DE L\'EMPLOYEUR CHARGE<br><br>DU SUIVI MEDICAL : <br>');
 		$pdf->setCellHeightRatio(1);
 		$pdf->writeHTML('<p style="">'.($interim ? '' : $medecinedutravail->name).'</p>');
-		$pdf->writeHTML('<p style="">'.($interim ? '' : $medecinedutravail->address).'</p>');
+		$pdf->writeHTML('<p style="">'.($interim ? '' : nl2br($medecinedutravail->address)).'</p>');
 		$pdf->writeHTML('<p style="">'.($interim ? '' : $medecinedutravail->zip.', '.$medecinedutravail->town).'</p>');
 		$pdf->writeHTML('<p style="">TEL : '.($interim ? '' : $medecinedutravail->phone).'</p><br>');
 		$pdf->setCellHeightRatio(0.6);
@@ -890,7 +890,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		$pdf->writeHTML('<p style="">NOM DU SERVICE DE<br><br>MEDECINE DU TRAVAIL<br><br>DE L\'EMPLOYEUR CHARGE<br><br>DU SUIVI MEDICAL : <br>');
 		$pdf->setCellHeightRatio(1);
 		$pdf->writeHTML('<p style="">'.($interim ? $medecinedutravail->name : '').'</p>');
-		$pdf->writeHTML('<p style="">'.($interim ? $medecinedutravail->address : '').'</p>');
+		$pdf->writeHTML('<p style="">'.($interim ? nl2br($medecinedutravail->address) : '').'</p>');
 		$pdf->writeHTML('<p style="">'.($interim ? $medecinedutravail->zip.', '.$medecinedutravail->town : '').'</p>');
 		$pdf->writeHTML('<p style="">TEL : '.($interim ? $medecinedutravail->phone : '').'</p><br>');
 		$pdf->setCellHeightRatio(0.6);

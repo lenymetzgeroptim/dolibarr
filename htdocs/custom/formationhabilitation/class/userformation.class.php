@@ -2640,7 +2640,7 @@ class UserFormation extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND uf.fk_formation = $formationid";
-		$sql .= " AND uf.resultat != 3";
+		$sql .= " AND (uf.resultat IS NULL OR uf.resultat != 3)";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.")";
 
 		dol_syslog(get_class($this)."::userAsFormation", LOG_DEBUG);
@@ -2673,7 +2673,7 @@ class UserFormation extends CommonObject
 		$sql = "SELECT DISTINCT uf.fk_formation, uf.date_finvalidite_formation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " WHERE uf.fk_user = $userid";
-		$sql .= " AND uf.resultat != 3";
+		$sql .= " AND (uf.resultat IS NULL OR uf.resultat != 3)";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE;
 		if($withprogram) {
 			$sql .= " OR uf.status = ".self::STATUS_PROGRAMMEE;
@@ -2714,7 +2714,7 @@ class UserFormation extends CommonObject
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND FIND_IN_SET(".$voletid.", f.fk_volet) > 0";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.')';
-		$sql .= " AND uf.resultat != 3";
+		$sql .= " AND (uf.resultat IS NULL OR uf.resultat != 3)";
 
 		dol_syslog(get_class($this)."::getAllFormationsForUserOnVolet", LOG_DEBUG);
 		$resql = $this->db->query($sql);
@@ -2753,7 +2753,7 @@ class UserFormation extends CommonObject
 		$sql .= " WHERE uf.fk_user = $userid";
 		$sql .= " AND FIND_IN_SET(".$prerequisid.", e.prerequisobjects) > 0 AND e.prerequistype = '$prerequistype'";
 		$sql .= " AND (uf.status = ".self::STATUS_VALIDE." OR uf.status = ".self::STATUS_A_PROGRAMMER." OR uf.status = ".self::STATUS_REPROGRAMMEE.')';
-		$sql .= " AND uf.resultat != 3";
+		$sql .= " AND (uf.resultat IS NULL OR uf.resultat != 3)";
 
 		dol_syslog(get_class($this)."::getObjectNeedPrerequis", LOG_DEBUG);
 		$resql = $this->db->query($sql);
