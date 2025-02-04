@@ -28,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/formation.cl
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
 
 /**
  * Class for UserFormation
@@ -852,10 +853,10 @@ class UserFormation extends CommonObject
 				);
 	
 				if(!empty($to)) {
-					//$result = $mail->sendfile();
+					$result = $mail->sendfile();
 	
 					if (!$result) {
-						//setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 					}
 				}
 				
@@ -924,10 +925,10 @@ class UserFormation extends CommonObject
 				);
 	
 				if(!empty($to)) {
-					//$result = $mail->sendfile();
+					$result = $mail->sendfile();
 	
 					if (!$result) {
-						//setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 					}
 				}
 				
@@ -2111,6 +2112,28 @@ class UserFormation extends CommonObject
 		$this->db->begin();
 		$this->output = '';
 
+		// Destinataires des mails
+		$user_group = new UserGroup($this->db);
+		$user_group->fetch(31);
+		$liste_user = $user_group->listUsersForGroup('u.statut=1');
+		$to_admin_go = '';
+		foreach($liste_user as $uservalide){
+			if(!empty($uservalide->email)){
+				$to_admin_go .= $uservalide->email.", ";
+			}
+		}
+		rtrim($to_admin_go, ', ');
+		$user_group->fetch(7);
+		$liste_user = $user_group->listUsersForGroup('u.statut=1');
+		$to_admin = '';
+		foreach($liste_user as $uservalide){
+			if(!empty($uservalide->email)){
+				$to_admin .= $uservalide->email.", ";
+			}
+		}
+		rtrim($to_admin, ', ');
+
+
 		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée ou Clôturée
 		$sql = "SELECT uf.rowid, uf.ref, uf.fk_user";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
@@ -2193,24 +2216,16 @@ class UserFormation extends CommonObject
 
 								$user_static = new User($this->db);
 								$user_static->fetch($obj->fk_user);
-								
-								$user_group = new UserGroup($this->db);
-								$user_group->fetch(0, 'Administratif');
-								$liste_user = $user_group->listUsersForGroup('u.statut=1');
 
 								$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 								$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
-								$to = '';
-								foreach($liste_user as $uservalide){
-									if(!empty($uservalide->email)){
-										$to .= $uservalide->email.", ";
-									}
+								if($user_static->array_options['options_antenne'] == 158) {
+									$to = $to_admin_go;
 								}
-								// if(!empty($user_static->email)) {
-								// 	$to .= $user_static->email.", ";
-								// }
-								rtrim($to, ', ');
+								else {
+									$to = $to_admin;
+								}
 								
 								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 								$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
@@ -2246,24 +2261,16 @@ class UserFormation extends CommonObject
 
 								$user_static = new User($this->db);
 								$user_static->fetch($obj->fk_user);
-								
-								$user_group = new UserGroup($this->db);
-								$user_group->fetch(0, 'Administratif');
-								$liste_user = $user_group->listUsersForGroup('u.statut=1');
 
 								$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 								$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
-								$to = '';
-								foreach($liste_user as $uservalide){
-									if(!empty($uservalide->email)){
-										$to .= $uservalide->email.", ";
-									}
+								if($user_static->array_options['options_antenne'] == 158) {
+									$to = $to_admin_go;
 								}
-								// if(!empty($user_static->email)) {
-								// 	$to .= $user_static->email.", ";
-								// }
-								rtrim($to, ', ');
+								else {
+									$to = $to_admin;
+								}
 								
 								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 								$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
@@ -2314,21 +2321,16 @@ class UserFormation extends CommonObject
 
 					$user_static = new User($this->db);
 					$user_static->fetch($obj->fk_user);
-					
-					$user_group = new UserGroup($this->db);
-					$user_group->fetch(0, 'Administratif');
-					$liste_user = $user_group->listUsersForGroup('u.statut=1');
 
 					$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 					$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
-					$to = '';
-					foreach($liste_user as $uservalide){
-						if(!empty($uservalide->email)){
-							$to .= $uservalide->email.", ";
-						}
+					if($user_static->array_options['options_antenne'] == 158) {
+						$to = $to_admin_go;
 					}
-					rtrim($to, ', ');
+					else {
+						$to = $to_admin;
+					}
 					
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file

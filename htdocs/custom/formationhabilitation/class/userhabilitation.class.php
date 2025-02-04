@@ -28,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/habilitation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
 
 /**
  * Class for UserHabilitation
@@ -1904,7 +1905,7 @@ class UserHabilitation extends CommonObject
 						$user_static->fetch($obj->fk_user);
 						
 						$user_group = new UserGroup($this->db);
-						$user_group->fetch(0, 'Administratif');
+						$user_group->fetch(7);
 						$liste_user = $user_group->listUsersForGroup('u.statut=1');
 
 						$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
@@ -1916,15 +1917,17 @@ class UserHabilitation extends CommonObject
 								$to .= $uservalide->email.", ";
 							}
 						}
-						// if(!empty($user_static->email)) {
-						// 	$to .= $user_static->email.", ";
-						// }
 						rtrim($to, ', ');
+
+						if(!empty($user_static->email)) {
+							$to2 = $user_static->email;
+						}
 						
 						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=habilitation">ici</a>';
 						$message = $langs->transnoentitiesnoconv("EMailTextHabilitationExpire",  $this->ref, $link);
+						$message2 = $langs->transnoentitiesnoconv("EMailTextHabilitationExpireForUser",  $this->ref, $link);
 
 						$mail = new CMailFile(
 							$subject,
@@ -1942,8 +1945,27 @@ class UserHabilitation extends CommonObject
 							''
 						);
 
+						$mail2 = new CMailFile(
+							$subject,
+							$to2,
+							$from,
+							$message2,
+							array(),
+							array(),
+							array(),
+							'',
+							'',
+							0,
+							1,
+							'',
+							''
+						);
+
 						if(!empty($to)) {
 							$resultmail = $mail->sendfile();
+						}
+						if(!empty($to2)) {
+							$resultmail2 = $mail2->sendfile();
 						}
 					}
 				}
@@ -1984,51 +2006,51 @@ class UserHabilitation extends CommonObject
 					else {
 						$this->output .= "L'habilitation $obj->ref a été passé au statut 'Clôturée'<br>";
 
-						$user_static = new User($this->db);
-						$user_static->fetch($obj->fk_user);
+						// $user_static = new User($this->db);
+						// $user_static->fetch($obj->fk_user);
 						
-						$user_group = new UserGroup($this->db);
-						$user_group->fetch(0, 'Administratif');
-						$liste_user = $user_group->listUsersForGroup('u.statut=1');
+						// $user_group = new UserGroup($this->db);
+						// $user_group->fetch(7);
+						// $liste_user = $user_group->listUsersForGroup('u.statut=1');
 
-						$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
-						$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+						// $subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+						// $from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
-						$to = '';
-						foreach($liste_user as $uservalide){
-							if(!empty($uservalide->email)){
-								$to .= $uservalide->email.", ";
-							}
-						}
-						// if(!empty($user_static->email)) {
-						// 	$to .= $user_static->email.", ";
+						// $to = '';
+						// foreach($liste_user as $uservalide){
+						// 	if(!empty($uservalide->email)){
+						// 		$to .= $uservalide->email.", ";
+						// 	}
 						// }
-						rtrim($to, ', ');
+						// // if(!empty($user_static->email)) {
+						// // 	$to .= $user_static->email.", ";
+						// // }
+						// rtrim($to, ', ');
 						
-						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=habilitation">ici</a>';
-						$message = $langs->transnoentitiesnoconv("EMailTextHabilitationClose",  $this->ref, $link);
+						// $urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+						// $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+						// $link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=habilitation">ici</a>';
+						// $message = $langs->transnoentitiesnoconv("EMailTextHabilitationClose",  $this->ref, $link);
 
-						$mail = new CMailFile(
-							$subject,
-							$to,
-							$from,
-							$message,
-							array(),
-							array(),
-							array(),
-							'',
-							'',
-							0,
-							1,
-							'',
-							''
-						);
+						// $mail = new CMailFile(
+						// 	$subject,
+						// 	$to,
+						// 	$from,
+						// 	$message,
+						// 	array(),
+						// 	array(),
+						// 	array(),
+						// 	'',
+						// 	'',
+						// 	0,
+						// 	1,
+						// 	'',
+						// 	''
+						// );
 
-						if(!empty($to)) {
-							$resultmail = $mail->sendfile();
-						}
+						// if(!empty($to)) {
+						// 	$resultmail = $mail->sendfile();
+						// }
 					}
 				}
 

@@ -32,6 +32,7 @@ dol_include_once('/formationhabilitation/class/userformation.class.php');
 dol_include_once('/formationhabilitation/class/userautorisation.class.php');
 dol_include_once('/formationhabilitation/class/volet.class.php');
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
 
 /**
  * Class for UserVolet
@@ -327,7 +328,7 @@ class UserVolet extends CommonObject
 		$resultcreate = $this->createCommon($user, $notrigger);
 
 		if($resultcreate > 0 && $this->status == self::STATUS_VALIDATED) {
-			$this->validate($user, 0, 1, 1, $generate_pdf);
+			$this->validate($user, 0, 1, 1, $generate_pdf, 1);
 		}
 		elseif($resultcreate > 0) {
 			// Génération du PDF
@@ -405,7 +406,7 @@ class UserVolet extends CommonObject
 			$user_static = new User($this->db);
 			$user_static->fetch($this->fk_user);
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user->firstname." ".$user->lastname, $user_group->name, $link);
 
 			$mail = new CMailFile(
 				$subject,
@@ -454,7 +455,7 @@ class UserVolet extends CommonObject
 			$user_static = new User($this->db);
 			$user_static->fetch($this->fk_user);
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user->firstname." ".$user->lastname, $user_group->name, $link);
 
 			$mail = new CMailFile(
 				$subject,
@@ -503,7 +504,7 @@ class UserVolet extends CommonObject
 			$user_static = new User($this->db);
 			$user_static->fetch($this->fk_user);
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user->firstname." ".$user->lastname, $user_group->name, $link);
 
 			$mail = new CMailFile(
 				$subject,
@@ -552,7 +553,7 @@ class UserVolet extends CommonObject
 			$user_static = new User($this->db);
 			$user_static->fetch($this->fk_user);
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletCreate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user->firstname." ".$user->lastname, $user_group->name, $link);
 
 			$mail = new CMailFile(
 				$subject,
@@ -591,7 +592,7 @@ class UserVolet extends CommonObject
 			$user_static->fetch($this->fk_user);
 			$to = $user_static->email;
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">'.$this->ref.'</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidateUser", $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidateUser", $link, $user->firstname." ".$user->lastname);
 
 			$mail = new CMailFile(
 				$subject,
@@ -1201,7 +1202,7 @@ class UserVolet extends CommonObject
 			$user_static = new User($this->db);
 			$user_static->fetch($this->fk_user);
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletNeedValidate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletNeedValidate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user->firstname." ".$user->lastname, $user_group->name, $link);
 
 			$mail = new CMailFile(
 				$subject,
@@ -1379,7 +1380,7 @@ class UserVolet extends CommonObject
 			$user_static = new User($this->db);
 			$user_static->fetch($this->fk_user);
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletNeedValidate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletNeedValidate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user->firstname." ".$user->lastname, $user_group->name, $link);
 
 			$mail = new CMailFile(
 				$subject,
@@ -1606,7 +1607,7 @@ class UserVolet extends CommonObject
 			$user_static = new User($this->db);
 			$user_static->fetch($this->fk_user);
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">ici</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletNeedValidate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user_group->name, $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletNeedValidate", $volet->label, $user_static->firstname." ".$user_static->lastname, $user->firstname." ".$user->lastname, $user_group->name, $link);
 
 			$mail = new CMailFile(
 				$subject,
@@ -1822,7 +1823,7 @@ class UserVolet extends CommonObject
 			$user_static->fetch($this->fk_user);
 			$to = $user_static->email;
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">'.$this->ref.'</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidateUser", $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidateUser", $link, $user->firstname." ".$user->lastname);
 
 			$mail = new CMailFile(
 				$subject,
@@ -1870,7 +1871,7 @@ class UserVolet extends CommonObject
 	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
 	 *	@return  	int						Return integer <=0 if OK, 0=Nothing done, >0 if KO
 	 */
-	public function validate($user, $notrigger = 0, $forcecreation = 0, $nosigning = 0, $generate_pdf = true)
+	public function validate($user, $notrigger = 0, $forcecreation = 0, $nosigning = 0, $generate_pdf = true, $validate_when_create = 0)
 	{
 		global $conf, $langs;
 
@@ -2070,12 +2071,6 @@ class UserVolet extends CommonObject
 			}
 		}
 
-		// Set new ref and current status
-		if (!$error) {
-			$this->ref = $num;
-			$this->status = self::STATUS_VALIDATED;
-		}
-
 		// Mail
 		if(!$error) {
 			global $dolibarr_main_url_root;
@@ -2088,9 +2083,16 @@ class UserVolet extends CommonObject
 
 			$user_static = new User($this->db);
 			$user_static->fetch($this->fk_user);
-			$to = $user_static->email;
+			if($this->status != self::STATUS_VALIDATION_WITHOUT_USER) {
+				$to = $user_static->email;
+			}
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$this->id.'">'.$this->ref.'</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidate", $link);
+			if($validate_when_create) {
+				$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidateWhenCreate", $link);
+			}
+			else {
+				$message = $langs->transnoentitiesnoconv("EMailTextUserVoletValidate", $link, $user->firstname." ".$user->lastname);
+			}
 
 			$mail = new CMailFile(
 				$subject,
@@ -2115,6 +2117,12 @@ class UserVolet extends CommonObject
 					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 				}
 			}
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->ref = $num;
+			$this->status = self::STATUS_VALIDATED;
 		}
 
 		if (!$error && empty($this->datedebutvolet)) {
@@ -4003,8 +4011,19 @@ class UserVolet extends CommonObject
 						$user_static->fetch($obj->fk_user);
 						
 						$user_group = new UserGroup($this->db);
-						$user_group->fetch(0, 'Administratif');
+						$user_group->fetch(7);
 						$liste_user = $user_group->listUsersForGroup('u.statut=1');
+
+						// Responsable d'antenne
+						$societe = New Societe($this->db);
+						$user_group->fetch(0, "Responsable d'antenne");
+						$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
+						$user_static->fetch($this->fk_user);
+						if($user_static->array_options['options_antenne'] > 0) {
+							$societe->fetch($user_static->array_options['options_antenne']);
+							$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
+							$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
+						}
 
 						$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 						$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
@@ -4015,15 +4034,29 @@ class UserVolet extends CommonObject
 								$to .= $uservalide->email.", ";
 							}
 						}
-						if(!empty($user_static->email)) {
-							$to .= $user_static->email.", ";
-						}
 						rtrim($to, ', ');
+
+						$to2 = '';
+						foreach($arrayRespAntenneForMail as $user_id) {
+							$user_static->fetch($user_id);
+			
+							if(!empty($user_static->email)) {
+								$to2 .= $user_static->email.', ';
+							}
+						}
+						rtrim($to2, ', ');
+
+						if(!empty($user_static->email)) {
+							$to3 = $user_static->email;
+						}
 						
 						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
 						$message = $langs->transnoentitiesnoconv("EMailTextUserVoletExpire", $link);
+						$link2 = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$user_static->id.'&onglet=formation">ici</a>';
+						$message2 = $langs->transnoentitiesnoconv("EMailTextUserVoletExpireRespAntenne", $link, $link2);
+						$message3 = $langs->transnoentitiesnoconv("EMailTextUserVoletExpireForUser", $link);
 
 						$mail = new CMailFile(
 							$subject,
@@ -4041,8 +4074,46 @@ class UserVolet extends CommonObject
 							''
 						);
 
+						$mail2 = new CMailFile(
+							$subject,
+							$to2,
+							$from,
+							$message2,
+							array(),
+							array(),
+							array(),
+							'',
+							'',
+							0,
+							1,
+							'',
+							''
+						);
+
+						$mail3 = new CMailFile(
+							$subject,
+							$to3,
+							$from,
+							$message3,
+							array(),
+							array(),
+							array(),
+							'',
+							'',
+							0,
+							1,
+							'',
+							''
+						);
+
 						if(!empty($to)) {
 							$resultmail = $mail->sendfile();
+						}
+						if(!empty($to2)) {
+							$resultmail2 = $mail2->sendfile();
+						}
+						if(!empty($to3)) {
+							$resultmail3 = $mail3->sendfile();
 						}
 					}
 				}

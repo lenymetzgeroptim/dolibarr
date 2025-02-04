@@ -32,6 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/habilitation
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userautorisation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/autorisation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/lib/formationhabilitation.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
 
 /**
  * Class for VisiteMedical
@@ -395,21 +396,47 @@ class VisiteMedical extends CommonObject
 			}
 		}
 
-		// Envoi d'un mail au responsable Q3SE et responsable d’antenne si VM conditionnel
+		// Envoi d'un mail au responsable si VM conditionnel
 		if($resultcreate && $this->status == self::STATUS_CONDITIONNEL) {
 			global $dolibarr_main_url_root;
 	
-			$user_group = New UserGroup($this->db);
-			$user_group->fetch(0, "Responsable d'antenne");
-			$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
+			$now = dol_now();
+
 			$societe = New Societe($this->db);
 			$user_static = new User($this->db);
-			$user_static->fetch($this->fk_user);
-			$societe->fetch($user_static->array_options['options_antenne']);
-			$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
-			$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
+			$user_group = New UserGroup($this->db);
+			$projectstatic = new Project($this->db);
+
+			$user_group->fetch(0, "Responsable d'antenne");
+			$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
 			$user_group->fetch(0, 'Resp. Q3SE');
 			$liste_q3se = $user_group->listUsersForGroup('u.statut=1');
+			$user_group->fetch(0, 'Direction');
+			$liste_direction = $user_group->listUsersForGroup('u.statut=1');
+
+			// Responsable d'antenne
+			$user_static->fetch($this->fk_user);
+			if($user_static->array_options['options_antenne'] > 0) {
+				$societe->fetch($user_static->array_options['options_antenne']);
+				$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
+				$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
+			}
+
+			// Responsable des projets
+			$filter = " AND dateo <= '".$this->db->idate($now)."' AND (datee >= '".$this->db->idate($now)."' OR datee IS NULL) AND fk_statut = 1 AND ec.fk_c_type_contact = 161";		
+			$liste_projet = $projectstatic->getProjectsAuthorizedForUser($user_static, 1, 0, 0, $filter); 
+			foreach($liste_projet as $projetid => $ref) {
+				$projectstatic->fetch($projetid);
+				if(!$projectstatic->array_options['options_projetstructurel']) {
+					// Responsables de projet
+					$liste_resp_projet = $projectstatic->liste_contact(-1, 'internal', 0, 'PROJECTLEADER', 1);
+					foreach($liste_resp_projet as $user_respprojet) {
+						if (!in_array($user_respprojet, $list_respprojet)) {
+							$list_respprojet[] = $user_respprojet;
+						}
+					}
+				}
+			}
 
 			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
@@ -422,10 +449,19 @@ class VisiteMedical extends CommonObject
 					$to .= $user_static->email.', ';
 				}
 			}
-
 			foreach($liste_q3se as $q3se){
 				if(!empty($q3se->email)){
 					$to .= $q3se->email.", ";
+				}
+			}
+			foreach($liste_direction as $direction){
+				if(!empty($direction->email)){
+					$to .= $direction->email.", ";
+				}
+			}
+			foreach($list_respprojet as $respprojet){
+				if(!empty($respprojet['email'])){
+					$to .= $respprojet['email'].", ";
 				}
 			}
 			rtrim($to, ', ');
@@ -435,7 +471,7 @@ class VisiteMedical extends CommonObject
 
 			$user_static->fetch($this->fk_user);
 			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/visitemedical_card.php?id='.$this->id.'">ici</a>';
-			$message = $langs->transnoentitiesnoconv("EMailTextVisiteMedicaleConditionnel", $user_static->firstname, $user_static->lastname, $link);
+			$message = $langs->transnoentitiesnoconv("EMailTextVisiteMedicaleConditionnel", $user_static->firstname, $user_static->lastname, $link, $this->commentaire);
 
 			$mail = new CMailFile(
 				$subject,
@@ -454,10 +490,10 @@ class VisiteMedical extends CommonObject
 			);
 
 			if(!empty($to)) {
-				//$resultmail = $mail->sendfile();
+				$resultmail = $mail->sendfile();
 
 				if (!$resultmail) {
-					//setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 				}
 			}
 		}
@@ -710,6 +746,8 @@ class VisiteMedical extends CommonObject
 	 */
 	public function update(User $user, $notrigger = false)
 	{
+		global $conf, $langs; 
+
 		$this->actionmsg = msgAgendaUpdate($this, 1);
 		$resultupdate = $this->updateCommon($user, $notrigger);
 
@@ -827,6 +865,108 @@ class VisiteMedical extends CommonObject
 							$error++;
 						}
 					}
+				}
+			}
+		}
+
+		// Envoi d'un mail au responsable si VM conditionnel
+		if($resultupdate && $this->status == self::STATUS_CONDITIONNEL && $this->oldcopy->status != self::STATUS_CONDITIONNEL) {
+			global $dolibarr_main_url_root;
+	
+			$now = dol_now();
+
+			$societe = New Societe($this->db);
+			$user_static = new User($this->db);
+			$user_group = New UserGroup($this->db);
+			$projectstatic = new Project($this->db);
+
+			$user_group->fetch(0, "Responsable d'antenne");
+			$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
+			$user_group->fetch(0, 'Resp. Q3SE');
+			$liste_q3se = $user_group->listUsersForGroup('u.statut=1');
+			$user_group->fetch(0, 'Direction');
+			$liste_direction = $user_group->listUsersForGroup('u.statut=1');
+
+			// Responsable d'antenne
+			$user_static->fetch($this->fk_user);
+			if($user_static->array_options['options_antenne'] > 0) {
+				$societe->fetch($user_static->array_options['options_antenne']);
+				$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
+				$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
+			}
+
+			// Responsable des projets
+			$filter = " AND dateo <= '".$this->db->idate($now)."' AND (datee >= '".$this->db->idate($now)."' OR datee IS NULL) AND fk_statut = 1 AND ec.fk_c_type_contact = 161";		
+			$liste_projet = $projectstatic->getProjectsAuthorizedForUser($user_static, 1, 0, 0, $filter); 
+			foreach($liste_projet as $projetid => $ref) {
+				$projectstatic->fetch($projetid);
+				if(!$projectstatic->array_options['options_projetstructurel']) {
+					// Responsables de projet
+					$liste_resp_projet = $projectstatic->liste_contact(-1, 'internal', 0, 'PROJECTLEADER', 1);
+					foreach($liste_resp_projet as $user_respprojet) {
+						if (!in_array($user_respprojet, $list_respprojet)) {
+							$list_respprojet[] = $user_respprojet;
+						}
+					}
+				}
+			}
+
+			$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+			$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+			$to = '';
+			foreach($arrayRespAntenneForMail as $user_id) {
+				$user_static->fetch($user_id);
+
+				if(!empty($user_static->email)) {
+					$to .= $user_static->email.', ';
+				}
+			}
+			foreach($liste_q3se as $q3se){
+				if(!empty($q3se->email)){
+					$to .= $q3se->email.", ";
+				}
+			}
+			foreach($liste_direction as $direction){
+				if(!empty($direction->email)){
+					$to .= $direction->email.", ";
+				}
+			}
+			foreach($list_respprojet as $respprojet){
+				if(!empty($respprojet['email'])){
+					$to .= $respprojet['email'].", ";
+				}
+			}
+			rtrim($to, ', ');
+			
+			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+			$user_static->fetch($this->fk_user);
+			$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/visitemedical_card.php?id='.$this->id.'">ici</a>';
+			$message = $langs->transnoentitiesnoconv("EMailTextVisiteMedicaleConditionnel", $user_static->firstname, $user_static->lastname, $link, $this->commentaire);
+
+			$mail = new CMailFile(
+				$subject,
+				$to,
+				$from,
+				$message,
+				array(),
+				array(),
+				array(),
+				'',
+				'',
+				0,
+				1,
+				'',
+				''
+			);
+
+			if(!empty($to)) {
+				$resultmail = $mail->sendfile();
+
+				if (!$resultmail) {
+					setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
 				}
 			}
 		}
@@ -1487,6 +1627,7 @@ class VisiteMedical extends CommonObject
 
 		$this->db->begin();
 
+		// Gestion des VM expirées
 		$sql = "SELECT vm.rowid, vm.ref, vm.fk_user";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
 		$sql .= " WHERE vm.datefinvalidite IS NOT NULL";
@@ -1513,7 +1654,7 @@ class VisiteMedical extends CommonObject
 					$user_static->fetch($obj->fk_user);
 					
 					$user_group = new UserGroup($this->db);
-					$user_group->fetch(0, 'Administratif');
+					$user_group->fetch(7);
 					$liste_user = $user_group->listUsersForGroup('u.statut=1');
 
 					$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
@@ -1525,9 +1666,6 @@ class VisiteMedical extends CommonObject
 							$to .= $uservalide->email.", ";
 						}
 					}
-					// if(!empty($user_static->email)) {
-					// 	$to .= $user_static->email.", ";
-					// }
 					rtrim($to, ', ');
 					
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
@@ -1557,6 +1695,75 @@ class VisiteMedical extends CommonObject
 				}
 			}
 		}
+
+		// Gestion des VM qui expire dans moins de 2 mois
+		$sql2 = "SELECT vm.rowid, vm.ref, vm.fk_user, vm.datefinvalidite";
+		$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
+		$sql2 .= " WHERE vm.datefinvalidite IS NOT NULL";
+		$sql2 .= " AND vm.datefinvalidite = '".substr($this->db->idate(dol_time_plus_duree($now, 2, 'm')), 0, 10)."'";
+		$sql2 .= " AND vm.status != ".self::STATUS_CLOSE;
+		$sql2 .= " AND vm.status != ".self::STATUS_EXPIRE;
+
+		$resql2 = $this->db->query($sql2);
+		if($resql2) {
+			while($obj = $this->db->fetch_object($resql2)) {
+				$this->output .= "La visite médicale $obj->ref expire dans moins de 2 mois<br>";
+
+				global $dolibarr_main_url_root;
+
+				$user_static = new User($this->db);
+				$user_static->fetch($obj->fk_user);
+				
+				$user_group = new UserGroup($this->db);
+				$user_group->fetch(7);
+				$liste_user_administratif = $user_group->listUsersForGroup('u.statut=1');
+				$user_group->fetch(31);
+				$liste_user_administratif_go = $user_group->listUsersForGroup('u.statut=1');
+
+				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+				$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+				$to = '';
+				foreach($liste_user_administratif as $user_administratif){
+					if(!empty($user_administratif->email)){
+						$to .= $user_administratif->email.", ";
+					}
+				}
+				foreach($liste_user_administratif_go as $user_administratif_go){
+					if(!empty($user_administratif_go->email)){
+						$to .= $user_administratif_go->email.", ";
+					}
+				}
+				rtrim($to, ', ');
+				
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/visitemedical_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
+				$message = $langs->transnoentitiesnoconv("EMailTextVMExpireWarning", $link);
+
+				$mail = new CMailFile(
+					$subject,
+					$to,
+					$from,
+					$message,
+					array(),
+					array(),
+					array(),
+					'',
+					'',
+					0,
+					1,
+					'',
+					''
+				);
+
+				if(!empty($to)) {
+					$resultmail = $mail->sendfile();
+				}
+				
+			}
+		}
+
 
 		if(!$error) {
 			$this->db->commit();
