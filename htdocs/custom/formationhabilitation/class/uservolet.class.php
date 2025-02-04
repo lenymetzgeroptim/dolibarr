@@ -913,7 +913,7 @@ class UserVolet extends CommonObject
 			$this->actionmsg = msgAgendaUpdate($this, 1);
 		}
 		
-		$resultupdate = $this->updateCommon($user, $notrigger);
+		$resultupdate = $this->updateCommon($user, (empty($this->actionmsg) ? 1 : 0));
 
 		if($resultupdate && $refus) {
 			$user_group = new UserGroup($this->db);
@@ -1045,48 +1045,48 @@ class UserVolet extends CommonObject
 		$this->db->begin();
 
 		//Evenement Agenda
-		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
-		$actioncomm = new ActionComm($this->db);
+		// require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		// $actioncomm = new ActionComm($this->db);
 
-		if($this->status == $this::STATUS_VALIDATION0) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION1) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION2) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION3) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION_WITHOUT_USER) {
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr", $this->ref);
-		}
-		$actioncomm->note_private = $actioncomm->label;
+		// if($this->status == $this::STATUS_VALIDATION0) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION1) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION2) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION3) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION_WITHOUT_USER) {
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr", $this->ref);
+		// }
+		// $actioncomm->note_private = $actioncomm->label;
 
-		$actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
-		$actioncomm->code        = 'AC_VOLET_VALIDATE';
-		$actioncomm->fk_project  = '';
-		$actioncomm->datep       = $now;
-		$actioncomm->datef       = $now;
-		$actioncomm->percentage  = -1; // Not applicable
-		$actioncomm->socid       = '';
-		$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
-		$actioncomm->authorid    = $user->id; // User saving action
-		$actioncomm->userownerid = $user->id; // Owner of action
-		$actioncomm->fk_element  = $this->id;
-		$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
+		// $actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+		// $actioncomm->code        = 'AC_VOLET_VALIDATE';
+		// $actioncomm->fk_project  = '';
+		// $actioncomm->datep       = $now;
+		// $actioncomm->datef       = $now;
+		// $actioncomm->percentage  = -1; // Not applicable
+		// $actioncomm->socid       = '';
+		// $actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+		// $actioncomm->authorid    = $user->id; // User saving action
+		// $actioncomm->userownerid = $user->id; // Owner of action
+		// $actioncomm->fk_element  = $this->id;
+		// $actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
 
-		$ret = $actioncomm->create($user); // User creating action
+		// $ret = $actioncomm->create($user); // User creating action
 		
-		if($ret < 0) {
-			$error++;
-		}
+		// if($ret < 0) {
+		// 	$error++;
+		// }
 
 		if(!$error) {
 			// Validate
@@ -1120,6 +1120,26 @@ class UserVolet extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
+				if($this->status == $this::STATUS_VALIDATION0) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION1) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION2) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION3) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION_WITHOUT_USER) {
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr", $this->ref);
+				}
+				$this->actionmsg = $this->actionmsg2;
 				$result = $this->call_trigger('USERVOLET_VALIDATE1', $user);
 				if ($result < 0) {
 					$error++;
@@ -1426,48 +1446,48 @@ class UserVolet extends CommonObject
 		}
 
 		//Evenement Agenda
-		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
-		$actioncomm = new ActionComm($this->db);
+		// require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		// $actioncomm = new ActionComm($this->db);
 
-		if($this->status == $this::STATUS_VALIDATION0) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION1) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION2) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION3) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION_WITHOUT_USER) {
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr", $this->ref);
-		}
-		$actioncomm->note_private = $actioncomm->label;
+		// if($this->status == $this::STATUS_VALIDATION0) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION1) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION2) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION3) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION_WITHOUT_USER) {
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr", $this->ref);
+		// }
+		// $actioncomm->note_private = $actioncomm->label;
 
-		$actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
-		$actioncomm->code        = 'AC_VOLET_VALIDATE';
-		$actioncomm->fk_project  = '';
-		$actioncomm->datep       = $now;
-		$actioncomm->datef       = $now;
-		$actioncomm->percentage  = -1; // Not applicable
-		$actioncomm->socid       = '';
-		$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
-		$actioncomm->authorid    = $user->id; // User saving action
-		$actioncomm->userownerid = $user->id; // Owner of action
-		$actioncomm->fk_element  = $this->id;
-		$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
+		// $actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+		// $actioncomm->code        = 'AC_VOLET_VALIDATE';
+		// $actioncomm->fk_project  = '';
+		// $actioncomm->datep       = $now;
+		// $actioncomm->datef       = $now;
+		// $actioncomm->percentage  = -1; // Not applicable
+		// $actioncomm->socid       = '';
+		// $actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+		// $actioncomm->authorid    = $user->id; // User saving action
+		// $actioncomm->userownerid = $user->id; // Owner of action
+		// $actioncomm->fk_element  = $this->id;
+		// $actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
 
-		$ret = $actioncomm->create($user); // User creating action
+		// $ret = $actioncomm->create($user); // User creating action
 		
-		if($ret < 0) {
-			$error++;
-		}
+		// if($ret < 0) {
+		// 	$error++;
+		// }
 
 		$now = dol_now();
 
@@ -1505,6 +1525,26 @@ class UserVolet extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
+				if($this->status == $this::STATUS_VALIDATION0) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION1) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION2) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION3) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION_WITHOUT_USER) {
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr", $this->ref);
+				}
+				$this->actionmsg = $this->actionmsg2;
 				$result = $this->call_trigger('USERVOLET_VALIDATE3', $user);
 				if ($result < 0) {
 					$error++;
@@ -1633,48 +1673,48 @@ class UserVolet extends CommonObject
 		}
 
 		//Evenement Agenda
-		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
-		$actioncomm = new ActionComm($this->db);
+		// require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+		// $actioncomm = new ActionComm($this->db);
 
-		if($this->status == $this::STATUS_VALIDATION0) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION1) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION2) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION3) {
-			$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
-		}
-		elseif($this->status == $this::STATUS_VALIDATION_WITHOUT_USER) {
-			$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr", $this->ref);
-		}
-		$actioncomm->note_private = $actioncomm->label;
+		// if($this->status == $this::STATUS_VALIDATION0) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION1) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION2) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION3) {
+		// 	$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+		// }
+		// elseif($this->status == $this::STATUS_VALIDATION_WITHOUT_USER) {
+		// 	$actioncomm->label = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr", $this->ref);
+		// }
+		// $actioncomm->note_private = $actioncomm->label;
 
-		$actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
-		$actioncomm->code        = 'AC_VOLET_VALIDATE';
-		$actioncomm->fk_project  = '';
-		$actioncomm->datep       = $now;
-		$actioncomm->datef       = $now;
-		$actioncomm->percentage  = -1; // Not applicable
-		$actioncomm->socid       = '';
-		$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
-		$actioncomm->authorid    = $user->id; // User saving action
-		$actioncomm->userownerid = $user->id; // Owner of action
-		$actioncomm->fk_element  = $this->id;
-		$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
+		// $actioncomm->type_code   = 'AC_OTH'; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+		// $actioncomm->code        = 'AC_VOLET_VALIDATE';
+		// $actioncomm->fk_project  = '';
+		// $actioncomm->datep       = $now;
+		// $actioncomm->datef       = $now;
+		// $actioncomm->percentage  = -1; // Not applicable
+		// $actioncomm->socid       = '';
+		// $actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+		// $actioncomm->authorid    = $user->id; // User saving action
+		// $actioncomm->userownerid = $user->id; // Owner of action
+		// $actioncomm->fk_element  = $this->id;
+		// $actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
 
-		$ret = $actioncomm->create($user); // User creating action
+		// $ret = $actioncomm->create($user); // User creating action
 		
-		if($ret < 0) {
-			$error++;
-		}
+		// if($ret < 0) {
+		// 	$error++;
+		// }
 
 		$now = dol_now();
 
@@ -1713,6 +1753,26 @@ class UserVolet extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
+				if($this->status == $this::STATUS_VALIDATION0) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION1) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION2) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION3) {
+					$user_group->fetch($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4);
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr", $this->ref, $user_group->name);
+				}
+				elseif($this->status == $this::STATUS_VALIDATION_WITHOUT_USER) {
+					$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr", $this->ref);
+				}
+				$this->actionmsg = $this->actionmsg2;
 				$result = $this->call_trigger('USERVOLET_VALIDATE_WITHOUT_USER', $user);
 				if ($result < 0) {
 					$error++;
@@ -1877,7 +1937,7 @@ class UserVolet extends CommonObject
 		$actioncomm->fk_element  = $this->id;
 		$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
 
-		$ret = $actioncomm->create($user); // User creating action
+		if(!empty($actioncomm->label)) $ret = $actioncomm->create($user); // User creating action
 		
 		if($ret < 0) {
 			$error++;
