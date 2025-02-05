@@ -275,6 +275,7 @@ EMailTextUserVoletValidateWhenCreate = Bonjour,<br><br>Un nouveau volet %s vous 
 EMailTextUserVoletValidateUser = Bonjour,<br><br>Votre volet %s a été validé par %s. Vous devez également le valider<br><br>Cordialement
 EMailTextUserVoletRefus = Bonjour,<br><br>Le volet %s a été refusé par %s pour le motif suivant : %s<br><br>Cordialement
 EMailTextVMExpire = Bonjour,<br><br>La visite médicale %s a expirée<br><br>Cordialement
+EMailTextVMExpireForUser = Bonjour,<br><br>Votre visite médicale %s a expirée<br><br>Cordialement
 EMailTextVMExpireWarning = Bonjour,<br><br>La visite médicale %s expire dans moins de 2 mois<br><br>Cordialement
 EMailTextUserVoletExpire = Bonjour,<br><br>Le volet %s a expiré<br><br>Cordialement
 EMailTextUserVoletExpireForUser = Bonjour,<br><br>Votre volet %s a expiré<br><br>Cordialement
