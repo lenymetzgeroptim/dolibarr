@@ -127,9 +127,11 @@ class Volet extends CommonObject
 		"typevolet" => array("type"=>"integer", "label"=>"TypeVolet", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Volet de formations", "2" => "Volet d'habilitations", "3" => "Volet d'autorisations", "4" => "Autre"),),
 		"nommage" => array("type"=>"varchar(128)", "label"=>"NommagePDF", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
 		"model" => array("type"=>"integer", "label"=>"ModelPDF", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Identité", "2" => "Formation", "3" => "Entreprise", "4" => "Habilitation", "5" => "Médical", "6" => "Autorisation"),),
+		"longlabel" => array("type"=>"varchar(255)", "label"=>"LongLabel", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
+	public $numero;
 	public $label;
 	public $note_public;
 	public $note_private;
@@ -138,10 +140,10 @@ class Volet extends CommonObject
 	public $fk_user_creat;
 	public $fk_user_modif;
 	public $status;
-	public $numero;
 	public $typevolet;
 	public $nommage;
 	public $model;
+	public $longlabel;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1065,11 +1067,15 @@ class Volet extends CommonObject
 		$search_status = explode(',', $search['status']);
 		foreach(array_keys($search_status, '50', false) as $key) {
 			unset($search_status[$key]);
-			$search_status[] = UserVolet::STATUS_DRAFT;
+			$search_status[] = UserVolet::STATUS_VALIDATION0;
 			$search_status[] = UserVolet::STATUS_VALIDATION1;
 			$search_status[] = UserVolet::STATUS_VALIDATION2;
 			$search_status[] = UserVolet::STATUS_VALIDATION3;
-			//$search_status[] = UserVolet::STATUS_VALIDATION4;
+		}
+		foreach(array_keys($search_status, UserVolet::STATUS_VALIDATED, false) as $key) {
+			unset($search_status[$key]);
+			$search_status[] = UserVolet::STATUS_VALIDATED;
+			$search_status[] = UserVolet::STATUS_VALIDATION_WITHOUT_USER;
 		}
 		$search['status'] = implode(',', $search_status);
 
@@ -1464,6 +1470,37 @@ class Volet extends CommonObject
 	}
 
 	/**
+	 * 	Return tous les volets de type $type
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllVoletByType($type)
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT v.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_volet as v";
+		$sql .= " WHERE v.status = 1";
+		$sql .= " AND v.typevolet = $type";
+		$sql .= " ORDER BY v.numero";
+
+		dol_syslog(get_class($this)."::getAllVoletByType", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
 	 * 	Return tous les domaines d'application à partir du dictionnaire
 	 *
 	 * 	@return	array						
@@ -1492,6 +1529,34 @@ class Volet extends CommonObject
 		}
 	}
 
+	/**
+	 * 	Return toutes les qualifications profesionnelle à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllQualificationProfesionnelle()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT d.rowid, d.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_qualification_profesionnelle as d";
+		$sql .= " WHERE d.active = 1";
+
+		dol_syslog(get_class($this)."::getAllQualificationProfesionnelle", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

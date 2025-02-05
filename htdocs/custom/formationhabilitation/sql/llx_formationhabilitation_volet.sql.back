@@ -18,6 +18,7 @@ CREATE TABLE llx_formationhabilitation_volet(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
 	ref varchar(128) NOT NULL, 
+	numero integer, 
 	label varchar(255), 
 	note_public text, 
 	note_private text, 
@@ -26,9 +27,9 @@ CREATE TABLE llx_formationhabilitation_volet(
 	fk_user_creat integer NOT NULL, 
 	fk_user_modif integer, 
 	status integer DEFAULT 1 NOT NULL, 
-	numero integer, 
 	typevolet integer NOT NULL, 
 	nommage varchar(128) NOT NULL, 
-	model integer NOT NULL
+	model integer NOT NULL, 
+	longlabel varchar(255) NOT NULL
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

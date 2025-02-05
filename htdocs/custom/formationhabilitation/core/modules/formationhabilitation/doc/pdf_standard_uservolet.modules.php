@@ -297,52 +297,68 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 					$pdf->setSignature($cert, $cert, $this->emetteur->name, '', 2, $info);
 				}
 
-				$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite); // Left, Top, Right
-
-				// New page
-				$pdf->AddPage();
-				$pagenb++;
-
-				// Head
-				$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
-				
-				// Body
-				$pdf->SetFont('', '', $default_font_size - 1);
-				//$pdf->MultiCell(0, 3, ''); // Set interline to 3
-				$pdf->SetTextColor(0, 0, 0);
-
-				if($volet->model == 1) {
-					$this->pagebodyidentity($pdf, $object, $outputlangs, $outputlangsbis);
-				}
-				elseif($volet->model == 2) {
-					$this->pagebodyformation($pdf, $object, $outputlangs, $outputlangsbis);
-				}
-				elseif($volet->model == 3) {
-					$this->pagebodyentreprise($pdf, $object, $outputlangs, $outputlangsbis);
-				}
-				elseif($volet->model == 4) {
-					$this->pagebodyhabilitation($pdf, $object, $outputlangs, $outputlangsbis, $pagenb);
-				}
-				elseif($volet->model == 5) {
-					$this->pagebodymedical($pdf, $object, $outputlangs, $outputlangsbis);
-				}
-				elseif($volet->model == 6) {
-					$this->pagebodyautorisation($pdf, $object, $outputlangs, $outputlangsbis);
-				}
-
-				// Footer
-				$this->_pagefoot($pdf, $object, $outputlangs);
-
-				if($volet->model == 6) {
-					$autorisationFile = $conf->formationhabilitation->dir_output.'/'.$object->element.'/Autorisation.pdf';
-					if (file_exists($autorisationFile)) {
+				if($volet->model == 7) {
+					$dirFiles = scandir($conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$object->ref);
+					$keyFile = array_keys(array_filter($dirFiles, function($value) {
+						return strpos($value, "Volet_Elect") !== false;
+					}));
+					$voletFile = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$object->ref.'/'.$dirFiles[$keyFile[0]];
+					if (file_exists($voletFile)) {
 						$pdf->AddPage();
 						$pagenb++;
-						$pagecount = $pdf->setSourceFile($autorisationFile);
+						$pagecount = $pdf->setSourceFile($voletFile);
 						$pdf->useTemplate($pdf->importPage(1));
+						unlink($voletFile);
 					}
 				}
+				else {
+					$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite); // Left, Top, Right
 
+					// New page
+					$pdf->AddPage();
+					$pagenb++;
+	
+					// Head
+					$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
+					
+					// Body
+					$pdf->SetFont('', '', $default_font_size - 1);
+					//$pdf->MultiCell(0, 3, ''); // Set interline to 3
+					$pdf->SetTextColor(0, 0, 0);
+	
+					if($volet->model == 1) {
+						$this->pagebodyidentity($pdf, $object, $outputlangs, $outputlangsbis);
+					}
+					elseif($volet->model == 2) {
+						$this->pagebodyformation($pdf, $object, $outputlangs, $outputlangsbis);
+					}
+					elseif($volet->model == 3) {
+						$this->pagebodyentreprise($pdf, $object, $outputlangs, $outputlangsbis);
+					}
+					elseif($volet->model == 4) {
+						$this->pagebodyhabilitation($pdf, $object, $outputlangs, $outputlangsbis, $pagenb);
+					}
+					elseif($volet->model == 5) {
+						$this->pagebodymedical($pdf, $object, $outputlangs, $outputlangsbis);
+					}
+					elseif($volet->model == 6) {
+						$this->pagebodyautorisation($pdf, $object, $outputlangs, $outputlangsbis);
+					}
+	
+					// Footer
+					$this->_pagefoot($pdf, $object, $outputlangs);
+	
+					if($volet->model == 6) {
+						$autorisationFile = $conf->formationhabilitation->dir_output.'/'.$object->element.'/Autorisation.pdf';
+						if (file_exists($autorisationFile)) {
+							$pdf->AddPage();
+							$pagenb++;
+							$pagecount = $pdf->setSourceFile($autorisationFile);
+							$pdf->useTemplate($pdf->importPage(1));
+						}
+					}
+				}
+				
 				$pdf->Close();
 
 				$pdf->Output($file, 'F');

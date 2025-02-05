@@ -126,7 +126,7 @@ class Volet extends CommonObject
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "default"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Actif", "9" => "Inactif"), "validate"=>"1",),
 		"typevolet" => array("type"=>"integer", "label"=>"TypeVolet", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Volet de formations", "2" => "Volet d'habilitations", "3" => "Volet d'autorisations", "4" => "Autre"),),
 		"nommage" => array("type"=>"varchar(128)", "label"=>"NommagePDF", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
-		"model" => array("type"=>"integer", "label"=>"ModelPDF", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Identité", "2" => "Formation", "3" => "Entreprise", "4" => "Habilitation", "5" => "Médical", "6" => "Autorisation"),),
+		"model" => array("type"=>"integer", "label"=>"ModelPDF", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "Identité", "2" => "Formation", "3" => "Entreprise", "4" => "Habilitation", "5" => "Médical", "6" => "Autorisation", "7" => "Habilitation électrique"),),
 		"longlabel" => array("type"=>"varchar(255)", "label"=>"LongLabel", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1",),
 	);
 	public $rowid;
