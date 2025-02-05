@@ -1,0 +1,2636 @@
+2024-09-09 15:42:32 - Début du script PHP
+2024-09-09 15:42:32 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-09 15:42:39 - Début du script PHP
+2024-09-09 15:42:39 - Données POST reçues : Array
+(
+)
+
+2024-09-09 15:42:39 - Réponse : {"status":"error","message":"Donn\u00e9es manquantes."}
+2024-09-09 16:11:05 - Début du script PHP
+2024-09-09 16:11:05 - Méthode non autorisée : GET
+2024-09-09 16:11:05 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-09 16:11:11 - Début du script PHP
+2024-09-09 16:11:11 - Données JSON reçues : {"data":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-09 16:11:11 - Données décodées : Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-09 16:11:11 - Réponse : {"status":"error","message":"Donn\u00e9es manquantes."}
+2024-09-09 16:17:08 - Début du script PHP
+2024-09-09 16:17:08 - Méthode non autorisée : GET
+2024-09-09 16:17:08 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-09 16:17:10 - Début du script PHP
+2024-09-09 16:17:10 - Données JSON reçues : {"data":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-09 16:17:10 - Données décodées : Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-09 16:17:10 - Réponse : {"status":"error","message":"Donn\u00e9es manquantes."}
+2024-09-09 16:29:59 - Début du script PHP
+2024-09-09 16:29:59 - Méthode non autorisée : GET
+2024-09-09 16:29:59 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-09 16:30:02 - Début du script PHP
+2024-09-09 16:30:02 - Données JSON reçues : {"data":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-09 16:30:02 - Données décodées : Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-09 16:30:02 - Réponse : {"status":"error","message":"Donn\u00e9es manquantes."}
+2024-09-09 16:34:32 - Début du script PHP
+2024-09-09 16:34:32 - Méthode non autorisée : GET
+2024-09-09 16:34:32 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-09 16:35:02 - Début du script PHP
+2024-09-09 16:35:02 - Données JSON reçues : {"data":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-09 16:35:02 - Données décodées : Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-09 16:35:02 - Réponse : {"status":"error","message":"Donn\u00e9es manquantes."}
+2024-09-10 09:22:31 - Début du script PHP
+2024-09-10 09:22:31 - Méthode non autorisée : GET
+2024-09-10 09:22:31 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 09:22:37 - Début du script PHP
+2024-09-10 09:22:37 - Méthode non autorisée : GET
+2024-09-10 09:22:37 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 09:22:40 - Début du script PHP
+2024-09-10 09:22:40 - Données JSON reçues : {"data":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 09:22:40 - Données décodées : Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 09:22:40 - Réponse : {"status":"error","message":"Donn\u00e9es manquantes."}
+2024-09-10 09:22:49 - Début du script PHP
+2024-09-10 09:22:49 - Données JSON reçues : {"data":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 09:22:49 - Données décodées : Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 09:22:49 - Réponse : {"status":"error","message":"Donn\u00e9es manquantes."}
+2024-09-10 09:40:54 - Début du script PHP
+2024-09-10 09:40:54 - Méthode non autorisée : GET
+2024-09-10 09:40:54 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 09:40:56 - Début du script PHP
+2024-09-10 09:40:56 - Données JSON reçues : {"data":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 09:40:56 - Données décodées : Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 09:40:56 - Réponse : {"status":"error","message":"Donn\u00e9es manquantes."}
+2024-09-10 10:13:28 - Début du script PHP
+2024-09-10 10:13:28 - Méthode non autorisée : GET
+2024-09-10 10:13:28 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:27:19 - Début du script PHP
+2024-09-10 10:27:19 - Méthode non autorisée : GET
+2024-09-10 10:27:19 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:27:28 - Début du script PHP
+2024-09-10 10:27:28 - Méthode non autorisée : GET
+2024-09-10 10:27:28 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:29:08 - Début du script PHP
+2024-09-10 10:29:08 - Méthode non autorisée : GET
+2024-09-10 10:29:08 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:29:15 - Début du script PHP
+2024-09-10 10:29:15 - Méthode non autorisée : GET
+2024-09-10 10:29:15 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:29:21 - Début du script PHP
+2024-09-10 10:29:21 - Méthode non autorisée : GET
+2024-09-10 10:29:21 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:33:28 - Début du script PHP
+2024-09-10 10:33:28 - Méthode non autorisée : GET
+2024-09-10 10:33:28 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:33:35 - Début du script PHP
+2024-09-10 10:33:35 - Méthode non autorisée : GET
+2024-09-10 10:33:35 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:36:41 - Début du script PHP
+2024-09-10 10:36:41 - Méthode non autorisée : GET
+2024-09-10 10:36:41 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:39:25 - Début du script PHP
+2024-09-10 10:39:25 - Méthode non autorisée : GET
+2024-09-10 10:39:25 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:41:24 - Début du script PHP
+2024-09-10 10:41:24 - Méthode non autorisée : GET
+2024-09-10 10:41:24 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:41:41 - Début du script PHP
+2024-09-10 10:41:41 - Méthode non autorisée : GET
+2024-09-10 10:41:41 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:44:05 - Début du script PHP
+2024-09-10 10:44:05 - Méthode non autorisée : GET
+2024-09-10 10:44:05 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:48:39 - Début du script PHP
+2024-09-10 10:48:39 - Méthode non autorisée : GET
+2024-09-10 10:48:39 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:51:00 - Début du script PHP
+2024-09-10 10:51:00 - Méthode non autorisée : GET
+2024-09-10 10:51:00 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:51:04 - Début du script PHP
+2024-09-10 10:51:04 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 10:51:04 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 10:51:04 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 10:51:04 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 10:51:04 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 10:51:04 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 10:52:45 - Début du script PHP
+2024-09-10 10:52:45 - Méthode non autorisée : GET
+2024-09-10 10:52:45 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:52:51 - Début du script PHP
+2024-09-10 10:52:51 - Méthode non autorisée : GET
+2024-09-10 10:52:51 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:52:59 - Début du script PHP
+2024-09-10 10:52:59 - Méthode non autorisée : GET
+2024-09-10 10:52:59 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:53:36 - Début du script PHP
+2024-09-10 10:53:36 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 10:53:36 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 10:53:36 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 10:53:36 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 10:53:36 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 10:53:36 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 10:54:49 - Début du script PHP
+2024-09-10 10:54:49 - Méthode non autorisée : GET
+2024-09-10 10:54:49 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 10:54:53 - Début du script PHP
+2024-09-10 10:54:53 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 10:54:53 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 10:54:53 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 10:54:53 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 10:54:53 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 10:54:53 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 10:58:40 - Début du script PHP
+2024-09-10 10:58:40 - Méthode non autorisée : GET
+2024-09-10 10:58:40 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 11:04:25 - Début du script PHP
+2024-09-10 11:04:25 - Méthode non autorisée : GET
+2024-09-10 11:04:25 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 11:04:28 - Début du script PHP
+2024-09-10 11:04:28 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 11:04:28 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 11:04:28 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:04:28 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:04:28 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:04:28 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 11:06:36 - Début du script PHP
+2024-09-10 11:06:36 - Méthode non autorisée : GET
+2024-09-10 11:06:36 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 11:06:39 - Début du script PHP
+2024-09-10 11:06:39 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 11:06:39 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 11:06:39 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:06:39 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:06:39 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:06:39 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 11:30:41 - Début du script PHP
+2024-09-10 11:30:41 - Méthode non autorisée : GET
+2024-09-10 11:30:41 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 11:42:45 - Début du script PHP
+2024-09-10 11:42:45 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 11:42:45 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 11:42:45 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:42:45 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:42:45 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:42:45 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 11:49:38 - Début du script PHP
+2024-09-10 11:49:38 - Méthode non autorisée : GET
+2024-09-10 11:49:38 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 11:49:55 - Début du script PHP
+2024-09-10 11:49:55 - Méthode non autorisée : GET
+2024-09-10 11:49:55 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 11:50:05 - Début du script PHP
+2024-09-10 11:50:05 - Méthode non autorisée : GET
+2024-09-10 11:50:05 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 11:50:07 - Début du script PHP
+2024-09-10 11:50:07 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 11:50:07 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 11:50:07 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:50:07 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:50:07 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:50:07 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 11:52:55 - Début du script PHP
+2024-09-10 11:52:55 - Méthode non autorisée : GET
+2024-09-10 11:52:55 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 11:53:39 - Début du script PHP
+2024-09-10 11:53:39 - Méthode non autorisée : GET
+2024-09-10 11:53:39 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 11:55:02 - Début du script PHP
+2024-09-10 11:55:02 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 11:55:02 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 11:55:02 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:55:02 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:55:02 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 11:55:02 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 12:04:35 - Début du script PHP
+2024-09-10 12:04:35 - Méthode non autorisée : GET
+2024-09-10 12:04:35 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 12:04:44 - Début du script PHP
+2024-09-10 12:04:44 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 12:04:44 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 12:04:44 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:04:44 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:04:44 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:04:44 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 12:07:50 - Début du script PHP
+2024-09-10 12:07:50 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 12:07:50 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 12:07:50 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:07:50 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:07:50 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:07:50 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 12:07:55 - Début du script PHP
+2024-09-10 12:07:55 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 12:07:55 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 12:07:55 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:07:55 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:07:55 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:07:55 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 12:08:41 - Début du script PHP
+2024-09-10 12:08:41 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"Nouvelle Carte","name":"coucou","habilitations":"dadaad","contract":"dadadad","items":[]},{"x":"3","y":"4","role":"Nouvelle Liste","name":null,"habilitations":null,"contract":null,"items":[{"name":"Christian DERANCY - Responsable suivi de la commande"},{"name":"Sandrine LEGAY - Responsable suivi de la commande"},{"name":"Nicolas DEMURE - Contact client suivi commande"},{"name":"Louis Faure - Chef de projet"},{"name":"Louis Faure - Intervenant"},{"name":"Sylvie VERCHERE - Responsable"},{"name":"Louis Faure - Responsable d'affaire"},{"name":"Louis Faure - Responsable QSSE référent"},{"name":"Louis Faure - PCR référent"},{"name":"Louis Faure - Délégataire sécurité"}]}]}
+2024-09-10 12:08:41 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [3] => Array
+                (
+                    [role] => Nouvelle Carte
+                    [name] => coucou
+                    [habilitations] => dadaad
+                    [contract] => dadadad
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [4] => Array
+                (
+                    [x] => 3
+                    [y] => 4
+                    [role] => Nouvelle Liste
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [name] => Christian DERANCY - Responsable suivi de la commande
+                                )
+
+                            [1] => Array
+                                (
+                                    [name] => Sandrine LEGAY - Responsable suivi de la commande
+                                )
+
+                            [2] => Array
+                                (
+                                    [name] => Nicolas DEMURE - Contact client suivi commande
+                                )
+
+                            [3] => Array
+                                (
+                                    [name] => Louis Faure - Chef de projet
+                                )
+
+                            [4] => Array
+                                (
+                                    [name] => Louis Faure - Intervenant
+                                )
+
+                            [5] => Array
+                                (
+                                    [name] => Sylvie VERCHERE - Responsable
+                                )
+
+                            [6] => Array
+                                (
+                                    [name] => Louis Faure - Responsable d'affaire
+                                )
+
+                            [7] => Array
+                                (
+                                    [name] => Louis Faure - Responsable QSSE référent
+                                )
+
+                            [8] => Array
+                                (
+                                    [name] => Louis Faure - PCR référent
+                                )
+
+                            [9] => Array
+                                (
+                                    [name] => Louis Faure - Délégataire sécurité
+                                )
+
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 12:08:41 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:08:41 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:08:41 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:08:41 - Carte - X: , Y: , Role: Nouvelle Carte, Nom: coucou, Habilitations: dadaad, Contrat: dadadad
+2024-09-10 12:08:41 - Carte - X: 3, Y: 4, Role: Nouvelle Liste, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:08:41 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 12:10:36 - Début du script PHP
+2024-09-10 12:10:36 - Méthode non autorisée : GET
+2024-09-10 12:10:36 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 12:10:50 - Début du script PHP
+2024-09-10 12:10:50 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"x":"1","y":"3","role":"Nouvelle Liste","name":null,"habilitations":null,"contract":null,"items":[{"name":"Christian DERANCY - Responsable suivi de la commande"},{"name":"Sandrine LEGAY - Responsable suivi de la commande"},{"name":"Nicolas DEMURE - Contact client suivi commande"},{"name":"Sylvie VERCHERE - Responsable"},{"name":"Louis Faure - Responsable d'affaire"},{"name":"Louis Faure - Responsable QSSE référent"},{"name":"Louis Faure - PCR référent"},{"name":"Louis Faure - Délégataire sécurité"}]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"Nouvelle Carte","name":"dadad","habilitations":"dada","contract":"dadada","items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 12:10:50 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [x] => 1
+                    [y] => 3
+                    [role] => Nouvelle Liste
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [name] => Christian DERANCY - Responsable suivi de la commande
+                                )
+
+                            [1] => Array
+                                (
+                                    [name] => Sandrine LEGAY - Responsable suivi de la commande
+                                )
+
+                            [2] => Array
+                                (
+                                    [name] => Nicolas DEMURE - Contact client suivi commande
+                                )
+
+                            [3] => Array
+                                (
+                                    [name] => Sylvie VERCHERE - Responsable
+                                )
+
+                            [4] => Array
+                                (
+                                    [name] => Louis Faure - Responsable d'affaire
+                                )
+
+                            [5] => Array
+                                (
+                                    [name] => Louis Faure - Responsable QSSE référent
+                                )
+
+                            [6] => Array
+                                (
+                                    [name] => Louis Faure - PCR référent
+                                )
+
+                            [7] => Array
+                                (
+                                    [name] => Louis Faure - Délégataire sécurité
+                                )
+
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [3] => Array
+                (
+                    [role] => Nouvelle Carte
+                    [name] => dadad
+                    [habilitations] => dada
+                    [contract] => dadada
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [4] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 12:10:50 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:10:50 - Carte - X: 1, Y: 3, Role: Nouvelle Liste, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:10:50 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:10:50 - Carte - X: , Y: , Role: Nouvelle Carte, Nom: dadad, Habilitations: dada, Contrat: dadada
+2024-09-10 12:10:50 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:10:50 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 12:14:06 - Début du script PHP
+2024-09-10 12:14:06 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"x":"1","y":"3","role":"Nouvelle Liste","name":null,"habilitations":null,"contract":null,"items":[{"name":"Christian DERANCY - Responsable suivi de la commande"},{"name":"Sandrine LEGAY - Responsable suivi de la commande"},{"name":"Nicolas DEMURE - Contact client suivi commande"},{"name":"Sylvie VERCHERE - Responsable"},{"name":"Louis Faure - Responsable d'affaire"},{"name":"Louis Faure - Responsable QSSE référent"},{"name":"Louis Faure - PCR référent"},{"name":"Louis Faure - Délégataire sécurité"}]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"Nouvelle Carte","name":"dadad","habilitations":"dada","contract":"dadada","items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 12:14:06 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [x] => 1
+                    [y] => 3
+                    [role] => Nouvelle Liste
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [name] => Christian DERANCY - Responsable suivi de la commande
+                                )
+
+                            [1] => Array
+                                (
+                                    [name] => Sandrine LEGAY - Responsable suivi de la commande
+                                )
+
+                            [2] => Array
+                                (
+                                    [name] => Nicolas DEMURE - Contact client suivi commande
+                                )
+
+                            [3] => Array
+                                (
+                                    [name] => Sylvie VERCHERE - Responsable
+                                )
+
+                            [4] => Array
+                                (
+                                    [name] => Louis Faure - Responsable d'affaire
+                                )
+
+                            [5] => Array
+                                (
+                                    [name] => Louis Faure - Responsable QSSE référent
+                                )
+
+                            [6] => Array
+                                (
+                                    [name] => Louis Faure - PCR référent
+                                )
+
+                            [7] => Array
+                                (
+                                    [name] => Louis Faure - Délégataire sécurité
+                                )
+
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [3] => Array
+                (
+                    [role] => Nouvelle Carte
+                    [name] => dadad
+                    [habilitations] => dada
+                    [contract] => dadada
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [4] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 12:14:06 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:14:06 - Carte - X: 1, Y: 3, Role: Nouvelle Liste, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:14:06 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:14:06 - Carte - X: , Y: , Role: Nouvelle Carte, Nom: dadad, Habilitations: dada, Contrat: dadada
+2024-09-10 12:14:06 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:14:06 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 12:24:19 - Début du script PHP
+2024-09-10 12:24:19 - Méthode non autorisée : GET
+2024-09-10 12:24:19 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 12:24:46 - Début du script PHP
+2024-09-10 12:24:46 - Données JSON reçues : {"cartes":[{"role":"ResponsableAffaire","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"ResponsableQ3SE","name":null,"habilitations":null,"contract":null,"items":[]},{"role":"PCRReferent","name":null,"habilitations":null,"contract":null,"items":[]}]}
+2024-09-10 12:24:46 - Données décodées : Array
+(
+    [cartes] => Array
+        (
+            [0] => Array
+                (
+                    [role] => ResponsableAffaire
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [1] => Array
+                (
+                    [role] => ResponsableQ3SE
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+            [2] => Array
+                (
+                    [role] => PCRReferent
+                    [name] => 
+                    [habilitations] => 
+                    [contract] => 
+                    [items] => Array
+                        (
+                        )
+
+                )
+
+        )
+
+)
+
+2024-09-10 12:24:46 - Carte - X: , Y: , Role: ResponsableAffaire, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:24:46 - Carte - X: , Y: , Role: ResponsableQ3SE, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:24:46 - Carte - X: , Y: , Role: PCRReferent, Nom: , Habilitations: , Contrat: 
+2024-09-10 12:24:46 - Réponse : {"status":"success","message":"Les donn\u00e9es ont \u00e9t\u00e9 trait\u00e9es avec succ\u00e8s."}
+2024-09-10 12:24:51 - Début du script PHP
+2024-09-10 12:24:51 - Méthode non autorisée : GET
+2024-09-10 12:24:51 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 12:25:22 - Début du script PHP
+2024-09-10 12:25:22 - Méthode non autorisée : POST
+2024-09-10 12:25:22 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 12:25:34 - Début du script PHP
+2024-09-10 12:25:34 - Données JSON reçues : 
+2024-09-10 12:25:34 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 12:25:35 - Début du script PHP
+2024-09-10 12:25:35 - Données JSON reçues : 
+2024-09-10 12:25:35 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 12:25:37 - Début du script PHP
+2024-09-10 12:25:37 - Méthode non autorisée : POST
+2024-09-10 12:25:37 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 12:25:53 - Début du script PHP
+2024-09-10 12:25:53 - Méthode non autorisée : POST
+2024-09-10 12:25:53 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-10 14:12:17 - Début du script PHP
+2024-09-10 14:12:17 - Données JSON reçues : 
+2024-09-10 14:12:17 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:13:30 - Début du script PHP
+2024-09-10 14:13:30 - Données JSON reçues : 
+2024-09-10 14:13:30 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:34:50 - Début du script PHP
+2024-09-10 14:34:50 - Données JSON reçues : 
+2024-09-10 14:34:50 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:36:03 - Début du script PHP
+2024-09-10 14:36:03 - Données JSON reçues : 
+2024-09-10 14:36:03 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:36:49 - Début du script PHP
+2024-09-10 14:36:49 - Données JSON reçues : 
+2024-09-10 14:36:49 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:36:57 - Début du script PHP
+2024-09-10 14:36:57 - Données JSON reçues : 
+2024-09-10 14:36:57 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:38:09 - Début du script PHP
+2024-09-10 14:38:09 - Données JSON reçues : 
+2024-09-10 14:38:09 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:43:35 - Début du script PHP
+2024-09-10 14:43:35 - Données JSON reçues : 
+2024-09-10 14:43:35 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:44:48 - Début du script PHP
+2024-09-10 14:44:48 - Données JSON reçues : 
+2024-09-10 14:44:48 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:45:03 - Début du script PHP
+2024-09-10 14:45:03 - Données JSON reçues : 
+2024-09-10 14:45:03 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:45:22 - Début du script PHP
+2024-09-10 14:45:22 - Données JSON reçues : 
+2024-09-10 14:45:22 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:45:32 - Début du script PHP
+2024-09-10 14:45:32 - Données JSON reçues : 
+2024-09-10 14:45:32 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:48:06 - Début du script PHP
+2024-09-10 14:48:06 - Données JSON reçues : 
+2024-09-10 14:48:06 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:48:22 - Début du script PHP
+2024-09-10 14:48:22 - Données JSON reçues : 
+2024-09-10 14:48:22 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:49:15 - Début du script PHP
+2024-09-10 14:49:15 - Données JSON reçues : 
+2024-09-10 14:49:15 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:49:37 - Début du script PHP
+2024-09-10 14:49:37 - Données JSON reçues : 
+2024-09-10 14:49:37 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:52:48 - Début du script PHP
+2024-09-10 14:52:48 - Données JSON reçues : 
+2024-09-10 14:52:48 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 14:54:21 - Début du script PHP
+2024-09-10 14:54:21 - Données JSON reçues : 
+2024-09-10 14:54:21 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 15:01:24 - Début du script PHP
+2024-09-10 15:01:24 - Données JSON reçues : 
+2024-09-10 15:01:24 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 15:08:25 - Début du script PHP
+2024-09-10 15:08:25 - Données JSON reçues : 
+2024-09-10 15:08:25 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 15:13:15 - Début du script PHP
+2024-09-10 15:13:15 - Données JSON reçues : 
+2024-09-10 15:13:15 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 15:14:10 - Début du script PHP
+2024-09-10 15:14:10 - Données JSON reçues : 
+2024-09-10 15:14:10 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 15:14:30 - Début du script PHP
+2024-09-10 15:14:30 - Données JSON reçues : 
+2024-09-10 15:14:30 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 15:32:34 - Début du script PHP
+2024-09-10 15:32:34 - Données JSON reçues : 
+2024-09-10 15:32:34 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 15:49:46 - Début du script PHP
+2024-09-10 15:49:46 - Données JSON reçues : 
+2024-09-10 15:49:46 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 16:06:01 - Début du script PHP
+2024-09-10 16:06:01 - Données JSON reçues : 
+2024-09-10 16:06:01 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 16:11:00 - Début du script PHP
+2024-09-10 16:11:00 - Données JSON reçues : 
+2024-09-10 16:11:00 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 16:11:35 - Début du script PHP
+2024-09-10 16:11:35 - Données JSON reçues : 
+2024-09-10 16:11:35 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 16:12:28 - Début du script PHP
+2024-09-10 16:12:28 - Données JSON reçues : 
+2024-09-10 16:12:28 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 16:12:54 - Début du script PHP
+2024-09-10 16:12:54 - Données JSON reçues : 
+2024-09-10 16:12:54 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 16:13:20 - Début du script PHP
+2024-09-10 16:13:20 - Données JSON reçues : 
+2024-09-10 16:13:20 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 16:13:42 - Début du script PHP
+2024-09-10 16:13:42 - Données JSON reçues : 
+2024-09-10 16:13:42 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 16:14:07 - Début du script PHP
+2024-09-10 16:14:07 - Données JSON reçues : 
+2024-09-10 16:14:07 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-10 16:18:51 - Début du script PHP
+2024-09-10 16:18:51 - Méthode non autorisée : POST
+2024-09-10 16:18:51 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-09-11 09:20:12 - Début du script PHP
+2024-09-11 09:20:12 - Données JSON reçues : 
+2024-09-11 09:20:12 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-11 09:40:08 - Début du script PHP
+2024-09-11 09:40:08 - Données JSON reçues : 
+2024-09-11 09:40:08 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-11 09:59:21 - Début du script PHP
+2024-09-11 09:59:21 - Données JSON reçues : 
+2024-09-11 09:59:21 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-11 10:26:21 - Début du script PHP
+2024-09-11 10:26:21 - Données JSON reçues : 
+2024-09-11 10:26:21 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-11 14:37:49 - Début du script PHP
+2024-09-11 14:37:49 - Données JSON reçues : 
+2024-09-11 14:37:49 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-11 14:37:54 - Début du script PHP
+2024-09-11 14:37:54 - Données JSON reçues : 
+2024-09-11 14:37:54 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-12 09:23:15 - Début du script PHP
+2024-09-12 09:23:15 - Données JSON reçues : 
+2024-09-12 09:23:15 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-19 10:22:58 - Début du script PHP
+2024-09-19 10:22:58 - Données JSON reçues : 
+2024-09-19 10:22:58 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-20 12:11:16 - Début du script PHP
+2024-09-20 12:11:16 - Données JSON reçues : 
+2024-09-20 12:11:16 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-20 12:14:21 - Début du script PHP
+2024-09-20 12:14:21 - Données JSON reçues : 
+2024-09-20 12:14:21 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-20 12:19:41 - Début du script PHP
+2024-09-20 12:19:41 - Données JSON reçues : 
+2024-09-20 12:19:41 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-09-20 15:46:39 - Début du script PHP
+2024-09-20 15:46:39 - Données JSON reçues : 
+2024-09-20 15:46:39 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:04:24 - Début du script PHP
+2024-10-03 09:04:24 - Données JSON reçues : 
+2024-10-03 09:04:24 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:05:45 - Début du script PHP
+2024-10-03 09:05:45 - Données JSON reçues : 
+2024-10-03 09:05:45 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:09:24 - Début du script PHP
+2024-10-03 09:09:24 - Données JSON reçues : 
+2024-10-03 09:09:24 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:13:18 - Début du script PHP
+2024-10-03 09:13:18 - Données JSON reçues : 
+2024-10-03 09:13:18 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:18:49 - Début du script PHP
+2024-10-03 09:18:49 - Données JSON reçues : 
+2024-10-03 09:18:49 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:20:09 - Début du script PHP
+2024-10-03 09:20:09 - Données JSON reçues : 
+2024-10-03 09:20:09 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:21:39 - Début du script PHP
+2024-10-03 09:21:39 - Données JSON reçues : 
+2024-10-03 09:21:39 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:23:08 - Début du script PHP
+2024-10-03 09:23:08 - Données JSON reçues : 
+2024-10-03 09:23:08 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:33:36 - Début du script PHP
+2024-10-03 09:33:36 - Données JSON reçues : 
+2024-10-03 09:33:36 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:34:09 - Début du script PHP
+2024-10-03 09:34:09 - Données JSON reçues : 
+2024-10-03 09:34:09 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:34:54 - Début du script PHP
+2024-10-03 09:34:54 - Données JSON reçues : 
+2024-10-03 09:34:54 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:35:59 - Début du script PHP
+2024-10-03 09:35:59 - Données JSON reçues : 
+2024-10-03 09:35:59 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:39:51 - Début du script PHP
+2024-10-03 09:39:51 - Données JSON reçues : 
+2024-10-03 09:39:51 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:41:03 - Début du script PHP
+2024-10-03 09:41:04 - Début du script PHP
+2024-10-03 09:41:51 - Début du script PHP
+2024-10-03 09:41:51 - Données JSON reçues : 
+2024-10-03 09:41:51 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:42:16 - Début du script PHP
+2024-10-03 09:42:16 - Données JSON reçues : 
+2024-10-03 09:42:16 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:43:18 - Début du script PHP
+2024-10-03 09:43:18 - Données JSON reçues : 
+2024-10-03 09:43:18 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:43:35 - Début du script PHP
+2024-10-03 09:43:35 - Données JSON reçues : 
+2024-10-03 09:43:35 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:45:50 - Début du script PHP
+2024-10-03 09:45:50 - Données JSON reçues : 
+2024-10-03 09:45:50 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:46:43 - Début du script PHP
+2024-10-03 09:46:43 - Données JSON reçues : 
+2024-10-03 09:46:43 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:48:20 - Début du script PHP
+2024-10-03 09:48:20 - Données JSON reçues : 
+2024-10-03 09:48:20 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:49:25 - Début du script PHP
+2024-10-03 09:49:25 - Données JSON reçues : 
+2024-10-03 09:49:25 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:49:54 - Début du script PHP
+2024-10-03 09:49:54 - Données JSON reçues : 
+2024-10-03 09:49:54 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:51:16 - Début du script PHP
+2024-10-03 09:51:16 - Réponse : null
+2024-10-03 09:51:44 - Début du script PHP
+2024-10-03 09:55:45 - Début du script PHP
+2024-10-03 09:55:45 - Données JSON reçues : 
+2024-10-03 09:55:45 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:55:56 - Début du script PHP
+2024-10-03 09:55:56 - Données JSON reçues : 
+2024-10-03 09:55:56 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:56:28 - Début du script PHP
+2024-10-03 09:56:28 - Données JSON reçues : 
+2024-10-03 09:56:28 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 09:58:20 - Début du script PHP
+2024-10-03 09:58:20 - Méthode non autorisée : GET
+2024-10-03 09:58:20 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-10-03 09:58:21 - Début du script PHP
+2024-10-03 09:58:21 - Méthode non autorisée : GET
+2024-10-03 09:58:21 - Réponse : {"status":"error","message":"M\u00e9thode non autoris\u00e9e."}
+2024-10-03 10:23:29 - Début du script PHP
+2024-10-03 10:24:04 - Début du script PHP
+2024-10-03 10:25:00 - Début du script PHP
+2024-10-03 10:26:02 - Début du script PHP
+2024-10-03 10:26:41 - Début du script PHP
+2024-10-03 10:33:37 - Début du script PHP
+2024-10-03 10:33:37 - Données JSON reçues : 
+2024-10-03 10:33:37 - Réponse : {"status":"error","message":"Erreur de d\u00e9codage JSON."}
+2024-10-03 10:33:59 - Début du script PHP
+2024-10-03 10:33:59 - Réponse : null
+2024-10-03 10:34:18 - Début du script PHP
+2024-10-03 10:34:18 - Réponse : null
+2024-10-03 10:37:43 - Début du script PHP
+2024-10-03 10:37:43 - Réponse : null
+2024-10-03 10:37:53 - Début du script PHP
+2024-10-03 10:37:53 - Réponse : null
+2024-10-03 10:38:17 - Début du script PHP
+2024-10-03 10:38:17 - Réponse : null
+2024-10-03 10:38:34 - Début du script PHP
+2024-10-03 10:38:34 - Réponse : null
+2024-10-03 10:39:22 - Début du script PHP
+2024-10-03 10:39:22 - Réponse : null
+2024-10-03 10:39:37 - Début du script PHP
+2024-10-03 10:39:37 - Réponse : null
+2024-10-03 10:53:25 - Début du script PHP
+2024-10-03 10:53:25 - Réponse : null
+2024-10-03 10:53:25 - Début du script PHP
+2024-10-03 10:53:25 - Réponse : null
+2024-10-03 10:53:25 - Début du script PHP
+2024-10-03 10:53:25 - Réponse : null
+2024-10-03 10:53:25 - Début du script PHP
+2024-10-03 10:53:25 - Réponse : null
+2024-10-03 10:53:26 - Début du script PHP
+2024-10-03 10:53:26 - Réponse : null
+2024-10-03 11:12:46 - Début du script PHP
+2024-10-03 11:12:46 - Réponse : null
+2024-10-03 11:13:10 - Début du script PHP
+2024-10-03 11:13:10 - Réponse : null
+2024-10-03 11:13:17 - Début du script PHP
+2024-10-03 11:13:17 - Réponse : null
+2024-10-04 14:24:25 - Début du script PHP
+2024-10-04 14:24:25 - Réponse : null
+2024-10-04 14:40:30 - Début du script PHP
+2024-10-04 14:40:30 - Réponse : null
+2024-10-04 15:07:42 - Début du script PHP
+2024-10-04 15:07:42 - Réponse : null
+2024-10-04 15:41:28 - Début du script PHP
+2024-10-04 15:41:28 - Réponse : null
+2024-10-04 15:53:23 - Début du script PHP
+2024-10-04 15:53:23 - Réponse : null
+2024-10-04 15:56:25 - Début du script PHP
+2024-10-04 15:56:25 - Réponse : null
+2024-10-07 10:49:28 - Début du script PHP
+2024-10-07 10:49:28 - Réponse : null
+2024-10-07 10:53:56 - Début du script PHP
+2024-10-07 10:53:56 - Réponse : null
+2024-10-07 10:54:27 - Début du script PHP
+2024-10-07 10:54:27 - Réponse : null
+2024-10-07 10:57:46 - Début du script PHP
+2024-10-07 10:57:46 - Réponse : null
+2024-10-07 10:57:54 - Début du script PHP
+2024-10-07 10:57:54 - Réponse : null
+2024-10-07 11:00:44 - Début du script PHP
+2024-10-07 11:00:44 - Réponse : null
+2024-10-07 11:00:56 - Début du script PHP
+2024-10-07 11:00:56 - Réponse : null
+2024-10-07 11:14:54 - Début du script PHP
+2024-10-07 11:14:54 - Réponse : null
+2024-10-07 11:15:10 - Début du script PHP
+2024-10-07 11:15:10 - Réponse : null
+2024-10-07 11:15:20 - Début du script PHP
+2024-10-07 11:15:20 - Réponse : null
+2024-10-07 11:15:28 - Début du script PHP
+2024-10-07 11:15:28 - Réponse : null
+2024-10-07 11:16:04 - Début du script PHP
+2024-10-07 11:16:04 - Réponse : null
+2024-10-07 11:24:12 - Début du script PHP
+2024-10-07 11:24:12 - Réponse : null
+2024-10-07 11:24:47 - Début du script PHP
+2024-10-07 11:24:47 - Réponse : null
+2024-10-07 11:25:42 - Début du script PHP
+2024-10-07 11:25:42 - Réponse : null
+2024-10-07 11:26:26 - Début du script PHP
+2024-10-07 11:26:26 - Réponse : null
+2024-10-07 11:26:53 - Début du script PHP
+2024-10-07 11:26:53 - Réponse : null
+2024-10-07 11:28:07 - Début du script PHP
+2024-10-07 11:28:07 - Réponse : null
+2024-10-07 11:28:31 - Début du script PHP
+2024-10-07 11:28:31 - Réponse : null
+2024-10-07 11:29:01 - Début du script PHP
+2024-10-07 11:29:01 - Réponse : null
+2024-10-07 11:29:31 - Début du script PHP
+2024-10-07 11:29:31 - Réponse : null
+2024-10-07 11:35:01 - Début du script PHP
+2024-10-07 11:35:01 - Réponse : null
+2024-10-07 11:35:11 - Début du script PHP
+2024-10-07 11:35:11 - Réponse : null
+2024-10-07 11:37:30 - Début du script PHP
+2024-10-07 11:37:30 - Réponse : null
+2024-10-07 11:37:41 - Début du script PHP
+2024-10-07 11:37:41 - Réponse : null
+2024-10-07 11:40:27 - Début du script PHP
+2024-10-07 11:40:27 - Réponse : null
+2024-10-07 11:40:39 - Début du script PHP
+2024-10-07 11:40:39 - Réponse : null
+2024-10-07 11:46:45 - Début du script PHP
+2024-10-07 11:46:45 - Réponse : null
+2024-10-07 11:47:00 - Début du script PHP
+2024-10-07 11:47:00 - Réponse : null
+2024-10-07 11:47:11 - Début du script PHP
+2024-10-07 11:47:11 - Réponse : null
+2024-10-07 11:47:58 - Début du script PHP
+2024-10-07 11:47:58 - Réponse : null
+2024-10-07 11:48:05 - Début du script PHP
+2024-10-07 11:48:05 - Réponse : null
+2024-10-07 11:48:16 - Début du script PHP
+2024-10-07 11:48:16 - Réponse : null
+2024-10-07 11:48:26 - Début du script PHP
+2024-10-07 11:48:26 - Réponse : null
+2024-10-07 11:48:33 - Début du script PHP
+2024-10-07 11:48:33 - Réponse : null
+2024-10-07 11:48:50 - Début du script PHP
+2024-10-07 11:48:50 - Réponse : null
+2024-10-07 11:48:55 - Début du script PHP
+2024-10-07 11:48:55 - Réponse : null
+2024-10-07 11:49:03 - Début du script PHP
+2024-10-07 11:49:03 - Réponse : null
+2024-10-07 11:49:15 - Début du script PHP
+2024-10-07 11:49:15 - Réponse : null
+2024-10-07 11:49:22 - Début du script PHP
+2024-10-07 11:49:22 - Réponse : null
+2024-10-07 12:02:15 - Début du script PHP
+2024-10-07 12:02:15 - Réponse : null
+2024-10-07 12:08:40 - Début du script PHP
+2024-10-07 12:08:40 - Réponse : null
+2024-10-07 12:13:39 - Début du script PHP
+2024-10-07 12:13:39 - Réponse : null
+2024-10-07 13:43:23 - Début du script PHP
+2024-10-07 13:43:23 - Réponse : null
+2024-10-07 13:44:59 - Début du script PHP
+2024-10-07 13:44:59 - Réponse : null
+2024-10-07 13:46:31 - Début du script PHP
+2024-10-07 13:46:31 - Réponse : null
+2024-10-07 14:02:48 - Début du script PHP
+2024-10-07 14:02:48 - Réponse : null
+2024-10-07 14:03:15 - Début du script PHP
+2024-10-07 14:03:15 - Réponse : null
+2024-10-07 14:03:50 - Début du script PHP
+2024-10-07 14:03:50 - Réponse : null
+2024-10-07 14:04:20 - Début du script PHP
+2024-10-07 14:04:20 - Réponse : null
+2024-10-07 14:06:43 - Début du script PHP
+2024-10-07 14:06:43 - Réponse : null
+2024-10-07 14:09:13 - Début du script PHP
+2024-10-07 14:09:13 - Réponse : null
+2024-10-07 14:09:41 - Début du script PHP
+2024-10-07 14:09:41 - Réponse : null
+2024-10-07 14:10:00 - Début du script PHP
+2024-10-07 14:10:00 - Réponse : null
+2024-10-07 14:10:26 - Début du script PHP
+2024-10-07 14:10:26 - Réponse : null
+2024-10-07 14:10:53 - Début du script PHP
+2024-10-07 14:10:53 - Réponse : null
+2024-10-07 14:13:54 - Début du script PHP
+2024-10-07 14:13:54 - Réponse : null
+2024-10-07 14:15:08 - Début du script PHP
+2024-10-07 14:15:08 - Réponse : null
+2024-10-07 14:15:11 - Début du script PHP
+2024-10-07 14:15:11 - Réponse : null
+2024-10-07 14:18:04 - Début du script PHP
+2024-10-07 14:18:04 - Réponse : null
+2024-10-07 14:19:15 - Début du script PHP
+2024-10-07 14:19:15 - Réponse : null
+2024-10-07 14:24:02 - Début du script PHP
+2024-10-07 14:24:02 - Réponse : null
+2024-10-07 14:30:35 - Début du script PHP
+2024-10-07 14:30:35 - Réponse : null
+2024-10-07 14:33:19 - Début du script PHP
+2024-10-07 14:33:19 - Réponse : null
+2024-10-07 14:33:28 - Début du script PHP
+2024-10-07 14:33:28 - Réponse : null
+2024-10-07 14:35:32 - Début du script PHP
+2024-10-07 14:35:32 - Réponse : null
+2024-10-07 14:45:00 - Début du script PHP
+2024-10-07 14:45:00 - Réponse : null
+2024-10-07 14:47:18 - Début du script PHP
+2024-10-07 14:47:18 - Réponse : null
+2024-10-07 14:48:33 - Début du script PHP
+2024-10-07 14:48:33 - Réponse : null
+2024-10-07 14:51:10 - Début du script PHP
+2024-10-07 14:51:10 - Réponse : null
+2024-10-07 14:52:12 - Début du script PHP
+2024-10-07 14:52:12 - Réponse : null
+2024-10-07 14:57:03 - Début du script PHP
+2024-10-07 14:57:03 - Réponse : null
+2024-10-07 14:57:36 - Début du script PHP
+2024-10-07 14:57:36 - Réponse : null
+2024-10-07 14:57:56 - Début du script PHP
+2024-10-07 14:57:56 - Réponse : null
+2024-10-07 14:58:05 - Début du script PHP
+2024-10-07 14:58:05 - Réponse : null
+2024-10-07 15:08:01 - Début du script PHP
+2024-10-07 15:08:01 - Réponse : null
+2024-10-07 15:14:18 - Début du script PHP
+2024-10-07 15:14:18 - Réponse : null
+2024-10-07 15:14:36 - Début du script PHP
+2024-10-07 15:14:37 - Réponse : null
+2024-10-07 15:15:59 - Début du script PHP
+2024-10-07 15:15:59 - Réponse : null
+2024-10-07 15:38:49 - Début du script PHP
+2024-10-07 15:38:49 - Réponse : null
+2024-10-07 15:39:19 - Début du script PHP
+2024-10-07 15:39:19 - Réponse : null
+2024-10-07 15:40:23 - Début du script PHP
+2024-10-07 15:40:23 - Réponse : null
+2024-10-07 15:40:51 - Début du script PHP
+2024-10-07 15:40:51 - Réponse : null
+2024-10-07 15:41:11 - Début du script PHP
+2024-10-07 15:41:11 - Réponse : null
+2024-10-07 15:41:33 - Début du script PHP
+2024-10-07 15:41:33 - Réponse : null
+2024-10-07 15:41:45 - Début du script PHP
+2024-10-07 15:41:45 - Réponse : null
+2024-10-07 15:42:06 - Début du script PHP
+2024-10-07 15:42:06 - Réponse : null
+2024-10-07 15:42:28 - Début du script PHP
+2024-10-07 15:42:28 - Réponse : null
+2024-10-07 15:42:39 - Début du script PHP
+2024-10-07 15:42:39 - Réponse : null
+2024-10-07 15:43:00 - Début du script PHP
+2024-10-07 15:43:00 - Réponse : null
+2024-10-07 15:43:39 - Début du script PHP
+2024-10-07 15:43:39 - Réponse : null
+2024-10-07 15:43:50 - Début du script PHP
+2024-10-07 15:43:50 - Réponse : null
+2024-10-07 15:43:58 - Début du script PHP
+2024-10-07 15:43:58 - Réponse : null
+2024-10-07 15:44:07 - Début du script PHP
+2024-10-07 15:44:07 - Réponse : null
+2024-10-07 15:44:19 - Début du script PHP
+2024-10-07 15:44:19 - Réponse : null
+2024-10-07 15:46:03 - Début du script PHP
+2024-10-07 15:46:03 - Réponse : null
+2024-10-07 15:47:41 - Début du script PHP
+2024-10-07 15:47:41 - Réponse : null
+2024-10-07 15:47:51 - Début du script PHP
+2024-10-07 15:47:51 - Réponse : null
+2024-10-07 15:51:18 - Début du script PHP
+2024-10-07 15:51:18 - Réponse : null
+2024-10-07 15:51:26 - Début du script PHP
+2024-10-07 15:51:26 - Réponse : null
+2024-10-07 15:52:20 - Début du script PHP
+2024-10-07 15:52:20 - Réponse : null
+2024-10-07 15:52:51 - Début du script PHP
+2024-10-07 15:52:51 - Réponse : null
+2024-10-07 15:53:17 - Début du script PHP
+2024-10-07 15:53:17 - Réponse : null
+2024-10-07 15:54:02 - Début du script PHP
+2024-10-07 15:54:02 - Réponse : null
+2024-10-07 15:55:25 - Début du script PHP
+2024-10-07 15:55:25 - Réponse : null
+2024-10-07 16:03:37 - Début du script PHP
+2024-10-07 16:03:37 - Réponse : null
+2024-10-07 16:04:51 - Début du script PHP
+2024-10-07 16:04:51 - Réponse : null
+2024-10-07 16:09:44 - Début du script PHP
+2024-10-07 16:09:44 - Réponse : null
+2024-10-07 16:09:51 - Début du script PHP
+2024-10-07 16:09:51 - Réponse : null
+2024-10-07 16:10:14 - Début du script PHP
+2024-10-07 16:10:14 - Réponse : null
+2024-10-07 16:10:24 - Début du script PHP
+2024-10-07 16:10:24 - Réponse : null
+2024-10-07 16:10:32 - Début du script PHP
+2024-10-07 16:10:32 - Réponse : null
+2024-10-07 16:12:39 - Début du script PHP
+2024-10-07 16:12:39 - Réponse : null
+2024-10-07 16:15:18 - Début du script PHP
+2024-10-07 16:15:18 - Réponse : null
+2024-10-07 16:15:26 - Début du script PHP
+2024-10-07 16:15:26 - Réponse : null
+2024-10-07 16:38:33 - Début du script PHP
+2024-10-07 16:38:33 - Réponse : null
+2024-10-08 09:04:56 - Début du script PHP
+2024-10-08 09:04:56 - Réponse : null
+2024-10-08 09:23:41 - Début du script PHP
+2024-10-08 09:23:41 - Réponse : null
+2024-10-08 09:26:14 - Début du script PHP
+2024-10-08 09:26:14 - Réponse : null
+2024-10-08 09:26:54 - Début du script PHP
+2024-10-08 09:26:54 - Réponse : null
+2024-10-08 09:27:01 - Début du script PHP
+2024-10-08 09:27:01 - Réponse : null
+2024-10-08 09:27:16 - Début du script PHP
+2024-10-08 09:27:16 - Réponse : null
+2024-10-08 09:27:50 - Début du script PHP
+2024-10-08 09:27:50 - Réponse : null
+2024-10-08 09:29:09 - Début du script PHP
+2024-10-08 09:29:09 - Réponse : null
+2024-10-08 09:29:13 - Début du script PHP
+2024-10-08 09:29:13 - Réponse : null
+2024-10-08 09:29:27 - Début du script PHP
+2024-10-08 09:29:27 - Réponse : null
+2024-10-08 09:29:51 - Début du script PHP
+2024-10-08 09:29:51 - Réponse : null
+2024-10-08 09:30:30 - Début du script PHP
+2024-10-08 09:30:30 - Réponse : null
+2024-10-08 09:31:17 - Début du script PHP
+2024-10-08 09:31:17 - Réponse : null
+2024-10-08 09:31:51 - Début du script PHP
+2024-10-08 09:31:51 - Réponse : null
+2024-10-08 09:33:51 - Début du script PHP
+2024-10-08 09:33:51 - Réponse : null
+2024-10-08 09:33:59 - Début du script PHP
+2024-10-08 09:33:59 - Réponse : null
+2024-10-08 09:36:16 - Début du script PHP
+2024-10-08 09:36:16 - Réponse : null
+2024-10-08 09:37:30 - Début du script PHP
+2024-10-08 09:37:30 - Réponse : null
+2024-10-08 09:37:43 - Début du script PHP
+2024-10-08 09:37:43 - Réponse : null
+2024-10-08 09:38:41 - Début du script PHP
+2024-10-08 09:38:41 - Réponse : null
+2024-10-08 09:38:49 - Début du script PHP
+2024-10-08 09:38:49 - Réponse : null
+2024-10-08 09:38:59 - Début du script PHP
+2024-10-08 09:38:59 - Réponse : null
+2024-10-08 09:40:15 - Début du script PHP
+2024-10-08 09:40:15 - Réponse : null
+2024-10-08 09:43:36 - Début du script PHP
+2024-10-08 09:43:36 - Réponse : null
+2024-10-08 09:44:57 - Début du script PHP
+2024-10-08 09:44:57 - Réponse : null
+2024-10-08 09:45:49 - Début du script PHP
+2024-10-08 09:45:49 - Réponse : null
+2024-10-08 09:47:15 - Début du script PHP
+2024-10-08 09:47:15 - Réponse : null
+2024-10-08 09:47:47 - Début du script PHP
+2024-10-08 09:47:47 - Réponse : null
+2024-10-08 10:16:28 - Début du script PHP
+2024-10-08 10:16:28 - Réponse : null
+2024-10-08 10:16:39 - Début du script PHP
+2024-10-08 10:16:39 - Réponse : null
+2024-10-08 10:20:10 - Début du script PHP
+2024-10-08 10:20:10 - Réponse : null
+2024-10-08 10:26:02 - Début du script PHP
+2024-10-08 10:26:02 - Réponse : null
+2024-10-08 11:04:34 - Début du script PHP
+2024-10-08 11:04:34 - Réponse : null
+2024-10-08 11:19:15 - Début du script PHP
+2024-10-08 11:19:15 - Réponse : null
+2024-10-08 11:25:16 - Début du script PHP
+2024-10-08 11:25:16 - Réponse : null
+2024-10-08 12:12:45 - Début du script PHP
+2024-10-08 12:12:45 - Réponse : null
+2024-10-08 12:13:10 - Début du script PHP
+2024-10-08 12:13:10 - Réponse : null
+2024-10-08 12:14:15 - Début du script PHP
+2024-10-08 12:14:15 - Réponse : null
+2024-10-08 12:15:00 - Début du script PHP
+2024-10-08 12:15:00 - Réponse : null
+2024-10-08 12:16:27 - Début du script PHP
+2024-10-08 12:16:27 - Réponse : null
+2024-10-08 13:57:35 - Début du script PHP
+2024-10-08 13:57:35 - Réponse : null
+2024-10-08 13:57:44 - Début du script PHP
+2024-10-08 13:57:44 - Réponse : null
+2024-10-08 14:01:21 - Début du script PHP
+2024-10-08 14:01:21 - Réponse : null
+2024-10-08 14:02:20 - Début du script PHP
+2024-10-08 14:02:20 - Réponse : null
+2024-10-08 14:02:40 - Début du script PHP
+2024-10-08 14:02:40 - Réponse : null
+2024-10-08 14:09:20 - Début du script PHP
+2024-10-08 14:09:20 - Réponse : null
+2024-10-08 14:09:35 - Début du script PHP
+2024-10-08 14:09:35 - Réponse : null
+2024-10-08 14:11:42 - Début du script PHP
+2024-10-08 14:11:42 - Réponse : null
+2024-10-08 14:13:05 - Début du script PHP
+2024-10-08 14:13:05 - Réponse : null
+2024-10-08 14:13:32 - Début du script PHP
+2024-10-08 14:13:32 - Réponse : null
+2024-10-08 14:14:37 - Début du script PHP
+2024-10-08 14:14:37 - Réponse : null
+2024-10-08 14:15:18 - Début du script PHP
+2024-10-08 14:15:18 - Réponse : null
+2024-10-08 14:16:58 - Début du script PHP
+2024-10-08 14:16:58 - Réponse : null
+2024-10-08 14:17:38 - Début du script PHP
+2024-10-08 14:17:38 - Réponse : null
+2024-10-08 14:19:27 - Début du script PHP
+2024-10-08 14:19:27 - Réponse : null
+2024-10-08 14:51:05 - Début du script PHP
+2024-10-08 14:51:05 - Réponse : null
+2024-10-08 14:51:38 - Début du script PHP
+2024-10-08 14:51:38 - Réponse : null
+2024-10-08 14:53:37 - Début du script PHP
+2024-10-08 14:53:37 - Réponse : null
+2024-10-08 14:57:09 - Début du script PHP
+2024-10-08 14:57:09 - Réponse : null
+2024-10-08 15:02:35 - Début du script PHP
+2024-10-08 15:02:35 - Réponse : null
+2024-10-08 15:05:47 - Début du script PHP
+2024-10-08 15:05:47 - Réponse : null
+2024-10-08 15:14:20 - Début du script PHP
+2024-10-08 15:14:20 - Réponse : null
+2024-10-08 15:18:53 - Début du script PHP
+2024-10-08 15:18:53 - Réponse : null
+2024-10-08 15:27:22 - Début du script PHP
+2024-10-08 15:27:22 - Réponse : null
+2024-10-08 15:30:14 - Début du script PHP
+2024-10-08 15:30:14 - Réponse : null
+2024-10-08 15:31:32 - Début du script PHP
+2024-10-08 15:31:42 - Début du script PHP
+2024-10-08 15:31:42 - Réponse : null
+2024-10-08 15:39:55 - Début du script PHP
+2024-10-08 15:39:55 - Réponse : null
+2024-10-08 15:40:33 - Début du script PHP
+2024-10-08 15:40:33 - Réponse : null
+2024-10-08 15:41:51 - Début du script PHP
+2024-10-08 15:41:51 - Réponse : null
+2024-10-08 16:47:26 - Début du script PHP
+2024-10-08 16:47:26 - Réponse : null
+2024-10-09 09:04:35 - Début du script PHP
+2024-10-09 09:04:35 - Réponse : null
+2024-10-09 10:37:10 - Début du script PHP
+2024-10-09 10:37:10 - Réponse : null
+2024-10-09 10:37:29 - Début du script PHP
+2024-10-09 10:37:29 - Réponse : null
+2024-10-09 10:40:25 - Début du script PHP
+2024-10-09 10:40:25 - Réponse : null
+2024-10-09 10:47:18 - Début du script PHP
+2024-10-09 10:47:18 - Réponse : null
+2024-10-09 10:47:24 - Début du script PHP
+2024-10-09 10:47:24 - Réponse : null
+2024-10-09 10:55:34 - Début du script PHP
+2024-10-09 10:55:34 - Réponse : null
+2024-10-09 10:55:39 - Début du script PHP
+2024-10-09 10:55:39 - Réponse : null
+2024-10-09 11:03:08 - Début du script PHP
+2024-10-09 11:03:08 - Réponse : null
+2024-10-09 11:03:16 - Début du script PHP
+2024-10-09 11:03:16 - Réponse : null
+2024-10-09 11:07:00 - Début du script PHP
+2024-10-09 11:07:00 - Réponse : null
+2024-10-09 11:10:12 - Début du script PHP
+2024-10-09 11:10:12 - Réponse : null
+2024-10-09 11:10:21 - Début du script PHP
+2024-10-09 11:10:21 - Réponse : null
+2024-10-09 11:21:52 - Début du script PHP
+2024-10-09 11:21:52 - Réponse : null
+2024-10-09 11:22:05 - Début du script PHP
+2024-10-09 11:22:05 - Réponse : null
+2024-10-09 11:34:19 - Début du script PHP
+2024-10-09 11:34:19 - Réponse : null
+2024-10-09 11:34:23 - Début du script PHP
+2024-10-09 11:34:23 - Données reçues : [{"title":"","userId":"","type":"card","x":0,"y":0}]
+2024-10-09 11:34:23 - Réponse : null
+2024-10-09 11:34:58 - Début du script PHP
+2024-10-09 11:34:58 - Réponse : null
+2024-10-09 11:35:11 - Début du script PHP
+2024-10-09 11:35:11 - Données reçues : []
+2024-10-09 11:35:11 - Réponse : null
+2024-10-09 11:35:17 - Début du script PHP
+2024-10-09 11:35:17 - Réponse : null
+2024-10-09 11:35:19 - Début du script PHP
+2024-10-09 11:35:19 - Données reçues : []
+2024-10-09 11:35:19 - Réponse : null
+2024-10-09 11:43:17 - Début du script PHP
+2024-10-09 11:43:17 - Fin du script PHP
+2024-10-09 11:43:20 - Début du script PHP
+2024-10-09 11:43:20 - Fin du script PHP
+2024-10-09 11:54:57 - Début du script PHP
+2024-10-09 11:54:57 - Réponse : null
+2024-10-09 11:57:37 - Début du script PHP
+2024-10-09 11:57:37 - Données reçues : [{"title":"","userId":"","type":"card","x":0,"y":0}]
+2024-10-09 11:57:37 - Réponse : null
+2024-10-09 12:10:30 - Début du script PHP
+2024-10-09 12:10:30 - Réponse : null
+2024-10-09 12:28:26 - Début du script PHP
+2024-10-09 12:28:26 - Réponse : null
+2024-10-09 12:40:00 - Début du script PHP
+2024-10-09 12:40:00 - Données reçues : []
+2024-10-09 12:40:00 - Réponse : null
+2024-10-09 12:47:24 - Début du script PHP
+2024-10-09 12:47:24 - Réponse : null
+2024-10-09 12:48:26 - Début du script PHP
+2024-10-09 12:48:26 - Réponse : null
+2024-10-09 12:48:45 - Début du script PHP
+2024-10-09 12:48:45 - Données reçues : []
+2024-10-09 12:48:45 - Réponse : null
+2024-10-09 12:49:38 - Début du script PHP
+2024-10-09 12:49:38 - Données reçues : []
+2024-10-09 12:49:38 - Réponse : null
+2024-10-09 13:10:08 - Début du script PHP
+2024-10-09 13:10:08 - Réponse : null
+2024-10-09 13:21:48 - Début du script PHP
+2024-10-09 13:21:48 - Réponse : null
+2024-10-09 13:22:23 - Début du script PHP
+2024-10-09 13:22:23 - Réponse : null
+2024-10-09 15:01:29 - Début du script PHP
+2024-10-09 15:01:29 - Réponse : null
+2024-10-09 15:01:45 - Début du script PHP
+2024-10-09 15:01:45 - Réponse : null
+2024-10-09 15:14:43 - Début du script PHP
+2024-10-09 15:14:43 - Réponse : null
+2024-10-09 15:14:47 - Début du script PHP
+2024-10-09 15:14:47 - Réponse : null
+2024-10-09 15:14:48 - Début du script PHP
+2024-10-09 15:14:48 - Réponse : null
+2024-10-09 15:32:29 - Début du script PHP
+2024-10-09 15:32:29 - Réponse : null
+2024-10-09 15:46:08 - Début du script PHP
+2024-10-09 15:46:08 - Réponse : null
+2024-10-09 15:53:03 - Début du script PHP
+2024-10-09 15:53:03 - Réponse : null
+2024-10-09 15:54:15 - Début du script PHP
+2024-10-09 15:54:15 - Réponse : null
+2024-10-09 16:08:15 - Début du script PHP
+2024-10-09 16:08:15 - Réponse : null
+2024-10-09 16:08:28 - Début du script PHP
+2024-10-09 16:08:28 - Réponse : null
+2024-10-09 16:12:07 - Début du script PHP
+2024-10-09 16:12:07 - Réponse : null
+2024-10-09 16:12:14 - Début du script PHP
+2024-10-09 16:12:14 - Réponse : null
+2024-10-09 16:16:20 - Début du script PHP
+2024-10-09 16:16:20 - Réponse : null
+2024-10-09 16:16:25 - Début du script PHP
+2024-10-09 16:16:25 - Réponse : null
+2024-10-09 16:16:37 - Début du script PHP
+2024-10-09 16:16:37 - Réponse : null
+2024-10-09 16:16:52 - Début du script PHP
+2024-10-09 16:16:52 - Réponse : null
+2024-10-09 16:17:10 - Début du script PHP
+2024-10-09 16:17:10 - Réponse : null
+2024-10-10 09:14:02 - Début du script PHP
+2024-10-10 09:14:02 - Réponse : null
+2024-10-10 09:16:40 - Début du script PHP
+2024-10-10 09:16:40 - Réponse : null
+2024-10-10 09:16:52 - Début du script PHP
+2024-10-10 09:16:52 - Réponse : null
+2024-10-10 09:16:58 - Début du script PHP
+2024-10-10 09:16:58 - Réponse : null
+2024-10-10 09:21:16 - Début du script PHP
+2024-10-10 09:21:16 - Réponse : null
+2024-10-10 09:24:46 - Début du script PHP
+2024-10-10 09:24:46 - Réponse : null
+2024-10-10 10:03:04 - Début du script PHP
+2024-10-10 10:03:04 - Réponse : null
+2024-10-10 10:24:24 - Début du script PHP
+2024-10-10 10:24:24 - Réponse : null
+2024-10-10 10:24:29 - Début du script PHP
+2024-10-10 10:24:29 - Réponse : null
+2024-10-10 10:24:43 - Début du script PHP
+2024-10-10 10:24:43 - Réponse : null
+2024-10-10 10:32:14 - Début du script PHP
+2024-10-10 10:32:14 - Réponse : null
+2024-10-10 10:32:44 - Début du script PHP
+2024-10-10 10:32:44 - Réponse : null
+2024-10-10 10:32:58 - Début du script PHP
+2024-10-10 10:32:58 - Réponse : null
+2024-10-10 10:33:02 - Début du script PHP
+2024-10-10 10:33:02 - Réponse : null
+2024-10-10 10:33:40 - Début du script PHP
+2024-10-10 10:33:40 - Réponse : null
+2024-10-10 10:40:30 - Début du script PHP
+2024-10-10 10:40:30 - Réponse : null
+2024-10-10 10:49:01 - Début du script PHP
+2024-10-10 10:49:01 - Réponse : null
+2024-10-10 10:49:46 - Début du script PHP
+2024-10-10 10:49:46 - Réponse : null
+2024-10-10 10:52:39 - Début du script PHP
+2024-10-10 10:52:39 - Réponse : null
+2024-10-10 10:52:49 - Début du script PHP
+2024-10-10 10:52:49 - Réponse : null
+2024-10-10 10:53:38 - Début du script PHP
+2024-10-10 10:53:38 - Réponse : null
+2024-10-10 10:53:51 - Début du script PHP
+2024-10-10 10:53:51 - Réponse : null
+2024-10-10 10:56:15 - Début du script PHP
+2024-10-10 10:56:15 - Réponse : null
+2024-10-10 10:56:16 - Début du script PHP
+2024-10-10 10:56:16 - Réponse : null
+2024-10-10 10:56:22 - Début du script PHP
+2024-10-10 10:56:22 - Réponse : null
+2024-10-10 10:56:24 - Début du script PHP
+2024-10-10 10:56:24 - Réponse : null
+2024-10-10 10:57:28 - Début du script PHP
+2024-10-10 10:57:28 - Réponse : null
+2024-10-10 10:57:31 - Début du script PHP
+2024-10-10 10:57:31 - Réponse : null
+2024-10-10 10:57:38 - Début du script PHP
+2024-10-10 10:57:38 - Réponse : null
+2024-10-10 10:57:44 - Début du script PHP
+2024-10-10 10:57:44 - Réponse : null
+2024-10-10 11:03:34 - Début du script PHP
+2024-10-10 11:03:34 - Réponse : null
+2024-10-10 11:06:25 - Début du script PHP
+2024-10-10 11:06:25 - Réponse : null
+2024-10-10 11:06:31 - Début du script PHP
+2024-10-10 11:06:31 - Réponse : null
+2024-10-10 11:06:47 - Début du script PHP
+2024-10-10 11:06:47 - Réponse : null
+2024-10-10 11:15:36 - Début du script PHP
+2024-10-10 11:15:36 - Réponse : null
+2024-10-10 11:15:43 - Début du script PHP
+2024-10-10 11:15:43 - Réponse : null
+2024-10-10 11:16:10 - Début du script PHP
+2024-10-10 11:16:10 - Réponse : null
+2024-10-10 11:16:16 - Début du script PHP
+2024-10-10 11:16:16 - Réponse : null
+2024-10-10 11:16:41 - Début du script PHP
+2024-10-10 11:16:41 - Réponse : null
+2024-10-10 11:16:49 - Début du script PHP
+2024-10-10 11:16:49 - Réponse : null
+2024-10-10 11:16:55 - Début du script PHP
+2024-10-10 11:16:55 - Réponse : null
+2024-10-10 11:16:59 - Début du script PHP
+2024-10-10 11:16:59 - Réponse : null
+2024-10-10 11:17:09 - Début du script PHP
+2024-10-10 11:17:09 - Réponse : null
+2024-10-10 11:17:10 - Début du script PHP
+2024-10-10 11:17:10 - Réponse : null
+2024-10-10 11:17:11 - Début du script PHP
+2024-10-10 11:17:11 - Réponse : null
+2024-10-10 11:17:16 - Début du script PHP
+2024-10-10 11:17:16 - Réponse : null
+2024-10-10 11:39:08 - Début du script PHP
+2024-10-10 11:39:08 - Réponse : null
+2024-10-10 11:39:14 - Début du script PHP
+2024-10-10 11:39:14 - Réponse : null
+2024-10-10 11:39:20 - Début du script PHP
+2024-10-10 11:39:20 - Réponse : null
+2024-10-10 11:39:27 - Début du script PHP
+2024-10-10 11:39:27 - Réponse : null
+2024-10-10 11:42:18 - Début du script PHP
+2024-10-10 11:42:18 - Réponse : null
+2024-10-10 11:42:48 - Début du script PHP
+2024-10-10 11:42:48 - Réponse : null
+2024-10-10 11:43:28 - Début du script PHP
+2024-10-10 11:43:28 - Réponse : null
+2024-10-10 11:43:34 - Début du script PHP
+2024-10-10 11:43:34 - Réponse : null
+2024-10-10 11:46:40 - Début du script PHP
+2024-10-10 11:46:40 - Réponse : null
+2024-10-10 11:46:47 - Début du script PHP
+2024-10-10 11:46:47 - Réponse : null
+2024-10-10 11:47:28 - Début du script PHP
+2024-10-10 11:47:28 - Réponse : null
+2024-10-10 11:52:28 - Début du script PHP
+2024-10-10 11:52:28 - Réponse : null
+2024-10-10 11:59:56 - Début du script PHP
+2024-10-10 11:59:56 - Réponse : null
+2024-10-10 12:00:11 - Début du script PHP
+2024-10-10 12:00:11 - Réponse : null
+2024-10-10 12:00:33 - Début du script PHP
+2024-10-10 12:00:33 - Réponse : null
+2024-10-10 12:01:52 - Début du script PHP
+2024-10-10 12:01:52 - Réponse : null
+2024-10-10 12:02:25 - Début du script PHP
+2024-10-10 12:02:25 - Réponse : null
+2024-10-10 12:02:50 - Début du script PHP
+2024-10-10 12:02:50 - Réponse : null
+2024-10-10 12:03:04 - Début du script PHP
+2024-10-10 12:03:04 - Réponse : null
+2024-10-10 12:03:37 - Début du script PHP
+2024-10-10 12:03:37 - Réponse : null
+2024-10-10 12:03:49 - Début du script PHP
+2024-10-10 12:03:49 - Réponse : null
+2024-10-10 12:07:47 - Début du script PHP
+2024-10-10 12:07:47 - Réponse : null
+2024-10-10 12:07:49 - Début du script PHP
+2024-10-10 12:07:49 - Réponse : null
+2024-10-10 12:10:28 - Début du script PHP
+2024-10-10 12:10:28 - Réponse : null
+2024-10-10 12:10:41 - Début du script PHP
+2024-10-10 12:10:41 - Réponse : null
+2024-10-10 12:10:46 - Début du script PHP
+2024-10-10 12:10:46 - Réponse : null
+2024-10-10 12:11:16 - Début du script PHP
+2024-10-10 12:11:16 - Réponse : null
+2024-10-10 12:11:57 - Début du script PHP
+2024-10-10 12:11:57 - Réponse : null
+2024-10-10 12:12:16 - Début du script PHP
+2024-10-10 12:12:16 - Réponse : null
+2024-10-10 12:12:30 - Début du script PHP
+2024-10-10 12:12:30 - Réponse : null
+2024-10-10 12:12:44 - Début du script PHP
+2024-10-10 12:12:44 - Réponse : null
+2024-10-10 14:05:49 - Début du script PHP
+2024-10-10 14:05:49 - Réponse : null
+2024-10-10 14:11:13 - Début du script PHP
+2024-10-10 14:13:13 - Début du script PHP
+2024-10-10 14:13:23 - Début du script PHP
+2024-10-10 14:13:23 - Réponse : null
+2024-10-10 14:13:32 - Début du script PHP
+2024-10-10 14:13:32 - Réponse : null
+2024-10-10 14:20:28 - Début du script PHP
+2024-10-10 14:20:39 - Début du script PHP
+2024-10-10 14:20:39 - Réponse : null
+2024-10-10 14:20:48 - Début du script PHP
+2024-10-10 14:20:48 - Réponse : null
+2024-10-10 14:22:45 - Réponse : null
+2024-10-10 14:22:54 - Début du script PHP
+2024-10-10 14:22:54 - Réponse : null
+2024-10-10 14:23:51 - Début du script PHP
+2024-10-10 14:23:51 - Réponse : null
+2024-10-10 14:24:02 - Début du script PHP
+2024-10-10 14:24:02 - Réponse : null
+2024-10-10 14:28:16 - Début du script PHP
+2024-10-10 14:28:16 - Réponse : null
+2024-10-10 14:30:07 - Début du script PHP
+2024-10-10 14:30:07 - Méthode de requête : GET
+2024-10-10 14:30:07 - Réponse : null
+2024-10-10 14:31:01 - Début du script PHP
+2024-10-10 14:31:01 - Réponse : null
+2024-10-10 14:48:54 - Début du script PHP
+2024-10-10 14:48:54 - Réponse : null
+2024-10-10 14:51:02 - Début du script PHP
+2024-10-10 14:51:02 - Réponse : null
+2024-10-10 14:51:16 - Début du script PHP
+2024-10-10 14:51:16 - Réponse : null
+2024-10-10 14:53:13 - Début du script PHP
+2024-10-10 14:53:13 - Réponse : null
+2024-10-10 14:53:47 - Début du script PHP
+2024-10-10 14:53:47 - Réponse : null
+2024-10-10 14:53:52 - Début du script PHP
+2024-10-10 14:53:52 - Réponse : null
+2024-10-10 14:54:08 - Début du script PHP
+2024-10-10 14:54:08 - Réponse : null
+2024-10-10 14:54:15 - Début du script PHP
+2024-10-10 14:54:15 - Réponse : null
+2024-10-10 15:04:55 - Début du script PHP
+2024-10-10 15:04:55 - Réponse : null
+2024-10-10 15:05:06 - Début du script PHP
+2024-10-10 15:05:06 - Réponse : null
+2024-10-10 15:06:59 - Début du script PHP
+2024-10-10 15:06:59 - Réponse : null
+2024-10-10 15:08:13 - Début du script PHP
+2024-10-10 15:08:13 - Réponse : null
+2024-10-10 15:08:19 - Début du script PHP
+2024-10-10 15:08:19 - Réponse : null
+2024-10-10 15:12:36 - Début du script PHP
+2024-10-10 15:12:36 - Réponse : null
+2024-10-10 15:13:04 - Début du script PHP
+2024-10-10 15:13:04 - Réponse : null
+2024-10-10 15:13:05 - Début du script PHP
+2024-10-10 15:13:05 - Réponse : null
+2024-10-10 15:13:23 - Début du script PHP
+2024-10-10 15:13:23 - Réponse : null
+2024-10-10 15:13:42 - Début du script PHP
+2024-10-10 15:13:42 - Réponse : null
+2024-10-10 15:14:26 - Début du script PHP
+2024-10-10 15:14:26 - Réponse : null
+2024-10-10 15:14:58 - Début du script PHP
+2024-10-10 15:14:58 - Réponse : null
+2024-10-10 15:16:41 - Début du script PHP
+2024-10-10 15:16:41 - Réponse : null
+2024-10-10 15:16:53 - Début du script PHP
+2024-10-10 15:16:53 - Réponse : null
+2024-10-10 15:17:11 - Début du script PHP
+2024-10-10 15:17:11 - Réponse : null
+2024-10-10 15:17:15 - Début du script PHP
+2024-10-10 15:17:15 - Réponse : null
+2024-10-10 15:18:17 - Début du script PHP
+2024-10-10 15:18:17 - Réponse : null
+2024-10-10 15:18:24 - Début du script PHP
+2024-10-10 15:18:24 - Réponse : null
+2024-10-10 15:22:05 - Début du script PHP
+2024-10-10 15:22:05 - Réponse : null
+2024-10-10 15:22:22 - Début du script PHP
+2024-10-10 15:22:22 - Réponse : null
+2024-10-10 15:22:34 - Début du script PHP
+2024-10-10 15:22:34 - Réponse : null
+2024-10-10 15:26:01 - Début du script PHP
+2024-10-10 15:26:01 - Réponse : null
+2024-10-10 15:26:12 - Début du script PHP
+2024-10-10 15:26:12 - Réponse : null
+2024-10-10 15:26:20 - Début du script PHP
+2024-10-10 15:26:20 - Réponse : null
+2024-10-10 15:26:23 - Début du script PHP
+2024-10-10 15:26:23 - Réponse : null
+2024-10-10 15:26:31 - Début du script PHP
+2024-10-10 15:26:31 - Réponse : null
+2024-10-10 15:26:46 - Début du script PHP
+2024-10-10 15:26:46 - Réponse : null
+2024-10-10 15:29:04 - Début du script PHP
+2024-10-10 15:29:04 - Réponse : null
+2024-10-10 15:29:23 - Début du script PHP
+2024-10-10 15:29:23 - Réponse : null
+2024-10-10 15:29:42 - Début du script PHP
+2024-10-10 15:29:42 - Réponse : null
+2024-10-10 15:29:49 - Début du script PHP
+2024-10-10 15:29:49 - Réponse : null
+2024-10-10 15:30:25 - Début du script PHP
+2024-10-10 15:30:25 - Réponse : null
+2024-10-10 15:30:42 - Début du script PHP
+2024-10-10 15:30:42 - Réponse : null
+2024-10-10 15:30:54 - Début du script PHP
+2024-10-10 15:30:54 - Réponse : null
+2024-10-10 15:31:06 - Début du script PHP
+2024-10-10 15:31:06 - Réponse : null
+2024-10-10 15:31:26 - Début du script PHP
+2024-10-10 15:31:26 - Réponse : null
+2024-10-10 15:32:17 - Début du script PHP
+2024-10-10 15:32:17 - Réponse : null
+2024-10-10 15:32:27 - Début du script PHP
+2024-10-10 15:32:27 - Réponse : null
+2024-10-10 15:32:31 - Début du script PHP
+2024-10-10 15:32:31 - Réponse : null
+2024-10-10 15:32:32 - Début du script PHP
+2024-10-10 15:32:32 - Réponse : null
+2024-10-10 15:32:40 - Début du script PHP
+2024-10-10 15:32:40 - Réponse : null
+2024-10-10 15:32:44 - Début du script PHP
+2024-10-10 15:32:44 - Réponse : null
+2024-10-10 15:33:25 - Début du script PHP
+2024-10-10 15:33:25 - Réponse : null
+2024-10-10 15:33:32 - Début du script PHP
+2024-10-10 15:33:32 - Réponse : null
+2024-10-10 15:39:17 - Début du script PHP
+2024-10-10 15:39:17 - Réponse : null
+2024-10-10 15:39:28 - Début du script PHP
+2024-10-10 15:39:28 - Réponse : null
+2024-10-10 15:40:29 - Début du script PHP
+2024-10-10 15:40:29 - Réponse : null
+2024-10-10 15:41:27 - Début du script PHP
+2024-10-10 15:41:27 - Réponse : null
+2024-10-10 15:41:34 - Début du script PHP
+2024-10-10 15:41:34 - Réponse : null
+2024-10-10 15:43:04 - Début du script PHP
+2024-10-10 15:43:04 - Réponse : null
+2024-10-10 15:43:10 - Début du script PHP
+2024-10-10 15:43:10 - Réponse : null
+2024-10-10 15:44:58 - Début du script PHP
+2024-10-10 15:44:58 - Réponse : null
+2024-10-10 15:45:12 - Début du script PHP
+2024-10-10 15:45:12 - Réponse : null
+2024-10-10 15:46:30 - Début du script PHP
+2024-10-10 15:46:30 - Réponse : null
+2024-10-10 15:46:35 - Début du script PHP
+2024-10-10 15:46:35 - Réponse : null
+2024-10-10 15:59:01 - Début du script PHP
+2024-10-10 15:59:01 - Réponse : null
+2024-10-10 15:59:04 - Début du script PHP
+2024-10-10 15:59:04 - Réponse : null
+2024-10-10 15:59:14 - Début du script PHP
+2024-10-10 15:59:14 - Réponse : null
+2024-10-10 15:59:17 - Début du script PHP
+2024-10-10 15:59:17 - Réponse : null
+2024-10-10 16:05:40 - Début du script PHP
+2024-10-10 16:05:40 - Réponse : null
+2024-10-10 16:05:46 - Début du script PHP
+2024-10-10 16:05:46 - Réponse : null
+2024-10-10 16:07:06 - Début du script PHP
+2024-10-10 16:07:06 - Réponse : null
+2024-10-10 16:07:12 - Début du script PHP
+2024-10-10 16:07:12 - Réponse : null
+2024-10-10 16:08:20 - Début du script PHP
+2024-10-10 16:08:20 - Réponse : null
+2024-10-10 16:08:25 - Début du script PHP
+2024-10-10 16:08:25 - Réponse : null
+2024-10-10 16:08:36 - Début du script PHP
+2024-10-10 16:08:36 - Réponse : null
+2024-10-10 16:08:49 - Début du script PHP
+2024-10-10 16:08:49 - Réponse : null
+2024-10-10 16:10:32 - Début du script PHP
+2024-10-10 16:10:32 - Réponse : null
+2024-10-10 16:10:44 - Début du script PHP
+2024-10-10 16:10:44 - Réponse : null
+2024-10-10 16:10:47 - Début du script PHP
+2024-10-10 16:10:47 - Réponse : null
+2024-10-10 16:11:10 - Début du script PHP
+2024-10-10 16:11:10 - Réponse : null
+2024-10-10 16:19:51 - Début du script PHP
+2024-10-10 16:19:51 - Réponse : null
+2024-10-10 16:21:35 - Début du script PHP
+2024-10-10 16:21:35 - Réponse : null
+2024-10-10 16:21:57 - Début du script PHP
+2024-10-10 16:21:57 - Réponse : null
+2024-10-10 16:22:01 - Début du script PHP
+2024-10-10 16:22:01 - Réponse : null
+2024-10-10 16:22:36 - Début du script PHP
+2024-10-10 16:22:36 - Réponse : null
+2024-10-10 16:22:58 - Début du script PHP
+2024-10-10 16:22:58 - Réponse : null
+2024-10-10 16:23:35 - Début du script PHP
+2024-10-10 16:23:35 - Réponse : null
+2024-10-10 16:23:50 - Début du script PHP
+2024-10-10 16:23:50 - Réponse : null
+2024-10-10 16:24:35 - Début du script PHP
+2024-10-10 16:24:35 - Réponse : null
+2024-10-10 16:24:54 - Début du script PHP
+2024-10-10 16:24:54 - Réponse : null
+2024-10-10 16:25:03 - Début du script PHP
+2024-10-10 16:25:03 - Réponse : null
+2024-10-10 16:25:11 - Début du script PHP
+2024-10-10 16:25:11 - Réponse : null
+2024-10-10 16:25:15 - Début du script PHP
+2024-10-10 16:25:15 - Réponse : null
+2024-10-10 16:26:27 - Début du script PHP
+2024-10-10 16:26:27 - Réponse : null
+2024-10-10 16:26:34 - Début du script PHP
+2024-10-10 16:26:34 - Réponse : null
+2024-10-10 16:26:41 - Début du script PHP
+2024-10-10 16:26:41 - Réponse : null
+2024-10-10 16:26:51 - Début du script PHP
+2024-10-10 16:26:51 - Réponse : null
+2024-10-10 16:27:15 - Début du script PHP
+2024-10-10 16:27:15 - Réponse : null
+2024-10-10 16:27:33 - Début du script PHP
+2024-10-10 16:27:33 - Réponse : null
+2024-10-10 16:29:40 - Début du script PHP
+2024-10-10 16:29:40 - Réponse : null
+2024-10-10 16:29:48 - Début du script PHP
+2024-10-10 16:29:48 - Réponse : null
+2024-10-10 16:36:53 - Début du script PHP
+2024-10-10 16:36:53 - Réponse : null
+2024-10-10 16:37:19 - Début du script PHP
+2024-10-10 16:37:19 - Réponse : null
+2024-10-10 16:45:51 - Début du script PHP
+2024-10-10 16:45:51 - Réponse : null
+2024-10-10 16:45:53 - Début du script PHP
+2024-10-10 16:45:53 - Réponse : null
+2024-10-10 16:47:25 - Début du script PHP
+2024-10-10 16:47:25 - Réponse : null
+2024-10-10 16:47:36 - Début du script PHP
+2024-10-10 16:47:36 - Réponse : null
+2024-10-10 16:48:35 - Début du script PHP
+2024-10-10 16:48:35 - Réponse : null
+2024-10-10 16:48:40 - Début du script PHP
+2024-10-10 16:48:40 - Réponse : null
+2024-10-10 16:48:44 - Début du script PHP
+2024-10-10 16:48:44 - Réponse : null
+2024-10-11 09:43:49 - Début du script PHP
+2024-10-11 09:43:49 - Réponse : null
+2024-10-11 09:44:28 - Début du script PHP
+2024-10-11 09:44:28 - Réponse : null
+2024-10-11 09:44:48 - Début du script PHP
+2024-10-11 09:44:48 - Réponse : null
+2024-10-11 09:44:54 - Début du script PHP
+2024-10-11 09:44:54 - Réponse : null
+2024-10-11 09:44:55 - Début du script PHP
+2024-10-11 09:44:55 - Réponse : null
+2024-10-11 09:44:56 - Début du script PHP
+2024-10-11 09:44:56 - Réponse : null
+2024-10-11 09:45:08 - Début du script PHP
+2024-10-11 09:45:08 - Réponse : null
+2024-10-11 09:50:55 - Début du script PHP
+2024-10-11 09:50:55 - Réponse : null
+2024-10-11 09:53:14 - Début du script PHP
+2024-10-11 09:53:14 - Réponse : null
+2024-10-11 09:55:03 - Début du script PHP
+2024-10-11 09:55:03 - Réponse : null
+2024-10-11 09:55:05 - Début du script PHP
+2024-10-11 09:55:05 - Réponse : null
+2024-10-11 09:55:07 - Début du script PHP
+2024-10-11 09:55:07 - Réponse : null
+2024-10-11 10:00:24 - Début du script PHP
+2024-10-11 10:01:10 - Début du script PHP
+2024-10-11 10:02:18 - Début du script PHP
+2024-10-11 10:02:18 - Réponse : null
+2024-10-11 10:02:44 - Début du script PHP
+2024-10-11 10:02:44 - Réponse : null
+2024-10-11 10:07:26 - Début du script PHP
+2024-10-11 10:07:26 - Réponse : null
+2024-10-11 10:09:30 - Début du script PHP
+2024-10-11 10:09:30 - Réponse : null
+2024-10-11 10:09:46 - Début du script PHP
+2024-10-11 10:09:46 - Réponse : null
+2024-10-11 10:09:50 - Début du script PHP
+2024-10-11 10:09:50 - Réponse : null
+2024-10-11 10:14:32 - Début du script PHP
+2024-10-11 10:14:32 - Réponse : null
+2024-10-11 10:24:21 - Début du script PHP
+2024-10-11 10:24:21 - Réponse : null

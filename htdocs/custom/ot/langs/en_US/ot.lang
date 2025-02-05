@@ -1,0 +1,57 @@
+# Copyright (C) 2024 Faure Louis <l.faure@optim-industries.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleOTName'
+ModuleOTName = OT
+# Module description 'ModuleOTDesc'
+ModuleOTDesc = OT description
+
+#
+# Admin page
+#
+OTSetup = OT setup
+Settings = Settings
+OTSetupPage = OT setup page
+OT_MYPARAM1 = My param 1
+OT_MYPARAM1Tooltip = My param 1 tooltip
+OT_MYPARAM2=My param 2
+OT_MYPARAM2Tooltip=My param 2 tooltip
+
+
+#
+# About page
+#
+About = About
+OTAbout = About OT
+OTAboutPage = OT about page
+
+#
+# Sample page
+#
+OTArea = Home OT
+MyPageName = My page name
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
+
+pdfmodale = Voulez vous générez le pdf de l'organigrame 
+pdfmodale2 = AAAAA
