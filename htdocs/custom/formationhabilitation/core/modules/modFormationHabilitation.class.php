@@ -195,11 +195,11 @@ class modFormationHabilitation extends DolibarrModules
 				30 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_CREATE', 'chaine', '1', '', 0), // Lors de la création
 				31 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
 				32 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				33 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE1', 'chaine', '1', '', 0), // Lors de la validation
-				34 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE2', 'chaine', '1', '', 0), // Lors de la validation
-				35 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE3', 'chaine', '1', '', 0), // Lors de la validation
-				36 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE_WITHOUT_USER', 'chaine', '1', '', 0), // Lors de la validation
-				37 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				// 33 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE1', 'chaine', '1', '', 0), // Lors de la validation
+				// 34 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE2', 'chaine', '1', '', 0), // Lors de la validation
+				// 35 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE3', 'chaine', '1', '', 0), // Lors de la validation
+				// 36 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE_WITHOUT_USER', 'chaine', '1', '', 0), // Lors de la validation
+				// 37 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
 				38 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_EXPIRE', 'chaine', '1', '', 0), // Lors de l'expiration
 				39 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_SUSPEND', 'chaine', '1', '', 0), // Lors de la suspension
 				40 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_UNSUSPEND', 'chaine', '1', '', 0), // Lors de la non suspensio,
