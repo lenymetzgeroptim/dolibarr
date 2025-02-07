@@ -1267,6 +1267,9 @@ if (!columnsContainer) {
     document.body.appendChild(columnsContainer);
 }
 
+
+console.log("Type de jsdata:", typeof jsdata);
+console.log("Valeur de jsdata:", jsdata);
 const uniqueJsData = jsdata.filter((value, index, self) => 
     index === self.findIndex((t) => (
         t.fk_socpeople === value.fk_socpeople

@@ -116,20 +116,22 @@ class Ot extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
-		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"5", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
-		"indice" => array("type"=>"integer", "label"=>"Indice", "enabled"=>"1", 'position'=>43, 'notnull'=>0, "visible"=>"5", "default"=>"0", "validate"=>"1",),
-		"fk_project" => array("type"=>"integer:Project:projet/class/project.class.php:rowid(IN395,197,190,445)", "label"=>"Project", "picto"=>"project", "enabled"=>"isModEnabled('project')", 'position'=>52, 'notnull'=>0, "visible"=>"5", "index"=>"1", "css"=>"maxwidth500 widthcentpercentminusxx", "csslist"=>"tdoverflowmax150", "validate"=>"1",),
-		"date_applica_ot" => array("type"=>"date", "label"=>"date applicabilité OT", "enabled"=>"1", 'position'=>540, 'notnull'=>0, "visible"=>"1",),
-		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>0, "visible"=>"5",),
-		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>550, 'notnull'=>0, "visible"=>"-2",),
-		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>560, 'notnull'=>0, "visible"=>"5", "foreignkey"=>"0", "csslist"=>"tdoverflowmax150",),
-		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "picto"=>"user", "enabled"=>"1", 'position'=>571, 'notnull'=>0, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
-		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
-		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>0, "visible"=>"-2",),
-		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>0, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>0, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "9" => "Annul&eacute;"), "validate"=>"1",),
-	);
+		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
+		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>20, 'notnull'=>0, 'visible'=>5, 'index'=>1, 'searchall'=>1, 'showoncombobox'=>'1', 'validate'=>'1', 'comment'=>"Reference of object"),
+		'indice' => array('type'=>'integer', 'label'=>'Indice', 'enabled'=>'1', 'position'=>43, 'notnull'=>0, 'visible'=>5, 'default'=>'0', 'validate'=>'1',),
+		'fk_project' => array('type'=>'integer', 'label'=>'Project', 'picto'=>'project', 'enabled'=>'isModEnabled("project")', 'position'=>52, 'notnull'=>0, 'visible'=>5, 'index'=>1, 'css'=>'maxwidth500 widthcentpercentminusxx', 'csslist'=>'tdoverflowmax150', 'validate'=>'1',),
+		'date_applica_ot' => array('type'=>'date', 'label'=>'date applicabilité OT', 'enabled'=>'1', 'position'=>540, 'notnull'=>0, 'visible'=>1,),
+		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>0, 'visible'=>5,),
+		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>550, 'notnull'=>0, 'visible'=>-2,),
+		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>560, 'notnull'=>0, 'visible'=>5, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
+		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'picto'=>'user', 'enabled'=>'1', 'position'=>571, 'notnull'=>0, 'visible'=>-2, 'csslist'=>'tdoverflowmax150',),
+		'last_main_doc' => array('type'=>'varchar(255)', 'label'=>'LastMainDoc', 'enabled'=>'1', 'position'=>600, 'notnull'=>0, 'visible'=>0,),
+		'import_key' => array('type'=>'varchar(14)', 'label'=>'ImportId', 'enabled'=>'1', 'position'=>1000, 'notnull'=>0, 'visible'=>-2,),
+		'model_pdf' => array('type'=>'varchar(255)', 'label'=>'Model pdf', 'enabled'=>'1', 'position'=>1010, 'notnull'=>0, 'visible'=>0,),
+		'status' => array('type'=>'integer', 'label'=>'Status', 'enabled'=>'1', 'position'=>2000, 'notnull'=>0, 'visible'=>5, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Brouillon', '1'=>'Valid&eacute;', '9'=>'Annul&eacute;'), 'validate'=>'1',),
+		
+	
+	);	
 	public $rowid;
 	public $ref;
 	public $indice;
@@ -143,6 +145,8 @@ class Ot extends CommonObject
 	public $import_key;
 	public $model_pdf;
 	public $status;
+
+
 	// END MODULEBUILDER PROPERTIES
 
 

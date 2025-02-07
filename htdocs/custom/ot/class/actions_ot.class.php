@@ -161,10 +161,16 @@ class ActionsOT
             NOW()      /* tms */
         )";
 
-        $sql = "SELECT ot_id,id_cellule,title,type,x,y FROM".MAIN_DB_PREFIX."ot_ot_cellule"
-         
+        $resql = $db->query($sql); // Exécuter l'INSERT
+        if (!$resql) {
+            setEventMessage("Erreur lors de la création de l'OT : " . $db->lasterror(), 'errors');
+            return; // Stopper la fonction en cas d'échec
+        }
+
+        // Maintenant, on peut exécuter une autre requête sans écraser l'INSERT
+        $sql = "SELECT ot_id,id_cellule,title,type,x,y FROM ".MAIN_DB_PREFIX."ot_ot_cellule";
         $resql = $db->query($sql);
-        
+
         if ($resql) {
             setEventMessage("OT créé avec succès. Référence OT : " . $otRef, 'mesgs');
         } else {
@@ -172,5 +178,5 @@ class ActionsOT
         }
     }
 
-
+    
 }
