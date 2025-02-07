@@ -186,6 +186,9 @@ $item = $formSetup->newItem('FDT_USER_APPROVER')->setAsYesNo();
 // FDT_ANTICIPE_BLOCKED
 $item = $formSetup->newItem('FDT_ANTICIPE_BLOCKED')->setAsYesNo();
 
+// FDT_DAY_FOR_NEXT_FDT
+$item = $formSetup->newItem('FDT_DAY_FOR_NEXT_FDT')->setAsString();
+
 $setupnotempty += count($formSetup->items);
 
 

@@ -67,10 +67,17 @@ $modeinput = ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? 'hours_decimal' : 'hours'
 $socid = 0;
 $now = dol_now();
 
-$year = GETPOST('reyear', 'int') ?GETPOST('reyear', 'int') : (GETPOST("year", 'int') ?GETPOST("year", "int") : date("Y"));
-$month = GETPOST('remonth', 'int') ?GETPOST('remonth', 'int') : (GETPOST("month", 'int') ?GETPOST("month", "int") : date("m"));
-$day = GETPOST('reday', 'int') ?GETPOST('reday', 'int') : (GETPOST("day", 'int') ?GETPOST("day", "int") : date("d"));
+$day = GETPOST('reday', 'int') ?GETPOST('reday', 'int') : (GETPOST("day", 'int') ?GETPOST("day", "int") : date('d'));
 $day = (int)$day;
+
+if(empty($conf->global->FDT_DAY_FOR_NEXT_FDT) || $day >= $conf->global->FDT_DAY_FOR_NEXT_FDT) {
+	$year = GETPOST('reyear', 'int') ?GETPOST('reyear', 'int') : (GETPOST("year", 'int') ?GETPOST("year", "int") : date('Y'));
+	$month = GETPOST('remonth', 'int') ?GETPOST('remonth', 'int') : (GETPOST("month", 'int') ?GETPOST("month", "int") : date('m'));
+}
+else {
+	$year = GETPOST('reyear', 'int') ?GETPOST('reyear', 'int') : (GETPOST("year", 'int') ?GETPOST("year", "int") : dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%Y'));
+	$month = GETPOST('remonth', 'int') ?GETPOST('remonth', 'int') : (GETPOST("month", 'int') ?GETPOST("month", "int") : dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%m'));
+}
 
 $search_usertoprocessid = (!empty($_POST['search_usertoprocessid']) ? $_POST['search_usertoprocessid'] : $_GET['search_usertoprocessid']);
 $search_task_ref = GETPOST('search_task_ref', 'alpha', 3);

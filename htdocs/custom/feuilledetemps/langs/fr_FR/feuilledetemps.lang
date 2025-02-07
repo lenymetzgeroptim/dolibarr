@@ -60,7 +60,7 @@ FDT_DISPLAY_FULL_WEEK = Afficher les semaines completes dans les feuilles de tem
 FDT_COLUMN_MAX_TASK_DAY = Si le format colonne est utilisé : Nombre de tâche maximum sur une journée
 FDT_USER_APPROVER = Approbateurs des feuilles de temps définient sur la fiche utilisateur
 FDT_ANTICIPE_BLOCKED = Les jours en dehors du mois courant sont bloqués
-
+FDT_DAY_FOR_NEXT_FDT = Jour a partir duquel la feuille de temps change de mois
 
 #
 # About page
