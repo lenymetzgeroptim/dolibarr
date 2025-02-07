@@ -992,6 +992,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, &$appel_actif = 0, &$nb_appel = 0){
 	global $conf, $db, $user, $langs;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
+	global $first_day_month, $last_day_month;
 	
 	$holiday = new extendedHoliday($db);
 	$silae = new Silae($db);
@@ -1043,7 +1044,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 
 	foreach($silae->fields as $key => $value) {
 		if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50'))) {
-			$header[] = array('text' => $value['label'], 'visible' => ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status >= 4));
+			$header[] = array('text' => $value['label'], 'visible' => ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3));
 		}
 	}
 
@@ -1082,7 +1083,9 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	$timespent_month = $task->fetchAllTimeSpentByDate($fuser, $filter);
 	print '<tbody>';
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify, $modifier_jour_conges,
+		$modify_day = (!$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? 0 : 1);
+
+		printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 		$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
 		$num_first_day, $timeHoliday, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday);
 	}
@@ -1113,7 +1116,7 @@ function printHeaderLine_Sigedi($header) {
 function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify, $modifier_jour_conges, 
 						 $holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
 						 $num_first_day, $timeHoliday, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday) {
-	global $db, $form, $formother, $conf, $langs, $user, $extrafields;
+	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object;
 	global $displayVerification;
 
 	$formproject = new ExtendedFormProjets($db);
@@ -1489,9 +1492,9 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		if($silae->id > 0) $silae->fetch($silae->id);
 
 		foreach($silae->fields as $key => $value) {
-			if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50')) && ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status >= 4)) {
+			if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50')) && ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3)) {
 				print '<td class="center'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-					print $silae->showInputField($value, $key, $silae->$key, '', '['.$idw.']');
+					print $silae->showInputField($value, $key, ($silae->$key / 3600), '', '['.$idw.']');
 				print '</td>';
 			}
 		}

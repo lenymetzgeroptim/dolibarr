@@ -20,7 +20,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	if($object->id == 0) {
 		$object->ref = "FDT_".str_pad($usertoprocess->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date($lastdaytoshow, '%m%Y');
 		$object->date_debut = $first_day_month;
-		$object->date_fin = $lastdaytoshow;
+		$object->date_fin = $last_day_month;
 		$object->fk_user = $usertoprocess->id;
 		$object->status = 0;
 
@@ -2335,7 +2335,7 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 	}
 
 	// Gestion des 1er approbateurs de la FDT
-	if(!$userIsRA){
+	if(!$userIsRA && !$conf->global->FDT_USER_APPROVER){
 		$object->deleteAllTaskValidation();
 
 		// 1er Approbateurs
@@ -2366,12 +2366,12 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 	}
 
 	// Si l'utilisateur est un RAF, la FDT est directement validé
-	if ($userIsRA){
+	if (($userIsRA  && !$conf->global->FDT_USER_APPROVER) || ($conf->global->FDT_USER_APPROVER && (empty($usertoprocess->array_options['options_approbateurfdt']) || in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt']))))){
 		$object->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATION1_RAInDolibarr", $object->ref);
 		$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATION1_RAInDolibarr", $object->ref);
 		$result = $object->setVerification($user);
 	}
-	elseif(empty($list_validation1)) {
+	elseif(empty($list_validation1) && !$conf->global->FDT_USER_APPROVER) {
 		$result = $object->setApprobation2($user);
 	}
 	else {	// Sinon, elle doit être approuvée 

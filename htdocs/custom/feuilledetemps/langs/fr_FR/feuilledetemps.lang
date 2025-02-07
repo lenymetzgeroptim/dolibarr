@@ -58,6 +58,8 @@ FDT_DECIMAL_HOUR_FORMAT = Heures au format décimal
 FDT_USE_HS_CASE = Ajout des cases d'heures sup pour les collaborateurs
 FDT_DISPLAY_FULL_WEEK = Afficher les semaines completes dans les feuilles de temps
 FDT_COLUMN_MAX_TASK_DAY = Si le format colonne est utilisé : Nombre de tâche maximum sur une journée
+FDT_USER_APPROVER = Approbateurs des feuilles de temps définient sur la fiche utilisateur
+FDT_ANTICIPE_BLOCKED = Les jours en dehors du mois courant sont bloqués
 
 
 #
@@ -106,6 +108,7 @@ PrimePoste_3_8 = PrimePoste_3x8
 H_Dim_75 = H_Dim_75%
 H_Dim_50 = H_Dim_50%
 SiteFDT = Site
+ApprobateurFDT = Approbateur des feuilles de temps
 
 #
 # Autres
@@ -154,6 +157,7 @@ FEUILLEDETEMPS_VALIDATE12_NONOPTIMInDolibarr = Approbation n°1 et n°2 de la fe
 FEUILLEDETEMPS_VALIDATE_NONOPTIMInDolibarr = Approbation n°2 de la feuille de temps %s réalisée, feuille de temps validée (Non OPTIM)
 FEUILLEDETEMPS_EXPORTEDInDolibarr = Export de la feuille de temps %s réalisée
 FEUILLEDETEMPS_APPROBATION1ET2InDolibarr = Approbation n°1 et n°2 de la feuille de temps %s réalisée, passage en vérification
+FEUILLEDETEMPS_APPROBATIONInDolibarr = Approbation de la feuille de temps %s réalisée, passage en vérification
 SENDMAILInDolibarr = Contenu du message :<br>%s
 
 #

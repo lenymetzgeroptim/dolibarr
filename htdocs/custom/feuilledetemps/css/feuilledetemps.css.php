@@ -515,7 +515,7 @@ tr > th:last-child.fixed {
 	width: 100%
 }
 
-#tablelines_fdt> tbody > tr > td.totalweekcolumn {
+#tablelines_fdt > tbody > tr > td.totalweekcolumn {
 	border-right: 1px solid var(--colortopbordertitle1);
 	background-color: #f0f0f0;
 }

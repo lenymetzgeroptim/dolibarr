@@ -114,24 +114,24 @@ class FeuilleDeTemps extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
-		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"1", "index"=>"1", "searchall"=>"1", "comment"=>"Reference of object"),
-		"note_public" => array("type"=>"html", "label"=>"NotePublic", "enabled"=>"1", 'position'=>61, 'notnull'=>0, "visible"=>"0",),
-		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0",),
-		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
-		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
-		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php:0", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0",),
-		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php:0", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
-		"status" => array("type"=>"smallint", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "2" => "1&egrave;re approbation en attente", "3" => "2&egrave;me approbation en attente", "4" => "En V&eacuterification", "5" => "Export&eacute", "9" => "Annul&eacute;"),),
-		"date_debut" => array("type"=>"date", "label"=>"DateDebut", "enabled"=>"1", 'position'=>100, 'notnull'=>1, "visible"=>"1", "index"=>"1",),
-		"date_fin" => array("type"=>"date", "label"=>"DateFin", "enabled"=>"1", 'position'=>101, 'notnull'=>1, "visible"=>"1", "index"=>"1",),
-		"fk_user" => array("type"=>"integer:User:user/class/user.class.php:0:(t.statut:=:1)", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>110, 'notnull'=>1, "visible"=>"1", "index"=>"1",),
-		"observation" => array("type"=>"text", "label"=>"Observation", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>"5",),
-		"prime_astreinte" => array("type"=>"price", "label"=>"PrimeAstreinte", "enabled"=>"1", 'position'=>150, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
-		"prime_exceptionnelle" => array("type"=>"price", "label"=>"PrimeExceptionnelle", "enabled"=>"1", 'position'=>151, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
-		"prime_objectif" => array("type"=>"price", "label"=>"PrimeObjectif", "enabled"=>"1", 'position'=>152, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
-		"prime_variable" => array("type"=>"price", "label"=>"PrimeVariable", "enabled"=>"1", 'position'=>153, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
-		"prime_amplitude" => array("type"=>"price", "label"=>"PrimeAmplitude", "enabled"=>"1", 'position'=>154, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
+		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
+		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>20, 'notnull'=>0, 'visible'=>1, 'index'=>1, 'searchall'=>1, 'comment'=>"Reference of object"),
+		'note_public' => array('type'=>'html', 'label'=>'NotePublic', 'enabled'=>'1', 'position'=>61, 'notnull'=>0, 'visible'=>0,),
+		'note_private' => array('type'=>'html', 'label'=>'NotePrivate', 'enabled'=>'1', 'position'=>62, 'notnull'=>0, 'visible'=>0,),
+		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
+		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
+		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php:0', 'label'=>'UserAuthor', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid',),
+		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php:0', 'label'=>'UserModif', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2,),
+		'status' => array('type'=>'smallint', 'label'=>'Status', 'enabled'=>'1', 'position'=>1000, 'notnull'=>1, 'visible'=>1, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Brouillon', '1'=>'Valid&eacute;', '2'=>'1&egrave;re approbation en attente', '3'=>'2&egrave;me approbation en attente', '4'=>'En V&eacuterification', '5'=>'Export&eacute', '9'=>'Annul&eacute;'),),
+		'date_debut' => array('type'=>'date', 'label'=>'DateDebut', 'enabled'=>'1', 'position'=>100, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
+		'date_fin' => array('type'=>'date', 'label'=>'DateFin', 'enabled'=>'1', 'position'=>101, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
+		'fk_user' => array('type'=>'integer:User:user/class/user.class.php:0:(t.statut:=:1)', 'label'=>'Utilisateur', 'enabled'=>'1', 'position'=>110, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
+		'observation' => array('type'=>'text', 'label'=>'Observation', 'enabled'=>'1', 'position'=>210, 'notnull'=>0, 'visible'=>5,),
+		'prime_astreinte' => array('type'=>'price', 'label'=>'PrimeAstreinte', 'enabled'=>'1', 'position'=>150, 'notnull'=>0, 'visible'=>1,),
+		'prime_exceptionnelle' => array('type'=>'price', 'label'=>'PrimeExceptionnelle', 'enabled'=>'1', 'position'=>151, 'notnull'=>0, 'visible'=>1,),
+		'prime_objectif' => array('type'=>'price', 'label'=>'PrimeObjectif', 'enabled'=>'1', 'position'=>152, 'notnull'=>0, 'visible'=>1,),
+		'prime_variable' => array('type'=>'price', 'label'=>'PrimeVariable', 'enabled'=>'1', 'position'=>153, 'notnull'=>0, 'visible'=>1,),
+		'prime_amplitude' => array('type'=>'price', 'label'=>'PrimeAmplitude', 'enabled'=>'1', 'position'=>154, 'notnull'=>0, 'visible'=>1,),
 	);
 	public $rowid;
 	public $ref;
@@ -2376,35 +2376,20 @@ class FeuilleDeTemps extends CommonObject
 			}
 		}
 		
-		if($conf->global->FDT_DISPLAY_COLUMN) {
-			$sql = "SELECT DATE_FORMAT(element_date, '%u') as week_number, (SUM(element_duration)/3600) as temps, SUM(o.heure_nuit)/3600 as temps_nuit, element_date";
-			$sql .= " FROM ".MAIN_DB_PREFIX."element_time as et";
-			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_projet_task_time_other AS o ON o.fk_projet_task_time = et.rowid";
-			$sql .= " WHERE element_date >= '".$this->db->idate($firstdate)."'";
-			$sql .= " AND element_date < '".$this->db->idate($lastdate)."'";
-			$sql .= " AND fk_user = ".$user_id;
-			$sql .= " AND elementtype = 'task'";
-			$sql .= " GROUP BY DATE_FORMAT(element_date, '%u')";
-		}
-		else {
-			$sql = "SELECT DATE_FORMAT(element_date, '%u') as week_number, SUM(element_duration)/3600 as temps, element_date";
-			$sql .= " FROM ".MAIN_DB_PREFIX."element_time";
-			$sql .= " WHERE element_date >= '".$this->db->idate($firstdate)."'";
-			$sql .= " AND element_date < '".$this->db->idate($lastdate)."'";
-			$sql .= " AND fk_user = ".$user_id;
-			$sql .= " AND elementtype = 'task'";
-			$sql .= " GROUP BY DATE_FORMAT(element_date, '%u')";
-		}
+		$sql = "SELECT DATE_FORMAT(element_date, '%u') as week_number, SUM(element_duration)/3600 as temps";
+		$sql .= " FROM ".MAIN_DB_PREFIX."element_time";
+		$sql .= " WHERE element_date >= '".$this->db->idate($firstdate)."'";
+		$sql .= " AND element_date < '".$this->db->idate($lastdate)."'";
+		$sql .= " AND fk_user = ".$user_id;
+		$sql .= " AND elementtype = 'task'";
+		$sql .= " GROUP BY DATE_FORMAT(element_date, '%u')";
 
 		dol_syslog(get_class($this)."::timeDoneByWeek()", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
 			while($obj = $this->db->fetch_object($resql)) {
-				$result[(int)date('W', $this->db->jdate($obj->element_date))] += $obj->temps;
-				if($obj->temps_nuit > 0) {
-					$result[(int)date('W', $this->db->jdate($obj->element_date))] += $obj->temps_nuit;
-				}
+				$result[(int)$obj->week_number] = $obj->temps;
 			}
 			$this->db->free($resql);
 		} else {

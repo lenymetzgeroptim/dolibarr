@@ -180,6 +180,12 @@ $item = $formSetup->newItem('FDT_DISPLAY_FULL_WEEK')->setAsYesNo();
 // FDT_COLUMN_MAX_TASK_DAY
 $item = $formSetup->newItem('FDT_COLUMN_MAX_TASK_DAY')->setAsString();
 
+// FDT_USER_APPROVER
+$item = $formSetup->newItem('FDT_USER_APPROVER')->setAsYesNo();
+
+// FDT_ANTICIPE_BLOCKED
+$item = $formSetup->newItem('FDT_ANTICIPE_BLOCKED')->setAsYesNo();
+
 $setupnotempty += count($formSetup->items);
 
 

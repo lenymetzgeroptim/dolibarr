@@ -1251,7 +1251,7 @@ class Silae extends CommonObject
 		$this->heure_sup25 = ($timeSpentWeekMax - $heure_semaine_hs > 0 ? ($timeSpentWeekMax - $heure_semaine_hs) * 3600 : '');
 
 		$timeSpentWeekMax = ($timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)] > $heure_semaine_hs ? $heure_semaine_hs : $timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)]);
-		$heuresup00 = $timeSpentWeekMax - ($heure_semaine - $timeHoliday[date("W", $dayinloopfromfirstdaytoshow)]);
+		$heuresup00 = $timeSpentWeekMax - ($heure_semaine - $timeHoliday[(int)date("W", $dayinloopfromfirstdaytoshow)]);
 		$this->heure_sup00 = ($heuresup00 > 0 ? $heuresup00 * 3600 : '');
 	}
 }
