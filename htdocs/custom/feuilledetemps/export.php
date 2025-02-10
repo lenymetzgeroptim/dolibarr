@@ -1468,7 +1468,7 @@ if ($action == 'buildalldoc') {
 		$allFdtValidated = $feuilleDeTemps->fetchAll('', '', 0, 0, $filter, 'AND');
 		foreach($allFdtValidated as $id => $fdt) {
 			$user_static->fetch($fdt->fk_user);
-			if($user_static->array_options['options_employeur'] == 1){
+			if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_static->array_options['options_fk_employeur'] == 157)){
 				$fdt->setExported($user);
 			}
 		}

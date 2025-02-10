@@ -62,7 +62,7 @@ FDT_USER_APPROVER = Approbateurs des feuilles de temps définient sur la fiche u
 FDT_ANTICIPE_BLOCKED = Les jours en dehors du mois courant sont bloqués
 FDT_DAY_FOR_NEXT_FDT = Jour a partir duquel la feuille de temps change de mois
 HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE = Utiliser les HS50-HT qui permettent le dépassement de HEURE_MAX_SEMAINE
-
+FDT_MANAGE_EMPLOYER = Gestion de l'employeur pour les exports (export uniquement d'un employeur)
 
 #
 # About page

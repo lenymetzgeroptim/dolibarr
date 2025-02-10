@@ -1276,6 +1276,8 @@ class FeuilleDeTemps extends CommonObject
 	 */
 	public function LibStatut($status, $mode = 0)
 	{
+		global $conf; 
+		
 		$mode = 5;
 
 		// phpcs:enable
@@ -1286,7 +1288,7 @@ class FeuilleDeTemps extends CommonObject
 			
 			//$langs->load("feuilledetemps@feuilledetemps");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if($user_fdt->array_options['options_employeur'] == 1) {
+			if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_fdt->array_options['options_fk_employeur'] == 157)){
 				$this->labelStatus[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {
@@ -1298,7 +1300,7 @@ class FeuilleDeTemps extends CommonObject
 			$this->labelStatus[self::STATUS_EXPORTED] = $langs->trans('Exportée');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->trans('Disabled');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if($user_fdt->array_options['options_employeur'] == 1) {
+			if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_fdt->array_options['options_fk_employeur'] == 157)){
 				$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {

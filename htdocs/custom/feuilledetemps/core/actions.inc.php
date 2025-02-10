@@ -46,7 +46,7 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 	$regulHeureSup50 = ($regul->heure_sup50 != 0 ? (double)$regul->heure_sup50 : 0);
 	$regulHeureSup50HT = ($regul->heure_sup50ht != 0 ? (double)$regul->heure_sup50ht : 0);
 
-	//if($usertoprocess->array_options['options_employeur'] == 1) {
+	if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $usertoprocess->array_options['options_fk_employeur'] == 157)){
 		$object->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATIONInDolibarr", $object->ref);
 		$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATIONInDolibarr", $object->ref);
 
@@ -201,7 +201,7 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 	// 	$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_VALIDATE12_NONOPTIMInDolibarr", $object->ref);
 
 	// 	$result = $object->validate($user);
-	// }
+	}
 	
 
 	if ($result < 0) {
@@ -242,7 +242,7 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 			$object->updateTaskValidation($user->id, 1, 1, 2);
 		}
 		
-		if($usertoprocess->array_options['options_employeur'] == 1) {
+		if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $usertoprocess->array_options['options_fk_employeur'] == 157)){
 			$object->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATION1ET2InDolibarr", $object->ref);
 			$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATION1ET2InDolibarr", $object->ref);
 
@@ -427,7 +427,7 @@ if ($action == 'confirm_validate2' && $confirm == 'yes' && $userIsRespProjet && 
 
 	$list_valideur = $object->listApprover2;
 	if(!in_array(0, $list_valideur[1])) {
-		if($usertoprocess->array_options['options_employeur'] == 1) {
+		if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $usertoprocess->array_options['options_fk_employeur'] == 157)){
 			$object->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_VERIFICATIONInDolibarr", $object->ref);
 			$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_VERIFICATIONInDolibarr", $object->ref);
 

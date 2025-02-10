@@ -124,7 +124,7 @@ class ExtendedExportFDT extends Export
 
 				$userstatic->fetchAll('', 't.lastname', 0, 0, $filter);
 				foreach($userstatic->users as $id => $user_obj) {
-					if($user_obj->array_options['options_employeur'] == 1) {
+					if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_obj->array_options['options_fk_employeur'] == 157)){
 						$timeHoliday = $object->timeHolidayWeek($id, $date_debut, $date_fin);
 						$timeSpentWeek = $object->timeDoneByWeek($id, $date_debut, $date_fin);
 						$societe = new Societe($this->db);
@@ -243,7 +243,7 @@ class ExtendedExportFDT extends Export
 				foreach($userstatic->users as $id => $user_obj) {
 					$userField->id = $id;
 					$userField->fetch_optionals();
-					if($user_obj->array_options['options_employeur'] == 1 && (empty($userField->array_options['options_datedepart']) || $userField->array_options['options_datedepart'] >= $date_debut)) {
+					if((!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_obj->array_options['options_fk_employeur'] == 157)) && (empty($userField->array_options['options_datedepart']) || $userField->array_options['options_datedepart'] >= $date_debut)) {
 						$societe = new Societe($this->db);
 
 						$obj->eu_matricule = $user_obj->array_options['options_matricule'];
