@@ -459,7 +459,7 @@ class pdf_standard_ot extends ModelePDFOt
 				WHERE 
 					sp.element_id = $object->fk_project
 					AND sp.statut = 4
-					AND sp.fk_c_type_contact IN ('1031120', '1031131', '1031132')
+					AND sp.fk_c_type_contact IN ('160', '1032000', '1032001')
 				";
 				$resqlRoles = $db->query($sqlRoles);
 

@@ -872,24 +872,94 @@ if ($resql) {
 $userjson = json_encode($arrayresult);
 
 
-$sql = "SELECT  u.firstname, u.lastname,u.office_phone, ctc.libelle, sp.fk_c_type_contact, sp.fk_socpeople
-            FROM ".MAIN_DB_PREFIX."element_contact as sp 
-            JOIN ".MAIN_DB_PREFIX."user as u ON sp.fk_socpeople = u.rowid 
-            JOIN ".MAIN_DB_PREFIX."c_type_contact as ctc ON sp.fk_c_type_contact = ctc.rowid 
-            WHERE sp.element_id = $object->fk_project
+// Fonction pour récupérer les fonctions d'un utilisateur sur un projet
+function getFonctions($userId, $projectId, $db) {
+    $fonction_map = [
+        160 => "RA",
+        1031113 => "RI",
+        161 => "INT",
+        1031119 => "CT",
+        1032001 => "PCRREF",
+        1031139 => "CONS"
+    ];
+
+    $fonctions = [];
+
+    $sql = "SELECT sp.fk_c_type_contact 
+            FROM ".MAIN_DB_PREFIX."element_contact as sp
+            JOIN ".MAIN_DB_PREFIX."c_type_contact as ctc ON sp.fk_c_type_contact = ctc.rowid
+            WHERE sp.fk_socpeople = ".intval($userId)."
+            AND sp.element_id = ".intval($projectId)."
+            AND ctc.element = 'project'
             AND sp.statut = 4";
+
+    $resql = $db->query($sql);
+    if ($resql) {
+        while ($obj = $db->fetch_object($resql)) {
+            if (isset($fonction_map[$obj->fk_c_type_contact])) {
+                $fonctions[] = $fonction_map[$obj->fk_c_type_contact];
+            }
+        }
+    }
+
+    // Retourner les fonctions sous forme de chaîne séparée par "-"
+    return !empty($fonctions) ? implode("-", $fonctions) : null;
+}
+
+// Fonction pour récupérer les habilitations d'un utilisateur
+function getHabilitations($userId, $db) {
+    $habilitationRefs = [];
+
+    $sql = "SELECT fh.ref 
+            FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as fuh 
+            JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as fh 
+                ON fuh.fk_habilitation = fh.rowid 
+            WHERE fuh.fk_user = ".intval($userId);
+
+    $resql = $db->query($sql);
+    if ($resql) {
+        while ($obj = $db->fetch_object($resql)) {
+            $habilitationRefs[] = $obj->ref;
+        }
+    }
+
+    // Retourner une chaîne de refs séparées par des "-"
+    return !empty($habilitationRefs) ? implode("-", $habilitationRefs) : null;
+}
+
+$sql = "SELECT  
+        u.firstname, u.lastname, u.office_phone, ctc.libelle, sp.fk_c_type_contact, sp.fk_socpeople,cct.type as contrat
+        FROM ".MAIN_DB_PREFIX."element_contact as sp 
+        JOIN ".MAIN_DB_PREFIX."user as u ON sp.fk_socpeople = u.rowid 
+        JOIN ".MAIN_DB_PREFIX."c_type_contact as ctc ON sp.fk_c_type_contact = ctc.rowid 
+        LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_positionetcoefficient_extrafields as drh 
+            ON drh.fk_object = u.rowid  
+        LEFT JOIN ".MAIN_DB_PREFIX."c_contrattravail as cct 
+            ON drh.contratdetravail = cct.rowid  
+        WHERE sp.element_id = $object->fk_project
+        AND sp.statut = 4
+        AND ctc.element = 'project'";
 
 $resql = $db->query($sql);
 
 if ($resql) {
     $arrayresult = [];
+
     while ($obj = $db->fetch_object($resql)) {
+        // Récupérer les fonctions sous forme de chaîne (ex: "RA-CT")
+        $obj->fonction = getFonctions($obj->fk_socpeople, $object->fk_project, $db);
+        
+        // Récupérer les habilitations sous forme de chaîne (ex: "B0-HN1-HN2")
+        $obj->habilitation = getHabilitations($obj->fk_socpeople, $db);
+
+        // Ajouter l'utilisateur au résultat final
         $arrayresult[] = $obj; 
-		
     }
 } else {
     $arrayresult = array('error' => 'SQL query error: '.$db->lasterror());
 }
+
+
 
 // Convertir les résultats en JSON
 $data = json_encode($arrayresult);
@@ -1253,7 +1323,6 @@ document.addEventListener("DOMContentLoaded", function() {
     let isDataSaved = false;
     let isUniqueListCreated = false;
 
-   console.log(cellData);
 
 let columnsContainer = document.querySelector(".card-columns") ||
     document.querySelector("#card-columns") ||
@@ -1268,8 +1337,7 @@ if (!columnsContainer) {
 }
 
 
-console.log("Type de jsdata:", typeof jsdata);
-console.log("Valeur de jsdata:", jsdata);
+
 const uniqueJsData = jsdata.filter((value, index, self) => 
     index === self.findIndex((t) => (
         t.fk_socpeople === value.fk_socpeople
@@ -1309,9 +1377,18 @@ function displayUserList() {
                         if (user) {
                             const li = document.createElement("li");
                             li.setAttribute("data-user-id", userId);
-                            li.innerHTML = `${user.firstname} ${user.lastname} 
-                                            <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>`;
-                            ulElement.appendChild(li);
+                            li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;"; // Centrer les éléments de utilisateur
+
+        // Créer une ligne avec les informations de utilisateur, réparties uniformément
+        li.innerHTML = `
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+            <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
+              <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
+        `;
+                        ulElement.appendChild(li);
                         } else {
                             console.warn(`Utilisateur avec ID ${userId} introuvable dans  uniqueJsData.`);
                         }
@@ -1335,7 +1412,6 @@ function displayUserList() {
 
 // Appeler la fonction pour afficher la liste lors du chargement de la page
 displayUserList();
-
 
 
     // Trier les utilisateurs par ordre croissant de nom (lastname)
@@ -1396,12 +1472,18 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
                 ulElement.innerHTML = "";
 
                 cell.userIds.forEach(function(userId) {
-                    const user = uniqueJsData.find(u => u.fk_socpeople === userId); // Vérifiez si vous utilisez le bon tableau pour trouver lutilisateur
+                    const user = uniqueJsData.find(u => u.fk_socpeople === userId); 
+                    
                     if (user) {
                         const li = document.createElement("li");
                         li.setAttribute("data-user-id", userId);
                         // Utilisez le nom et le prénom au lieu de lID
-                        li.innerHTML = `${user.firstname} ${user.lastname} 
+                               li.innerHTML = `
+                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+                                    <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
                                         <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>`;
                         ulElement.appendChild(li);
                     } else {
@@ -1420,6 +1502,7 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
     // Vérifie si une liste unique avec ce titre existe déjà dans le DOM
     const existingUniqueList = document.querySelector(`.user-list.unique-list[data-list-id="${cell.title}"]`);
     
+    
 
     if (isUniqueListCreated && !existingUniqueList) {
         console.log("La liste unique a été créée mais est plus dans le DOM. Mise à jour du contenu.");
@@ -1436,8 +1519,13 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
             if (user) {
                 const li = document.createElement("li");
                 li.setAttribute("data-user-id", userId);
-                li.innerHTML = `${user.firstname} ${user.lastname} 
-                                <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>`;
+                li.innerHTML = `
+                     <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+                    <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
+                     <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>`;
                 ulElement.appendChild(li);
             } else {
                 console.warn(`Utilisateur avec ID ${userId} introuvable dans uniqueJsData.`);
@@ -1465,22 +1553,51 @@ function createUniqueUserList() {
     const uniqueListId = `unique_${Date.now()}`; 
     list.setAttribute("data-list-id", uniqueListId);
 
+    // Créer un conteneur pour le titre avec le trait rouge
+    const titleContainer = document.createElement("div");
+    titleContainer.style = "text-align: center; padding-bottom: 10px; margin-bottom: 10px; color: #333; font-weight: bold;";
+
     const listTitleInput = document.createElement("input");
     listTitleInput.type = "text";
     listTitleInput.className = "list-title-input";
     listTitleInput.name = "listTitle";
     listTitleInput.placeholder = "Titre de la liste";
     listTitleInput.required = true;
-    listTitleInput.style = "width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;";
+    listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
+
+    titleContainer.appendChild(listTitleInput); // Ajout du titre dans son conteneur
+
+    // Créer une légende pour décrire les informations
+    const legend = document.createElement("div");
+    legend.className = "list-legend";
+    legend.style = "display: flex; justify-content: space-between; padding: 10px; font-weight: bold; color: #333; margin-bottom: 10px; text-align: center;"; // Centrer la légende
+    legend.innerHTML = `
+        <div style="flex: 1; text-align: center;">Nom Prénom</div>
+        <div style="flex: 1; text-align: center;">Fonction</div>
+        <div style="flex: 1; text-align: center;">Contrat</div>
+        <div style="flex: 1; text-align: center;">Habilitations</div>
+        <div style="flex: 1; text-align: center;">Téléphone</div>
+    `;
 
     const ulElement = document.createElement("ul");
+    ulElement.style = "list-style: none; padding: 0; margin: 0;";
 
     // Remplir les utilisateurs de la liste depuis uniqueJsData
     uniqueJsData.forEach(user => {
         const li = document.createElement("li");
         li.setAttribute("data-user-id", user.fk_socpeople);
-        li.textContent = `${user.firstname} ${user.lastname}`;
+        li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;"; // Centrer les éléments de utilisateur
 
+        // Créer une ligne avec les informations de utilisateur, réparties uniformément
+        li.innerHTML = `
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+            <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
+        `;
+
+        // Ajouter le bouton de suppression
         const removeSpan = document.createElement("span");
         removeSpan.textContent = "×";
         removeSpan.style = "color:red; cursor:pointer;";
@@ -1492,8 +1609,9 @@ function createUniqueUserList() {
 
     const listBody = document.createElement("div");
     listBody.className = "list-body";
-    listBody.style = "text-align: center; color: #333;";
-    listBody.appendChild(listTitleInput);
+    listBody.style = "text-align: left; color: #333; padding-left: 20px; padding-right: 20px;"; // Ajouter des espaces à gauche et à droite
+    listBody.appendChild(titleContainer);  // Ajouter le titre avec le trait rouge
+    listBody.appendChild(legend);  // Ajouter la légende en haut de la liste
     listBody.appendChild(ulElement);
 
     list.appendChild(listBody);
@@ -1509,11 +1627,12 @@ function createUniqueUserList() {
 
     list.appendChild(deleteListButton);
 
-    // Attacher les écouteurs de suppression dutilisateur
+    // Attacher les écouteurs de suppression utilisateur
     attachUserRemoveListeners(list);
 
     return list;
 }
+
 
 
 
@@ -1532,13 +1651,13 @@ function deleteUniqueList(uniqueListId, list) {
 
         jsdata.forEach(function(contact) {
             switch(contact.fk_c_type_contact) {
-                case "1031120":
+                case "160":
                     cardHeaders["ResponsableAffaire"] = contact;
                     break;
-                case "1031131":
+                case "1032000":
                     cardHeaders["ResponsableQ3SE"] = contact;
                     break;
-                case "1031132":
+                case "1032001":
                     cardHeaders["PCRReferent"] = contact;
                     break;
             }
@@ -1648,12 +1767,22 @@ function createUserList(column) {
 
     const ulElement = document.createElement("ul");
 
+    // Itérer sur les utilisateurs dans uniqueJsData
     uniqueJsData.forEach(user => {
+        // Récupérer les informations spécifiques de lutilisateur dans uniqueJsData
+        const { firstname, lastname, fonction, habilitation, contrat } = user;
+
+        // Créer élément <li> pour chaque utilisateur
         const li = document.createElement("li");
         li.setAttribute("data-user-id", user.fk_socpeople);
-        li.innerHTML = `${user.firstname} ${user.lastname} 
-                        <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>`;
+
+        // Afficher les informations dansélément <li>
+        li.innerHTML = `
+            ${firstname} ${lastname} | ${fonction} | ${habilitation} | ${contrat}
+            <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
+        `;
         ulElement.appendChild(li);
+       
     });
 
     list.innerHTML = `
@@ -1661,7 +1790,6 @@ function createUserList(column) {
             <input type="text" class="list-title-input" name="listTitle" placeholder="Titre de la liste" required
                 style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
             <ul>${ulElement.innerHTML}</ul>
-           
         </div>
         <button class="delete-list-button btn btn-danger" style="margin-bottom: 25px; display: inline-block;">Supprimer</button>
     `;
@@ -1670,6 +1798,7 @@ function createUserList(column) {
     list.setAttribute("data-list-id", listId); // Assigner ID unique
     return list;
 }
+
 
 
 
