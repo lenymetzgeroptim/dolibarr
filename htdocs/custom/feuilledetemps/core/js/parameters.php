@@ -23,8 +23,7 @@ global $conf;
 $langs->load('feuilledetemps@feuilledetemps');
 
 header('Content-Type: text/javascript');
-echo 'var HEURE_MAX_JOUR ='.null2zero($conf->global->HEURE_MAX_JOUR).";\n";
-echo 'var HEURE_MAX_SEMAINE ='.null2zero($conf->global->HEURE_MAX_SEMAINE).";\n";
+
 echo 'var HEURE_JOUR ='.null2zero($conf->global->HEURE_JOUR).";\n";
 //echo 'var HEURE_SEMAINE ='.null2zero($conf->global->HEURE_SEMAINE).";\n";
 echo 'var HEURE_SUP1 ='.null2zero($conf->global->HEURE_SUP1).";\n";

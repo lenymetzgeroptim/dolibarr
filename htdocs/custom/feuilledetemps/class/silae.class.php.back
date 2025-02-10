@@ -1,6 +1,5 @@
 <?php
-/* Copyright (C) 2017  Laurent Destailleur      <eldy@users.sourceforge.net>
- * Copyright (C) 2023  Frédéric France          <frederic.france@netlogic.fr>
+/* Copyright (C) 2017  Laurent Destailleur <eldy@users.sourceforge.net>
  * Copyright (C) 2023 METZGER Leny <l.metzger@optim-industries.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,9 +17,9 @@
  */
 
 /**
- * \file        class/regul.class.php
+ * \file        class/silae.class.php
  * \ingroup     feuilledetemps
- * \brief       This file is a CRUD class file for Regul (Create/Read/Update/Delete)
+ * \brief       This file is a CRUD class file for Silae (Create/Read/Update/Delete)
  */
 
 // Put here all includes required by your class file
@@ -29,9 +28,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 
 /**
- * Class for Regul
+ * Class for Silae
  */
-class Regul extends CommonObject
+class Silae extends CommonObject
 {
 	/**
 	 * @var string ID of module.
@@ -41,12 +40,12 @@ class Regul extends CommonObject
 	/**
 	 * @var string ID to identify managed object.
 	 */
-	public $element = 'regul';
+	public $element = 'silae';
 
 	/**
 	 * @var string Name of table without prefix where object is stored. This is also the key used for extrafields management.
 	 */
-	public $table_element = 'feuilledetemps_regul';
+	public $table_element = 'feuilledetemps_silae';
 
 	/**
 	 * @var int  Does this object support multicompany module ?
@@ -60,7 +59,7 @@ class Regul extends CommonObject
 	public $isextrafieldmanaged = 1;
 
 	/**
-	 * @var string String with name of icon for regul. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'regul@feuilledetemps' if picto is file 'img/object_regul.png'.
+	 * @var string String with name of icon for silae. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'silae@feuilledetemps' if picto is file 'img/object_silae.png'.
 	 */
 	public $picto = 'fa-file';
 
@@ -82,10 +81,10 @@ class Regul extends CommonObject
 	 *  	'date', 'datetime', 'timestamp', 'duration',
 	 *  	'boolean', 'checkbox', 'radio', 'array',
 	 *  	'mail', 'phone', 'url', 'password', 'ip'
-	 *		Note: Filter must be a Dolibarr Universal Filter syntax string. Example: "(t.ref:like:'SO-%') or (t.date_creation:<:'20160101') or (t.status:!=:0) or (t.nature:is:NULL)"
+	 *		Note: Filter must be a Dolibarr filter syntax string. Example: "(t.ref:like:'SO-%') or (t.date_creation:<:'20160101') or (t.status:!=:0) or (t.nature:is:NULL)"
 	 *  'label' the translation key.
 	 *  'picto' is code of a picto to show before value in forms
-	 *  'enabled' is a condition when the field must be managed (Example: 1 or 'getDolGlobalInt("MY_SETUP_PARAM")' or 'isModEnabled("multicurrency")' ...)
+	 *  'enabled' is a condition when the field must be managed (Example: 1 or '$conf->global->MY_SETUP_PARAM' or 'isModEnabled("multicurrency")' ...)
 	 *  'position' is the sort order of field.
 	 *  'notnull' is set to 1 if not null in database. Set to -1 if we must set data to null if empty ('' or 0).
 	 *  'visible' says if field is visible in list (Examples: 0=Not visible, 1=Visible on list and create/update/view forms, 2=Visible on list only, 3=Visible on create/update/view form only (not list), 4=Visible on list and update/view form only (not create). 5=Visible on list and view only (not create/not update). Using a negative value means field is not shown by default on list but can be selected for viewing)
@@ -97,7 +96,7 @@ class Regul extends CommonObject
 	 *  'searchall' is 1 if we want to search in this field when making a search from the quick search button.
 	 *  'isameasure' must be set to 1 or 2 if field can be used for measure. Field type must be summable like integer or double(24,8). Use 1 in most cases, or 2 if you don't want to see the column total into list (for example for percentage)
 	 *  'css' and 'cssview' and 'csslist' is the CSS style to use on field. 'css' is used in creation and update. 'cssview' is used in view mode. 'csslist' is used for columns in lists. For example: 'css'=>'minwidth300 maxwidth500 widthcentpercentminusx', 'cssview'=>'wordbreak', 'csslist'=>'tdoverflowmax200'
-	 *  'help' and 'helplist' is a 'TranslationString' to use to show a tooltip on field. You can also use 'TranslationString:keyfortooltiponlick' for a tooltip on click.
+	 *  'help' is a 'TranslationString' to use to show a tooltip on field. You can also use 'TranslationString:keyfortooltiponlick' for a tooltip on click.
 	 *  'showoncombobox' if value of the field must be visible into the label of the combobox that list record
 	 *  'disabled' is 1 if we want to have the field locked by a 'disabled' attribute. In most cases, this is never set into the definition of $fields into class, but is set dynamically by some part of code.
 	 *  'arrayofkeyval' to set a list of values if type is a list of predefined values. For example: array("0"=>"Draft","1"=>"Active","-1"=>"Cancel"). Note that type can be 'integer' or 'varchar'
@@ -114,31 +113,21 @@ class Regul extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
-		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
-		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
-		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0", "csslist"=>"tdoverflowmax150",),
-		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "picto"=>"user", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
-		"date" => array("type"=>"date", "label"=>"Date", "enabled"=>"1", 'position'=>100, 'notnull'=>1, "visible"=>"1",),
-		"fk_user" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"User", "enabled"=>"1", 'position'=>110, 'notnull'=>1, "visible"=>"1",),
-		"d1" => array("type"=>"integer", "label"=>"D1", "enabled"=>"1", 'position'=>200, 'notnull'=>0, "visible"=>"1",),
-		"d2" => array("type"=>"integer", "label"=>"D2", "enabled"=>"1", 'position'=>201, 'notnull'=>0, "visible"=>"1",),
-		"d3" => array("type"=>"integer", "label"=>"D3", "enabled"=>"1", 'position'=>202, 'notnull'=>0, "visible"=>"1",),
-		"d4" => array("type"=>"integer", "label"=>"D4", "enabled"=>"1", 'position'=>203, 'notnull'=>0, "visible"=>"1",),
-		"gd1" => array("type"=>"integer", "label"=>"GD1", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>"1",),
-		"gd2" => array("type"=>"integer", "label"=>"GD2", "enabled"=>"1", 'position'=>211, 'notnull'=>0, "visible"=>"1",),
-		"heure_route" => array("type"=>"double", "label"=>"HeureRoute", "enabled"=>"1", 'position'=>220, 'notnull'=>0, "visible"=>"1",),
-		"repas1" => array("type"=>"integer", "label"=>"Repas1", "enabled"=>"1", 'position'=>230, 'notnull'=>0, "visible"=>"1",),
-		"repas2" => array("type"=>"integer", "label"=>"Repas2", "enabled"=>"1", 'position'=>231, 'notnull'=>0, "visible"=>"1",),
-		"kilometres" => array("type"=>"double(6,2)", "label"=>"IK", "enabled"=>"1", 'position'=>240, 'notnull'=>0, "visible"=>"1",),
-		"indemnite_tt" => array("type"=>"integer", "label"=>"IndemniteTT", "enabled"=>"1", 'position'=>250, 'notnull'=>0, "visible"=>"1",),
-		"heure_nuit_50" => array("type"=>"double", "label"=>"HeureNuit50", "enabled"=>"1", 'position'=>300, 'notnull'=>0, "visible"=>"1",),
-		"heure_nuit_75" => array("type"=>"double", "label"=>"HeureNuit75", "enabled"=>"1", 'position'=>301, 'notnull'=>0, "visible"=>"1",),
-		"heure_nuit_100" => array("type"=>"double", "label"=>"HeureNuit100", "enabled"=>"1", 'position'=>302, 'notnull'=>0, "visible"=>"1",),
-		"heure_sup00" => array("type"=>"double", "label"=>"HeureSup00", "enabled"=>"1", 'position'=>310, 'notnull'=>0, "visible"=>"1",),
-		"heure_sup25" => array("type"=>"double", "label"=>"HeureSup25", "enabled"=>"1", 'position'=>311, 'notnull'=>0, "visible"=>"1",),
-		"heure_sup50" => array("type"=>"double", "label"=>"HeureSup50", "enabled"=>"1", 'position'=>312, 'notnull'=>0, "visible"=>"1",),
-		"heure_sup50ht" => array("type"=>"double", "label"=>"HeureSup50HT", "enabled"=>"1", 'position'=>313, 'notnull'=>0, "visible"=>"1",),
+		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
+		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
+		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
+		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
+		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'picto'=>'user', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2, 'csslist'=>'tdoverflowmax150',),
+		'date' => array('type'=>'date', 'label'=>'Date', 'enabled'=>'1', 'position'=>30, 'notnull'=>1, 'visible'=>1,),
+		'fk_user' => array('type'=>'integer', 'label'=>'User', 'enabled'=>'1', 'position'=>20, 'notnull'=>1, 'visible'=>0,),
+		'heure_nuit' => array('type'=>'double', 'label'=>'HeureNuit', 'enabled'=>'1', 'position'=>55, 'notnull'=>0, 'visible'=>1,),
+		'heure_route' => array('type'=>'double', 'label'=>'HeureRoute', 'enabled'=>'1', 'position'=>56, 'notnull'=>0, 'visible'=>1,),
+		'kilometres' => array('type'=>'double(6,2)', 'label'=>'IK', 'enabled'=>'1', 'position'=>62, 'notnull'=>0, 'visible'=>1,),
+		'repas' => array('type'=>'integer', 'label'=>'Repas', 'enabled'=>'1', 'position'=>70, 'notnull'=>0, 'visible'=>1, 'arrayofkeyval'=>array('1'=>'R1', '2'=>'R2'),),
+		'indemnite_tt' => array('type'=>'boolean', 'label'=>'IndemniteTT', 'enabled'=>'1', 'position'=>71, 'notnull'=>0, 'visible'=>1,),
+		'heure_sup00' => array('type'=>'double', 'label'=>'HeureSup00', 'enabled'=>'1', 'position'=>51, 'notnull'=>0, 'visible'=>1,),
+		'heure_sup25' => array('type'=>'double', 'label'=>'HeureSup25', 'enabled'=>'1', 'position'=>52, 'notnull'=>0, 'visible'=>1,),
+		'heure_sup50' => array('type'=>'double', 'label'=>'HeureSup50', 'enabled'=>'1', 'position'=>53, 'notnull'=>0, 'visible'=>1,),
 	);
 	public $rowid;
 	public $date_creation;
@@ -147,24 +136,14 @@ class Regul extends CommonObject
 	public $fk_user_modif;
 	public $date;
 	public $fk_user;
-	public $d1;
-	public $d2;
-	public $d3;
-	public $d4;
-	public $gd1;
-	public $gd2;
+	public $heure_nuit;
 	public $heure_route;
-	public $repas1;
-	public $repas2;
 	public $kilometres;
+	public $repas;
 	public $indemnite_tt;
-	public $heure_nuit_50;
-	public $heure_nuit_75;
-	public $heure_nuit_100;
 	public $heure_sup00;
 	public $heure_sup25;
 	public $heure_sup50;
-	public $heure_sup50ht;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -173,32 +152,32 @@ class Regul extends CommonObject
 	// /**
 	//  * @var string    Name of subtable line
 	//  */
-	// public $table_element_line = 'feuilledetemps_regulline';
+	// public $table_element_line = 'feuilledetemps_silaeline';
 
 	// /**
 	//  * @var string    Field with ID of parent key if this object has a parent
 	//  */
-	// public $fk_element = 'fk_regul';
+	// public $fk_element = 'fk_silae';
 
 	// /**
 	//  * @var string    Name of subtable class that manage subtable lines
 	//  */
-	// public $class_element_line = 'Regulline';
+	// public $class_element_line = 'Silaeline';
 
 	// /**
 	//  * @var array	List of child tables. To test if we can delete object.
 	//  */
-	// protected $childtables = array('mychildtable' => array('name'=>'Regul', 'fk_element'=>'fk_regul'));
+	// protected $childtables = array();
 
 	// /**
 	//  * @var array    List of child tables. To know object to delete on cascade.
 	//  *               If name matches '@ClassNAme:FilePathClass;ParentFkFieldName' it will
 	//  *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object
 	//  */
-	// protected $childtablesoncascade = array('feuilledetemps_reguldet');
+	// protected $childtablesoncascade = array('feuilledetemps_silaedet');
 
 	// /**
-	//  * @var RegulLine[]     Array of subtable lines
+	//  * @var SilaeLine[]     Array of subtable lines
 	//  */
 	// public $lines = array();
 
@@ -215,7 +194,7 @@ class Regul extends CommonObject
 
 		$this->db = $db;
 
-		if (!getDolGlobalInt('MAIN_SHOW_TECHNICAL_ID') && isset($this->fields['rowid']) && !empty($this->fields['ref'])) {
+		if (empty($conf->global->MAIN_SHOW_TECHNICAL_ID) && isset($this->fields['rowid']) && !empty($this->fields['ref'])) {
 			$this->fields['rowid']['visible'] = 0;
 		}
 		if (!isModEnabled('multicompany') && isset($this->fields['entity'])) {
@@ -223,7 +202,7 @@ class Regul extends CommonObject
 		}
 
 		// Example to show how to set values of fields definition dynamically
-		/*if ($user->hasRight('feuilledetemps', 'regul', 'read')) {
+		/*if ($user->rights->feuilledetemps->silae->read) {
 			$this->fields['myfield']['visible'] = 1;
 			$this->fields['myfield']['noteditable'] = 0;
 		}*/
@@ -257,7 +236,6 @@ class Regul extends CommonObject
 	public function create(User $user, $notrigger = false)
 	{
 		$resultcreate = $this->createCommon($user, $notrigger);
-
 		//$resultvalidate = $this->validate($user, $notrigger);
 
 		return $resultcreate;
@@ -331,7 +309,8 @@ class Regul extends CommonObject
 		$result = $object->createCommon($user);
 		if ($result < 0) {
 			$error++;
-			$this->setErrorsFromObject($object);
+			$this->error = $object->error;
+			$this->errors = $object->errors;
 		}
 
 		if (!$error) {
@@ -405,6 +384,8 @@ class Regul extends CommonObject
 	 */
 	public function fetchAll($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND')
 	{
+		global $conf;
+
 		dol_syslog(__METHOD__, LOG_DEBUG);
 
 		$records = array();
@@ -430,7 +411,7 @@ class Regul extends CommonObject
 				} elseif (strpos($value, '%') === false) {
 					$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
 				} else {
-					$sqlwhere[] = $key." LIKE '%".$this->db->escapeforlike($this->db->escape($value))."%'";
+					$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
 				}
 			}
 		}
@@ -535,8 +516,8 @@ class Regul extends CommonObject
 			return 0;
 		}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && !empty($user->rights->feuilledetemps->regul->regul_advance->validate))))
+		/*if (! ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->feuilledetemps->silae->write))
+		 || (!empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->feuilledetemps->silae->silae_advance->validate))))
 		 {
 		 $this->error='NotEnoughPermissions';
 		 dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
@@ -578,7 +559,7 @@ class Regul extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
-				$result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+				$result = $this->call_trigger('SILAE_VALIDATE', $user);
 				if ($result < 0) {
 					$error++;
 				}
@@ -592,14 +573,8 @@ class Regul extends CommonObject
 			// Rename directory if dir was a temporary ref
 			if (preg_match('/^[\(]?PROV/i', $this->ref)) {
 				// Now we rename also files into index
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'regul/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'regul/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
-				$resql = $this->db->query($sql);
-				if (!$resql) {
-					$error++; $this->error = $this->db->lasterror();
-				}
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filepath = 'regul/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filepath = 'regul/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
+				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'silae/".$this->db->escape($this->newref)."'";
+				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'silae/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
 				$resql = $this->db->query($sql);
 				if (!$resql) {
 					$error++; $this->error = $this->db->lasterror();
@@ -608,15 +583,15 @@ class Regul extends CommonObject
 				// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
 				$oldref = dol_sanitizeFileName($this->ref);
 				$newref = dol_sanitizeFileName($num);
-				$dirsource = $conf->feuilledetemps->dir_output.'/regul/'.$oldref;
-				$dirdest = $conf->feuilledetemps->dir_output.'/regul/'.$newref;
+				$dirsource = $conf->feuilledetemps->dir_output.'/silae/'.$oldref;
+				$dirdest = $conf->feuilledetemps->dir_output.'/silae/'.$newref;
 				if (!$error && file_exists($dirsource)) {
 					dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
 
 					if (@rename($dirsource, $dirdest)) {
 						dol_syslog("Rename ok");
 						// Rename docs starting with $oldref with $newref
-						$listoffiles = dol_dir_list($conf->feuilledetemps->dir_output.'/regul/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
+						$listoffiles = dol_dir_list($conf->feuilledetemps->dir_output.'/silae/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
 						foreach ($listoffiles as $fileentry) {
 							$dirsource = $fileentry['name'];
 							$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
@@ -659,14 +634,14 @@ class Regul extends CommonObject
 			return 0;
 		}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','feuilledetemps_advance','validate'))))
+		/*if (! ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->feuilledetemps->write))
+		 || (!empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->feuilledetemps->feuilledetemps_advance->validate))))
 		 {
 		 $this->error='Permission denied';
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FEUILLEDETEMPS_MYOBJECT_UNVALIDATE');
+		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'SILAE_UNVALIDATE');
 	}
 
 	/**
@@ -683,14 +658,14 @@ class Regul extends CommonObject
 			return 0;
 		}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','feuilledetemps_advance','validate'))))
+		/*if (! ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->feuilledetemps->write))
+		 || (!empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->feuilledetemps->feuilledetemps_advance->validate))))
 		 {
 		 $this->error='Permission denied';
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'FEUILLEDETEMPS_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'SILAE_CANCEL');
 	}
 
 	/**
@@ -707,39 +682,14 @@ class Regul extends CommonObject
 			return 0;
 		}
 
-		/*if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','feuilledetemps_advance','validate'))))
+		/*if (! ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->feuilledetemps->write))
+		 || (!empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->feuilledetemps->feuilledetemps_advance->validate))))
 		 {
 		 $this->error='Permission denied';
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'FEUILLEDETEMPS_MYOBJECT_REOPEN');
-	}
-
-	/**
-	 * getTooltipContentArray
-	 *
-	 * @param 	array 	$params 	Params to construct tooltip data
-	 * @since 	v18
-	 * @return 	array
-	 */
-	public function getTooltipContentArray($params)
-	{
-		global $conf, $langs;
-
-		$datas = [];
-
-		if (getDolGlobalInt('MAIN_OPTIMIZEFORTEXTBROWSER')) {
-			return ['optimize' => $langs->trans("ShowRegul")];
-		}
-		$datas['picto'] = img_picto('', $this->picto).' <u>'.$langs->trans("Regul").'</u>';
-		if (isset($this->status)) {
-			$datas['picto'] .= ' '.$this->getLibStatut(5);
-		}
-		$datas['ref'] .= '<br><b>'.$langs->trans('Ref').':</b> '.$this->ref;
-
-		return $datas;
+		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'SILAE_REOPEN');
 	}
 
 	/**
@@ -761,24 +711,17 @@ class Regul extends CommonObject
 		}
 
 		$result = '';
-		$params = [
-			'id' => $this->id,
-			'objecttype' => $this->element.($this->module ? '@'.$this->module : ''),
-			'option' => $option,
-		];
-		$classfortooltip = 'classfortooltip';
-		$dataparams = '';
-		if (getDolGlobalInt('MAIN_ENABLE_AJAX_TOOLTIP')) {
-			$classfortooltip = 'classforajaxtooltip';
-			$dataparams = ' data-params="'.dol_escape_htmltag(json_encode($params)).'"';
-			$label = '';
-		} else {
-			$label = implode($this->getTooltipContentArray($params));
+
+		$label = img_picto('', $this->picto).' <u>'.$langs->trans("Silae").'</u>';
+		if (isset($this->status)) {
+			$label .= ' '.$this->getLibStatut(5);
 		}
+		$label .= '<br>';
+		$label .= '<b>'.$langs->trans('Ref').':</b> '.$this->ref;
 
-		$url = dol_buildpath('/feuilledetemps/regul_card.php', 1).'?id='.$this->id;
+		$url = dol_buildpath('/feuilledetemps/silae_card.php', 1).'?id='.$this->id;
 
-		if ($option !== 'nolink') {
+		if ($option != 'nolink') {
 			// Add param to save lastsearch_values or not
 			$add_save_lastsearch_values = ($save_lastsearch_value == 1 ? 1 : 0);
 			if ($save_lastsearch_value == -1 && preg_match('/list\.php/', $_SERVER["PHP_SELF"])) {
@@ -791,12 +734,12 @@ class Regul extends CommonObject
 
 		$linkclose = '';
 		if (empty($notooltip)) {
-			if (getDolGlobalInt('MAIN_OPTIMIZEFORTEXTBROWSER')) {
-				$label = $langs->trans("ShowRegul");
+			if (!empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) {
+				$label = $langs->trans("ShowSilae");
 				$linkclose .= ' alt="'.dol_escape_htmltag($label, 1).'"';
 			}
-			$linkclose .= ($label ? ' title="'.dol_escape_htmltag($label, 1).'"' :  ' title="tocomplete"');
-			$linkclose .= $dataparams.' class="'.$classfortooltip.($morecss ? ' '.$morecss : '').'"';
+			$linkclose .= ' title="'.dol_escape_htmltag($label, 1).'"';
+			$linkclose .= ' class="classfortooltip'.($morecss ? ' '.$morecss : '').'"';
 		} else {
 			$linkclose = ($morecss ? ' class="'.$morecss.'"' : '');
 		}
@@ -817,7 +760,7 @@ class Regul extends CommonObject
 
 		if (empty($this->showphoto_on_popup)) {
 			if ($withpicto) {
-				$result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), (($withpicto != 2) ? 'class="paddingright"' : ''), 0, 0, $notooltip ? 0 : 1);
+				$result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="'.(($withpicto != 2) ? 'paddingright ' : '').'classfortooltip"'), 0, 0, $notooltip ? 0 : 1);
 			}
 		} else {
 			if ($withpicto) {
@@ -831,7 +774,7 @@ class Regul extends CommonObject
 					$pospoint = strpos($filearray[0]['name'], '.');
 
 					$pathtophoto = $class.'/'.$this->ref.'/thumbs/'.substr($filename, 0, $pospoint).'_mini'.substr($filename, $pospoint);
-					if (!getDolGlobalString(strtoupper($module.'_'.$class).'_FORMATLISTPHOTOSASUSERS')) {
+					if (empty($conf->global->{strtoupper($module.'_'.$class).'_FORMATLISTPHOTOSASUSERS'})) {
 						$result .= '<div class="floatleft inline-block valignmiddle divphotoref"><div class="photoref"><img class="photo'.$module.'" alt="No photo" border="0" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$module.'&entity='.$conf->entity.'&file='.urlencode($pathtophoto).'"></div></div>';
 					} else {
 						$result .= '<div class="floatleft inline-block valignmiddle divphotoref"><img class="photouserphoto userphoto" alt="No photo" border="0" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$module.'&entity='.$conf->entity.'&file='.urlencode($pathtophoto).'"></div>';
@@ -839,7 +782,7 @@ class Regul extends CommonObject
 
 					$result .= '</div>';
 				} else {
-					$result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="'.(($withpicto != 2) ? 'paddingright ' : '').'"'), 0, 0, $notooltip ? 0 : 1);
+					$result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="'.(($withpicto != 2) ? 'paddingright ' : '').'classfortooltip"'), 0, 0, $notooltip ? 0 : 1);
 				}
 			}
 		}
@@ -853,7 +796,7 @@ class Regul extends CommonObject
 
 		global $action, $hookmanager;
 		$hookmanager->initHooks(array($this->element.'dao'));
-		$parameters = array('id' => $this->id, 'getnomurl' => &$result);
+		$parameters = array('id'=>$this->id, 'getnomurl' => &$result);
 		$reshook = $hookmanager->executeHooks('getNomUrl', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
 		if ($reshook > 0) {
 			$result = $hookmanager->resPrint;
@@ -868,37 +811,23 @@ class Regul extends CommonObject
 	 *	Return a thumb for kanban views
 	 *
 	 *	@param      string	    $option                 Where point the link (0=> main card, 1,2 => shipment, 'nolink'=>No link)
-	 *  @param		array		$arraydata				Array of data
 	 *  @return		string								HTML Code for Kanban thumb.
 	 */
-	public function getKanbanView($option = '', $arraydata = null)
+	/*
+	public function getKanbanView($option = '')
 	{
-		global $conf, $langs;
-
-		$selected = (empty($arraydata['selected']) ? 0 : $arraydata['selected']);
-
 		$return = '<div class="box-flex-item box-flex-grow-zero">';
 		$return .= '<div class="info-box info-box-sm">';
 		$return .= '<span class="info-box-icon bg-infobox-action">';
 		$return .= img_picto('', $this->picto);
 		$return .= '</span>';
 		$return .= '<div class="info-box-content">';
-		$return .= '<span class="info-box-ref inline-block tdoverflowmax150 valignmiddle">'.(method_exists($this, 'getNomUrl') ? $this->getNomUrl() : $this->ref).'</span>';
-		if ($selected >= 0) {
-			$return .= '<input id="cb'.$this->id.'" class="flat checkforselect fright" type="checkbox" name="toselect[]" value="'.$this->id.'"'.($selected ? ' checked="checked"' : '').'>';
-		}
+		$return .= '<span class="info-box-ref">'.(method_exists($this, 'getNomUrl') ? $this->getNomUrl() : $this->ref).'</span>';
 		if (property_exists($this, 'label')) {
-			$return .= ' <div class="inline-block opacitymedium valignmiddle tdoverflowmax100">'.$this->label.'</div>';
-		}
-		if (property_exists($this, 'thirdparty') && is_object($this->thirdparty)) {
-			$return .= '<br><div class="info-box-ref tdoverflowmax150">'.$this->thirdparty->getNomUrl(1).'</div>';
-		}
-		if (property_exists($this, 'amount')) {
-			$return .= '<br>';
-			$return .= '<span class="info-box-label amount">'.price($this->amount, 0, $langs, 1, -1, -1, $conf->currency).'</span>';
+			$return .= '<br><span class="info-box-label opacitymedium">'.$this->label.'</span>';
 		}
 		if (method_exists($this, 'getLibStatut')) {
-			$return .= '<br><div class="info-box-status margintoponly">'.$this->getLibStatut(3).'</div>';
+			$return .= '<br><div class="info-box-status margintoponly">'.$this->getLibStatut(5).'</div>';
 		}
 		$return .= '</div>';
 		$return .= '</div>';
@@ -906,6 +835,7 @@ class Regul extends CommonObject
 
 		return $return;
 	}
+	*/
 
 	/**
 	 *  Return the label of the status
@@ -931,7 +861,7 @@ class Regul extends CommonObject
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
 	/**
-	 *  Return the label of a given status
+	 *  Return the status
 	 *
 	 *  @param	int		$status        Id status
 	 *  @param  int		$mode          0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=Short label + Picto, 6=Long label + Picto
@@ -1023,11 +953,12 @@ class Regul extends CommonObject
 	{
 		$this->lines = array();
 
-		$objectline = new RegulLine($this->db);
-		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_regul = '.((int) $this->id)));
+		$objectline = new SilaeLine($this->db);
+		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_silae = '.((int) $this->id)));
 
 		if (is_numeric($result)) {
-			$this->setErrorsFromObject($objectline);
+			$this->error = $objectline->error;
+			$this->errors = $objectline->errors;
 			return $result;
 		} else {
 			$this->lines = $result;
@@ -1045,15 +976,15 @@ class Regul extends CommonObject
 		global $langs, $conf;
 		$langs->load("feuilledetemps@feuilledetemps");
 
-		if (!getDolGlobalString('FEUILLEDETEMPS_MYOBJECT_ADDON')) {
-			$conf->global->FEUILLEDETEMPS_MYOBJECT_ADDON = 'mod_regul_standard';
+		if (empty($conf->global->FEUILLEDETEMPS_SILAE_ADDON)) {
+			$conf->global->FEUILLEDETEMPS_SILAE_ADDON = 'mod_silae_standard';
 		}
 
-		if (getDolGlobalString('FEUILLEDETEMPS_MYOBJECT_ADDON')) {
+		if (!empty($conf->global->FEUILLEDETEMPS_SILAE_ADDON)) {
 			$mybool = false;
 
-			$file = getDolGlobalString('FEUILLEDETEMPS_MYOBJECT_ADDON').".php";
-			$classname = getDolGlobalString('FEUILLEDETEMPS_MYOBJECT_ADDON');
+			$file = $conf->global->FEUILLEDETEMPS_SILAE_ADDON.".php";
+			$classname = $conf->global->FEUILLEDETEMPS_SILAE_ADDON;
 
 			// Include file with class
 			$dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
@@ -1111,12 +1042,12 @@ class Regul extends CommonObject
 		$langs->load("feuilledetemps@feuilledetemps");
 
 		if (!dol_strlen($modele)) {
-			$modele = 'standard_regul';
+			$modele = 'standard_silae';
 
 			if (!empty($this->model_pdf)) {
 				$modele = $this->model_pdf;
-			} elseif (getDolGlobalString('MYOBJECT_ADDON_PDF')) {
-				$modele = getDolGlobalString('MYOBJECT_ADDON_PDF');
+			} elseif (!empty($conf->global->SILAE_ADDON_PDF)) {
+				$modele = $conf->global->SILAE_ADDON_PDF;
 			}
 		}
 
@@ -1138,7 +1069,7 @@ class Regul extends CommonObject
 	 */
 	public function doScheduledJob()
 	{
-		//global $conf, $langs;
+		global $conf, $langs;
 
 		//$conf->global->SYSLOG_FILE = 'DOL_DATA_ROOT/dolibarr_mydedicatedlofile.log';
 
@@ -1160,13 +1091,88 @@ class Regul extends CommonObject
 	}
 
 	/**
-    *  Load properties of regul whithout ID.
+	 *  Obtenir le total des heures à partir d'un utilisateur et d'une date
+	 *
+	 *  @param	    Date		$date			
+	 *  @param      Int			id de l'user   
+	 *  @return     array         				Total des heures
+	 */
+	public function getAllSilae($dateStart, $dateEnd, $userId)
+    {
+		$arraySilae = array();
+
+        if (empty($dateStart)) {
+			dol_print_error('', 'Error dateStart parameter is empty');
+		}
+
+		if (empty($dateEnd)) {
+			dol_print_error('', 'Error dateEnd parameter is empty');
+		}
+
+		if (empty($userId)) {
+			dol_print_error('', 'Error userId parameter is empty');
+		}
+  
+        $sql = 'SELECT s.date, s.fk_user, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_nuit, s.heure_route, s.kilometres, s.repas, s.indemnite_tt';
+        $sql .= ' FROM '.MAIN_DB_PREFIX.$this->table_element.' as s';
+    	$sql .= " WHERE s.date <= '".$this->db->idate($dateEnd)."'";
+		$sql .= " AND s.date >= '".$this->db->idate($dateStart)."'";
+        $sql .= " AND s.fk_user = ".((int) $userId);
+  
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			// Loop on each record found, so each couple (project id, task id)
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				$day = $this->db->jdate($obj->date); // task_date is date without hours
+
+				if(!empty($obj->heure_sup00)) {
+					$arraySilae['heure_sup00'][$day] = $obj->heure_sup00;
+				}
+				if(!empty($obj->heure_sup25)) {
+					$arraySilae['heure_sup25'][$day] = $obj->heure_sup25;
+				}
+				if(!empty($obj->heure_sup50)) {
+					$arraySilae['heure_sup50'][$day] = $obj->heure_sup50;
+				}
+				if(!empty($obj->heure_nuit)) {
+					$arraySilae['heure_nuit'][$day] = $obj->heure_nuit;
+				}
+				if(!empty($obj->heure_route)) {
+					$arraySilae['heure_route'][$day] = $obj->heure_route;
+				}
+				if(!empty($obj->kilometres)) {
+					$arraySilae['kilometres'][$day] = $obj->kilometres;
+				}
+				if(!empty($obj->repas)) {
+					$arraySilae['repas'][$day] = $obj->repas;
+				}
+				if(!empty($obj->indemnite_tt)) {
+					$arraySilae['indemnite_tt'][$day] = $obj->indemnite_tt;
+				}
+
+				$i++;
+			}
+
+			$this->db->free($resql);
+			return $arraySilae;
+		} else {
+			$this->error = "Error ".$this->db->lasterror();
+			dol_syslog(get_class($this)."::getAllSilae ".$this->error, LOG_ERR);
+			return -1;
+		}
+	}
+
+	/**
+    *  Load properties of deplacement whithout ID.
     *
-    *  @param	int		$date 	    Date of regul
+    *  @param	int		$date 	    Date of deplacement
     *  @param	int		$fk_user 	Id of User
-    *  @return  int		            <0 if KO, >0 if OK, 0 si aucune regul n'a été trouvé
+    *  @return  int		            <0 if KO, >0 if OK, 0 si aucun deplacement n'a été trouvé
     */
-    public function fetchWithoutId($date, $fk_user)
+    public function fetchSilaeWithoutId($date, $fk_user)
     {
         global $langs;
 
@@ -1178,29 +1184,19 @@ class Regul extends CommonObject
         $sql .= " d.fk_user_modif,";
         $sql .= " d.date,";
         $sql .= " d.fk_user,";
-        $sql .= " d.d1,";
-		$sql .= " d.d2,";
-        $sql .= " d.d3,";
-        $sql .= " d.d4,";
-        $sql .= " d.gd1,";
-        $sql .= " d.gd2,";
-		$sql .= " d.heure_route,";
-		$sql .= " d.repas1,";
-		$sql .= " d.repas2,";
-		$sql .= " d.kilometres,";
-		$sql .= " d.indemnite_tt,";
-		$sql .= " d.heure_nuit_50,";
-		$sql .= " d.heure_nuit_75,";
-		$sql .= " d.heure_nuit_100,";
 		$sql .= " d.heure_sup00,";
 		$sql .= " d.heure_sup25,";
 		$sql .= " d.heure_sup50,";
-		$sql .= " d.heure_sup50th";
-        $sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_regul as d";
+        $sql .= " d.heure_nuit,";
+        $sql .= " d.heure_route,";
+        $sql .= " d.kilometres,";
+        $sql .= " d.repas,";
+		$sql .= " d.indemnite_tt";
+        $sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_silae as d";
         $sql .= " WHERE d.date = '".($this->db->idate($date))."'";
         $sql .= " AND d.fk_user = ".((int) $fk_user);
 
-        dol_syslog(get_class($this)."::fetchWithoutId", LOG_DEBUG);
+        dol_syslog(get_class($this)."::fetchSilaeWithoutId", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql) {
             if ($this->db->num_rows($resql)) {
@@ -1213,29 +1209,21 @@ class Regul extends CommonObject
                 $this->fk_user_modif = $obj->fk_user_modif;
                 $this->date = $this->db->jdate($obj->date);
                 $this->fk_user = $obj->fk_user;
-                $this->d1 = $obj->d1;
-				$this->d2 = $obj->d2;
-                $this->d3 = $obj->d3;
-                $this->d4 = $obj->d4;
-                $this->gd1 = $obj->gd1;
-                $this->gd2 = $obj->gd2;
-                $this->heure_route = $obj->heure_route;
-				$this->repas1 = $obj->repas1;
-				$this->repas2 = $obj->repas2;
-				$this->kilometres = $obj->kilometres;
-				$this->indemnite_tt = $obj->indemnite_tt;
-				$this->heure_nuit_50 = $obj->heure_nuit_50;
-				$this->heure_nuit_75 = $obj->heure_nuit_75;
-				$this->heure_nuit_100 = $obj->heure_nuit_100;
 				$this->heure_sup00 = $obj->heure_sup00;
 				$this->heure_sup25 = $obj->heure_sup25;
 				$this->heure_sup50 = $obj->heure_sup50;
-				$this->heure_sup50ht = $obj->heure_sup50ht;
+                $this->heure_nuit = $obj->heure_nuit;
+                $this->heure_route = $obj->heure_route;
+                $this->kilometres = $obj->kilometres;
+                $this->repas = $obj->repas;
+                $this->indemnite_tt = $obj->indemnite_tt;
 
                 $this->db->free($resql);
                 return 1;
             }
             else {
+				$this->repas = 0;
+
                 $this->db->free($resql);
                 return 0;
             }
@@ -1244,23 +1232,46 @@ class Regul extends CommonObject
             return -1;
         }
     }
+
+	public function calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow) {
+		global $conf; 
+
+		if(dol_print_date($dayinloopfromfirstdaytoshow, '%Y-%m-%d') < '2024-06-03' && $heure_semaine == $conf->global->HEURE_SEMAINE) {
+			$heure_semaine = 35;
+		}
+
+		if(dol_print_date($dayinloopfromfirstdaytoshow, '%Y-%m-%d') < '2024-06-03' && $heure_semaine_hs == $conf->global->HEURE_SEMAINE) {
+			$heure_semaine_hs = 35;
+		}
+
+		$timeSpentWeekMax = ($timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)] > $conf->global->HEURE_MAX_SEMAINE ? $conf->global->HEURE_MAX_SEMAINE : $timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)]);
+		$this->heure_sup50 = ($timeSpentWeekMax - $conf->global->HEURE_SUP1 > 0 ? ($timeSpentWeekMax - $conf->global->HEURE_SUP1) * 3600 : '');
+
+		$timeSpentWeekMax = ($timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)] > $conf->global->HEURE_SUP1 ? $conf->global->HEURE_SUP1 : $timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)]);
+		$this->heure_sup25 = ($timeSpentWeekMax - $heure_semaine_hs > 0 ? ($timeSpentWeekMax - $heure_semaine_hs) * 3600 : '');
+
+		$timeSpentWeekMax = ($timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)] > $heure_semaine_hs ? $heure_semaine_hs : $timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)]);
+		$heuresup00 = $timeSpentWeekMax - ($heure_semaine - $timeHoliday[(int)date("W", $dayinloopfromfirstdaytoshow)]);
+		$this->heure_sup00 = ($heuresup00 > 0 ? $heuresup00 * 3600 : '');
+	}
 }
+
 
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobjectline.class.php';
 
 /**
- * Class RegulLine. You can also remove this and generate a CRUD class for lines objects.
+ * Class SilaeLine. You can also remove this and generate a CRUD class for lines objects.
  */
-class RegulLine extends CommonObjectLine
+class SilaeLine extends CommonObjectLine
 {
-	// To complete with content of an object RegulLine
-	// We should have a field rowid, fk_regul and position
+	// To complete with content of an object SilaeLine
+	// We should have a field rowid, fk_silae and position
 
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 0;
+	public $isextrafieldmanaged = 1;
 
 	/**
 	 * Constructor

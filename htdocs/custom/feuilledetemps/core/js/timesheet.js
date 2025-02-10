@@ -877,9 +877,9 @@ function deleteTypeDeplacement(idw, typeDeplacement, nb_jour, num_first_day) {
  * @param {type} silent will show message to user or not
  * @returns {undefined}
  */
-function validateTime(object, idw, jour_ecart, mode_input, nb_jour, temps, typeDeplacement, heure_semaine_hs, modifyTypeDeplacement) {
+function validateTime(object, idw, jour_ecart, mode_input, nb_jour, temps, typeDeplacement, heure_semaine_hs, modifyTypeDeplacement, heure_max_jour, heure_max_semaine) {
     updated = false;
-    if (validateTotal(idw, mode_input) < 0) {
+    if (validateTotal(idw, mode_input, heure_max_jour) < 0) {
         object.value = "";
         object.style.backgroundColor = "#ff000078";
         return 0;
@@ -888,7 +888,7 @@ function validateTime(object, idw, jour_ecart, mode_input, nb_jour, temps, typeD
         object.style.backgroundColor = "white";
     }
 
-    if (validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_semaine_hs, mode_input) < 0) {
+    if (validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_semaine_hs, mode_input, heure_max_semaine) < 0) {
         object.value = "";
         object.style.backgroundColor = "#ff000078";
         return 0;
@@ -910,7 +910,7 @@ function validateTime(object, idw, jour_ecart, mode_input, nb_jour, temps, typeD
 }
 
 // Valide le total des heures pointées
-function validateTotal(idw, mode_input) {
+function validateTotal(idw, mode_input, heure_max_jour) {
     var total = 0;
     try {
         //var Total = document.getElementsByClassName('TotalColumn_'+idw);
@@ -930,7 +930,7 @@ function validateTotal(idw, mode_input) {
             }
         }
         var hours = total / 60;
-        if (hours > HEURE_MAX_JOUR) {
+        if (hours > heure_max_jour) {
             $.jnotify(ERR_HEURE_MAX_JOUR_DEPASSEMENT, 'error', false);
             return -1;
         }
@@ -941,7 +941,7 @@ function validateTotal(idw, mode_input) {
     return 1;
 }
 
-function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_semaine_hs, mode_input) {
+function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_semaine_hs, mode_input, heure_max_semaine) {
     var total = 0;
     var heureCase = 0;
     var total_hs = 0;
@@ -961,7 +961,7 @@ function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_sem
             if(mode_input == 'hours_decimal' && Total[0].innerHTML) {
                 totalDay = 60 * parseFloat(Total[0].innerHTML);
 
-                if (totalDay <= 600) {
+                if (totalDay <= 1440) {
                     total += totalDay;
                     if (Total[0].parentNode.className.indexOf('onholidayallday') !== -1) {
                         total_hs += totalDay;
@@ -981,7 +981,7 @@ function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_sem
                 }
             }
             var hours = total / 60;
-            if (hours > HEURE_MAX_SEMAINE) {
+            if (hours > heure_max_semaine) {
                 $.jnotify(ERR_HEURE_MAX_SEMAINE_DEPASSEMENT, 'error', false);
                 return -1;
             }
@@ -1804,6 +1804,32 @@ function updateTotal_HeureSup50(nb_jour, num_first_day) {
     }
     else {
         totalHeureSup50.classList.remove('noNull')
+    }
+}
+
+// Permet de mettre à jour le total des heures sup à 50% HT
+function updateTotal_HeureSup50HT(nb_jour, num_first_day) {
+    var totalHeureSup50HT = document.getElementById('totalHeureSup50HT');
+    var heure = 0;
+
+    if (document.getElementById('regulHeureSup50HT') && document.getElementById('regulHeureSup50HT').value) {
+        heure += parseFloat(document.getElementById('regulHeureSup50HT').value.replace(',', '.'));
+    }
+
+    if (totalHeureSup50HT !== null) {
+        for (i = num_first_day; i < nb_jour; i++) {
+            if (document.getElementById('heure_sup50ht[' + i + ']') && parseFloat(document.getElementById('heure_sup50ht[' + i + ']').value) > 0)
+                heure += parseFloat(document.getElementById('heure_sup50ht[' + i + ']').value.replace(',', '.'));
+        }
+    }
+
+    totalHeureSup50HT.textContent = heure;
+
+    if (heure != 0) {
+        totalHeureSup50HT.classList.add('noNull')
+    }
+    else {
+        totalHeureSup50HT.classList.remove('noNull')
     }
 }
 

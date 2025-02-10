@@ -117,6 +117,8 @@ $item = $formSetup->newItem('HEURE_SEMAINE_NO_RTT')->setAsString();
 // HEURE_SUP1
 $item = $formSetup->newItem('HEURE_SUP1')->setAsString();
 
+// HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE
+$item = $formSetup->newItem('HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE')->setAsYesNo();
 
 
 // Titre Congés

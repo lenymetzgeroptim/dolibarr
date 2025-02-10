@@ -86,9 +86,8 @@ $search_project_ref = GETPOST('search_project_ref', 'alpha', 3);
 $search_thirdparty = GETPOST('search_thirdparty', 'alpha', 3);
 $search_declared_progress = GETPOST('search_declared_progress', 'alpha', 3);
 
-
 // Déclaration des objets
-if (empty($search_usertoprocessid) || $search_usertoprocessid == $user->id) {
+if (empty($search_usertoprocessid) || $search_usertoprocessid == $user->id || GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) {
 	$usertoprocess = $user;
 	$search_usertoprocessid = $usertoprocess->id;
 } elseif ($search_usertoprocessid > 0) {
@@ -238,6 +237,21 @@ $heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire'
 $heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
 
 
+// Nombre d'heures max par jour et semaine
+if(empty($usertoprocess->array_options['options_heuremaxjour'])) {
+    $heure_max_jour = ($conf->global->HEURE_MAX_JOUR > 0 ? $conf->global->HEURE_MAX_JOUR : 0);
+}
+else {
+	$heure_max_jour = $usertoprocess->array_options['options_heuremaxjour'];
+}
+
+if(empty($usertoprocess->array_options['options_heuremaxsemaine'])) {
+	$heure_max_semaine = ($conf->global->HEURE_MAX_SEMAINE > 0 ? $conf->global->HEURE_MAX_SEMAINE : 0);
+}
+else {
+	$heure_max_semaine = $usertoprocess->array_options['options_heuremaxsemaine'];
+}
+
 /*
  * Actions
  */
@@ -256,7 +270,7 @@ if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x'
 	$search_array_options_task = array();
 
 	// We redefine $usertoprocess
-	$usertoprocess = $user;
+	//$usertoprocess = $user;
 }
 
 $onlyopenedproject = -1;
@@ -583,14 +597,14 @@ if (count($tasksarray) > 0) {
 															$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
 															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-															$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday);
+															$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine);
 	}
 	else {
 		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek_Sigedi('timesheet', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
 																$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
 																$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 																$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs,
-																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday);
+																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine);
 	}
 } else {
 	print '<tr><td colspan="'.(4 + $addcolspan + $nb_jour).'"><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';

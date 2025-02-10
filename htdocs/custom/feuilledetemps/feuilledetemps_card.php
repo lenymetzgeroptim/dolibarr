@@ -281,44 +281,46 @@ $is_semaine_anticipe = 0;
 $addcolspan = 0;
 
 // Gestion des types de déplacement de l'utilisateur
-$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
-$userField_deplacement = new UserField($db);
-$userField_deplacement->id = $object->fk_user;
-$userField_deplacement->table_element = 'donneesrh_Deplacement';
-$userField_deplacement->fetch_optionals();
+if($conf->donneesrh->enabled) {
+	$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
+	$userField_deplacement = new UserField($db);
+	$userField_deplacement->id = $object->fk_user;
+	$userField_deplacement->table_element = 'donneesrh_Deplacement';
+	$userField_deplacement->fetch_optionals();
 
-$userInDeplacement = 0;
-$type_deplacement = 'none';
-$userInGrandDeplacement = 0;
-if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
-	$userInDeplacement = 1;
-	$type_deplacement = 'petitDeplacement';
+	$userInDeplacement = 0;
+	$type_deplacement = 'none';
+	$userInGrandDeplacement = 0;
+	if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
+		$userInDeplacement = 1;
+		$type_deplacement = 'petitDeplacement';
+	}
+	if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
+		$userInGrandDeplacement = 1;
+		$type_deplacement = 'grandDeplacement';
+	}
+
+	// Gestion des repas de l'utilisateur
+	$userRepas = 0;
+	if($userField_deplacement->array_options['options_panier1'] == '1') {
+		$userRepas = 1;
+	}
+	elseif($userField_deplacement->array_options['options_panier2'] == '1') {
+		$userRepas = 2;
+	}
+
+
+	// Nombre d'heures par semaine à faire et avant de pouvoir avoir des hs
+	$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+	$userField = new UserField($db);
+	$userField->id = $usertoprocess->id;
+	$userField->table_element = 'donneesrh_Positionetcoefficient';
+	$userField->fetch_optionals();
+
+	$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
+	$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
 }
-if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
-	$userInGrandDeplacement = 1;
-	$type_deplacement = 'grandDeplacement';
-}
-
-// Gestion des repas de l'utilisateur
-$userRepas = 0;
-if($userField_deplacement->array_options['options_panier1'] == '1') {
-	$userRepas = 1;
-}
-elseif($userField_deplacement->array_options['options_panier2'] == '1') {
-	$userRepas = 2;
-}
-
-// Nombre d'heures par semaine à faire et avant de pouvoir avoir des hs
-$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
-$userField = new UserField($db);
-$userField->id = $usertoprocess->id;
-$userField->table_element = 'donneesrh_Positionetcoefficient';
-$userField->fetch_optionals();
-
-$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
-$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
-$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
-
 
 // Gestion des congés et des jours feriés
 $all_holiday_validate = 1;
@@ -386,6 +388,21 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 	}
 }
 
+
+// Nombre d'heures max par jour et semaine
+if(empty($usertoprocess->array_options['options_heuremaxjour'])) {
+    $heure_max_jour = ($conf->global->HEURE_MAX_JOUR > 0 ? $conf->global->HEURE_MAX_JOUR : 0);
+}
+else {
+	$heure_max_jour = $usertoprocess->array_options['options_heuremaxjour'];
+}
+
+if(empty($usertoprocess->array_options['options_heuremaxsemaine'])) {
+	$heure_max_semaine = ($conf->global->HEURE_MAX_SEMAINE > 0 ? $conf->global->HEURE_MAX_SEMAINE : 0);
+}
+else {
+	$heure_max_semaine = $usertoprocess->array_options['options_heuremaxsemaine'];
+}
 
 
 /*
@@ -543,6 +560,52 @@ if (empty($reshook)) {
 		$modification = ($old_value != $new_value ? "<strong>Regul Heure Sup 50%</strong> : $old_value ➔ $new_value" : '');
 
 		$regul->heure_sup50 = $regulHeureSup50;
+
+		if($resregul > 0) {
+			$res = $regul->update($user);
+		}
+		elseif ($resregul == 0) {
+			$regul->date = $first_day_month;
+			$regul->fk_user = $usertoprocess->id;
+
+			$result = $regul->create($user);
+		}
+
+		if($res < 0) {
+			$error++;
+		}
+		
+		if (!$error) {
+			$db->commit();
+
+			if($modification != '') {
+				$object->actiontypecode = 'AC_FDT_VERIF';
+				$object->actionmsg2 = "Mise à jour des données de vérification de la feuille de temps $object->ref";
+				$object->actionmsg = $modification;
+				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
+			}
+
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+			exit;
+		} else {
+			$db->rollback();
+			setEventMessages($regul->error, $regul->errors, 'warnings');
+			$action = 'ediths50';
+		}
+	}
+
+	if ($action == 'savehs50ht' && $permissionToVerification) {
+		$db->begin();
+
+		$regul = new Regul($db);
+		$resregul = $regul->fetchWithoutId($object->date_debut, $usertoprocess->id);
+		$regulHeureSup50HT = GETPOST('regulHeureSup50HT') * 3600;
+		
+		$new_value = formatValueForAgenda('double', $regulHeureSup50HT / 3600);
+		$old_value = formatValueForAgenda('double', $regul->heure_sup50ht / 3600);
+		$modification = ($old_value != $new_value ? "<strong>Regul Heure Sup 50% HT</strong> : $old_value ➔ $new_value" : '');
+
+		$regul->heure_sup50ht = $regulHeureSup50HT;
 
 		if($resregul > 0) {
 			$res = $regul->update($user);
@@ -1102,14 +1165,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 															$modifier, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
 															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-															array(), '', $totalforeachday, $holidayWithoutCanceled, $multiple_holiday);
+															array(), '', $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine);
 		}
 		else {
 			$totalforvisibletasks = FeuilleDeTempsLinesPerWeek_Sigedi('card', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
 															$modifier, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
 															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-															array(), '', $totalforeachday, $holidayWithoutCanceled, $multiple_holiday);
+															array(), '', $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine);
 		}
 		
 	} else {

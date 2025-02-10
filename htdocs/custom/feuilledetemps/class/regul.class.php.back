@@ -114,31 +114,30 @@ class Regul extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
-		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
-		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
-		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0", "csslist"=>"tdoverflowmax150",),
-		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "picto"=>"user", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
-		"date" => array("type"=>"date", "label"=>"Date", "enabled"=>"1", 'position'=>100, 'notnull'=>1, "visible"=>"1",),
-		"fk_user" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"User", "enabled"=>"1", 'position'=>110, 'notnull'=>1, "visible"=>"1",),
-		"d1" => array("type"=>"integer", "label"=>"D1", "enabled"=>"1", 'position'=>200, 'notnull'=>0, "visible"=>"1",),
-		"d2" => array("type"=>"integer", "label"=>"D2", "enabled"=>"1", 'position'=>201, 'notnull'=>0, "visible"=>"1",),
-		"d3" => array("type"=>"integer", "label"=>"D3", "enabled"=>"1", 'position'=>202, 'notnull'=>0, "visible"=>"1",),
-		"d4" => array("type"=>"integer", "label"=>"D4", "enabled"=>"1", 'position'=>203, 'notnull'=>0, "visible"=>"1",),
-		"gd1" => array("type"=>"integer", "label"=>"GD1", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>"1",),
-		"gd2" => array("type"=>"integer", "label"=>"GD2", "enabled"=>"1", 'position'=>211, 'notnull'=>0, "visible"=>"1",),
-		"heure_route" => array("type"=>"double", "label"=>"HeureRoute", "enabled"=>"1", 'position'=>220, 'notnull'=>0, "visible"=>"1",),
-		"repas1" => array("type"=>"integer", "label"=>"Repas1", "enabled"=>"1", 'position'=>230, 'notnull'=>0, "visible"=>"1",),
-		"repas2" => array("type"=>"integer", "label"=>"Repas2", "enabled"=>"1", 'position'=>231, 'notnull'=>0, "visible"=>"1",),
-		"kilometres" => array("type"=>"double(6,2)", "label"=>"IK", "enabled"=>"1", 'position'=>240, 'notnull'=>0, "visible"=>"1",),
-		"indemnite_tt" => array("type"=>"integer", "label"=>"IndemniteTT", "enabled"=>"1", 'position'=>250, 'notnull'=>0, "visible"=>"1",),
-		"heure_nuit_50" => array("type"=>"double", "label"=>"HeureNuit50", "enabled"=>"1", 'position'=>300, 'notnull'=>0, "visible"=>"1",),
-		"heure_nuit_75" => array("type"=>"double", "label"=>"HeureNuit75", "enabled"=>"1", 'position'=>301, 'notnull'=>0, "visible"=>"1",),
-		"heure_nuit_100" => array("type"=>"double", "label"=>"HeureNuit100", "enabled"=>"1", 'position'=>302, 'notnull'=>0, "visible"=>"1",),
-		"heure_sup00" => array("type"=>"double", "label"=>"HeureSup00", "enabled"=>"1", 'position'=>310, 'notnull'=>0, "visible"=>"1",),
-		"heure_sup25" => array("type"=>"double", "label"=>"HeureSup25", "enabled"=>"1", 'position'=>311, 'notnull'=>0, "visible"=>"1",),
-		"heure_sup50" => array("type"=>"double", "label"=>"HeureSup50", "enabled"=>"1", 'position'=>312, 'notnull'=>0, "visible"=>"1",),
-		"heure_sup50ht" => array("type"=>"double", "label"=>"HeureSup50HT", "enabled"=>"1", 'position'=>313, 'notnull'=>0, "visible"=>"1",),
+		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
+		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
+		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
+		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
+		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'picto'=>'user', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2, 'csslist'=>'tdoverflowmax150',),
+		'date' => array('type'=>'date', 'label'=>'Date', 'enabled'=>'1', 'position'=>100, 'notnull'=>1, 'visible'=>1,),
+		'fk_user' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'User', 'enabled'=>'1', 'position'=>110, 'notnull'=>1, 'visible'=>1,),
+		'd1' => array('type'=>'integer', 'label'=>'D1', 'enabled'=>'1', 'position'=>200, 'notnull'=>0, 'visible'=>1,),
+		'd2' => array('type'=>'integer', 'label'=>'D2', 'enabled'=>'1', 'position'=>201, 'notnull'=>0, 'visible'=>1,),
+		'd3' => array('type'=>'integer', 'label'=>'D3', 'enabled'=>'1', 'position'=>202, 'notnull'=>0, 'visible'=>1,),
+		'd4' => array('type'=>'integer', 'label'=>'D4', 'enabled'=>'1', 'position'=>203, 'notnull'=>0, 'visible'=>1,),
+		'gd1' => array('type'=>'integer', 'label'=>'GD1', 'enabled'=>'1', 'position'=>210, 'notnull'=>0, 'visible'=>1,),
+		'gd2' => array('type'=>'integer', 'label'=>'GD2', 'enabled'=>'1', 'position'=>211, 'notnull'=>0, 'visible'=>1,),
+		'heure_route' => array('type'=>'double', 'label'=>'HeureRoute', 'enabled'=>'1', 'position'=>220, 'notnull'=>0, 'visible'=>1,),
+		'repas1' => array('type'=>'integer', 'label'=>'Repas1', 'enabled'=>'1', 'position'=>230, 'notnull'=>0, 'visible'=>1,),
+		'repas2' => array('type'=>'integer', 'label'=>'Repas2', 'enabled'=>'1', 'position'=>231, 'notnull'=>0, 'visible'=>1,),
+		'kilometres' => array('type'=>'double(6,2)', 'label'=>'IK', 'enabled'=>'1', 'position'=>240, 'notnull'=>0, 'visible'=>1,),
+		'indemnite_tt' => array('type'=>'integer', 'label'=>'IndemniteTT', 'enabled'=>'1', 'position'=>250, 'notnull'=>0, 'visible'=>1,),
+		'heure_nuit_50' => array('type'=>'double', 'label'=>'HeureNuit50', 'enabled'=>'1', 'position'=>300, 'notnull'=>0, 'visible'=>1,),
+		'heure_nuit_75' => array('type'=>'double', 'label'=>'HeureNuit75', 'enabled'=>'1', 'position'=>301, 'notnull'=>0, 'visible'=>1,),
+		'heure_nuit_100' => array('type'=>'double', 'label'=>'HeureNuit100', 'enabled'=>'1', 'position'=>302, 'notnull'=>0, 'visible'=>1,),
+		'heure_sup00' => array('type'=>'double', 'label'=>'HeureSup00', 'enabled'=>'1', 'position'=>310, 'notnull'=>0, 'visible'=>1,),
+		'heure_sup25' => array('type'=>'double', 'label'=>'HeureSup25', 'enabled'=>'1', 'position'=>311, 'notnull'=>0, 'visible'=>1,),
+		'heure_sup50' => array('type'=>'double', 'label'=>'HeureSup50', 'enabled'=>'1', 'position'=>312, 'notnull'=>0, 'visible'=>1,),
 	);
 	public $rowid;
 	public $date_creation;
@@ -164,7 +163,6 @@ class Regul extends CommonObject
 	public $heure_sup00;
 	public $heure_sup25;
 	public $heure_sup50;
-	public $heure_sup50ht;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1194,8 +1192,7 @@ class Regul extends CommonObject
 		$sql .= " d.heure_nuit_100,";
 		$sql .= " d.heure_sup00,";
 		$sql .= " d.heure_sup25,";
-		$sql .= " d.heure_sup50,";
-		$sql .= " d.heure_sup50th";
+		$sql .= " d.heure_sup50";
         $sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_regul as d";
         $sql .= " WHERE d.date = '".($this->db->idate($date))."'";
         $sql .= " AND d.fk_user = ".((int) $fk_user);
@@ -1230,7 +1227,6 @@ class Regul extends CommonObject
 				$this->heure_sup00 = $obj->heure_sup00;
 				$this->heure_sup25 = $obj->heure_sup25;
 				$this->heure_sup50 = $obj->heure_sup50;
-				$this->heure_sup50ht = $obj->heure_sup50ht;
 
                 $this->db->free($resql);
                 return 1;

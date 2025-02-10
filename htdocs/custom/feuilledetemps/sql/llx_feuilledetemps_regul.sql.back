@@ -14,7 +14,7 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-CREATE TABLE llx_feuilledetemps_silae(
+CREATE TABLE llx_feuilledetemps_regul(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
 	date_creation datetime NOT NULL, 
@@ -23,14 +23,22 @@ CREATE TABLE llx_feuilledetemps_silae(
 	fk_user_modif integer, 
 	date date NOT NULL, 
 	fk_user integer NOT NULL, 
-	heure_nuit double, 
+	d1 integer, 
+	d2 integer, 
+	d3 integer, 
+	d4 integer, 
+	gd1 integer, 
+	gd2 integer, 
 	heure_route double, 
+	repas1 integer, 
+	repas2 integer, 
 	kilometres double(6,2), 
-	repas integer, 
-	indemnite_tt boolean, 
+	indemnite_tt integer, 
+	heure_nuit_50 double, 
+	heure_nuit_75 double, 
+	heure_nuit_100 double, 
 	heure_sup00 double, 
 	heure_sup25 double, 
-	heure_sup50 double, 
-	heure_sup50ht double
+	heure_sup50 double
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

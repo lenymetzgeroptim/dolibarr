@@ -113,21 +113,22 @@ class Silae extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
-		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
-		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
-		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
-		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
-		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'picto'=>'user', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2, 'csslist'=>'tdoverflowmax150',),
-		'date' => array('type'=>'date', 'label'=>'Date', 'enabled'=>'1', 'position'=>30, 'notnull'=>1, 'visible'=>1,),
-		'fk_user' => array('type'=>'integer', 'label'=>'User', 'enabled'=>'1', 'position'=>20, 'notnull'=>1, 'visible'=>0,),
-		'heure_nuit' => array('type'=>'double', 'label'=>'HeureNuit', 'enabled'=>'1', 'position'=>55, 'notnull'=>0, 'visible'=>1,),
-		'heure_route' => array('type'=>'double', 'label'=>'HeureRoute', 'enabled'=>'1', 'position'=>56, 'notnull'=>0, 'visible'=>1,),
-		'kilometres' => array('type'=>'double(6,2)', 'label'=>'IK', 'enabled'=>'1', 'position'=>62, 'notnull'=>0, 'visible'=>1,),
-		'repas' => array('type'=>'integer', 'label'=>'Repas', 'enabled'=>'1', 'position'=>70, 'notnull'=>0, 'visible'=>1, 'arrayofkeyval'=>array('1'=>'R1', '2'=>'R2'),),
-		'indemnite_tt' => array('type'=>'boolean', 'label'=>'IndemniteTT', 'enabled'=>'1', 'position'=>71, 'notnull'=>0, 'visible'=>1,),
-		'heure_sup00' => array('type'=>'double', 'label'=>'HeureSup00', 'enabled'=>'1', 'position'=>51, 'notnull'=>0, 'visible'=>1,),
-		'heure_sup25' => array('type'=>'double', 'label'=>'HeureSup25', 'enabled'=>'1', 'position'=>52, 'notnull'=>0, 'visible'=>1,),
-		'heure_sup50' => array('type'=>'double', 'label'=>'HeureSup50', 'enabled'=>'1', 'position'=>53, 'notnull'=>0, 'visible'=>1,),
+		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
+		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
+		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
+		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0", "csslist"=>"tdoverflowmax150",),
+		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "picto"=>"user", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
+		"date" => array("type"=>"date", "label"=>"Date", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
+		"fk_user" => array("type"=>"integer", "label"=>"User", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"0",),
+		"heure_nuit" => array("type"=>"double", "label"=>"HeureNuit", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
+		"heure_route" => array("type"=>"double", "label"=>"HeureRoute", "enabled"=>"1", 'position'=>56, 'notnull'=>0, "visible"=>"1",),
+		"kilometres" => array("type"=>"double(6,2)", "label"=>"IK", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"1",),
+		"repas" => array("type"=>"integer", "label"=>"Repas", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "R1", "2" => "R2"),),
+		"indemnite_tt" => array("type"=>"boolean", "label"=>"IndemniteTT", "enabled"=>"1", 'position'=>71, 'notnull'=>0, "visible"=>"1",),
+		"heure_sup00" => array("type"=>"double", "label"=>"HeureSup00", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
+		"heure_sup25" => array("type"=>"double", "label"=>"HeureSup25", "enabled"=>"1", 'position'=>52, 'notnull'=>0, "visible"=>"1",),
+		"heure_sup50" => array("type"=>"double", "label"=>"HeureSup50", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1",),
+		"heure_sup50ht" => array("type"=>"double", "label"=>"HeureSup50HT", "enabled"=>"1", 'position'=>54, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $date_creation;
@@ -144,6 +145,7 @@ class Silae extends CommonObject
 	public $heure_sup00;
 	public $heure_sup25;
 	public $heure_sup50;
+	public $heure_sup50ht;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1113,7 +1115,7 @@ class Silae extends CommonObject
 			dol_print_error('', 'Error userId parameter is empty');
 		}
   
-        $sql = 'SELECT s.date, s.fk_user, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_nuit, s.heure_route, s.kilometres, s.repas, s.indemnite_tt';
+        $sql = 'SELECT s.date, s.fk_user, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_sup50ht, s.heure_nuit, s.heure_route, s.kilometres, s.repas, s.indemnite_tt';
         $sql .= ' FROM '.MAIN_DB_PREFIX.$this->table_element.' as s';
     	$sql .= " WHERE s.date <= '".$this->db->idate($dateEnd)."'";
 		$sql .= " AND s.date >= '".$this->db->idate($dateStart)."'";
@@ -1136,6 +1138,9 @@ class Silae extends CommonObject
 				}
 				if(!empty($obj->heure_sup50)) {
 					$arraySilae['heure_sup50'][$day] = $obj->heure_sup50;
+				}
+				if(!empty($obj->heure_sup50ht)) {
+					$arraySilae['heure_sup50ht'][$day] = $obj->heure_sup50ht;
 				}
 				if(!empty($obj->heure_nuit)) {
 					$arraySilae['heure_nuit'][$day] = $obj->heure_nuit;
@@ -1187,6 +1192,7 @@ class Silae extends CommonObject
 		$sql .= " d.heure_sup00,";
 		$sql .= " d.heure_sup25,";
 		$sql .= " d.heure_sup50,";
+		$sql .= " d.heure_sup50ht,";
         $sql .= " d.heure_nuit,";
         $sql .= " d.heure_route,";
         $sql .= " d.kilometres,";
@@ -1212,6 +1218,7 @@ class Silae extends CommonObject
 				$this->heure_sup00 = $obj->heure_sup00;
 				$this->heure_sup25 = $obj->heure_sup25;
 				$this->heure_sup50 = $obj->heure_sup50;
+				$this->heure_sup50ht = $obj->heure_sup50ht;
                 $this->heure_nuit = $obj->heure_nuit;
                 $this->heure_route = $obj->heure_route;
                 $this->kilometres = $obj->kilometres;
@@ -1234,7 +1241,7 @@ class Silae extends CommonObject
     }
 
 	public function calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow) {
-		global $conf; 
+		global $conf, $usertoprocess; 
 
 		if(dol_print_date($dayinloopfromfirstdaytoshow, '%Y-%m-%d') < '2024-06-03' && $heure_semaine == $conf->global->HEURE_SEMAINE) {
 			$heure_semaine = 35;
@@ -1242,6 +1249,11 @@ class Silae extends CommonObject
 
 		if(dol_print_date($dayinloopfromfirstdaytoshow, '%Y-%m-%d') < '2024-06-03' && $heure_semaine_hs == $conf->global->HEURE_SEMAINE) {
 			$heure_semaine_hs = 35;
+		}
+
+		if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && !empty($usertoprocess->array_options['options_heuremaxsemaine']) && $usertoprocess->array_options['options_heuremaxsemaine'] > $conf->global->HEURE_MAX_SEMAINE) {
+			$timeSpentWeekMax = ($timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)] > $usertoprocess->array_options['options_heuremaxsemaine'] ? $usertoprocess->array_options['options_heuremaxsemaine'] : $timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)]);
+			$this->heure_sup50ht = ($timeSpentWeekMax - $conf->global->HEURE_MAX_SEMAINE > 0 ? ($timeSpentWeekMax - $conf->global->HEURE_MAX_SEMAINE) * 3600 : '');
 		}
 
 		$timeSpentWeekMax = ($timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)] > $conf->global->HEURE_MAX_SEMAINE ? $conf->global->HEURE_MAX_SEMAINE : $timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)]);
