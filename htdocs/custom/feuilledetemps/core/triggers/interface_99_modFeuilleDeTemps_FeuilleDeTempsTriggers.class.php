@@ -329,6 +329,57 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				}
 				break;
 
+			case 'PROJECT_CREATE' :
+				if($conf->global->FDT_GENERATE_TASK_PROJECTCREATION) {
+					$this->db->begin();
+
+					$task = new Task($this->db);
+
+					$task->ref = $object->ref;
+					$task->label = $object->title;
+					$task->fk_project = $object->id;
+					$task->date_start = $object->date_start;
+					$task->date_end = $object->date_end;
+
+					$res = $task->create($user);
+
+					if ($res) {
+						$this->db->commit();
+						return 1;
+					} else {
+						$this->db->rollback();
+						return -1;
+					}
+				}
+				break;
+
+			case 'PROJECT_MODIFY' :
+				if($conf->global->FDT_GENERATE_TASK_PROJECTCREATION) {
+					$this->db->begin();
+
+					$task = new Task($this->db);
+					$res = $task->fetch(0, $object->oldcopy->ref);
+
+					if($res && ($task->ref != $object->ref || $task->label != $object->title || $task->fk_project != $object->id || $task->date_start != $object->date_start || $task->date_end != $object->date_end)) {
+						$task->ref = $object->ref;
+						$task->label = $object->title;
+						$task->fk_project = $object->id;
+						$task->date_start = $object->date_start;
+						$task->date_end = $object->date_end;
+
+						$res = $task->update($user);
+
+						if ($res) {
+							$this->db->commit();
+							return 1;
+						} else {
+							$this->db->rollback();
+							return -1;
+						}
+					}
+				}
+				break;
+
 			default:
 				dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
 				break;

@@ -197,6 +197,9 @@ $item = $formSetup->newItem('FDT_MANAGE_EMPLOYER')->setAsYesNo();
 // FDT_STATUT_HOLIDAY
 $item = $formSetup->newItem('FDT_STATUT_HOLIDAY')->setAsYesNo();
 
+// FDT_GENERATE_TASK_PROJECTCREATION
+$item = $formSetup->newItem('FDT_GENERATE_TASK_PROJECTCREATION')->setAsYesNo();
+
 $setupnotempty += count($formSetup->items);
 
 
