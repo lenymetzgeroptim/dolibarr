@@ -133,7 +133,7 @@ class ActionsOT
         $lastFiveChars = substr($projectRef, -5); 
         $sql = "SELECT MAX(indice) as max_indice FROM ".MAIN_DB_PREFIX."ot_ot WHERE fk_project = ".intval($projectId);
         $resql = $db->query($sql);
-        $maxIndice = 137;
+        $maxIndice = 0;
         if ($resql) {
             $obj = $db->fetch_object($resql);
             if ($obj && $obj->max_indice !== null) {
@@ -178,5 +178,4 @@ class ActionsOT
         }
     }
 
-    
 }

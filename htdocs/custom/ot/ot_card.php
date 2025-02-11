@@ -1041,17 +1041,18 @@ print '
             padding: 0;
         }
 
-        /* Carte principale */
         .card {
             border: 1px solid #ddd;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease-in-out;
             margin-bottom: 20px;
-            width: 100%;
-            max-width: 100%; /* Ajusté pour utiliser toute la largeur disponible */
-            position: relative; /* Pour positionner le bouton de suppression */
+            width: 100%;  /* surer que les cartes utilisent toute la largeur disponible */
+            height: auto; /* Laisse la hauteur se calculer selon le contenu */
+            position: relative;
+            display: block; /* Forcer le bloc pour que la taille de la carte prenne toute la largeur */
         }
+
 
         /* Header de la carte */
         .card-header {
@@ -1127,16 +1128,20 @@ print '
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 20px;
+            width: 100%;
         }
 
+
         /* Styles pour les colonnes */
-        .card-column {
+       .card-column {
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
             max-width: 300px;
+            flex-grow: 1;
         }
+
 
         .card-column .card {
             margin: 10px 0; /* Ajouté pour espacer les cartes verticalement */
@@ -1346,7 +1351,6 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
 
 
 
- // Fonction pour afficher la liste de la BDD ou créer la liste par défaut si aucune donnée
 function displayUserList() {
     const existingUniqueList = document.querySelector(".user-list.unique-list");
     console.log("Affichage de la liste unique.");
@@ -1379,16 +1383,16 @@ function displayUserList() {
                             li.setAttribute("data-user-id", userId);
                             li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;"; // Centrer les éléments de utilisateur
 
-        // Créer une ligne avec les informations de utilisateur, réparties uniformément
-        li.innerHTML = `
-            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
-            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
-            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
-            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-            <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
-              <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
-        `;
-                        ulElement.appendChild(li);
+                            // Créer une ligne avec les informations de utilisateur, réparties uniformément
+                            li.innerHTML = `  
+                                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+                                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+                                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+                                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+                                <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
+                                <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
+                            `;
+                            ulElement.appendChild(li);
                         } else {
                             console.warn(`Utilisateur avec ID ${userId} introuvable dans  uniqueJsData.`);
                         }
@@ -1407,7 +1411,43 @@ function displayUserList() {
         const uniqueList = createUniqueUserList();
         columnsContainer.appendChild(uniqueList);
     }
+
+    // Gérer la taille des listes dynamiquement
+    adjustListSizes(); // Appel de la fonction pour ajuster la taille des listes
 }
+
+// Fonction pour ajuster la taille des listes
+function adjustListSizes() {
+    const lists = document.querySelectorAll(".user-list");
+    
+    // Diviser les listes en lignes (groupes)
+    let currentRow = [];
+    lists.forEach((list, index) => {
+        currentRow.push(list);
+
+        // Une fois qune ligne est complète, ajuster la taille des listes
+        if (currentRow.length === 3 || index === lists.length - 1) {
+            const numberOfLists = currentRow.length;
+            
+            // Calculer la largeur de chaque liste
+            let width = "100%"; // Par défaut, si 1 seule liste
+            if (numberOfLists === 2) {
+                width = "50%"; // Si 2 listes
+            } else if (numberOfLists === 3) {
+                width = "33.33%"; // Si 3 listes
+            }
+
+            // Appliquer la largeur calculée à chaque liste dans la ligne
+            currentRow.forEach(list => {
+                list.style.width = width;
+            });
+
+            // Réinitialiser pour la prochaine ligne
+            currentRow = [];
+        }
+    });
+}
+
 
 
 // Appeler la fonction pour afficher la liste lors du chargement de la page
@@ -1463,42 +1503,43 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
                 addedCardTitles.add(cell.title);
             }
         } else if (cell.type === "list") {
-            if (!addedListTitles.has(cell.title)) {
-                const list = createUserList(column);
-                const titleInput = list.querySelector(".list-title-input");
-                titleInput.value = cell.title;
+    if (!addedListTitles.has(cell.title)) {
+        const list = createUserList(column);
+        const titleInput = list.querySelector(".list-title-input");
+        titleInput.value = cell.title;
 
-                const ulElement = list.querySelector("ul");
-                ulElement.innerHTML = "";
+        const ulElement = list.querySelector("ul");
+        ulElement.innerHTML = "";
 
-                cell.userIds.forEach(function(userId) {
-                    const user = uniqueJsData.find(u => u.fk_socpeople === userId); 
-                    
-                    if (user) {
-                        const li = document.createElement("li");
-                        li.setAttribute("data-user-id", userId);
-                        // Utilisez le nom et le prénom au lieu de lID
-                               li.innerHTML = `
-                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
-                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
-                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
-                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-                                    <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
-                                        <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>`;
-                        ulElement.appendChild(li);
-                    } else {
-                        console.warn(`Utilisateur avec ID ${userId} introuvable dans  uniqueJsData.`);
-                    }
-                });
-                attachUserRemoveListeners(list);
-                const columnElement = document.querySelector(`.card-column:nth-child(${column})`);
-                if (columnElement) {
-                    columnElement.appendChild(list);
-                }
+        cell.userIds.forEach(function (userId) {
+            const user = uniqueJsData.find(u => u.fk_socpeople === userId);
 
-                addedListTitles.add(cell.title);
+            if (user) {
+                const li = document.createElement("li");
+                li.setAttribute("data-user-id", userId);
+
+                // Utiliser le même affichage que dans createUserList
+                li.innerHTML = `
+                    ${user.firstname} ${user.lastname} | ${user.fonction || "Non définie"} | 
+                    ${user.habilitation || "Aucune habilitation"} | ${user.contrat || "Non défini"}
+                    <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
+                `;
+                ulElement.appendChild(li);
+            } else {
+                console.warn(`Utilisateur avec ID ${userId} introuvable dans uniqueJsData.`);
             }
-        } else if (cell.type === "listeunique") {
+        });
+
+        attachUserRemoveListeners(list);
+        const columnElement = document.querySelector(`.card-column:nth-child(${column})`);
+        if (columnElement) {
+            columnElement.appendChild(list);
+        }
+
+        addedListTitles.add(cell.title);
+    }
+}
+ else if (cell.type === "listeunique") {
     // Vérifie si une liste unique avec ce titre existe déjà dans le DOM
     const existingUniqueList = document.querySelector(`.user-list.unique-list[data-list-id="${cell.title}"]`);
     
@@ -1945,6 +1986,7 @@ function attachEventListeners() {
     // Attacher des écouteurs sur le changement utilisateur dans les cartes
     document.querySelectorAll(".card .name-dropdown").forEach(dropdown => {
         if (!dropdown.dataset.listenerAttached) {
+       
             dropdown.addEventListener("change", function() {
                 const selectedUser = this.value; // Nouveau utilisateur sélectionné
                 const card = this.closest(".card");
@@ -2069,13 +2111,16 @@ function saveData() {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(payload), // Envoyer les données avec otid et ids inclus
+            
         })
+        
         .then(response => response.text()) // Assurez-vous que la réponse est en JSON
 
         .catch((error) => {
             console.error("Erreur de sauvegarde:", error);
         });
     });
+    
 }
     updateCards(); 
 });

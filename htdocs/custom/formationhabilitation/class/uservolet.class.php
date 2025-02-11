@@ -1992,9 +1992,11 @@ class UserVolet extends CommonObject
 			if (!$error && !$notrigger) {
 				// Call trigger
 				$result = $this->call_trigger('USERVOLET_VALIDATE', $user);
+				
 				if ($result < 0) {
 					$error++;
 				}
+				
 				// End call triggers
 			}
 		}
