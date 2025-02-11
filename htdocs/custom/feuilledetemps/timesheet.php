@@ -205,37 +205,44 @@ if(!empty($_POST["transmettre"])) {
 	$massaction = "transmettre";
 }
 
-$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
-$userField_deplacement = new UserField($db);
-$userField_deplacement->id = $usertoprocess->id;
-$userField_deplacement->table_element = 'donneesrh_Deplacement';
-$userField_deplacement->fetch_optionals();
-
-// Gestion des types de déplacement
 $userInDeplacement = 0;
 $type_deplacement = 'none';
 $userInGrandDeplacement = 0;
-if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
-	$userInDeplacement = 1;
-	$type_deplacement = 'petitDeplacement';
-}
-if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
-	$userInGrandDeplacement = 1;
-	$type_deplacement = 'grandDeplacement';
-}
+if($conf->donneesrh->enabled) {
+	$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
+	$userField_deplacement = new UserField($db);
+	$userField_deplacement->id = $usertoprocess->id;
+	$userField_deplacement->table_element = 'donneesrh_Deplacement';
+	$userField_deplacement->fetch_optionals();
 
+	// Gestion des types de déplacement
+	if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
+		$userInDeplacement = 1;
+		$type_deplacement = 'petitDeplacement';
+	}
+	if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
+		$userInGrandDeplacement = 1;
+		$type_deplacement = 'grandDeplacement';
+	}
+}
 
 // Nombre d'heures par semaine à faire et avant de pouvoir avoir des hs
-$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
-$userField = new UserField($db);
-$userField->id = $usertoprocess->id;
-$userField->table_element = 'donneesrh_Positionetcoefficient';
-$userField->fetch_optionals();
+if($conf->donneesrh->enable) {
+	$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+	$userField = new UserField($db);
+	$userField->id = $usertoprocess->id;
+	$userField->table_element = 'donneesrh_Positionetcoefficient';
+	$userField->fetch_optionals();
 
-$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
-$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
-$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
-
+	$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
+	$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+}
+else {
+	$heure_semaine = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	$heure_semaine = (!empty($usertoprocess->array_options['options_horairehebdomadaire']) ? $usertoprocess->array_options['options_horairehebdomadaire'] : $heure_semaine);
+	$heure_semaine_hs = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+}
 
 // Nombre d'heures max par jour et semaine
 if(empty($usertoprocess->array_options['options_heuremaxjour'])) {

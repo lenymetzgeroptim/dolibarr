@@ -194,6 +194,9 @@ $item = $formSetup->newItem('FDT_DAY_FOR_NEXT_FDT')->setAsString();
 // FDT_MANAGE_EMPLOYER
 $item = $formSetup->newItem('FDT_MANAGE_EMPLOYER')->setAsYesNo();
 
+// FDT_STATUT_HOLIDAY
+$item = $formSetup->newItem('FDT_STATUT_HOLIDAY')->setAsYesNo();
+
 $setupnotempty += count($formSetup->items);
 
 

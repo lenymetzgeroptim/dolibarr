@@ -1838,8 +1838,8 @@ if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafte
 			// If no hour and hour is required
 			if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
 				$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-				$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-				if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+				$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+				if((($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt'])|| dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
 					$duration_hour += 3.5 * 3600;
 				}
 				elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
@@ -1866,7 +1866,7 @@ if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafte
 			}
 		}
 
-		if($holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
+		if($conf->global->FDT_STATUT_HOLIDAY && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
 			$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
 			if(in_array($holiday->fk_type, $exclude_type)) {
 				$holiday->array_options['options_statutfdt'] = 3;
@@ -1877,7 +1877,7 @@ if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafte
 			$result = $holiday->updateExtended($user);
 		}
 
-		if(empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
+		if($conf->global->FDT_STATUT_HOLIDAY && empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
 			$holiday->array_options['options_statutfdt'] = 1;
 			$result = $holiday->updateExtended($user);
 		}

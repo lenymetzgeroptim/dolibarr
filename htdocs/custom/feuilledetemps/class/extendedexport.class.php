@@ -128,12 +128,14 @@ class ExtendedExportFDT extends Export
 						$timeHoliday = $object->timeHolidayWeek($id, $date_debut, $date_fin);
 						$timeSpentWeek = $object->timeDoneByWeek($id, $date_debut, $date_fin);
 						$societe = new Societe($this->db);
-						$societe->fetch($user_obj->array_options['options_antenne']);
+						if(!empty($user_obj->array_options['options_antenne'])) {
+							$societe->fetch($user_obj->array_options['options_antenne']);
+							$obj->eu_antenne = $societe->name_alias;
+						}
 
 						$obj->eu_matricule = $user_obj->array_options['options_matricule'];
 						$obj->u_firstname = $user_obj->firstname;
 						$obj->u_lastname = $user_obj->lastname;
-						$obj->eu_antenne = $societe->name_alias;
 
 						$dayinloop = $date_debut;
 						if($datatoexport == "total_hour_week") {
@@ -221,9 +223,11 @@ class ExtendedExportFDT extends Export
 				$typesHoliday = $holiday->getTypesNoCP();
 
 				$extrafields = new ExtraFields($this->db);
-				$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
-				$userField = new UserField($this->db);
-				$userField->table_element = 'donneesrh_Positionetcoefficient';
+				if($conf->donneesrh->enable) {
+					$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+					$userField = new UserField($this->db);
+					$userField->table_element = 'donneesrh_Positionetcoefficient';
+				}
 
 				if($array_filterValue["u.firstname"]) {
 					$filter["t.firstname"] = $array_filterValue["u.firstname"];
@@ -241,9 +245,16 @@ class ExtendedExportFDT extends Export
 
 				$userstatic->fetchAll('', 't.lastname', 0, 0, $filter);
 				foreach($userstatic->users as $id => $user_obj) {
-					$userField->id = $id;
-					$userField->fetch_optionals();
-					if((!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_obj->array_options['options_fk_employeur'] == 157)) && (empty($userField->array_options['options_datedepart']) || $userField->array_options['options_datedepart'] >= $date_debut)) {
+					if($conf->donneesrh->enable) {
+						$userField->id = $id;
+						$userField->fetch_optionals();
+						$date_depart =  $userField->array_options['options_datedepart'];
+					}
+					else {
+						$date_depart =  $user_obj->dateemploymentend;
+					}
+
+					if((!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_obj->array_options['options_fk_employeur'] == 157)) && (empty($date_depart) || $date_depart >= $date_debut)) {
 						$societe = new Societe($this->db);
 
 						$obj->eu_matricule = $user_obj->array_options['options_matricule'];

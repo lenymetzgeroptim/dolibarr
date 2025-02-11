@@ -284,8 +284,8 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 					}
 					else {
 						$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-						$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-						if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+						$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+						if((($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
 							$duration_hour += 3.5 * 3600;
 						}
 						elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
@@ -308,7 +308,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
 					}
 
-					if($mode == 'card' && $displayVerification) {
+					if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
 						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 					}
 
@@ -357,8 +357,8 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 					}
 					else {
 						$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-						$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-						if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+						$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+						if((($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
 							$duration_hour += 3.5 * 3600;
 						}
 						elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
@@ -374,14 +374,14 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 						$numberDay = $nb_jour - $idw;
 					}
 					
-					if($mode == 'card') {
+					if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
 						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
 					}
 					else {
 						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
 					}
 
-					if($mode == 'card' && $displayVerification) {
+					if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
 						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 					}
 		
@@ -1187,8 +1187,8 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			}
 			else {
 				$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-				$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-				if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+				$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+				if((($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
 					$duration_hour += 3.5 * 3600;
 				}
 				elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
@@ -1204,14 +1204,14 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$numberDay = $nb_jour - $idw;
 			}
 			
-			if($mode == 'card') {
+			if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
 				print '<td class="center holidaycolumn hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
 			}
 			else {
 				print '<td class="center holidaycolumn hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" rowspan="'.$numberDay.'">';
 			}
 
-			if($mode == 'card' && $displayVerification) {
+			if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
 				print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 			}
 
@@ -1248,8 +1248,8 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				}
 				else {
 					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600); // TODOL : gestion des la date 2024-07-01
-					if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600); // TODOL : gestion des la date 2024-07-01
+					if((($conf->donneesrh->enable && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
 						$duration_hour += 3.5 * 3600;
 					}
 					elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
@@ -1265,14 +1265,14 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 					$numberDay = $nb_jour - $idw;
 				}
 				
-				if($mode == 'card') {
+				if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
 					print '<td class="center holidaycolumn hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
 				}
 				else {
 					print '<td class="center holidaycolumn hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" rowspan="'.$numberDay.'">';
 				}
 
-				if($mode == 'card' && $displayVerification) {
+				if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
 					print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 				}
 	
@@ -1802,20 +1802,22 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 	$array_deplacement = $deplacement->getAllDeplacements($firstdaytoshow, $lastdaytoshow, $fuser->id);
 
 	// Gestion des types de déplacement de l'utilisateur
-	$extrafields = new ExtraFields($db);
-	$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
-	$userField_deplacement = new UserField($db);
-	$userField_deplacement->id = $object->fk_user;
-	$userField_deplacement->table_element = 'donneesrh_Deplacement';
-	$userField_deplacement->fetch_optionals();
-
 	$userInDeplacement = 0;
 	$userInGrandDeplacement = 0;
-	if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
-		$userInDeplacement = 1;
-	}
-	if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
-		$userInGrandDeplacement = 1;
+	if($conf->donneesrh->enable) {
+		$extrafields = new ExtraFields($db);
+		$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
+		$userField_deplacement = new UserField($db);
+		$userField_deplacement->id = $object->fk_user;
+		$userField_deplacement->table_element = 'donneesrh_Deplacement';
+		$userField_deplacement->fetch_optionals();
+
+		if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
+			$userInDeplacement = 1;
+		}
+		if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
+			$userInGrandDeplacement = 1;
+		}
 	}
 
 	// Note 

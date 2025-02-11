@@ -281,6 +281,10 @@ $is_semaine_anticipe = 0;
 $addcolspan = 0;
 
 // Gestion des types de déplacement de l'utilisateur
+$userInDeplacement = 0;
+$type_deplacement = 'none';
+$userInGrandDeplacement = 0;
+$userRepas = 0;
 if($conf->donneesrh->enabled) {
 	$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
 	$userField_deplacement = new UserField($db);
@@ -288,9 +292,6 @@ if($conf->donneesrh->enabled) {
 	$userField_deplacement->table_element = 'donneesrh_Deplacement';
 	$userField_deplacement->fetch_optionals();
 
-	$userInDeplacement = 0;
-	$type_deplacement = 'none';
-	$userInGrandDeplacement = 0;
 	if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
 		$userInDeplacement = 1;
 		$type_deplacement = 'petitDeplacement';
@@ -301,16 +302,16 @@ if($conf->donneesrh->enabled) {
 	}
 
 	// Gestion des repas de l'utilisateur
-	$userRepas = 0;
 	if($userField_deplacement->array_options['options_panier1'] == '1') {
 		$userRepas = 1;
 	}
 	elseif($userField_deplacement->array_options['options_panier2'] == '1') {
 		$userRepas = 2;
 	}
+}
 
-
-	// Nombre d'heures par semaine à faire et avant de pouvoir avoir des hs
+// Nombre d'heures par semaine à faire et avant de pouvoir avoir des hs
+if($conf->donneesrh->enable) {
 	$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
 	$userField = new UserField($db);
 	$userField->id = $usertoprocess->id;
@@ -320,6 +321,11 @@ if($conf->donneesrh->enabled) {
 	$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
 	$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
 	$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+}
+else {
+	$heure_semaine = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	$heure_semaine = (!empty($usertoprocess->array_options['options_horairehebdomadaire']) ? $usertoprocess->array_options['options_horairehebdomadaire'] : $heure_semaine);
+	$heure_semaine_hs = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
 }
 
 // Gestion des congés et des jours feriés
