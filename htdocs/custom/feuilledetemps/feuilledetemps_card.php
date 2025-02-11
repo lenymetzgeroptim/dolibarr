@@ -646,7 +646,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'savevalidator1' && !empty($user->rights->feuilledetemps->changeappro)) {
+	if ($action == 'savevalidator1' && !empty($user->rights->feuilledetemps->changeappro) && !$conf->global->FDT_USER_APPROVER) {
 		$db->begin();
 
 		$object->oldcopy = dol_clone($object);
@@ -742,7 +742,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'savevalidator2' && !empty($user->rights->feuilledetemps->changeappro)) {
+	if ($action == 'savevalidator2' && !empty($user->rights->feuilledetemps->changeappro) && !$conf->global->FDT_USER_APPROVER) {
 		$db->begin();
 
 		$object->oldcopy = dol_clone($object);
@@ -938,11 +938,20 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	if ($action == 'sendMail'  && $permissionToVerification) {
 		$values = array($usertoprocess->id => $usertoprocess->firstname.' '.$usertoprocess->lastname);
-		foreach($object->listApprover1[2] as $id => $user_static) {
-			$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+		if($conf->global->FDT_USER_APPROVER) {
+			foreach(explode(',', $usertoprocess->array_options['options_approbateurfdt']) as $id) {
+				$user_static = new User($db);
+				$user_static->fetch($id);
+				$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+			}
 		}
-		foreach($object->listApprover2[2] as $id => $user_static) {
-			$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+		else {
+			foreach($object->listApprover1[2] as $id => $user_static) {
+				$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+			}
+			foreach($object->listApprover2[2] as $id => $user_static) {
+				$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+			}
 		}
 		$formquestion = array();
 		$formquestion[] = array('type'=>'multiselect', 'name'=>'sendMailTo', 'label' => 'Destinataire', 'morecss' => 'ml20 minwidth200', 'default' => '', 'values' => $values);

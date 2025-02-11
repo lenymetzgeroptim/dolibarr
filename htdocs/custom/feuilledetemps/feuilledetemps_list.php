@@ -297,16 +297,21 @@ $sql .= " FROM ".MAIN_DB_PREFIX.$object->table_element." as t";
 if (isset($extrafields->attributes[$object->table_element]['label']) && is_array($extrafields->attributes[$object->table_element]['label']) && count($extrafields->attributes[$object->table_element]['label'])) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX.$object->table_element."_extrafields as ef on (t.rowid = ef.fk_object)";
 }
-$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv on (tv.fk_feuilledetemps = t.rowid)";
-if($search['fk_user_validation_1'] > 0){
-	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv1 on (tv1.fk_feuilledetemps = t.rowid";
-	$sql .= " AND tv1.fk_user_validation = ".$search['fk_user_validation_1']." AND tv1.validation_number = 1";
-	$sql .= ")";
+if($conf->global->FDT_USER_APPROVER) {
+	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue on t.fk_user = ue.fk_object";	
 }
-if($search['fk_user_validation_2'] > 0){
-	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv2 on (tv2.fk_feuilledetemps = t.rowid";
-	$sql .= " AND tv2.fk_user_validation = ".$search['fk_user_validation_2']." AND tv2.validation_number = 2";
-	$sql .= ")";
+else {
+	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv on (tv.fk_feuilledetemps = t.rowid)";
+	if($search['fk_user_validation_1'] > 0){
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv1 on (tv1.fk_feuilledetemps = t.rowid";
+		$sql .= " AND tv1.fk_user_validation = ".$search['fk_user_validation_1']." AND tv1.validation_number = 1";
+		$sql .= ")";
+	}
+	if($search['fk_user_validation_2'] > 0){
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv2 on (tv2.fk_feuilledetemps = t.rowid";
+		$sql .= " AND tv2.fk_user_validation = ".$search['fk_user_validation_2']." AND tv2.validation_number = 2";
+		$sql .= ")";
+	}
 }
 // Add table from hooks
 $parameters = array();
@@ -347,21 +352,44 @@ foreach ($search as $key => $val) {
 	}
 }
 
-if($search['fk_user_validation_1'] > 0){
-	$sql .= " AND tv1.fk_feuilledetemps IS NOT NULL";
+// if($conf->global->FDT_USER_APPROVER) {
+// 	if($search['fk_user_validation_1'] > 0){
+// 		$sql .= " AND tv1.fk_feuilledetemps IS NOT NULL";
+// 	}
+// }
+if($conf->global->FDT_USER_APPROVER) {
+	if($search['fk_user_validation_1'] > 0){
+		$sql .= " AND FIND_IN_SET(".$search['fk_user_validation_1'].", ue.approbateurfdt) > 0";
+	}
 }
-if($search['fk_user_validation_2'] > 0){
-	$sql .= " AND tv2.fk_feuilledetemps IS NOT NULL";
+else {
+	if($search['fk_user_validation_1'] > 0){
+		$sql .= " AND tv1.fk_feuilledetemps IS NOT NULL";
+	}
+	if($search['fk_user_validation_2'] > 0){
+		$sql .= " AND tv2.fk_feuilledetemps IS NOT NULL";
+	}
 }
 
-if(!$user->admin && !$user->rights->feuilledetemps->feuilledetemps->read && $user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
+
+if(/*!$user->admin &&*/ !$user->rights->feuilledetemps->feuilledetemps->read && $user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 	$user_hierarchy = $user->getAllChildIds(1);
 	$sql .= " AND (t.fk_user IN (".implode(', ', $user_hierarchy).")";
-	$sql .= " OR tv.fk_user_validation = ".$user->id;
+	if($conf->global->FDT_USER_APPROVER) {
+		$sql .= " OR FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
+	}
+	else {
+		$sql .= " OR tv.fk_user_validation = ".$user->id;
+	}
 	$sql .= " OR t.fk_user = ".$user->id.')';
 }
-else if(!$user->admin && !$user->rights->feuilledetemps->feuilledetemps->read && !$user->rights->feuilledetemps->feuilledetemps->readHierarchy){
-	$sql .= " AND (tv.fk_user_validation = ".$user->id;
+else if(/*!$user->admin && */!$user->rights->feuilledetemps->feuilledetemps->read && !$user->rights->feuilledetemps->feuilledetemps->readHierarchy){
+	if($conf->global->FDT_USER_APPROVER) {
+		$sql .= " AND (FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
+	}
+	else {
+		$sql .= " AND (tv.fk_user_validation = ".$user->id;
+	}
 	$sql .= " OR t.fk_user = ".$user->id.')';
 }
 
@@ -590,15 +618,23 @@ foreach ($object->fields as $key => $val) {
 		print '</td>';
 	}
 	if($key == 'fk_user'){
-		print '<td class="liste_titre">';
-		print $form->select_dolusers((isset($search[$key.'_validation_1']) ? $search[$key.'_validation_1'] : ''), "search_".$key."_validation_1", 1, "", 0, $include, '', 0, 0, 0, $morefilter, 0, '', 'maxwidth150');
-		//print $object->showInputField($val, $key, (isset($search[$key.'_validation_1']) ? $search[$key.'_validation_1'] : ''), '', '_validation_1', 'search_', 'maxwidth125', 1);
-		print '</td>';
-
-		print '<td class="liste_titre">';
-		print $form->select_dolusers((isset($search[$key.'_validation_2']) ? $search[$key.'_validation_2'] : ''), "search_".$key."_validation_2", 1, "", 0, $include, '', 0, 0, 0, $morefilter, 0, '', 'maxwidth150');
-		//print $object->showInputField($val, $key, (isset($search[$key.'_validation_2']) ? $search[$key.'_validation_2'] : ''), '', '_validation_2', 'search_', 'maxwidth125', 1);
-		print '</td>';
+		if($conf->global->FDT_USER_APPROVER) {
+			print '<td class="liste_titre">';
+			print $form->select_dolusers((isset($search[$key.'_validation_1']) ? $search[$key.'_validation_1'] : ''), "search_".$key."_validation_1", 1, "", 0, $include, '', 0, 0, 0, $morefilter, 0, '', 'maxwidth150');
+			//print $object->showInputField($val, $key, (isset($search[$key.'_validation_1']) ? $search[$key.'_validation_1'] : ''), '', '_validation_1', 'search_', 'maxwidth125', 1);
+			print '</td>';
+		}
+		else {
+			print '<td class="liste_titre">';
+			print $form->select_dolusers((isset($search[$key.'_validation_1']) ? $search[$key.'_validation_1'] : ''), "search_".$key."_validation_1", 1, "", 0, $include, '', 0, 0, 0, $morefilter, 0, '', 'maxwidth150');
+			//print $object->showInputField($val, $key, (isset($search[$key.'_validation_1']) ? $search[$key.'_validation_1'] : ''), '', '_validation_1', 'search_', 'maxwidth125', 1);
+			print '</td>';
+	
+			print '<td class="liste_titre">';
+			print $form->select_dolusers((isset($search[$key.'_validation_2']) ? $search[$key.'_validation_2'] : ''), "search_".$key."_validation_2", 1, "", 0, $include, '', 0, 0, 0, $morefilter, 0, '', 'maxwidth150');
+			//print $object->showInputField($val, $key, (isset($search[$key.'_validation_2']) ? $search[$key.'_validation_2'] : ''), '', '_validation_2', 'search_', 'maxwidth125', 1);
+			print '</td>';
+		}
 	}
 }
 // Extra fields
@@ -634,8 +670,13 @@ foreach ($object->fields as $key => $val) {
 		print getTitleFieldOfList($arrayfields['t.'.$key]['label'], 0, $_SERVER['PHP_SELF'], 't.'.$key, '', $param, ($cssforfield ? 'class="'.$cssforfield.'"' : ''), $sortfield, $sortorder, ($cssforfield ? $cssforfield.' ' : ''))."\n";
 	}
 	if($key == 'fk_user'){
-		print '<th class="wrapcolumntitle liste_titre" title="1ère validation">1ère validation</th>';
-		print '<th class="wrapcolumntitle liste_titre" title="2ème validation">2ème validation</th>';
+		if($conf->global->FDT_USER_APPROVER) {
+			print '<th class="wrapcolumntitle liste_titre" title="1ère validation">1ère validation</th>';
+		}
+		else {
+			print '<th class="wrapcolumntitle liste_titre" title="1ère validation">1ère validation</th>';
+			print '<th class="wrapcolumntitle liste_titre" title="2ème validation">2ème validation</th>';
+		}
 	}
 }
 // Extra fields
@@ -660,8 +701,11 @@ if (isset($extrafields->attributes[$object->table_element]['computed']) && is_ar
 }
 
 $user_static = new User($db);
-$user_static->fetchAll();
-$tab_user = $user_static->users;
+// $user_static->fetchAll();
+// $tab_user = $user_static->users;
+$tab_user = array();
+$extrafieldsuser = new extrafields($db);
+$extrafieldsuser->fetch_name_optionals_label($user_static->table_element);
 
 // Loop on record
 // --------------------------------------------------------------------
@@ -677,8 +721,10 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 	// Store properties in $object
 	$object->setVarsFromFetchObj($obj);
 
-	$object->listApprover1 = $object->listApprover('', 1);
-	$object->listApprover2 = $object->listApprover('', 2);
+	if(!$conf->global->FDT_USER_APPROVER) {
+		$object->listApprover1 = $object->listApprover('', 1);
+		$object->listApprover2 = $object->listApprover('', 2);
+	}
 
 	// Show here line of result
 	print '<tr class="oddeven">';
@@ -708,6 +754,10 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 			} elseif ($key == 'rowid') {
 				print $object->showOutputField($val, $key, $object->id, '');
 			} elseif ($key == 'fk_user' && $object->$key > 0) {
+				if(!key_exists($object->$key, $tab_user)) {
+					$user_static->fetch($object->$key);
+					$tab_user[$object->$key] = clone $user_static;
+				}
 				$user_static = $tab_user[$object->$key];
 				print $user_static->getNomUrl(3, "");
 			} 
@@ -736,25 +786,41 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 		}
 
 		if($key == 'fk_user'){
-			// 1er Approbateurs
-			print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
-			$list_validation1 = $object->listApprover1;
-			foreach($list_validation1[0] as $id => $id2){
-				$user_static = $tab_user[$id2];
-				print $user_static->getNomUrl(3, "").($list_validation1[1][$id2] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
-				print '<br>';
+			if($conf->global->FDT_USER_APPROVER) {
+				// 1er Approbateurs
+				print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
+				print $extrafieldsuser->showOutputField('approbateurfdt', $tab_user[$object->$key]->array_options['options_approbateurfdt'], '', $user_static->table_element);
+				print '</td>';
 			}
-			print '</td>';
+			else {
+				// 1er Approbateurs
+				print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
+				$list_validation1 = $object->listApprover1;
+				foreach($list_validation1[0] as $id => $id2){
+					if(!key_exists($id2, $tab_user)) {
+						$user_static->fetch($id2);
+						$tab_user[$id2] = clone $user_static;
+					}
+					$user_static = $tab_user[$id2];
+					print $user_static->getNomUrl(3, "").($list_validation1[1][$id2] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
+					print '<br>';
+				}
+				print '</td>';
 
-			// 2nd Approbateurs
-			print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
-			$list_validation2 = $object->listApprover2;
-			foreach($list_validation2[0] as $id => $id2){
-				$user_static = $tab_user[$id2];
-				print $user_static->getNomUrl(3, "").($list_validation2[1][$id2] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
-				print '<br>';
+				// 2nd Approbateurs
+				print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
+				$list_validation2 = $object->listApprover2;
+				foreach($list_validation2[0] as $id => $id2){
+					if(!key_exists($id2, $tab_user)) {
+						$user_static->fetch($id2);
+						$tab_user[$id2] = clone $user_static;
+					}
+					$user_static = $tab_user[$id2];
+					print $user_static->getNomUrl(3, "").($list_validation2[1][$id2] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
+					print '<br>';
+				}
+				print '</td>';
 			}
-			print '</td>';
 		}
 	}
 	// Extra fields

@@ -416,7 +416,7 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 	}
 }
 
-if ($action == 'confirm_validate2' && $confirm == 'yes' && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
+if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $confirm == 'yes' && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
 	$modification = '<ul>';
 	$regulHeureSup00 = ($regul->heure_sup00 != 0 ? (double)$regul->heure_sup00 : 0);
 	$regulHeureSup25 = ($regul->heure_sup25 != 0 ? (double)$regul->heure_sup25 : 0);
@@ -698,7 +698,7 @@ if ($action == 'update' && !empty($permissiontoadd)) {
 		}
 	}
 
-	if (!$error) {
+	if (!$error && !$conf->global->FDT_USER_APPROVER) {
 		$fk_user_validation1 = GETPOST('fk_user_validation1');
 		$fk_user_validation2 = GETPOST('fk_user_validation2');
 

@@ -363,9 +363,11 @@ class FeuilleDeTemps extends CommonObject
 	 */
 	public function fetch($id, $ref = null)
 	{
+		global $conf; 
+
 		$result = $this->fetchCommon($id, $ref);
 		
-		if ($result) {
+		if ($result && !$conf->global->FDT_USER_APPROVER) {
 			$this->listApprover1 = $this->listApprover('', 1);
 			$this->listApprover2 = $this->listApprover('', 2);
 		}
@@ -466,8 +468,10 @@ class FeuilleDeTemps extends CommonObject
 				$record = new self($this->db);
 				$record->setVarsFromFetchObj($obj);
 
-				$record->listApprover1 = $record->listApprover('', 1);
-				$record->listApprover2 = $record->listApprover('', 2);
+				if(!$conf->global->FDT_USER_APPROVER) {
+					$record->listApprover1 = $record->listApprover('', 1);
+					$record->listApprover2 = $record->listApprover('', 2);
+				}
 
 				$records[$record->id] = $record;
 
@@ -526,45 +530,47 @@ class FeuilleDeTemps extends CommonObject
 				$this->actionmsg .= "<strong>".$langs->transnoentities($val['label']).'</strong>: '.$old_value.' ➔ '.$value.'<br/>';
 			}
 
-			// 1ere étape : Supprimer les 1er et 2nd validateur nécéssaire
-			$modification_1e_validation = '';
-			$modification_2e_validation = '';
-			foreach($this->oldcopy->listApprover1[2] as $id => $user_static){
-				if(!in_array($id, $this->listApprover1[0])){	
-					$prenom = $user_static->firstname;
-					$nom = $user_static->lastname;
-					$modification_1e_validation .= '<li>Suppression de '.$prenom.' '.$nom.'</li>';
+			if(!$conf->global->FDT_USER_APPROVER) {
+				// 1ere étape : Supprimer les 1er et 2nd validateur nécéssaire
+				$modification_1e_validation = '';
+				$modification_2e_validation = '';
+				foreach($this->oldcopy->listApprover1[2] as $id => $user_static){
+					if(!in_array($id, $this->listApprover1[0])){	
+						$prenom = $user_static->firstname;
+						$nom = $user_static->lastname;
+						$modification_1e_validation .= '<li>Suppression de '.$prenom.' '.$nom.'</li>';
+					}
 				}
-			}
-			foreach($this->oldcopy->listApprover2[2] as $id => $user_static){
-				if(!in_array($id, $this->listApprover2[0])){	
-					$prenom = $user_static->firstname;
-					$nom = $user_static->lastname;
-					$modification_2e_validation .= '<li>Suppression de '.$prenom.' '.$nom.'</li>';
+				foreach($this->oldcopy->listApprover2[2] as $id => $user_static){
+					if(!in_array($id, $this->listApprover2[0])){	
+						$prenom = $user_static->firstname;
+						$nom = $user_static->lastname;
+						$modification_2e_validation .= '<li>Suppression de '.$prenom.' '.$nom.'</li>';
+					}
 				}
-			}
 
-			// 2e étape : On ajoute les 1er et 2nd validateur nécéssaire
-			foreach($this->listApprover1[2] as $id => $user_static){
-				if(!in_array($id, $this->oldcopy->listApprover1[0])){
-					$prenom = $user_static->firstname;
-					$nom = $user_static->lastname;
-					$modification_1e_validation .= '<li>Ajout de '.$prenom.' '.$nom.'</li>';
+				// 2e étape : On ajoute les 1er et 2nd validateur nécéssaire
+				foreach($this->listApprover1[2] as $id => $user_static){
+					if(!in_array($id, $this->oldcopy->listApprover1[0])){
+						$prenom = $user_static->firstname;
+						$nom = $user_static->lastname;
+						$modification_1e_validation .= '<li>Ajout de '.$prenom.' '.$nom.'</li>';
+					}
 				}
-			}
-			foreach($this->listApprover2[2] as $id => $user_static){
-				if(!in_array($id, $this->oldcopy->listApprover2[0])){
-					$prenom = $user_static->firstname;
-					$nom = $user_static->lastname;
-					$modification_2e_validation .= '<li>Ajout de '.$prenom.' '.$nom.'</li>';
+				foreach($this->listApprover2[2] as $id => $user_static){
+					if(!in_array($id, $this->oldcopy->listApprover2[0])){
+						$prenom = $user_static->firstname;
+						$nom = $user_static->lastname;
+						$modification_2e_validation .= '<li>Ajout de '.$prenom.' '.$nom.'</li>';
+					}
 				}
-			}
 
-			if($modification_1e_validation) {
-				$this->actionmsg .= '<strong>1ère validation</strong>:<ul>'.$modification_1e_validation."</ul><br/>";
-			}
-			if($modification_2e_validation) {
-				$this->actionmsg .= '<strong>2ème validation</strong>:<ul>'.$modification_2e_validation."</ul><br/>";
+				if($modification_1e_validation) {
+					$this->actionmsg .= '<strong>1ère validation</strong>:<ul>'.$modification_1e_validation."</ul><br/>";
+				}
+				if($modification_2e_validation) {
+					$this->actionmsg .= '<strong>2ème validation</strong>:<ul>'.$modification_2e_validation."</ul><br/>";
+				}
 			}
 		}
 
@@ -1033,7 +1039,7 @@ class FeuilleDeTemps extends CommonObject
 	 */
 	public function setDraft($user, $notrigger = 0)
 	{
-		global $langs; 
+		global $langs, $conf; 
 
 		// Protection
 		if ($this->status <= self::STATUS_DRAFT) {
@@ -1043,14 +1049,16 @@ class FeuilleDeTemps extends CommonObject
 		$this->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_REFUSInDolibarr", $this->ref);
 		$this->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_REFUSDetailInDolibarr", GETPOST('raison_refus'));
 
-		$list_validation1 = $this->listApprover1;
-		foreach($list_validation1[2] as $id => $user_static){
-			$result = $this->updateTaskValidation($id, 1, 0, 1);
-		}
-
-		$list_validation2 = $this->listApprover2;
-		foreach($list_validation2[2] as $id => $user_static){
-			$result = $this->updateTaskValidation($id, 1, 0, 2);
+		if(!$conf->global->FDT_USER_APPROVER) {
+			$list_validation1 = $this->listApprover1;
+			foreach($list_validation1[2] as $id => $user_static){
+				$result = $this->updateTaskValidation($id, 1, 0, 1);
+			}
+	
+			$list_validation2 = $this->listApprover2;
+			foreach($list_validation2[2] as $id => $user_static){
+				$result = $this->updateTaskValidation($id, 1, 0, 2);
+			}
 		}
 
 		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FEUILLEDETEMPS_REFUS');
@@ -1138,32 +1146,34 @@ class FeuilleDeTemps extends CommonObject
 			$label .= '<br><b>'.$langs->trans('Utilisateur').':</b> '.$user_static->firstname.' '.$user_static->lastname;
 		
 
-			$list_validation1 = $this->listApprover1;
-			$i = 0;
-			foreach($list_validation1[2] as $id => $user_static){
-				if($i == 0){
-					$label .= '<br><b>'.$langs->trans('UserValidation1').':</b> ';
-					$label .= $user_static->firstname.' '.$user_static->lastname;
+			if(!$conf->global->FDT_USER_APPROVER) {
+				$list_validation1 = $this->listApprover1;
+				$i = 0;
+				foreach($list_validation1[2] as $id => $user_static){
+					if($i == 0){
+						$label .= '<br><b>'.$langs->trans('UserValidation1').':</b> ';
+						$label .= $user_static->firstname.' '.$user_static->lastname;
+					}
+					else {
+						$label .= ', ';
+						$label .= $user_static->firstname.' '.$user_static->lastname;
+					}
+					$i++;
 				}
-				else {
-					$label .= ', ';
-					$label .= $user_static->firstname.' '.$user_static->lastname;
-				}
-				$i++;
-			}
 
-			$list_validation2 = $this->listApprover2;
-			$i = 0;
-			foreach($list_validation2[2] as $id => $user_static){
-				if($i == 0){
-					$label .= '<br><b>'.$langs->trans('UserValidation2').':</b> ';
-					$label .= $user_static->firstname.' '.$user_static->lastname;
+				$list_validation2 = $this->listApprover2;
+				$i = 0;
+				foreach($list_validation2[2] as $id => $user_static){
+					if($i == 0){
+						$label .= '<br><b>'.$langs->trans('UserValidation2').':</b> ';
+						$label .= $user_static->firstname.' '.$user_static->lastname;
+					}
+					else {
+						$label .= ', ';
+						$label .= $user_static->firstname.' '.$user_static->lastname;
+					}
+					$i++;
 				}
-				else {
-					$label .= ', ';
-					$label .= $user_static->firstname.' '.$user_static->lastname;
-				}
-				$i++;
 			}
 		}
 
@@ -3448,10 +3458,19 @@ class FeuilleDeTemps extends CommonObject
 
 		$now = dol_now();
 
-		$sql = "SELECT DISTINCT v.fk_feuilledetemps";
-		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_task_validation as v";
-		$sql .= " WHERE v.fk_user_validation = ".$user->id;
-		$sql .= " AND v.validation = 0 AND v.validation_number = 1";
+		if($conf->global->FDT_USER_APPROVER) {
+			$sql = "SELECT DISTINCT f.rowid";
+			$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps as f";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue ON f.fk_user = ue.fk_object";
+			$sql .= " WHERE FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
+			$sql .= " AND f.status = ".self::STATUS_APPROBATION1;
+		}
+		else {
+			$sql = "SELECT DISTINCT v.fk_feuilledetemps";
+			$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_task_validation as v";
+			$sql .= " WHERE v.fk_user_validation = ".$user->id;
+			$sql .= " AND v.validation = 0 AND v.validation_number = 1";
+		}
 
 		$resql = $this->db->query($sql);
 		if ($resql) {
@@ -3459,7 +3478,7 @@ class FeuilleDeTemps extends CommonObject
 			//$response->warning_delay = $conf->holiday->approve->warning_delay / 60 / 60 / 24;
 			$response->label = $langs->trans("FeuilleDeTempsToApprove1");
 			$response->labelShort = $langs->trans("ToApprove1");
-			$response->url = DOL_URL_ROOT.'/custom/feuilledetemps/feuilledetemps_list.php?mainmenu=feuilledetemps&search_fk_user_validation_1='.$user->id;
+			$response->url = DOL_URL_ROOT.'/custom/feuilledetemps/feuilledetemps_list.php?mainmenu=feuilledetemps&search_status=2&search_fk_user_validation_1='.$user->id;
 
 			while ($obj = $this->db->fetch_object($resql)) {
 				$response->nbtodo++;
@@ -3500,7 +3519,7 @@ class FeuilleDeTemps extends CommonObject
 			//$response->warning_delay = $conf->holiday->approve->warning_delay / 60 / 60 / 24;
 			$response->label = $langs->trans("FeuilleDeTempsToApprove2");
 			$response->labelShort = $langs->trans("ToApprove2");
-			$response->url = DOL_URL_ROOT.'/custom/feuilledetemps/feuilledetemps_list.php?mainmenu=feuilledetemps&search_fk_user_validation_2='.$user->id;
+			$response->url = DOL_URL_ROOT.'/custom/feuilledetemps/feuilledetemps_list.php?mainmenu=feuilledetemps&search_status=3&search_fk_user_validation_2='.$user->id;
 
 			while ($obj = $this->db->fetch_object($resql)) {
 				$response->nbtodo++;
@@ -4193,6 +4212,40 @@ class FeuilleDeTemps extends CommonObject
 				$task->fetch($obj->rowid);
 
 				$arrayres[] = $task;
+
+				$i++;
+			}
+		
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
+			$this->error = "Error ".$this->db->lasterror();
+			return -1;
+		}
+	
+		return $arrayres;
+	}
+
+	public function getUserImApprover()
+  	{
+		global $user; 
+
+		$arrayres = array();
+	
+		$sql = "SELECT DISTINCT";
+		$sql .= " u.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."user as u";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue ON u.rowid = ue.fk_object";
+		$sql .= " WHERE FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
+
+		dol_syslog(get_class($this)."::getUserImApprover", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				$arrayres[] = $obj->rowid;
 
 				$i++;
 			}

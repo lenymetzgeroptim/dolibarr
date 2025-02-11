@@ -154,12 +154,14 @@ $can_modify_fdt = 1;
 if($object_id > 0) {
 	$object->fetch($object_id);
 
-	$list_resp_task = $object->listApprover1;
-	if(in_array(1, $list_resp_task[1])){
-		$resp_task_valide = 1;
-	}
-	else {
-		$resp_task_valide = 0;
+	if(!$conf->global->FDT_USER_APPROVER) {
+		$list_resp_task = $object->listApprover1;
+		if(in_array(1, $list_resp_task[1])){
+			$resp_task_valide = 1;
+		}
+		else {
+			$resp_task_valide = 0;
+		}
 	}
 
 	if($object->status != FeuilleDeTemps::STATUS_DRAFT){
@@ -488,14 +490,22 @@ $moreforfilter .= '<div class="inline-block hideonsmartphone"></div>';
 $projectListResp = $project->getProjectsAuthorizedForUser($user, 1, 1, 0, " AND ec.fk_c_type_contact = 160");
 $userList = $projectstatic->getUserForProjectLeader($projectListResp);
 if(!$user->rights->feuilledetemps->feuilledetemps->read) {
-	$includeonly = array_merge($userList, $user->getAllChildIds(1));
-	if (empty($user->rights->user->user->lire)) {
-		$includeonly = array($user->id);
+	if(!$conf->global->FDT_USER_APPROVER) {
+		$includeonly = array_merge($userList, $user->getAllChildIds(1));
+		if (empty($user->rights->user->user->lire)) {
+			$includeonly = array($user->id);
+		}
+	}
+	else {
+		$includeonly = $object->getUserImApprover();
+		if (in_array($user->id, $includeonly)) {
+			$includeonly[] = $user->id;
+		}
 	}
 }
 $extendedUser = New ExtendedUser3($db);
-$exlude = $extendedUser->get_full_treeIds("statut <> 1");
-$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class="paddingright pictofixedwidth"').$form->select_dolusers($search_usertoprocessid ? $search_usertoprocessid : $usertoprocess->id, 'search_usertoprocessid', 0, $exlude, 0, $includeonly, null, 0, 0, 0, '', 0, '', 'maxwidth200');
+$exclude = $extendedUser->get_full_treeIds("statut <> 1");
+$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class="paddingright pictofixedwidth"').$form->select_dolusers($search_usertoprocessid ? $search_usertoprocessid : $usertoprocess->id, 'search_usertoprocessid', 0, $exclude, 0, $includeonly, null, 0, 0, 0, '', 0, '', 'maxwidth200');
 $moreforfilter .= '</div>';
 
 

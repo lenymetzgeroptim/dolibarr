@@ -124,12 +124,27 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 
 				$to = '';
 
-				$list_validation = $object->listApprover1;
-				foreach($list_validation[2] as $id => $user_static){
-					if(!empty($user_static->email)){
-						$to .= $user_static->email.', ';
+				$user_static = new User($this->db);
+				$user_static->fetch($object->fk_user);
+
+				if($conf->global->FDT_USER_APPROVER) {
+					$list_validation = explode(',', $user_static->array_options['options_approbateurfdt']);
+					foreach($list_validation as $id){
+						$user_static->fetch($id);
+						if(!empty($user_static->email)){
+							$to .= $user_static->email.', ';
+						}
 					}
 				}
+				else {
+					$list_validation = $object->listApprover1;
+					foreach($list_validation[2] as $id => $user_static){
+						if(!empty($user_static->email)){
+							$to .= $user_static->email.', ';
+						}
+					}
+				}
+				
 				$to = rtrim($to, ", ");
 
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
