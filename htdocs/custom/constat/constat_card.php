@@ -1142,7 +1142,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status != $object::STATUS_CLOTURE) {
 					print dolGetButtonAction('', $langs->trans('classer le constat'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloture&confirm=yes&token='.newToken(), '', $permissiontoadd);
-					// $object->updateCloture();
+					
 					
 				}
 			}
