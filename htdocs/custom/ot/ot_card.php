@@ -1412,41 +1412,9 @@ function displayUserList() {
         columnsContainer.appendChild(uniqueList);
     }
 
-    // Gérer la taille des listes dynamiquement
-    adjustListSizes(); // Appel de la fonction pour ajuster la taille des listes
+  
 }
 
-// Fonction pour ajuster la taille des listes
-function adjustListSizes() {
-    const lists = document.querySelectorAll(".user-list");
-    
-    // Diviser les listes en lignes (groupes)
-    let currentRow = [];
-    lists.forEach((list, index) => {
-        currentRow.push(list);
-
-        // Une fois qune ligne est complète, ajuster la taille des listes
-        if (currentRow.length === 3 || index === lists.length - 1) {
-            const numberOfLists = currentRow.length;
-            
-            // Calculer la largeur de chaque liste
-            let width = "100%"; // Par défaut, si 1 seule liste
-            if (numberOfLists === 2) {
-                width = "50%"; // Si 2 listes
-            } else if (numberOfLists === 3) {
-                width = "33.33%"; // Si 3 listes
-            }
-
-            // Appliquer la largeur calculée à chaque liste dans la ligne
-            currentRow.forEach(list => {
-                list.style.width = width;
-            });
-
-            // Réinitialiser pour la prochaine ligne
-            currentRow = [];
-        }
-    });
-}
 
 
 
