@@ -526,6 +526,18 @@ tr > th:last-child.fixed {
 	background-color: #f0f0f0;
 }
 
+#tablelines_fdt> tbody > tr > td.holidaycolumnmultiple1 {
+	border-right: 1px solid var(--colortopbordertitle1);
+	border-bottom: none;
+	background-color: #f0f0f0;
+}
+
+#tablelines_fdt> tbody > tr > td.holidaycolumnmultiple2 {
+	border-right: 1px solid rgb(82, 82, 82);
+	border-bottom: none;
+	background-color: #f0f0f0;
+}
+
 #tablelines_fdt> thead > tr > th.columntitle {
 	border-bottom: 1px solid var(--colortopbordertitle1);
 }
@@ -753,4 +765,17 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 
 .feuilledetemps .ml0 {
 	margin-left: 0px; !important
+}
+
+.feuilledetemps div.prefilling_time input {
+	font-style: italic;
+	color: grey;
+}
+
+.feuilledetemps span.diffpositive {
+	color: blue;
+}
+
+.feuilledetemps span.diffnegative {
+	color: red;
 }

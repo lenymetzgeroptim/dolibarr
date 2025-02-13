@@ -223,7 +223,7 @@ class ExtendedExportFDT extends Export
 				$typesHoliday = $holiday->getTypesNoCP();
 
 				$extrafields = new ExtraFields($this->db);
-				if($conf->donneesrh->enable) {
+				if($conf->donneesrh->enabled) {
 					$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
 					$userField = new UserField($this->db);
 					$userField->table_element = 'donneesrh_Positionetcoefficient';
@@ -245,7 +245,7 @@ class ExtendedExportFDT extends Export
 
 				$userstatic->fetchAll('', 't.lastname', 0, 0, $filter);
 				foreach($userstatic->users as $id => $user_obj) {
-					if($conf->donneesrh->enable) {
+					if($conf->donneesrh->enabled) {
 						$userField->id = $id;
 						$userField->fetch_optionals();
 						$date_depart =  $userField->array_options['options_datedepart'];

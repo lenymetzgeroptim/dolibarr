@@ -175,9 +175,6 @@ else {
 
 $nb_jour = num_between_day($firstdaytoshow, $lastdaytoshow - 3600) + 1; // Nombre de jour total à affiché
 
-$timeHoliday = $object->timeHolidayWeek($usertoprocess->id);
-$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
-
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = dol_time_plus_duree($firstdaytoshow, $idw, 'd');
 	$dayinloopfromfirstdaytoshow_array[$idw] = $dayinloopfromfirstdaytoshow; 
@@ -229,7 +226,7 @@ if($conf->donneesrh->enabled) {
 }
 
 // Nombre d'heures par semaine à faire et avant de pouvoir avoir des hs
-if($conf->donneesrh->enable) {
+if($conf->donneesrh->enabled) {
 	$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
 	$userField = new UserField($db);
 	$userField->id = $usertoprocess->id;
@@ -260,6 +257,32 @@ if(empty($usertoprocess->array_options['options_heuremaxsemaine'])) {
 else {
 	$heure_max_semaine = $usertoprocess->array_options['options_heuremaxsemaine'];
 }
+
+// Semaine type
+$standard_week_hour = array();
+if($heure_semaine == $conf->global->HEURE_SEMAINE_NO_RTT) {
+	$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
+	$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_NO_RTT * 3600;
+	$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT * 3600;
+	$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_NO_RTT * 3600;
+	$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_NO_RTT * 3600;
+	$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_NO_RTT * 3600;
+	$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_NO_RTT * 3600;
+}
+else {
+	$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_WITH_RTT * 3600;
+	$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_WITH_RTT * 3600;
+	$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT * 3600;
+	$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_WITH_RTT * 3600;
+	$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_WITH_RTT * 3600;
+	$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_WITH_RTT * 3600;
+	$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_WITH_RTT * 3600;
+}
+
+// Temps en congés par semaine
+$timeHoliday = $object->timeHolidayWeek($usertoprocess->id, $standard_week_hour);
+// Temps travaillé par semaine
+$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
 
 /*
  * Actions
@@ -621,7 +644,7 @@ if (count($tasksarray) > 0) {
 																$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
 																$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 																$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs,
-																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine);
+																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour);
 	}
 } else {
 	print '<tr><td colspan="'.(4 + $addcolspan + $nb_jour).'"><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';

@@ -311,7 +311,7 @@ if($conf->donneesrh->enabled) {
 }
 
 // Nombre d'heures par semaine à faire et avant de pouvoir avoir des hs
-if($conf->donneesrh->enable) {
+if($conf->donneesrh->enabled) {
 	$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
 	$userField = new UserField($db);
 	$userField->id = $usertoprocess->id;

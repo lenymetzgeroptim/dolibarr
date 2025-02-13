@@ -243,7 +243,7 @@ function screenFDT(url, name) {
 function disableNullInput(columnmode) {
     if(columnmode) {
         $('form[name="addtime"] input[type="text"][id^="timeadded"], form[name="addtime"] input[type="text"][id^="time_heure_nuit"], form[name="addtime"] input[type="text"][id^="site"], form[name="addtime"] input[type="text"], form[name="addtime"] input[type="checkbox"]').each(function (index, obj) {
-            if (obj.defaultValue == obj.value) {
+            if (obj.defaultValue == obj.value && !obj.parentNode.classList.contains('prefilling_time')) {
                 $(obj).prop('disabled', true);
             }
         });
@@ -276,6 +276,12 @@ function toggleCheckboxesHoliday(source) {
             checkbox.checked = source.checked;
         }
     });
+}
+
+function deletePrefillingClass(objet) {
+    if(objet.parentNode.classList.contains('prefilling_time')) {
+        objet.parentNode.classList.remove('prefilling_time')
+    }
 }
 
 /* Parse en input data for time entry into timesheet */
@@ -459,7 +465,7 @@ function updateAllTotalLoad_TS(mode, nb_jour, num_first_day = 0) {
 
 /* Update total. days = column nb starting from 0 */
 // totalDay, totalDayAll, total_task
-function updateTotal_TS(object, days, mode, num_task, num_first_day = 0) {
+function updateTotal_TS(object, days, mode, num_task, num_first_day = 0, holiday = 0) {
     if (mode == "hours") {
         var total = new Date(0);
         var nbextradays = 0;
@@ -577,6 +583,21 @@ function updateTotal_TS(object, days, mode, num_task, num_first_day = 0) {
             else jQuery('.totalDay' + days).removeClass("bold");
             var texttoshow = parseFloat(total).toFixed(2);
             jQuery('.totalDay' + days).text(texttoshow);
+
+            if($('#diff_' + days)) {
+                contrat = parseFloat(jQuery('#contrat_' + days).text());
+                diff = total + holiday - contrat;
+                var texttoshow = (diff > 0 ? '+' : '') + parseFloat(diff).toFixed(2);
+                $('#diff_' + days).text(texttoshow);
+                $('#diff_' + days).removeClass('diffpositive');
+                $('#diff_' + days).removeClass('diffnegative');
+                if(diff > 0) {
+                    $('#diff_' + days).addClass('diffpositive');
+                }
+                else if(diff < 0) {
+                    $('#diff_' + days).addClass('diffnegative');
+                }
+            }
 
             // /* Output total of all total */
             // if (days >= num_first_day) {

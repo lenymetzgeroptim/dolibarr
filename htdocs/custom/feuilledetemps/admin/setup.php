@@ -200,6 +200,63 @@ $item = $formSetup->newItem('FDT_STATUT_HOLIDAY')->setAsYesNo();
 // FDT_GENERATE_TASK_PROJECTCREATION
 $item = $formSetup->newItem('FDT_GENERATE_TASK_PROJECTCREATION')->setAsYesNo();
 
+
+
+// Titre FDT_STANDARD_WEEK
+$formSetup->newItem('FDT_STANDARD_WEEK')->setAsTitle();
+
+// FDT_STANDARD_WEEK_FOR_HOLIDAY
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_FOR_HOLIDAY')->setAsYesNo();
+
+// Titre FDT_STANDARD_WEEK_WITH_RTT
+$formSetup->newItem('FDT_STANDARD_WEEK_WITH_RTT')->setAsTitle();
+
+// FDT_STANDARD_WEEK_MONDAY_WITH_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_MONDAY_WITH_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_TUESDAY_WITH_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_TUESDAY_WITH_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_THURSDAY_WITH_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_THURSDAY_WITH_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_FRIDAY_WITH_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_FRIDAY_WITH_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_SATURDAY_WITH_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_SATURDAY_WITH_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_SUNDAY_WITH_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_SUNDAY_WITH_RTT')->setAsString();
+
+// Titre FDT_STANDARD_WEEK_NO_RTT
+$formSetup->newItem('FDT_STANDARD_WEEK_NO_RTT')->setAsTitle();
+
+// FDT_STANDARD_WEEK_MONDAY_NO_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_MONDAY_NO_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_TUESDAY_NO_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_TUESDAY_NO_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_THURSDAY_NO_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_THURSDAY_NO_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_FRIDAY_NO_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_FRIDAY_NO_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_SATURDAY_NO_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_SATURDAY_NO_RTT')->setAsString();
+
+// FDT_STANDARD_WEEK_SUNDAY_NO_RTT
+$item = $formSetup->newItem('FDT_STANDARD_WEEK_SUNDAY_NO_RTT')->setAsString();
+
+
 $setupnotempty += count($formSetup->items);
 
 

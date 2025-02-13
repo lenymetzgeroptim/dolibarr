@@ -65,7 +65,24 @@ HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE = Utiliser les HS50-HT qui permettent le d�
 FDT_MANAGE_EMPLOYER = Gestion de l'employeur pour les exports (export uniquement d'un employeur)
 FDT_STATUT_HOLIDAY = Gestion d'un statut des congés sur les feuilles de temps
 FDT_GENERATE_TASK_PROJECTCREATION = Générer une tâche automatiquement lors de la création d'un projet
-
+FDT_STANDARD_WEEK = Pointage d'une semaine type
+FDT_STANDARD_WEEK_WITH_RTT = Avec RTT
+FDT_STANDARD_WEEK_NO_RTT = Sans RTT
+FDT_STANDARD_WEEK_MONDAY_WITH_RTT = Lundi
+FDT_STANDARD_WEEK_TUESDAY_WITH_RTT = Mardi
+FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT = Mercredi
+FDT_STANDARD_WEEK_THURSDAY_WITH_RTT = Jeudi
+FDT_STANDARD_WEEK_FRIDAY_WITH_RTT = Vendredi
+FDT_STANDARD_WEEK_SATURDAY_WITH_RTT = Samedi
+FDT_STANDARD_WEEK_SUNDAY_WITH_RTT = Dimanche
+FDT_STANDARD_WEEK_MONDAY_NO_RTT = Lundi
+FDT_STANDARD_WEEK_TUESDAY_NO_RTT = Mardi
+FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT = Mercredi
+FDT_STANDARD_WEEK_THURSDAY_NO_RTT = Jeudi
+FDT_STANDARD_WEEK_FRIDAY_NO_RTT = Vendredi
+FDT_STANDARD_WEEK_SATURDAY_NO_RTT = Samedi
+FDT_STANDARD_WEEK_SUNDAY_NO_RTT = Dimanche
+FDT_STANDARD_WEEK_FOR_HOLIDAY = Utiliser la semaine type pour la durée des congés en jour
 
 #
 # About page
