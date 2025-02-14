@@ -83,6 +83,8 @@ FDT_STANDARD_WEEK_FRIDAY_NO_RTT = Vendredi
 FDT_STANDARD_WEEK_SATURDAY_NO_RTT = Samedi
 FDT_STANDARD_WEEK_SUNDAY_NO_RTT = Dimanche
 FDT_STANDARD_WEEK_FOR_HOLIDAY = Utiliser la semaine type pour la durée des congés en jour
+FDT_SHORTCUT_HOLIDAY = Raccourci pour créer un congés dans le menu feuille de temps
+
 
 #
 # About page
@@ -143,6 +145,8 @@ ToVerification = En vérification
 FeuilleDeTempsToApprove1 = Feuille de temps en approbation n°1
 FeuilleDeTempsToApprove2 = Feuille de temps en approbation n°2
 FeuilleDeTempsToVerification = Feuille de temps en vérification
+NewHoliday = Nouveau congé
+
 
 #
 # Mail

@@ -547,6 +547,22 @@ class modFeuilleDeTemps extends DolibarrModules
 			'user'=>2,
 		);
 
+
+		$this->menu[$r++]=array(
+            'fk_menu'=>'fk_mainmenu=feuilledetemps',
+			'type'=>'left',                                        						// This is a Left menu entry
+			'titre'=> $langs->trans("NewHoliday"),
+			'mainmenu'=>'feuilledetemps',
+			'leftmenu'=>'holiday_create',
+			'url'=>'/holidaycustom/card.php?action=create',
+			'langs'=>'feuilledetemps@feuilledetemps',                // Lang file to use(without .lang) by module. File must be in langs/code_CODE/ directory.
+			'position'=>1100+$r,
+			'enabled'=>'$conf->feuilledetemps->enabled&&$conf->holidaycustom->enabled', // Define condition to show or hide menu entry. Use '$conf->feuilledetemps->enabled' if entry must be visible if module is enabled. Use '$leftmenu == \'system\'' to show if leftmenu system is selected.
+			'perms'=>'$user->rights->holidaycustom->write&&$conf->global->FDT_SHORTCUT_HOLIDAY',                                        // Use 'perms'=>'$user->rights->feuilledetemps->level1->level2' if you want your menu with a permission rules
+			'target'=>'',
+			'user'=>2,
+		);
+
         /*$this->menu[$r++]=array(
             // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
             'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=feuilledetemps_feuilledetemps',
