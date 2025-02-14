@@ -15,6 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+function autoFillSite(sitedefaut, day, cpt){
+    heure = $('input[name="task[' + day + '][' + cpt + ']"').val();
+    heure_nuit = $('input[name="heure_nuit[' + day + '][' + cpt + ']"').val();
+    if(sitedefaut && ((heure && heure != '0.00' && heure != '00.00' && heure != '0:00' && heure != '00:00') || (heure_nuit && heure_nuit != '0.00' && heure_nuit != '00.00' && heure_nuit != '0:00' && heure_nuit != '00:00')) && $('input[name="site[' + day + '][' + cpt + ']"') && $('input[name="site[' + day + '][' + cpt + ']"').val() == "") {
+        $('input[name="site[' + day + '][' + cpt + ']"').val(sitedefaut);
+    }
+    else if(sitedefaut && sitedefaut == $('input[name="site[' + day + '][' + cpt + ']"').val() && ((!heure || heure == '0.00' || heure == '00.00' || heure == '0:00' || heure == '00:00') && (!heure_nuit || heure_nuit == '0.00' || heure_nuit == '00.00' || heure_nuit == '0:00' || heure_nuit == '00:00'))) {
+        $('input[name="site[' + day + '][' + cpt + ']"').val("");
+    }
+}
+
 function forceUppercase(input) {
     input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '');
 }

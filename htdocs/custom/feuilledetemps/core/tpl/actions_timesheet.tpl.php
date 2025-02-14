@@ -18,7 +18,7 @@ if (empty($conf) || !is_object($conf)) {
 if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
 	// Création de la feuille de temps au 1er enregistrement
 	if($object->id == 0) {
-		$object->ref = "FDT_".str_pad($usertoprocess->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date($lastdaytoshow, '%m%Y');
+		$object->ref = "FDT_".str_pad($usertoprocess->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date($last_day_month, '%m%Y');
 		$object->date_debut = $first_day_month;
 		$object->date_fin = $last_day_month;
 		$object->fk_user = $usertoprocess->id;
