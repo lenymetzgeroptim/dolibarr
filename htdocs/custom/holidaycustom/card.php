@@ -382,13 +382,15 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 
-				$form = new Form($db);
-				$userstatic->fetch($object->fk_user);
-				if($object->fk_type == 4 || $userstatic->array_options['options_employeur'] != 1) {
-					$object->array_options['options_statutfdt'] = 4;
-				}
-				elseif(in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
-					$object->array_options['options_statutfdt'] = 2;
+				if($conf->global->FDT_STATUT_HOLIDAY) {
+					$form = new Form($db);
+					$userstatic->fetch($object->fk_user);
+					if($object->fk_type == 4 || $userstatic->array_options['options_employeur'] != 1) {
+						$object->array_options['options_statutfdt'] = 4;
+					}
+					elseif(in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
+						$object->array_options['options_statutfdt'] = 2;
+					}
 				}
 
 				$result = $object->create($user);
@@ -935,7 +937,7 @@ if (empty($reshook)) {
 				// Update
 				$verif = $object->update($user);
 
-				if(!$error && $verif && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -979,7 +981,9 @@ if (empty($reshook)) {
 
 		// If this is a rough draft, canceled or refused
 		if ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED) {
-			$options_statutfdt =  $object->array_options['options_statutfdt'];
+			if($conf->global->FDT_STATUT_HOLIDAY) {
+				$options_statutfdt =  $object->array_options['options_statutfdt'];
+			}
 			$date_debut = $object->date_debut;
 			$date_fin = $object->date_fin;
 			$object_fk_user = $object->fk_user;
@@ -987,7 +991,7 @@ if (empty($reshook)) {
 
 			$result = $object->delete($user);
 
-			if(!$error && $result &&  ($options_statutfdt == 2 || $options_statutfdt == 3)) {
+			if(!$error && $result && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $options_statutfdt == 3)) {
 				global $dolibarr_main_url_root;
 				$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 				$from = 'erp@optim-industries.fr';
@@ -1786,7 +1790,7 @@ if (empty($reshook)) {
 				$object->statut = Holiday::STATUS_REFUSED;
 				$object->detail_refuse = GETPOST('detail_refuse', 'alphanohtml');
 
-				if($object->array_options['options_statutfdt'] == 1) {
+				if($conf->global->FDT_STATUT_HOLIDAY && $object->array_options['options_statutfdt'] == 1) {
 					$object->array_options['options_statutfdt'] = 4;
 				}
 				
@@ -1852,7 +1856,7 @@ if (empty($reshook)) {
 					$action = '';
 				}
 
-				if(!$error && $verif && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -1948,7 +1952,7 @@ if (empty($reshook)) {
 				$object->statut = Holiday::STATUS_CANCELED;
 				$object->array_options['options_detail_annulation'] = GETPOST('detail_annulation', 'alphanohtml');
 
-				if($object->array_options['options_statutfdt'] == 1) {
+				if($conf->global->FDT_STATUT_HOLIDAY && $object->array_options['options_statutfdt'] == 1) {
 					$object->array_options['options_statutfdt'] = 4;
 				}
 				
@@ -2159,7 +2163,7 @@ if (empty($reshook)) {
 					}*/
 				}
 
-				if(!$error && $result && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $result && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
