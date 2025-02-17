@@ -139,6 +139,7 @@ $search_type         = GETPOST('search_type', 'int');
 $object = new Holiday($db);
 $extrafields = new ExtraFields($db);
 $hookmanager->initHooks(array('holidaylist')); // Note that conf->hooks_modules contains array
+$user_static = new User($db); 
 
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
@@ -280,8 +281,9 @@ $formother = new FormOther($db);
 $formfile = new FormFile($db);
 
 $fuser = new User($db);
-$fuser->fetchAll();
-$tab_user = $fuser->users;
+// $fuser->fetchAll();
+// $tab_user = $fuser->users;
+$tab_user = array();
 
 $holidaystatic = new Holiday($db);
 
@@ -947,10 +949,10 @@ if ($resql) {
 			$obj = $db->fetch_object($resql);
 
 			// Store properties in $object
-			$object->fetch($obj->rowid);
+			$object->fetch($obj->rowid, '', 0);
 
-			$object->listApprover1 = $object->listApprover('', 1);
-			$object->listApprover2 = $object->listApprover('', 2);
+			// $object->listApprover1 = $object->listApprover('', 1, 0);
+			// $object->listApprover2 = $object->listApprover('', 2, 0);
 
 			// Leave request
 			$holidaystatic->id = $obj->rowid;
@@ -1006,10 +1008,19 @@ if ($resql) {
 				//print $approbatorstatic->getNomUrl(-1);
 				
 				if($conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+					if(!key_exists($userstatic->id, $tab_user)) {
+						$user_static->fetch($userstatic->id);
+						$tab_user[$userstatic->id] = clone $user_static;
+					}
 					$user_static = $tab_user[$userstatic->id];
 					$list_validation1 = explode(",", $user_static->array_options['options_approbateurfdt']);
 					foreach($list_validation1 as $userid){
 						if($userid > 0) {
+							if(!key_exists($userid, $tab_user)) {
+								$user_static->fetch($userid);
+								$tab_user[$userid] = clone $user_static;
+							}
+
 							$user_static = $tab_user[$userid];
 							print $user_static->getNomUrl(3, "");
 							print '<br>';
@@ -1019,6 +1030,11 @@ if ($resql) {
 				else {
 					$list_validation1 = $object->listApprover1;
 					foreach($list_validation1[0] as $userid){
+						if(!key_exists($userid, $tab_user)) {
+							$user_static->fetch($userid);
+							$tab_user[$userid] = clone $user_static;
+						}
+
 						$user_static = $tab_user[$userid];
 						print $user_static->getNomUrl(3, "").($list_validation1[1][$userid] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
 						print '<br>';
@@ -1038,6 +1054,11 @@ if ($resql) {
 
 				$list_validation2 = $object->listApprover2;
 				foreach($list_validation2[0] as $userid){
+					if(!key_exists($userid, $tab_user)) {
+						$user_static->fetch($userid);
+						$tab_user[$userid] = clone $user_static;
+					}
+					
 					$user_static = $tab_user[$userid];
 					print $user_static->getNomUrl(3, "").($list_validation2[1][$userid] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
 					print '<br>';
