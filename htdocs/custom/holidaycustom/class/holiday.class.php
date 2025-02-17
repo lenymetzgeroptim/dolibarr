@@ -100,6 +100,8 @@ class Holiday extends CommonObject
 	 * @var int 	ID of user that must approve. TODO: there is no date for validation (date_valid is used for approval), add one.
 	 */
 	public $fk_validator;
+	public $listApprover1 = array();
+	public $listApprover2 = array();
 
 	/**
 	 * @var int 	Date of approval. TODO: Add a field for approval date and use date_valid instead for validation.
@@ -403,7 +405,7 @@ class Holiday extends CommonObject
 	 */
 	public function fetch($id, $ref = '')
 	{
-		global $langs;
+		global $langs, $conf;
 
 		$sql = "SELECT";
 		$sql .= " cp.rowid,";
@@ -474,7 +476,7 @@ class Holiday extends CommonObject
 			}
 			$this->db->free($resql);
 
-			if ($result) {
+			if ($result && !$conf->global->HOLIDAY_FDT_APPROVER) {
 				$this->listApprover1 = $this->listApprover('', 1);
 				$this->listApprover2 = $this->listApprover('', 2);
 			}
