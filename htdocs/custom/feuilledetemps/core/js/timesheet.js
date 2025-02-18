@@ -411,8 +411,6 @@ function updateAllTotalLoad_TS(mode, nb_jour, num_first_day = 0) {
 }
 
 function updateTotalSigedi(object, key, type) {
-    console.log('onchange')
-
     total_col = $('#total_' + key);
     total = (parseFloat(total_col.text()) ? parseFloat(total_col.text()) : 0);
 

@@ -1066,10 +1066,19 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$modify_day = (!$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? 0 : 1);
 
-		$total_array = printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
-		$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
-		$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-		$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array);
+		// Si c'est un jour anticipé, on ne met pas à jour le total
+		if($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month) {
+			printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
+			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
+			$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
+			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array);
+		}
+		else {
+			$total_array = printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
+			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
+			$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
+			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array);
+		}
 	}
 	print '</tbody>';
 
@@ -1605,7 +1614,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$moreparam = 'onfocus="this.oldvalue = this.value;"';
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
 				$moreparam .= ' maxlength="7"';
-				$moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
+				if($idw > $num_first_day) $moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
 				$moreparam .= ($disabled ? ' disabled' : '');
 				print $extrafields->showInputField($key, $silae->array_options['options_'.$key], $moreparam, '['.$idw.']', '', 0, $silae->id, $silae->table_element);
 			}
