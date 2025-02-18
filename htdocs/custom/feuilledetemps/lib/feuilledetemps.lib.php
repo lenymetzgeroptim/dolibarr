@@ -999,30 +999,31 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	$task = new Task($db);
 
 	$conges_texte = $holiday->getArrayHoliday($fuser->id, 0, 1);
+	$total_array = array();
 
-	$header = array(
-		0 => array('text' => 'Date', 'visible' => 1, 'css' => 'fixed'),
-		1 => array('text' => 'Semaine', 'visible' => 1, 'css' => 'minwidth100'),
-		2 => array('text' => 'Absence'.$form->textwithpicto('', $conges_texte), 'visible' => 1, 'css' => 'minwidth100'),
-		3 => array('text' => 'Contrat', 'visible' => 1),
-		4 => array('text' => 'Heures Jour', 'visible' => 1, 'css' => 'minwidth100'),
-		5 => array('text' => 'Heures Nuit', 'visible' => 1),
-		6 => array('text' => 'Total', 'visible' => 1),
-		7 => array('text' => 'Diff.', 'visible' => 1),
-		8 => array('text' => 'SiteFDT', 'visible' => 1),
-		9 => array('text' => 'Affaire', 'visible' => 1),
+	$fields = array(
+		'date' => array('text' => 'Date', 'visible' => 1, 'css' => 'fixed'),
+		'total_semaine' => array('text' => 'Semaine', 'type' => 'duration', 'visible' => 1, 'css' => 'minwidth100'),
+		'absence' => array('text' => 'Absence'.$form->textwithpicto('', $conges_texte), 'visible' => 1, 'css' => 'minwidth100'),
+		'contrat' => array('text' => 'Contrat', 'type' => 'duration', 'visible' => 1),
+		'heure_jour' => array('text' => 'Heures Jour', 'type' => 'duration', 'visible' => 1, 'css' => 'minwidth100'),
+		'heure_nuit' => array('text' => 'Heures Nuit', 'type' => 'duration', 'visible' => 1),
+		'heure_total' => array('text' => 'Total', 'type' => 'duration', 'visible' => 1),
+		'diff' => array('text' => 'Diff.', 'visible' => 1),
+		'site' => array('text' => 'SiteFDT', 'visible' => 1),
+		'affaire' => array('text' => 'Affaire', 'visible' => 1),
 	);
 
 	if($mode == 'card' && $displayVerification) {
-		$header[2]['text'] .= '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
+		$fields['absence']['text'] .= '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
 	}
 	if($multiple_holiday) {
-		$header[2]['colspan'] = 2;
+		$fields['absence']['colspan'] = 2;
 	}
 
 	foreach($silae->fields as $key => $value) {
 		if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50', 'heure_sup50ht'))) {
-			$header[] = array('text' => $value['label'], 'visible' => ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3));
+			$fields[$key] = array('text' => $value['label'],  'type' => 'duration', 'visible' => ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3));
 		}
 	}
 
@@ -1032,8 +1033,9 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 		// var_dump($key);
 		// var_dump($label);
 
-		$header[] = array(
+		$fields[$key] = array(
 						'text' => $label, 
+						'type' => $extrafields->attributes[$silae->table_element]['type'][$key],
 						'visible' => dol_eval($extrafields->attributes[$silae->table_element]['list'][$key], 1, 1, '2'),
 						'css' => $extrafields->attributes[$silae->table_element]['cssview'][$key]
 					);		
@@ -1054,7 +1056,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	print '<div class="div-table-responsive" style="min-height: 0px">';
 	print '<table class="tagtable liste listwithfilterbefore" id="tablelines_fdt">'."\n";			
 
-	printHeaderLine_Sigedi($header);
+	printHeaderLine_Sigedi($fields);
 
 	$task = new extendedTask($db);
 	$filter = ' AND ptt.element_date >= "'.substr($db->idate($firstdaytoshow), 0, 10).'" AND ptt.element_date <= "'.substr($db->idate($lastdaytoshow), 0, 10).'"';
@@ -1064,24 +1066,28 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$modify_day = (!$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? 0 : 1);
 
-		printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
+		$total_array = printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 		$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
-		$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, $heure_max_jour, $heure_max_semaine, $standard_week_hour);
+		$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
+		$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array);
 	}
 	print '</tbody>';
 
+	printTotalLine_Sigedi($fields, $total_array);
+
 	print '</table>';
 	print '</div>';
+	// var_dump($total_array);
 
 	return $totalforvisibletasks;
 }
 
-function printHeaderLine_Sigedi($header) {
+function printHeaderLine_Sigedi($fields) {
 	global $langs;
 
 	print '<thead>';
 	print '<tr class="liste_titre">';
-	foreach($header as $key => $value) {
+	foreach($fields as $key => $value) {
 		if (abs($value['visible']) != 1) {
 			continue;
 		}
@@ -1092,10 +1098,31 @@ function printHeaderLine_Sigedi($header) {
 	print '</thead>';
 }
 
+function printTotalLine_Sigedi($fields, $total_array) {
+	global $langs;
+
+	print '<tr class="liste_total">';
+	foreach($fields as $key => $value) {
+		if (abs($value['visible']) != 1) {
+			continue;
+		}
+
+		if(!empty($total_array[$key])) {
+			$total = ($value['type'] != 'boolean' ? formatValueForAgenda($value['type'], $total_array[$key]) : $total_array[$key]);
+		}
+		else {
+			$total = '';
+		}
+
+		print '<th class="bold columntitle'.($value['css'] ? ' '.$value['css'] : '').'" name="total['.$key.']" id="total_'.$key.'" align="center" colspan="'.($value['colspan'] ? $value['colspan'] : 1).'">'.$total.'</th>';
+	}
+	print '</tr>';
+}
+
 function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify, $modifier_jour_conges, 
 						 $holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
 						 $num_first_day, $timeHoliday, &$timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-						 $heure_max_jour, $heure_max_semaine, $standard_week_hour) {
+						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array) {
 	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object;
 	global $displayVerification;
 
@@ -1360,6 +1387,10 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		$tmparray = dol_getdate($dayinloopfromfirstdaytoshow);
 		$alttitle = $langs->trans("AddHereTimeSpentForDay", $tmparray['day'], $tmparray['mon']);
 		for($cpt = 0; $cpt < $conf->global->FDT_COLUMN_MAX_TASK_DAY; $cpt++) {
+			
+			$timespent = $timespent_month[$dayinloopfromfirstdaytoshow][$cpt];
+			$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
+
 			// Est-ce qu'on désactive l'input ou non ?
 			$disabled = 0;
 			if(!$modify || ($user_conges && !$modifier_jour_conges && empty($alreadyspent))) {
@@ -1371,15 +1402,14 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$class .= ' displaynone';
 			}
 
-			$timespent = $timespent_month[$dayinloopfromfirstdaytoshow][$cpt];
+			$totalforday += (int)$timespent->timespent_duration;
+			$total_array['heure_jour'] += (int)$timespent->timespent_duration;
 
 			if($cpt == 0 && $mode == 'timesheet' && !$disabled && empty($timespent) && empty($timeHoliday[(int)$weekNumber]) && empty($timeSpentWeek[(int)$weekNumber])) {
 				$timespent->timespent_duration = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
 				$class_timespent .= ' prefilling_time';
+				$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
 			} 
-
-			$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
-			$totalforday += (int)$timespent->timespent_duration;
 
 			if($cpt == 0) $tableCellTimespent = '<td class="center valignmiddle hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 			if($cpt == 0) $tableCellHeureNuit = '<td class="center valignmiddle hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
@@ -1434,6 +1464,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$heure_nuit_nf = $otherTaskTime['heure_nuit'][$dayinloopfromfirstdaytoshow][$timespent->timespent_id];
 			$heure_nuit = ($heure_nuit_nf > 0 ? number_format($heure_nuit_nf / 3600, 2, '.', '') : '');
 			$totalforday += (int)$heure_nuit_nf;
+			$total_array['heure_nuit'] += (int)$heure_nuit_nf;
 
 			if($idw >= $num_first_day) {
 				//$total_heureNuit += $heure_nuit_nf; // TODOL : Est-ce que je compte les jour en dehors du mois ?
@@ -1457,7 +1488,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 			// Site
 			// $tableCellSite .= '<input type="text" id="site['.$idw.']['.$cpt.']" name="site['.$idw.']['.$cpt.']"></input>';
-			$tableCellSite .= $projet_task_time_other->showInputField($projet_task_time_other->fields['site'], 'site', $otherTaskTime['site'][$dayinloopfromfirstdaytoshow][$timespent->timespent_id], 'oninput="forceUppercase(this)"', '['.$idw.']['.$cpt.']');
+			$tableCellSite .= $projet_task_time_other->showInputField($projet_task_time_other->fields['site'], 'site', $otherTaskTime['site'][$dayinloopfromfirstdaytoshow][$timespent->timespent_id], ($disabled ? ' disabled' : '').' oninput="forceUppercase(this)"', '['.$idw.']['.$cpt.']');
 			$tableCellSite .= '</div>';
 
 
@@ -1478,6 +1509,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 					$tableCellTimespent .=  '"></div>';
 
 					$totalforday += (int)$timeonothertasks;
+					$total_array['heure_jour'] += (int)$timeonothertasks;
 
 					$tableCellHeureNuit .= '<div><input style="visibility: hidden"></div>';
 					$tableCellSite .= '<div><input style="visibility: hidden"></div>';
@@ -1506,7 +1538,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		print '<td class="liste_total center hide'.$idw.($total != '00:00' ? ' bold' : '').($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'" align="center">';
 		print '<div class="totalDay'.$idw.'" '.(!empty($style) ? $style : '').'>'.$total;
 		print '</div></td>';
-
+		$total_array['heure_total'] += $totalforday;
 
 
 		// Diff
@@ -1538,12 +1570,18 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
         $silae = new Silae($db);
 		$silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $fuser->id);
 		if($silae->id > 0) $silae->fetch($silae->id);
-
 		foreach($silae->fields as $key => $value) {
 			if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50', 'heure_sup50ht')) && ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3)) {
+				$moreparam = 'onfocus="this.oldvalue = this.value;"';
+				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
+				$moreparam .= ' maxlength="5"';
+				$moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
+				$moreparam .= ($disabled ? ' disabled' : '');
+				
 				print '<td class="center'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-					print $silae->showInputField($value, $key, ($silae->$key / 3600), '', '['.$idw.']');
+					print $silae->showInputField($value, $key, ($silae->$key / 3600), $moreparam, '['.$idw.']');
 				print '</td>';
+				$total_array[$key] += $silae->$key;
 			}
 		}
 
@@ -1557,19 +1595,27 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 			print '<td class="center'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 			if($type == 'boolean') {
+				$moreparam = ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
+				$moreparam .= ($disabled ? ' disabled' : '');
 				$checked = '';
 				if (!empty($silae->array_options['options_'.$key])) $checked = ' checked';
-				print '<input type="checkbox" class="flat valignmiddle'.($morecss ? ' '.$morecss : '').' maxwidthonsmartphone" name="options_'.$key.'['.$idw.']" id="options_'.$key.'['.$idw.']" '.$checked.'>';
+				print '<input type="checkbox" class="flat valignmiddle'.($morecss ? ' '.$morecss : '').' maxwidthonsmartphone" name="options_'.$key.'['.$idw.']" id="options_'.$key.'['.$idw.']" '.$checked.$moreparam.'>';
 			}
 			else {
-				print $extrafields->showInputField($key, $silae->array_options['options_'.$key], '', '['.$idw.']', '', 0, $silae->id, $silae->table_element);
+				$moreparam = 'onfocus="this.oldvalue = this.value;"';
+				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
+				$moreparam .= ' maxlength="7"';
+				$moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
+				$moreparam .= ($disabled ? ' disabled' : '');
+				print $extrafields->showInputField($key, $silae->array_options['options_'.$key], $moreparam, '['.$idw.']', '', 0, $silae->id, $silae->table_element);
 			}
 			print '</td>';
+			$total_array[$key] += $silae->array_options['options_'.$key];
 		}
 
-
-
 	print '</tr>';
+
+	return $total_array;
 }
 
 /**

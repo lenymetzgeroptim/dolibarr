@@ -410,6 +410,32 @@ function updateAllTotalLoad_TS(mode, nb_jour, num_first_day = 0) {
     jQuery('.totalDayAll').text(texttoshow);
 }
 
+function updateTotalSigedi(object, key, type) {
+    console.log('onchange')
+
+    total_col = $('#total_' + key);
+    total = (parseFloat(total_col.text()) ? parseFloat(total_col.text()) : 0);
+
+    if(type == 'boolean') {
+        if(object.checked == true) {
+            total += 1;
+        }
+        else {
+            total -= 1;
+        }
+    }
+    else {
+        if(object.oldvalue) total -= parseFloat(object.oldvalue)
+        if(object.value) total += parseFloat(object.value)
+
+        if(type == 'price') {
+            total += " €" 
+        }
+    }
+
+    total_col.text(total);
+}
+
 /* Update total. days = column nb starting from 0 */
 // function updateTotalLoad_TS(days, mode, nb_jour, num_first_day = 0) {
 //     if (mode == "hours") {
