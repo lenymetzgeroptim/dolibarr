@@ -991,6 +991,7 @@ if (empty($reshook)) {
 				elseif($needHour && $date_debut != $date_fin) {
 					$nbDay = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1);
 					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
 							$tmpday = dol_time_plus_duree($date_debut_gmt, $i, 'd');
 							$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
