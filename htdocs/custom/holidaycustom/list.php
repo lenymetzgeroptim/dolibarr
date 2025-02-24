@@ -451,8 +451,14 @@ $reshook = $hookmanager->executeHooks('printFieldListWhere', $parameters); // No
 $sql .= $hookmanager->resPrint;
 
 if (empty($user->rights->holidaycustom->readall)) {
-	$sql .= ' AND (cp.fk_user IN ('.$db->sanitize(join(',', $childids)).')';
-	$sql .= " OR ha.fk_user = ".$user->id.")";
+	if($conf->global->HOLIDAY_FDT_APPROVER) {
+		$sql .= ' AND (cp.fk_user IN ('.$db->sanitize(join(',', $childids)).')';
+		$sql .= " OR FIND_IN_SET($db->escape($user->id), uue.approbateurfdt) > 0)";
+	}
+	else {
+		$sql .= ' AND (cp.fk_user IN ('.$db->sanitize(join(',', $childids)).')';
+		$sql .= " OR ha.fk_user = ".$user->id.")";
+	}
 }
 if ($id > 0) {
 	$sql .= " AND cp.fk_user IN (".$db->sanitize($id).")";

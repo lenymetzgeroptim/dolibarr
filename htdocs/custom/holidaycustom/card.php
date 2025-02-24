@@ -2587,9 +2587,16 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 		print '<tr>';
 		print '<td class="titlefield fieldrequired">'.$langs->trans("User").'</td>';
 		print '<td>';
-		if ($cancreate && !$cancreateall) {
+		if ($cancreate && !$cancreateall && !$conf->global->HOLIDAY_FDT_APPROVER) {
 			print img_picto('', 'user').$form->select_dolusers(($fuserid ? $fuserid : $user->id), 'fuserid', 0, '', 0, 'hierarchyme', '', '0,'.$conf->entity, 0, 0, $morefilter, 0, '', 'minwidth200 maxwidth500');
 			//print '<input type="hidden" name="fuserid" value="'.($fuserid?$fuserid:$user->id).'">';
+		} elseif ($cancreate && !$cancreateall && $conf->global->HOLIDAY_FDT_APPROVER) {
+			$feuilledetemps = new FeuilleDeTemps($db);
+			$include = $feuilledetemps->getUserImApprover();
+			if (!in_array($user->id, $include)) {
+				$include[] = $user->id;
+			}
+			print img_picto('', 'user').$form->select_dolusers(($fuserid ? $fuserid : $user->id), 'fuserid', 0, '', 0, $include, '', '0,'.$conf->entity, 0, 0, $morefilter, 0, '', 'minwidth200 maxwidth500');
 		} else {
 			print img_picto('', 'user').$form->select_dolusers($fuserid ? $fuserid : $user->id, 'fuserid', 0, '', 0, '', '', '0,'.$conf->entity, 0, 0, $morefilter, 0, '', 'minwidth200 maxwidth500');
 		}
