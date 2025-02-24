@@ -1375,7 +1375,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 		// Est-ce que l'utilisateur est en congé sur le jour actuel => Utilisé pour bloquer l'input
 		$user_conges = 0;
-		if($isavailable[$dayinloopfromfirstdaytoshow]['morning'] == false && $isavailable[$dayinloopfromfirstdaytoshow]['morning_reason'] == "leave_request" 
+		if(!in_array("1", $isavailable[$dayinloopfromfirstdaytoshow]['in_hour']) && $isavailable[$dayinloopfromfirstdaytoshow]['morning'] == false && $isavailable[$dayinloopfromfirstdaytoshow]['morning_reason'] == "leave_request" 
 				&& $isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] == false && $isavailable[$dayinloopfromfirstdaytoshow]['afternoon_reason'] == "leave_request" && str_contains($css[$dayinloopfromfirstdaytoshow], 'onholidayallday')){
 			$user_conges = 1;
 		}
