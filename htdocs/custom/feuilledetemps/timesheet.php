@@ -380,13 +380,17 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
 
 	$holidayTypeNeedHour = 1;
+	$holidayInSeveralDay = 0;
 	for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['code']); $i++) {
 		if(!$holiday->holidayTypeNeedHour($isavailable[$dayinloopfromfirstdaytoshow]['code'][$i])) {
 			$holidayTypeNeedHour = 0;
 		}
+		if($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['nb_jour'][$i] > 1) {
+			$holidayInSeveralDay = 1;
+		}
 	}
 
-	if (!$isavailable[$dayinloopfromfirstdaytoshow]['morning'] && !$isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] && !$holidayTypeNeedHour) {
+	if (!$isavailable[$dayinloopfromfirstdaytoshow]['morning'] && !$isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] && (!$holidayTypeNeedHour || $holidayInSeveralDay)) {
 		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';
 	} elseif(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim'){
 		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';

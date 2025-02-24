@@ -262,6 +262,7 @@ if($conf->global->FDT_DISPLAY_FULL_WEEK) {
 	$lastdaytoshow = dol_time_plus_duree($lastdaytoshow, 1, 'w');
 	$firstdayweek = dol_get_first_day_week(dol_print_date($lastdaytoshow, '%d'), dol_print_date($lastdaytoshow, '%m'), dol_print_date($lastdaytoshow, '%Y'));
 	$lastdaytoshow = dol_mktime(0, 0, 0, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
+	$lastdaytoshow = dol_time_plus_duree($lastdaytoshow, -1, 'd');
 }
 
 $first_day_month = $object->date_debut; 
