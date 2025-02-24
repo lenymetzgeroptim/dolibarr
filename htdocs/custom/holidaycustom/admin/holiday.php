@@ -51,6 +51,8 @@ $arrayofparameters = array(
 	'ORGANISATION_CONGES'=>array('type'=>'textarea', 'css'=>'' ,'enabled'=>1),
 	'HOLIDAY_FRAC_ANC_DATESTART'=>array('type'=>'chaine', 'css'=>'' ,'enabled'=>1),
 	'HOLIDAY_FRAC_ANC_DATEEND'=>array('type'=>'chaine', 'css'=>'' ,'enabled'=>1),
+	'HOLIDAY_FDT_APPROVER'=>array('type'=>'yesno', 'css'=>'' ,'enabled'=>1),
+	'HOLIDAY_VALIDATE_ONLY_RTT'=>array('type'=>'yesno', 'css'=>'' ,'enabled'=>1),
 );
 
 /*
@@ -153,7 +155,13 @@ if ($action == 'updateMask') {
 	$orga =  GETPOST('HOLIDAY_FRAC_ANC_DATEEND', 'alpha');
 	$res5 = dolibarr_set_const($db, "HOLIDAY_FRAC_ANC_DATEEND", trim($orga), 'chaine', 0, '', $conf->entity);
 
-	if (!$res1 > 0 || !$res2 > 0 || !$res3 > 0 || !$res4 > 0 || !$res5 > 0){
+	$orga =  GETPOST('HOLIDAY_FDT_APPROVER', 'alpha');
+	$res6 = dolibarr_set_const($db, "HOLIDAY_FDT_APPROVER", trim($orga), 'chaine', 0, '', $conf->entity);
+
+	$orga =  GETPOST('HOLIDAY_VALIDATE_ONLY_RTT', 'alpha');
+	$res7 = dolibarr_set_const($db, "HOLIDAY_VALIDATE_ONLY_RTT", trim($orga), 'chaine', 0, '', $conf->entity);
+
+	if (!$res1 > 0 || !$res2 > 0 || !$res3 > 0 || !$res4 > 0 || !$res5 > 0 || !$res6 > 0 || !$res7 > 0){
 		$error++;
 	}
 

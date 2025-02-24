@@ -78,6 +78,9 @@ $extrafields->fetch_name_optionals_label($object->table_element);
 if (($id > 0) || $ref) {
 	$object->fetch($id, $ref);
 
+	$user_static = new User($db);
+	$user_static->fetch($object->fk_user);
+
 	// Check current user can read this leave request
 	$canread = 0;
 	if (!empty($user->rights->holidaycustom->readall)) {
@@ -86,7 +89,10 @@ if (($id > 0) || $ref) {
 	if (!empty($user->rights->holidaycustom->read) && in_array($object->fk_user, $childids)) {
 		$canread = 1;
 	}
-	if(in_array($user->id, $object->listApprover1[0]) || in_array($user->id, $object->listApprover2[0])) {
+	if(in_array($user->id, $object->listApprover1[0]) || in_array($user->id, $object->listApprover2[0]) && !$conf->global->HOLIDAY_FDT_APPROVER) {
+		$canread = 1;
+	}
+	if(in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt'])) && $conf->global->HOLIDAY_FDT_APPROVER) {
 		$canread = 1;
 	}
 	if (!$canread) {
@@ -100,6 +106,9 @@ $hookmanager->initHooks(array('holidaycard', 'globalcard'));
 $cancreate = 0;
 $cancreateall = 0;
 if (!empty($user->rights->holidaycustom->write) && in_array($fuserid, $childids)) {
+	$cancreate = 1;
+}
+if(!empty($user->rights->holidaycustom->write) && in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt'])) && $conf->global->HOLIDAY_FDT_APPROVER) {
 	$cancreate = 1;
 }
 if (!empty($user->rights->holidaycustom->writeall)) {
@@ -118,6 +127,18 @@ if (!empty($user->rights->holidaycustom->delete)) {
 // Protection if external user
 if ($user->socid) {
 	$socid = $user->socid;
+}
+
+$permissiontovalidate1 = 0;
+$permissiontovalidate2 = 0;
+if($object->id > 0) {
+	if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+		$permissiontovalidate1 = in_array($user->id, $object->listApprover1[0]) && $object->listApprover1[1][$user->id] == 0;
+		$permissiontovalidate2 = in_array($user->id, $object->listApprover2[0]) && $object->listApprover2[1][$user->id] == 0;
+	}
+	elseif($conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+		$permissiontovalidate1 = in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt']));
+	}
 }
 
 if (empty($conf->holidaycustom->enabled)) accessforbidden();
@@ -325,52 +346,54 @@ if (empty($reshook)) {
 				$object->halfday = $halfday;
 
 				// Gestion des approbateurs
-				$projectstatic = new Project($db);
-				$userstatic = new User($db);
-				$taskstatic = new extendedTaskHoliday($db);
-				$userstatic->fetch($fuserid);
-				$filter = " AND dateo <= '".$db->idate($date_fin)."' AND (datee >= '".$db->idate($date_debut)."' OR datee IS NULL) AND fk_statut = 1 AND ec.fk_c_type_contact = 161";		
-				$liste_projet = $projectstatic->getProjectsAuthorizedForUser($userstatic, 1, 0, 0, $filter); 
-				foreach($liste_projet as $projetid => $ref) {
-					$projectstatic->fetch($projetid);
-					if(!$projectstatic->array_options['options_projetstructurel']) {
-						// Responsables de projet
-						$liste_resp_projet = $projectstatic->liste_contact(-1, 'internal', 1, 'PROJECTLEADER', 1);
-						foreach($liste_resp_projet as $userid) {
-							if (!in_array($userid, $approver2id)) {
-								$approver2id[] = $userid;
+				if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $type == 101)) {
+					$projectstatic = new Project($db);
+					$userstatic = new User($db);
+					$taskstatic = new extendedTaskHoliday($db);
+					$userstatic->fetch($fuserid);
+					$filter = " AND dateo <= '".$db->idate($date_fin)."' AND (datee >= '".$db->idate($date_debut)."' OR datee IS NULL) AND fk_statut = 1 AND ec.fk_c_type_contact = 161";		
+					$liste_projet = $projectstatic->getProjectsAuthorizedForUser($userstatic, 1, 0, 0, $filter); 
+					foreach($liste_projet as $projetid => $ref) {
+						$projectstatic->fetch($projetid);
+						if(!$projectstatic->array_options['options_projetstructurel']) {
+							// Responsables de projet
+							$liste_resp_projet = $projectstatic->liste_contact(-1, 'internal', 1, 'PROJECTLEADER', 1);
+							foreach($liste_resp_projet as $userid) {
+								if (!in_array($userid, $approver2id)) {
+									$approver2id[] = $userid;
+								}
 							}
-						}
 
-						$filter = " AND t.dateo <= '".$db->idate($date_fin)."' AND (t.datee >= '".$db->idate($date_debut)."' OR t.datee IS NULL) AND ctc2.code = 'TASKCONTRIBUTOR'";
-						$liste_taches = $taskstatic->getTasksArrayCorrect(0, $userstatic, $projectstatic->id, 0, 0, '',  '-1', $filter, 0, $userstatic->id, array(),  0,  array(),  0,  1);
-						foreach($liste_taches as $task_static) {
-							// Responsables de tâche
-							$liste_resp_tache = $task_static->liste_contact(-1, 'internal', 1, 'TASKEXECUTIVE', 1);
-							foreach($liste_resp_tache as $userid) {
-								if (!in_array($userid, $approver1id) && !in_array($userid, $approver2id)) {
-									$approver1id[] = $userid;
+							$filter = " AND t.dateo <= '".$db->idate($date_fin)."' AND (t.datee >= '".$db->idate($date_debut)."' OR t.datee IS NULL) AND ctc2.code = 'TASKCONTRIBUTOR'";
+							$liste_taches = $taskstatic->getTasksArrayCorrect(0, $userstatic, $projectstatic->id, 0, 0, '',  '-1', $filter, 0, $userstatic->id, array(),  0,  array(),  0,  1);
+							foreach($liste_taches as $task_static) {
+								// Responsables de tâche
+								$liste_resp_tache = $task_static->liste_contact(-1, 'internal', 1, 'TASKEXECUTIVE', 1);
+								foreach($liste_resp_tache as $userid) {
+									if (!in_array($userid, $approver1id) && !in_array($userid, $approver2id)) {
+										$approver1id[] = $userid;
+									}
 								}
 							}
 						}
 					}
-				}
 
-				if(empty($approver2id)) {
-					$user_validation_1 = new User($db);
-					if(!empty($userstatic->fk_user)){
-						$user_validation_1->fetch($userstatic->fk_user);
-					}
-					else {
-						$user_validation_1->fetch(16);
-					}
-					$approver1id[] = $user_validation_1->id;
-					
-					//if(empty($approver2id)) {
-						if(!empty($user_validation_1->fk_user) && $user_validation_1->fk_user != 16){
-							$approver2id[] = $user_validation_1->fk_user;
+					if(empty($approver2id)) {
+						$user_validation_1 = new User($db);
+						if(!empty($userstatic->fk_user)){
+							$user_validation_1->fetch($userstatic->fk_user);
 						}
-					//}
+						else {
+							$user_validation_1->fetch(16);
+						}
+						$approver1id[] = $user_validation_1->id;
+						
+						//if(empty($approver2id)) {
+							if(!empty($user_validation_1->fk_user) && $user_validation_1->fk_user != 16){
+								$approver2id[] = $user_validation_1->fk_user;
+							}
+						//}
+					}
 				}
 
 				if($needHour && $date_debut == $date_fin) {
@@ -382,13 +405,15 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 
-				$form = new Form($db);
-				$userstatic->fetch($object->fk_user);
-				if($object->fk_type == 4 || $userstatic->array_options['options_employeur'] != 1) {
-					$object->array_options['options_statutfdt'] = 4;
-				}
-				elseif(in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
-					$object->array_options['options_statutfdt'] = 2;
+				if($conf->global->FDT_STATUT_HOLIDAY) {
+					$form = new Form($db);
+					$userstatic->fetch($object->fk_user);
+					if($object->fk_type == 4 || $userstatic->array_options['options_employeur'] != 1) {
+						$object->array_options['options_statutfdt'] = 4;
+					}
+					elseif(in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
+						$object->array_options['options_statutfdt'] = 2;
+					}
 				}
 
 				$result = $object->create($user);
@@ -399,7 +424,8 @@ if (empty($reshook)) {
 				}
 			}
 
-			if(!$error) {
+			// Ajout des approbateurs : responsables de tâches et de projets
+			if(!$error && !$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $type == 101)) {
 				foreach($approver1id as $userid) {
 					$res = $object->createApprobation($userid, 1, 1);
 
@@ -429,7 +455,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'update' && GETPOSTISSET('savevalidator1') && !empty($user->rights->holidaycustom->changeappro)) {
+	if ($action == 'update' && GETPOSTISSET('savevalidator1') && !empty($user->rights->holidaycustom->changeappro) && !$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
 		$object->fetch($id);
 		$db->begin();
 
@@ -564,7 +590,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'update' && GETPOSTISSET('savevalidator2') && !empty($user->rights->holidaycustom->changeappro)) {
+	if ($action == 'update' && GETPOSTISSET('savevalidator2') && !empty($user->rights->holidaycustom->changeappro) && !$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
 		$object->fetch($id);
 		$db->begin();
 
@@ -817,7 +843,7 @@ if (empty($reshook)) {
 					exit;
 				}
 
-				if($object->date_debut != $date_debut || $object->date_fin != $date_fin) {
+				if(($object->date_debut != $date_debut || $object->date_fin != $date_fin) && !$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
 					$res = $object->deleteAllApprobation();
 					if ($res <= 0) {
 						$error++;
@@ -893,6 +919,7 @@ if (empty($reshook)) {
 				$object->date_debut = $date_debut;
 				$object->date_fin = $date_fin;
 				//if(!empty($user->rights->holidaycustom->approve)) {
+				if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
 					if($object->fk_validator > 0) {
 						$object->createApprobation($object->fk_validator, 1, 1); 
 						$object->fk_validator = 0;
@@ -901,7 +928,7 @@ if (empty($reshook)) {
 						$object->createApprobation($object->array_options['options_fk_validator2'], 1, 2); 
 						$object->array_options['options_fk_validator2'] = null;
 					}
-				//}
+				}
 				$object->halfday = $halfday;
 
 				// Fill array 'array_options' with data from add form
@@ -935,7 +962,7 @@ if (empty($reshook)) {
 				// Update
 				$verif = $object->update($user);
 
-				if(!$error && $verif && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -979,7 +1006,9 @@ if (empty($reshook)) {
 
 		// If this is a rough draft, canceled or refused
 		if ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED) {
-			$options_statutfdt =  $object->array_options['options_statutfdt'];
+			if($conf->global->FDT_STATUT_HOLIDAY) {
+				$options_statutfdt =  $object->array_options['options_statutfdt'];
+			}
 			$date_debut = $object->date_debut;
 			$date_fin = $object->date_fin;
 			$object_fk_user = $object->fk_user;
@@ -987,7 +1016,7 @@ if (empty($reshook)) {
 
 			$result = $object->delete($user);
 
-			if(!$error && $result &&  ($options_statutfdt == 2 || $options_statutfdt == 3)) {
+			if(!$error && $result && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $options_statutfdt == 3)) {
 				global $dolibarr_main_url_root;
 				$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 				$from = 'erp@optim-industries.fr';
@@ -1024,10 +1053,10 @@ if (empty($reshook)) {
 		$object->fetch($id);
 
 		// If draft and owner of leave
-		if ($object->statut == Holiday::STATUS_DRAFT && $cancreate) {
+		if ($object->statut == Holiday::STATUS_DRAFT && $cancreate && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
 			$object->oldcopy = dol_clone($object);
 
-			if(!empty($object->listApprover1)) {
+			if(!empty($object->listApprover1) || $conf->global->HOLIDAY_FDT_APPROVER) {
 				$object->statut = Holiday::STATUS_VALIDATED;
 			}
 			else {
@@ -1044,24 +1073,37 @@ if (empty($reshook)) {
 				// $emailTo = $destinataire->email;
 
 				$emailTo = '';
-				if(!empty($object->listApprover1)) {
-					$list_validation = $object->listApprover1;
+				if(!$conf->global->HOLIDAY_FDT_APPROVER) {
+					if(!empty($object->listApprover1)) {
+						$list_validation = $object->listApprover1;
+					}
+					else {
+						$list_validation = $object->listApprover2;
+					}
+					foreach($list_validation[2] as $userid => $user_static){
+						if(!empty($user_static->email)){
+							$emailTo .= $user_static->email.', ';
+						}
+					}
 				}
-				else {
-					$list_validation = $object->listApprover2;
-				}
-				foreach($list_validation[2] as $userid => $user_static){
-					if(!empty($user_static->email)){
-						$emailTo .= $user_static->email.', ';
+				elseif($conf->global->HOLIDAY_FDT_APPROVER) {
+					$user_static = new User($db);
+					$user_static->fetch($object->fk_user);
+					$list_validation = explode(',', $user_static->array_options['options_approbateurfdt']);
+					foreach($list_validation as $id){
+						$user_static->fetch($id);
+						if(!empty($user_static->email)){
+							$emailTo .= $user_static->email.', ';
+						}
 					}
 				}
 				$emailTo = rtrim($emailTo, ", ");
 
-				if (!$emailTo) {
-					dol_syslog("Expected validator has no email, so we redirect directly to finished page without sending email");
-					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-					exit;
-				}
+				// if (!$emailTo) {
+				// 	dol_syslog("Expected validator has no email, so we redirect directly to finished page without sending email");
+				// 	header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+				// 	exit;
+				// }
 
 				// From
 				$expediteur = new User($db);
@@ -1131,7 +1173,9 @@ if (empty($reshook)) {
 				$mail = new CMailFile($subject, $emailTo, $emailFrom, $message, array(), array(), array(), '', '', 0, 1, '', '', $trackid);
 
 				// Sending the email
-				$result = $mail->sendfile();
+				if($emailTo) {
+					$result = $mail->sendfile();
+				}
 
 				if (!$result) {
 					setEventMessages($mail->error, $mail->errors, 'warnings');
@@ -1140,6 +1184,20 @@ if (empty($reshook)) {
 					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
 					exit;
 				}
+			} else {
+				setEventMessages($object->error, $object->errors, 'errors');
+				$action = '';
+			}
+		}
+		if ($object->statut == Holiday::STATUS_DRAFT && $cancreate && $conf->global->HOLIDAY_VALIDATE_ONLY_RTT && $object->fk_type != 101) {
+			$object->oldcopy = dol_clone($object);
+
+			$verif = $object->approve2($user);
+
+			// If no SQL error, we redirect to the request form
+			if ($verif > 0) {
+				header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+				exit;
 			} else {
 				setEventMessages($object->error, $object->errors, 'errors');
 				$action = '';
@@ -1281,11 +1339,14 @@ if (empty($reshook)) {
 	// }
 
 	// Approve leave request (1ere validation)
-	if ($action == 'confirm_valid1') {
+	if ($action == 'confirm_valid1' && $permissiontovalidate1) {
 		$object->fetch($id);
 
-		// If status is waiting approval and approver is also user
-		if ($object->statut == Holiday::STATUS_VALIDATED && /*$user->id == $object->fk_validator*/ in_array($user->id, $object->listApprover1[0]) && $object->listApprover1[1][$user->id] == 0) {
+		$user_static = new User($db);
+		$user_static->fetch($object->fk_user);
+
+		// If status is waiting approval and approver is resp task and project
+		if ($object->statut == Holiday::STATUS_VALIDATED && !$conf->global->HOLIDAY_FDT_APPROVER) {
 			$object->oldcopy = dol_clone($object);
 
 			$object->date_valid = dol_now();
@@ -1470,14 +1531,87 @@ if (empty($reshook)) {
 				$action = '';
 			}
 		}
+		// If status is waiting approval and approver is resp task and project
+		elseif ($object->statut == Holiday::STATUS_VALIDATED && $conf->global->HOLIDAY_FDT_APPROVER) {
+			$object->oldcopy = dol_clone($object);
+
+			$object->date_valid = dol_now();
+			$object->fk_user_valid = $user->id;
+
+			$db->begin();
+
+			$verif = $object->approve2($user);
+			if ($verif <= 0) {
+				setEventMessages($object->error, $object->errors, 'errors');
+				$error++;
+			}
+
+			if (!$error) {
+				// To
+				$destinataire = new User($db);
+				$destinataire->fetch($object->fk_user);
+				$emailTo = $destinataire->email;
+
+				if (!$emailTo) {
+					dol_syslog("User that request leave has no email, so we redirect directly to finished page without sending email");
+				} else {
+					// From
+					$expediteur = new User($db);
+					$expediteur->fetch($object->fk_validator);
+					//$emailFrom = $expediteur->email;		Email of user can be an email into another company. Sending will fails, we must use the generic email.
+					$emailFrom = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+					// Subject
+					$societeName = $conf->global->MAIN_INFO_SOCIETE_NOM;
+					if (!empty($conf->global->MAIN_APPLICATION_TITLE)) {
+						$societeName = $conf->global->MAIN_APPLICATION_TITLE;
+					}
+
+					$subject = $societeName." - ".$langs->transnoentitiesnoconv("HolidaysValidated");
+
+					// Content
+					$message = "<p>".$langs->transnoentitiesnoconv("Hello")." ".$destinataire->firstname.",</p>\n";
+
+					$message .= "<p>".$langs->transnoentities("HolidaysValidatedBody", dol_print_date($object->date_debut, 'day'), dol_print_date($object->date_fin, 'day'))."</p>\n";
+
+					$link = dol_buildpath('/custom/holidaycustom/card.php', 3).'?id='.$object->id;
+
+					$message .= "<ul>\n";
+					$message .= "<li>".$langs->transnoentitiesnoconv("ValidatedBy")." : ".dolGetFirstLastname($expediteur->firstname, $expediteur->lastname)."</li>\n";
+					$message .= "<li>".$langs->transnoentitiesnoconv("Link").' : <a href="'.$link.'" target="_blank">'.$link."</a></li>\n";
+					$message .= "</ul>\n";
+
+					$trackid = 'leav'.$object->id;
+
+					$mail = new CMailFile($subject, $emailTo, $emailFrom, $message, array(), array(), array(), '', '', 0, 1, '', '', $trackid);
+
+					// Sending email
+					$result = $mail->sendfile();
+
+					if (!$result) {
+						setEventMessages($mail->error, $mail->errors, 'warnings'); // Show error, but do no make rollback, so $error is not set to 1
+						$action = '';
+					}
+				}
+			}
+
+			if (!$error) {
+				$db->commit();
+				header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+				exit;
+			} else {
+				$db->rollback();
+				$action = '';
+			}
+		}
 	}
 
 	// Approve leave request (2eme validation)
 	if ($action == 'confirm_valid2') {
 		$object->fetch($id);
 
-		// If status is waiting approval and approver is also user
-		if (($object->statut == Holiday::STATUS_APPROVED1 && /*$user->id == $object->array_options['options_fk_validator2']*/ in_array($user->id, $object->listApprover2[0]) && $object->listApprover2[1][$user->id] == 0) /*|| ($object->statut == Holiday::STATUS_VALIDATED && $user->id == $object->fk_validator)*/) {
+		// If status is waiting approval and approver is resp task and project
+		if ($object->statut == Holiday::STATUS_APPROVED1 && $permissiontovalidate2) {
 			$object->oldcopy = dol_clone($object);
 
 			$object->date_valid = dol_now();
@@ -1780,13 +1914,13 @@ if (empty($reshook)) {
 			$object->fetch($id);
 
 			// If status pending validation and validator = user
-			if (($object->statut == Holiday::STATUS_VALIDATED && /*$user->id == $object->fk_validator*/ in_array($user->id, $object->listApprover1[0]) && $object->listApprover1[1][$user->id] == 0) || ($object->statut == Holiday::STATUS_APPROVED1 && /*$user->id == $object->array_options['options_fk_validator2']*/ in_array($user->id, $object->listApprover2[0]) && $object->listApprover2[1][$user->id] == 0)) {
+			if (($object->statut == Holiday::STATUS_VALIDATED && $permissiontovalidate1) || ($object->statut == Holiday::STATUS_APPROVED1 && $permissiontovalidate2)) {
 				$object->date_refuse = dol_print_date('dayhour', dol_now());
 				$object->fk_user_refuse = $user->id;
 				$object->statut = Holiday::STATUS_REFUSED;
 				$object->detail_refuse = GETPOST('detail_refuse', 'alphanohtml');
 
-				if($object->array_options['options_statutfdt'] == 1) {
+				if($conf->global->FDT_STATUT_HOLIDAY && $object->array_options['options_statutfdt'] == 1) {
 					$object->array_options['options_statutfdt'] = 4;
 				}
 				
@@ -1852,7 +1986,7 @@ if (empty($reshook)) {
 					$action = '';
 				}
 
-				if(!$error && $verif && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -1934,12 +2068,9 @@ if (empty($reshook)) {
 
 		// If status pending validation and validator = validator or user, or rights to do for others
 		if (($object->statut == Holiday::STATUS_VALIDATED || $object->statut == Holiday::STATUS_APPROVED1 || $object->statut == Holiday::STATUS_APPROVED2) &&
-			(!empty($user->admin) || /*$user->id == $object->fk_validator || $user->id == $object->array_options['options_fk_validator2']*/ 
-			in_array($user->id, $object->listApprover1[0]) || in_array($user->id, $object->listApprover2[0]) || $cancreate || $cancreateall)) {
+			(!empty($user->admin) || $permissiontovalidate1 || $permissiontovalidate2 || $cancreate || $cancreateall)) {
 			
 			if(!empty(GETPOST('detail_annulation', 'alphanohtml'))) {
-
-			
 				$db->begin();
 
 				$oldstatus = $object->statut;
@@ -1948,7 +2079,7 @@ if (empty($reshook)) {
 				$object->statut = Holiday::STATUS_CANCELED;
 				$object->array_options['options_detail_annulation'] = GETPOST('detail_annulation', 'alphanohtml');
 
-				if($object->array_options['options_statutfdt'] == 1) {
+				if($conf->global->FDT_STATUT_HOLIDAY && $object->array_options['options_statutfdt'] == 1) {
 					$object->array_options['options_statutfdt'] = 4;
 				}
 				
@@ -2159,7 +2290,7 @@ if (empty($reshook)) {
 					}*/
 				}
 
-				if(!$error && $result && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $result && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -2185,21 +2316,35 @@ if (empty($reshook)) {
 				// If no SQL error, we redirect to the request form
 				if (!$error && $result > 0) {
 					// To
+					$emailTo = '';
 					$destinataire = new User($db);
 					$destinataire->fetch($object->fk_user);
 					if(!empty($destinataire->email)) {
-						$emailTo = $destinataire->email.', ';
+						$emailTo .= $destinataire->email.', ';
 					}
-					$list_validation = $object->listApprover1;
-					foreach($list_validation[2] as $userid => $user_static){
-						if(!empty($user_static->email)){
-							$emailTo .= $user_static->email.', ';
+
+					if(!$conf->global->HOLIDAY_FDT_APPROVER) {
+						$list_validation = $object->listApprover1;
+						foreach($list_validation[2] as $userid => $user_static){
+							if(!empty($user_static->email)){
+								$emailTo .= $user_static->email.', ';
+							}
+						}
+						$list_validation = $object->listApprover2;
+						foreach($list_validation[2] as $userid => $user_static){
+							if(!empty($user_static->email)){
+								$emailTo .= $user_static->email.', ';
+							}
 						}
 					}
-					$list_validation = $object->listApprover2;
-					foreach($list_validation[2] as $userid => $user_static){
-						if(!empty($user_static->email)){
-							$emailTo .= $user_static->email.', ';
+					elseif($conf->global->HOLIDAY_FDT_APPROVER) {
+						$user_static = new User($db);
+						$list_validation = explode(',', $destinataire->array_options['options_approbateurfdt']);
+						foreach($list_validation as $id){
+							$user_static->fetch($id);
+							if(!empty($user_static->email)){
+								$emailTo .= $user_static->email.', ';
+							}
 						}
 					}
 					$emailTo = rtrim($emailTo, ", ");
@@ -2818,81 +2963,104 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 				}
 
 				// Approver
-				print '<tr>';
-				print '<td class="titlefield">';
-				print '<table class="nobordernopadding centpercent">';
-				print '<tr><td class="">';
-				print '1ère Approbation par';
-				print '</td>';
-				print "<td class='right'>";
-				if(!empty($user->rights->holidaycustom->changeappro) && $action != 'editvalidator1' && ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_VALIDATED)) {
-					print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editvalidator1&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a>';
-				}
-				print '</td>';
-				print '</tr></table></td>';
-				print '<td>';
-				if (!$edit && $action == 'editvalidator1' && !empty($user->rights->holidaycustom->changeappro)) {
-					$value = array();
-					$list_validation1 = $object->listApprover1;
-					foreach($list_validation1[2] as $id => $user_static){
-						$value = array_merge($value, array($id));
+				if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+					print '<tr>';
+					print '<td class="titlefield">';
+					print '<table class="nobordernopadding centpercent">';
+					print '<tr><td class="">';
+					print '1ère Approbation par';
+					print '</td>';
+					print "<td class='right'>";
+					if(!empty($user->rights->holidaycustom->changeappro) && $action != 'editvalidator1' && ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_VALIDATED)) {
+						print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editvalidator1&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a>';
 					}
-					$key = 'fk_user_approbation1';
-					$object->fields[$key] = array('type'=>'chkbxlst:user:firstname|lastname:rowid', 'label'=>'UserApprobation1', 'enabled'=>'1', 'position'=>50, 'notnull'=>1, 'visible'=>1);
-					print $object->showInputField($object->fields[$key], $key, $value, '', '', '', 0);
-					unset($object->fields[$key]);
+					print '</td>';
+					print '</tr></table></td>';
+					print '<td>';
+					if (!$edit && $action == 'editvalidator1' && !empty($user->rights->holidaycustom->changeappro)) {
+						$value = array();
+						$list_validation1 = $object->listApprover1;
+						foreach($list_validation1[2] as $id => $user_static){
+							$value = array_merge($value, array($id));
+						}
+						$key = 'fk_user_approbation1';
+						$object->fields[$key] = array('type'=>'chkbxlst:user:firstname|lastname:rowid', 'label'=>'UserApprobation1', 'enabled'=>'1', 'position'=>50, 'notnull'=>1, 'visible'=>1);
+						print $object->showInputField($object->fields[$key], $key, $value, '', '', '', 0);
+						unset($object->fields[$key]);
 
-					if ($action == 'editvalidator1') {
-						print '<input type="submit" class="button button-save" name="savevalidator1" value="'.$langs->trans("Save").'">';
-						print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
+						if ($action == 'editvalidator1') {
+							print '<input type="submit" class="button button-save" name="savevalidator1" value="'.$langs->trans("Save").'">';
+							print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
+						}
 					}
+					else {
+						$list_validation1 = $object->listApprover1;
+						foreach($list_validation1[2] as $id => $user_static){
+							print $user_static->getNomUrl(1).($list_validation1[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
+						}
+					}
+					print '</td>';
+					print '</tr>';
 				}
-				else {
-					$list_validation1 = $object->listApprover1;
-					foreach($list_validation1[2] as $id => $user_static){
-						print $user_static->getNomUrl(1).($list_validation1[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
-					}
+				elseif($conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+					$extrafieldsuser = new extrafields($db);
+					$extrafieldsuser->fetch_name_optionals_label($user_static->table_element);
+					$user_static->fetch($object->fk_user);
+
+					print '<tr>';
+					print '<td class="titlefield">';
+					print '<table class="nobordernopadding centpercent">';
+					print '<tr><td class="">';
+					print '1ère Approbation par';
+					print '</td>';
+					print '</tr></table></td>';
+					print '<td>';
+					print $extrafieldsuser->showOutputField('approbateurfdt', $user_static->array_options['options_approbateurfdt'], '', $user_static->table_element);
+					print '</td>';
+					print '</tr>';
 				}
 
 				// Approver 2
-				print '<tr>';
-				print '<td class="titlefield">';
-				print '<table class="nobordernopadding centpercent">';
-				print '<tr><td class="">';
-				print '2ème Approbation par';
-				print '</td>';
-				print "<td class='right'>";
-				if(!empty($user->rights->holidaycustom->changeappro) && $action != 'editvalidator2' && ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_VALIDATED || $object->statut == Holiday::STATUS_APPROVED1)) {
-					print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editvalidator2&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a>';
-				}
-				print '</td>';
-				print '</tr></table></td>';
-				print '<td>';
-				if (!$edit && $action == 'editvalidator2' && !empty($user->rights->holidaycustom->changeappro)) {
-					$value = array();
-					$list_validation2 = $object->listApprover2;
-					foreach($list_validation2[2] as $id => $user_static){
-						$value = array_merge($value, array($id));
+				if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+					print '<tr>';
+					print '<td class="titlefield">';
+					print '<table class="nobordernopadding centpercent">';
+					print '<tr><td class="">';
+					print '2ème Approbation par';
+					print '</td>';
+					print "<td class='right'>";
+					if(!empty($user->rights->holidaycustom->changeappro) && $action != 'editvalidator2' && ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_VALIDATED || $object->statut == Holiday::STATUS_APPROVED1)) {
+						print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editvalidator2&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a>';
 					}
-					$key = 'fk_user_approbation2';
-					$object->fields[$key] = array('type'=>'chkbxlst:user:firstname|lastname:rowid', 'label'=>'UserApprobation2', 'enabled'=>'1', 'position'=>50, 'notnull'=>1, 'visible'=>1);
-					print $object->showInputField($object->fields[$key], $key, $value, '', '', '', 0);
-					unset($object->fields[$key]);
+					print '</td>';
+					print '</tr></table></td>';
+					print '<td>';
+					if (!$edit && $action == 'editvalidator2' && !empty($user->rights->holidaycustom->changeappro)) {
+						$value = array();
+						$list_validation2 = $object->listApprover2;
+						foreach($list_validation2[2] as $id => $user_static){
+							$value = array_merge($value, array($id));
+						}
+						$key = 'fk_user_approbation2';
+						$object->fields[$key] = array('type'=>'chkbxlst:user:firstname|lastname:rowid', 'label'=>'UserApprobation2', 'enabled'=>'1', 'position'=>50, 'notnull'=>1, 'visible'=>1);
+						print $object->showInputField($object->fields[$key], $key, $value, '', '', '', 0);
+						unset($object->fields[$key]);
 
-					if ($action == 'editvalidator2') {
-						print '<input type="submit" class="button button-save" name="savevalidator2" value="'.$langs->trans("Save").'">';
-						print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
+						if ($action == 'editvalidator2') {
+							print '<input type="submit" class="button button-save" name="savevalidator2" value="'.$langs->trans("Save").'">';
+							print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
+						}
 					}
-				}
-				else {
-					$list_validation2 = $object->listApprover2;
-					foreach($list_validation2[2] as $id => $user_static){
-						print $user_static->getNomUrl(1).($list_validation2[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
+					else {
+						$list_validation2 = $object->listApprover2;
+						foreach($list_validation2[2] as $id => $user_static){
+							print $user_static->getNomUrl(1).($list_validation2[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
+						}
 					}
-				}
 
-				print '</td>';
-				print '</tr>';
+					print '</td>';
+					print '</tr>';
+				}
 
 
 				// Other attributes
@@ -3026,7 +3194,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 
 					if ($object->statut == Holiday::STATUS_VALIDATED) {	// If validated
 						// Button Approve / Refuse
-						if (/*$user->id == $object->fk_validator*/ in_array($user->id, $object->listApprover1[0]) && $object->listApprover1[1][$user->id] == 0) {
+						if ($permissiontovalidate1) {
 							print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=valid1" class="butAction">'.$langs->trans("Approve").'</a>';
 							print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=refuse" class="butAction">'.$langs->trans("ActionRefuseCP").'</a>';
 							// print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=transferer" class="butAction">'.$langs->trans("Transferer").'</a>';
@@ -3047,7 +3215,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 
 					if ($object->statut == Holiday::STATUS_APPROVED1) {	// If validated
 						// Button Approve / Refuse
-						if (/*$user->id == $object->array_options['options_fk_validator2']*/ in_array($user->id, $object->listApprover2[0]) && $object->listApprover2[1][$user->id] == 0) {
+						if ($permissiontovalidate2) {
 							print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=valid2" class="butAction">'.$langs->trans("Approve").'</a>';
 							print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=refuse" class="butAction">'.$langs->trans("ActionRefuseCP").'</a>';
 						} else {

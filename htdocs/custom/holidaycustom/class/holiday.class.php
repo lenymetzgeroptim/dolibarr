@@ -100,6 +100,8 @@ class Holiday extends CommonObject
 	 * @var int 	ID of user that must approve. TODO: there is no date for validation (date_valid is used for approval), add one.
 	 */
 	public $fk_validator;
+	public $listApprover1 = array();
+	public $listApprover2 = array();
 
 	/**
 	 * @var int 	Date of approval. TODO: Add a field for approval date and use date_valid instead for validation.
@@ -399,11 +401,12 @@ class Holiday extends CommonObject
 	 *
 	 *  @param	int		$id         Id object
 	 *  @param	string	$ref        Ref object
+	 *  @param	int		$fetch_user			If = 1 fetch User object
 	 *  @return int         		<0 if KO, 0 if not found, >0 if OK
 	 */
-	public function fetch($id, $ref = '')
+	public function fetch($id, $ref = '', $fetch_user = 1)
 	{
-		global $langs;
+		global $langs, $conf;
 
 		$sql = "SELECT";
 		$sql .= " cp.rowid,";
@@ -474,9 +477,9 @@ class Holiday extends CommonObject
 			}
 			$this->db->free($resql);
 
-			if ($result) {
-				$this->listApprover1 = $this->listApprover('', 1);
-				$this->listApprover2 = $this->listApprover('', 2);
+			if ($result && !$conf->global->HOLIDAY_FDT_APPROVER) {
+				$this->listApprover1 = $this->listApprover('', 1, $fetch_user);
+				$this->listApprover2 = $this->listApprover('', 2, $fetch_user);
 			}
 
 			return $result;
@@ -4234,9 +4237,10 @@ class Holiday extends CommonObject
 	 *
 	 * 	@param	string	$excludefilter		Filter to exclude. Do not use here a string coming from user input.
 	 *  @param	int		$validation_number	Validation Number
+	 *  @param	int		$fetch_user			If = 1 fetch User object
 	 * 	@return	mixed						Array of users or -1 on error
 	 */
-	public function listApprover($excludefilter = '', $validation_number)
+	public function listApprover($excludefilter = '', $validation_number, $fetch_user = 1)
 	{
 		global $conf, $user;
 		$ret = array();
@@ -4286,11 +4290,14 @@ class Holiday extends CommonObject
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$newuser = new User($this->db);
-				$newuser->fetch($obj->rowid);
 				$ret[0][$obj->rowid] = $obj->rowid;
 				$ret[1][$obj->rowid] = $obj->validation;
-				$ret[2][$obj->rowid] = $newuser;
+
+				if($fetch_user) {
+					$newuser = new User($this->db);
+					$newuser->fetch($obj->rowid);
+					$ret[2][$obj->rowid] = clone $newuser;
+				}
 			}
 
 			$this->db->free($resql);

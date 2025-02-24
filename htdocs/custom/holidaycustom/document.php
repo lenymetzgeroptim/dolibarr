@@ -80,6 +80,9 @@ $extrafields->fetch_name_optionals_label($object->table_element);
 if (($id > 0) || $ref) {
 	$object->fetch($id, $ref);
 
+	$user_static = new User($db);
+	$user_static->fetch($object->fk_user);
+	
 	// Check current user can read this leave request
 	$canread = 0;
 	if (!empty($user->rights->holidaycustom->readall)) {
@@ -88,7 +91,10 @@ if (($id > 0) || $ref) {
 	if (!empty($user->rights->holidaycustom->read) && in_array($object->fk_user, $childids)) {
 		$canread = 1;
 	}
-	if(in_array($user->id, $object->listApprover1[0]) || in_array($user->id, $object->listApprover2[0])) {
+	if(in_array($user->id, $object->listApprover1[0]) || in_array($user->id, $object->listApprover2[0]) && !$conf->global->HOLIDAY_FDT_APPROVER) {
+		$canread = 1;
+	}
+	if(in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt'])) && $conf->global->HOLIDAY_FDT_APPROVER) {
 		$canread = 1;
 	}
 	if (!$canread) {
