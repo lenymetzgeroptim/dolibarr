@@ -230,6 +230,9 @@ class extendedHoliday extends Holiday
 					if ($timestamp == $record['date_start'] && $record['halfday'] == -1) {
 						continue;
 					}
+					if ($timestamp == $record['date_start'] && $obj->in_hour) {
+						continue;
+					}
 					$isavailablemorning = false;
 					break;
 				}
@@ -239,6 +242,9 @@ class extendedHoliday extends Holiday
 						continue;
 					}
 					if ($timestamp == $record['date_end'] && $record['halfday'] == 1) {
+						continue;
+					}
+					if ($timestamp == $record['date_end'] && $obj->in_hour) {
 						continue;
 					}
 					$isavailableafternoon = false;

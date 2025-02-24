@@ -1200,6 +1200,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				
 			if(!empty($holiday->array_options['options_hour'])) {
 				$durationHoliday = $holiday->array_options['options_hour'];
+				$timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $holiday->array_options['options_hour'];
 			}
 			else {
 				if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
@@ -1283,6 +1284,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 					
 				if(!empty($holiday->array_options['options_hour'])) {
 					$durationHoliday = $holiday->array_options['options_hour'];
+					$timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $holiday->array_options['options_hour'];
 				}
 				else {
 					if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
@@ -1414,7 +1416,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$totalforday += (int)$timespent->timespent_duration;
 			$total_array['heure_jour'] += (int)$timespent->timespent_duration;
 
-			if($cpt == 0 && $mode == 'timesheet' && !$disabled && empty($timespent) && empty($timeHoliday[(int)$weekNumber]) && empty($timeSpentWeek[(int)$weekNumber]) && !empty($standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')])) {
+			if($cpt == 0 && $mode == 'timesheet' && !$disabled && empty($timespent) /*&& empty($timeHoliday[(int)$weekNumber]) */&& empty($timeSpentWeek[(int)$weekNumber]) && !empty($standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')])) {
 				$timespent->timespent_duration = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
 				$class_timespent .= ' prefilling_time';
 				$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');

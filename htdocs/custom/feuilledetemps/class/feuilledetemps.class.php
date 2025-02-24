@@ -2193,7 +2193,7 @@ class FeuilleDeTemps extends CommonObject
 								$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][$i] / 3600) : ($isavailablefordayanduser['hour'][$i] / 3600));
 							}
 						}
-						if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+						elseif($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 						}
 						elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
