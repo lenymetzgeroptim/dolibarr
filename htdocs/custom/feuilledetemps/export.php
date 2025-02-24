@@ -150,6 +150,9 @@ $formfile = new ExtendedFormFile($db);
 $holiday = new extendedHoliday($db);
 $sqlusedforexport = '';
 $typesHoliday = $holiday->getTypesNoCP();
+$silae = new Silae($db);
+$extrafields = new Extrafields($db);
+$extrafields->fetch_name_optionals_label($silae->table_element);
 
 $head = array();
 $upload_dir = $conf->export->dir_temp.'/'.$user->id;
@@ -211,36 +214,50 @@ if($datatoexport == 'analytique_pourcentage') {
 	);
 }
 elseif($datatoexport == 'donnees_variables') {
-	$array_export_fields[0] = array(
-		"eu.matricule" => "Matricule",
-		"u.firstname" => "Prénom",
-		"u.lastname" => "Nom",
-		//"fdt.date_debut" => "Date Début",
-		//"fdt.date_fin" => "Date Fin",
-		"s.date" => "Date des éléments de vérification",
-		"petit_deplacement1" => "Ind.P.Depl1",
-		"petit_deplacement2" => "Ind.P.Depl2",
-		"petit_deplacement3" => "Ind.P.Depl3",
-		"petit_deplacement4" => "Ind.P.Depl4",
-		"repas1" => "Ind.Repas",
-		"repas2" => "Ind.Repas.2",
-		"heure_route" => "HRoute",
-		"kilometres" => "IK",
-		"kilometres_rappel" => "IK.Rappel",
-		"grand_deplacement1" => "Ind.G.Depl1",
-		"grand_deplacement2" => "Ind.G.Depl2",
-		"grand_deplacement3" => "Ind.G.Depl3",
-		"indemnite_tt" => "Indem.Teletravail",
-		"fdt.prime_astreinte" => "P.Astreinte",
-		"fdt.prime_exceptionnelle" => "P.Exceptionnelle",
-		"fdt.prime_objectif" => "P.Objectifs",
-		"fdt.prime_variable" => "P.Variable",
-		"fdt.prime_amplitude" => "P.Amplitude",
-		"heure_nuit50" => "H_Dim_Nuit_50%",
-		"heure_nuit75" => "H_Dim_Nuit_75%",
-		"heure_nuit100" => "H_Dim_Nuit_100%",
-		"fdt.status" => "Statut feuille de temps",
-	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_export_fields[0] = array(
+			"eu.matricule" => "Matricule",
+			"u.firstname" => "Prénom",
+			"u.lastname" => "Nom",
+			//"fdt.date_debut" => "Date Début",
+			//"fdt.date_fin" => "Date Fin",
+			"s.date" => "Date des éléments de vérification",
+			"petit_deplacement1" => "Ind.P.Depl1",
+			"petit_deplacement2" => "Ind.P.Depl2",
+			"petit_deplacement3" => "Ind.P.Depl3",
+			"petit_deplacement4" => "Ind.P.Depl4",
+			"repas1" => "Ind.Repas",
+			"repas2" => "Ind.Repas.2",
+			"heure_route" => "HRoute",
+			"kilometres" => "IK",
+			"kilometres_rappel" => "IK.Rappel",
+			"grand_deplacement1" => "Ind.G.Depl1",
+			"grand_deplacement2" => "Ind.G.Depl2",
+			"grand_deplacement3" => "Ind.G.Depl3",
+			"indemnite_tt" => "Indem.Teletravail",
+			"fdt.prime_astreinte" => "P.Astreinte",
+			"fdt.prime_exceptionnelle" => "P.Exceptionnelle",
+			"fdt.prime_objectif" => "P.Objectifs",
+			"fdt.prime_variable" => "P.Variable",
+			"fdt.prime_amplitude" => "P.Amplitude",
+			"heure_nuit50" => "H_Dim_Nuit_50%",
+			"heure_nuit75" => "H_Dim_Nuit_75%",
+			"heure_nuit100" => "H_Dim_Nuit_100%",
+			"fdt.status" => "Statut feuille de temps",
+		);
+	}
+	else {
+		$array_export_fields[0] = array(
+			"eu.matricule" => "Matricule",
+			"u.firstname" => "Prénom",
+			"u.lastname" => "Nom",
+			"s.date" => "Date des éléments de vérification",
+			"fdt.status" => "Statut feuille de temps",
+		);
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$array_export_fields[0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['label'][$key];
+		}
+	}
 }
 elseif($datatoexport == 'absences') {
 	$array_export_fields[0] = array(
@@ -337,36 +354,50 @@ else {
 		"fdt.date_debut" => "PERIODE",
 		"fdt.status" => "STATUT FEUILLE DE TEMPS",
 	);
-	$array_export_fields[1][0] = array(
-		"eu.matricule" => "Matricule",
-		"u.firstname" => "Prénom",
-		"u.lastname" => "Nom",
-		//"fdt.date_debut" => "Date Début",
-		//"fdt.date_fin" => "Date Fin",
-		"s.date" => "Date des éléments de vérification",
-		"petit_deplacement1" => "Ind.P.Depl1",
-		"petit_deplacement2" => "Ind.P.Depl2",
-		"petit_deplacement3" => "Ind.P.Depl3",
-		"petit_deplacement4" => "Ind.P.Depl4",
-		"repas1" => "Ind.Repas",
-		"repas2" => "Ind.Repas.2",
-		"heure_route" => "HRoute",
-		"kilometres" => "IK",
-		"kilometres_rappel" => "IK.Rappel",
-		"grand_deplacement1" => "Ind.G.Depl1",
-		"grand_deplacement2" => "Ind.G.Depl2",
-		"grand_deplacement3" => "Ind.G.Depl3",
-		"indemnite_tt" => "Indem.Teletravail",
-		"fdt.prime_astreinte" => "P.Astreinte",
-		"fdt.prime_exceptionnelle" => "P.Exceptionnelle",
-		"fdt.prime_objectif" => "P.Objectifs",
-		"fdt.prime_variable" => "P.Variable",
-		"fdt.prime_amplitude" => "P.Amplitude",
-		"heure_nuit50" => "H_Dim_Nuit_50%",
-		"heure_nuit75" => "H_Dim_Nuit_75%",
-		"heure_nuit100" => "H_Dim_Nuit_100%",
-		"fdt.status" => "Statut feuille de temps",
-	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_export_fields[1][0] = array(
+			"eu.matricule" => "Matricule",
+			"u.firstname" => "Prénom",
+			"u.lastname" => "Nom",
+			//"fdt.date_debut" => "Date Début",
+			//"fdt.date_fin" => "Date Fin",
+			"s.date" => "Date des éléments de vérification",
+			"petit_deplacement1" => "Ind.P.Depl1",
+			"petit_deplacement2" => "Ind.P.Depl2",
+			"petit_deplacement3" => "Ind.P.Depl3",
+			"petit_deplacement4" => "Ind.P.Depl4",
+			"repas1" => "Ind.Repas",
+			"repas2" => "Ind.Repas.2",
+			"heure_route" => "HRoute",
+			"kilometres" => "IK",
+			"kilometres_rappel" => "IK.Rappel",
+			"grand_deplacement1" => "Ind.G.Depl1",
+			"grand_deplacement2" => "Ind.G.Depl2",
+			"grand_deplacement3" => "Ind.G.Depl3",
+			"indemnite_tt" => "Indem.Teletravail",
+			"fdt.prime_astreinte" => "P.Astreinte",
+			"fdt.prime_exceptionnelle" => "P.Exceptionnelle",
+			"fdt.prime_objectif" => "P.Objectifs",
+			"fdt.prime_variable" => "P.Variable",
+			"fdt.prime_amplitude" => "P.Amplitude",
+			"heure_nuit50" => "H_Dim_Nuit_50%",
+			"heure_nuit75" => "H_Dim_Nuit_75%",
+			"heure_nuit100" => "H_Dim_Nuit_100%",
+			"fdt.status" => "Statut feuille de temps",
+		);
+	}
+	else {
+		$array_export_fields[1][0] = array(
+			"eu.matricule" => "Matricule",
+			"u.firstname" => "Prénom",
+			"u.lastname" => "Nom",
+			"s.date" => "Date des éléments de vérification",
+			"fdt.status" => "Statut feuille de temps",
+		);
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$array_export_fields[1][0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['label'][$key];
+		}
+	}
 	$array_export_fields[2][0] = array(
 		"eu.matricule" => "Matricule",
 		"u.firstname" => "Prénom",
@@ -458,36 +489,50 @@ if($datatoexport == 'analytique_pourcentage') {
 	);
 }
 elseif($datatoexport == 'donnees_variables') { 
-	$array_export_entities[0] = array(
-		"eu.matricule" => "user",
-		"u.firstname" => "user",
-		"u.lastname" => "user",
-		//"fdt.date_debut" => "timesheet_16@feuilledetemps",
-		//"fdt.date_fin" => "timesheet_16@feuilledetemps",
-		"s.date" => "timesheet_16@feuilledetemps",
-		"petit_deplacement1" => "timesheet_16@feuilledetemps",
-		"petit_deplacement2" => "timesheet_16@feuilledetemps",
-		"petit_deplacement3" => "timesheet_16@feuilledetemps",
-		"petit_deplacement4" => "timesheet_16@feuilledetemps",
-		"repas1" => "timesheet_16@feuilledetemps",
-		"repas2" => "timesheet_16@feuilledetemps",
-		"heure_route" => "timesheet_16@feuilledetemps",
-		"kilometres" => "timesheet_16@feuilledetemps",
-		"kilometres_rappel" => "timesheet_16@feuilledetemps",
-		"grand_deplacement1" => "timesheet_16@feuilledetemps",
-		"grand_deplacement2" => "timesheet_16@feuilledetemps",
-		"grand_deplacement3" => "timesheet_16@feuilledetemps",
-		"teletravail" => "timesheet_16@feuilledetemps",
-		"fdt.prime_astreinte" => "timesheet_16@feuilledetemps",
-		"fdt.prime_exceptionnelle" => "timesheet_16@feuilledetemps",
-		"fdt.prime_objectif" => "timesheet_16@feuilledetemps",
-		"fdt.prime_variable" => "timesheet_16@feuilledetemps",
-		"fdt.prime_amplitude" => "timesheet_16@feuilledetemps",
-		"heure_nuit50" => "timesheet_16@feuilledetemps",
-		"heure_nuit75" => "timesheet_16@feuilledetemps",
-		"heure_nuit100" => "timesheet_16@feuilledetemps",
-		"fdt.status" => "timesheet_16@feuilledetemps",
-	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_export_entities[0] = array(
+			"eu.matricule" => "user",
+			"u.firstname" => "user",
+			"u.lastname" => "user",
+			//"fdt.date_debut" => "timesheet_16@feuilledetemps",
+			//"fdt.date_fin" => "timesheet_16@feuilledetemps",
+			"s.date" => "timesheet_16@feuilledetemps",
+			"petit_deplacement1" => "timesheet_16@feuilledetemps",
+			"petit_deplacement2" => "timesheet_16@feuilledetemps",
+			"petit_deplacement3" => "timesheet_16@feuilledetemps",
+			"petit_deplacement4" => "timesheet_16@feuilledetemps",
+			"repas1" => "timesheet_16@feuilledetemps",
+			"repas2" => "timesheet_16@feuilledetemps",
+			"heure_route" => "timesheet_16@feuilledetemps",
+			"kilometres" => "timesheet_16@feuilledetemps",
+			"kilometres_rappel" => "timesheet_16@feuilledetemps",
+			"grand_deplacement1" => "timesheet_16@feuilledetemps",
+			"grand_deplacement2" => "timesheet_16@feuilledetemps",
+			"grand_deplacement3" => "timesheet_16@feuilledetemps",
+			"teletravail" => "timesheet_16@feuilledetemps",
+			"fdt.prime_astreinte" => "timesheet_16@feuilledetemps",
+			"fdt.prime_exceptionnelle" => "timesheet_16@feuilledetemps",
+			"fdt.prime_objectif" => "timesheet_16@feuilledetemps",
+			"fdt.prime_variable" => "timesheet_16@feuilledetemps",
+			"fdt.prime_amplitude" => "timesheet_16@feuilledetemps",
+			"heure_nuit50" => "timesheet_16@feuilledetemps",
+			"heure_nuit75" => "timesheet_16@feuilledetemps",
+			"heure_nuit100" => "timesheet_16@feuilledetemps",
+			"fdt.status" => "timesheet_16@feuilledetemps",
+		);
+	}
+	else {
+		$array_export_entities[0] = array(
+			"eu.matricule" => "user",
+			"u.firstname" => "user",
+			"u.lastname" => "user",
+			"s.date" => "timesheet_16@feuilledetemps",
+			"fdt.status" => "timesheet_16@feuilledetemps",
+		);
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$array_export_entities[0]['silae_extrafields.'.$key] = 'timesheet_16@feuilledetemps';
+		}
+	}
 }
 elseif($datatoexport == 'absences') {
 	$array_export_entities[0] = array(
@@ -583,36 +628,50 @@ else {
 		"fdt.date_debut" => "timesheet_16@feuilledetemps",
 		"fdt.status" => "timesheet_16@feuilledetemps",
 	);
-	$array_export_entities[1][0] = array(
-		"eu.matricule" => "user",
-		"u.firstname" => "user",
-		"u.lastname" => "user",
-		//"fdt.date_debut" => "timesheet_16@feuilledetemps",
-		//"fdt.date_fin" => "timesheet_16@feuilledetemps",
-		"s.date" => "timesheet_16@feuilledetemps",
-		"petit_deplacement1" => "timesheet_16@feuilledetemps",
-		"petit_deplacement2" => "timesheet_16@feuilledetemps",
-		"petit_deplacement3" => "timesheet_16@feuilledetemps",
-		"petit_deplacement4" => "timesheet_16@feuilledetemps",
-		"repas1" => "timesheet_16@feuilledetemps",
-		"repas2" => "timesheet_16@feuilledetemps",
-		"heure_route" => "timesheet_16@feuilledetemps",
-		"kilometres" => "timesheet_16@feuilledetemps",
-		"kilometres_rappel" => "timesheet_16@feuilledetemps",
-		"grand_deplacement1" => "timesheet_16@feuilledetemps",
-		"grand_deplacement2" => "timesheet_16@feuilledetemps",
-		"grand_deplacement3" => "timesheet_16@feuilledetemps",
-		"teletravail" => "timesheet_16@feuilledetemps",
-		"fdt.prime_astreinte" => "timesheet_16@feuilledetemps",
-		"fdt.prime_exceptionnelle" => "timesheet_16@feuilledetemps",
-		"fdt.prime_objectif" => "timesheet_16@feuilledetemps",
-		"fdt.prime_variable" => "timesheet_16@feuilledetemps",
-		"fdt.prime_amplitude" => "timesheet_16@feuilledetemps",
-		"heure_nuit50" => "timesheet_16@feuilledetemps",
-		"heure_nuit75" => "timesheet_16@feuilledetemps",
-		"heure_nuit100" => "timesheet_16@feuilledetemps",
-		"fdt.status" => "timesheet_16@feuilledetemps",
-	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_export_entities[1][0] = array(
+			"eu.matricule" => "user",
+			"u.firstname" => "user",
+			"u.lastname" => "user",
+			//"fdt.date_debut" => "timesheet_16@feuilledetemps",
+			//"fdt.date_fin" => "timesheet_16@feuilledetemps",
+			"s.date" => "timesheet_16@feuilledetemps",
+			"petit_deplacement1" => "timesheet_16@feuilledetemps",
+			"petit_deplacement2" => "timesheet_16@feuilledetemps",
+			"petit_deplacement3" => "timesheet_16@feuilledetemps",
+			"petit_deplacement4" => "timesheet_16@feuilledetemps",
+			"repas1" => "timesheet_16@feuilledetemps",
+			"repas2" => "timesheet_16@feuilledetemps",
+			"heure_route" => "timesheet_16@feuilledetemps",
+			"kilometres" => "timesheet_16@feuilledetemps",
+			"kilometres_rappel" => "timesheet_16@feuilledetemps",
+			"grand_deplacement1" => "timesheet_16@feuilledetemps",
+			"grand_deplacement2" => "timesheet_16@feuilledetemps",
+			"grand_deplacement3" => "timesheet_16@feuilledetemps",
+			"teletravail" => "timesheet_16@feuilledetemps",
+			"fdt.prime_astreinte" => "timesheet_16@feuilledetemps",
+			"fdt.prime_exceptionnelle" => "timesheet_16@feuilledetemps",
+			"fdt.prime_objectif" => "timesheet_16@feuilledetemps",
+			"fdt.prime_variable" => "timesheet_16@feuilledetemps",
+			"fdt.prime_amplitude" => "timesheet_16@feuilledetemps",
+			"heure_nuit50" => "timesheet_16@feuilledetemps",
+			"heure_nuit75" => "timesheet_16@feuilledetemps",
+			"heure_nuit100" => "timesheet_16@feuilledetemps",
+			"fdt.status" => "timesheet_16@feuilledetemps",
+		);
+	}
+	else {
+		$array_export_entities[1][0] = array(
+			"eu.matricule" => "user",
+			"u.firstname" => "user",
+			"u.lastname" => "user",
+			"s.date" => "timesheet_16@feuilledetemps",
+			"fdt.status" => "timesheet_16@feuilledetemps",
+		);
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$array_export_entities[1][0]['silae_extrafields.'.$key] = 'timesheet_16@feuilledetemps';
+		}
+	}
 	$array_export_entities[2][0] = array(
 		"eu.matricule" => "user",
 		"u.firstname" => "user",
@@ -701,36 +760,51 @@ if($datatoexport == 'analytique_pourcentage') {
 	);
 }
 elseif($datatoexport == 'donnees_variables') {
-	$array_export_TypeFields[0] = array(
-		"eu.matricule" => "Numeric",
-		"u.firstname" => "Text",
-		"u.lastname" => "Text",
-		"fdt.date_debut" => "Date",
-		//"fdt.date_fin" => "Date",
-		"s.date" => "Date",
-		"petit_deplacement1" => "Numeric",
-		"petit_deplacement2" => "Numeric",
-		"petit_deplacement3" => "Numeric",
-		"petit_deplacement4" => "Numeric",
-		"repas1" => "Numeric",
-		"repas2" => "Numeric",
-		"heure_route" => "Numeric",
-		"kilometres" => "Numeric",
-		"kilometres_rappel" => "Numeric",
-		"grand_deplacement1" => "Numeric",
-		"grand_deplacement2" => "Numeric",
-		"grand_deplacement3" => "Numeric",
-		"teletravail" => "Numeric",
-		"fdt.prime_astreinte" => "Numeric",
-		"fdt.prime_exceptionnelle" => "Numeric",
-		"fdt.prime_objectif" => "Numeric",
-		"fdt.prime_variable" => "Numeric",
-		"fdt.prime_amplitude" => "Numeric",
-		"heure_nuit50" => "Numeric",
-		"heure_nuit75" => "Numeric",
-		"heure_nuit100" => "Numeric",
-		"fdt.status" => "Status",
-	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_export_TypeFields[0] = array(
+			"eu.matricule" => "Numeric",
+			"u.firstname" => "Text",
+			"u.lastname" => "Text",
+			"fdt.date_debut" => "Date",
+			//"fdt.date_fin" => "Date",
+			"s.date" => "Date",
+			"petit_deplacement1" => "Numeric",
+			"petit_deplacement2" => "Numeric",
+			"petit_deplacement3" => "Numeric",
+			"petit_deplacement4" => "Numeric",
+			"repas1" => "Numeric",
+			"repas2" => "Numeric",
+			"heure_route" => "Numeric",
+			"kilometres" => "Numeric",
+			"kilometres_rappel" => "Numeric",
+			"grand_deplacement1" => "Numeric",
+			"grand_deplacement2" => "Numeric",
+			"grand_deplacement3" => "Numeric",
+			"teletravail" => "Numeric",
+			"fdt.prime_astreinte" => "Numeric",
+			"fdt.prime_exceptionnelle" => "Numeric",
+			"fdt.prime_objectif" => "Numeric",
+			"fdt.prime_variable" => "Numeric",
+			"fdt.prime_amplitude" => "Numeric",
+			"heure_nuit50" => "Numeric",
+			"heure_nuit75" => "Numeric",
+			"heure_nuit100" => "Numeric",
+			"fdt.status" => "Status",
+		);
+	}
+	else {
+		$array_export_TypeFields[0] = array(
+			"eu.matricule" => "Numeric",
+			"u.firstname" => "Text",
+			"u.lastname" => "Text",
+			"fdt.date_debut" => "Date",
+			"s.date" => "Date",
+			"fdt.status" => "Status",
+		);
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$array_export_TypeFields[0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['type'][$key];
+		}
+	}
 }
 elseif($datatoexport == 'absences') {
 	$array_export_TypeFields[0] = array(
@@ -828,36 +902,51 @@ else {
 		"fdt.date_debut" => "Date",
 		"fdt.status" => "Status",
 	);
-	$array_export_TypeFields[1][0] = array(
-		"eu.matricule" => "Numeric",
-		"u.firstname" => "Text",
-		"u.lastname" => "Text",
-		"fdt.date_debut" => "Date",
-		//"fdt.date_fin" => "Date",
-		"s.date" => "Date",
-		"petit_deplacement1" => "Numeric",
-		"petit_deplacement2" => "Numeric",
-		"petit_deplacement3" => "Numeric",
-		"petit_deplacement4" => "Numeric",
-		"repas1" => "Numeric",
-		"repas2" => "Numeric",
-		"heure_route" => "Numeric",
-		"kilometres" => "Numeric",
-		"kilometres_rappel" => "Numeric",
-		"grand_deplacement1" => "Numeric",
-		"grand_deplacement2" => "Numeric",
-		"grand_deplacement3" => "Numeric",
-		"teletravail" => "Numeric",
-		"fdt.prime_astreinte" => "Numeric",
-		"fdt.prime_exceptionnelle" => "Numeric",
-		"fdt.prime_objectif" => "Numeric",
-		"fdt.prime_variable" => "Numeric",
-		"fdt.prime_amplitude" => "Numeric",
-		"heure_nuit50" => "Numeric",
-		"heure_nuit75" => "Numeric",
-		"heure_nuit100" => "Numeric",
-		"fdt.status" => "Status",
-	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_export_TypeFields[1][0] = array(
+			"eu.matricule" => "Numeric",
+			"u.firstname" => "Text",
+			"u.lastname" => "Text",
+			"fdt.date_debut" => "Date",
+			//"fdt.date_fin" => "Date",
+			"s.date" => "Date",
+			"petit_deplacement1" => "Numeric",
+			"petit_deplacement2" => "Numeric",
+			"petit_deplacement3" => "Numeric",
+			"petit_deplacement4" => "Numeric",
+			"repas1" => "Numeric",
+			"repas2" => "Numeric",
+			"heure_route" => "Numeric",
+			"kilometres" => "Numeric",
+			"kilometres_rappel" => "Numeric",
+			"grand_deplacement1" => "Numeric",
+			"grand_deplacement2" => "Numeric",
+			"grand_deplacement3" => "Numeric",
+			"teletravail" => "Numeric",
+			"fdt.prime_astreinte" => "Numeric",
+			"fdt.prime_exceptionnelle" => "Numeric",
+			"fdt.prime_objectif" => "Numeric",
+			"fdt.prime_variable" => "Numeric",
+			"fdt.prime_amplitude" => "Numeric",
+			"heure_nuit50" => "Numeric",
+			"heure_nuit75" => "Numeric",
+			"heure_nuit100" => "Numeric",
+			"fdt.status" => "Status",
+		);
+	}
+	else {
+		$array_export_TypeFields[1][0] = array(
+			"eu.matricule" => "Numeric",
+			"u.firstname" => "Text",
+			"u.lastname" => "Text",
+			"fdt.date_debut" => "Date",
+			"s.date" => "Date",
+			"fdt.status" => "Status",
+		);
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$array_export_TypeFields[1][0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['type'][$key];
+		}
+	}
 	$array_export_TypeFields[2][0] = array(
 		"eu.matricule" => "Numeric",
 		"u.firstname" => "Text",
@@ -949,36 +1038,50 @@ if($datatoexport == 'analytique_pourcentage') {
 	);
 }
 elseif($datatoexport == 'donnees_variables')  {
-	$array_tablename[0] = array(
-		"eu.matricule" => "llx_user_extrafields",
-		"u.firstname" => "llx_user",
-		"u.lastname" => "llx_user",
-		//"fdt.date_debut" => "llx_feuilledetemps_feuilledetemps",
-		//"fdt.date_fin" => "llx_feuilledetemps_feuilledetemps",
-		"s.date" => "llx_feuilledetemps_feuilledetemps",
-		"petit_deplacement1" => "llx_feuilledetemps_deplacement",
-		"petit_deplacement2" => "llx_feuilledetemps_deplacement",
-		"petit_deplacement3" => "llx_feuilledetemps_deplacement",
-		"petit_deplacement4" => "llx_feuilledetemps_deplacement",
-		"repas1" => "llx_feuilledetemps_silae",
-		"repas2" => "llx_feuilledetemps_silae",
-		"heure_route" => "llx_feuilledetemps_silae",
-		"kilometres" => "llx_feuilledetemps_silae",
-		"kilometres_rappel" => "llx_feuilledetemps_silae",
-		"grand_deplacement1" => "llx_feuilledetemps_deplacement",
-		"grand_deplacement2" => "llx_feuilledetemps_deplacement",
-		"grand_deplacement3" => "llx_feuilledetemps_deplacement",
-		"teletravail" => "llx_feuilledetemps_silae",
-		"fdt.prime_astreinte" => "llx_feuilledetemps_feuilledetemps",
-		"fdt.prime_exceptionnelle" => "llx_feuilledetemps_feuilledetemps",
-		"fdt.prime_objectif" => "llx_feuilledetemps_feuilledetemps",
-		"fdt.prime_variable" => "llx_feuilledetemps_feuilledetemps",
-		"fdt.prime_amplitude" => "llx_feuilledetemps_feuilledetemps",
-		"heure_nuit50" => "llx_feuilledetemps_silae",
-		"heure_nuit75" => "llx_feuilledetemps_silae",
-		"heure_nuit100" => "llx_feuilledetemps_silae",
-		"fdt.status" => "llx_feuilledetemps_feuilledetemps",
-	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_tablename[0] = array(
+			"eu.matricule" => "llx_user_extrafields",
+			"u.firstname" => "llx_user",
+			"u.lastname" => "llx_user",
+			//"fdt.date_debut" => "llx_feuilledetemps_feuilledetemps",
+			//"fdt.date_fin" => "llx_feuilledetemps_feuilledetemps",
+			"s.date" => "llx_feuilledetemps_feuilledetemps",
+			"petit_deplacement1" => "llx_feuilledetemps_deplacement",
+			"petit_deplacement2" => "llx_feuilledetemps_deplacement",
+			"petit_deplacement3" => "llx_feuilledetemps_deplacement",
+			"petit_deplacement4" => "llx_feuilledetemps_deplacement",
+			"repas1" => "llx_feuilledetemps_silae",
+			"repas2" => "llx_feuilledetemps_silae",
+			"heure_route" => "llx_feuilledetemps_silae",
+			"kilometres" => "llx_feuilledetemps_silae",
+			"kilometres_rappel" => "llx_feuilledetemps_silae",
+			"grand_deplacement1" => "llx_feuilledetemps_deplacement",
+			"grand_deplacement2" => "llx_feuilledetemps_deplacement",
+			"grand_deplacement3" => "llx_feuilledetemps_deplacement",
+			"teletravail" => "llx_feuilledetemps_silae",
+			"fdt.prime_astreinte" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.prime_exceptionnelle" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.prime_objectif" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.prime_variable" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.prime_amplitude" => "llx_feuilledetemps_feuilledetemps",
+			"heure_nuit50" => "llx_feuilledetemps_silae",
+			"heure_nuit75" => "llx_feuilledetemps_silae",
+			"heure_nuit100" => "llx_feuilledetemps_silae",
+			"fdt.status" => "llx_feuilledetemps_feuilledetemps",
+		);
+	}
+	else {
+		$array_tablename[0] = array(
+			"eu.matricule" => "llx_user_extrafields",
+			"u.firstname" => "llx_user",
+			"u.lastname" => "llx_user",
+			"s.date" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.status" => "llx_feuilledetemps_feuilledetemps",
+		);
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$array_tablename[0]['silae_extrafields.'.$key] = 'llx_feuilledetemps_silae_extrafields';
+		}
+	}
 }
 elseif($datatoexport == 'absences') {
 	$array_tablename[0] = array(
@@ -1072,36 +1175,50 @@ else {
 		"fdt.date_debut" => "llx_feuilledetemps_feuilledetemps",
 		"fdt.status" => "llx_feuilledetemps_feuilledetemps",
 	);
-	$array_tablename[1][0] = array(
-		"eu.matricule" => "llx_user_extrafields",
-		"u.firstname" => "llx_user",
-		"u.lastname" => "llx_user",
-		//"fdt.date_debut" => "llx_feuilledetemps_feuilledetemps",
-		//"fdt.date_fin" => "llx_feuilledetemps_feuilledetemps",
-		"s.date" => "llx_feuilledetemps_feuilledetemps",
-		"petit_deplacement1" => "llx_feuilledetemps_deplacement",
-		"petit_deplacement2" => "llx_feuilledetemps_deplacement",
-		"petit_deplacement3" => "llx_feuilledetemps_deplacement",
-		"petit_deplacement4" => "llx_feuilledetemps_deplacement",
-		"repas1" => "llx_feuilledetemps_silae",
-		"repas2" => "llx_feuilledetemps_silae",
-		"heure_route" => "llx_feuilledetemps_silae",
-		"kilometres" => "llx_feuilledetemps_silae",
-		"kilometres_rappel" => "llx_feuilledetemps_silae",
-		"grand_deplacement1" => "llx_feuilledetemps_deplacement",
-		"grand_deplacement2" => "llx_feuilledetemps_deplacement",
-		"grand_deplacement3" => "llx_feuilledetemps_deplacement",
-		"teletravail" => "llx_feuilledetemps_silae",
-		"fdt.prime_astreinte" => "llx_feuilledetemps_feuilledetemps",
-		"fdt.prime_exceptionnelle" => "llx_feuilledetemps_feuilledetemps",
-		"fdt.prime_objectif" => "llx_feuilledetemps_feuilledetemps",
-		"fdt.prime_variable" => "llx_feuilledetemps_feuilledetemps",
-		"fdt.prime_amplitude" => "llx_feuilledetemps_feuilledetemps",
-		"heure_nuit50" => "llx_feuilledetemps_silae",
-		"heure_nuit75" => "llx_feuilledetemps_silae",
-		"heure_nuit100" => "llx_feuilledetemps_silae",
-		"fdt.status" => "llx_feuilledetemps_feuilledetemps",
-	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_tablename[1][0] = array(
+			"eu.matricule" => "llx_user_extrafields",
+			"u.firstname" => "llx_user",
+			"u.lastname" => "llx_user",
+			//"fdt.date_debut" => "llx_feuilledetemps_feuilledetemps",
+			//"fdt.date_fin" => "llx_feuilledetemps_feuilledetemps",
+			"s.date" => "llx_feuilledetemps_feuilledetemps",
+			"petit_deplacement1" => "llx_feuilledetemps_deplacement",
+			"petit_deplacement2" => "llx_feuilledetemps_deplacement",
+			"petit_deplacement3" => "llx_feuilledetemps_deplacement",
+			"petit_deplacement4" => "llx_feuilledetemps_deplacement",
+			"repas1" => "llx_feuilledetemps_silae",
+			"repas2" => "llx_feuilledetemps_silae",
+			"heure_route" => "llx_feuilledetemps_silae",
+			"kilometres" => "llx_feuilledetemps_silae",
+			"kilometres_rappel" => "llx_feuilledetemps_silae",
+			"grand_deplacement1" => "llx_feuilledetemps_deplacement",
+			"grand_deplacement2" => "llx_feuilledetemps_deplacement",
+			"grand_deplacement3" => "llx_feuilledetemps_deplacement",
+			"teletravail" => "llx_feuilledetemps_silae",
+			"fdt.prime_astreinte" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.prime_exceptionnelle" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.prime_objectif" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.prime_variable" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.prime_amplitude" => "llx_feuilledetemps_feuilledetemps",
+			"heure_nuit50" => "llx_feuilledetemps_silae",
+			"heure_nuit75" => "llx_feuilledetemps_silae",
+			"heure_nuit100" => "llx_feuilledetemps_silae",
+			"fdt.status" => "llx_feuilledetemps_feuilledetemps",
+		);
+	}
+	else {
+		$array_tablename[1][0] = array(
+			"eu.matricule" => "llx_user_extrafields",
+			"u.firstname" => "llx_user",
+			"u.lastname" => "llx_user",
+			"s.date" => "llx_feuilledetemps_feuilledetemps",
+			"fdt.status" => "llx_feuilledetemps_feuilledetemps",
+		);
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$array_tablename[1][0]['silae_extrafields.'.$key] = 'llx_feuilledetemps_silae_extrafields';
+		}
+	}
 	$array_tablename[2][0] = array(
 		"eu.matricule" => "llx_user_extrafields",
 		"u.firstname" => "llx_user",
@@ -1369,32 +1486,46 @@ if ($action == 'buildalldoc') {
 		"pourcentage" => 4,
 		"fdt.date_debut" => 5,
 	);
-	$array_selected[1] = array(
-		"eu.matricule" => 1,
-		"u.lastname" => 2,
-		"u.firstname" => 3,
-		"petit_deplacement1" => 4,
-		"petit_deplacement2" => 5,
-		"petit_deplacement3" => 6,
-		"petit_deplacement4" => 7,
-		"repas1" => 8,
-		"repas2" => 9,
-		"heure_route" => 10,
-		"kilometres" => 11,
-		"kilometres_rappel" => 12,
-		"grand_deplacement1" => 13,
-		"grand_deplacement2" => 14,
-		"grand_deplacement3" => 15,
-		"indemnite_tt" => 16,
-		"fdt.prime_astreinte" => 17,
-		"fdt.prime_exceptionnelle" => 18,
-		"fdt.prime_objectif" => 19,
-		"fdt.prime_variable" => 20,
-		"fdt.prime_amplitude" => 21,
-		"heure_nuit50" => 22,
-		"heure_nuit75" => 23,
-		"heure_nuit100" => 24
-	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_selected[1] = array(
+			"eu.matricule" => 1,
+			"u.lastname" => 2,
+			"u.firstname" => 3,
+			"petit_deplacement1" => 4,
+			"petit_deplacement2" => 5,
+			"petit_deplacement3" => 6,
+			"petit_deplacement4" => 7,
+			"repas1" => 8,
+			"repas2" => 9,
+			"heure_route" => 10,
+			"kilometres" => 11,
+			"kilometres_rappel" => 12,
+			"grand_deplacement1" => 13,
+			"grand_deplacement2" => 14,
+			"grand_deplacement3" => 15,
+			"indemnite_tt" => 16,
+			"fdt.prime_astreinte" => 17,
+			"fdt.prime_exceptionnelle" => 18,
+			"fdt.prime_objectif" => 19,
+			"fdt.prime_variable" => 20,
+			"fdt.prime_amplitude" => 21,
+			"heure_nuit50" => 22,
+			"heure_nuit75" => 23,
+			"heure_nuit100" => 24
+		);
+	}
+	else {
+		$array_selected[1] = array(
+			"eu.matricule" => 1,
+			"u.lastname" => 2,
+			"u.firstname" => 3,
+		);
+		$cpt = 4;
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$array_selected[1]['silae_extrafields.'.$key] = $cpt;
+			$cpt++;
+		}
+	}
 	$array_selected[2] = array(
 		"eu.matricule" => 1,
 		"ht.code_silae" => 2,
@@ -1458,27 +1589,27 @@ if ($action == 'buildalldoc') {
 	}
 
 	if(!$error) {
-		// On passe au statut Exporté l'ensemble des feuilles de temps que l'on a exportée
-		$feuilleDeTemps = new FeuilleDeTemps($db);
-		$user_static = new User($db);
-		$filter = array(
-			'customsql' => 'date_debut = "'.substr($db->idate($date_debut), 0, 10).'" AND date_fin = "'.substr($db->idate($date_fin), 0, 10).'"',
-			'status' => FeuilleDeTemps::STATUS_VALIDATED,
-		);
-		$allFdtValidated = $feuilleDeTemps->fetchAll('', '', 0, 0, $filter, 'AND');
-		foreach($allFdtValidated as $id => $fdt) {
-			$user_static->fetch($fdt->fk_user);
-			if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_static->array_options['options_fk_employeur'] == 157)){
-				$fdt->setExported($user);
-			}
-		}
+		// // On passe au statut Exporté l'ensemble des feuilles de temps que l'on a exportée
+		// $feuilleDeTemps = new FeuilleDeTemps($db);
+		// $user_static = new User($db);
+		// $filter = array(
+		// 	'customsql' => 'date_debut = "'.substr($db->idate($date_debut), 0, 10).'" AND date_fin = "'.substr($db->idate($date_fin), 0, 10).'"',
+		// 	'status' => FeuilleDeTemps::STATUS_VALIDATED,
+		// );
+		// $allFdtValidated = $feuilleDeTemps->fetchAll('', '', 0, 0, $filter, 'AND');
+		// foreach($allFdtValidated as $id => $fdt) {
+		// 	$user_static->fetch($fdt->fk_user);
+		// 	if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_static->array_options['options_fk_employeur'] == 157)){
+		// 		$fdt->setExported($user);
+		// 	}
+		// }
 
-		header("Location: ".$_SERVER["PHP_SELF"].'?step=1');
-		return;
+		//header("Location: ".$_SERVER["PHP_SELF"].'?step=1');
+		//return;
 	}
 }
 
-if ($action == 'builddoccompta') {
+if ($action == 'builddoccompta' && $conf->donneesrh->enabled) {
 	$max_execution_time_for_importexport = (empty($conf->global->EXPORT_MAX_EXECUTION_TIME) ? 300 : $conf->global->EXPORT_MAX_EXECUTION_TIME); // 5mn if not defined
 	$max_time = @ini_get("max_execution_time");
 	if ($max_time && $max_time < $max_execution_time_for_importexport) {
@@ -1806,31 +1937,33 @@ if ($step == 1 || !$datatoexport) {
 		print '</tr>';
 		print '</table></div></div>';
 
-		print '<div class="fichetwothirdright">';
-		print '<div class="div-table-responsive-no-min">';
-		print '<table class="noborder centpercent">';
-		print '<tr class="liste_titre">';
-		print '<th colspan="2">';
-		print $langs->trans("Export Notes pour la compta");
-		print '</th>';
-		print '</tr>';
-		print '<tr>';
-		print '<td align="center" colspan="2">';
-			print '<form name="exportObservationCompta" id="exportObservationCompta" action="'.$_SERVER["PHP_SELF"].'?step=1&action=builddoccompta&token='.newToken().'" method="POST">';
-			print $htmlother->select_month((GETPOST('exportdate_startmonth') ? GETPOST('exportdate_startmonth') : date("m")), 'exportdate_startmonth', 0, 1, 'minwidth50 valignmiddle', true);
-			print ' ';
-			print $htmlother->select_year(GETPOST('exportdate_startyear'), 'exportdate_startyear', 0, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
-			print ' - ';
-			print $htmlother->select_month((GETPOST('exportdate_endmonth') ? GETPOST('exportdate_endmonth') : date("m")), 'exportdate_endmonth', 1, 1, 'minwidth50 valignmiddle', true);
-			print ' ';
-			print $htmlother->select_year((GETPOST('exportdate_endyear') ? GETPOST('exportdate_endyear') : date("Y")), 'exportdate_endyear', 1, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
-			// Show existing generated documents
-			// NB: La fonction show_documents rescanne les modules qd genallowed=1, sinon prend $liste
-			print $formfile->showdocuments('export', '', $upload_dir, $_SERVER["PHP_SELF"].'?step=1', $liste2, 1, (!empty($_POST['model']) ? $_POST['model'] : 'csv'), 1, 1, 0, 0, 0, '', '<input class="butAction" type="submit" value="'.$langs->trans('Export').'">', '', '', '', null, 0, 'remove_file', '', '^export_ObservationCompta\..*$');
-			print '</form>';
-		print '</td>';
-		print '</tr>';
-		print '</table></div></div>';
+		if($conf->donneesrh->enabled) {
+			print '<div class="fichetwothirdright">';
+			print '<div class="div-table-responsive-no-min">';
+			print '<table class="noborder centpercent">';
+			print '<tr class="liste_titre">';
+			print '<th colspan="2">';
+			print $langs->trans("Export Notes pour la compta");
+			print '</th>';
+			print '</tr>';
+			print '<tr>';
+			print '<td align="center" colspan="2">';
+				print '<form name="exportObservationCompta" id="exportObservationCompta" action="'.$_SERVER["PHP_SELF"].'?step=1&action=builddoccompta&token='.newToken().'" method="POST">';
+				print $htmlother->select_month((GETPOST('exportdate_startmonth') ? GETPOST('exportdate_startmonth') : date("m")), 'exportdate_startmonth', 0, 1, 'minwidth50 valignmiddle', true);
+				print ' ';
+				print $htmlother->select_year(GETPOST('exportdate_startyear'), 'exportdate_startyear', 0, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
+				print ' - ';
+				print $htmlother->select_month((GETPOST('exportdate_endmonth') ? GETPOST('exportdate_endmonth') : date("m")), 'exportdate_endmonth', 1, 1, 'minwidth50 valignmiddle', true);
+				print ' ';
+				print $htmlother->select_year((GETPOST('exportdate_endyear') ? GETPOST('exportdate_endyear') : date("Y")), 'exportdate_endyear', 1, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
+				// Show existing generated documents
+				// NB: La fonction show_documents rescanne les modules qd genallowed=1, sinon prend $liste
+				print $formfile->showdocuments('export', '', $upload_dir, $_SERVER["PHP_SELF"].'?step=1', $liste2, 1, (!empty($_POST['model']) ? $_POST['model'] : 'csv'), 1, 1, 0, 0, 0, '', '<input class="butAction" type="submit" value="'.$langs->trans('Export').'">', '', '', '', null, 0, 'remove_file', '', '^export_ObservationCompta\..*$');
+				print '</form>';
+			print '</td>';
+			print '</tr>';
+			print '</table></div></div>';
+		}
 	print '</div>';
 
 	print '</form>';

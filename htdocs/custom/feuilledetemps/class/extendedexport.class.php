@@ -436,12 +436,14 @@ class ExtendedExportFDT extends Export
 							$obj->fdt_date_debut = dol_print_date($obj->fdt_date_debut, '%d/%m/%Y');
 						}
 						elseif($datatoexport == 'donnees_variables') {
-							$obj->heure_route = (int)$obj->heure_route / 3600;
-							$obj->heure_nuit50 = (int)$obj->heure_nuit50 / 3600;
-							$obj->heure_nuit75 = (int)$obj->heure_nuit75 / 3600;
-							$obj->heure_nuit100 = (int)$obj->heure_nuit100 / 3600;
-							$obj->kilometres_rappel = '';
-							$obj->grand_deplacement3 = '';
+							if(!$conf->global->FDT_DISPLAY_COLUMN) {
+								$obj->heure_route = (int)$obj->heure_route / 3600;
+								$obj->heure_nuit50 = (int)$obj->heure_nuit50 / 3600;
+								$obj->heure_nuit75 = (int)$obj->heure_nuit75 / 3600;
+								$obj->heure_nuit100 = (int)$obj->heure_nuit100 / 3600;
+								$obj->kilometres_rappel = '';
+								$obj->grand_deplacement3 = '';
+							}
 						}
 						elseif($datatoexport == 'ObservationCompta') {
 							$obj->t_date_start = substr($obj->t_date_start, 0, 7);
@@ -667,6 +669,15 @@ class ExtendedExportFDT extends Export
 				$newfield = $key;
 			}
 
+			if(str_contains($key, 'silae_extrafields')) {
+				if($array_export_TypeFields[$key] == 'checkbox') {
+					$newfield = "COALESCE(SUM(CASE WHEN $key = 1 THEN 1 ELSE 0 END), 0) AS ".str_replace(array('.', '-', '(', ')'), '_', $key);
+				}
+				else {
+					$newfield = "COALESCE(SUM($key), 0) AS ".str_replace(array('.', '-', '(', ')'), '_', $key); 
+				}
+			}
+
 			if($key == 'petit_deplacement1') {
 				$newfield = "COALESCE(d.d1, 0) + COALESCE(r.regul_d1, 0) AS petit_deplacement1";
 			}
@@ -728,7 +739,12 @@ class ExtendedExportFDT extends Export
 				$newfield = "p.ref as section";
 			}
 			elseif($key == 'pourcentage') {
-				$newfield = "SUM(tt.element_duration)/3600 as total_task, totalMonth.total as total";
+				if(!$conf->global->FDT_DISPLAY_COLUMN) {
+					$newfield = "SUM(tt.element_duration)/3600 as total_task, totalMonth.total as total";
+				}
+				else {
+					$newfield = "(SUM(tt.element_duration)/3600 + SUM(ptto.heure_nuit)/3600) as total_task, totalMonth.total as total";
+				}
 			}
 			elseif($key == 'axe') {
 				$newfield = "null as axe";
@@ -759,9 +775,10 @@ class ExtendedExportFDT extends Export
 
 		if($datatoexport == 'analytique_pourcentage'){
 			$sql .= " LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid";
+			$sql .= " LEFT JOIN llx_feuilledetemps_projet_task_time_other AS ptto ON ptto.fk_projet_task_time = tt.rowid";
 			$sql .= " LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element";
 			$sql .= " LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet";
-			$sql .= " LEFT JOIN (SELECT u.rowid, SUM(tt.element_duration)/3600 as total FROM llx_user AS u LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet WHERE tt.elementtype = 'task'";
+			$sql .= " LEFT JOIN (SELECT u.rowid, (SUM(tt.element_duration)/3600 + SUM(ptto .heure_nuit)/3600) as total FROM llx_user AS u LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid LEFT JOIN llx_feuilledetemps_projet_task_time_other AS ptto ON ptto.fk_projet_task_time = tt.rowid LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet WHERE tt.elementtype = 'task'";
 			if(!empty($array_filterValue['tt.element_date'])) {
 				$sql .= " AND date_format(tt.element_date,'%Y%m') = '".$array_filterValue['tt.element_date']."'";
 			}
@@ -769,58 +786,64 @@ class ExtendedExportFDT extends Export
 		}
 		elseif($datatoexport == 'donnees_variables'){
 			$sql .= " LEFT JOIN llx_feuilledetemps_feuilledetemps AS fdt ON fdt.fk_user = u.rowid";
-			$sql .= " LEFT JOIN 
-						(SELECT 
-							fk_user, 
-							COALESCE(SUM(heure_route), 0) AS heure_route, 
-							COALESCE(SUM(kilometres), 0) AS kilometres ,
-							COALESCE(SUM(CASE WHEN repas = 1 THEN 1 ELSE 0 END), 0) AS repas1, 
-							COALESCE(SUM(CASE WHEN repas = 2 THEN 1 ELSE 0 END), 0) AS repas2, 
-							COALESCE(SUM(indemnite_tt), 0) AS indemnite_tt
-						FROM 
-							llx_feuilledetemps_silae 
-						WHERE 
-							date_format(date,'%Y%m') = '".$array_filterValue["fdt.date_debut"]."' 
-						GROUP BY 
-							fk_user) AS s ON s.fk_user = u.rowid ";
-			$sql .= " LEFT JOIN 
-						(SELECT 
-							fk_user, 
-							COALESCE(SUM(heure_nuit_50), 0) AS heure_nuit_50, 
-							COALESCE(SUM(heure_nuit_75), 0) AS heure_nuit_75, 
-							COALESCE(SUM(heure_nuit_100), 0) AS heure_nuit_100, 
-							COALESCE(SUM(d1), 0) AS regul_d1, 
-							COALESCE(SUM(d2), 0) AS regul_d2, 
-							COALESCE(SUM(d3), 0) AS regul_d3, 
-							COALESCE(SUM(d4), 0) AS regul_d4, 
-							COALESCE(SUM(gd1), 0) AS regul_gd1, 
-							COALESCE(SUM(gd2), 0) AS regul_gd2, 
-							COALESCE(SUM(repas1), 0) AS regul_repas1, 
-							COALESCE(SUM(repas2), 0) AS regul_repas2, 
-							COALESCE(SUM(indemnite_tt), 0) AS regul_indemnite_tt,
-							COALESCE(SUM(heure_route), 0) AS regul_heure_route,
-							COALESCE(SUM(kilometres), 0) AS regul_kilometres
-						FROM 
-							llx_feuilledetemps_regul 
-						WHERE 
-							date_format(date,'%Y%m') = '".$array_filterValue["fdt.date_debut"]."' 
-						GROUP BY 
-							fk_user) AS r ON r.fk_user = u.rowid";
-			$sql .= " LEFT JOIN 
-						(SELECT 
-							fk_user, 
-							COALESCE(SUM(CASE WHEN type_deplacement = 1 THEN 1 ELSE 0 END), 0) AS d1, 
-							COALESCE(SUM(CASE WHEN type_deplacement = 2 THEN 1 ELSE 0 END), 0) AS d2, 
-							COALESCE(SUM(CASE WHEN type_deplacement = 3 THEN 1 ELSE 0 END), 0) AS d3, 
-							COALESCE(SUM(CASE WHEN type_deplacement = 4 THEN 1 ELSE 0 END), 0) AS d4, 
-							COALESCE(SUM(CASE WHEN (type_deplacement = 5 OR type_deplacement = 8 OR type_deplacement = 9) THEN 1 ELSE 0 END), 0) AS gd1, 
-							COALESCE(SUM(CASE WHEN type_deplacement = 6 THEN 1 ELSE 0 END), 0) AS gd2 
-						FROM 
-							llx_feuilledetemps_deplacement 
-						WHERE 
-							date_format(date,'%Y%m') = '".$array_filterValue["fdt.date_debut"]."' 
-						GROUP BY 
-							fk_user) AS d ON d.fk_user = u.rowid";
+			if(!$conf->global->FDT_DISPLAY_COLUMN) {
+				$sql .= " LEFT JOIN 
+							(SELECT 
+								fk_user, 
+								COALESCE(SUM(heure_route), 0) AS heure_route, 
+								COALESCE(SUM(kilometres), 0) AS kilometres ,
+								COALESCE(SUM(CASE WHEN repas = 1 THEN 1 ELSE 0 END), 0) AS repas1, 
+								COALESCE(SUM(CASE WHEN repas = 2 THEN 1 ELSE 0 END), 0) AS repas2, 
+								COALESCE(SUM(indemnite_tt), 0) AS indemnite_tt
+							FROM 
+								llx_feuilledetemps_silae 
+							WHERE 
+								date_format(date,'%Y%m') = '".$array_filterValue["fdt.date_debut"]."' 
+							GROUP BY 
+								fk_user) AS s ON s.fk_user = u.rowid ";
+				$sql .= " LEFT JOIN 
+							(SELECT 
+								fk_user, 
+								COALESCE(SUM(heure_nuit_50), 0) AS heure_nuit_50, 
+								COALESCE(SUM(heure_nuit_75), 0) AS heure_nuit_75, 
+								COALESCE(SUM(heure_nuit_100), 0) AS heure_nuit_100, 
+								COALESCE(SUM(d1), 0) AS regul_d1, 
+								COALESCE(SUM(d2), 0) AS regul_d2, 
+								COALESCE(SUM(d3), 0) AS regul_d3, 
+								COALESCE(SUM(d4), 0) AS regul_d4, 
+								COALESCE(SUM(gd1), 0) AS regul_gd1, 
+								COALESCE(SUM(gd2), 0) AS regul_gd2, 
+								COALESCE(SUM(repas1), 0) AS regul_repas1, 
+								COALESCE(SUM(repas2), 0) AS regul_repas2, 
+								COALESCE(SUM(indemnite_tt), 0) AS regul_indemnite_tt,
+								COALESCE(SUM(heure_route), 0) AS regul_heure_route,
+								COALESCE(SUM(kilometres), 0) AS regul_kilometres
+							FROM 
+								llx_feuilledetemps_regul 
+							WHERE 
+								date_format(date,'%Y%m') = '".$array_filterValue["fdt.date_debut"]."' 
+							GROUP BY 
+								fk_user) AS r ON r.fk_user = u.rowid";
+				$sql .= " LEFT JOIN 
+							(SELECT 
+								fk_user, 
+								COALESCE(SUM(CASE WHEN type_deplacement = 1 THEN 1 ELSE 0 END), 0) AS d1, 
+								COALESCE(SUM(CASE WHEN type_deplacement = 2 THEN 1 ELSE 0 END), 0) AS d2, 
+								COALESCE(SUM(CASE WHEN type_deplacement = 3 THEN 1 ELSE 0 END), 0) AS d3, 
+								COALESCE(SUM(CASE WHEN type_deplacement = 4 THEN 1 ELSE 0 END), 0) AS d4, 
+								COALESCE(SUM(CASE WHEN (type_deplacement = 5 OR type_deplacement = 8 OR type_deplacement = 9) THEN 1 ELSE 0 END), 0) AS gd1, 
+								COALESCE(SUM(CASE WHEN type_deplacement = 6 THEN 1 ELSE 0 END), 0) AS gd2 
+							FROM 
+								llx_feuilledetemps_deplacement 
+							WHERE 
+								date_format(date,'%Y%m') = '".$array_filterValue["fdt.date_debut"]."' 
+							GROUP BY 
+								fk_user) AS d ON d.fk_user = u.rowid";
+			}
+			else {
+				$sql .= " LEFT JOIN llx_feuilledetemps_silae AS silae ON silae.fk_user = u.rowid AND date_format(silae.date,'%Y%m') = '".$array_filterValue["fdt.date_debut"]."'";
+				$sql .= " LEFT JOIN llx_feuilledetemps_silae_extrafields AS silae_extrafields ON silae_extrafields.fk_object = silae.rowid";
+			}
 		}
 		elseif($datatoexport == 'absences') {
 			$sql .= " LEFT JOIN llx_donneesrh_Positionetcoefficient_extrafields AS drh ON drh.fk_object = u.rowid";
@@ -843,7 +866,10 @@ class ExtendedExportFDT extends Export
 			$sql .= " AND date_format(s.date,'%Y%m') = date_format(fdt.date_debut,'%Y%m') AND date_format(s.date,'%Y%m') = date_format(fdt.date_fin,'%Y%m')";
 		}
 
-		$sql .= " WHERE 1 = 1 AND u.statut = 1 AND eu.employeur = 1";
+		$sql .= " WHERE 1 = 1 AND u.statut = 1";
+		if($conf->global->FDT_MANAGE_EMPLOYER) {
+			$sql .= " AND eu.employeur = 1";
+		}
 		if($datatoexport == 'analytique_pourcentage'){
 			$sql .= " AND tt.elementtype = 'task'";
 		}
