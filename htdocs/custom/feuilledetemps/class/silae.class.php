@@ -1225,6 +1225,13 @@ class Silae extends CommonObject
                 $this->repas = $obj->repas;
                 $this->indemnite_tt = $obj->indemnite_tt;
 
+				$result = $this->fetch_optionals();
+				if ($result < 0) {
+					$this->error = $this->db->lasterror();
+					$this->errors[] = $this->error;
+					return -4;
+				}
+
                 $this->db->free($resql);
                 return 1;
             }

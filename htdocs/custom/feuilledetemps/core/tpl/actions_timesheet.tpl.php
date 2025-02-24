@@ -183,12 +183,17 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 						}
 						elseif(!$is_day_anticipe){		
 							$result = $timespent->delete($user);
+
+							$res = $heure_other->fetchWithoutId($timespent_tmp->timespent_id); // $res contient l'id du Projet_task_time_other correspondant, si celui-ci existe
+							if ($res > 0){
+								$result = $heure_other->delete($user);
+							}
 						}
 					}
 					// Si le temps consommé existe déja et qu'il y a au moins une modification
-					else if($timespent_tmp->timespent_id > 0 && ($timespent_tmp->timespent_duration != $newduration || $timespent->fk_element != $fk_task[$day][$cpt])){
+					else if($timespent_tmp->timespent_id > 0 && ($timespent_tmp->timespent_duration != $newduration || ($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0))){
 						// Agenda
-						if($timespent->fk_element != $fk_task[$day][$cpt]) {
+						if($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0) {
 							if($is_day_anticipe){
 								$new_value = formatValueForAgenda('duration', 0);
 								$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
@@ -219,7 +224,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							}
 						}
 					
-						if($timespent->fk_element != $fk_task[$day][$cpt]) {
+						if($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0) {
 							$tmpnote = $timespent->note;
 
 							$res_del = $timespent->delete($user);
@@ -247,6 +252,12 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							$timespent->thm = $usertoprocess->thm;
 
 							$result = $timespent->create($user);
+
+							$res = $heure_other->fetchWithoutId($timespent_tmp->timespent_id); // $res contient l'id du Projet_task_time_other correspondant, si celui-ci existe
+							if ($res > 0){
+								$heure_other->fk_projet_task_time = $result;
+								$result = $heure_other->update($user);
+							}
 
 							$timespent_month[$tmpday][$cpt]->timespent_id = $result;
 							$timespent_tmp = $timespent_month[$tmpday][$cpt];
@@ -307,6 +318,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 					}
 				}
 			}
+
 
 
 
@@ -462,8 +474,13 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 		$extrafields->fetch_name_optionals_label($silae->table_element);
 		$res = $silae->fetchSilaeWithoutId($tmpday, $usertoprocess->id);
 		$has_modif = 0;
+		$all_field_null = 1;
 		
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			if($key_post[$day] !== null || !empty($silae->key)) {
+				$all_field_null = 0;
+			}
+
 			if (dol_eval($extrafields->attributes[$silae->table_element]['list'][$key], 1, 1, '2') != 1) {
 				continue;
 			}
@@ -489,9 +506,9 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 		}
 
 		// S'il existe une ligne et que tous les champs sont = null
-		// if($res > 0 ) {
-		// 		$result = $silae->delete($user);
-		// }
+		if($res > 0 && $all_field_null && empty($silae->heure_sup00) && empty($silae->heure_sup25) && empty($silae->heure_sup50) && empty($silae->heure_sup50ht)) {
+				$result = $silae->delete($user);
+		}
 		// S'il existe une ligne et qu'au moins un champ a été modifié
 		if($res > 0 && $has_modif) {
 			$result = $silae->update($user);
@@ -512,55 +529,6 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	}
 
 	if (!$error) {
-		// $mail_hs = 0;
-
-		// $timeDoneByWeekAfter = $object->timeDoneByWeek(($object->fk_user ? $object->fk_user : $usertoprocess->id));
-
-		// foreach($timeDoneByWeekAfter as $semaine => $temps){
-		// 	if($temps > $heure_semaine_hs && $timeDoneByWeekBefore[$semaine] <= $heure_semaine_hs){ // Si il y a une semaine avec des hs et que ce n'était pas le cas avant les modifications
-		// 		$mail_hs = 1;
-		// 	}
-		// }
-
-		// Envoi du mail si enregistrement de + de 35h ou - de 35h
-		// if($mail_hs && $object->status == FeuilleDeTemps::STATUS_DRAFT){
-		// 	$user_static = new User($db);
-
-		// 	// Le mail est envoyé aux responsables de tâche sur lequel l'utilisateur a pointé
-		// 	$to = "";
-		// 	foreach($timetoadd as $taskid => $val){
-		// 		$task->fetch($taskid);
-		// 		$liste_responsables_taches = $task->liste_contact(-1, 'internal', 1, 'TASKEXECUTIVE');
-
-		// 		foreach($liste_responsables_taches as $responsable_tache){
-		// 			$user_static->fetch($responsable_tache);
-		// 			if($user_static->statut == 1 && !empty($user_static->email)){
-		// 				$to .= $user_static->email.', ';
-		// 			}
-		// 		}
-		// 	}
-		// 	$to = rtrim($to, ", ");
-
-		// 	global $dolibarr_main_url_root;
-		// 	$subject = '[OPTIM Industries] Notification automatique Feuille de temps';
-		// 	$from = 'erp@optim-industries.fr';
-		// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-		// 	$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-		// 	$link = '<a href="'.$urlwithroot.'/custom/feuilledetemps/feuilledetemps_card.php?id='.$object->id.'">ici</a>';
-		// 	// if($mail_hs && $mail_hm) {
-		// 	// 	$msg = $langs->transnoentitiesnoconv("EMailTextHSAndHM", $usertoprocess->firstname, $usertoprocess->lastname, dol_print_date($object->date_fin, '%B'), $link);
-		// 	// }
-		// 	$msg = $langs->transnoentitiesnoconv("EMailTextHS", $usertoprocess->firstname, $usertoprocess->lastname, dol_print_date($object->date_fin, '%B'), $link);
-		// 	// elseif ($mail_hm) {
-		// 	// 	$msg = $langs->transnoentitiesnoconv("EMailTextHM", $usertoprocess->firstname, $usertoprocess->lastname, dol_print_date($object->date_fin, '%B'), $link);
-		// 	// }
-			
-		// 	$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
-		// 	if (!empty($to)){
-		// 		$res = $mail->sendfile();
-		// 	}			
-		// }
-
 		// Si le feuille de temps existe et que des modifications ont été réalisé
 		if($object->id > 0 && ($modification != '<ul>' || $modification_deplacement != '<ul>')){
 			$modification .= '</ul>';
@@ -578,66 +546,6 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 				$object->actionmsg = $modification_deplacement;
 				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
 			}
-
-			// Mail lors de modification des temps après une 1er validation
-			// if($object->id) {
-			// 	$list_resp_task = $object->listApprover1;
-			// 	if(in_array(1, $list_resp_task[1])){
-			// 		$resp_task_valide = 1;
-			// 	}
-			// 	else {
-			// 		$resp_task_valide = 0;
-			// 	}
-
-			// 	$to = '';
-			// 	if(($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && $resp_task_valide) || $object->status == FeuilleDeTemps::STATUS_APPROBATION2 || $object->status == FeuilleDeTemps::STATUS_VALIDATED){
-			// 		$user_static = new User($db);
-
-			// 		$user_static->fetch($object->fk_user);
-			// 		if(!empty($user_static->email)){
-			// 			$to .= $user_static->email.', ';
-			// 		}
-
-			// 		$list_validation = $object->listApprover1;
-			// 		foreach($list_validation[2] as $id => $user_static){
-			// 			if(!empty($user_static->email) && $list_validation[1][$id] == 1){
-			// 				$to .= $user_static->email.', ';
-			// 			}
-			// 		}
-
-			// 		if($object->status == FeuilleDeTemps::STATUS_VALIDATED || $object->status == FeuilleDeTemps::STATUS_APPROBATION2){
-			// 			$list_validation = $object->listApprover2;
-			// 			foreach($list_validation[2] as $id => $user_static){
-			// 				if(!empty($user_static->email) && $list_validation[1][$id] == 1){
-			// 					$to .= $user_static->email.', ';
-			// 				}
-			// 			}
-			// 		}
-			// 	}
-			// 	$to = rtrim($to, ", ");
-
-			// 	global $dolibarr_main_url_root;
-			// 	$subject = '[OPTIM Industries] Notification automatique Feuille de temps';
-			// 	$from = 'erp@optim-industries.fr';
-			// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-			// 	$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-			// 	$link = '<a href="'.$urlwithroot.'/custom/feuilledetemps/feuilledetemps_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-
-			// 	if($modification != '<ul>' && $modification_deplacement != '<ul>') {
-			// 		$msg = $langs->transnoentitiesnoconv("EMailTextModifHeure", $link, $modification.$modification_deplacement);
-			// 	}
-			// 	else if($modification_deplacement != '<ul>') {
-			// 		$msg = $langs->transnoentitiesnoconv("EMailTextModifHeure", $link, $modification_deplacement);
-			// 	}
-			// 	else if($modification != '<ul>') {
-			// 		$msg = $langs->transnoentitiesnoconv("EMailTextModifHeure", $link, $modification);
-			// 	}
-
-			// 	$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
-			// 	if (!empty($to) && !empty($msg)){
-			// 		$res = $mail->sendfile();
-			// 	}
-			// }
 		}
 
 		if($object->id > 0 && ($modification_anticipe != '<ul>' || $modification_anticipe_deplacement != '<ul>')) {
@@ -705,7 +613,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	}
 	
 }
-elseif ($action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
+elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
 	// Création de la feuille de temps au 1er enregistrement
 	if($object->id == 0) {
 		$object->ref = "FDT_".str_pad($usertoprocess->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date($lastdaytoshow, '%m%Y');
@@ -1735,7 +1643,192 @@ if ($action == 'updateObservation' && $permissionToVerification) {
 }
 
 // Enregistrement des vérifications
-if ($action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
+if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
+	$holiday = new extendedHoliday($db);
+	// $regul = new Regul($db);
+	// $resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
+	
+	// $holiday_type = $_POST['holiday_type'];
+	// $holiday_id = $_POST['holiday_id'];
+	// $holiday_valide = $_POST['holiday_valide'];
+
+	// $regulD1 = ($_POST['regulD1'] > 0 || $_POST['regulD1'] < 0 ? $_POST['regulD1'] : null);
+	// $regulD2 = ($_POST['regulD2'] > 0 || $_POST['regulD2'] < 0  ? $_POST['regulD2'] : null);
+	// $regulD3 = ($_POST['regulD3'] > 0 || $_POST['regulD3'] < 0  ? $_POST['regulD3'] : null);
+	// $regulD4 = ($_POST['regulD4'] > 0 || $_POST['regulD4'] < 0  ? $_POST['regulD4'] : null);
+	// $regulGD1 = ($_POST['regulGD1'] > 0 || $_POST['regulGD1'] < 0 ? $_POST['regulGD1'] : null);
+	// $regulGD2 = ($_POST['regulGD2'] > 0 || $_POST['regulGD2'] < 0  ? $_POST['regulGD2'] : null);
+	// $regulHeureRoute = ($_POST['regulHeureRoute'] > 0 || $_POST['regulHeureRoute'] < 0  ? $_POST['regulHeureRoute'] : null);
+	// $regulRepas1 = ($_POST['regulRepas1'] > 0 || $_POST['regulRepas1'] < 0  ? $_POST['regulRepas1'] : null);
+	// $regulRepas2 = ($_POST['regulRepas2'] > 0 || $_POST['regulRepas2'] < 0  ? $_POST['regulRepas2'] : null);
+	// $regulKilometres = ($_POST['regulKilometres'] > 0 || $_POST['regulKilometres'] < 0  ? price2num($_POST['regulKilometres']) : null);
+	// $regulIndemniteTT = ($_POST['regulIndemniteTT'] > 0 || $_POST['regulIndemniteTT'] < 0  ? $_POST['regulIndemniteTT'] : null);
+	// $regulHeureSup00 = ($regul->heure_sup00 != 0 ? (double)$regul->heure_sup00 : 0);
+	// $regulHeureSup25 = ($regul->heure_sup25 != 0 ? (double)$regul->heure_sup25 : 0);
+	// $regulHeureSup50 = ($regul->heure_sup50 != 0 ? (double)$regul->heure_sup50 : 0);
+	// $regulHeureSup50HT = ($regul->heure_sup50ht != 0 ? (double)$regul->heure_sup50ht : 0);
+
+	$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
+
+	$modification_silae = '<ul>';
+
+	// Gestion des congés 
+	// foreach($holiday_type as $key => $type) {
+	// 	$holiday->fetch($holiday_id[$key]);
+		
+	// 	if($holiday->fk_type != $type) {
+	// 		$needHour = $holiday->holidayTypeNeedHour($type);
+
+	// 		if($needHour && date("W", $holiday->date_debut) != date("W", $holiday->date_fin)) {
+	// 			setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
+	// 			$error++;
+	// 			break;
+	// 		}
+
+	// 		if($needHour && $holiday->date_debut != $holiday->date_fin && $holiday->halfday != 0) {
+	// 			setEventMessages($langs->trans("ErrorHalfdayHoliday"), null, 'errors');
+	// 			$error++;
+	// 			break;
+	// 		}
+
+	// 		// If no hour and hour is required
+	// 		if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
+	// 			$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
+	// 			$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+	// 			if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt'])|| dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+	// 				$duration_hour += 3.5 * 3600;
+	// 			}
+	// 			elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+	// 				$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
+	// 			}
+	// 			elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
+	// 				$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
+	// 			}
+	// 			$holiday->array_options['options_hour'] = $duration_hour;
+	// 		}
+	// 		elseif(!empty($holiday->array_options['options_hour']) && !$needHour) {
+	// 			$holiday->array_options['options_hour'] = null;
+	// 		}
+
+	// 		if(!$error) {
+	// 			$holiday->fk_type = $type;
+	// 			$result = $holiday->updateExtended($user);
+
+	// 			if ($result < 0) {
+	// 				setEventMessages($holiday->error, $holiday->errors, 'errors');
+	// 				$error++;
+	// 				break;
+	// 			}
+	// 		}
+	// 	}
+
+	// 	if($conf->global->FDT_STATUT_HOLIDAY && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
+	// 		$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
+	// 		if(in_array($holiday->fk_type, $exclude_type)) {
+	// 			$holiday->array_options['options_statutfdt'] = 3;
+	// 		}
+	// 		else {
+	// 			$holiday->array_options['options_statutfdt'] = 2;
+	// 		}
+	// 		$result = $holiday->updateExtended($user);
+	// 	}
+
+	// 	if($conf->global->FDT_STATUT_HOLIDAY && empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
+	// 		$holiday->array_options['options_statutfdt'] = 1;
+	// 		$result = $holiday->updateExtended($user);
+	// 	}
+	// }
+
+	for ($idw = 0; $idw < $nb_jour; $idw++) {
+
+		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
+
+		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
+		$silae = new Silae($db);
+	
+		// Calcul auto des heures sup
+		if((!empty(GETPOST('task')) || !empty(GETPOST('heure_nuit')) || !empty($holiday_type)) && dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
+			$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
+			$heure_sup00_before = $silae->heure_sup00;
+			$heure_sup25_before = $silae->heure_sup25;
+			$heure_sup50_before = $silae->heure_sup50;
+			$heure_sup50ht_before = $silae->heure_sup50ht;
+
+			$silae->date = $dayinloopfromfirstdaytoshow;
+			$silae->fk_user = $object->fk_user;
+			$silae->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
+
+			if($heure_sup00_before != $silae->heure_sup00) {
+				$new_value = formatValueForAgenda('double', $silae->heure_sup00 / 3600);
+				$old_value = formatValueForAgenda('double', $heure_sup00_before / 3600);
+
+				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+			}
+
+			// Agenda Heure Sup 25%
+			if($heure_sup25_before != $silae->heure_sup25) {
+				$new_value = formatValueForAgenda('double', $silae->heure_sup25 / 3600);
+				$old_value = formatValueForAgenda('double', $heure_sup25_before / 3600);
+
+				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+			}
+
+			// Agenda Heure Sup 50%
+			if($heure_sup50_before != $silae->heure_sup50) {
+				$new_value = formatValueForAgenda('double', $silae->heure_sup50 / 3600);
+				$old_value = formatValueForAgenda('double', $heure_sup50_before / 3600);
+
+				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+			}
+
+			// Agenda Heure Sup 50% HT
+			if($heure_sup50ht_before != $silae->heure_sup50ht) {
+				$new_value = formatValueForAgenda('double', $silae->heure_sup50ht / 3600);
+				$old_value = formatValueForAgenda('double', $heure_sup50ht_before / 3600);
+
+				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 50% HT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+			}
+			
+			if($dayinloopfromfirstdaytoshow < $first_day_month) {
+				$regulHeureSup00 += ((double)$silae->heure_sup00 - (double)$heure_sup00_before);
+				$regulHeureSup25 += ((double)$silae->heure_sup25 - (double)$heure_sup25_before);
+				$regulHeureSup50 += ((double)$silae->heure_sup50 - (double)$heure_sup50_before);
+				$regulHeureSup50HT += ((double)$silae->heure_sup50ht - (double)$heure_sup50ht_before);
+			}
+
+			if($res > 0) {
+				$silae->update($user);
+			}
+			elseif($res == 0) {
+				$silae->create($user);
+			}
+			else {
+				$error++;
+			}
+		}
+	}
+
+	if (!$error) {
+		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+
+		// Si le feuille de temps existe et que des modifications ont été réalisé
+		if($object->id > 0 && $modification_silae != '<ul>'){
+			$modification_silae .= '</ul>';
+			if($modification_silae != '<ul></ul>') {
+				$object->actiontypecode = 'AC_FDT_VERIF';
+				$object->actionmsg2 = "Mise à jour des données de vérification de la feuille de temps $object->ref";
+				$object->actionmsg = $modification_silae;
+				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
+			}
+		}
+
+		// Redirect to avoid submit twice on back
+		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+		exit;
+	}
+	
+}
+elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
 	$holiday = new extendedHoliday($db);
 	$regul = new Regul($db);
 	$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);

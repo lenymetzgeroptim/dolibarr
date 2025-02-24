@@ -131,7 +131,7 @@ class ExtendedFormProjets extends FormProjets
 					if ($socid > 0 && (empty($obj->fk_soc) || $obj->fk_soc == $socid) && !$usertofilter->hasRight('societe', 'lire')) {
 						// Do nothing
 					} else {
-						if ($discard_closed == 1 && $obj->fk_statut == Project::STATUS_CLOSED) {
+						if ($discard_closed == 1 && $obj->fk_statut == Project::STATUS_CLOSED && $selected != $obj->rowid) {
 							$i++;
 							continue;
 						}
@@ -182,9 +182,28 @@ class ExtendedFormProjets extends FormProjets
 							$titletoshow .= ' - ';
 						}
 
+						if (preg_match('/projectstatut/', $showmore)) {
+							$disabled = 0;
+							if ($obj->fk_statut == Project::STATUS_DRAFT) {
+								$disabled = 1;
+								$labeltoshow .= $langs->trans("Draft").' - ';
+								$titletoshow .= '<span class="opacitymedium">' . $langs->trans("Draft") . '</span>'.' - ';
+							} elseif ($obj->fk_statut == Project::STATUS_CLOSED) {
+								if ($discard_closed == 2) {
+									$disabled = 1;
+								}
+								$labeltoshow .= $langs->trans("Closed").' - ';
+								$titletoshow .= '<span class="opacitymedium">' . $langs->trans("Closed") . '</span>'.' - ';
+							} elseif ($socid > 0 && (!empty($obj->fk_soc) && $obj->fk_soc != $socid)) {
+								$disabled = 1;
+								$labeltoshow .= $langs->trans("LinkedToAnotherCompany").' - ';
+								$titletoshow .= '<span class="opacitymedium">' . $langs->trans("LinkedToAnotherCompany") . '</span>'.' - ';
+							}
+						}
+
 						// Label for task
-						$labeltoshow .= $obj->tref . ' ' . dol_trunc($obj->tlabel, $maxlength);
-						$titletoshow .= $obj->tref . ' ' . dol_trunc($obj->tlabel, $maxlength);
+						$labeltoshow .= /*$obj->tref . ' ' .*/ dol_trunc($obj->tlabel, $maxlength);
+						$titletoshow .= /*$obj->tref . ' ' .*/ dol_trunc($obj->tlabel, $maxlength);
 						if ($obj->usage_task && preg_match('/progress/', $showmore)) {
 							$labeltoshow .= ' <span class="opacitymedium">(' . $obj->progress . '%)</span>';
 							$titletoshow .= ' <span class="opacitymedium">(' . $obj->progress . '%)</span>';

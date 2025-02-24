@@ -164,7 +164,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return 1;
 				}
 				else{
-					return -1;
+					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
+					return 0;
 				}
 		
 			
@@ -203,7 +204,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return 1;
 				}
 				else{
-					return -1;
+					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
+					return 0;
 				}
 
 
@@ -234,7 +236,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return 1;
 				}
 				else{
-					return -1;
+					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
+					return 0;
 				}
 				
 			case 'USER_CREATE':

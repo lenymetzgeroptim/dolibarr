@@ -253,15 +253,52 @@ function screenFDT(url, name) {
 
 function disableNullInput(columnmode) {
     if(columnmode) {
-        $('form[name="addtime"] input[type="text"][id^="timeadded"], form[name="addtime"] input[type="text"][id^="time_heure_nuit"], form[name="addtime"] input[type="text"][id^="site"], form[name="addtime"] input[type="text"], form[name="addtime"] input[type="checkbox"]').each(function (index, obj) {
+        $('form[name="addtime"] input[type="text"][id^="timeadded"]:not(:disabled), form[name="addtime"] input[type="text"][id^="time_heure_nuit"]:not(:disabled), form[name="addtime"] input[type="text"][id^="site"]:not(:disabled), form[name="addtime"] input[type="text"]:not(:disabled):not( #search_project_ref):not(#search_thirdparty):not(#search_task_label):not(#re)').each(function (index, obj) {
             if (obj.defaultValue == obj.value && !obj.parentNode.classList.contains('prefilling_time')) {
                 $(obj).prop('disabled', true);
             }
         });
 
-        $('form[name="addtime"] textarea[name^="note"]').each(function (index, obj) {
+        $('form[name="addtime"] textarea[name^="note"]:not(:disabled)').each(function (index, obj) {
             if (obj.defaultValue == obj.value) {
                 $(obj).prop('disabled', true);
+            }
+        });
+
+        $('form[name="addtime"] select:not(:disabled):not(#search_usertoprocessid)').each(function () {
+            let initialValue = $(this).find("option[selected]").val(); 
+            let currentValue = $(this).val(); 
+
+            if(initialValue == undefined) initialValue = '0'
+            
+            if (initialValue === currentValue) {
+                $(this).prop("disabled", true); 
+            }
+        });
+
+        $('form[name="addtime"] input[type="text"][id^="timeadded"]:disabled').each(function (index, obj) {
+            let id = $(obj).attr("id"); 
+            let matches = id.match(/timeadded\[(\d+)\]\[(\d+)\]/);
+
+            if (matches) {
+                let day = matches[1];
+                let cpt = matches[2];
+
+                let fk_task_obj = $("#" + `fk_task_${day}_${cpt}`);
+                
+                let initialValue = fk_task_obj.find("option[selected]").val(); 
+                let currentValue = fk_task_obj.val(); 
+
+
+                if(initialValue == undefined) initialValue = '0'
+
+                console.log(initialValue)
+                console.log(currentValue)
+                console.log(initialValue !== currentValue)
+
+                if (initialValue !== currentValue) {
+                    $(obj).prop('disabled', false);
+                }
             }
         });
     }
@@ -423,8 +460,10 @@ function updateTotalSigedi(object, key, type) {
         }
     }
     else {
-        if(object.oldvalue) total -= parseFloat(object.oldvalue)
-        if(object.value) total += parseFloat(object.value)
+        if(object.oldvalue && parseFloat(object.oldvalue) > 0.00 && !object.parentNode.classList.contains('prefilling_time')) total -= parseFloat(object.oldvalue)
+        if(object.value && parseFloat(object.value) > 0.00) total += parseFloat(object.value)
+
+        total = parseFloat(total).toFixed(2);
 
         if(type == 'price') {
             total += " €" 
@@ -608,10 +647,10 @@ function updateTotal_TS(object, days, mode, num_task, num_first_day = 0, holiday
     }
     else if (mode == "hours_decimal") {
         var total = 0;
-        if (object.value != object.oldvalue) {
+        if (object.value != object.oldvalue || object.parentNode.classList.contains('prefilling_time')) {
             total += parseFloat(jQuery('.totalDay' + days).text());
-            if(object.oldvalue) total -= parseFloat(parseFloat(object.oldvalue).toFixed(2));
-            if(object.value) total += parseFloat(parseFloat(object.value).toFixed(2));
+            if(object.oldvalue && parseFloat(parseFloat(object.oldvalue).toFixed(2)) > 0.00 && !object.parentNode.classList.contains('prefilling_time')) total -= parseFloat(parseFloat(object.oldvalue).toFixed(2));
+            if(object.value && parseFloat(parseFloat(object.value).toFixed(2)) > 0.00) total += parseFloat(parseFloat(object.value).toFixed(2));
 
             /* Output total in top of column */
             if (total > 0.00) jQuery('.totalDay' + days).addClass("bold");

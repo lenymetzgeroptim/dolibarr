@@ -203,6 +203,8 @@ $item = $formSetup->newItem('FDT_SHORTCUT_HOLIDAY')->setAsYesNo();
 // FDT_GENERATE_TASK_PROJECTCREATION
 $item = $formSetup->newItem('FDT_GENERATE_TASK_PROJECTCREATION')->setAsYesNo();
 
+// FDT_SCREEN_VERIFICATION
+$item = $formSetup->newItem('FDT_SCREEN_VERIFICATION')->setAsYesNo();
 
 
 // Titre FDT_STANDARD_WEEK

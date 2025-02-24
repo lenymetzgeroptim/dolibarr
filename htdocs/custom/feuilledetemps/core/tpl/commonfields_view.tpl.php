@@ -435,7 +435,7 @@ if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 	print '</div>';
 }
 
-if (!empty($object->table_element_line) && $permissionToVerification) {
+if (!empty($object->table_element_line) && $permissionToVerification && $conf->donneesrh->enabled) {
 	// Show object lines
 	$result = $object->getLinesArray();
 

@@ -1414,7 +1414,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$totalforday += (int)$timespent->timespent_duration;
 			$total_array['heure_jour'] += (int)$timespent->timespent_duration;
 
-			if($cpt == 0 && $mode == 'timesheet' && !$disabled && empty($timespent) && empty($timeHoliday[(int)$weekNumber]) && empty($timeSpentWeek[(int)$weekNumber])) {
+			if($cpt == 0 && $mode == 'timesheet' && !$disabled && empty($timespent) && empty($timeHoliday[(int)$weekNumber]) && empty($timeSpentWeek[(int)$weekNumber]) && !empty($standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')])) {
 				$timespent->timespent_duration = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
 				$class_timespent .= ' prefilling_time';
 				$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
@@ -1456,13 +1456,15 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 									 class="center smallpadd time_'.$idw.'" size="2" id="timeadded['.$idw.']['.$cpt.']" name="task['.$idw.']['.$cpt.']" value="'.$alreadyspent.'" 
 									 cols="2"  maxlength="5"';
 			$tableCellTimespent .= ' onfocus="this.oldvalue = this.value; this.oldvalue_focus = this.value;"';
-			$tableCellTimespent .= ' onkeypress="deletePrefillingClass(this); return regexEvent_TS(this,event,\'timeChar\');"';
-			$tableCellTimespent .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); this.oldvalue = this.value;
-									 updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');"';
+			$tableCellTimespent .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
+			$tableCellTimespent .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalSigedi(this, \'heure_jour\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\'); this.oldvalue = this.value;
+									 updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
+									 deletePrefillingClass(this);"';
 			$tableCellTimespent .= ' onblur="regexEvent_TS(this,event,\''.$modeinput.'\'); validateTime(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.', 0,\''.$type_deplacement.'\', '.$tmp_heure_semaine_hs.', 0, '.$heure_max_jour.', '.$heure_max_semaine.');
-									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
-									 autoFillSite(\''.$fuser->array_options['options_sitedefaut'].'\', '.$idw.', '.$cpt.')"';
+									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalSigedi(this, \'heure_jour\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\'); updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
+									 deletePrefillingClass(this); autoFillSite(\''.$fuser->array_options['options_sitedefaut'].'\', '.$idw.', '.$cpt.')"';
 								  // validateTime_HS(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.', 0, 0, 0, 0, '.$tmp_heure_semaine_hs.');"';
+			//$tableCellTimespent .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
 			$tableCellTimespent .= '	/>';
 
 			$tableCellTimespent .= '</div>';
@@ -1485,10 +1487,10 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 									value="'.$heure_nuit.'" cols="2"  maxlength="5"';
 			$tableCellHeureNuit .= ' onfocus="this.oldvalue = this.value; this.oldvalue_focus = this.value;"';
 			$tableCellHeureNuit .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\')"';
-			$tableCellHeureNuit .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); this.oldvalue = this.value;
+			$tableCellHeureNuit .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\'); this.oldvalue = this.value;
 									 updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');"';
 			$tableCellHeureNuit .= ' onblur="regexEvent_TS(this,event,\''.$modeinput.'\'); validateTime(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.', 0,\''.$type_deplacement.'\', '.$tmp_heure_semaine_hs.', 0, '.$heure_max_jour.', '.$heure_max_semaine.');
-									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
+									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\'); updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
 									 autoFillSite(\''.$fuser->array_options['options_sitedefaut'].'\', '.$idw.', '.$cpt.')"';
 			$tableCellHeureNuit .= ' />';
 			$tableCellHeureNuit .= '</div>';
@@ -1503,7 +1505,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 			// Affaires
-			$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width300', '', '', null, 'fk_task_'.$idw.'_'.$cpt);
+			$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width300', '', 'projectstatut', null, 'fk_task_'.$idw.'_'.$cpt);
 			//print $formproject->select_projects(-1, $timespent->fk_project, 'fk_project['.$idw.']', 0, 0, 1, 1, 0, $disabled, 0, '', 1, 0, 'maxwidth500', 'fk_project_'.$idw);
 			$tableCellAffaire .= '</div>';
 
@@ -1585,10 +1587,13 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
 				$moreparam .= ' maxlength="5"';
 				$moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
-				$moreparam .= ($disabled ? ' disabled' : '');
-				
+				//$moreparam .= ($disabled ? ' disabled' : '');
+				$moreparam .= ' disabled';
+
 				print '<td class="center'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-					print $silae->showInputField($value, $key, ($silae->$key / 3600), $moreparam, '['.$idw.']');
+					if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim' || !empty($silae->$key)) {
+						print $silae->showInputField($value, $key, ($silae->$key / 3600), $moreparam, '['.$idw.']');
+					}
 				print '</td>';
 				$total_array[$key] += $silae->$key;
 			}
