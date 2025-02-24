@@ -144,6 +144,45 @@ if($object->id > 0) {
 if (empty($conf->holidaycustom->enabled)) accessforbidden();
 //$result = restrictedArea($user, 'holidaycustom', $object->id, 'holiday', '', '', 'rowid', $object->statut);
 
+if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+	if($conf->donneesrh->enabled) {
+		$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+		$userField = new UserField($db);
+		$userField->id = $usertoprocess->id;
+		$userField->table_element = 'donneesrh_Positionetcoefficient';
+		$userField->fetch_optionals();
+
+		$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+		$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
+		$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	}
+	else {
+		$heure_semaine = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+		$heure_semaine = (!empty($usertoprocess->array_options['options_horairehebdomadaire']) ? $usertoprocess->array_options['options_horairehebdomadaire'] : $heure_semaine);
+		$heure_semaine_hs = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	}
+
+	// Semaine type
+	$standard_week_hour = array();
+	if($heure_semaine == $conf->global->HEURE_SEMAINE_NO_RTT) {
+		$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
+		$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_NO_RTT * 3600;
+		$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT * 3600;
+		$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_NO_RTT * 3600;
+		$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_NO_RTT * 3600;
+		$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_NO_RTT * 3600;
+		$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_NO_RTT * 3600;
+	}
+	else {
+		$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_WITH_RTT * 3600;
+		$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_WITH_RTT * 3600;
+		$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT * 3600;
+		$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_WITH_RTT * 3600;
+		$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_WITH_RTT * 3600;
+		$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_WITH_RTT * 3600;
+		$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_WITH_RTT * 3600;
+	}
+}
 
 /*
  * Actions
@@ -401,7 +440,16 @@ if (empty($reshook)) {
 				}
 				elseif($needHour && $date_debut != $date_fin) {
 					$nbDay = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1);
-					$duration_hour = $nbDay * 7 * 3600;
+					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+						$duration_hour = 0;
+						for($i = 0; $i < $nbDay; $i++) {
+							$tmpday = dol_time_plus_duree($date_debut_gmt, $i, 'd');
+							$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
+						}
+					}
+					else {
+						$duration_hour = $nbDay * 7 * 3600;
+					}
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 
@@ -941,8 +989,16 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 				elseif($needHour && $date_debut != $date_fin) {
-					$nbDay = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $halfday);
-					$duration_hour = $nbDay * 7 * 3600;
+					$nbDay = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1);
+					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+						for($i = 0; $i < $nbDay; $i++) {
+							$tmpday = dol_time_plus_duree($date_debut_gmt, $i, 'd');
+							$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
+						}
+					}
+					else {
+						$duration_hour = $nbDay * 7 * 3600;
+					}
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 
