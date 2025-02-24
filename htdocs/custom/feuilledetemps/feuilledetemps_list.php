@@ -164,7 +164,7 @@ foreach ($object->fields as $key => $val) {
 }
 
 // Definition of array of fields for columns
-if(!$user->rights->feuilledetemps->feuilledetemps->modify_verification) {
+if(!$user->rights->feuilledetemps->feuilledetemps->modify_verification || $conf->global->FDT_DISPLAY_COLUMN) {
 	unset($object->fields['prime_astreinte']);
 	unset($object->fields['prime_exceptionnelle']);
 	unset($object->fields['prime_objectif']);
@@ -192,8 +192,8 @@ include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 $object->fields = dol_sort_array($object->fields, 'position');
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
-$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read;
-$permissiontoadd = $user->rights->feuilledetemps->feuilledetemps->write;
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall;
+// $permissiontoadd = $user->rights->feuilledetemps->feuilledetemps->write;
 $permissiontodelete = $user->rights->feuilledetemps->feuilledetemps->delete;
 $permissionToVerification = $user->rights->feuilledetemps->feuilledetemps->modify_verification;
 
@@ -372,7 +372,7 @@ else {
 }
 
 
-if(/*!$user->admin &&*/ !$user->rights->feuilledetemps->feuilledetemps->read && $user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
+if(/*!$user->admin &&*/ !$user->rights->feuilledetemps->feuilledetemps->readall && $user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 	$user_hierarchy = $user->getAllChildIds(1);
 	$sql .= " AND (t.fk_user IN (".implode(', ', $user_hierarchy).")";
 	if($conf->global->FDT_USER_APPROVER) {
@@ -383,7 +383,7 @@ if(/*!$user->admin &&*/ !$user->rights->feuilledetemps->feuilledetemps->read && 
 	}
 	$sql .= " OR t.fk_user = ".$user->id.')';
 }
-else if(/*!$user->admin && */!$user->rights->feuilledetemps->feuilledetemps->read && !$user->rights->feuilledetemps->feuilledetemps->readHierarchy){
+else if(/*!$user->admin && */!$user->rights->feuilledetemps->feuilledetemps->readall && !$user->rights->feuilledetemps->feuilledetemps->readHierarchy){
 	if($conf->global->FDT_USER_APPROVER) {
 		$sql .= " AND (FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
 	}
@@ -874,25 +874,25 @@ print '</div>'."\n";
 
 print '</form>'."\n";
 
-if (in_array('builddoc', $arrayofmassactions) && ($nbtotalofrecords === '' || $nbtotalofrecords)) {
-	$hidegeneratedfilelistifempty = 1;
-	if ($massaction == 'builddoc' || $action == 'remove_file' || $show_files) {
-		$hidegeneratedfilelistifempty = 0;
-	}
+// if (in_array('builddoc', $arrayofmassactions) && ($nbtotalofrecords === '' || $nbtotalofrecords)) {
+// 	$hidegeneratedfilelistifempty = 1;
+// 	if ($massaction == 'builddoc' || $action == 'remove_file' || $show_files) {
+// 		$hidegeneratedfilelistifempty = 0;
+// 	}
 
-	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
-	$formfile = new FormFile($db);
+// 	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+// 	$formfile = new FormFile($db);
 
-	// Show list of available documents
-	$urlsource = $_SERVER['PHP_SELF'].'?sortfield='.$sortfield.'&sortorder='.$sortorder;
-	$urlsource .= str_replace('&amp;', '&', $param);
+// 	// Show list of available documents
+// 	$urlsource = $_SERVER['PHP_SELF'].'?sortfield='.$sortfield.'&sortorder='.$sortorder;
+// 	$urlsource .= str_replace('&amp;', '&', $param);
 
-	$filedir = $diroutputmassaction;
-	$genallowed = $permissiontoread;
-	$delallowed = $permissiontoadd;
+// 	$filedir = $diroutputmassaction;
+// 	$genallowed = $permissiontoread;
+// 	$delallowed = $permissiontoadd;
 
-	print $formfile->showdocuments('massfilesarea_feuilledetemps', '', $filedir, $urlsource, 0, $delallowed, '', 1, 1, 0, 48, 1, $param, $title, '', '', '', null, $hidegeneratedfilelistifempty);
-}
+// 	print $formfile->showdocuments('massfilesarea_feuilledetemps', '', $filedir, $urlsource, 0, $delallowed, '', 1, 1, 0, 48, 1, $param, $title, '', '', '', null, $hidegeneratedfilelistifempty);
+// }
 
 // End of page
 llxFooter();

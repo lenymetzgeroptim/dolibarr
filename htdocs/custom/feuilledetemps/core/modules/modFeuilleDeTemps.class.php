@@ -331,9 +331,14 @@ class modFeuilleDeTemps extends DolibarrModules
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-		$this->rights[$r][1] = 'Lire toutes les feuilles de temps';
+		$this->rights[$r][1] = 'Lire ses propres feuilles de temps';
 		$this->rights[$r][4] = 'feuilledetemps';
 		$this->rights[$r][5] = 'read';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
+		$this->rights[$r][1] = 'Lire toutes les feuilles de temps';
+		$this->rights[$r][4] = 'feuilledetemps';
+		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
 		$this->rights[$r][1] = 'Lire les feuilles de temps de sa sous-hiérarchie';

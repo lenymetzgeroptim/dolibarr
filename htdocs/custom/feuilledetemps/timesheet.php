@@ -284,6 +284,9 @@ $timeHoliday = $object->timeHolidayWeek($usertoprocess->id, $standard_week_hour)
 // Temps travaillé par semaine
 $timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
 
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read;
+if (!$permissiontoread) accessforbidden();
+
 /*
  * Actions
  */
@@ -512,7 +515,7 @@ $moreforfilter .= '<div class="divsearchfield">';
 $moreforfilter .= '<div class="inline-block hideonsmartphone"></div>';
 $projectListResp = $project->getProjectsAuthorizedForUser($user, 1, 1, 0, " AND ec.fk_c_type_contact = 160");
 $userList = $projectstatic->getUserForProjectLeader($projectListResp);
-if(!$user->rights->feuilledetemps->feuilledetemps->read) {
+if(!$user->rights->feuilledetemps->feuilledetemps->readall) {
 	if(!$conf->global->FDT_USER_APPROVER) {
 		$includeonly = array_merge($userList, $user->getAllChildIds(1));
 		if (empty($user->rights->user->user->lire)) {
@@ -521,7 +524,7 @@ if(!$user->rights->feuilledetemps->feuilledetemps->read) {
 	}
 	else {
 		$includeonly = $object->getUserImApprover();
-		if (in_array($user->id, $includeonly)) {
+		if (!in_array($user->id, $includeonly)) {
 			$includeonly[] = $user->id;
 		}
 	}
@@ -536,17 +539,17 @@ $moreforfilter .= '</div>';
 if (empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT)) {
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<div class="inline-block"></div>';
-	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Project'), 'project', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_project_ref" class="maxwidth100" value="'.dol_escape_htmltag($search_project_ref).'">';
+	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Project'), 'project', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_project_ref" id="search_project_ref" class="maxwidth100" value="'.dol_escape_htmltag($search_project_ref).'">';
 	$moreforfilter .= '</div>';
 
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<div class="inline-block"></div>';
-	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('ThirdParty'), 'company', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_thirdparty" class="maxwidth100" value="'.dol_escape_htmltag($search_thirdparty).'">';
+	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('ThirdParty'), 'company', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_thirdparty" id="search_thirdparty" class="maxwidth100" value="'.dol_escape_htmltag($search_thirdparty).'">';
 	$moreforfilter .= '</div>';
 
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<div class="inline-block"></div>';
-	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Task'), 'projecttask', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_task_label" class="maxwidth100" value="'.dol_escape_htmltag($search_task_label).'">';
+	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Task'), 'projecttask', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_task_label" id="search_task_label" class="maxwidth100" value="'.dol_escape_htmltag($search_task_label).'">';
 	$moreforfilter .= '</div>';
 
 	$moreforfilter .= '<div class="divsearchfield nowrap">';

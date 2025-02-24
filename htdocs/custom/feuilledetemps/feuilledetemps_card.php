@@ -199,7 +199,7 @@ if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 }
 
 $permissionToVerification = $user->rights->feuilledetemps->feuilledetemps->modify_verification;
-$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || $user->id == $object->fk_user;
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read);
 if($conf->global->FDT_USER_APPROVER) {
 	$permissiontoadd = $userIsResp || $user->admin || $permissionToVerification; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 }
@@ -1017,18 +1017,20 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// ------------------------------------------------------------
 	$linkback = '<a href="'.dol_buildpath('/feuilledetemps/feuilledetemps_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 	
-	$morehtmlref = '<span class="info_fdt inline-block">';
-	if($userInDeplacement) {
-		$morehtmlref .= 'D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
-		$morehtmlref .= '<br><br>';
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$morehtmlref = '<span class="info_fdt inline-block">';
+		if($userInDeplacement) {
+			$morehtmlref .= 'D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
+			$morehtmlref .= '<br><br>';
+		}
+		if($userInGrandDeplacement) {
+			$morehtmlref .= 'GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
+			$morehtmlref .= '<br><br>';
+		}	
+		$morehtmlref .= 'Les heures de route ne doivent pas être pointées';
+		$morehtmlref .= '</span>';
 	}
-	if($userInGrandDeplacement) {
-		$morehtmlref .= 'GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
-		$morehtmlref .= '<br><br>';
-	}	
-	$morehtmlref .= 'Les heures de route ne doivent pas être pointées';
-	$morehtmlref .= '</span>';
-	
+
 	$buttonAction = '';
 	// Buttons for actions
 	if ($action != 'presend' && $action != 'editline') {
@@ -1059,7 +1061,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		
 		if ($object->status == $object::STATUS_VERIFICATION) {
 			if($permissionToVerification) {
-				$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken().'\', \''.$object->ref.'_'.str_replace(array("'", " "), "", $usertoprocess->lastname).'_'.str_replace(array("'", " "), "", $usertoprocess->firstname).'\')" class="butAction classfortooltip" aria-label="Vérification" title="Vérification">Vérification</a>';
+				if($conf->global->FDT_SCREEN_VERIFICATION) {
+					$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken().'\', \''.$object->ref.'_'.str_replace(array("'", " "), "", $usertoprocess->lastname).'_'.str_replace(array("'", " "), "", $usertoprocess->firstname).'\')" class="butAction classfortooltip" aria-label="Vérification" title="Vérification">Vérification</a>';
+				}
+				else {
+					$buttonAction .= dolGetButtonAction($langs->trans('Vérification'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken(), '', $permissionToVerification);
+				}
 			}
 			$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=refus&token='.newToken(), '', $permissionToVerification);
 		}

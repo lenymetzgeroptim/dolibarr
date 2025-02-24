@@ -159,7 +159,7 @@ foreach ($object->fields as $key => $val) {
 }
 
 // Definition of array of fields for columns
-if(!$user->rights->feuilledetemps->feuilledetemps->modify_verification) {
+if(!$user->rights->feuilledetemps->feuilledetemps->modify_verification || $conf->global->FDT_DISPLAY_COLUMN) {
 	unset($object->fields['prime_astreinte']);
 	unset($object->fields['prime_exceptionnelle']);
 	unset($object->fields['prime_objectif']);
@@ -169,7 +169,7 @@ if(!$user->rights->feuilledetemps->feuilledetemps->modify_verification) {
 }
 $arrayfields = array();
 foreach ($object->fields as $key => $val) {
-	if(!$user->rights->feuilledetemps->feuilledetemps->modify_verification && ($key == 'prime_astreinte' || $key == 'prime_exceptionnelle' || $key == 'prime_objectif' || $key == 'prime_variable' || $key == 'prime_amplitude')) {
+	if((!$user->rights->feuilledetemps->feuilledetemps->modify_verification || $conf->global->FDT_DISPLAY_COLUMN) && ($key == 'prime_astreinte' || $key == 'prime_exceptionnelle' || $key == 'prime_objectif' || $key == 'prime_variable' || $key == 'prime_amplitude')) {
 		continue;
 	}
 	// If $val['visible']==0, then we never show the field
@@ -190,9 +190,8 @@ include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 $object->fields = dol_sort_array($object->fields, 'position');
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
-$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read;
-$permissiontoread_listeResponsable = $user->rights->feuilledetemps->feuilledetemps->read_listeResponsable;
-$permissiontoadd = $user->rights->feuilledetemps->feuilledetemps->write;
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read_listeResponsable;
+// $permissiontoadd = $user->rights->feuilledetemps->feuilledetemps->write;
 $permissiontodelete = $user->rights->feuilledetemps->feuilledetemps->delete;
 
 // Security check
@@ -207,7 +206,7 @@ if ($user->socid > 0) accessforbidden();
 //$isdraft = (($object->status == $object::STATUS_DRAFT) ? 1 : 0);
 //restrictedArea($user, $object->element, $object->id, $object->table_element, '', 'fk_soc', 'rowid', $isdraft);
 //if (empty($conf->feuilledetemps->enabled)) accessforbidden();
-if (!$permissiontoread_listeResponsable) accessforbidden();
+if (!$permissiontoread) accessforbidden();
 
 
 
@@ -834,25 +833,25 @@ print '</div>'."\n";
 
 print '</form>'."\n";
 
-if (in_array('builddoc', $arrayofmassactions) && ($nbtotalofrecords === '' || $nbtotalofrecords)) {
-	$hidegeneratedfilelistifempty = 1;
-	if ($massaction == 'builddoc' || $action == 'remove_file' || $show_files) {
-		$hidegeneratedfilelistifempty = 0;
-	}
+// if (in_array('builddoc', $arrayofmassactions) && ($nbtotalofrecords === '' || $nbtotalofrecords)) {
+// 	$hidegeneratedfilelistifempty = 1;
+// 	if ($massaction == 'builddoc' || $action == 'remove_file' || $show_files) {
+// 		$hidegeneratedfilelistifempty = 0;
+// 	}
 
-	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
-	$formfile = new FormFile($db);
+// 	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+// 	$formfile = new FormFile($db);
 
-	// Show list of available documents
-	$urlsource = $_SERVER['PHP_SELF'].'?sortfield='.$sortfield.'&sortorder='.$sortorder;
-	$urlsource .= str_replace('&amp;', '&', $param);
+// 	// Show list of available documents
+// 	$urlsource = $_SERVER['PHP_SELF'].'?sortfield='.$sortfield.'&sortorder='.$sortorder;
+// 	$urlsource .= str_replace('&amp;', '&', $param);
 
-	$filedir = $diroutputmassaction;
-	$genallowed = $permissiontoread;
-	$delallowed = $permissiontoadd;
+// 	$filedir = $diroutputmassaction;
+// 	$genallowed = $permissiontoread;
+// 	$delallowed = $permissiontoadd;
 
-	print $formfile->showdocuments('massfilesarea_feuilledetemps', '', $filedir, $urlsource, 0, $delallowed, '', 1, 1, 0, 48, 1, $param, $title, '', '', '', null, $hidegeneratedfilelistifempty);
-}
+// 	print $formfile->showdocuments('massfilesarea_feuilledetemps', '', $filedir, $urlsource, 0, $delallowed, '', 1, 1, 0, 48, 1, $param, $title, '', '', '', null, $hidegeneratedfilelistifempty);
+// }
 
 // End of page
 llxFooter();

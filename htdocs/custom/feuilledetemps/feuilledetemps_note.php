@@ -134,7 +134,7 @@ if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 	}
 }
 
-$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || $user->id == $object->fk_user;
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read);
 if($conf->global->FDT_USER_APPROVER) {
 	$permissiontoadd = $userIsResp || $user->admin; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 }
