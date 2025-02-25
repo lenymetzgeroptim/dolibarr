@@ -178,7 +178,10 @@ class extendedHoliday extends Holiday
 		$nb_jour_array = array();
 
 		// Check into leave requests
-		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, he.statutfdt, ht.in_hour";
+		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, ht.in_hour";
+		if($conf->global->FDT_STATUT_HOLIDAY) {
+			$sql .= ", he.statutfdt";
+		}
 		$sql .= " FROM ".MAIN_DB_PREFIX."holiday as cp";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = cp.fk_type";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as he ON he.fk_object = cp.rowid";
@@ -213,7 +216,9 @@ class extendedHoliday extends Holiday
 					$statut_array[] = $obj->statut;
 					$code_array[] = $obj->code;
 					$hour_array[] = $obj->hour;
-					$statutfdt_array[] = $obj->statutfdt;
+					if($conf->global->FDT_STATUT_HOLIDAY) {
+						$statutfdt_array[] = $obj->statutfdt;
+					}
 					$droitrtt_array[] = $obj->droit_rtt;
 					$in_hour_array[] = $obj->in_hour;
 					$nb_jour_array[] = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
@@ -287,7 +292,10 @@ class extendedHoliday extends Holiday
 		$nb_jour_array = array();
 
 		// Check into leave requests
-		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, he.statutfdt, ht.in_hour, cp.fk_user";
+		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, ht.in_hour, cp.fk_user";
+		if($conf->global->FDT_STATUT_HOLIDAY) {
+			$sql .= ", he.statutfdt";
+		}
 		$sql .= " FROM ".MAIN_DB_PREFIX."holiday as cp";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = cp.fk_type";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as he ON he.fk_object = cp.rowid";
@@ -321,7 +329,9 @@ class extendedHoliday extends Holiday
 					$statut_array[$obj->fk_user][] = $obj->statut;
 					$code_array[$obj->fk_user][] = $obj->code;
 					$hour_array[$obj->fk_user][] = $obj->hour;
-					$statutfdt_array[$obj->fk_user][] = $obj->statutfdt;
+					if($conf->global->FDT_STATUT_HOLIDAY) {
+						$statutfdt_array[$obj->fk_user][] = $obj->statutfdt;
+					}
 					$droitrtt_array[$obj->fk_user][] = $obj->droit_rtt;
 					$in_hour_array[$obj->fk_user][] = $obj->in_hour;
 					if(!in_array($obj->fk_user, $user_id_array)) {

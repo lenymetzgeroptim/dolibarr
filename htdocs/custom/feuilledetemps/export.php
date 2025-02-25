@@ -270,8 +270,10 @@ elseif($datatoexport == 'absences') {
 		"h.date_fin" => "Date fin",
 		"type" => "Type (H ou J)",
 		"fdt.status" => "Statut feuille de temps",
-		"hef.statutfdt" => "Statut Feuille de temps des congés",
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_export_fields[0]["hef.statutfdt"] = "Statut Feuille de temps des congés";
+	}
 }
 elseif($datatoexport == 'heure_sup') {
 	$array_export_fields[0] = array(
@@ -408,8 +410,10 @@ else {
 		"h.date_fin" => "Date fin",
 		"type" => "Type (H ou J)",
 		"fdt.status" => "Statut feuille de temps",
-		"hef.statutfdt" => "Statut Feuille de temps des congés",
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_export_fields[2][0]["hef.statutfdt"] = "Statut Feuille de temps des congés";
+	}
 	$array_export_fields[3][0] = array(
 		"eu.matricule" => "Matricule",
 		"u.firstname" => "Prénom",
@@ -545,8 +549,10 @@ elseif($datatoexport == 'absences') {
 		"h.date_fin" => "holiday",
 		"type" => "holiday",
 		"fdt.status" => "timesheet_16@feuilledetemps",
-		"hef.statutfdt" => "holiday",
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_export_entities[0]["hef.statutfdt"] = "holiday";
+	}
 }
 elseif($datatoexport == 'heure_sup') {
 	$array_export_entities[0] = array(
@@ -682,8 +688,10 @@ else {
 		"h.date_fin" => "holiday",
 		"type" => "holiday",
 		"fdt.status" => "timesheet_16@feuilledetemps",
-		"hef.statutfdt" => "holiday",
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_export_entities[2][0]["hef.statutfdt"] = "holiday";
+	}
 	$array_export_entities[3][0] = array(
 		"eu.matricule" => "user",
 		"u.firstname" => "user",
@@ -817,8 +825,10 @@ elseif($datatoexport == 'absences') {
 		"h.date_fin" => "Date",
 		"type" => "Text",
 		"fdt.status" => "Status",
-		"hef.statutfdt" => "Numeric",
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_export_TypeFields[0]["hef.statutfdt"] = "Numeric";
+	}
 }
 elseif($datatoexport == 'heure_sup') {
 	$array_export_TypeFields[0] = array(
@@ -959,8 +969,10 @@ else {
 		"h.date_fin" => "Date",
 		"type" => "Text",
 		"fdt.status" => "Status",
-		"hef.statutfdt" => "Numeric",
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_export_TypeFields[2][0]["hef.statutfdt"] = "Numeric";
+	}
 	$array_export_TypeFields[3][0] = array(
 		"eu.matricule" => "Numeric",
 		"u.firstname" => "Text",
@@ -1094,8 +1106,10 @@ elseif($datatoexport == 'absences') {
 		"h.date_fin" => "llx_holiday",
 		"type" => "",
 		"fdt.status" => "llx_feuilledetemps_feuilledetemps",
-		"hef.statutfdt" => "llx_holiday",
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_tablename[0]["hef.statutfdt"] = "llx_holiday";
+	}
 }
 elseif($datatoexport == 'heure_sup') {
 	$array_tablename[0] = array(
@@ -1229,8 +1243,10 @@ else {
 		"h.date_fin" => "llx_holiday",
 		"type" => "",
 		"fdt.status" => "llx_feuilledetemps_feuilledetemps",
-		"hef.statutfdt" => "llx_holiday",
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_tablename[2][0]["hef.statutfdt"] = "llx_holiday";
+	}
 	$array_tablename[3][0] = array(
 		"eu.matricule" => "llx_user_extrafields",
 		"u.firstname" => "llx_user",
@@ -1561,8 +1577,10 @@ if ($action == 'buildalldoc') {
 		"h.date_debut" => dol_mktime(-1, -1, -1, GETPOST("exportdate_month", 'int'), 1, GETPOST("exportdate_year", 'int')),
 		"h.date_fin" => dol_get_last_day(GETPOST("exportdate_year", 'int'), GETPOST("exportdate_month", 'int')),
 		"fdt.status" => FeuilleDeTemps::STATUS_VALIDATED,
-		"hef.statutfdt" => 2,
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_filtervalue[2]["hef.statutfdt"] = 2;
+	}
 	$array_filtervalue[3] = array(
 		//"fdt.date_debut" => GETPOST("exportdate_year", 'int').str_pad(GETPOST("exportdate_month", 'int'), 2, '0', STR_PAD_LEFT),
 		//"fdt.date_fin" => GETPOST("exportdate_year", 'int').str_pad(GETPOST("exportdate_month", 'int'), 2, '0', STR_PAD_LEFT),

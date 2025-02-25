@@ -32,11 +32,12 @@ class ExtendedExportFDT extends Export
 	public function build_file_bis($user, $model, $datatoexport, $array_selected, $array_filterValue, $sqlquery = '', $array_export_fields, $array_export_TypeFields, $array_export_special)
 	{
 		// phpcs:enable
-		global $conf, $langs, $mysoc, $dirname, $filename;
+		global $conf, $langs, $mysoc, $dirname, $filename, $extrafields;
 
 		$indice = 0;
 		asort($array_selected);
 		$all_holiday = array();
+		$heure_semaine = array();
 
 		dol_syslog(__METHOD__." ".$model.", ".$datatoexport.", ".implode(",", $array_selected));
 
@@ -498,6 +499,46 @@ class ExtendedExportFDT extends Export
 								$date_debut = dol_mktime(-1, -1, -1, substr($obj->h_date_debut, 3, 2), substr($obj->h_date_debut, 0, 2), substr($obj->h_date_debut, 6, 4));
 								$nb_jour = num_between_day($date_debut, dol_mktime(-1, -1, -1, substr($obj->h_date_fin, 3, 2), substr($obj->h_date_fin, 0, 2), substr($obj->h_date_fin, 6, 4)) + 3600, 1); 
 								$heure = $obj->valeur;
+
+								if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+									if($conf->donneesrh->enabled && empty($heure_semaine[$obj->rowid])) {
+										$userstatic = new User($db);
+										$userstatic->fetch($obj->rowid);
+										$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+										$userField = new UserField($db);
+										$userField->id = $obj->rowid;
+										$userField->table_element = 'donneesrh_Positionetcoefficient';
+										$userField->fetch_optionals();
+								
+										$heure_semaine[$obj->rowid] = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+										$heure_semaine[$obj->rowid] = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine[$obj->rowid]);
+									}
+									else {
+										$heure_semaine[$obj->rowid] = (!empty($userstatic->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+										$heure_semaine[$obj->rowid] = (!empty($userstatic->array_options['options_horairehebdomadaire']) ? $userstatic->array_options['options_horairehebdomadaire'] : $heure_semaine[$obj->rowid]);
+									}
+								
+									// Semaine type
+									$standard_week_hour = array();
+									if($heure_semaine[$obj->rowid] == $conf->global->HEURE_SEMAINE_NO_RTT) {
+										$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
+										$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_NO_RTT * 3600;
+										$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT * 3600;
+										$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_NO_RTT * 3600;
+										$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_NO_RTT * 3600;
+										$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_NO_RTT * 3600;
+										$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_NO_RTT * 3600;
+									}
+									else {
+										$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_WITH_RTT * 3600;
+										$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_WITH_RTT * 3600;
+										$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT * 3600;
+										$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_WITH_RTT * 3600;
+										$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_WITH_RTT * 3600;
+										$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_WITH_RTT * 3600;
+										$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_WITH_RTT * 3600;
+									}
+								}						
 	
 								for ($idw = 0; $idw < $nb_jour; $idw++) {
 									$dayinloopfromfirstdaytoshow = dol_time_plus_duree($date_debut, $idw, 'd');
@@ -506,11 +547,21 @@ class ExtendedExportFDT extends Export
 										$obj->h_date_debut = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
 										$obj->h_date_fin = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
 	
-										if($heure > 7) {
-											$obj->valeur = 7;
+										if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+											if($heure > $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] / 3600) {
+												$obj->valeur = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] / 3600;
+											}
+											else {
+												$obj->valeur = $heure;
+											}
 										}
 										else {
-											$obj->valeur = $heure;
+											if($heure > 7) {
+												$obj->valeur = 7;
+											}
+											else {
+												$obj->valeur = $heure;
+											}
 										}
 	
 										$heure -= $obj->valeur;
@@ -568,7 +619,7 @@ class ExtendedExportFDT extends Export
 							elseif($obj->h_halfday == '1') {
 								$h_date_fin = $obj->h_date_fin;
 								if($obj->h_date_debut != $obj->h_date_fin) {
-									$obj->h_date_fin = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_fin, 5, 2), substr($h_date_fin, 8, 2), substr($h_date_fin, 0, 4)), -1, 'd'), '%d/%m/%Y');
+									$obj->h_date_fin = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_fin, 3, 2), substr($h_date_fin, 0, 2), substr($h_date_fin, 6, 4)), -1, 'd'), '%d/%m/%Y');
 									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
 								}
 	
@@ -581,11 +632,6 @@ class ExtendedExportFDT extends Export
 							elseif($obj->h_halfday == '2') {
 								$h_date_debut = $obj->h_date_debut;
 								$h_date_fin = $obj->h_date_fin;
-								if(num_open_day($this->db->jdate($h_date_debut), $this->db->jdate($h_date_fin)) > 1) {
-									$obj->h_date_debut = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_debut, 5, 2), substr($h_date_debut, 8, 2), substr($h_date_debut, 0, 4)), 1, 'd'), '%d/%m/%Y');
-									$obj->h_date_fin = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_fin, 5, 2), substr($h_date_fin, 8, 2), substr($h_date_fin, 0, 4)), -1, 'd'), '%d/%m/%Y');
-									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-								}
 	
 								$obj->h_date_debut = $h_date_debut;
 								$obj->h_date_fin = $h_date_debut;
@@ -593,6 +639,13 @@ class ExtendedExportFDT extends Export
 								$obj->valeur = '0.5';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
 	
+								if(num_open_day(dol_mktime(-1, -1, -1, substr($h_date_debut, 3, 2), substr($h_date_debut, 0, 2), substr($h_date_debut, 6, 4)), dol_mktime(-1, -1, -1, substr($h_date_fin, 3, 2), substr($h_date_fin, 0, 2), substr($h_date_fin, 6, 4))) > 1) {
+									$obj->h_date_debut = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_debut, 3, 2), substr($h_date_debut, 0, 2), substr($h_date_debut, 6, 4)), 1, 'd'), '%d/%m/%Y');
+									$obj->h_date_fin = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_fin, 3, 2), substr($h_date_fin, 0, 2), substr($h_date_fin, 6, 4)), -1, 'd'), '%d/%m/%Y');
+									$obj->valeur = '';
+									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+								}
+
 								$obj->h_date_debut = $h_date_fin;
 								$obj->h_date_fin = $h_date_fin;
 								$obj->type = 'J';
@@ -868,7 +921,7 @@ class ExtendedExportFDT extends Export
 
 		$sql .= " WHERE 1 = 1 AND u.statut = 1";
 		if($conf->global->FDT_MANAGE_EMPLOYER) {
-			$sql .= " AND eu.employeur = 1";
+			$sql .= " AND eu.fk_employeur = 157";
 		}
 		if($datatoexport == 'analytique_pourcentage'){
 			$sql .= " AND tt.elementtype = 'task'";
@@ -900,7 +953,7 @@ class ExtendedExportFDT extends Export
 					$sqlWhere .= " AND ".$this->build_filterQuery("Date", "fdt.date_fin", substr(str_replace('-', '', $this->db->idate($array_filterValue["h.date_fin"])), 0, 6));
 					$sqlWhere .= " AND (h.date_debut <= '".$this->db->idate($array_filterValue["h.date_fin"])."' AND h.date_fin >= '".$this->db->idate(dol_time_plus_duree($array_filterValue["h.date_debut"], -$conf->global->JOUR_ANTICIPES, 'd'))."')";
 				}
-				//$sqlWhere .= " AND (h.statut = 2 OR h.statut = 3 OR h.statut = 6)";
+				$sqlWhere .= " AND h.statut NOT IN (1,4,5)";
 				if(!empty($conf->global->HOLIDAYTYPE_EXLUDED_EXPORT)) {
 					$sqlWhere .= " AND ht.rowid NOT IN (".$conf->global->HOLIDAYTYPE_EXLUDED_EXPORT.")";
 				}

@@ -1014,7 +1014,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 		'affaire' => array('text' => 'Affaire', 'visible' => 1),
 	);
 
-	if($mode == 'card' && $displayVerification) {
+	if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
 		$fields['absence']['text'] .= '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
 	}
 	if($multiple_holiday) {

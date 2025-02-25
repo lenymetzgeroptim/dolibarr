@@ -956,7 +956,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 	if ($massaction == 'verification'  && $permissionToVerification) {
 		$question = 'Voulez vous valider la feuille de temps ?';
-		$question .= (!GETPOST('all_holiday_validate', 'int') ? '<br><span style="color: #be0000; font-size: initial;"><strong>⚠ Certains congés ne sont pas validés</strong></span>' : '');
+		if($conf->global->FDT_STATUT_HOLIDAY) $question .= (!GETPOST('all_holiday_validate', 'int') ? '<br><span style="color: #be0000; font-size: initial;"><strong>⚠ Certains congés ne sont pas validés</strong></span>' : '');
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), $question, 'confirm_verification', '', 0, 1);
 	}
 
