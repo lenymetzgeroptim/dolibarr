@@ -567,6 +567,11 @@ tr > th:last-child.fixed {
 	background-color: #d7d7d7;
 }
 
+.feuilledetemps tr.liste_totalcolumn th {
+	background-color: var(--colorbacktitle1);
+  	border-top: 1px solid var(--colortopbordertitle1);
+}
+
 
 
 /* Autres */
@@ -778,4 +783,14 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 
 .feuilledetemps span.diffnegative {
 	color: red;
+}
+
+.feuilledetemps tr.liste_totalcolumn {
+	z-index: 1;
+  	position: sticky;
+  	bottom: 0;
+}
+
+#tablelines_fdt.liste.column {
+	margin: 0 !important;
 }

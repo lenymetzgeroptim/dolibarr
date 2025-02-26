@@ -1054,7 +1054,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	// $first_day_month = dol_time_plus_duree($firstdaytoshow, $num_first_day, 'd');
 
 	print '<div class="div-table-responsive" style="min-height: 0px">';
-	print '<table class="tagtable liste listwithfilterbefore" id="tablelines_fdt">'."\n";			
+	print '<table class="tagtable liste listwithfilterbefore column" id="tablelines_fdt">'."\n";			
 
 	printHeaderLine_Sigedi($fields);
 
@@ -1080,10 +1080,10 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array);
 		}
 	}
-	print '</tbody>';
 
 	printTotalLine_Sigedi($fields, $total_array);
 
+	print '</tbody>';
 	print '</table>';
 	print '</div>';
 	// var_dump($total_array);
@@ -1110,7 +1110,7 @@ function printHeaderLine_Sigedi($fields) {
 function printTotalLine_Sigedi($fields, $total_array) {
 	global $langs;
 
-	print '<tr class="liste_total">';
+	print '<tr class="liste_totalcolumn">';
 	foreach($fields as $key => $value) {
 		if (abs($value['visible']) != 1) {
 			continue;
@@ -1118,6 +1118,9 @@ function printTotalLine_Sigedi($fields, $total_array) {
 
 		if(!empty($total_array[$key])) {
 			$total = ($value['type'] != 'boolean' ? formatValueForAgenda($value['type'], $total_array[$key]) : $total_array[$key]);
+		}
+		elseif($key == 'date') {
+			$total = 'TOTAL';
 		}
 		else {
 			$total = '';
