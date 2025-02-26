@@ -444,7 +444,9 @@ if (empty($reshook)) {
 						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
 							$tmpday = dol_time_plus_duree($date_debut_gmt, $i, 'd');
-							if(num_public_holiday($tmpday, $tmpday, '', 1) == 0) {
+							$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+
+							if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) == 0) {
 								if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
 									$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
 								}
@@ -1002,7 +1004,9 @@ if (empty($reshook)) {
 						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
 							$tmpday = dol_time_plus_duree($date_debut_gmt, $i, 'd');
-							if(num_public_holiday($tmpday, $tmpday, '', 1) == 0) {
+							$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+
+							if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) == 0) {
 								if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
 									$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
 								}
