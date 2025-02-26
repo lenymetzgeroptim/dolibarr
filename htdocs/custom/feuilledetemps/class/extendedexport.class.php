@@ -543,7 +543,7 @@ class ExtendedExportFDT extends Export
 								for ($idw = 0; $idw < $nb_jour; $idw++) {
 									$dayinloopfromfirstdaytoshow = dol_time_plus_duree($date_debut, $idw, 'd');
 	
-									if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Sam' && dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Dim') {
+									if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Sam' && dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Dim' && num_public_holiday($dayinloopfromfirstdaytoshow, $dayinloopfromfirstdaytoshow, '', 1) == 0) {
 										$obj->h_date_debut = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
 										$obj->h_date_fin = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
 	
