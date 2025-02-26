@@ -439,17 +439,25 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 				elseif($needHour && $date_debut != $date_fin) {
-					$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 1);
 					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 1);
 						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
 							$tmpday = dol_time_plus_duree($date_debut_gmt, $i, 'd');
-							if(num_public_holiday($tmpday, $tmpday, '', 1) == 0) {
-								$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
+							$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+
+							if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) == 0) {
+								if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
+									$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
+								}
+								else {
+									$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
+								}
 							}
 						}
 					}
 					else {
+						$nbDay = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $holiday->halfday);
 						$duration_hour = $nbDay * 7 * 3600;
 					}
 					$object->array_options['options_hour'] = $duration_hour;
@@ -991,17 +999,25 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 				elseif($needHour && $date_debut != $date_fin) {
-					$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 1);
 					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 1);
 						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
 							$tmpday = dol_time_plus_duree($date_debut_gmt, $i, 'd');
-							if(num_public_holiday($tmpday, $tmpday, '', 1) == 0) {
-								$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
+							$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+
+							if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) == 0) {
+								if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
+									$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
+								}
+								else {
+									$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
+								}
 							}
 						}
 					}
 					else {
+						$nbDay = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $holiday->halfday);
 						$duration_hour = $nbDay * 7 * 3600;
 					}
 					$object->array_options['options_hour'] = $duration_hour;
