@@ -1692,44 +1692,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 			}
 
 			// If no hour and hour is required
-			if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
-				if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-					$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
-					$duration_hour = 0;
-					for($i = 0; $i < $nbDay; $i++) {
-						$tmpday = dol_time_plus_duree($holiday->date_debut, $i, 'd');
-						$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
-
-						if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
-							continue;
-						}
-
-						if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
-							$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-						}
-						else {
-							$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
-						}
-					}
-				}
-				else {
-					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-				
-					if($holiday->halfday == 1 || $holiday->halfday == -1) { // gestion des demi journées
-						if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01')) {
-							$duration_hour += 3.5 * 3600;
-						}
-						elseif(in_array($holiday->fk_type, $droit_rtt)) {
-							$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-						}
-						elseif(!in_array($holiday->fk_type, $droit_rtt)) {
-							$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-						}
-					}
-				}
-
-				$holiday->array_options['options_hour'] = $duration_hour;
+			if (empty($holiday->array_options['options_hour']) && $needHour == 1) {				
+				$holiday->array_options['options_hour'] = $holiday->getHourDuration($standard_week_hour, $holiday->date_debut);
 			}
 			elseif(!empty($holiday->array_options['options_hour']) && !$needHour) {
 				$holiday->array_options['options_hour'] = null;
@@ -1955,43 +1919,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 
 			// If no hour and hour is required
 			if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
-				if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-					$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
-					$duration_hour = 0;
-					for($i = 0; $i < $nbDay; $i++) {
-						$tmpday = dol_time_plus_duree($holiday->date_debut, $i, 'd');
-						$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
-
-						if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
-							continue;
-						}
-
-						if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
-							$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-						}
-						else {
-							$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
-						}
-					}
-				}
-				else {
-					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-				
-					if($holiday->halfday == 1 || $holiday->halfday == -1) { // gestion des demi journées
-						if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01')) {
-							$duration_hour += 3.5 * 3600;
-						}
-						elseif(in_array($holiday->fk_type, $droit_rtt)) {
-							$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-						}
-						elseif(!in_array($holiday->fk_type, $droit_rtt)) {
-							$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-						}
-					}
-				}
-
-				$holiday->array_options['options_hour'] = $duration_hour;
+				$holiday->array_options['options_hour'] = $holiday->getHourDuration($standard_week_hour, $holiday->date_debut);
 			}
 			elseif(!empty($holiday->array_options['options_hour']) && !$needHour) {
 				$holiday->array_options['options_hour'] = null;

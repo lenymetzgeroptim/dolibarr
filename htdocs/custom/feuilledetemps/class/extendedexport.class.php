@@ -125,8 +125,46 @@ class ExtendedExportFDT extends Export
 
 				$userstatic->fetchAll('', 't.lastname', 0, 0, $filter);
 				foreach($userstatic->users as $id => $user_obj) {
+					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+						if($conf->donneesrh->enabled && empty($heure_semaine[$id])) {
+							$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+							$userField = new UserField($db);
+							$userField->id = $id;
+							$userField->table_element = 'donneesrh_Positionetcoefficient';
+							$userField->fetch_optionals();
+					
+							$heure_semaine[$id] = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+							$heure_semaine[$id] = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine[$obj->rowid]);
+						}
+						else {
+							$heure_semaine[$id] = (!empty($userstatic->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+							$heure_semaine[$id] = (!empty($userstatic->array_options['options_horairehebdomadaire']) ? $userstatic->array_options['options_horairehebdomadaire'] : $heure_semaine[$obj->rowid]);
+						}
+					
+						// Semaine type
+						$standard_week_hour = array();
+						if($heure_semaine[$id] == $conf->global->HEURE_SEMAINE_NO_RTT) {
+							$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
+							$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_NO_RTT * 3600;
+							$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT * 3600;
+							$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_NO_RTT * 3600;
+							$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_NO_RTT * 3600;
+							$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_NO_RTT * 3600;
+							$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_NO_RTT * 3600;
+						}
+						else {
+							$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_WITH_RTT * 3600;
+							$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_WITH_RTT * 3600;
+							$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT * 3600;
+							$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_WITH_RTT * 3600;
+							$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_WITH_RTT * 3600;
+							$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_WITH_RTT * 3600;
+							$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_WITH_RTT * 3600;
+						}
+					}	
+					
 					if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_obj->array_options['options_fk_employeur'] == 157)){
-						$timeHoliday = $object->timeHolidayWeek($id, array(), $date_debut, $date_fin);
+						$timeHoliday = $object->timeHolidayWeek($id, $standard_week_hour, $date_debut, $date_fin);
 						$timeSpentWeek = $object->timeDoneByWeek($id, $date_debut, $date_fin);
 						$societe = new Societe($this->db);
 						if(!empty($user_obj->array_options['options_antenne'])) {
@@ -668,7 +706,7 @@ class ExtendedExportFDT extends Export
 					// Close file
 					$objmodel->close_file();
 	
-					if($datatoexport == 'absences') {
+					if($datatoexport == 'absences' && $conf->global->FDT_STATUT_HOLIDAY) {
 						require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedHoliday.class.php';
 						$holiday = new extendedHoliday($this->db);
 						$result = $holiday->setStatutExported($all_holiday);

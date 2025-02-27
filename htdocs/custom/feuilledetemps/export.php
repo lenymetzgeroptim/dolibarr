@@ -1607,23 +1607,23 @@ if ($action == 'buildalldoc') {
 	}
 
 	if(!$error) {
-		// // On passe au statut Exporté l'ensemble des feuilles de temps que l'on a exportée
-		// $feuilleDeTemps = new FeuilleDeTemps($db);
-		// $user_static = new User($db);
-		// $filter = array(
-		// 	'customsql' => 'date_debut = "'.substr($db->idate($date_debut), 0, 10).'" AND date_fin = "'.substr($db->idate($date_fin), 0, 10).'"',
-		// 	'status' => FeuilleDeTemps::STATUS_VALIDATED,
-		// );
-		// $allFdtValidated = $feuilleDeTemps->fetchAll('', '', 0, 0, $filter, 'AND');
-		// foreach($allFdtValidated as $id => $fdt) {
-		// 	$user_static->fetch($fdt->fk_user);
-		// 	if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_static->array_options['options_fk_employeur'] == 157)){
-		// 		$fdt->setExported($user);
-		// 	}
-		// }
+		// On passe au statut Exporté l'ensemble des feuilles de temps que l'on a exportée
+		$feuilleDeTemps = new FeuilleDeTemps($db);
+		$user_static = new User($db);
+		$filter = array(
+			'customsql' => 'date_debut = "'.substr($db->idate($date_debut), 0, 10).'" AND date_fin = "'.substr($db->idate($date_fin), 0, 10).'"',
+			'status' => FeuilleDeTemps::STATUS_VALIDATED,
+		);
+		$allFdtValidated = $feuilleDeTemps->fetchAll('', '', 0, 0, $filter, 'AND');
+		foreach($allFdtValidated as $id => $fdt) {
+			$user_static->fetch($fdt->fk_user);
+			if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_static->array_options['options_fk_employeur'] == 157)){
+				$fdt->setExported($user);
+			}
+		}
 
-		//header("Location: ".$_SERVER["PHP_SELF"].'?step=1');
-		//return;
+		header("Location: ".$_SERVER["PHP_SELF"].'?step=1');
+		return;
 	}
 }
 

@@ -506,4 +506,94 @@ class extendedHoliday extends Holiday
 			return 1;
 		}	
 	}
+
+	public function getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser = null, $numberDay = 0, &$timeHolidayByDay = array()) {
+		global $conf; 
+
+		$droit_rtt = $this->holidayTypeDroitRTT();
+
+		if(empty($fuser)) {
+			$fuser = new User($this->db);
+			$fuser->fetch($this->fk_user);
+		}
+
+		if($conf->donneesrh->enabled) {
+			$extrafields = new ExtraFields($this->db);
+			$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient_extrafields');
+			$userField = new UserField($this->db);
+			$userField->id = $this->fk_user;
+			$userField->table_element = 'donneesrh_Positionetcoefficient_extrafields';
+			$userField->fetch_optionals();
+		}
+
+		if(!empty($this->array_options['options_hour'])) {
+			if($numberDay > 1) {
+				$duration_hour = 0;
+				if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+					$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
+					for($i = 0; $i < $nbDay; $i++) {
+						$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
+						$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+
+						if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
+							continue;
+						}
+
+						if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
+					}
+				}
+				else {
+					$nbDay = floor(num_open_day($this->date_debut_gmt, $this->date_fin_gmt, 0, 1, $this->halfday));
+					$duration_hour = $nbDay * 7 * 3600;
+					if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $duration_hour;
+				}
+			}
+			else {
+				if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $this->array_options['options_hour'];
+			}
+
+			return $this->array_options['options_hour'];
+		}
+		else {
+			if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+				$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
+				$duration_hour = 0;
+				for($i = 0; $i < $nbDay; $i++) {
+					$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
+					$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+
+					if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
+						continue;
+					}
+
+					if((($this->halfday == 1 || $this->halfday == 2) && $i == $nbDay - 1) || (($this->halfday == -1 || $this->halfday == 2) && $i == 0)) { // gestion des demi journées
+						$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
+						if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
+					}
+					else {
+						$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
+						if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
+					}
+				}
+			}
+			else {
+				$nbDay = floor(num_open_day($this->date_debut_gmt, $this->date_fin_gmt, 0, 1, $this->halfday));
+				$duration_hour = (dol_print_date($this->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+			
+				if($this->halfday == 1 || $this->halfday == -1) { // gestion des demi journées
+					if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($this->date_fin, '%Y-%m-%d') < '2024-07-01')) {
+						$duration_hour += 3.5 * 3600;
+					}
+					elseif(in_array($this->fk_type, $droit_rtt)) {
+						$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
+					}
+					elseif(!in_array($this->fk_type, $droit_rtt)) {
+						$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
+					}
+				}
+			}
+
+			return $duration_hour;
+		}
+	}
 }

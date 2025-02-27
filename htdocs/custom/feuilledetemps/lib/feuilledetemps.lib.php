@@ -277,57 +277,10 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 				if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0])) {
 					$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
 					$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-					$droit_rtt = $holiday->holidayTypeDroitRTT();
-						
-					if(!empty($holiday->array_options['options_hour'])) {
-						$durationHoliday = $holiday->array_options['options_hour'];
-					}
-					else {
-						if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-							$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
-							$duration_hour = 0;
-							for($i = 0; $i < $nbDay; $i++) {
-								$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
-								$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
-		
-								if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
-									continue;
-								}
+					if($idw + $numberDay > $nb_jour) $numberDay = $nb_jour - $idw;
 
-								if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
-									$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-									//if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-								}
-								else {
-									$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
-									//if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
-								}
-							}
-						}
-						else {
-							$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-							$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-						
-							if($holiday->halfday == 1 || $holiday->halfday == -1) { // gestion des demi journées
-								if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01')) {
-									$duration_hour += 3.5 * 3600;
-								}
-								elseif(in_array($holiday->fk_type, $droit_rtt)) {
-									$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-								}
-								elseif(!in_array($holiday->fk_type, $droit_rtt)) {
-									$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-								}
-							}
-						}
-		
-						$durationHoliday = $duration_hour;
-					}
+					$durationHoliday = $holiday->getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser);
 
-					if($idw + $numberDay > $nb_jour) {
-						$numberDay = $nb_jour - $idw;
-					}
-					
 					if($mode == 'card') {
 						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
 					}
@@ -377,56 +330,10 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 				if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][1])) {
 					$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][1]);
 					$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-					$droit_rtt = $holiday->holidayTypeDroitRTT();
-						
-					if(!empty($holiday->array_options['options_hour'])) {
-						$durationHoliday = $holiday->array_options['options_hour'];
-					}
-					else {
-						if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-							$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
-							$duration_hour = 0;
-							for($i = 0; $i < $nbDay; $i++) {
-								$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
-								$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
-	
-								if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
-									continue;
-								}
+					if($idw + $numberDay > $nb_jour) $numberDay = $nb_jour - $idw;
 
-								if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
-									$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-									//if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-								}
-								else {
-									$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
-									//if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
-								}
-							}
-						}
-						else {
-							$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-							$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-						
-							if($holiday->halfday == 1 || $holiday->halfday == -1) { // gestion des demi journées
-								if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01')) {
-									$duration_hour += 3.5 * 3600;
-								}
-								elseif(in_array($holiday->fk_type, $droit_rtt)) {
-									$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-								}
-								elseif(!in_array($holiday->fk_type, $droit_rtt)) {
-									$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-								}
-							}
-						}
-		
-						$durationHoliday = $duration_hour;
-					}
-		
-					if($idw + $numberDay > $nb_jour) {
-						$numberDay = $nb_jour - $idw;
-					}
+					$durationHoliday = $holiday->getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser);
+
 					
 					if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
 						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
@@ -1253,82 +1160,9 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]) && $holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0] != $holiday_without_canceled[dol_time_plus_duree($dayinloopfromfirstdaytoshow, -1, 'd')]['rowid'][0]) {
 			$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
 			$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-			$droit_rtt = $holiday->holidayTypeDroitRTT();
-	
-			if(!empty($holiday->array_options['options_hour'])) {
-				$durationHoliday = $holiday->array_options['options_hour'];
-				if($numberDay > 1) {
-					$duration_hour = 0;
-					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
-						$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
-						for($i = 0; $i < $nbDay; $i++) {
-							$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
-							$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+			if($idw + $numberDay > $nb_jour) $numberDay = $nb_jour - $idw;
 
-							if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
-								continue;
-							}
-
-							if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
-						}
-					}
-					else {
-						$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-						$duration_hour = $nbDay * 7 * 3600;
-						if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $duration_hour;
-					}
-				}
-				else {
-					if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $holiday->array_options['options_hour'];
-				}
-			}
-			else {
-				if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-					$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
-					$duration_hour = 0;
-
-					for($i = 0; $i < $nbDay; $i++) {
-						$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
-						$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
-
-						if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
-							continue;
-						}
-
-
-						if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
-							$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-							if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-						}
-						else {
-							$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
-							if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
-						}
-					}
-				}
-				else {
-					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-				
-					if($holiday->halfday == 1 || $holiday->halfday == -1) { // gestion des demi journées
-						if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01')) {
-							$duration_hour += 3.5 * 3600;
-						}
-						elseif(in_array($holiday->fk_type, $droit_rtt)) {
-							$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-						}
-						elseif(!in_array($holiday->fk_type, $droit_rtt)) {
-							$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-						}
-					}
-				}
-
-				$durationHoliday = $duration_hour;
-			}
-
-			if($idw + $numberDay > $nb_jour) {
-				$numberDay = $nb_jour - $idw;
-			}
+			$durationHoliday = $holiday->getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser, $numberDay, $timeHolidayByDay);
 			
 			if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
 				print '<td class="center '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
@@ -1367,80 +1201,9 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][1])) {
 				$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][1]);
 				$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-				$droit_rtt = $holiday->holidayTypeDroitRTT();
-					
-				if(!empty($holiday->array_options['options_hour'])) {
-					$durationHoliday = $holiday->array_options['options_hour'];
-					if($numberDay > 1) {
-						$duration_hour = 0;
-						if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
-							$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
-							for($i = 0; $i < $nbDay; $i++) {
-								$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
-								$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+				if($idw + $numberDay > $nb_jour) $numberDay = $nb_jour - $idw;
 
-								if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
-									continue;
-								}
-
-								if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
-							}
-						}
-						else {
-							$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-							$duration_hour = $nbDay * 7 * 3600;
-							if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $duration_hour;
-						}
-					}
-					else {
-						if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $holiday->array_options['options_hour'];
-					}
-				}
-				else {
-					if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-						$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
-						$duration_hour = 0;
-						for($i = 0; $i < $nbDay; $i++) {
-							$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
-							$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
-
-							if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
-								continue;
-							}
-
-							if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
-								$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-								if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-							}
-							else {
-								$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
-								if($holiday->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
-							}
-						}
-					}
-					else {
-						$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-						$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-					
-						if($holiday->halfday == 1 || $holiday->halfday == -1) { // gestion des demi journées
-							if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01')) {
-								$duration_hour += 3.5 * 3600;
-							}
-							elseif(in_array($holiday->fk_type, $droit_rtt)) {
-								$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-							}
-							elseif(!in_array($holiday->fk_type, $droit_rtt)) {
-								$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-							}
-						}
-					} 
-
-					$durationHoliday = $duration_hour;
-				}
-	
-				if($idw + $numberDay > $nb_jour) {
-					$numberDay = $nb_jour - $idw;
-				}
+				$durationHoliday = $holiday->getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser, $numberDay, $timeHolidayByDay);
 				
 				if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
 					print '<td class="center '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
