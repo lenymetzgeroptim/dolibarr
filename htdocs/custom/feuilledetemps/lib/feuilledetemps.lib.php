@@ -284,7 +284,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 					}
 					else {
 						if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-							$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 1));
+							$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
 							$duration_hour = 0;
 							for($i = 0; $i < $nbDay; $i++) {
 								$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
@@ -384,7 +384,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 					}
 					else {
 						if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-							$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 1));
+							$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
 							$duration_hour = 0;
 							for($i = 0; $i < $nbDay; $i++) {
 								$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
@@ -1254,13 +1254,13 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
 			$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
 			$droit_rtt = $holiday->holidayTypeDroitRTT();
-				
+	
 			if(!empty($holiday->array_options['options_hour'])) {
 				$durationHoliday = $holiday->array_options['options_hour'];
 				if($numberDay > 1) {
 					$duration_hour = 0;
 					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
-						$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 1));
+						$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
 						for($i = 0; $i < $nbDay; $i++) {
 							$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
 							$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
@@ -1284,8 +1284,9 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			}
 			else {
 				if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-					$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 1));
+					$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
 					$duration_hour = 0;
+
 					for($i = 0; $i < $nbDay; $i++) {
 						$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
 						$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
@@ -1293,6 +1294,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 						if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
 							continue;
 						}
+
 
 						if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
 							$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
@@ -1372,7 +1374,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 					if($numberDay > 1) {
 						$duration_hour = 0;
 						if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
-							$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 1));
+							$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
 							for($i = 0; $i < $nbDay; $i++) {
 								$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
 								$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
@@ -1396,7 +1398,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				}
 				else {
 					if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-						$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 1));
+						$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
 						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
 							$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
