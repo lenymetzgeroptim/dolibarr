@@ -1648,9 +1648,9 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 	// $regul = new Regul($db);
 	// $resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 	
-	// $holiday_type = $_POST['holiday_type'];
-	// $holiday_id = $_POST['holiday_id'];
-	// $holiday_valide = $_POST['holiday_valide'];
+	$holiday_type = $_POST['holiday_type'];
+	$holiday_id = $_POST['holiday_id'];
+	$holiday_valide = $_POST['holiday_valide'];
 
 	// $regulD1 = ($_POST['regulD1'] > 0 || $_POST['regulD1'] < 0 ? $_POST['regulD1'] : null);
 	// $regulD2 = ($_POST['regulD2'] > 0 || $_POST['regulD2'] < 0  ? $_POST['regulD2'] : null);
@@ -1673,71 +1673,96 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 	$modification_silae = '<ul>';
 
 	// Gestion des congés 
-	// foreach($holiday_type as $key => $type) {
-	// 	$holiday->fetch($holiday_id[$key]);
+	foreach($holiday_type as $key => $type) {
+		$holiday->fetch($holiday_id[$key]);
 		
-	// 	if($holiday->fk_type != $type) {
-	// 		$needHour = $holiday->holidayTypeNeedHour($type);
+		if($holiday->fk_type != $type) {
+			$needHour = $holiday->holidayTypeNeedHour($type);
 
-	// 		if($needHour && date("W", $holiday->date_debut) != date("W", $holiday->date_fin)) {
-	// 			setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
-	// 			$error++;
-	// 			break;
-	// 		}
+			if($needHour && date("W", $holiday->date_debut) != date("W", $holiday->date_fin)) {
+				setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
+				$error++;
+				break;
+			}
 
-	// 		if($needHour && $holiday->date_debut != $holiday->date_fin && $holiday->halfday != 0) {
-	// 			setEventMessages($langs->trans("ErrorHalfdayHoliday"), null, 'errors');
-	// 			$error++;
-	// 			break;
-	// 		}
+			if($needHour && $holiday->date_debut != $holiday->date_fin && $holiday->halfday != 0) {
+				setEventMessages($langs->trans("ErrorHalfdayHoliday"), null, 'errors');
+				$error++;
+				break;
+			}
 
-	// 		// If no hour and hour is required
-	// 		if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
-	// 			$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-	// 			$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-	// 			if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt'])|| dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-	// 				$duration_hour += 3.5 * 3600;
-	// 			}
-	// 			elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-	// 				$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-	// 			}
-	// 			elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-	// 				$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-	// 			}
-	// 			$holiday->array_options['options_hour'] = $duration_hour;
-	// 		}
-	// 		elseif(!empty($holiday->array_options['options_hour']) && !$needHour) {
-	// 			$holiday->array_options['options_hour'] = null;
-	// 		}
+			// If no hour and hour is required
+			if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
+				if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+					$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
+					$duration_hour = 0;
+					for($i = 0; $i < $nbDay; $i++) {
+						$tmpday = dol_time_plus_duree($holiday->date_debut, $i, 'd');
+						$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
 
-	// 		if(!$error) {
-	// 			$holiday->fk_type = $type;
-	// 			$result = $holiday->updateExtended($user);
+						if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
+							continue;
+						}
 
-	// 			if ($result < 0) {
-	// 				setEventMessages($holiday->error, $holiday->errors, 'errors');
-	// 				$error++;
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
+						if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
+							$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
+						}
+						else {
+							$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
+						}
+					}
+				}
+				else {
+					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
+					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+				
+					if($holiday->halfday == 1 || $holiday->halfday == -1) { // gestion des demi journées
+						if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01')) {
+							$duration_hour += 3.5 * 3600;
+						}
+						elseif(in_array($holiday->fk_type, $droit_rtt)) {
+							$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
+						}
+						elseif(!in_array($holiday->fk_type, $droit_rtt)) {
+							$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
+						}
+					}
+				}
 
-	// 	if($conf->global->FDT_STATUT_HOLIDAY && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
-	// 		$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
-	// 		if(in_array($holiday->fk_type, $exclude_type)) {
-	// 			$holiday->array_options['options_statutfdt'] = 3;
-	// 		}
-	// 		else {
-	// 			$holiday->array_options['options_statutfdt'] = 2;
-	// 		}
-	// 		$result = $holiday->updateExtended($user);
-	// 	}
+				$holiday->array_options['options_hour'] = $duration_hour;
+			}
+			elseif(!empty($holiday->array_options['options_hour']) && !$needHour) {
+				$holiday->array_options['options_hour'] = null;
+			}
 
-	// 	if($conf->global->FDT_STATUT_HOLIDAY && empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
-	// 		$holiday->array_options['options_statutfdt'] = 1;
-	// 		$result = $holiday->updateExtended($user);
-	// 	}
-	// }
+			if(!$error) {
+				$holiday->fk_type = $type;
+				$result = $holiday->updateExtended($user);
+
+				if ($result < 0) {
+					setEventMessages($holiday->error, $holiday->errors, 'errors');
+					$error++;
+					break;
+				}
+			}
+		}
+
+		if($conf->global->FDT_STATUT_HOLIDAY && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
+			$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
+			if(in_array($holiday->fk_type, $exclude_type)) {
+				$holiday->array_options['options_statutfdt'] = 3;
+			}
+			else {
+				$holiday->array_options['options_statutfdt'] = 2;
+			}
+			$result = $holiday->updateExtended($user);
+		}
+
+		if($conf->global->FDT_STATUT_HOLIDAY && empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
+			$holiday->array_options['options_statutfdt'] = 1;
+			$result = $holiday->updateExtended($user);
+		}
+	}
 
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 
@@ -1931,10 +1956,10 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			// If no hour and hour is required
 			if (empty($holiday->array_options['options_hour']) && $needHour == 1) {
 				if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
-					$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 1));
+					$nbDay = floor(num_between_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0) + 1);
 					$duration_hour = 0;
 					for($i = 0; $i < $nbDay; $i++) {
-						$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
+						$tmpday = dol_time_plus_duree($holiday->date_debut, $i, 'd');
 						$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
 
 						if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
@@ -1943,11 +1968,9 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 
 						if((($holiday->halfday == 1 || $holiday->halfday == 2) && $i == $nbDay - 1) || (($holiday->halfday == -1 || $holiday->halfday == 2) && $i == 0)) { // gestion des demi journées
 							$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
-							$timeHolidayByDay[$tmpday] += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
 						}
 						else {
 							$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
-							$timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
 						}
 					}
 				}

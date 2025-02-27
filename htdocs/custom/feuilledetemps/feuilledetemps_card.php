@@ -433,7 +433,7 @@ else {
 // Temps en congés par semaine
 $timeSpentWeek = $object->timeDoneByWeek($object->fk_user);
 // Temps travaillé par semaine
-$timeHoliday = $object->timeHolidayWeek($object->fk_user);
+$timeHoliday = $object->timeHolidayWeek($object->fk_user, $standard_week_hour);
 
 /*
  * Actions

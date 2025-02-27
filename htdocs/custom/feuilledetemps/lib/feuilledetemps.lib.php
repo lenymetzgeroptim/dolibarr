@@ -256,7 +256,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 		}	
 			
 		$conges_texte = $holiday->getArrayHoliday($fuser->id, 0, 1);
-		$cpt = 0; 
+		$cptholiday = 0; 
 
 		print '<tr class="nostrong liste_titre fixed conges">';
 			print '<th colspan="'.(2 + $addcolspan).'" '.($multiple_holiday ? 'rowspan="2"' : '').' class="fixed">';
@@ -336,24 +336,24 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 					}
 
 					if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
-						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cptholiday.']" id="holiday_valide['.$cptholiday.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 					}
 
 					print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
 					
 					if($mode == 'card') {
-						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+						print ' '.$form->selectarray('holiday_type['.$cptholiday.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cptholiday.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
 					
 						if($modify && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
-							print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
+							print '<input type="hidden" name="holiday_id['.$cptholiday.']"  id="holiday_id['.$cptholiday.']" value="'.$holiday->id.'">';
 						}
 					}
 					else {
-						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+						print ' '.$form->selectarray('holiday_type['.$cptholiday.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cptholiday.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
 					}
 
 					$idw += $numberDay - 1;
-					$cpt++;
+					$cptholiday++;
 				}
 				else {
 					print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
@@ -436,23 +436,23 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 					}
 
 					if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
-						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cptholiday.']" id="holiday_valide['.$cptholiday.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 					}
 		
 					print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
 					
 					if($mode == 'card') {
-						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+						print ' '.$form->selectarray('holiday_type['.$cptholiday.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cptholiday.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
 						if($modify && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
-							print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
+							print '<input type="hidden" name="holiday_id['.$cptholiday.']"  id="holiday_id['.$cptholiday.']" value="'.$holiday->id.'">';
 						}
 					}
 					else {
-						print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+						print ' '.$form->selectarray('holiday_type['.$cptholiday.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cptholiday.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
 					}
 		
 					$idw += $numberDay - 1;
-					$cpt++;
+					$cptholiday++;
 				}
 				else {
 					print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'">';
@@ -1054,6 +1054,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 
 	$conges_texte = $holiday->getArrayHoliday($fuser->id, 0, 1);
 	$total_array = array();
+	$cptholiday = 0;
 
 	$fields = array(
 		'date' => array('text' => 'Date', 'visible' => 1, 'css' => 'fixed'),
@@ -1125,13 +1126,13 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 			printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
 			$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array);
+			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday);
 		}
 		else {
 			$total_array = printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
 			$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array);
+			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday);
 		}
 	}
 
@@ -1188,7 +1189,7 @@ function printTotalLine_Sigedi($fields, $total_array) {
 function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify, $modifier_jour_conges, 
 						 $holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
 						 $num_first_day, $timeHoliday, &$timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array) {
+						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, &$cptholiday) {
 	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object;
 	global $displayVerification;
 
@@ -1196,6 +1197,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 	$projet_task_time_other = new Projet_task_time_other($db);
 
 	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+	$dayinloopfromfirstdaytoshowgmt = dol_mktime(0, 0, 0, dol_print_date($dayinloopfromfirstdaytoshow, '%m'), dol_print_date($dayinloopfromfirstdaytoshow, '%d'), dol_print_date($dayinloopfromfirstdaytoshow, '%Y'), 'gmt');
 	$ecart_lundi = ecart_lundi($dayinloopfromfirstdaytoshow);
 	$weekNumber = date("W", $dayinloopfromfirstdaytoshow);
 	$modeinput = ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? 'hours_decimal' : 'hours');
@@ -1248,8 +1250,6 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$arraytypeleaves[$val['rowid']] = $labeltoshow;
 		}	
 			
-		$cpt = 0; 
-
 		if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]) && $holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0] != $holiday_without_canceled[dol_time_plus_duree($dayinloopfromfirstdaytoshow, -1, 'd')]['rowid'][0]) {
 			$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
 			$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
@@ -1338,25 +1338,25 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			}
 
 			if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
-				print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+				print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cptholiday.']" id="holiday_valide['.$cptholiday.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 			}
 
 			print $holiday->getNomUrlBlank(2)." ".($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($durationHoliday / 3600, 2, '.', '') : convertSecondToTime($durationHoliday, 'allhourmin'));
 			
 			if($mode == 'card') {
-				print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+				print ' '.$form->selectarray('holiday_type['.$cptholiday.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cptholiday.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
 			
 				if($modify && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
-					print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
+					print '<input type="hidden" name="holiday_id['.$cptholiday.']"  id="holiday_id['.$cptholiday.']" value="'.$holiday->id.'">';
 				}
 			}
 			else {
-				print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+				print ' '.$form->selectarray('holiday_type['.$cptholiday.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cptholiday.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
 			}
 
 			print '</td>';
 
-			$cpt++; // TODOL : Impossible de gérer ce compteur, trouver une autre solution
+			$cptholiday++;
 		}
 		elseif(empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0])) {
 			print '<td class="center '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
@@ -1450,22 +1450,22 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				}
 
 				if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
-					print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
+					print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cptholiday.']" id="holiday_valide['.$cptholiday.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 				}
 	
 				print $holiday->getNomUrlBlank(2)." ".($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($durationHoliday / 3600, 2, '.', '') : convertSecondToTime($durationHoliday, 'allhourmin'));
 				
 				if($mode == 'card') {
-					print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					print ' '.$form->selectarray('holiday_type['.$cptholiday.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cptholiday.']"'.(!$modify  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
 					if($modify && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
-						print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
+						print '<input type="hidden" name="holiday_id['.$cptholiday.']"  id="holiday_id['.$cptholiday.']" value="'.$holiday->id.'">';
 					}
 				}
 				else {
-					print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
+					print ' '.$form->selectarray('holiday_type['.$cptholiday.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cptholiday.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
 				}
 	
-				$cpt++;
+				$cptholiday++;
 			}
 			else {
 				print '<td class="center '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'">';
@@ -1538,8 +1538,13 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$totalforday += (int)$timespent->timespent_duration;
 			$total_array['heure_jour'] += (int)$timespent->timespent_duration;
 
-			if($cpt == 0 && $mode == 'timesheet' && !$disabled && empty($timespent) /*&& empty($timeHoliday[(int)$weekNumber]) */&& empty($timeSpentWeek[(int)$weekNumber]) && !empty($standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')])) {
-				$timespent->timespent_duration = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
+			if($cpt == 0 && $mode == 'timesheet' && !$disabled && empty($timespent) && num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt, '', 1) == 0 /*&& empty($timeHoliday[(int)$weekNumber]) */&& empty($timeSpentWeek[(int)$weekNumber]) && !empty($standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')]) && $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] != $timeHolidayByDay[$dayinloopfromfirstdaytoshow]) {
+				if(!empty($timeHolidayByDay[$dayinloopfromfirstdaytoshow]) && $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] - $timeHolidayByDay[$dayinloopfromfirstdaytoshow]) {
+					$timespent->timespent_duration = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] - $timeHolidayByDay[$dayinloopfromfirstdaytoshow];
+				}
+				else {
+					$timespent->timespent_duration = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
+				}
 				$class_timespent .= ' prefilling_time';
 				$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
 			} 
@@ -1677,7 +1682,12 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 		// Diff
-		$diff = $totalforday + $timeHolidayByDay[$dayinloopfromfirstdaytoshow] - $contrat;
+		if(num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt, '', 1) != 0 && empty($timeHolidayByDay[$dayinloopfromfirstdaytoshow])) {
+			$diff = $totalforday;
+		}
+		else {
+			$diff = $totalforday + $timeHolidayByDay[$dayinloopfromfirstdaytoshow] - $contrat;
+		}
 		$diff_class = '';
 		if($diff > 0) {
 			$diff_class .= "diffpositive";
