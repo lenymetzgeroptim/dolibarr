@@ -440,7 +440,7 @@ if (empty($reshook)) {
 				}
 				elseif($needHour && $date_debut != $date_fin) {
 					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
-						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 1);
+						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 0) + 1;
 						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
 							$tmpday = dol_time_plus_duree($date_debut_gmt, $i, 'd');
@@ -1000,7 +1000,7 @@ if (empty($reshook)) {
 				}
 				elseif($needHour && $date_debut != $date_fin) {
 					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
-						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 1);
+						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 0) + 1;
 						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
 							$tmpday = dol_time_plus_duree($date_debut_gmt, $i, 'd');
