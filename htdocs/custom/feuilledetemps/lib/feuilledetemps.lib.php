@@ -148,9 +148,11 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, &$appel_actif = 0, &$nb_appel = 0){
+									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
 	global $conf, $db, $user, $langs;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
+
+	$holiday = new extendedHoliday($db);
 
 	$numlines = count($lines);
 	$lastprojectid = 0;
@@ -246,15 +248,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 		print '<th class="fixed total_week"></th>';
 		print '</tr>';
 
-		// Affichage de la ligne des congés
-		$holiday = new extendedHoliday($db);
-		$typeleaves = $holiday->getTypesNoCP(-1, -1);
-		$arraytypeleaves = array();
-		foreach ($typeleaves as $key => $val) {
-			$labeltoshow = $val['code'];
-			$arraytypeleaves[$val['rowid']] = $labeltoshow;
-		}	
-			
+		// Affichage de la ligne des congés			
 		$conges_texte = $holiday->getArrayHoliday($fuser->id, 0, 1);
 		$cptholiday = 0; 
 
@@ -950,7 +944,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, &$appel_actif = 0, &$nb_appel = 0){
+									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
 	global $conf, $db, $user, $langs;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
 	global $first_day_month, $last_day_month;
@@ -1014,6 +1008,12 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	// $total_hs50 = 0;
 	$nb_jour = sizeof($dayinloopfromfirstdaytoshow_array);
 	// $first_day_month = dol_time_plus_duree($firstdaytoshow, $num_first_day, 'd');
+	$task_load = array();
+
+	if (!$fuser->hasRight('projet', 'all', 'lire')) {
+		$projectstatic = new Project($db);
+		$projectsListId = $projectstatic->getProjectsAuthorizedForUser($fuser, 0, 1);
+	}
 
 	print '<div class="div-table-responsive" style="min-height: 0px">';
 	print '<table class="tagtable liste listwithfilterbefore column" id="tablelines_fdt">'."\n";			
@@ -1024,6 +1024,8 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	$filter = ' AND ptt.element_date >= "'.substr($db->idate($firstdaytoshow), 0, 10).'" AND ptt.element_date <= "'.substr($db->idate($lastdaytoshow), 0, 10).'"';
 	$timespent_month = $task->fetchAllTimeSpentByDate($fuser, $filter);
 	$timeHolidayByDay = array();
+	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $fuser->id);
+
 	print '<tbody>';
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$modify_day = (!$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? 0 : 1);
@@ -1033,13 +1035,13 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 			printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
 			$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday);
+			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $projectsListId, $silae_array);
 		}
 		else {
 			$total_array = printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
 			$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday);
+			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $projectsListId, $silae_array);
 		}
 	}
 
@@ -1096,12 +1098,14 @@ function printTotalLine_Sigedi($fields, $total_array) {
 function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify, $modifier_jour_conges, 
 						 $holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
 						 $num_first_day, $timeHoliday, &$timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, &$cptholiday) {
+						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, &$cptholiday, $arraytypeleaves, &$task_load, $projectsListId, $silae_array) {
 	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object;
 	global $displayVerification;
 
 	$formproject = new ExtendedFormProjets($db);
 	$projet_task_time_other = new Projet_task_time_other($db);
+	$holiday = new extendedHoliday($db);
+	$silae = new Silae($db);
 
 	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
 	$dayinloopfromfirstdaytoshowgmt = dol_mktime(0, 0, 0, dol_print_date($dayinloopfromfirstdaytoshow, '%m'), dol_print_date($dayinloopfromfirstdaytoshow, '%d'), dol_print_date($dayinloopfromfirstdaytoshow, '%Y'), 'gmt');
@@ -1149,14 +1153,6 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 		// Congés
-		$holiday = new extendedHoliday($db);
-		$typeleaves = $holiday->getTypesNoCP(-1, -1);
-		$arraytypeleaves = array();
-		foreach ($typeleaves as $key => $val) {
-			$labeltoshow = $val['code'];
-			$arraytypeleaves[$val['rowid']] = $labeltoshow;
-		}	
-			
 		if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]) && $holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0] != $holiday_without_canceled[dol_time_plus_duree($dayinloopfromfirstdaytoshow, -1, 'd')]['rowid'][0]) {
 			$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
 			$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
@@ -1397,7 +1393,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 			// Affaires
-			$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width300', '', 'projectstatut', null, 'fk_task_'.$idw.'_'.$cpt);
+			$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width300', $projectsListId, 'projectstatut', $fuser, 'fk_task_'.$idw.'_'.$cpt, ($idw == 0 && $cpt == 0 ? 1 : 0), $task_load);
 			//print $formproject->select_projects(-1, $timespent->fk_project, 'fk_project['.$idw.']', 0, 0, 1, 1, 0, $disabled, 0, '', 1, 0, 'maxwidth500', 'fk_project_'.$idw);
 			$tableCellAffaire .= '</div>';
 
@@ -1475,9 +1471,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 		// Autres
-        $silae = new Silae($db);
-		$silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $fuser->id);
-		if($silae->id > 0) $silae->fetch($silae->id);
+		if($silae_array[$dayinloopfromfirstdaytoshow]->id > 0) $silae = $silae_array[$dayinloopfromfirstdaytoshow];
 		foreach($silae->fields as $key => $value) {
 			if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50', 'heure_sup50ht')) && ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3)) {
 				$moreparam = 'onfocus="this.oldvalue = this.value;"';
@@ -1496,7 +1490,6 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			}
 		}
 
-        $extrafields->fetch_name_optionals_label($silae->table_element);
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
 			if (dol_eval($extrafields->attributes[$silae->table_element]['list'][$key], 1, 1, '2') != 1) {
 				continue;

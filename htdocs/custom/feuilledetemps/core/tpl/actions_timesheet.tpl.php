@@ -488,15 +488,15 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 			$key_post = (GETPOST('options_'.$key)  ? GETPOST('options_'.$key)  : array());
 			$type = $extrafields->attributes[$silae->table_element]['type'][$key];
 
-			if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && $key_post[$day] != $silae->array_options['options_'.$key])) {
+			if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && ((isset($key_post[$day]) && $silae->array_options['options_'.$key] == 0) || (!isset($key_post[$day]) && $silae->array_options['options_'.$key] == 1)))) {
 				$has_modif = 1;
 				$new_value = $key_post[$day];
-				$new_value = ($new_value == 'on' ? 1 : $new_value);
+				$new_value = (isset($new_value) ? 1 : $new_value);
 				
 				// Agenda
-				if($new_value != $silae->$key) {
+				if($new_value != $silae->array_options['options_'.$key]) {
 					$new_value = formatValueForAgenda('double', $new_value);
-					$old_value = formatValueForAgenda('double', $silae->$key);
+					$old_value = formatValueForAgenda('double', $silae->array_options['options_'.$key]);
 
 					$modification_silae .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 				}
@@ -510,7 +510,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 				$result = $silae->delete($user);
 		}
 		// S'il existe une ligne et qu'au moins un champ a été modifié
-		if($res > 0 && $has_modif) {
+		elseif($res > 0 && $has_modif) {
 			$result = $silae->update($user);
 		}
 		// S'il n'existe pas de ligne et qu'au moins un champ est différent de null
@@ -595,8 +595,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 			if(strpos($_SERVER["PHP_SELF"], 'feuilledetemps_card') === false) {
 				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 				// Redirect to avoid submit twice on back
-				header('Location: '.$_SERVER["PHP_SELF"].'?'.$param);
-				exit;
+				//header('Location: '.$_SERVER["PHP_SELF"].'?'.$param);
+				//exit;
 			}
 			else {
 				if($permissionToVerification && $object->status == $object::STATUS_VERIFICATION) {
@@ -605,8 +605,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 				else {
 					setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 					// Redirect to avoid submit twice on back
-					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-					exit;
+					//header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+					//exit;
 				}
 			}
 		}
@@ -1668,7 +1668,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 	// $regulHeureSup50 = ($regul->heure_sup50 != 0 ? (double)$regul->heure_sup50 : 0);
 	// $regulHeureSup50HT = ($regul->heure_sup50ht != 0 ? (double)$regul->heure_sup50ht : 0);
 
-	$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
+	//$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
 
 	$modification_silae = '<ul>';
 
@@ -1812,8 +1812,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 		}
 
 		// Redirect to avoid submit twice on back
-		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-		exit;
+		//header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+		//exit;
 	}
 	
 }
@@ -1866,7 +1866,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	$prime_variable = ($_POST['prime_variable'] > 0 ? price2num($_POST['prime_variable'], 2) : null);
 	$prime_amplitude = ($_POST['prime_amplitude'] > 0 ? price2num($_POST['prime_amplitude'], 2) : null);
 
-	$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
+	//$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
 
 	if (!empty($HeureNuit50)) {
 		$newdurationHeureNuit50 = price2num($HeureNuit50, 2) * 3600;

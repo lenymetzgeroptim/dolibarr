@@ -474,8 +474,35 @@ class Silae extends CommonObject
 	 */
 	public function delete(User $user, $notrigger = false)
 	{
-		return $this->deleteCommon($user, $notrigger);
-		//return $this->deleteCommon($user, $notrigger, 1);
+		//return $this->deleteCommon($user, $notrigger);
+		
+		$error = 0;
+
+		if (!$error && !empty($this->isextrafieldmanaged)) {
+			$result = $this->deleteExtraFields();
+			if ($result < 0) {
+				$error++;
+			}
+		}
+
+		if (!$error) {
+			$sql = 'DELETE FROM '.$this->db->prefix().$this->table_element.' WHERE rowid='.((int) $this->id);
+
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				$error++;
+				$this->errors[] = $this->db->lasterror();
+			}
+		}
+
+		// Commit or rollback
+		if ($error) {
+			$this->db->rollback();
+			return -1;
+		} else {
+			$this->db->commit();
+			return 1;
+		}
 	}
 
 	/**
@@ -1241,6 +1268,113 @@ class Silae extends CommonObject
                 $this->db->free($resql);
                 return 0;
             }
+        } else {
+            $this->error = "Error ".$this->db->lasterror();
+            return -1;
+        }
+    }
+
+	/**
+    *  Fetch all Silae object between 2 dates
+    *
+    *  @param	int		$datestart 	 
+    *  @param	int		$dateend 
+	*  @param	int		$fk_user 	Id of User
+    *  @return  array|int		            <0 if KO, array of Silae object if OK
+    */
+    public function fetchAllSilaeWithoutId($datestart, $dateend, $fk_user)
+    {
+        global $langs;
+
+		$res_array = array();
+		
+		$extrafields = new ExtraFields($this->db);
+		$extrafields->fetch_name_optionals_label($this->table_element);
+		$optionsArray = (!empty($extrafields->attributes[$this->table_element]['label']) ? $extrafields->attributes[$this->table_element]['label'] : null);
+
+        $sql = "SELECT";
+        $sql .= " d.rowid,";
+		$sql .= " d.date_creation,";
+		$sql .= " d.tms,";
+        $sql .= " d.fk_user_creat,";
+        $sql .= " d.fk_user_modif,";
+        $sql .= " d.date,";
+        $sql .= " d.fk_user,";
+		$sql .= " d.heure_sup00,";
+		$sql .= " d.heure_sup25,";
+		$sql .= " d.heure_sup50,";
+		$sql .= " d.heure_sup50ht,";
+        $sql .= " d.heure_nuit,";
+        $sql .= " d.heure_route,";
+        $sql .= " d.kilometres,";
+        $sql .= " d.repas,";
+		$sql .= " d.indemnite_tt";
+		foreach ($optionsArray as $name => $label) {
+			if (empty($extrafields->attributes[$this->table_element]['type'][$name]) || $extrafields->attributes[$this->table_element]['type'][$name] != 'separate') {
+				$sql .= ", ed.".$name;
+			}
+		}
+        $sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_silae as d";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_silae_extrafields as ed ON ed.fk_object = d.rowid";
+        $sql .= " WHERE d.date >= '".($this->db->idate($datestart))."'";
+		$sql .= " AND d.date <= '".($this->db->idate($dateend))."'";
+        $sql .= " AND d.fk_user = ".((int) $fk_user);
+
+        dol_syslog(get_class($this)."::fetchAllSilaeWithoutId", LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $i = 0;
+			$num = $this->db->num_rows($resql);
+
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+
+                $this->id = $obj->rowid;
+				$this->date_creation = $this->db->jdate($obj->date_creation);
+                $this->tms = $this->db->jdate($obj->tms);
+                $this->fk_user_creat = $obj->fk_user_creat;
+                $this->fk_user_modif = $obj->fk_user_modif;
+                $this->date = $this->db->jdate($obj->date);
+                $this->fk_user = $obj->fk_user;
+				$this->heure_sup00 = $obj->heure_sup00;
+				$this->heure_sup25 = $obj->heure_sup25;
+				$this->heure_sup50 = $obj->heure_sup50;
+				$this->heure_sup50ht = $obj->heure_sup50ht;
+                $this->heure_nuit = $obj->heure_nuit;
+                $this->heure_route = $obj->heure_route;
+                $this->kilometres = $obj->kilometres;
+                $this->repas = $obj->repas;
+                $this->indemnite_tt = $obj->indemnite_tt;
+
+				// extrafields
+				foreach ($optionsArray as $key => $label) {
+					if (empty($extrafields->attributes[$this->table_element]['type'][$name]) || $extrafields->attributes[$this->table_element]['type'][$name] != 'separate') {
+						// Test fetch_array ! is_int($key) because fetch_array result is a mix table with Key as alpha and Key as int (depend db engine)
+						if ($key != 'rowid' && $key != 'tms' && $key != 'fk_member' && !is_int($key)) {
+							// we can add this attribute to object
+							if (!empty($extrafields->attributes[$this->table_element]) && in_array($extrafields->attributes[$this->table_element]['type'][$key], array('date', 'datetime'))) {
+								//var_dump($extrafields->attributes[$this->table_element]['type'][$key]);
+								$this->array_options["options_".$key] = $this->db->jdate($obj->$key);
+							} else {
+								$this->array_options["options_".$key] = $obj->$key;
+							}
+
+							//var_dump('key '.$key.' '.$obj->$key.' type='.$extrafields->attributes[$this->table_element]['type'][$key].' '.$this->array_options["options_".$key]);
+						}
+						if (!empty($extrafields->attributes[$this->table_element]['type'][$key]) && $extrafields->attributes[$this->table_element]['type'][$key] == 'password') {
+							if (!empty($obj->$key) && preg_match('/^dolcrypt:/', $obj->$key)) {
+								$this->array_options["options_".$key] = dolDecrypt($obj->$key);
+							}
+						}
+					}
+				}
+
+				$res_array[$this->date] = clone $this;
+				$i++;
+            }
+
+			$this->db->free($resql);
+			return $res_array;
         } else {
             $this->error = "Error ".$this->db->lasterror();
             return -1;

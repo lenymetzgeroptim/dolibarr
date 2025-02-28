@@ -287,6 +287,15 @@ $timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
 $permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read;
 if (!$permissiontoread) accessforbidden();
 
+// Types de congés 
+$typeleaves = $holiday->getTypesNoCP(-1, -1);
+$arraytypeleaves = array();
+foreach ($typeleaves as $key => $val) {
+	$labeltoshow = $val['code'];
+	$arraytypeleaves[$val['rowid']] = $labeltoshow;
+}
+
+
 /*
  * Actions
  */
@@ -368,7 +377,11 @@ include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/tpl/actions_timesheet.tpl
 
 include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/actions.inc.php';
 
-// Gestion des congés et des jours feriés
+/*
+ * View
+ */
+
+ // Gestion des congés et des jours feriés
 $timeSpentDay = $object->timeDoneByDay($usertoprocess->id);
 $multiple_holiday = 0;
 $uncompleted_fdt = 0;
@@ -436,10 +449,6 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$uncompleted_fdt = 1;
 	}
 }
-
-/*
- * View
- */
 
 $title = $langs->trans("FeuilleDeTemps");
 
@@ -595,23 +604,28 @@ foreach ($arrayfields as $key => $val) {
 $tasksarray = $taskstatic->getTasksArray(0, 0, 0, $socid, 0, $search_project_ref, $onlyopenedproject, $morewherefilter, 0, 0, $extrafields); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
 
 // Calculate total for all tasks
-$listofdistinctprojectid = array(); // List of all distinct projects
-if (is_array($tasksarraywithoutfilter) && count($tasksarraywithoutfilter)) {
-	foreach ($tasksarraywithoutfilter as $tmptask) {
-		$listofdistinctprojectid[$tmptask->fk_project] = $tmptask->fk_project;
+if(!$conf->global->FDT_DISPLAY_COLUMN) {
+	$listofdistinctprojectid = array(); // List of all distinct projects
+	if (is_array($tasksarraywithoutfilter) && count($tasksarraywithoutfilter)) {
+		foreach ($tasksarraywithoutfilter as $tmptask) {
+			$listofdistinctprojectid[$tmptask->fk_project] = $tmptask->fk_project;
+		}
+	}
+	$totalforeachday = array();
+	$timeSpentMonth = array();
+	foreach ($listofdistinctprojectid as $tmpprojectid) {
+		$projectstatic->id = $tmpprojectid;
+		$projectstatic->loadTimeSpent_month($firstdaytoshow, 0, $usertoprocess->id); // Load time spent from table projet_task_time for the project into this->weekWorkLoad and this->weekWorkLoadPerTask for all days of a week
+		$timeSpentMonth[$projectstatic->id]['weekWorkLoad'] = $projectstatic->weekWorkLoad;
+		$timeSpentMonth[$projectstatic->id]['weekWorkLoadPerTask'] = $projectstatic->weekWorkLoadPerTask;
+		for ($idw = 0; $idw < $nb_jour; $idw++) {
+			$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
+			$totalforeachday[$tmpday] += $projectstatic->weekWorkLoad[$tmpday];
+		}
 	}
 }
-$totalforeachday = array();
-$timeSpentMonth = array();
-foreach ($listofdistinctprojectid as $tmpprojectid) {
-	$projectstatic->id = $tmpprojectid;
-	$projectstatic->loadTimeSpent_month($firstdaytoshow, 0, $usertoprocess->id); // Load time spent from table projet_task_time for the project into this->weekWorkLoad and this->weekWorkLoadPerTask for all days of a week
-	$timeSpentMonth[$projectstatic->id]['weekWorkLoad'] = $projectstatic->weekWorkLoad;
-	$timeSpentMonth[$projectstatic->id]['weekWorkLoadPerTask'] = $projectstatic->weekWorkLoadPerTask;
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-		$totalforeachday[$tmpday] += $projectstatic->weekWorkLoad[$tmpday];
-	}
+else {
+	$totalforeachday2 = $projectstatic->getTotalForEachDay($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 }
 
 // By default, we can edit only tasks we are assigned to
@@ -621,12 +635,22 @@ if (count($tasksarray) > 0) {
 	$level = 0;
 
 	// Récupération des temps précédent et suivant qui ne sont pas affichés
-	$temps_prec = $object->getTempsSemainePrecedente($firstdaytoshow, $usertoprocess);
-	$temps_suiv = $object->getTempsSemaineSuivante($lastdaytoshow, $usertoprocess);
-	$temps_prec_hs25 = $object->getHS25SemainePrecedente($firstdaytoshow, $usertoprocess);
-	$temps_suiv_hs25 = $object->getHS25SemaineSuivante($lastdaytoshow, $usertoprocess);
-	$temps_prec_hs50 = $object->getHS50SemainePrecedente($firstdaytoshow, $usertoprocess);
-	$temps_suiv_hs50 = $object->getHS50SemaineSuivante($lastdaytoshow, $usertoprocess);
+	if(!$conf->global->FDT_DISPLAY_FULL_WEEK) {
+		$temps_prec = $object->getTempsSemainePrecedente($firstdaytoshow, $usertoprocess);
+		$temps_suiv = $object->getTempsSemaineSuivante($lastdaytoshow, $usertoprocess);
+		$temps_prec_hs25 = $object->getHS25SemainePrecedente($firstdaytoshow, $usertoprocess);
+		$temps_suiv_hs25 = $object->getHS25SemaineSuivante($lastdaytoshow, $usertoprocess);
+		$temps_prec_hs50 = $object->getHS50SemainePrecedente($firstdaytoshow, $usertoprocess);
+		$temps_suiv_hs50 = $object->getHS50SemaineSuivante($lastdaytoshow, $usertoprocess);
+	}
+	else {
+		$temps_prec = 0;
+		$temps_suiv = 0;
+		$temps_prec_hs25 = 0;
+		$temps_suiv_hs25 = 0;
+		$temps_prec_hs50 = 0;
+		$temps_suiv_hs50 = 0;
+	}
 
 	// Récupération des favoris
 	$favoris = $object->getFavoris($usertoprocess->id);
@@ -644,14 +668,14 @@ if (count($tasksarray) > 0) {
 															$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
 															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-															$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine);
+															$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves);
 	}
 	else {
 		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek_Sigedi('timesheet', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
 																$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
 																$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 																$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs,
-																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour);
+																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves);
 	}
 } else {
 	print '<tr><td colspan="'.(4 + $addcolspan + $nb_jour).'"><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
