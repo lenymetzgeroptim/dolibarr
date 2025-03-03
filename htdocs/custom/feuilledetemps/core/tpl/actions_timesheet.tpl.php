@@ -44,15 +44,6 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	$filter = ' AND ptt.element_date >= "'.substr($db->idate($firstdaytoshow), 0, 10).'" AND ptt.element_date <= "'.substr($db->idate($lastdaytoshow), 0, 10).'"';
 	$timespent_month = $task->fetchAllTimeSpentByDate($usertoprocess, $filter);
 	
-	// Modification effectuée pour l'agenda
-	if($object->id > 0){
-		$modification = '<ul>';
-		$modification_deplacement = '<ul>';
-
-		$modification_anticipe = '<ul>';
-		$modification_anticipe_deplacement = '<ul>';
-	}
-
 	//foreach ($timetoadd as $day => $value) {     // Loop on each day
 	foreach($dayinloopfromfirstdaytoshow_array as $day => $tmpday) {
 		$is_day_anticipe = ($tmpday < $first_day_month ? 1 : 0);
@@ -65,6 +56,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 			$heure_other = new Projet_task_time_other($db);
 
 			$timespent_tmp = $timespent_month[$tmpday][$cpt];
+			$resheure_other = $heure_other->fetchWithoutId($timespent_tmp->timespent_id); // $res contient l'id du Projet_task_time_other correspondant, si celui-ci existe
 
 			if($timespent_tmp->fk_task > 0) {
 				$task->fetch($timespent_tmp->fk_task);
@@ -166,7 +158,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
 
 							if($is_day_anticipe){
-								$modification_anticipe .= ($old_value != $new_value ? '<li><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+								$modification .= ($old_value != $new_value ? '<li class="txt_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 							}
 							elseif($object->id > 0){
 								$modification .= ($old_value != $new_value ? '<li><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -181,13 +173,12 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 							$result = $timespent->update($user);
 						}
+						elseif($resheure_other != 0){
+							$timespent->element_duration = 0;		
+							$result = $timespent->update($user);
+						}
 						elseif(!$is_day_anticipe){		
 							$result = $timespent->delete($user);
-
-							$res = $heure_other->fetchWithoutId($timespent_tmp->timespent_id); // $res contient l'id du Projet_task_time_other correspondant, si celui-ci existe
-							if ($res > 0){
-								$result = $heure_other->delete($user);
-							}
 						}
 					}
 					// Si le temps consommé existe déja et qu'il y a au moins une modification
@@ -197,11 +188,11 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							if($is_day_anticipe){
 								$new_value = formatValueForAgenda('duration', 0);
 								$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
-								$modification_anticipe .= '<li><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";
+								$modification .= '<li class="txt_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";
 								
 								$new_value = formatValueForAgenda('duration', $newduration);
 								$old_value = formatValueForAgenda('duration', 0);
-								$modification_anticipe .= '<li><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";
+								$modification .= '<li class="txt_before"><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";
 							}
 							elseif($object->id > 0){
 								$new_value = formatValueForAgenda('duration', 0);
@@ -210,14 +201,15 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 								
 								$new_value = formatValueForAgenda('duration', $newduration);
 								$old_value = formatValueForAgenda('duration', 0);
-								$modification .= '<li><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";						}
+								$modification .= '<li><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";					
+							}
 						}
 						elseif($timespent_tmp->timespent_duration != $newduration) {
 							$new_value = formatValueForAgenda('duration', $newduration);
 							$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
 
 							if($is_day_anticipe){
-								$modification_anticipe .= ($old_value != $new_value ? '<li><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+								$modification .= ($old_value != $new_value ? '<li class="txt_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 							}
 							elseif($object->id > 0){
 								$modification .= ($old_value != $new_value ? '<li><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -281,7 +273,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
 
 							if($is_day_anticipe){
-								$modification_anticipe .= ($old_value != $new_value ? '<li><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+								$modification .= ($old_value != $new_value ? '<li class="txt_before"><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 							}
 							elseif($object->id > 0){
 								$modification .= ($old_value != $new_value ? '<li><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -323,8 +315,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 
 			// Gestion des heures de nuit
-			if($heure_nuit[$day][$cpt] !== null) {
-
+			if($heure_nuit[$day][$cpt] !== null) {	
 				$timetoadd_heure_nuit = $heure_nuit[$day][$cpt];
 				$newduration_heure_nuit = 0;
 
@@ -347,23 +338,23 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 					$timespent_tmp = $timespent_month[$tmpday][$cpt];
 				}
 
-				$res = $heure_other->fetchWithoutId($timespent_tmp->timespent_id); // $res contient l'id du Projet_task_time_other correspondant, si celui-ci existe
-
-				// Agenda Heure nuit
-				$new_value = formatValueForAgenda('duration', $newduration_heure_nuit);
-				$old_value = formatValueForAgenda('duration', $heure_other->heure_nuit);
-
-				if($is_day_anticipe){
-					$modification_anticipe .= ($old_value != $new_value ? '<li class="txt_heure_nuit"><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
-				}
-				elseif($object->id > 0){
-					$modification .= ($old_value != $new_value ? '<li class="txt_heure_nuit"><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
-				}
-
 				$timespent->fetch($timespent_tmp->timespent_id);
 
 				// S'il existe une ligne de Projet_task_time_other et que tous les champs sont = null
 				if($res > 0 && ($newduration_heure_nuit == 0)){
+					// Agenda Heure nuit
+					if($heure_other->heure_nuit != $newduration_heure_nuit) {
+						$new_value = formatValueForAgenda('duration', $newduration_heure_nuit);
+						$old_value = formatValueForAgenda('duration', $heure_other->heure_nuit);
+
+						if($is_day_anticipe){
+							$modification .= ($old_value != $new_value ? '<li class="txt_heure_nuit_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+						}
+						elseif($object->id > 0){
+							$modification .= ($old_value != $new_value ? '<li class="txt_heure_nuit"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+						}
+					}
+
 					if($is_day_anticipe && $heure_other->heure_nuit > 0) {
 						$timespent->note = (!empty($timespent->note) ? $timespent->note.' / ' : '');
 						$timespent->note .= 'Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other->heure_nuit > 0 ? convertSecondToTime($heure_other->heure_nuit) : '00:00').' ➔ 00:00';
@@ -495,10 +486,10 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 				
 				// Agenda
 				if($new_value != $silae->array_options['options_'.$key]) {
-					$new_value = formatValueForAgenda('double', $new_value);
-					$old_value = formatValueForAgenda('double', $silae->array_options['options_'.$key]);
+					$new_value = formatValueForAgenda($type, $new_value);
+					$old_value = formatValueForAgenda($type, $silae->array_options['options_'.$key]);
 
-					$modification_silae .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+					$modification .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 				}
 				
 				$silae->array_options['options_'.$key] = $new_value;
@@ -530,42 +521,19 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 	if (!$error) {
 		// Si le feuille de temps existe et que des modifications ont été réalisé
-		if($object->id > 0 && ($modification != '<ul>' || $modification_deplacement != '<ul>')){
-			$modification .= '</ul>';
-			$modification_deplacement .= '</ul>';
-
-			if($modification != '<ul></ul>') {
-				$object->actiontypecode = 'AC_OTH_AUTO';
-				$object->actionmsg2 = "Mise à jour des temps de la feuille de temps $object->ref";
-				$object->actionmsg = $modification;
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
+		if($object->id > 0 && !empty($modification)){
+			$modification = '<ul>'.$modification.'</ul>';
+			
+			if($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && !in_array($object->status, array(0, 2, 3))) {
+				$object->actiontypecode = 'AC_FDT_VERIF';
+				$object->actionmsg2 = ($object->status == 4 ? "Mise à jour des données lors de la vérification de la feuille de temps $object->ref" : "Mise à jour des données après la vérification de la feuille de temps $object->ref");
 			}
-			if($modification_deplacement != '<ul></ul>') {
+			else {
 				$object->actiontypecode = 'AC_OTH_AUTO';
-				$object->actionmsg2 = "Mise à jour des déplacements de la feuille de temps $object->ref";
-				$object->actionmsg = $modification_deplacement;
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
+				$object->actionmsg2 = "Mise à jour des données de la feuille de temps $object->ref";
 			}
-		}
-
-		if($object->id > 0 && ($modification_anticipe != '<ul>' || $modification_anticipe_deplacement != '<ul>')) {
-			$modification_anticipe .= '</ul>';
-			$modification_anticipe_deplacement .= '</ul>';
-
-			if($modification_anticipe != '<ul></ul>') {
-				$object->actiontypecode = 'AC_OTH_AUTO';
-				$object->actionmsg2 = "Mise à jour des temps anticipés de la feuille de temps $object->ref";
-				$object->actionmsg = '<span class="txt_before">'.$modification_anticipe.'</span>';
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
-			}
-			if($modification_anticipe_deplacement != '<ul></ul>') {
-				$object->actiontypecode = 'AC_OTH_AUTO';
-				$object->actionmsg2 = "Mise à jour des déplacements anticipés de la feuille de temps $object->ref";
-				$object->actionmsg = '<span class="txt_before">'.$modification_anticipe_deplacement.'</span>';
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
-			}
-
-			//$object->update($user);
+			$object->actionmsg = $modification;
+			$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
 		}
 
 		if(strpos($_SERVER["PHP_SELF"], 'feuilledetemps_card') === false) {
@@ -645,15 +613,6 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 
 	// Temps de chaque semaine pour vérifier s'il y a moins de 35h enregistré
 	$timeDoneByWeekBefore = $timeSpentWeek; 
-	
-	// Modification effectuée pour l'agenda
-	if($object->id > 0){
-		$modification = '<ul>';
-		$modification_deplacement = '<ul>';
-
-		$modification_anticipe = '<ul>';
-		$modification_anticipe_deplacement = '<ul>';
-	}
 
 	// Gestion des notes
 	foreach ($note as $taskid => $value) {  	// Loop on each task
@@ -744,7 +703,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 					$old_value = formatValueForAgenda('duration', $task->timespent_duration);
 
 					if($is_day_anticipe){
-						$modification_anticipe .= ($old_value != $new_value ? '<li><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+						$modification .= ($old_value != $new_value ? '<li class="txt_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 					}
 					elseif($object->id > 0){
 						$modification .= ($old_value != $new_value ? '<li><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -852,7 +811,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 						$old_value = formatValueForAgenda('duration', $heure_sup->heure_sup_25_duration);
 
 						if($is_day_anticipe){
-							$modification_anticipe .= ($old_value != $new_value ? '<li class="txt_hs25"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+							$modification .= ($old_value != $new_value ? '<li class="txt_hs25_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 						}
 						elseif($object->id > 0){
 							$modification .= ($old_value != $new_value ? '<li class="txt_hs25"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -959,7 +918,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 						$old_value = formatValueForAgenda('duration', $heure_sup->heure_sup_50_duration);
 
 						if($is_day_anticipe){
-							$modification_anticipe .= ($old_value != $new_value ? '<li class="txt_hs50"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+							$modification .= ($old_value != $new_value ? '<li class="txt_hs50_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 						}
 						elseif($object->id > 0){
 							$modification .= ($old_value != $new_value ? '<li class="txt_hs50"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -1058,7 +1017,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 						$old_value = formatValueForAgenda('duration', $heure_other->heure_nuit);
 
 						if($is_day_anticipe){
-							$modification_anticipe .= ($old_value != $new_value ? '<li class="txt_heure_nuit"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+							$modification .= ($old_value != $new_value ? '<li class="txt_heure_nuit_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 						}
 						elseif($object->id > 0){
 							$modification .= ($old_value != $new_value ? '<li class="txt_heure_nuit"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -1159,7 +1118,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 						$old_value = formatValueForAgenda('duration', $heure_other->port_epi);
 
 						if($is_day_anticipe){
-							$modification_anticipe .= ($old_value != $new_value ? '<li class="txt_heure_epi"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+							$modification .= ($old_value != $new_value ? '<li class="txt_heure_epi_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 						}
 						elseif($object->id > 0){
 							$modification .= ($old_value != $new_value ? '<li class="txt_heure_epi"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -1275,10 +1234,10 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 					$old_value = formatValueForAgenda('boolean', $deplacement->deplacement_ponctuel);
 
 					if($is_day_anticipe){
-						$modification_anticipe_deplacement .= ($old_value != $new_value ? '<li><strong>Déplacement Ponctuel</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+						$modification .= ($old_value != $new_value ? '<li class="txt_before"><strong>Déplacement Ponctuel</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 					}
 					elseif($object->id > 0){
-						$modification_deplacement .= ($old_value != $new_value ? '<li><strong>Déplacement Ponctuel</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+						$modification .= ($old_value != $new_value ? '<li><strong>Déplacement Ponctuel</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 					}
 				}
 
@@ -1288,10 +1247,10 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 					$old_value = formatValueForAgenda('int', $deplacement->type_deplacement, $deplacement, 'type_deplacement');
 
 					if($is_day_anticipe){
-						$modification_anticipe_deplacement .= ($old_value != $new_value ? '<li><strong>Type Déplacement</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+						$modification .= ($old_value != $new_value ? '<li class="txt_before"><strong>Type Déplacement</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 					}
 					elseif($object->id > 0){
-						$modification_deplacement .= ($old_value != $new_value ? '<li><strong>Type Déplacement</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+						$modification .= ($old_value != $new_value ? '<li><strong>Type Déplacement</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 					}
 				}
 
@@ -1301,10 +1260,10 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 					$old_value = formatValueForAgenda('int', $deplacement->moyen_transport, $deplacement, 'moyen_transport');
 
 					if($is_day_anticipe){
-						$modification_anticipe_deplacement .= ($old_value != $new_value ? '<li><strong>Moyen de transport</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+						$modification .= ($old_value != $new_value ? '<li class="txt_before"><strong>Moyen de transport</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 					}
 					elseif($object->id > 0){
-						$modification_deplacement .= ($old_value != $new_value ? '<li><strong>Moyen de transport</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+						$modification .= ($old_value != $new_value ? '<li><strong>Moyen de transport</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 					}
 				}
 
@@ -1473,22 +1432,13 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 		}
 
 		// Si le feuille de temps existe et que des modifications ont été réalisé
-		if($object->id > 0 && ($modification != '<ul>' || $modification_deplacement != '<ul>')){
-			$modification .= '</ul>';
-			$modification_deplacement .= '</ul>';
+		if($object->id > 0 && !empty($modification)){
+			$modification = '<ul>'.$modification.'</ul>';
 
-			if($modification != '<ul></ul>') {
-				$object->actiontypecode = 'AC_OTH_AUTO';
-				$object->actionmsg2 = "Mise à jour des temps de la feuille de temps $object->ref";
-				$object->actionmsg = $modification;
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
-			}
-			if($modification_deplacement != '<ul></ul>') {
-				$object->actiontypecode = 'AC_OTH_AUTO';
-				$object->actionmsg2 = "Mise à jour des déplacements de la feuille de temps $object->ref";
-				$object->actionmsg = $modification_deplacement;
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
-			}
+			$object->actiontypecode = 'AC_OTH_AUTO';
+			$object->actionmsg2 = "Mise à jour des données de la feuille de temps $object->ref";
+			$object->actionmsg = $modification;
+			$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
 
 			// Mail lors de modification des temps après une 1er validation
 			// if($object->id) {
@@ -1549,26 +1499,6 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 			// 		$res = $mail->sendfile();
 			// 	}
 			// }
-		}
-
-		if($object->id > 0 && ($modification_anticipe != '<ul>' || $modification_anticipe_deplacement != '<ul>')) {
-			$modification_anticipe .= '</ul>';
-			$modification_anticipe_deplacement .= '</ul>';
-
-			if($modification_anticipe != '<ul></ul>') {
-				$object->actiontypecode = 'AC_OTH_AUTO';
-				$object->actionmsg2 = "Mise à jour des temps anticipés de la feuille de temps $object->ref";
-				$object->actionmsg = '<span class="txt_before">'.$modification_anticipe.'</span>';
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
-			}
-			if($modification_anticipe_deplacement != '<ul></ul>') {
-				$object->actiontypecode = 'AC_OTH_AUTO';
-				$object->actionmsg2 = "Mise à jour des déplacements anticipés de la feuille de temps $object->ref";
-				$object->actionmsg = '<span class="txt_before">'.$modification_anticipe_deplacement.'</span>';
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
-			}
-
-			//$object->update($user);
 		}
 
 		if(strpos($_SERVER["PHP_SELF"], 'feuilledetemps_card') === false) {
@@ -1645,6 +1575,8 @@ if ($action == 'updateObservation' && $permissionToVerification) {
 // Enregistrement des vérifications
 if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
 	$holiday = new extendedHoliday($db);
+	$modification = '';
+
 	// $regul = new Regul($db);
 	// $resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 	
@@ -1667,10 +1599,6 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 	// $regulHeureSup25 = ($regul->heure_sup25 != 0 ? (double)$regul->heure_sup25 : 0);
 	// $regulHeureSup50 = ($regul->heure_sup50 != 0 ? (double)$regul->heure_sup50 : 0);
 	// $regulHeureSup50HT = ($regul->heure_sup50ht != 0 ? (double)$regul->heure_sup50ht : 0);
-
-	//$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
-
-	$modification_silae = '<ul>';
 
 	// Gestion des congés 
 	foreach($holiday_type as $key => $type) {
@@ -1728,8 +1656,10 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 		}
 	}
 
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
+	$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
+	$timeHoliday = $object->timeHolidayWeek($object->fk_user, $standard_week_hour);
 
+	for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
 
 		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
@@ -1751,7 +1681,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 				$new_value = formatValueForAgenda('double', $silae->heure_sup00 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup00_before / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 25%
@@ -1759,7 +1689,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 				$new_value = formatValueForAgenda('double', $silae->heure_sup25 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup25_before / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 50%
@@ -1767,7 +1697,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 				$new_value = formatValueForAgenda('double', $silae->heure_sup50 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup50_before / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 50% HT
@@ -1775,7 +1705,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 				$new_value = formatValueForAgenda('double', $silae->heure_sup50ht / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup50ht_before / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 50% HT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50% HT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 			
 			if($dayinloopfromfirstdaytoshow < $first_day_month) {
@@ -1801,14 +1731,13 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 
 		// Si le feuille de temps existe et que des modifications ont été réalisé
-		if($object->id > 0 && $modification_silae != '<ul>'){
-			$modification_silae .= '</ul>';
-			if($modification_silae != '<ul></ul>') {
-				$object->actiontypecode = 'AC_FDT_VERIF';
-				$object->actionmsg2 = "Mise à jour des données de vérification de la feuille de temps $object->ref";
-				$object->actionmsg = $modification_silae;
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
-			}
+		if($object->id > 0 && !empty($modification)){
+			$modification = '<ul>'.$modification.'</ul>';
+
+			$object->actiontypecode = 'AC_FDT_VERIF';
+			$object->actionmsg2 = ($object->status == 4 ? "Mise à jour des données lors de la vérification de la feuille de temps $object->ref" : "Mise à jour des données après la vérification de la feuille de temps $object->ref");
+			$object->actionmsg = $modification;
+			$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
 		}
 
 		// Redirect to avoid submit twice on back
@@ -1821,7 +1750,8 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	$holiday = new extendedHoliday($db);
 	$regul = new Regul($db);
 	$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
-	
+	$modification = '';
+
 	// $heure_sup00 = $_POST['heure_sup00'];
 	// $heure_sup25 = $_POST['heure_sup25'];
 	// $heure_sup50 = $_POST['heure_sup50'];
@@ -1866,8 +1796,6 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	$prime_variable = ($_POST['prime_variable'] > 0 ? price2num($_POST['prime_variable'], 2) : null);
 	$prime_amplitude = ($_POST['prime_amplitude'] > 0 ? price2num($_POST['prime_amplitude'], 2) : null);
 
-	//$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
-
 	if (!empty($HeureNuit50)) {
 		$newdurationHeureNuit50 = price2num($HeureNuit50, 2) * 3600;
 	}
@@ -1895,8 +1823,6 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	// if (!empty($regulHeureSup50)) {
 	// 	$regulHeureSup50 = price2num($regulHeureSup50, 2) * 3600;
 	// }
-
-	$modification_silae = '<ul>';
 
 	// Gestion des congés 
 	foreach($holiday_type as $key => $type) {
@@ -1955,6 +1881,9 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	}
 
 
+	$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
+	$timeHoliday = $object->timeHolidayWeek($object->fk_user, $standard_week_hour);
+
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 
 		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
@@ -2005,7 +1934,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$new_value = formatValueForAgenda('double', $silae->heure_sup00 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup00_before / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 25%
@@ -2013,7 +1942,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$new_value = formatValueForAgenda('double', $silae->heure_sup25 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup25_before / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 50%
@@ -2021,7 +1950,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$new_value = formatValueForAgenda('double', $silae->heure_sup50 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup50_before / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 50% HT
@@ -2029,7 +1958,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$new_value = formatValueForAgenda('double', $silae->heure_sup50ht / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup50ht_before / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 50% HT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50% HT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 			
 			if($dayinloopfromfirstdaytoshow < $first_day_month) {
@@ -2057,7 +1986,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			// 	$new_value = formatValueForAgenda('double', $newduration_heure_sup00);
 			// 	$old_value = formatValueForAgenda('double', $silae->heure_sup00);
 
-			// 	$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+			// 	$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			// }
 
 			// // Agenda Heure Sup 25%
@@ -2065,7 +1994,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			// 	$new_value = formatValueForAgenda('double', $newduration_heure_sup25);
 			// 	$old_value = formatValueForAgenda('double', $silae->heure_sup25);
 
-			// 	$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+			// 	$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			// }
 
 			// // Agenda Heure Sup 50%
@@ -2073,7 +2002,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			// 	$new_value = formatValueForAgenda('double', $newduration_heure_sup50);
 			// 	$old_value = formatValueForAgenda('double', $silae->heure_sup50);
 
-			// 	$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+			// 	$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			// }
 
 			// Agenda Heure Nuit
@@ -2081,7 +2010,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$new_value = formatValueForAgenda('double', $newduration_heure_nuit / 3600);
 				$old_value = formatValueForAgenda('double', $silae->heure_nuit / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Nuit</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Nuit</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Route
@@ -2089,7 +2018,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$new_value = formatValueForAgenda('double', $newduration_heure_route / 3600);
 				$old_value = formatValueForAgenda('double', $silae->heure_route / 3600);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Heure Route</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Heure Route</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Repas
@@ -2097,7 +2026,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$new_value = formatValueForAgenda('int', $repas[$idw], $silae, 'repas');
 				$old_value = formatValueForAgenda('int', $silae->repas, $silae, 'repas');
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Repas</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Repas</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Kilomètres
@@ -2105,7 +2034,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$new_value = formatValueForAgenda('double', $kilometres[$idw]);
 				$old_value = formatValueForAgenda('double', $silae->kilometres);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Kilomètres</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Kilomètres</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Indemnite TT
@@ -2113,7 +2042,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$new_value = formatValueForAgenda('boolean', $indemnite_tt[$idw]);
 				$old_value = formatValueForAgenda('boolean', $silae->indemnite_tt);
 
-				$modification_silae .= ($old_value != $new_value ? '<li><strong>Indemnité TT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				$modification .= ($old_value != $new_value ? '<li><strong>Indemnité TT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// S'il existe une ligne et que tous les champs sont = null
@@ -2171,7 +2100,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('int', $regulD1);
 			$old_value = formatValueForAgenda('int', $regul->d1);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul D1</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul D1</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Regul D2
@@ -2179,7 +2108,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('int', $regulD2);
 			$old_value = formatValueForAgenda('int', $regul->d2);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul D2</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul D2</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Regul D3
@@ -2187,7 +2116,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('int', $regulD3);
 			$old_value = formatValueForAgenda('int', $regul->d3);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul D3</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul D3</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Regul D4
@@ -2195,7 +2124,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('int', $regulD4);
 			$old_value = formatValueForAgenda('int', $regul->d4);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul D4</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul D4</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Regul GD1
@@ -2203,7 +2132,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('int', $regulGD1);
 			$old_value = formatValueForAgenda('int', $regul->gd1);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul GD1</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul GD1</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Regul GD2
@@ -2211,7 +2140,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('int', $regulGD2);
 			$old_value = formatValueForAgenda('int', $regul->gd2);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul GD2</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul GD2</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Regul Repas 1
@@ -2219,7 +2148,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('int', $regulRepas1);
 			$old_value = formatValueForAgenda('int', $regul->repas1);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Repas 1</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Repas 1</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Regul Repas 2
@@ -2227,7 +2156,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('int', $regulRepas2);
 			$old_value = formatValueForAgenda('int', $regul->repas2);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Repas 2</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Repas 2</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Regul Kilomètres
@@ -2235,7 +2164,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('double', $regulKilometres);
 			$old_value = formatValueForAgenda('double', $regul->kilometres);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Kilomètres</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Kilomètres</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Regul Indemnite TT
@@ -2243,7 +2172,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('int', $regulIndemniteTT);
 			$old_value = formatValueForAgenda('int', $regul->indemnite_tt);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Indemnite de TT</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Indemnite de TT</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Heure Nuit 50%
@@ -2251,7 +2180,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('double', $newdurationHeureNuit50 / 3600);
 			$old_value = formatValueForAgenda('double', $regul->heure_nuit_50 / 3600);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Heure Nuit 50%</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Nuit 50%</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Heure Nuit 75%
@@ -2259,7 +2188,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('double', $newdurationHeureNuit75 / 3600);
 			$old_value = formatValueForAgenda('double', $regul->heure_nuit_75 / 3600);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Heure Nuit 75%</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Nuit 75%</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Heure Nuit 100%
@@ -2267,7 +2196,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('double', $newdurationHeureNuit100 / 3600);
 			$old_value = formatValueForAgenda('double', $regul->heure_nuit_100 / 3600);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Heure Nuit 100%</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Nuit 100%</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Heure Route
@@ -2275,7 +2204,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('double', $newdurationHeureRoute / 3600);
 			$old_value = formatValueForAgenda('double', $regul->heure_route / 3600);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Heure Route</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Route</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Heure Sup 0%
@@ -2283,7 +2212,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('double', $regulHeureSup00 / 3600);
 			$old_value = formatValueForAgenda('double', $regul->heure_sup00 / 3600);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 0%</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 0%</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Heure Sup 25%
@@ -2291,7 +2220,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('double', $regulHeureSup25 / 3600);
 			$old_value = formatValueForAgenda('double', $regul->heure_sup25 / 3600);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 25%</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 25%</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Heure Sup 50%
@@ -2299,7 +2228,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('double', $regulHeureSup50 / 3600);
 			$old_value = formatValueForAgenda('double', $regul->heure_sup50 / 3600);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 50%</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 50%</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// Agenda Heure Sup 50% HT
@@ -2307,7 +2236,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$new_value = formatValueForAgenda('double', $regulHeureSup50HT / 3600);
 			$old_value = formatValueForAgenda('double', $regul->heure_sup50ht / 3600);
 
-			$modification_silae .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 50% HT</strong> : $old_value ➔ $new_value</li>" : '');
+			$modification .= ($old_value != $new_value ? "<li><strong>Regul Heure Sup 50% HT</strong> : $old_value ➔ $new_value</li>" : '');
 		}
 
 		// S'il existe une ligne et que tous les champs sont = null
@@ -2392,18 +2321,14 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 		setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 
 		// Si le feuille de temps existe et que des modifications ont été réalisé
-		if($object->id > 0 && $modification_silae != '<ul>'){
-			$modification_silae .= '</ul>';
+		if($object->id > 0 && !empty($modification)){
+			$modification = '<ul>'.$modification.'</ul>';
 
-			if($modification_silae != '<ul></ul>') {
-				$object->actiontypecode = 'AC_FDT_VERIF';
-				$object->actionmsg2 = "Mise à jour des données de vérification de la feuille de temps $object->ref";
-				$object->actionmsg = $modification_silae;
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
-			}
+			$object->actiontypecode = 'AC_FDT_VERIF';
+			$object->actionmsg2 = "Mise à jour des données de vérification de la feuille de temps $object->ref";
+			$object->actionmsg = $modification;
+			$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
 		}
-
-
 
 		// Redirect to avoid submit twice on back
 		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
@@ -2459,7 +2384,6 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 
 	// Si l'utilisateur est un RAF, la FDT est directement validé
 	if (($userIsRA  && !$conf->global->FDT_USER_APPROVER) || ($conf->global->FDT_USER_APPROVER && (empty($usertoprocess->array_options['options_approbateurfdt']) || in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt']))))){
-		$modification = '<ul>';
 		$regulHeureSup00 = ($regul->heure_sup00 != 0 ? (double)$regul->heure_sup00 : 0);
 		$regulHeureSup25 = ($regul->heure_sup25 != 0 ? (double)$regul->heure_sup25 : 0);
 		$regulHeureSup50 = ($regul->heure_sup50 != 0 ? (double)$regul->heure_sup50 : 0);
@@ -2628,15 +2552,13 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 	}
 
 	if ($result > 0) {
-		if($modification != '<ul>'){
-			$modification .= '</ul>';
+		if(!empty($modification)){
+			$modification = '<ul>'.$modification.'</ul>';
 
-			if($modification != '<ul></ul>') {
-				$object->actiontypecode = 'AC_FDT_VERIF';
-				$object->actionmsg2 = "Mise à jour des données de vérification de la feuille de temps $object->ref";
-				$object->actionmsg = $modification;
-				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
-			}
+			$object->actiontypecode = 'AC_FDT_VERIF';
+			$object->actionmsg2 = ($object->status == 4 ? "Mise à jour des données lors de la vérification de la feuille de temps $object->ref" : "Mise à jour des données après la vérification de la feuille de temps $object->ref");
+			$object->actionmsg = $modification;
+			$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
 		}
 
 		setEventMessages($langs->trans("Feuille de temps transmise"), null, 'mesgs');
