@@ -292,9 +292,27 @@ function disableNullInput(columnmode) {
 
                 if(initialValue == undefined) initialValue = '0'
 
-                console.log(initialValue)
-                console.log(currentValue)
-                console.log(initialValue !== currentValue)
+                if (initialValue !== currentValue) {
+                    $(obj).prop('disabled', false);
+                }
+            }
+        });
+
+        $('form[name="addtime"] input[type="text"][id^="time_heure_nuit"]:disabled').each(function (index, obj) {
+            let id = $(obj).attr("id"); 
+            let matches = id.match(/time_heure_nuit\[(\d+)\]\[(\d+)\]/);
+
+            if (matches) {
+                let day = matches[1];
+                let cpt = matches[2];
+
+                let fk_task_obj = $("#" + `fk_task_${day}_${cpt}`);
+                
+                let initialValue = fk_task_obj.find("option[selected]").val(); 
+                let currentValue = fk_task_obj.val(); 
+
+
+                if(initialValue == undefined) initialValue = '0'
 
                 if (initialValue !== currentValue) {
                     $(obj).prop('disabled', false);

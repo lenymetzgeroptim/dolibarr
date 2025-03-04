@@ -867,10 +867,17 @@ class ExtendedExportFDT extends Export
 
 		if($datatoexport == 'analytique_pourcentage'){
 			$sql .= " LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid";
-			$sql .= " LEFT JOIN llx_feuilledetemps_projet_task_time_other AS ptto ON ptto.fk_projet_task_time = tt.rowid";
+			if($conf->global->FDT_DISPLAY_COLUMN) {
+				$sql .= " LEFT JOIN llx_feuilledetemps_projet_task_time_other AS ptto ON ptto.fk_projet_task_time = tt.rowid";
+			}
 			$sql .= " LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element";
 			$sql .= " LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet";
-			$sql .= " LEFT JOIN (SELECT u.rowid, (SUM(tt.element_duration)/3600 + SUM(ptto .heure_nuit)/3600) as total FROM llx_user AS u LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid LEFT JOIN llx_feuilledetemps_projet_task_time_other AS ptto ON ptto.fk_projet_task_time = tt.rowid LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet WHERE tt.elementtype = 'task'";
+			if(!$conf->global->FDT_DISPLAY_COLUMN) {
+				$sql .= " LEFT JOIN (SELECT u.rowid, SUM(tt.element_duration)/3600 as total FROM llx_user AS u LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet WHERE tt.elementtype = 'task'";
+			}
+			else {
+				$sql .= " LEFT JOIN (SELECT u.rowid, (SUM(tt.element_duration)/3600 + SUM(ptto .heure_nuit)/3600) as total FROM llx_user AS u LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid LEFT JOIN llx_feuilledetemps_projet_task_time_other AS ptto ON ptto.fk_projet_task_time = tt.rowid LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet WHERE tt.elementtype = 'task'";
+			}
 			if(!empty($array_filterValue['tt.element_date'])) {
 				$sql .= " AND date_format(tt.element_date,'%Y%m') = '".$array_filterValue['tt.element_date']."'";
 			}
