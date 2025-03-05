@@ -1072,7 +1072,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				//passé au status classé(annulé)
 				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED) {
 					print dolGetButtonAction('', $langs->trans('Annuler cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken(), '', $permissiontoadd);	
-					print "<script>showPopupMessage('Le pilote peux passé son action au status attente validation soldée que si sont avancement est a 100% ', 'error');</script>";	
+					print "<script>showPopupMessage('Le pilote peut passer son action au status \'attente  soldée\' que si son avancement est à 100% ', 'error');</script>";	
 				}
 
 				if ($object->status != $object::STATUS_CANCELED) {
@@ -1082,7 +1082,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 
 				if($object->status == $object::STATUS_SOLDEE){
-					print "<script>showPopupMessage('veuilliez évaluer l\'action', 'error');</script>";
+					print "<script>showPopupMessage('Veuilliez évaluer l\'action', 'error');</script>";
 				}
 			}
 

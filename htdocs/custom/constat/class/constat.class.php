@@ -74,6 +74,7 @@ class Constat extends CommonObject
 	const STATUS_EN_COURS = 4;
 	const STATUS_SOLDEE = 5;
 	const STATUS_CLOTURE = 7;
+	const STATUS_CLASSE = 8;
 	const STATUS_CANCELED = 9;
 
 
@@ -124,12 +125,12 @@ class Constat extends CommonObject
 		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
 		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>20, 'notnull'=>1, 'visible'=>4, 'default'=>'(PROV)', 'index'=>1, 'searchall'=>1, 'showoncombobox'=>'1', 'validate'=>'1', 'comment'=>"Reference of object"),
 		'label' => array('type'=>'varchar(255)', 'label'=>'Titre', 'enabled'=>'1', 'position'=>30, 'notnull'=>1, 'visible'=>1, 'default'=>'', 'searchall'=>1, 'css'=>'minwidth300', 'cssview'=>'wordbreak', 'help'=>"Le numéro du constat", 'showoncombobox'=>'2', 'validate'=>'1',),
-		'status' => array('type'=>'integer', 'label'=>'Statut', 'enabled'=>'1', 'position'=>43, 'notnull'=>1, 'visible'=>5, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Brouillon', '1'=>'Validé', '3'=>'Vérifié', '4'=>'En cours', '5'=>'Soldée', '7'=>'Clôturé', '9'=>'Annulé'), 'validate'=>'1',),
+		'status' => array('type'=>'integer', 'label'=>'Statut', 'enabled'=>'1', 'position'=>43, 'notnull'=>1, 'visible'=>5, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Brouillon', '1'=>'Validé', '3'=>'Vérifié', '4'=>'En cours', '5'=>'Soldée', '7'=>'Clôturé','8'=>'Classé (sans suite)', '9'=>'Annulé'), 'validate'=>'1',),
 		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>502, 'notnull'=>1, 'visible'=>5, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
 		'fk_project' => array('type'=>'integer:Project:projet/class/project.class.php:', 'label'=>'Projet', 'enabled'=>'1', 'position'=>505, 'notnull'=>0, 'visible'=>1,),
 		'num_commande' => array('type'=>'integer:Commande:commande/class/commande.class.php:', 'label'=>'Numéro de commande', 'enabled'=>'1', 'position'=>504, 'notnull'=>0, 'visible'=>1,),
 		'site' => array('type'=>'integer:Societe:societe/class/societe.class.php::(client:=:1)OR(client:=:3:)', 'label'=>'Site intervention', 'enabled'=>'1', 'position'=>508, 'notnull'=>0, 'visible'=>-1, 'index'=>1,),
-		'dateEmeteur' => array('type'=>'date', 'label'=>'Date création du constat', 'enabled'=>'1', 'position'=>506, 'notnull'=>1, 'visible'=>1,),
+		'dateEmeteur' => array('type'=>'date', 'label'=>'Date création du constat', 'enabled'=>'1', 'position'=>506, 'notnull'=>0, 'visible'=>1,),
 		'sujet' => array('type'=>'sellist:constat_sujet:label:rowid::(active:=:1)', 'label'=>'Typologie', 'enabled'=>'1', 'position'=>510, 'notnull'=>0, 'visible'=>1, 'csslist'=>'150',),
 		'typeConstat' => array('type'=>'sellist:constat_type:label:rowid::(active:=:1)', 'label'=>'Type de constat', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>1,),
 		'actionimmediate' => array('type'=>'boolean', 'label'=>'Action immédiate', 'enabled'=>'1', 'position'=>562, 'notnull'=>0, 'visible'=>1, 'help'=>"Coché si le constat est une action immédiate",),
@@ -139,7 +140,6 @@ class Constat extends CommonObject
 		'coutTotal' => array('type'=>'int', 'label'=>'Coût Total', 'enabled'=>'1', 'position'=>550, 'notnull'=>0, 'visible'=>1, 'help'=>"Coût total regroupant : Coût traitement horraire ,coût traitement financier et coût pénalité",),
 		'descriptionConstat' => array('type'=>'html', 'label'=>'Description du constat', 'enabled'=>'1', 'position'=>515, 'notnull'=>0, 'visible'=>3, 'cssview'=>'wordbreak', 'help'=>"Description détaillée du constat (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
 		'impactcomm' => array('type'=>'html', 'label'=>'Description impact', 'enabled'=>'1', 'position'=>525, 'notnull'=>0, 'visible'=>3, 'cssview'=>'wordbreak', 'help'=>"Description impact (réels et potentiels)",),
-		'description' => array('type'=>'html', 'label'=>'Commentaire émetteur', 'enabled'=>'1', 'position'=>611, 'notnull'=>0, 'visible'=>3,),
 		'infoClient' => array('type'=>'boolean', 'label'=>'Information Client Requise', 'enabled'=>'1', 'position'=>578, 'notnull'=>0, 'visible'=>1, 'help'=>"client informé requis ou non",),
 		'commInfoClient' => array('type'=>'html', 'label'=>'Commentaire info client', 'enabled'=>'1', 'position'=>579, 'notnull'=>0, 'visible'=>3,'help'=>"précisez méthode d'information client ",),
 		'accordClient' => array('type'=>'boolean', 'label'=>'Accord du Client', 'enabled'=>'1', 'position'=>595, 'notnull'=>0, 'visible'=>1, 'help'=>"Accord client requis ou non",),
@@ -172,7 +172,6 @@ class Constat extends CommonObject
 	public $coutTotal;
 	public $descriptionConstat;
 	public $impactcomm;
-	public $description;
 	public $infoClient;
 	public $commInfoClient;
 	public $accordClient;
@@ -445,7 +444,6 @@ class Constat extends CommonObject
 		$sql .= " co.sujet,";
 		$sql .= " co.descriptionConstat,";
 		$sql .= " co.impactcomm,";
-		$sql .= " co.description,";
 		$sql .= " co.typeConstat,";
 		$sql .= " co.rubrique,";
 		$sql .= " co.actionimmediate,";
@@ -796,7 +794,68 @@ class Constat extends CommonObject
 				
 				$res = $cmail->sendfile();
 					
-					
+				if($this->fk_project = null){
+
+					$subject = '[OPTIM Industries] Notification automatique constat sans projet ';
+
+						$from = 'erp@optim-industries.fr';
+						
+						// Si la requête a réussi
+						if ($result) {
+							$to = ''; // Initialisation de la chaîne d'emails
+							while ($obj = $db->fetch_object($result)) {
+								$email = $obj->email;
+								// Ajoute l'email à la liste
+								if (!empty($email)) {
+									$to .= $email . ", ";
+								}
+							}
+						}
+
+						$user_group = New UserGroup($db);
+						$user_group->fetch('', 'Resp. Q3SE');
+						$liste_utilisateur = $user_group->listUsersForGroup();
+						foreach($liste_utilisateur as $qualite){
+							if(!empty($qualite->email)){
+								$to .= $qualite->email;
+								
+
+							}
+						}
+
+							// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+							$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+							$resql_creator = $db->query($sql_creator);
+							$creator_name = "";
+							if ($resql_creator) {
+								if ($db->num_rows($resql_creator) > 0) {
+									$creator = $db->fetch_object($resql_creator);
+									$creator_name = $creator->firstname . ' ' . $creator->lastname;
+								}
+							}
+
+						global $dolibarr_main_url_root;
+						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+						$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+
+						
+						$to = rtrim($to, ", ");
+						$message = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été validé sans projet, Votre système de notification.");
+						//$msg = 'test notif ( a ne pas prendre en compte si reçu )';
+						$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
+						
+						// Send mail
+						$res = $cmail->sendfile();
+						if($res) {
+							setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
+							// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+							// exit;
+							print '<script>
+							window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
+							</script>';
+						} 
+				}	
 
 				$ret = $this->fetch($this->id); // Reload to get new records
 
@@ -925,7 +984,8 @@ class Constat extends CommonObject
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						<0 if KO, >0 if OK
 	 */
-	public function setCloture($user, $notrigger = 0)
+	
+public function setCloture($user, $notrigger = 0)
 		{
 			// Protection
 			if ($this->status <= self::STATUS_CLOTURE) {
@@ -934,6 +994,22 @@ class Constat extends CommonObject
 			return $this->setStatusCommon($user, self::STATUS_CLOTURE, $notrigger, 'CONSTAT_UNVALIDATE');
 		}
 
+		/**
+	 *	Set Status Classé
+	 *
+	 *	@param	User	$user			Object user that modify
+	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
+	 *	@return	int						<0 if KO, >0 if OK
+	 */
+	
+public function setClasse($user, $notrigger = 0)
+{
+	// Protection
+	if ($this->status <= self::STATUS_CLASSE) {
+		return 0;
+	}
+	return $this->setStatusCommon($user, self::STATUS_CLASSE, $notrigger, 'CONSTAT_UNVALIDATE');
+}	
 	
 	/**
 	 *	Set draft status
@@ -1190,22 +1266,24 @@ class Constat extends CommonObject
 			global $langs;
 			//$langs->load("constat@constat");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Validé');
+			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Créé');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
 			$this->labelStatus[self::STATUS_PRISE] = $langs->transnoentitiesnoconv('Vérifiée');
 			$this->labelStatus[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatus[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldé');
-			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Classé');
+			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturé');
+			$this->labelStatus[self::STATUS_CLASSE] = $langs->transnoentitiesnoconv('Classé (sans suite)');
 
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Validé');
+			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Créé');
 			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
 			$this->labelStatusShort[self::STATUS_PRISE] = $langs->transnoentitiesnoconv('Vérifiée');
 			$this->labelStatusShort[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatusShort[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldé');
-			$this->labelStatusShort[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Classé');
+			$this->labelStatusShort[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturé');
+			$this->labelStatusShort[self::STATUS_CLASSE] = $langs->transnoentitiesnoconv('Classé (sans suite)');
 		}
-	
+
 		$statusType = 'status'.$status;
 		//if ($status == self::STATUS_VALIDATED) $statusType = 'status1';
 		if ($status == self::STATUS_CANCELED) {
@@ -1477,8 +1555,6 @@ class Constat extends CommonObject
 				$error++;
 			}
 
-
-
 		if (!$error) {
 			$this->status = self::STATUS_EN_COURS;
 			$this->db->commit();
@@ -1516,7 +1592,6 @@ class Constat extends CommonObject
 			$this->db->rollback();
 			return -1;
 		}
-
 	}
 
 	public function updateCloture($notrigger = 0)
@@ -1545,9 +1620,90 @@ class Constat extends CommonObject
 			return -1;
 		}
 
+	}
+
+	public function deleteConstat($notrigger = 0)
+{
+    global $user;
+    
+    $error = 0;
+    $this->db->begin(); // Début de la transaction
+
+    // Suppression des liaisons dans llx_element_element
+    $sql = "DELETE FROM ".MAIN_DB_PREFIX."element_element";
+    $sql .= " WHERE fk_source = ".((int) $this->id);
+    $sql .= " AND targettype = 'actions_action'";
+
+    $resql = $this->db->query($sql);
+    if (!$resql) {
+        dol_print_error($this->db);
+        $this->error = $this->db->lasterror();
+        $error++;
+    }
+
+    // Suppression des liaisons dans llx_actioncomm
+    $sql = "DELETE FROM ".MAIN_DB_PREFIX."actioncomm";
+    $sql .= " WHERE elementtype = 'constat@constat'";
+    $sql .= " AND fk_element = ".((int) $this->id);
+
+    $resql = $this->db->query($sql);
+    if (!$resql) {
+        dol_print_error($this->db);
+        $this->error = $this->db->lasterror();
+        $error++;
+    }
+
+    // Suppression du constat dans llx_constat_constat
+    $sql = "DELETE FROM ".MAIN_DB_PREFIX."constat_constat";
+    $sql .= " WHERE rowid = ".((int) $this->id);
+
+    $resql = $this->db->query($sql);
+    if (!$resql) {
+        dol_print_error($this->db);
+        $this->error = $this->db->lasterror();
+        $error++;
+    }
+
+    // Validation ou annulation de la transaction
+    if (!$error) {
+        $this->db->commit();
+        return 1;
+    } else {
+        $this->db->rollback();
+        return -1;
+    }
+}
+
+
+	public function updateClasse($notrigger = 0)
+	{
+		global $user; 
+
+		$error = 0;
+		$sql = "UPDATE ".MAIN_DB_PREFIX."constat_constat";
+		$sql .= " SET status = ".self::STATUS_CLASSE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+
+		if (!$error) {
+			$this->status = self::STATUS_CLASSE;
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
 		
 	}
 
+
+	
 
 	function updateCancel($notrigger = 0)
 	{
@@ -2640,6 +2796,29 @@ class ConstatLine extends CommonObjectLine
 		$this->db = $db;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
