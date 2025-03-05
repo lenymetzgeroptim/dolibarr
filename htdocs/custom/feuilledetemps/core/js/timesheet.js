@@ -265,7 +265,7 @@ function disableNullInput(columnmode) {
             }
         });
 
-        $('form[name="addtime"] select:not(:disabled):not(#search_usertoprocessid)').each(function () {
+        $('form[name="addtime"] select:not(:disabled):not(#search_usertoprocessid):not([name^="holiday_type"])').each(function () {
             let initialValue = $(this).find("option[selected]").val(); 
             let currentValue = $(this).val(); 
 

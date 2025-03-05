@@ -201,7 +201,7 @@ $search_array_options_project = $extrafields->getOptionalsFromPost('projet', '',
 $search_array_options_task = $extrafields->getOptionalsFromPost('projet_task', '', 'search_task_');
 
 if(!empty($_POST["transmettre"])) {
-	$massaction = "transmettre";
+	$action2 = "transmettre";
 }
 
 $userInDeplacement = 0;
@@ -347,7 +347,7 @@ $param .= ($search_thirdparty ? '&search_thirdparty='.urlencode($search_thirdpar
 $param .= ($search_task_ref ? '&search_task_ref='.urlencode($search_task_ref) : '');
 $param .= ($search_task_label ? '&search_task_label='.urlencode($search_task_label) : '');
 $paramwithoutdate = $param;
-//if ($massaction == 'transmettre' || $action == 'confirm_transmettre') {
+//if ($action2 == 'transmettre' || $action == 'confirm_transmettre') {
 	$param .= ($day ? '&day='.urlencode($day) : '').($month ? '&month='.urlencode($month) : '').($year ? '&year='.urlencode($year) : '');
 //}
 
@@ -466,7 +466,7 @@ print_barre_liste($title, $page, $_SERVER["PHP_SELF"], "", $sortfield, $sortorde
 
 // Affichage des fenêtres de confirmation
 $formconfirm = '';
-if ($massaction == 'transmettre') {
+if ($action2 == 'transmettre') {
 	$question = 'Voulez vous transmettre votre feuille de temps pour validation ?';
 	$question .= ($uncompleted_fdt ? '<br><span style="color: #be0000; font-size: initial;"><strong>⚠ Le pointage n\'a pas été renseigné en totalité</strong></span>' : '');
 	$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?'.$param, $langs->trans('Transmission'), $question, 'confirm_transmettre', '', 0, 1);

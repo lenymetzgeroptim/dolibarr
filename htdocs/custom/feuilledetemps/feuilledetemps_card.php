@@ -125,6 +125,10 @@ if ($mode == 'mine') {
 $modeinput = ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? 'hours_decimal' : 'hours');
 $socid = 0;
 
+if(!empty($_POST["verification"])) {
+	$action2 = "verification";
+}
+
 // Initialize technical objects
 $object = new FeuilleDeTemps($db);
 $extrafields = new ExtraFields($db);
@@ -952,16 +956,16 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Delete'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 1);
 	}
 
-	if ($massaction == 'validate1' && $userIsResp && $conf->global->FDT_USER_APPROVER) {
+	if ($action == 'validate1' && $userIsResp && $conf->global->FDT_USER_APPROVER) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate1', '', 0, 1);
 	}
-	if ($massaction == 'validate1' && $userIsResp && $resp_pas_valide && !$conf->global->FDT_USER_APPROVER) {
+	if ($action == 'validate1' && $userIsResp && $resp_pas_valide && !$conf->global->FDT_USER_APPROVER) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate1', '', 0, 1);
 	}
-	if ($massaction == 'validate2'  && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
+	if ($action == 'validate2'  && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate2', '', 0, 1);
 	}
-	if ($massaction == 'verification'  && $permissionToVerification) {
+	if ($action2 == 'verification'  && $permissionToVerification) {
 		$question = 'Voulez vous valider la feuille de temps ?';
 		if($conf->global->FDT_STATUT_HOLIDAY) $question .= (!GETPOST('all_holiday_validate', 'int') ? '<br><span style="color: #be0000; font-size: initial;"><strong>⚠ Certains congés ne sont pas validés</strong></span>' : '');
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), $question, 'confirm_verification', '', 0, 1);
@@ -990,10 +994,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $object->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('sendMail'), '', 'confirm_sendMail', $formquestion, 0, 0, 500, 1000);
 	}
 
-	if ($massaction == 'refus' && !$conf->global->FDT_USER_APPROVER && (($userIsResp && $resp_pas_valide) || $userIsRespProjet || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
+	if ($action == 'refus' && !$conf->global->FDT_USER_APPROVER && (($userIsResp && $resp_pas_valide) || $userIsRespProjet || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Refuser'), '', 'confirm_setdraft', array(array('label'=>'Raison du refus', 'type'=>'text', 'name'=>'raison_refus')), 0, 1);
 	}
-	elseif ($massaction == 'refus' && $conf->global->FDT_USER_APPROVER && (($userIsResp && $object->status == $object::STATUS_APPROBATION1) || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
+	elseif ($action == 'refus' && $conf->global->FDT_USER_APPROVER && (($userIsResp && $object->status == $object::STATUS_APPROBATION1) || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Refuser'), '', 'confirm_setdraft', array(array('label'=>'Raison du refus', 'type'=>'text', 'name'=>'raison_refus')), 0, 1);
 	}
 
@@ -1052,31 +1056,33 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// Validate
 		if($conf->global->FDT_USER_APPROVER) {
 			if ($object->status == $object::STATUS_APPROBATION1) {
-				$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=validate1&token='.newToken(), '', $userIsResp);
-				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=refus&token='.newToken(), '', $userIsResp);
+				$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate1&token='.newToken(), '', $userIsResp);
+				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $userIsResp);
 			}
 		}
 		else {
 			if ($object->status == $object::STATUS_APPROBATION1) {
-				$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=validate1&token='.newToken(), '', $userIsResp && $resp_pas_valide);
-				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=refus&token='.newToken(), '', $userIsResp && $resp_pas_valide);
+				$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate1&token='.newToken(), '', $userIsResp && $resp_pas_valide);
+				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $userIsResp && $resp_pas_valide);
 			}
 			elseif ($object->status == $object::STATUS_APPROBATION2) {
-				$buttonAction .= dolGetButtonAction('2ème validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=validate2&token='.newToken(), '', $userIsRespProjet);
-				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=refus&token='.newToken(), '', $userIsRespProjet);
+				$buttonAction .= dolGetButtonAction('2ème validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate2&token='.newToken(), '', $userIsRespProjet);
+				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $userIsRespProjet);
 			}
 		}
 		
 		if ($object->status == $object::STATUS_VERIFICATION) {
 			if($permissionToVerification) {
 				if($conf->global->FDT_SCREEN_VERIFICATION) {
-					$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken().'\', \''.$object->ref.'_'.str_replace(array("'", " "), "", $usertoprocess->lastname).'_'.str_replace(array("'", " "), "", $usertoprocess->firstname).'\')" class="butAction classfortooltip" aria-label="Vérification" title="Vérification">Vérification</a>';
+					$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action2=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken().'\', \''.$object->ref.'_'.str_replace(array("'", " "), "", $usertoprocess->lastname).'_'.str_replace(array("'", " "), "", $usertoprocess->firstname).'\')" class="butAction classfortooltip" aria-label="Vérification" title="Vérification">Vérification</a>';
 				}
 				else {
-					$buttonAction .= dolGetButtonAction($langs->trans('Vérification'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken(), '', $permissionToVerification);
+					$buttonAction .= '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butAction" name="verification" form="feuilleDeTempsForm" value="Vérification" style="margin-left: 1em;">';
+					$buttonAction .= '<input type="hidden" name="all_holiday_validate" form="feuilleDeTempsForm" value="'.$all_holiday_validate.'">';
+					//$buttonAction .= dolGetButtonAction($langs->trans('Vérification'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken(), '', $permissionToVerification);
 				}
 			}
-			$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=refus&token='.newToken(), '', $permissionToVerification);
+			$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $permissionToVerification);
 		}
 
 		

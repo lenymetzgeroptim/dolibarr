@@ -15,7 +15,7 @@ if (empty($conf) || !is_object($conf)) {
 }
 
 // Dans le cas ou on clique sur "ENREGISTRER"
-if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
+if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $action2 != 'verification') {
 	// Création de la feuille de temps au 1er enregistrement
 	if($object->id == 0) {
 		$object->ref = "FDT_".str_pad($usertoprocess->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date($last_day_month, '%m%Y');
@@ -656,7 +656,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 			include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
 		}
 
-		if($massaction != "transmettre") {
+		if($action2 != "transmettre") {
 			if(strpos($_SERVER["PHP_SELF"], 'feuilledetemps_card') === false) {
 				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 				// Redirect to avoid submit twice on back
@@ -678,7 +678,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	}
 	
 }
-elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
+elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $action2 != 'verification') {
 	// Création de la feuille de temps au 1er enregistrement
 	if($object->id == 0) {
 		$object->ref = "FDT_".str_pad($usertoprocess->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date($lastdaytoshow, '%m%Y');
@@ -1621,7 +1621,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 			include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
 		}
 
-		if($massaction != "transmettre") {
+		if($action2 != "transmettre") {
 			if(strpos($_SERVER["PHP_SELF"], 'feuilledetemps_card') === false) {
 				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 				// Redirect to avoid submit twice on back
@@ -1642,6 +1642,28 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 		}
 	}
 	
+}
+elseif ($conf->global->FDT_STATUT_HOLIDAY && $conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF && $action == 'addtime' && $action2 == 'verification') {
+	$holiday = new extendedHoliday($db);
+	
+	$holiday_type = $_POST['holiday_type'];
+	$holiday_id = $_POST['holiday_id'];
+	// $holiday_valide = $_POST['holiday_valide'];
+
+	// Gestion des congés 
+	foreach($holiday_type as $key => $type) {
+		$holiday->fetch($holiday_id[$key]);
+		if($holiday->array_options['options_statutfdt'] == 1 && !$error) {
+			$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
+			if(in_array($holiday->fk_type, $exclude_type)) {
+				$holiday->array_options['options_statutfdt'] = 3;
+			}
+			else {
+				$holiday->array_options['options_statutfdt'] = 2;
+			}
+			$result = $holiday->updateExtended($user);
+		}
+	}
 }
 
 // Modifier l'observation lorsque la feuille de temps est exportée
@@ -1670,7 +1692,7 @@ if ($action == 'updateObservation' && $permissionToVerification) {
 }
 
 // Enregistrement des vérifications
-if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
+if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafterchangingselectedfields') {
 	$holiday = new extendedHoliday($db);
 	$modification = '';
 
@@ -1736,7 +1758,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 			}
 		}
 
-		if($conf->global->FDT_STATUT_HOLIDAY && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
+		if($conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
 			$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
 			if(in_array($holiday->fk_type, $exclude_type)) {
 				$holiday->array_options['options_statutfdt'] = 3;
@@ -1747,7 +1769,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 			$result = $holiday->updateExtended($user);
 		}
 
-		if($conf->global->FDT_STATUT_HOLIDAY && empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
+		if($conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF && empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
 			$holiday->array_options['options_statutfdt'] = 1;
 			$result = $holiday->updateExtended($user);
 		}
@@ -1843,7 +1865,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 	}
 	
 }
-elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $massaction != 'validate1' && $massaction != 'validate2' && $massaction != 'verification' && $massaction != 'refus') {
+elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GETPOST('formfilteraction') != 'listafterchangingselectedfields') {
 	$holiday = new extendedHoliday($db);
 	$regul = new Regul($db);
 	$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
@@ -1960,7 +1982,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			}
 		}
 
-		if($conf->global->FDT_STATUT_HOLIDAY && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
+		if($conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
 			$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
 			if(in_array($holiday->fk_type, $exclude_type)) {
 				$holiday->array_options['options_statutfdt'] = 3;
@@ -1971,7 +1993,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			$result = $holiday->updateExtended($user);
 		}
 
-		if($conf->global->FDT_STATUT_HOLIDAY && empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
+		if($conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF && empty($holiday_valide[$key]) && $holiday->array_options['options_statutfdt'] == 2 && !$error) {
 			$holiday->array_options['options_statutfdt'] = 1;
 			$result = $holiday->updateExtended($user);
 		}

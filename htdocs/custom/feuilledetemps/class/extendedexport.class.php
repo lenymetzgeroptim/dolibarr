@@ -997,7 +997,21 @@ class ExtendedExportFDT extends Export
 				if(!empty($array_filterValue["h.date_debut"]) && !empty($array_filterValue["h.date_fin"])) {
 					$sqlWhere .= " AND ".$this->build_filterQuery("Date", "fdt.date_debut", substr(str_replace('-', '', $this->db->idate($array_filterValue["h.date_debut"])), 0, 6));
 					$sqlWhere .= " AND ".$this->build_filterQuery("Date", "fdt.date_fin", substr(str_replace('-', '', $this->db->idate($array_filterValue["h.date_fin"])), 0, 6));
-					$sqlWhere .= " AND (h.date_debut <= '".$this->db->idate($array_filterValue["h.date_fin"])."' AND h.date_fin >= '".$this->db->idate(dol_time_plus_duree($array_filterValue["h.date_debut"], -$conf->global->JOUR_ANTICIPES, 'd'))."')";
+					if($conf->global->FDT_DISPLAY_FULL_WEEK) {
+						$first_day = dol_time_plus_duree($array_filterValue["h.date_debut"], -$conf->global->JOUR_ANTICIPES, 'd');
+						$first_day = dol_get_first_day_week(dol_print_date($first_day, '%d'), dol_print_date($first_day, '%m'), dol_print_date($first_day, '%Y'));
+						$first_day = dol_mktime(0, 0, 0, $first_day['first_month'], $first_day['first_day'], $first_day['first_year']);
+						$last_day = $array_filterValue["h.date_fin"];
+						$last_day = dol_time_plus_duree($last_day, 1, 'w');
+						$last_day = dol_get_first_day_week(dol_print_date($last_day, '%d'), dol_print_date($last_day, '%m'), dol_print_date($last_day, '%Y'));
+						$last_day = dol_mktime(0, 0, 0, $last_day['first_month'], $last_day['first_day'], $last_day['first_year']);
+						$sqlWhere .= " AND (h.date_debut < '".$this->db->idate($last_day)."' AND h.date_fin >= '".$this->db->idate($first_day)."')";
+					}
+					else {
+						$first_day = dol_time_plus_duree($array_filterValue["h.date_debut"], -$conf->global->JOUR_ANTICIPES, 'd');
+						$last_day = $array_filterValue["h.date_fin"];
+						$sqlWhere .= " AND (h.date_debut <= '".$this->db->idate($last_day)."' AND h.date_fin >= '".$this->db->idate($first_day)."')";
+					}
 				}
 				$sqlWhere .= " AND h.statut NOT IN (1,4,5)";
 				if(!empty($conf->global->HOLIDAYTYPE_EXLUDED_EXPORT)) {

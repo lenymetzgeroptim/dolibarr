@@ -264,15 +264,15 @@ th.daycolumn {
 	background-color: var(--colorbacktitle1);
 }
 
-tr.conges th.statut1 {
+tr.conges th.statut1, td.statut1 {
 	border: red 4px solid !important;
 }
 
-tr.conges th.statut2 {
+tr.conges th.statut2, td.statut2 {
 	border: #0087ff 4px solid !important;
 }
 
-tr.conges th.statut3 {
+tr.conges th.statut3, td.statut3 {
 	border: #0087ff 4px solid !important;
 }
 

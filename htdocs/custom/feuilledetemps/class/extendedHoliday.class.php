@@ -532,7 +532,7 @@ class extendedHoliday extends Holiday
 				if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 					$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
 					for($i = 0; $i < $nbDay; $i++) {
-						$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
+						$tmpday = dol_time_plus_duree($this->date_debut, $i, 'd');
 						$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
 
 						if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
@@ -558,8 +558,9 @@ class extendedHoliday extends Holiday
 			if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 				$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
 				$duration_hour = 0;
+
 				for($i = 0; $i < $nbDay; $i++) {
-					$tmpday = dol_time_plus_duree($dayinloopfromfirstdaytoshow, $i, 'd');
+					$tmpday = dol_time_plus_duree($this->date_debut, $i, 'd');
 					$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
 
 					if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {

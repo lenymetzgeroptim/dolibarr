@@ -197,6 +197,9 @@ $item = $formSetup->newItem('FDT_MANAGE_EMPLOYER')->setAsYesNo();
 // FDT_STATUT_HOLIDAY
 $item = $formSetup->newItem('FDT_STATUT_HOLIDAY')->setAsYesNo();
 
+// FDT_STATUT_HOLIDAY_VALIDATE_VERIF
+$item = $formSetup->newItem('FDT_STATUT_HOLIDAY_VALIDATE_VERIF')->setAsYesNo();
+
 // FDT_SHORTCUT_HOLIDAY
 $item = $formSetup->newItem('FDT_SHORTCUT_HOLIDAY')->setAsYesNo();
 

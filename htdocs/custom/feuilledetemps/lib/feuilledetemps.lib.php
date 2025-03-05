@@ -254,7 +254,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 
 		print '<tr class="nostrong liste_titre fixed conges">';
 			print '<th colspan="'.(2 + $addcolspan).'" '.($multiple_holiday ? 'rowspan="2"' : '').' class="fixed">';
-			if($mode == 'card' && $displayVerification) {
+			if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
 				print '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
 			}
 			print '<strong>Congés</strong>';
@@ -282,7 +282,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
 					}
 
-					if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
+					if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
 						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cptholiday.']" id="holiday_valide['.$cptholiday.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 					}
 
@@ -336,7 +336,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 						print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
 					}
 
-					if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
+					if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
 						print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cptholiday.']" id="holiday_valide['.$cptholiday.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 					}
 		
@@ -970,7 +970,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 		'affaire' => array('text' => 'Affaire', 'visible' => 1),
 	);
 
-	if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
+	if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
 		$fields['absence']['text'] .= '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
 	}
 	if($multiple_holiday) {
@@ -1167,7 +1167,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				print '<td class="center '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" rowspan="'.$numberDay.'">';
 			}
 
-			if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
+			if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
 				print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cptholiday.']" id="holiday_valide['.$cptholiday.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 			}
 
@@ -1208,7 +1208,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 					print '<td class="center '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" rowspan="'.$numberDay.'">';
 				}
 
-				if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY) {
+				if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
 					print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modify ? ' disabled' : '').' name="holiday_valide['.$cptholiday.']" id="holiday_valide['.$cptholiday.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
 				}
 	
