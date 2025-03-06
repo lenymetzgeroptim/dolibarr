@@ -302,6 +302,17 @@ if (empty($reshook)) {
 				$error++;
 				$action = 'create';
 			}
+			if($conf->global->HOLIDAY_ONLY_CURRENT_MONTH) {
+				$now = dol_now();
+				$firstdaymonth = dol_get_first_day(dol_print_date($now, '%Y'), dol_print_date($now, '%m'));
+				$firstdayweek = dol_get_first_day_week(dol_print_date($firstdaymonth, '%d'), dol_print_date($firstdaymonth, '%m'), dol_print_date($firstdaymonth, '%Y'));
+				$firstdayweek = dol_mktime(-1, -1, -1, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
+				if (!empty($date_fin) && $date_fin < $firstdayweek) {
+					setEventMessages($langs->trans("ErrorDateBeforeMonth"), null, 'errors');
+					$error++;
+					$action = 'create';
+				}
+			}
 
 			// Check if there is already holiday for this period
 			$verifCP = $object->verifDateHolidayCP($fuserid, $date_debut, $date_fin, $halfday);

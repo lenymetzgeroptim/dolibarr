@@ -113,6 +113,8 @@ $TField = getLabelList('c_holiday_types', 'label');
 $TField[-1] = 'Tous'; 
 $formSetup->newItem('HOLIDAY_VALIDATE_TYPE')->setAsMultiSelect($TField);
 
+// HOLIDAY_ONLY_CURRENT_MONTH
+$formSetup->newItem('HOLIDAY_ONLY_CURRENT_MONTH')->setAsYesNo();
 
 // // Setup conf for selection of an URL
 // $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM1');
