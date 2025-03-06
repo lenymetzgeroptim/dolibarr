@@ -47,14 +47,6 @@ if (empty($conf->global->HOLIDAY_ADDON)) {
 	$conf->global->HOLIDAY_ADDON = 'mod_holiday_madonna';
 }
 
-$arrayofparameters = array(
-	'ORGANISATION_CONGES'=>array('type'=>'textarea', 'css'=>'' ,'enabled'=>1),
-	'HOLIDAY_FRAC_ANC_DATESTART'=>array('type'=>'chaine', 'css'=>'' ,'enabled'=>1),
-	'HOLIDAY_FRAC_ANC_DATEEND'=>array('type'=>'chaine', 'css'=>'' ,'enabled'=>1),
-	'HOLIDAY_FDT_APPROVER'=>array('type'=>'yesno', 'css'=>'' ,'enabled'=>1),
-	'HOLIDAY_VALIDATE_ONLY_RTT'=>array('type'=>'yesno', 'css'=>'' ,'enabled'=>1),
-);
-
 /*
  * Actions
  */
@@ -146,22 +138,7 @@ if ($action == 'updateMask') {
 	$draft = GETPOST('HOLIDAY_DRAFT_WATERMARK', 'alpha');
 	$res2 = dolibarr_set_const($db, "HOLIDAY_DRAFT_WATERMARK", trim($draft), 'chaine', 0, '', $conf->entity);
 
-	$orga =  GETPOST('ORGANISATION_CONGES', 'alpha');
-	$res3 = dolibarr_set_const($db, "ORGANISATION_CONGES", trim($orga), 'chaine', 0, '', $conf->entity);
-
-	$orga =  GETPOST('HOLIDAY_FRAC_ANC_DATESTART', 'alpha');
-	$res4 = dolibarr_set_const($db, "HOLIDAY_FRAC_ANC_DATESTART", trim($orga), 'chaine', 0, '', $conf->entity);
-
-	$orga =  GETPOST('HOLIDAY_FRAC_ANC_DATEEND', 'alpha');
-	$res5 = dolibarr_set_const($db, "HOLIDAY_FRAC_ANC_DATEEND", trim($orga), 'chaine', 0, '', $conf->entity);
-
-	$orga =  GETPOST('HOLIDAY_FDT_APPROVER', 'alpha');
-	$res6 = dolibarr_set_const($db, "HOLIDAY_FDT_APPROVER", trim($orga), 'chaine', 0, '', $conf->entity);
-
-	$orga =  GETPOST('HOLIDAY_VALIDATE_ONLY_RTT', 'alpha');
-	$res7 = dolibarr_set_const($db, "HOLIDAY_VALIDATE_ONLY_RTT", trim($orga), 'chaine', 0, '', $conf->entity);
-
-	if (!$res1 > 0 || !$res2 > 0 || !$res3 > 0 || !$res4 > 0 || !$res5 > 0 || !$res6 > 0 || !$res7 > 0){
+	if (!$res1 > 0 || !$res2 > 0){
 		$error++;
 	}
 
@@ -577,92 +554,6 @@ if ($conf->global->MAIN_FEATURES_LEVEL >= 2) {
 
 print '</table>';
 print '</div>';
-
-print '<table class="noborder centpercent">';
-print '<tr class="liste_titre"><td class="titlefield">'.$langs->trans("Parameter").'</td><td>'.$langs->trans("Value").'</td></tr>';
-
-foreach ($arrayofparameters as $constname => $val) {
-	if ($val['enabled']==1) {
-		$setupnotempty++;
-		print '<tr class="oddeven"><td>';
-		$tooltiphelp = (($langs->trans($constname . 'Tooltip') != $constname . 'Tooltip') ? $langs->trans($constname . 'Tooltip') : '');
-		print '<span id="helplink'.$constname.'" class="spanforparamtooltip">'.$form->textwithpicto($langs->trans($constname), $tooltiphelp, 1, 'info', '', 0, 3, 'tootips'.$constname).'</span>';
-		print '</td><td>';
-
-		if ($val['type'] == 'textarea') {
-			print '<textarea class="flat" name="'.$constname.'" id="'.$constname.'" cols="50" rows="5" wrap="soft">' . "\n";
-			print $conf->global->{$constname};
-			print "</textarea>\n";
-		} elseif ($val['type']== 'html') {
-			require_once DOL_DOCUMENT_ROOT . '/core/class/doleditor.class.php';
-			$doleditor = new DolEditor($constname, $conf->global->{$constname}, '', 160, 'dolibarr_notes', '', false, false, $conf->fckeditor->enabled, ROWS_5, '90%');
-			$doleditor->Create();
-		} elseif ($val['type'] == 'yesno') {
-			print $form->selectyesno($constname, $conf->global->{$constname}, 1);
-		} elseif (preg_match('/emailtemplate:/', $val['type'])) {
-			include_once DOL_DOCUMENT_ROOT . '/core/class/html.formmail.class.php';
-			$formmail = new FormMail($db);
-
-			$tmp = explode(':', $val['type']);
-			$nboftemplates = $formmail->fetchAllEMailTemplate($tmp[1], $user, null, 1); // We set lang=null to get in priority record with no lang
-			//$arraydefaultmessage = $formmail->getEMailTemplate($db, $tmp[1], $user, null, 0, 1, '');
-			$arrayofmessagename = array();
-			if (is_array($formmail->lines_model)) {
-				foreach ($formmail->lines_model as $modelmail) {
-					//var_dump($modelmail);
-					$moreonlabel = '';
-					if (!empty($arrayofmessagename[$modelmail->label])) {
-						$moreonlabel = ' <span class="opacitymedium">(' . $langs->trans("SeveralLangugeVariatFound") . ')</span>';
-					}
-					// The 'label' is the key that is unique if we exclude the language
-					$arrayofmessagename[$modelmail->id] = $langs->trans(preg_replace('/\(|\)/', '', $modelmail->label)) . $moreonlabel;
-				}
-			}
-			print $form->selectarray($constname, $arrayofmessagename, $conf->global->{$constname}, 'None', 0, 0, '', 0, 0, 0, '', '', 1);
-		} elseif (preg_match('/category:/', $val['type'])) {
-			require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
-			require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
-			$formother = new FormOther($db);
-
-			$tmp = explode(':', $val['type']);
-			print img_picto('', 'category', 'class="pictofixedwidth"');
-			print $formother->select_categories($tmp[1],  $conf->global->{$constname}, $constname, 0, $langs->trans('CustomersProspectsCategoriesShort'));
-		} elseif (preg_match('/thirdparty_type/', $val['type'])) {
-			require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
-			$formcompany = new FormCompany($db);
-			print $formcompany->selectProspectCustomerType($conf->global->{$constname}, $constname);
-		} elseif ($val['type'] == 'securekey') {
-			print '<input required="required" type="text" class="flat" id="'.$constname.'" name="'.$constname.'" value="'.(GETPOST($constname, 'alpha') ?GETPOST($constname, 'alpha') : $conf->global->{$constname}).'" size="40">';
-			if (!empty($conf->use_javascript_ajax)) {
-				print '&nbsp;'.img_picto($langs->trans('Generate'), 'refresh', 'id="generate_token'.$constname.'" class="linkobject"');
-			}
-			if (!empty($conf->use_javascript_ajax)) {
-				print "\n".'<script type="text/javascript">';
-				print '$(document).ready(function () {
-					$("#generate_token'.$constname.'").click(function() {
-						$.get( "'.DOL_URL_ROOT.'/core/ajax/security.php", {
-							action: \'getrandompassword\',
-							generic: true
-						},
-						function(token) {
-							$("#'.$constname.'").val(token);
-						});
-						});
-				});';
-				print '</script>';
-			}
-		} elseif ($val['type'] == 'product') {
-			if (!empty($conf->product->enabled) || !empty($conf->service->enabled)) {
-				$selected = (empty($conf->global->$constname) ? '' : $conf->global->$constname);
-				$form->select_produits($selected, $constname, '', 0);
-			}
-		} else {
-			print '<input name="'.$constname.'"  class="flat '.(empty($val['css']) ? 'minwidth200' : $val['css']).'" value="'.$conf->global->{$constname}.'">';
-		}
-		print '</td></tr>';
-	}
-}
-print '</table>';
 
 print $form->buttonsSaveCancel("Save", '');
 

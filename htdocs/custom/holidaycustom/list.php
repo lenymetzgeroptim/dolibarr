@@ -1013,7 +1013,7 @@ if ($resql) {
 				print '<td class="tdoverflowmax150">';
 				//print $approbatorstatic->getNomUrl(-1);
 				
-				if($conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+				if($conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 					if(!key_exists($userstatic->id, $tab_user)) {
 						$user_static->fetch($userstatic->id);
 						$tab_user[$userstatic->id] = clone $user_static;

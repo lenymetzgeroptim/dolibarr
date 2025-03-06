@@ -132,11 +132,11 @@ if ($user->socid) {
 $permissiontovalidate1 = 0;
 $permissiontovalidate2 = 0;
 if($object->id > 0) {
-	if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+	if(!$conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 		$permissiontovalidate1 = in_array($user->id, $object->listApprover1[0]) && $object->listApprover1[1][$user->id] == 0;
 		$permissiontovalidate2 = in_array($user->id, $object->listApprover2[0]) && $object->listApprover2[1][$user->id] == 0;
 	}
-	elseif($conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+	elseif($conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 		$permissiontovalidate1 = in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt']));
 	}
 }
@@ -302,6 +302,17 @@ if (empty($reshook)) {
 				$error++;
 				$action = 'create';
 			}
+			if($conf->global->HOLIDAY_ONLY_CURRENT_MONTH) {
+				$now = dol_now();
+				$firstdaymonth = dol_get_first_day(dol_print_date($now, '%Y'), dol_print_date($now, '%m'));
+				$firstdayweek = dol_get_first_day_week(dol_print_date($firstdaymonth, '%d'), dol_print_date($firstdaymonth, '%m'), dol_print_date($firstdaymonth, '%Y'));
+				$firstdayweek = dol_mktime(-1, -1, -1, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
+				if (!empty($date_fin) && $date_fin < $firstdayweek) {
+					setEventMessages($langs->trans("ErrorDateBeforeMonth"), null, 'errors');
+					$error++;
+					$action = 'create';
+				}
+			}
 
 			// Check if there is already holiday for this period
 			$verifCP = $object->verifDateHolidayCP($fuserid, $date_debut, $date_fin, $halfday);
@@ -373,6 +384,9 @@ if (empty($reshook)) {
 			$result = 0;
 
 			if (!$error) {
+				$userstatic = new User($db);
+				$userstatic->fetch($fuserid);
+
 				$approver1id = array();
 				$approver2id = array();
 
@@ -385,11 +399,9 @@ if (empty($reshook)) {
 				$object->halfday = $halfday;
 
 				// Gestion des approbateurs
-				if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $type == 101)) {
+				if(!$conf->global->HOLIDAY_FDT_APPROVER && (in_array($type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 					$projectstatic = new Project($db);
-					$userstatic = new User($db);
 					$taskstatic = new extendedTaskHoliday($db);
-					$userstatic->fetch($fuserid);
 					$filter = " AND dateo <= '".$db->idate($date_fin)."' AND (datee >= '".$db->idate($date_debut)."' OR datee IS NULL) AND fk_statut = 1 AND ec.fk_c_type_contact = 161";		
 					$liste_projet = $projectstatic->getProjectsAuthorizedForUser($userstatic, 1, 0, 0, $filter); 
 					foreach($liste_projet as $projetid => $ref) {
@@ -466,7 +478,7 @@ if (empty($reshook)) {
 				if($conf->global->FDT_STATUT_HOLIDAY) {
 					$form = new Form($db);
 					$userstatic->fetch($object->fk_user);
-					if($object->fk_type == 4 || $userstatic->array_options['options_employeur'] != 1) {
+					if($object->fk_type == 4 || ($userstatic->array_options['options_employeur'] != 1 && $conf->global->FDT_MANAGE_EMPLOYER)) {
 						$object->array_options['options_statutfdt'] = 4;
 					}
 					elseif(in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
@@ -483,7 +495,7 @@ if (empty($reshook)) {
 			}
 
 			// Ajout des approbateurs : responsables de tâches et de projets
-			if(!$error && !$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $type == 101)) {
+			if(!$error && !$conf->global->HOLIDAY_FDT_APPROVER && (in_array($type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 				foreach($approver1id as $userid) {
 					$res = $object->createApprobation($userid, 1, 1);
 
@@ -513,7 +525,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'update' && GETPOSTISSET('savevalidator1') && !empty($user->rights->holidaycustom->changeappro) && !$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+	if ($action == 'update' && GETPOSTISSET('savevalidator1') && !empty($user->rights->holidaycustom->changeappro) && !$conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 		$object->fetch($id);
 		$db->begin();
 
@@ -648,7 +660,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'update' && GETPOSTISSET('savevalidator2') && !empty($user->rights->holidaycustom->changeappro) && !$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+	if ($action == 'update' && GETPOSTISSET('savevalidator2') && !empty($user->rights->holidaycustom->changeappro) && !$conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 		$object->fetch($id);
 		$db->begin();
 
@@ -901,7 +913,7 @@ if (empty($reshook)) {
 					exit;
 				}
 
-				if(($object->date_debut != $date_debut || $object->date_fin != $date_fin) && !$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+				if(($object->date_debut != $date_debut || $object->date_fin != $date_fin) && !$conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 					$res = $object->deleteAllApprobation();
 					if ($res <= 0) {
 						$error++;
@@ -977,7 +989,7 @@ if (empty($reshook)) {
 				$object->date_debut = $date_debut;
 				$object->date_fin = $date_fin;
 				//if(!empty($user->rights->holidaycustom->approve)) {
-				if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+				if(!$conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 					if($object->fk_validator > 0) {
 						$object->createApprobation($object->fk_validator, 1, 1); 
 						$object->fk_validator = 0;
@@ -1130,7 +1142,7 @@ if (empty($reshook)) {
 		$object->fetch($id);
 
 		// If draft and owner of leave
-		if ($object->statut == Holiday::STATUS_DRAFT && $cancreate && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+		if ($object->statut == Holiday::STATUS_DRAFT && $cancreate && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 			$object->oldcopy = dol_clone($object);
 
 			if(!empty($object->listApprover1) || $conf->global->HOLIDAY_FDT_APPROVER) {
@@ -1266,7 +1278,7 @@ if (empty($reshook)) {
 				$action = '';
 			}
 		}
-		if ($object->statut == Holiday::STATUS_DRAFT && $cancreate && $conf->global->HOLIDAY_VALIDATE_ONLY_RTT && $object->fk_type != 101) {
+		if ($object->statut == Holiday::STATUS_DRAFT && $cancreate && !in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE))) {
 			$object->oldcopy = dol_clone($object);
 
 			$verif = $object->approve2($user);
@@ -1997,7 +2009,8 @@ if (empty($reshook)) {
 				$object->statut = Holiday::STATUS_REFUSED;
 				$object->detail_refuse = GETPOST('detail_refuse', 'alphanohtml');
 
-				if($conf->global->FDT_STATUT_HOLIDAY && $object->array_options['options_statutfdt'] == 1) {
+				if($conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 1 || $object->array_options['options_statutfdt'] == 2)) {
+					$options_statutfdt = $object->array_options['options_statutfdt'];
 					$object->array_options['options_statutfdt'] = 4;
 				}
 				
@@ -2063,7 +2076,7 @@ if (empty($reshook)) {
 					$action = '';
 				}
 
-				if(!$error && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -2075,7 +2088,7 @@ if (empty($reshook)) {
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 					$link = '<a href="'.$urlwithroot.'/custom/holidaycustom/card.php?id='.$object->id.'">'.$object->ref.'</a>';
-					$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerRefuse2" : "EMailTextCongesRegulerRefuse3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_fin, '%d/%m/%Y'), $link);
+					$msg = $langs->transnoentitiesnoconv(($options_statutfdt == 2 ? "EMailTextCongesRegulerRefuse2" : "EMailTextCongesRegulerRefuse3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_fin, '%d/%m/%Y'), $link);
 					$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 					$res = $mail->sendfile();
 				}
@@ -2156,7 +2169,8 @@ if (empty($reshook)) {
 				$object->statut = Holiday::STATUS_CANCELED;
 				$object->array_options['options_detail_annulation'] = GETPOST('detail_annulation', 'alphanohtml');
 
-				if($conf->global->FDT_STATUT_HOLIDAY && $object->array_options['options_statutfdt'] == 1) {
+				if($conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 1 || $object->array_options['options_statutfdt'] == 2)) {
+					$options_statutfdt = $object->array_options['options_statutfdt'];
 					$object->array_options['options_statutfdt'] = 4;
 				}
 				
@@ -2367,7 +2381,7 @@ if (empty($reshook)) {
 					}*/
 				}
 
-				if(!$error && $result && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $result && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
@@ -2379,7 +2393,7 @@ if (empty($reshook)) {
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 					$link = '<a href="'.$urlwithroot.'/custom/holidaycustom/card.php?id='.$object->id.'">'.$object->ref.'</a>';
-					$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerCancel2" : "EMailTextCongesRegulerCancel3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_debut, '%d/%m/%Y'), $link);
+					$msg = $langs->transnoentitiesnoconv(($options_statutfdt == 2 ? "EMailTextCongesRegulerCancel2" : "EMailTextCongesRegulerCancel3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_debut, '%d/%m/%Y'), $link);
 					$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 					$res = $mail->sendfile();
 				}
@@ -3047,7 +3061,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 				}
 
 				// Approver
-				if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+				if(!$conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 					print '<tr>';
 					print '<td class="titlefield">';
 					print '<table class="nobordernopadding centpercent">';
@@ -3086,7 +3100,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 					print '</td>';
 					print '</tr>';
 				}
-				elseif($conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+				elseif($conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 					$extrafieldsuser = new extrafields($db);
 					$extrafieldsuser->fetch_name_optionals_label($user_static->table_element);
 					$user_static->fetch($object->fk_user);
@@ -3105,7 +3119,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 				}
 
 				// Approver 2
-				if(!$conf->global->HOLIDAY_FDT_APPROVER && (!$conf->global->HOLIDAY_VALIDATE_ONLY_RTT || $object->fk_type == 101)) {
+				if(!$conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 					print '<tr>';
 					print '<td class="titlefield">';
 					print '<table class="nobordernopadding centpercent">';
