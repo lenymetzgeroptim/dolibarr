@@ -267,6 +267,7 @@ llxHeader('', $title, $help_url);
 
 
 
+
 // Part to create
 if ($action == 'create') {
 
@@ -281,6 +282,13 @@ if ($action == 'create') {
         } else {
             setEventMessages("Erreur lors de la clôture de l'action.", null, 'errors');
         }
+    }
+
+    
+    if (!empty($_GET['origin']) && $_GET['origin'] == 'constat')
+    {
+         $object->origins = 4;
+         $_POST['origins'] = 4;
     }
 
     if (empty($permissiontoadd)) {
@@ -359,6 +367,8 @@ if ($action == 'create') {
 
     // dol_set_focus('input[name="ref"]');
 }
+
+
 
 
 // Part to edit record
