@@ -71,6 +71,7 @@ class Action extends CommonObject
 	const STATUS_EN_COURS = 2;
 	const STATUS_SOLDEE = 3;
 	const STATUS_ATT_SOLDEE = 4;
+	const STATUS_CLOTURE = 8;
 	const STATUS_CANCELED = 9;
 
 
@@ -1316,13 +1317,15 @@ class Action extends CommonObject
 			$this->labelStatus[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatus[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldée');
 			$this->labelStatus[self::STATUS_ATT_SOLDEE ] = $langs->transnoentitiesnoconv('Attente validation Soldée');
-			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Classé');
+			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturée');
+			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Classé sans suite');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Validé');
 			$this->labelStatusShort[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatusShort[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldée');
 			$this->labelStatusShort[self::STATUS_ATT_SOLDEE] = $langs->transnoentitiesnoconv('Attente validation Soldée');
-			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Classé');
+			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturée');
+			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Classé sans suite');
 		}
 
 		$statusType = 'status'.$status;
@@ -1842,6 +1845,15 @@ class Action extends CommonObject
 		}
 		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'CONSTAT_UNVALIDATE');
 	}
+
+	public function setCloture($user, $notrigger = 0)
+	{
+		// Protection
+		if ($this->status <= self::STATUS_CLOTURE) {
+			return 0;
+		}
+		return $this->setStatusCommon($user, self::STATUS_CLOTURE, $notrigger, 'CONSTAT_UNVALIDATE');
+	}
 	
 
 	public function updateEnCours()
@@ -1944,6 +1956,34 @@ class Action extends CommonObject
 			return -1;
 		}
 	}
+
+
+	
+	public function updateCloture()
+	{
+		$error = 0;
+
+		$sql = "UPDATE ".MAIN_DB_PREFIX."actions_action";
+		$sql .= " SET status = ".self::STATUS_CLOTURE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+		if (!$error) {
+			$this->status = self::STATUS_CLOTURE;
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+
 
 	public function SetUserInGroup($group)
    {

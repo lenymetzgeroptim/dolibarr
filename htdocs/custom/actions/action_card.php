@@ -266,85 +266,100 @@ llxHeader('', $title, $help_url);
 
 
 
+
 // Part to create
 if ($action == 'create') {
 
-	if (empty($permissiontoadd)) {
-		accessforbidden('NotEnoughPermissions', 0, 1);
-	}
+    // Si un ID est passé dans l'URL, on considère qu'il s'agit d'une action existante
+    // qu'il faut clôturer.
+    if (!empty($_GET['id']))
+    {
+        // Met à jour le statut de l'action dont l'ID est passé dans l'URL.
+        $res = $object->updateCloture();
+        if ($res > 0) {
+            dol_syslog("Action ID " . $object->id . " clôturée avec succès.");
+        } else {
+            setEventMessages("Erreur lors de la clôture de l'action.", null, 'errors');
+        }
+    }
 
-	print load_fiche_titre($langs->trans("Nouvelle Action", $langs->transnoentitiesnoconv("Action")), '', 'object_'.$object->picto);
+    if (empty($permissiontoadd)) {
+        accessforbidden('NotEnoughPermissions', 0, 1);
+    }
 
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.newToken().'">';
-	print '<input type="hidden" name="action" value="add">';
-	print '<input type="hidden" name="origin" value="'.$origin.'">';
-	print '<input type="hidden" name="originid" value="'.$originid.'">';
-	if ($backtopage) {
-		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-	}
-	if ($backtopageforcancel) {
-		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
-	}
-	if ($backtopagejsfields) {
-		print '<input type="hidden" name="backtopagejsfields" value="'.$backtopagejsfields.'">';
-	}
-	if ($dol_openinpopup) {
-		print '<input type="hidden" name="dol_openinpopup" value="'.$dol_openinpopup.'">';
-	}
+    print load_fiche_titre($langs->trans("Nouvelle Action", $langs->transnoentitiesnoconv("Action")), '', 'object_'.$object->picto);
 
-	print dol_get_fiche_head(array(), '');
+    print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+    print '<input type="hidden" name="token" value="'.newToken().'">';
+    print '<input type="hidden" name="action" value="add">';
+    print '<input type="hidden" name="origin" value="'.$origin.'">';
+    print '<input type="hidden" name="originid" value="'.$originid.'">';
+    if ($backtopage) {
+        print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+    }
+    if ($backtopageforcancel) {
+        print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
+    }
+    if ($backtopagejsfields) {
+        print '<input type="hidden" name="backtopagejsfields" value="'.$backtopagejsfields.'">';
+    }
+    if ($dol_openinpopup) {
+        print '<input type="hidden" name="dol_openinpopup" value="'.$dol_openinpopup.'">';
+    }
 
-	// Set some default values
-	//if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
+    print dol_get_fiche_head(array(), '');
 
-	print '<table class="border centpercent tableforfieldcreate">'."\n";
-// Reference
-print '<tr><td class="titlefieldcreate fieldrequired">'.$langs->trans('Ref').'</td><td>'.$langs->trans("Draft").'</td></tr>';
-	// Common attributes
-	include DOL_DOCUMENT_ROOT.'/custom/actions/tpl/commonfields_add.tpl.php';
+    // Set some default values
+    // if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
 
-	// Other attributes
-	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
+    print '<table class="border centpercent tableforfieldcreate">'."\n";
+    // Reference
+    print '<tr><td class="titlefieldcreate fieldrequired">'.$langs->trans('Ref').'</td><td>'.$langs->trans("Draft").'</td></tr>';
 
-	if ($element == 'constat') {
-		$element = 'custom/constat';
-		$subelement = 'constat';
-	}
-	dol_include_once('/custom/constat/class/constat.class.php');
-	$srcobject = new Constat($db);
-	$srcobject->fetch($originid);
-	if (!empty($origin) && !empty($originid) && is_object($srcobject)) {
+    // Common attributes
+    include DOL_DOCUMENT_ROOT.'/custom/actions/tpl/commonfields_add.tpl.php';
 
-		print "\n<!-- ".$classname." info -->";
-		print "\n";
-		
-		print '<input type="hidden" name="origin"         value="'.$srcobject->element.'">';
-		print '<input type="hidden" name="originid"       value="'.$srcobject->id.'">';
+    // Other attributes
+    include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
 
-		switch ($classname) {
-			case 'Constat':
-				$newclassname = 'Constat';
-				break;
-			default:
-				$newclassname = $classname;
-		}
+    if ($element == 'constat') {
+        $element = 'custom/constat';
+        $subelement = 'constat';
+    }
+    dol_include_once('/custom/constat/class/constat.class.php');
+    $srcobject = new Constat($db);
+    $srcobject->fetch($originid);
+    if (!empty($origin) && !empty($originid) && is_object($srcobject)) {
 
-		print '<tr><td>'.$langs->trans('Constat').'</td><td>'.$srcobject->getNomUrl(1).'</td></tr>';
-	}
+        print "\n<!-- ".$classname." info -->";
+        print "\n";
 
-	print '</table>'."\n";
+        print '<input type="hidden" name="origin"         value="'.$srcobject->element.'">';
+        print '<input type="hidden" name="originid"       value="'.$srcobject->id.'">';
 
-	print dol_get_fiche_end();
+        switch ($classname) {
+            case 'Constat':
+                $newclassname = 'Constat';
+                break;
+            default:
+                $newclassname = $classname;
+        }
 
-	// print $form->buttonsSaveCancel("Create");
-	print $form->buttonsSaveCancel("CreateDraft");
-	
+        print '<tr><td>'.$langs->trans('Constat').'</td><td>'.$srcobject->getNomUrl(1).'</td></tr>';
+    }
 
-	print '</form>';
+    print '</table>'."\n";
 
-	//dol_set_focus('input[name="ref"]');
+    print dol_get_fiche_end();
+
+    // Boutons d'enregistrement
+    print $form->buttonsSaveCancel("CreateDraft");
+
+    print '</form>';
+
+    // dol_set_focus('input[name="ref"]');
 }
+
 
 // Part to edit record
 if (($id || $ref) && $action == 'edit') {
@@ -483,6 +498,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	}
 
+	
+
 	if( $action == 'setClasse'  && $confirm == 'yes' ){
 
 		$object->updateClasse();
@@ -491,6 +508,21 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		// Call trigger
 		$result = $object->call_trigger('ACTIONS_CLASSE', $user);
+		if ($result < 0) {
+			$error++;
+		}
+
+		
+	}
+
+	if( $action == 'setCloturee'  && $confirm == 'yes' ){
+
+		$object->updateCloture();
+
+		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_CLOTUREInDolibarr", $object->ref);
+
+		// Call trigger
+		$result = $object->call_trigger('ACTIONS_CLOTURE', $user);
 		if ($result < 0) {
 			$error++;
 		}
@@ -1012,7 +1044,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
 			}*/
 
-			if (!($object->status == $object::STATUS_SOLDEE && in_array('intervenant', $user->rights->actions->action)) && $object->status != $object::STATUS_CANCELED) {
+			if (!($object->status == $object::STATUS_SOLDEE && in_array('intervenant', $user->rights->actions->action)) && $object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
 				print dolGetButtonAction('', $langs->trans('Modifier/Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
 			}
 				//print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
@@ -1061,7 +1093,16 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_DRAFT ){
 					print dolGetButtonAction('', $langs->trans('lier a un constat'), 'default', '/erp/custom/actions/action_constat_list.php?idaction='.$object->id.'&action=setCloture&confirm=yes&token='.newToken(), '', $permissiontoadd);
 				}	
-			}	
+			}
+			
+			if($user->rights->actions->action->ServiceQ3SE){
+				if ($object->status == $object::STATUS_SOLDEE ){
+					if($object->eff_act == 9){
+						print dolGetButtonAction('', $langs->trans('Créé une nouvelle action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create&confirm=yes&token='.newToken(), '', $permissiontoadd);
+								
+					}
+				}	
+			}
 
 			if($user->rights->actions->action->ServiceQ3SE){
 			//passé au status en cours
@@ -1075,10 +1116,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					print "<script>showPopupMessage('Le pilote peux passé son action au status attente validation soldée que si sont avancement est a 100% ', 'error');</script>";	
 				}
 
-				if ($object->status != $object::STATUS_CANCELED) {
+				if ($object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
 					if($object->eff_act !=null){
 						print dolGetButtonAction('', $langs->trans('Classer cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken(), '', $permissiontoadd);		
 					}
+				}
+
+				if($object->status == $object::STATUS_SOLDEE){
+					print dolGetButtonAction('', $langs->trans('Cloture cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloturee&confirm=yes&token='.newToken(), '', $permissiontoadd);
 				}
 
 				if($object->status == $object::STATUS_SOLDEE){
