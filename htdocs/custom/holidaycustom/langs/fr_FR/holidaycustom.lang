@@ -34,6 +34,9 @@ HOLIDAY_FRAC_ANC_DATESTART = Date de début de prise des congés fractionné / a
 HOLIDAY_FRAC_ANC_DATEEND = Date de fin de prise des congés fractionné / ancienneté
 HOLIDAY_FDT_APPROVER = Les approbateurs des congés sont les approbateurs feuilles de temps sur la fiche utilisateur
 HOLIDAY_VALIDATE_ONLY_RTT = Seulement les RTT nécessite une approbation
+HOLIDAY_VALIDATE_TYPE = Types de congés qui nécessitent une approbation
+SetupCustom = Configuration Custom
+HolidaySetupPage = Configuration du module demandes de congés
 
 
 #
