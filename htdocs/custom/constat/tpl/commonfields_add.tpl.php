@@ -47,7 +47,7 @@ foreach ($object->fields as $key => $val) {
 	}
 
 	if ($user->rights->constat->constat->Emetteur){
-		if (($val['position']) !==30 && ($val['position']) !==43 && ($val['position']) !==501 && ($val['position']) !==504  && ($val['position']) !==505 && ($val['position']) !==506 && ($val['position']) !==510 && ($val['position']) !==515  && ($val['position']) !==605  && ($val['position']) !==611 && ($val['position']) !==508)  {
+		if (($val['position']) !==30 && ($val['position']) !==43 && ($val['position']) !==501 && ($val['position']) !==505 && ($val['position']) !==506 && ($val['position']) !==510 && ($val['position']) !==515  && ($val['position']) !==605  && ($val['position']) !==611 && ($val['position']) !==508)  {
 		continue;
 		}
 	}

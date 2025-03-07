@@ -354,6 +354,7 @@ if (($id || $ref) && $action == 'edit') {
 
 	
 	$fields_to_hide_second = [
+		'dateEmeteur',
 		'ref',
 		'label',
 		'date_eche',
@@ -804,10 +805,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 
 	if( $action == 'setDelete'  && $confirm == 'yes' ){
-		$result = $object->deleteConstat(); // Récupérer le résultat de la suppression
+		$result = $object->deleteConstat(); 
 	
 		if ($result > 0) {
-			header("Location: ".$_SERVER["PHP_SELF"]."?msg=deleted"); // Redirection après suppression
+			header("Location: ".$_SERVER["PHP_SELF"]."?msg=deleted"); 
 			exit;
 		} else {
 			setEventMessages("Erreur lors de la suppression", null, 'errors');
@@ -841,6 +842,24 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
             }
         }
     }
+
+	
+	if ($action == 'setCloture') {
+		$formquestion = array(
+			array(
+				'type' => 'date',
+				'name' => 'dateCloture',
+				'label' => $langs->trans("Date de clôture"),
+				'value' => dol_now()
+			)
+		);
+
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id, 
+			$langs->trans("Clôturer le constat"), 
+			$langs->trans("Veuillez saisir une date de clôture avant de valider."), 
+			'setCloture', 
+			$formquestion, '', 2);
+	}
 
 
 	// Call Hook formConfirm
@@ -1177,8 +1196,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 			}
 
-	
-			//  Affichage du bouton "Clôturer le constat"
+
+			
 			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status == $object::STATUS_SOLDEE) {
 					print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloture" class="butAction">';
@@ -1186,42 +1205,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 			}
 
-			//  Gestion de la pop-up
-			if ($action == 'setCloture') {
-				$formquestion = array(
-					array(
-						'type' => 'date',
-						'name' => 'dateCloture',
-						'label' => $langs->trans("Date de clôture"),
-						'value' => dol_now()
-					)
-				);
-
-				print $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id, 
-					$langs->trans("Clôturer le constat"), 
-					$langs->trans("Veuillez saisir une date de clôture avant de valider."), 
-					'setCloture', 
-					$formquestion, '', 1, 400, 300);
-			}
-
-			//  Traitement après validation de la pop-up
-			if ($action == 'setCloture' && !empty($_POST['dateCloture'])) {
-				$dateCloture = dol_mktime(0, 0, 0, $_POST['dateCloturemonth'], $_POST['dateClotureday'], $_POST['dateClotureyear']);
-
-				$sql = "UPDATE ".MAIN_DB_PREFIX."constat_constat SET dateCloture = '".$db->idate($dateCloture)."' WHERE rowid = ".((int) $object->id);
-				$resql = $db->query($sql);
-
-				if ($resql) {
-					setEventMessages("Le constat a été clôturé avec succès", null, 'mesgs');
-					header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-					exit;
-				} else {
-					setEventMessages("Erreur lors de la mise à jour de la date", null, 'errors');
-				}
-			}
+			
 			
 			$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setDelete&confirm=yes&token='.newToken();
 			print '<a href="#" onclick="confirmsupprimer(\'' . $url . '\')" class="butAction">' . $langs->trans('Supprimer le constat') . '</a>';
+			
 			?>
 			
 			<script type="text/javascript">

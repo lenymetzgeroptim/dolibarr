@@ -130,7 +130,7 @@ class Constat extends CommonObject
 		'fk_project' => array('type'=>'integer:Project:projet/class/project.class.php:', 'label'=>'Projet', 'enabled'=>'1', 'position'=>505, 'notnull'=>0, 'visible'=>1,),
 		'num_commande' => array('type'=>'integer:Commande:commande/class/commande.class.php:', 'label'=>'Numéro de commande', 'enabled'=>'1', 'position'=>504, 'notnull'=>0, 'visible'=>1,),
 		'site' => array('type'=>'integer:Societe:societe/class/societe.class.php::(client:=:1)OR(client:=:3:)', 'label'=>'Site intervention', 'enabled'=>'1', 'position'=>508, 'notnull'=>0, 'visible'=>-1, 'index'=>1,),
-		'dateEmeteur' => array('type'=>'date', 'label'=>'Date création du constat', 'enabled'=>'1', 'position'=>506, 'notnull'=>0, 'visible'=>1,),
+		'dateEmeteur' => array('type'=>'date', 'label'=>'Date création du constat', 'enabled'=>'1', 'position'=>506, 'notnull'=>1, 'visible'=>1,),
 		'sujet' => array('type'=>'sellist:constat_sujet:label:rowid::(active:=:1)', 'label'=>'Typologie', 'enabled'=>'1', 'position'=>510, 'notnull'=>0, 'visible'=>1, 'csslist'=>'150',),
 		'typeConstat' => array('type'=>'sellist:constat_type:label:rowid::(active:=:1)', 'label'=>'Type de constat', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>1,),
 		'actionimmediate' => array('type'=>'boolean', 'label'=>'Action immédiate', 'enabled'=>'1', 'position'=>562, 'notnull'=>0, 'visible'=>1, 'help'=>"Coché si le constat est une action immédiate",),
