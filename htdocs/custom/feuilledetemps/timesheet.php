@@ -42,7 +42,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedUser.class.
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/deplacement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/silae.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/regul.class.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
+if($conf->donneesrh->enabled)  require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("feuilledetemps@feuilledetemps", 'projects', 'users', 'companies', 'holidaycustom@holidaycustom'));

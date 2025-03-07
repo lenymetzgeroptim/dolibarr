@@ -92,7 +92,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/deplacement.class.p
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/silae.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/regul.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/observationcompta.class.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
+if($conf->donneesrh->enabled) require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedProjet.class.php';
 dol_include_once('/feuilledetemps/class/feuilledetemps.class.php');
 dol_include_once('/feuilledetemps/lib/feuilledetemps_feuilledetemps.lib.php');

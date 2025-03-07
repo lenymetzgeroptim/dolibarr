@@ -23,7 +23,6 @@
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 require_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/fod/class/fod_user.class.php';
 
 /**
  *	Class to manage Dolibarr users
