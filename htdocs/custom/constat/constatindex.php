@@ -116,11 +116,12 @@ if ($tmp) {
 */
 
 
-
-$tmp = getStatusByYearChart();
-if ($tmp) {
-	print $tmp;
-	print '<br>';
+if ($user->rights->constat->constat->Statistique){
+	$tmp = getStatusByYearChart();
+	if ($tmp) {
+		print $tmp;
+		print '<br>';
+	}
 }
 
 

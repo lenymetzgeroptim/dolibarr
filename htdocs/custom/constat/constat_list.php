@@ -353,8 +353,7 @@ $sql .= " AND (
               AND ug.fk_usergroup = 9
         )
         AND (
-            t.fk_project IS NULL 
-            OR t.fk_project IN (
+            t.fk_project IN (
                 SELECT ec.element_id 
                 FROM " . MAIN_DB_PREFIX . "element_contact AS ec 
                 WHERE ec.fk_socpeople = " . $user->id . " 
@@ -379,26 +378,26 @@ $sql .= " AND (
         )
     )
     OR (
-		EXISTS (
-			SELECT 1
-			FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug
-			WHERE ug.fk_user = " . $user->id . "
-			AND ug.fk_usergroup = 9
-		)
-		OR t.fk_user_creat = " . $user->id . "
-		AND t.fk_project IS NOT NULL 
-		AND EXISTS (
-			SELECT 1
-			FROM " . MAIN_DB_PREFIX . "projet_extrafields AS pe
-			WHERE pe.fk_object = t.fk_project
-			AND pe.agenceconcerne IN (
-				SELECT sc.fk_soc
-				FROM " . MAIN_DB_PREFIX . "societe_commerciaux AS sc
-				WHERE sc.fk_user = " . $user->id . "
-			)
-		)
-	)
-)";
+        EXISTS (
+            SELECT 1
+            FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug
+            WHERE ug.fk_user = " . $user->id . "
+            AND ug.fk_usergroup = 9
+        )
+        OR t.fk_user_creat = " . $user->id . "
+        AND t.fk_project IS NOT NULL 
+        AND EXISTS (
+            SELECT 1
+            FROM " . MAIN_DB_PREFIX . "projet_extrafields AS pe
+            WHERE pe.fk_object = t.fk_project
+            AND pe.agenceconcerne IN (
+                SELECT sc.fk_soc
+                FROM " . MAIN_DB_PREFIX . "societe_commerciaux AS sc
+                WHERE sc.fk_user = " . $user->id . "
+            )
+        )
+    )
+)"; 
 
 
 if ($search_all) {

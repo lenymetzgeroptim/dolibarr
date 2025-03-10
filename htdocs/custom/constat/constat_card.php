@@ -354,6 +354,7 @@ if (($id || $ref) && $action == 'edit') {
 
 	
 	$fields_to_hide_second = [
+		'dateEmeteur',
 		'ref',
 		'label',
 		'date_eche',
@@ -419,9 +420,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formquestion = array();
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('XXX'), $text, 'confirm_xxx', $formquestion, 0, 1, 220);
 	}
-
-
-
 
 
 	if ($action == 'setPrise' && $confirm == 'yes'){
@@ -490,7 +488,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	if ($action == 'setCloture' && $confirm == 'yes'){
 
-		$subject = '[OPTIM Industries] Notification automatique constat classé';
+		$subject = '[OPTIM Industries] Notification automatique constat clôturé';
 	
 		$from = 'erp@optim-industries.fr';
 		
@@ -656,7 +654,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 	
 
-
 	if ($action == 'setSolde' && $confirm == 'yes'){
 	
 		$subject = '[OPTIM Industries] Notification automatique constat soldé ';
@@ -747,7 +744,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		
 
 	}
-
+	
 	if( $action == 'setEnCours'  && $confirm == 'yes' ){
 		$object->updateEnCours();
 
@@ -793,6 +790,33 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	}
 
+	if( $action == 'setClasse'  && $confirm == 'yes' ){
+		$object->updateClasse();
+		
+		$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_CLASSEInDolibarr", $object->ref);
+		// Call trigger
+		$result = $object->call_trigger('CONSTAT_CLASSE', $user);
+		
+		if ($result < 0) {
+			$error++;
+		}
+			
+
+	}
+
+	if( $action == 'setDelete'  && $confirm == 'yes' ){
+		$result = $object->deleteConstat(); 
+	
+		if ($result > 0) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?msg=deleted"); 
+			exit;
+		} else {
+			setEventMessages("Erreur lors de la suppression", null, 'errors');
+		}
+	}
+	
+
+
 	if($action == 'confirm_genererDocConstat' && $confirm == 'yes') {
         if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
             if (method_exists($object, 'generateDocument') && !$error) {
@@ -818,6 +842,24 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
             }
         }
     }
+
+	
+	if ($action == 'setCloture') {
+		$formquestion = array(
+			array(
+				'type' => 'date',
+				'name' => 'dateCloture',
+				'label' => $langs->trans("Date de clôture"),
+				'value' => dol_now()
+			)
+		);
+
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id, 
+			$langs->trans("Clôturer le constat"), 
+			$langs->trans("Veuillez saisir une date de clôture avant de valider."), 
+			'setCloture', 
+			$formquestion, '', 2);
+	}
 
 
 	// Call Hook formConfirm
@@ -902,7 +944,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	/*
 	 * Lines
 	 */
-
+	
 	if (!empty($object->table_element_line)) {
 		// Show object lines
 		$result = $object->getLinesArray();
@@ -970,7 +1012,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		let popup = document.createElement('div');
 		popup.className = 'popup-message';
-		popup.textContent = message;
+		popup.innerHTML = message;
 		popup.style.background = '#4CAF50';
 		popup.style.color = '#fff';
 		popup.style.fontWeight = 'bold';
@@ -990,11 +1032,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 	</script>";
 
-
+	
 	$estResponsableAffaireOuQ3SEouEme = $user->rights->constat->constat->ResponsableAffaire || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->Emetteur;
 
 	// Buttons for actions
-
+	
 	if ($action != 'presend' && $action != 'editline') {
 		print '<div class="tabsAction">'."\n";
 		$parameters = array();
@@ -1010,15 +1052,32 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}*/
 
 			// Back to draft
-			//if ($estResponsableAffaireOuQ3SEouEme && !($pasresponsableaffaire == 1 && !$user->rights->constat->constat->ResponsableQ3SE)) {
-				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_DRAFT ||  $object->status == $object::STATUS_PRISE ||  $object->status == $object::STATUS_SOLDEE ) {
-					print dolGetButtonAction('', $langs->trans('Modifier / Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
+			if (
+				$object->status == $object::STATUS_EN_COURS || 
+				$object->status == $object::STATUS_VALIDATED || 
+				$object->status == $object::STATUS_DRAFT ||  
+				$object->status == $object::STATUS_PRISE ||  
+				$object->status == $object::STATUS_SOLDEE
+			) {
+				// Vérification des droits utilisateur et du statut
+				{
+					print dolGetButtonAction(
+						'', 
+						$langs->trans('Modifier / Compléter'), 
+						'default', 
+						$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), 
+						'', 
+						$permissiontoadd
+					);
 				}
+			}
+			
+				
 			//}
 			//SATUTS CREE ( Validé )
 			if ($user->rights->constat->constat->Emetteur || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status == $object::STATUS_DRAFT) {
-				print "<script>showPopupMessage('L\émetteur doit remplir les champs en gras pour validé le constat. ', 'error');</script>";
+				print "<script>showPopupMessage('L\'émetteur doit<br>remplir les champs en gras pour valider le constat. ', 'error');</script>";
 					if ($object->label != null && $object->site != null && $object->sujet != null) {
 						if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
 							print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
@@ -1027,9 +1086,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 			}
 			
-
-			
-			
+					
 			// Check if "client info" is unchecked (si_info_client == false)
 			if ($object->infoClient == 0) {
 				// Passé au Status En Cours
@@ -1063,7 +1120,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					}
 				}
 			}
-
+			
 			if ( $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status == $object::STATUS_SOLDEE) {
 					print dolGetButtonAction('', $langs->trans('retourne au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
@@ -1072,10 +1129,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 			if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status == $object::STATUS_VALIDATED) {
-					print "<script>showPopupMessage('Pour faire évoluer le statut, le Responsable d’Affaire doit soit cocher \'Information Client Requise\' pour passer au statut Vérifié, soit remplir tous les champs en gras pour passer directement au statut En cours. ', 'error');</script>";
+					print "<script>showPopupMessage('Pour faire évoluer le statut, le Responsable d\'Affaire doit soit cocher \'Information Client Requise\' pour passer au statut Vérifié, soit remplir tous les champs en gras pour passer directement au statut En cours. ', 'error');</script>";
 				}	
 			}
-
+			
 			if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status == $object::STATUS_PRISE ) {
 					print "<script>showPopupMessage('Le constat est vérifié, informé le client (si nécessaire) puis complété les champs en gras pour passé au statut \'En Cours\', 'error');</script>";
@@ -1138,15 +1195,55 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					}
 				}
 			}
-			//passé au  Status Clôturé
-			if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
-				if ($object->status != $object::STATUS_CLOTURE) {
-					print dolGetButtonAction('', $langs->trans('classer le constat'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloture&confirm=yes&token='.newToken(), '', $permissiontoadd);
-					// $object->updateCloture();
-					
+
+
+			
+			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+				if ($object->status == $object::STATUS_SOLDEE) {
+					print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloture" class="butAction">';
+					print $langs->trans('Clôturer le constat').'</a>';
 				}
 			}
 
+			
+			
+			$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setDelete&confirm=yes&token='.newToken();
+			print '<a href="#" onclick="confirmsupprimer(\'' . $url . '\')" class="butAction">' . $langs->trans('Supprimer le constat') . '</a>';
+			
+			?>
+			
+			<script type="text/javascript">
+			function confirmsupprimer(url) {
+				if (confirm("Êtes-vous sûr de vouloir supprimer  ce constat ? Cette action est irréversible.")) {
+					window.location.href = url;
+				}
+			}
+			</script>
+			<?php
+
+
+			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+				error_log("Statut actuel : " . $object->status);
+				error_log("Valeur de STATUS_CLASSE : " . $object::STATUS_CLASSE);
+			
+				// Afficher le bouton seulement si le constat N'EST PAS encore classé
+				if ($object->status != $object::STATUS_CLASSE) { 
+					$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken();
+					print '<a href="#" onclick="confirmClasser(\'' . $url . '\')" class="butAction">' . $langs->trans('Classer le constat') . '</a>';
+				}
+	
+			}
+			?>
+			
+			<script type="text/javascript">
+			function confirmClasser(url) {
+				if (confirm("Êtes-vous sûr de vouloir classer ce constat ? Cette action est irréversible.")) {
+					window.location.href = url;
+				}
+			}
+			</script>
+			<?php
+			
 			if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status == $object::STATUS_EN_COURS) {
 					print "<script>showPopupMessage('Le constat est en cours, veuillez passer au statut Soldé lorsque toutes les actions seront soldées ainsi que les champs en gras complété. ', 'error');</script>";
@@ -1156,23 +1253,21 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 			//généré pdf constat
 			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ResponsableAffaire  || $user->rights->constat->constat->ServiceQ3SE) {
-			print dolGetButtonAction('', $langs->trans('générer PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
+				print dolGetButtonAction('', $langs->trans('générer PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
 			}
 		
 			
-		
 			// Create a sale order
-			 if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
+			if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
 					if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_DRAFT ||  $object->status == $object::STATUS_PRISE ){
-					print '<a class="butAction" href="'.DOL_URL_ROOT.'/custom/actions/action_card.php?action=create&origin='.$object->element.'&originid='.$object->id.'&socid='.$object->socid.'">'.$langs->trans("Créer action").'</a>';
+						print '<a class="butAction" href="#" onclick="window.open(\''.DOL_URL_ROOT.'/custom/actions/action_card.php?action=create&origin='.$object->element.'&originid='.$object->id.'&socid='.$object->socid.'\', \'_blank\'); return false;">'.$langs->trans("Créer action").'</a>';
+
 				 }
-
-			 }
-
-			
+			}
 		}
 		print '</div>'."\n";
 	}
+
 
 	$projet = new Project($db);
 	$projet->fetch($object->fk_project);
@@ -1249,30 +1344,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}
 		}
 
-		
-		/*$sql .= "JOIN ".MAIN_DB_PREFIX."element_element as e ON ac.rowid = e.fk_target AND e.targettype = 'actions_action' ";
-			$sql .= "JOIN ".MAIN_DB_PREFIX."constat_constat as co ON e.fk_source = co.rowid AND e.sourcetype = 'constat' ";
-			$sql .= "WHERE ac.status = 3 AND e.fk_source = $id ";
-			$sql .= "ORDER BY e.targettype";
-			// Execute the query
-			
-			var_dump($result);
-			// Check if all actions have status = 3
-			$allStatusThree = false;
-			$result = $db->query($sql);
-
-			if ($result) {
-					$num = $db->num_rows($result);
-					$i = 0;
-			while ($i < $num) {
-				$obj = $db->fetch_object($result);
-				if ($obj->status == 3) {
-					$allStatusThree = true;
-					// break;
-					// var_dump($allStatusThree);
-				}
-			}
-		}*/
 
 		$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/constat/constat_agenda.php', 1).'?id='.$object->id);
 
@@ -1298,7 +1369,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 
 	include DOL_DOCUMENT_ROOT.'/core/tpl/card_presend.tpl.php';
-	
 	
 }
 

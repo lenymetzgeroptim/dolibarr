@@ -1096,10 +1096,7 @@ $controleClientcomm_safe = nl2br(htmlspecialchars(trim($controleClientcomm), ENT
 $controleClient_display = intval($controleClient) === 1 ? "Oui" : "Non";
 
 
-$date = new DateTime($object->dateEmeteur);
-    
-// Formater la date dans le format "Y-m-d"
-$formattedDate = $date->format('Y-m-d');
+
 
 $sql = "SELECT e.fk_target, e.fk_source, a.status";
 $sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
@@ -1128,6 +1125,11 @@ if ($result) {
 } else {
     dol_print_error($db);
 }
+
+$timestamp = $object->dateEmeteur;
+
+// Convertir le timestamp en format date lisible
+$formattedDate = date("d/m/Y", $timestamp);
 
 
 // Génération du tableau HTML
