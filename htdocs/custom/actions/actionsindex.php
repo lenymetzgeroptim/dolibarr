@@ -108,20 +108,24 @@ print load_fiche_titre($langs->trans("ActionsArea"), '', 'actions.png@actions');
 
 print '<div class="fichecenter"><div class="fichethirdleft">';
 
-
+if($user->rights->actions->action->Statistique){
 $tmp = getStatusByYearChartForAction();
 if ($tmp) {
 	print $tmp;
 	print '<br>';
 }
+}
 
+if($user->rights->actions->action->Statistique){
 $tmp = getActionsByStatusAndPriorityChart();
 if ($tmp) {
 	print $tmp;
 	print '<br>';
 }
+}
 
 
+if($user->rights->actions->action->Statistique){
 print '</div><div class="fichetwothirdright">';
 $tmp = getActionsInProgressChart();
 if ($tmp) {
@@ -129,7 +133,7 @@ if ($tmp) {
 	print '<br>';
 }
 print '</div>';
-
+}
 /* BEGIN MODULEBUILDER DRAFT MYOBJECT
 // Draft MyObject
 if (isModEnabled('actions') && $user->rights->actions->read)
