@@ -1196,7 +1196,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				if (!empty($selectedelement)) {
 					foreach ($selectedelement as $elements) {
 						foreach ($elements as $val) {
-							if ($val->status !== '3') {
+							if (!in_array($val->status, ['3', '8', '9'])) {
 								$is_exist = false; 
 								break 2; 
 							}
@@ -1242,19 +1242,27 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 			
 			
-			$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setDelete&confirm=yes&token='.newToken();
+			$sql = "SELECT 1 
+				FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug 
+				WHERE ug.fk_user = " . $user->id . " 
+				AND ug.fk_usergroup = 46";
+
+		$res = $db->query($sql);
+
+		if ($res && $db->num_rows($res) > 0) { 
+			$url = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=setDelete&confirm=yes&token=' . newToken();
 			print '<a href="#" onclick="confirmsupprimer(\'' . $url . '\')" class="butAction">' . $langs->trans('Supprimer le constat') . '</a>';
-			
-			?>
-			
-			<script type="text/javascript">
-			function confirmsupprimer(url) {
-				if (confirm("Êtes-vous sûr de vouloir supprimer  ce constat ? Cette action est irréversible.")) {
-					window.location.href = url;
-				}
+		}
+		?>
+
+		<script type="text/javascript">
+		function confirmsupprimer(url) {
+			if (confirm("Êtes-vous sûr de vouloir supprimer ce constat ? Cette action est irréversible.")) {
+				window.location.href = url;
 			}
-			</script>
-			<?php
+		}
+		</script>
+		<?php
 
 
 			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {

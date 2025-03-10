@@ -79,3 +79,4 @@ CONSTAT_SOLDEEInDolibarr = Le constat %s est soldée
 CONSTAT_CLOTUREInDolibarr = Le constat %s réalisée, est cloturé
 CONSTAT_CLASSSEInDolibarr = Le constat %s réalisée, est classé
 CONSTAT_CANCELEDInDolibarr = Le constat %s est annulé
+CONSTAT_CLASSEInDolibarr = Le constat %s est classé sans suite
