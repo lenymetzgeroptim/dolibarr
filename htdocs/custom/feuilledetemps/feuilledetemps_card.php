@@ -1204,7 +1204,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// By default, we can edit only tasks we are assigned to
 	$restrictviewformytask = ((!isset($conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED)) ? 2 : $conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED);
-	if (count($tasksarray) > 0) {
+	if (count($tasksarray) > 0 || $conf->global->FDT_DISPLAY_COLUMN) {
 		$j = 0;
 		$level = 0;
 
@@ -1250,7 +1250,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 		
 	} else {
-		print '<tr><td colspan="'.(4 + $addcolspan + $nb_jour).'"><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
+		print '<div class="div-table-responsive" style="min-height: 0px">';
+		print '<table class="tagtable liste listwithfilterbefore column">'."\n";	
+		print '<tr><td><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
+		print '</table>';
+		print '</div>';
 	}
 
 	// Tableau Full Screen

@@ -43,7 +43,7 @@ function feuilledetempsAdminPrepareHead()
 	$h++;
 
 	$head[$h][0] = dol_buildpath("/feuilledetemps/admin/silae_extrafields.php", 1);
-	$head[$h][1] = $langs->trans("ExtraFields");
+	$head[$h][1] = $langs->trans("ExtraFieldsSilae");
 	$head[$h][2] = 'silae_extrafields';
 	$h++;
 

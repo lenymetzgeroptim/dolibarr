@@ -31,6 +31,8 @@ ActionsOnFeuilleDeTemps = Actions sur la feuille de temps
 #
 # Admin page
 #
+ExtraFieldsSilae = Attributs supplémentaires pointage
+feuilledetempsSetup = Configuration du module feuille de temps
 FeuilleDeTempsSetup = Paramètres Feuille de temps
 Settings = Settings
 FeuilleDeTempsSetupPage = Page de paramètrage des Feuille de temps
@@ -61,7 +63,7 @@ FDT_COLUMN_MAX_TASK_DAY = Si le format colonne est utilisé : Nombre de tâche m
 FDT_USER_APPROVER = Approbateurs des feuilles de temps définient sur la fiche utilisateur
 FDT_ANTICIPE_BLOCKED = Les jours en dehors du mois courant sont bloqués
 FDT_DAY_FOR_NEXT_FDT = Jour a partir duquel la feuille de temps change de mois
-HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE = Utiliser les HS50-HT qui permettent le dépassement de HEURE_MAX_SEMAINE
+HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE = Utiliser les HS50-HT qui permettent le dépassement du nombre d'heure max par semaine
 FDT_MANAGE_EMPLOYER = Gestion de l'employeur pour les exports (export uniquement d'un employeur)
 FDT_STATUT_HOLIDAY = Gestion d'un statut des congés sur les feuilles de temps
 FDT_STATUT_HOLIDAY_VALIDATE_VERIF = Si la gestion d'un statut des congés sur les feuilles de temps est activé : validation automatique lors de la vérification
