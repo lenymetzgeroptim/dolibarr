@@ -486,7 +486,44 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 
 
-	if ($action == 'setCloture' && $confirm == 'yes'){
+	if ($action == 'confirmsetCloture' && $confirm == 'yes'){
+
+		$day   = GETPOST('dateClotureday');
+		$month = GETPOST('dateCloturemonth');
+		$year  = GETPOST('dateClotureyear');
+
+
+		if ($day && $month && $year) {
+			
+			$dateCloture = dol_mktime(0, 0, 0, $month, $day, $year);
+
+
+		$dateSQL = date("Y-m-d", $dateCloture);  // Convertit le timestamp en "YYYY-MM-DD"
+		$sql = "UPDATE " . MAIN_DB_PREFIX . "constat_constat 
+				SET dateCloture = '" . $dateSQL . "' 
+				WHERE rowid = " . (int)$object->id;
+		$resql = $db->query($sql);
+		
+	
+			if ($resql) {
+				setEventMessages("Le constat a été clôturé avec succès", null, 'mesgs');
+				header("Location: " . $_SERVER["PHP_SELF"] . "?id=" . $object->id);
+				
+			} else {
+				setEventMessages("Erreur lors de la mise à jour de la date : " . $db->lasterror(), null, 'errors');
+			}
+		} else {
+			setEventMessages("Les données de date sont manquantes.", null, 'errors');
+		}
+		
+		
+		$object->updateCloture();
+		$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_CLOTUREInDolibarr", $object->ref);
+		$result = $object->call_trigger('CONSTAT_CLOTURE', $user);
+		if ($result < 0) {
+			$error++;
+		}
+		
 
 		$subject = '[OPTIM Industries] Notification automatique constat clôturé';
 	
@@ -572,6 +609,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
 			</script>';
 		} 
+		
 	}
 
 	if ($action == 'setSolde' && $confirm == 'yes'){
@@ -775,18 +813,27 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	}
 
-	if( $action == 'setCloture'  && $confirm == 'yes' ){
-		$object->updateCloture();
-			
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_CLOTUREInDolibarr", $object->ref);
-		// Call trigger
-		$result = $object->call_trigger('CONSTAT_CLOTURE', $user);
+	if ($action == 'setCloture' ) {
 		
-		if ($result < 0) {
-			$error++;
-		}
-		// End call triggers
-			
+		$formquestion = array(
+			array(
+				'type' => 'date',
+				'name' => 'dateCloture',
+				'label' => $langs->trans("Date de clôture"),
+				'value' => dol_now()
+			)
+		);
+	
+		
+		print $form->formconfirm(
+			$_SERVER["PHP_SELF"]."?id=".$object->id,
+			$langs->trans("Clôturer le constat"),
+			$langs->trans("Veuillez saisir une date de clôture avant de valider."),
+			'confirmsetCloture',
+			$formquestion,
+			'', 
+			2
+		);
 
 	}
 
@@ -844,22 +891,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     }
 
 	
-	if ($action == 'setCloture') {
-		$formquestion = array(
-			array(
-				'type' => 'date',
-				'name' => 'dateCloture',
-				'label' => $langs->trans("Date de clôture"),
-				'value' => dol_now()
-			)
-		);
-
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id, 
-			$langs->trans("Clôturer le constat"), 
-			$langs->trans("Veuillez saisir une date de clôture avant de valider."), 
-			'setCloture', 
-			$formquestion, '', 2);
-	}
 
 
 	// Call Hook formConfirm
@@ -1204,6 +1235,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					print $langs->trans('Clôturer le constat').'</a>';
 				}
 			}
+
+
+
+
 
 			
 			
