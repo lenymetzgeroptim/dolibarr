@@ -576,11 +576,11 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 			$key_post = (GETPOST('options_'.$key)  ? GETPOST('options_'.$key)  : array());
 			$type = $extrafields->attributes[$silae->table_element]['type'][$key];
 
-			if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && ((isset($key_post[$day]) && $silae->array_options['options_'.$key] == 0) || (!isset($key_post[$day]) && $silae->array_options['options_'.$key] == 1)))) {
+			if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && ((isset($key_post[$day]) && $silae->array_options['options_'.$key] != 1) || (!isset($key_post[$day]) && $silae->array_options['options_'.$key] == 1)))) {
 				$has_modif = 1;
-				$new_value = $key_post[$day];
-				$new_value = (isset($new_value) ? 1 : $new_value);
-				
+				$new_val = $key_post[$day];
+				$new_val = (isset($new_val) ? 1 : $new_val);
+
 				// Agenda
 				if($new_value != $silae->array_options['options_'.$key]) {
 					$new_value = formatValueForAgenda($type, $new_value);
@@ -589,7 +589,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 					$modification .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 				}
 				
-				$silae->array_options['options_'.$key] = $new_value;
+				$silae->array_options['options_'.$key] = $new_val;
 			}
 		}
 

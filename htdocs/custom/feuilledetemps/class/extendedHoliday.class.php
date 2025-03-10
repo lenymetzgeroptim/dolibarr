@@ -167,7 +167,6 @@ class extendedHoliday extends Holiday
 
 		$isavailablemorning = true;
 		$isavailableafternoon = true;
-        $statut = '';
 		$rowid_array = array();
 		$statut_array = array();
 		$code_array = array();
@@ -261,6 +260,139 @@ class extendedHoliday extends Holiday
 		if (!$isavailableafternoon) {
 			$result['afternoon_reason'] = 'leave_request';
 		}
+		return $result;
+	}
+
+	 /**
+	 *	Check that a user is not on holiday for a particular timestamp. Can check approved leave requests and not into public holidays of company.
+	 *
+	 * 	@param 	int			$fk_user				Id user
+	 *  @param	integer	    $timestamp				Time stamp date for a day (YYYY-MM-DD) without hours  (= 12:00AM in english and not 12:00PM that is 12:00)
+	 *  @param	string		$status					Filter on holiday status. '-1' = no filter.
+	 *  @param	array		$excluded_types			Array of excluded types of holiday
+	 * 	@return array								array('morning'=> ,'afternoon'=> ), Boolean is true if user is available for day timestamp.
+	 *  @see verifDateHolidayCP()
+	 */
+	public function verifDateHolidayForTimestampBetweenDate($fk_user, $firstday, $lastday, $status = '-1', $excluded_types = array())
+	{
+		global $langs, $conf;
+
+		$isavailablemorning = true;
+		$isavailableafternoon = array();
+		$rowid_array = array();
+		$statut_array = array();
+		$code_array = array();
+		$hour_array = array();
+		$statutfdt_array = array();
+		$droitrtt_array = array();
+		$in_hour_array = array();
+		$nb_jour_array = array();
+
+		// Check into leave requests
+		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, ht.in_hour";
+		if($conf->global->FDT_STATUT_HOLIDAY) {
+			$sql .= ", he.statutfdt";
+		}
+		$sql .= " FROM ".MAIN_DB_PREFIX."holiday as cp";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = cp.fk_type";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as he ON he.fk_object = cp.rowid";
+		$sql .= " WHERE cp.entity IN (".getEntity('holiday').")";
+		$sql .= " AND cp.fk_user = ".(int) $fk_user;
+		$sql .= " AND cp.date_debut <= '".$this->db->idate($lastday)."' AND cp.date_fin >= '".$this->db->idate($firstday)."'";
+		if ($status != '-1' && gettype($status) != "array") {
+			$sql .= " AND cp.statut IN (".$this->db->sanitize($status).")";
+		}
+		elseif ($status != '-1') {
+			$sql .= " AND cp.statut IN (".$this->db->sanitize(implode(',', $status)).")";
+		}
+		if(!empty($excluded_types)) {
+			$sql .= " AND cp.fk_type NOT IN (".$this->db->sanitize(implode(',', $excluded_types)).")";
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num_rows = $this->db->num_rows($resql); // Note, we can have 2 records if on is morning and the other one is afternoon
+			if ($num_rows > 0) {
+				$arrayofrecord = array();
+				$i = 0;
+				while ($i < $num_rows) {
+					$obj = $this->db->fetch_object($resql);
+
+					$date_debut_gmt = $this->db->jdate($obj->date_start, 1);
+					$date_fin_gmt = $this->db->jdate($obj->date_end, 1);
+
+					$nb_jour =  num_between_day($this->db->jdate($obj->date_start), $this->db->jdate($obj->date_end)+3600, 1); 
+					for($idw = 0; $idw < $nb_jour; $idw++) {
+						$dayinloop = dol_time_plus_duree($this->db->jdate($obj->date_start), $idw, 'd');
+
+						// Note: $obj->halfday is  0:Full days, 2:Sart afternoon end morning, -1:Start afternoon, 1:End morning
+						$arrayofrecord[$dayinloop][$obj->rowid] = array('date_start'=>$this->db->jdate($obj->date_start), 'date_end'=>$this->db->jdate($obj->date_end), 'halfday'=>$obj->halfday);
+						$rowid_array[$dayinloop][] = $obj->rowid;
+						$statut_array[$dayinloop][] = $obj->statut;
+						$code_array[$dayinloop][] = $obj->code;
+						$hour_array[$dayinloop][] = $obj->hour;
+						if($conf->global->FDT_STATUT_HOLIDAY) {
+							$statutfdt_array[$dayinloop][] = $obj->statutfdt;
+						}
+						$droitrtt_array[$dayinloop][] = $obj->droit_rtt;
+						$in_hour_array[$dayinloop][] = $obj->in_hour;
+						$nb_jour_array[$dayinloop][] = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
+					}
+					$i++;
+				}
+			}
+		} else {
+			dol_print_error($this->db);
+		}
+
+		$nb_jour =  num_between_day($firstday, $lastday+3600, 1); 
+		for($idw = 0; $idw < $nb_jour; $idw++) {
+			$dayinloop = dol_time_plus_duree($firstday, $idw, 'd');
+
+			// We found a record, user is on holiday by default, so is not available is true.
+			$isavailablemorning = true;
+			foreach ($arrayofrecord[$dayinloop] as $record) {
+				if ($dayinloop == $record['date_start'] && $record['halfday'] == 2) {
+					continue;
+				}
+				if ($dayinloop == $record['date_start'] && $record['halfday'] == -1) {
+					continue;
+				}
+				$isavailablemorning = false;
+				break;
+			}
+			$isavailableafternoon = true;
+			foreach ($arrayofrecord[$dayinloop] as $record) {
+				if ($dayinloop == $record['date_end'] && $record['halfday'] == 2) {
+					continue;
+				}
+				if ($dayinloop == $record['date_end'] && $record['halfday'] == 1) {
+					continue;
+				}
+				$isavailableafternoon = false;
+				break;
+			}
+
+			$result[$dayinloop] = array(
+										'morning' => $isavailablemorning, 
+										'afternoon' => $isavailableafternoon, 
+										'statut' => (!empty($statut_array[$dayinloop]) ? $statut_array[$dayinloop] : array()), 
+										'code' => (!empty($code_array[$dayinloop]) ? $code_array[$dayinloop] : array()), 
+										'rowid' => (!empty($rowid_array[$dayinloop]) ? $rowid_array[$dayinloop] : array()), 
+										'hour' => (!empty($hour_array[$dayinloop]) ? $hour_array[$dayinloop] : array()), 
+										'statutfdt' => (!empty($statutfdt_array[$dayinloop]) ? $statutfdt_array[$dayinloop] : array()),
+										'droit_rtt' => (!empty($droitrtt_array[$dayinloop]) ? $droitrtt_array[$dayinloop] : array()), 
+										'in_hour' => (!empty($in_hour_array[$dayinloop]) ? $in_hour_array[$dayinloop] : array()), 
+										'nb_jour' => (!empty($nb_jour_array[$dayinloop]) ? $nb_jour_array[$dayinloop] : array())
+									);
+			if (!$isavailablemorning) {
+				$result[$dayinloop]['morning_reason'] = 'leave_request';
+			}
+			if (!$isavailableafternoon) {
+				$result[$dayinloop]['afternoon_reason'] = 'leave_request';
+			}
+		}
+
 		return $result;
 	}
 

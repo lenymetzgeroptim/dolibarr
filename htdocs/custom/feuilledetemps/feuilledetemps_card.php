@@ -332,14 +332,14 @@ else {
 }
 
 // Nombre d'heures max par jour et semaine
-if(empty($usertoprocess->array_options['options_heuremaxjour'])) {
+if(empty($usertoprocess->array_options['options_heuremaxjour']) || !$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
     $heure_max_jour = ($conf->global->HEURE_MAX_JOUR > 0 ? $conf->global->HEURE_MAX_JOUR : 0);
 }
 else {
 	$heure_max_jour = $usertoprocess->array_options['options_heuremaxjour'];
 }
 
-if(empty($usertoprocess->array_options['options_heuremaxsemaine'])) {
+if(empty($usertoprocess->array_options['options_heuremaxsemaine']) || !$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
 	$heure_max_semaine = ($conf->global->HEURE_MAX_SEMAINE > 0 ? $conf->global->HEURE_MAX_SEMAINE : 0);
 }
 else {
@@ -826,12 +826,14 @@ include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/tpl/actions_timesheet.tpl
 // Gestion des congés et des jours feriés
 $all_holiday_validate = 1;
 $multiple_holiday = 0;
+$isavailable = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, Holiday::STATUS_APPROVED2, array(4));
+$holidayWithoutCanceled = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
 	$dayinloopfromfirstdaytoshowgmt = dol_time_plus_duree($firstdaytoshowgmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
 
-	$isavailable[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, Holiday::STATUS_APPROVED2, array(4));
-	$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
+	// $isavailable[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, Holiday::STATUS_APPROVED2, array(4));
+	// $holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
 
 	$holidayTypeNeedHour = 1;
 	for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['code']); $i++) {
@@ -888,6 +890,8 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$css[$dayinloopfromfirstdaytoshow] .= ' public_holiday'; 
 	}
 }
+// var_dump($holidayWithoutCanceled);
+// var_dump($isavailable);
 
 $form = new Form($db);
 $formfile = new FormFile($db);

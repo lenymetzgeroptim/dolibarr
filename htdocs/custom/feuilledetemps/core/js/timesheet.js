@@ -254,7 +254,7 @@ function screenFDT(url, name) {
 function disableNullInput(columnmode) {
     if(columnmode) {
         $('form[name="addtime"] input[type="text"][id^="timeadded"]:not(:disabled), form[name="addtime"] input[type="text"][id^="time_heure_nuit"]:not(:disabled), form[name="addtime"] input[type="text"][id^="site"]:not(:disabled), form[name="addtime"] input[type="text"]:not(:disabled):not( #search_project_ref):not(#search_thirdparty):not(#search_task_label):not(#re)').each(function (index, obj) {
-            if (obj.defaultValue == obj.value && !obj.parentNode.classList.contains('prefilling_time')) {
+            if (obj.defaultValue == obj.value /*&& !obj.parentNode.classList.contains('prefilling_time')*/) {
                 $(obj).prop('disabled', true);
             }
         });

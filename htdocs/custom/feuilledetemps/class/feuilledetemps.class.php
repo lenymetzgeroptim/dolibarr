@@ -2148,6 +2148,8 @@ class FeuilleDeTemps extends CommonObject
 			}
 		}
 
+		$statusofholidaytocheck =  array(Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1);
+		$isavailablefordayandusermonth = $holiday->verifDateHolidayForTimestampBetweenDate($user_id, $firstdate, $lastdate, $statusofholidaytocheck, array(4));
 		$nb_jour = num_between_day($firstdate, $lastdate+3600); 
 
 		$firstdaygmt = dol_mktime(0, 0, 0, dol_print_date($firstdate, '%m'), dol_print_date($firstdate, '%d'), dol_print_date($firstdate, '%Y'), 'gmt');
@@ -2168,8 +2170,8 @@ class FeuilleDeTemps extends CommonObject
 			$tmpdaygmt = dol_time_plus_duree($firstdaygmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
 
 			if (dol_print_date($tmpday, '%a') != 'Sam' && dol_print_date($tmpday, '%a') != 'Dim') {
-				$statusofholidaytocheck =  array(Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1);
-				$isavailablefordayanduser = $holiday->verifDateHolidayForTimestamp($user_id, $tmpday, $statusofholidaytocheck, array(4));
+				// $isavailablefordayanduser = $holiday->verifDateHolidayForTimestamp($user_id, $tmpday, $statusofholidaytocheck, array(4));
+				$isavailablefordayanduser = $isavailablefordayandusermonth[$tmpday];
 				$test = num_public_holiday($tmpdaygmt, $tmpdaygmt + 86400, $mysoc->country_code, 0, 0, 0, 0);
 
 				if($test) { // Jour feriés

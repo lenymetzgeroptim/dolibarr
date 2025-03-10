@@ -79,7 +79,7 @@ else {
 	$month = GETPOST('remonth', 'int') ?GETPOST('remonth', 'int') : (GETPOST("month", 'int') ?GETPOST("month", "int") : dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%m'));
 }
 
-$search_usertoprocessid = (!empty($_POST['search_usertoprocessid']) ? $_POST['search_usertoprocessid'] : $_GET['search_usertoprocessid']);
+$search_usertoprocessid = (!empty($_POST['search_usertoprocessid']) && empty(GETPOST("save")) ? $_POST['search_usertoprocessid'] : $_GET['search_usertoprocessid']);
 $search_task_ref = GETPOST('search_task_ref', 'alpha', 3);
 $search_task_label = GETPOST('search_task_label', 'alpha', 3);
 $search_project_ref = GETPOST('search_project_ref', 'alpha', 3);
@@ -244,14 +244,14 @@ else {
 }
 
 // Nombre d'heures max par jour et semaine
-if(empty($usertoprocess->array_options['options_heuremaxjour'])) {
+if(empty($usertoprocess->array_options['options_heuremaxjour']) || !$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
     $heure_max_jour = ($conf->global->HEURE_MAX_JOUR > 0 ? $conf->global->HEURE_MAX_JOUR : 0);
 }
 else {
 	$heure_max_jour = $usertoprocess->array_options['options_heuremaxjour'];
 }
 
-if(empty($usertoprocess->array_options['options_heuremaxsemaine'])) {
+if(empty($usertoprocess->array_options['options_heuremaxsemaine']) || !$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
 	$heure_max_semaine = ($conf->global->HEURE_MAX_SEMAINE > 0 ? $conf->global->HEURE_MAX_SEMAINE : 0);
 }
 else {
@@ -385,6 +385,8 @@ include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/actions.inc.php';
 $timeSpentDay = $object->timeDoneByDay($usertoprocess->id);
 $multiple_holiday = 0;
 $uncompleted_fdt = 0;
+// $isavailable = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, Holiday::STATUS_APPROVED2, array(4));
+// $holidayWithoutCanceled = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
 	$dayinloopfromfirstdaytoshowgmt = dol_time_plus_duree($firstdaytoshowgmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
@@ -553,7 +555,7 @@ $moreforfilter .= '</div>';
 
 
 // Filtre
-if (empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT)) {
+if (empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT) && !$conf->global->FDT_DISPLAY_COLUMN) {
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<div class="inline-block"></div>';
 	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Project'), 'project', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_project_ref" id="search_project_ref" class="maxwidth100" value="'.dol_escape_htmltag($search_project_ref).'">';
@@ -568,12 +570,12 @@ if (empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT)) {
 	$moreforfilter .= '<div class="inline-block"></div>';
 	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Task'), 'projecttask', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_task_label" id="search_task_label" class="maxwidth100" value="'.dol_escape_htmltag($search_task_label).'">';
 	$moreforfilter .= '</div>';
-
-	$moreforfilter .= '<div class="divsearchfield nowrap">';
-	$searchpicto = $form->showFilterAndCheckAddButtons(0);
-	$moreforfilter .= $searchpicto;
-	$moreforfilter .= '</div>';
 }
+
+$moreforfilter .= '<div class="divsearchfield nowrap">';
+$searchpicto = $form->showFilterAndCheckAddButtons(0);
+$moreforfilter .= $searchpicto;
+$moreforfilter .= '</div>';
 
 if (!empty($moreforfilter)) {
 	print '<div id="filtre" class="liste_titre liste_titre_bydiv centpercent">';
