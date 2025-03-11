@@ -1284,11 +1284,11 @@ class Silae extends CommonObject
     */
     public function fetchAllSilaeWithoutId($datestart, $dateend, $fk_user)
     {
-        global $langs;
+        global $langs, $extrafields;
 
 		$res_array = array();
 		
-		$extrafields = new ExtraFields($this->db);
+		//$extrafields = new ExtraFields($this->db);
 		$extrafields->fetch_name_optionals_label($this->table_element);
 		$optionsArray = (!empty($extrafields->attributes[$this->table_element]['label']) ? $extrafields->attributes[$this->table_element]['label'] : null);
 

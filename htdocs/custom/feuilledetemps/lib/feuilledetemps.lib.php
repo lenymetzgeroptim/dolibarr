@@ -1520,6 +1520,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$type = $extrafields->attributes[$silae->table_element]['type'][$key];
 
 			print '<td class="center'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+			$moreparam = '';
 			if($type == 'boolean') {
 				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam = ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
 				$moreparam .= ($disabled ? ' disabled' : '');
@@ -1528,7 +1529,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				print '<input type="checkbox" class="flat valignmiddle'.($morecss ? ' '.$morecss : '').' maxwidthonsmartphone" name="options_'.$key.'['.$idw.']" id="options_'.$key.'['.$idw.']" '.$checked.$moreparam.'>';
 			}
 			else {
-				$moreparam = 'onfocus="this.oldvalue = this.value;"';
+				$moreparam .= 'onfocus="this.oldvalue = this.value;"';
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
 				$moreparam .= ' maxlength="7"';
 				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';

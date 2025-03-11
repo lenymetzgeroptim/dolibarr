@@ -43,7 +43,10 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	$task = new extendedTask($db);
 	$filter = ' AND ptt.element_date >= "'.substr($db->idate($firstdaytoshow), 0, 10).'" AND ptt.element_date <= "'.substr($db->idate($lastdaytoshow), 0, 10).'"';
 	$timespent_month = $task->fetchAllTimeSpentByDate($usertoprocess, $filter);
-	
+	$silae = new Silae($db);
+	$extrafields->fetch_name_optionals_label($silae->table_element);
+	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+
 	//foreach ($timetoadd as $day => $value) {     // Loop on each day
 	foreach($dayinloopfromfirstdaytoshow_array as $day => $tmpday) {
 		$is_day_anticipe = ($tmpday < $first_day_month ? 1 : 0);
@@ -558,14 +561,13 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 		}
 
 		// Autres
-		$silae = new Silae($db);
-		$extrafields->fetch_name_optionals_label($silae->table_element);
-		$res = $silae->fetchSilaeWithoutId($tmpday, $usertoprocess->id);
+		$res = ($silae_array[$tmpday]->id > 0 ? 1 : 0);
+		$silae_tmpday = ($silae_array[$tmpday]->id > 0 ? $silae_array[$tmpday] : new Silae($db));
 		$has_modif = 0;
 		$all_field_null = 1;
 		
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			if($key_post[$day] !== null || !empty($silae->key)) {
+			if($key_post[$day] !== null || !empty($silae_tmpday->key)) {
 				$all_field_null = 0;
 			}
 
@@ -576,41 +578,41 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 			$key_post = (GETPOST('options_'.$key)  ? GETPOST('options_'.$key)  : array());
 			$type = $extrafields->attributes[$silae->table_element]['type'][$key];
 
-			if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && ((isset($key_post[$day]) && $silae->array_options['options_'.$key] != 1) || (!isset($key_post[$day]) && $silae->array_options['options_'.$key] == 1)))) {
+			if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && ((isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] != 1) || (!isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] == 1)))) {
 				$has_modif = 1;
 				$new_val = $key_post[$day];
-				$new_val = (isset($new_val) ? 1 : $new_val);
+				$new_val = ($type == 'boolean' && isset($new_val) ? 1 : $new_val);
 
 				// Agenda
-				if($new_value != $silae->array_options['options_'.$key]) {
+				if($new_value != $silae_tmpday->array_options['options_'.$key]) {
 					$new_value = formatValueForAgenda($type, $new_value);
-					$old_value = formatValueForAgenda($type, $silae->array_options['options_'.$key]);
+					$old_value = formatValueForAgenda($type, $silae_tmpday->array_options['options_'.$key]);
 
 					$modification .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 				}
 				
-				$silae->array_options['options_'.$key] = $new_val;
+				$silae_tmpday->array_options['options_'.$key] = $new_val;
 			}
 		}
 
 		// S'il existe une ligne et que tous les champs sont = null
-		if($res > 0 && $all_field_null && empty($silae->heure_sup00) && empty($silae->heure_sup25) && empty($silae->heure_sup50) && empty($silae->heure_sup50ht)) {
-				$result = $silae->delete($user);
+		if($res > 0 && $all_field_null && empty($silae_tmpday->heure_sup00) && empty($silae_tmpday->heure_sup25) && empty($silae_tmpday->heure_sup50) && empty($silae_tmpday->heure_sup50ht)) {
+			$result = $silae_tmpday->delete($user);
 		}
 		// S'il existe une ligne et qu'au moins un champ a été modifié
 		elseif($res > 0 && $has_modif) {
-			$result = $silae->update($user);
+			$result = $silae_tmpday->update($user);
 		}
 		// S'il n'existe pas de ligne et qu'au moins un champ est différent de null
 		elseif($res == 0 && $has_modif) {
-			$silae->fk_user = $usertoprocess->id;
-			$silae->date = $tmpday;
+			$silae_tmpday->fk_user = $usertoprocess->id;
+			$silae_tmpday->date = $tmpday;
 
-			$result = $silae->create($user);
+			$result = $silae_tmpday->create($user);
 		}
 
 		if ($result < 0) {
-			setEventMessages($silae->error, $silae->errors, 'errors');
+			setEventMessages($silae_tmpday->error, $silae_tmpday->errors, 'errors');
 			$error++;
 			break;
 		}
@@ -660,8 +662,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 			if(strpos($_SERVER["PHP_SELF"], 'feuilledetemps_card') === false) {
 				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 				// Redirect to avoid submit twice on back
-				header('Location: '.$_SERVER["PHP_SELF"].'?'.$param);
-				exit;
+				//header('Location: '.$_SERVER["PHP_SELF"].'?'.$param);
+				//exit;
 			}
 			else {
 				if($permissionToVerification && $object->status == $object::STATUS_VERIFICATION) {
@@ -670,8 +672,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 				else {
 					setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 					// Redirect to avoid submit twice on back
-					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-					exit;
+					//header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+					//exit;
 				}
 			}
 		}
@@ -1698,7 +1700,9 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 
 	// $regul = new Regul($db);
 	// $resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
-	
+	$silae = new Silae($db);
+	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
+
 	$holiday_type = $_POST['holiday_type'];
 	$holiday_id = $_POST['holiday_id'];
 	$holiday_valide = $_POST['holiday_valide'];
@@ -1782,63 +1786,64 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
 
 		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
-		$silae = new Silae($db);
 	
 		// Calcul auto des heures sup
 		if((!empty(GETPOST('task')) || !empty(GETPOST('heure_nuit')) || !empty($holiday_type)) && dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
-			$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
-			$heure_sup00_before = $silae->heure_sup00;
-			$heure_sup25_before = $silae->heure_sup25;
-			$heure_sup50_before = $silae->heure_sup50;
-			$heure_sup50ht_before = $silae->heure_sup50ht;
+			$res = ($silae_array[$tmpday]->id > 0 ? 1 : 0);
+			$silae_tmpday = ($silae_array[$tmpday]->id > 0 ? $silae_array[$tmpday] : new Silae($db));
 
-			$silae->date = $dayinloopfromfirstdaytoshow;
-			$silae->fk_user = $object->fk_user;
-			$silae->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
+			$heure_sup00_before = $silae_tmpday->heure_sup00;
+			$heure_sup25_before = $silae_tmpday->heure_sup25;
+			$heure_sup50_before = $silae_tmpday->heure_sup50;
+			$heure_sup50ht_before = $silae_tmpday->heure_sup50ht;
 
-			if($heure_sup00_before != $silae->heure_sup00) {
-				$new_value = formatValueForAgenda('double', $silae->heure_sup00 / 3600);
+			$silae_tmpday->date = $dayinloopfromfirstdaytoshow;
+			$silae_tmpday->fk_user = $object->fk_user;
+			$silae_tmpday->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
+
+			if($heure_sup00_before != $silae_tmpday->heure_sup00) {
+				$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup00 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup00_before / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 25%
-			if($heure_sup25_before != $silae->heure_sup25) {
-				$new_value = formatValueForAgenda('double', $silae->heure_sup25 / 3600);
+			if($heure_sup25_before != $silae_tmpday->heure_sup25) {
+				$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup25 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup25_before / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 50%
-			if($heure_sup50_before != $silae->heure_sup50) {
-				$new_value = formatValueForAgenda('double', $silae->heure_sup50 / 3600);
+			if($heure_sup50_before != $silae_tmpday->heure_sup50) {
+				$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup50_before / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 50% HT
-			if($heure_sup50ht_before != $silae->heure_sup50ht) {
-				$new_value = formatValueForAgenda('double', $silae->heure_sup50ht / 3600);
+			if($heure_sup50ht_before != $silae_tmpday->heure_sup50ht) {
+				$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50ht / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup50ht_before / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50% HT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 			
 			if($dayinloopfromfirstdaytoshow < $first_day_month) {
-				$regulHeureSup00 += ((double)$silae->heure_sup00 - (double)$heure_sup00_before);
-				$regulHeureSup25 += ((double)$silae->heure_sup25 - (double)$heure_sup25_before);
-				$regulHeureSup50 += ((double)$silae->heure_sup50 - (double)$heure_sup50_before);
-				$regulHeureSup50HT += ((double)$silae->heure_sup50ht - (double)$heure_sup50ht_before);
+				$regulHeureSup00 += ((double)$silae_tmpday->heure_sup00 - (double)$heure_sup00_before);
+				$regulHeureSup25 += ((double)$silae_tmpday->heure_sup25 - (double)$heure_sup25_before);
+				$regulHeureSup50 += ((double)$silae_tmpday->heure_sup50 - (double)$heure_sup50_before);
+				$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
 			}
 
 			if($res > 0) {
-				$silae->update($user);
+				$silae_tmpday->update($user);
 			}
 			elseif($res == 0) {
-				$silae->create($user);
+				$silae_tmpday->create($user);
 			}
 			else {
 				$error++;
@@ -1860,8 +1865,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 		}
 
 		// Redirect to avoid submit twice on back
-		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-		exit;
+		//header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+		//exit;
 	}
 	
 }
@@ -1870,6 +1875,8 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	$regul = new Regul($db);
 	$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 	$modification = '';
+	$silae = new Silae($db);
+	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 
 	// $heure_sup00 = $_POST['heure_sup00'];
 	// $heure_sup25 = $_POST['heure_sup25'];
@@ -2006,9 +2013,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 
 		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-
 		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
-		$silae = new Silae($db);
 	
 		// $newduration_heure_sup00 = 0;
 		// if (!empty($heure_sup00[$idw])) {
@@ -2038,128 +2043,130 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 
 		// Calcul auto des heures sup
 		if((!empty($_POST['task']) || !empty($holiday_type)) && dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
-			$silae = new Silae($db);
-			$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $object->fk_user);
-			$heure_sup00_before = $silae->heure_sup00;
-			$heure_sup25_before = $silae->heure_sup25;
-			$heure_sup50_before = $silae->heure_sup50;
-			$heure_sup50ht_before = $silae->heure_sup50ht;
+			$res = ($silae_array[$tmpday]->id > 0 ? 1 : 0);
+			$silae_tmpday = ($silae_array[$tmpday]->id > 0 ? $silae_array[$tmpday] : new Silae($db));
 
-			$silae->date = $dayinloopfromfirstdaytoshow;
-			$silae->fk_user = $object->fk_user;
-			$silae->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
+			$heure_sup00_before = $silae_tmpday->heure_sup00;
+			$heure_sup25_before = $silae_tmpday->heure_sup25;
+			$heure_sup50_before = $silae_tmpday->heure_sup50;
+			$heure_sup50ht_before = $silae_tmpday->heure_sup50ht;
+
+			$silae_tmpday->date = $dayinloopfromfirstdaytoshow;
+			$silae_tmpday->fk_user = $object->fk_user;
+			$silae_tmpday->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
 			
-			if($heure_sup00_before != $silae->heure_sup00) {
-				$new_value = formatValueForAgenda('double', $silae->heure_sup00 / 3600);
+			if($heure_sup00_before != $silae_tmpday->heure_sup00) {
+				$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup00 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup00_before / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 25%
-			if($heure_sup25_before != $silae->heure_sup25) {
-				$new_value = formatValueForAgenda('double', $silae->heure_sup25 / 3600);
+			if($heure_sup25_before != $silae_tmpday->heure_sup25) {
+				$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup25 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup25_before / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 50%
-			if($heure_sup50_before != $silae->heure_sup50) {
-				$new_value = formatValueForAgenda('double', $silae->heure_sup50 / 3600);
+			if($heure_sup50_before != $silae_tmpday->heure_sup50) {
+				$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50 / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup50_before / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Sup 50% HT
-			if($heure_sup50ht_before != $silae->heure_sup50ht) {
-				$new_value = formatValueForAgenda('double', $silae->heure_sup50ht / 3600);
+			if($heure_sup50ht_before != $silae_tmpday->heure_sup50ht) {
+				$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50ht / 3600);
 				$old_value = formatValueForAgenda('double', $heure_sup50ht_before / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50% HT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 			
 			if($dayinloopfromfirstdaytoshow < $first_day_month) {
-				$regulHeureSup00 += ((double)$silae->heure_sup00 - (double)$heure_sup00_before);
-				$regulHeureSup25 += ((double)$silae->heure_sup25 - (double)$heure_sup25_before);
-				$regulHeureSup50 += ((double)$silae->heure_sup50 - (double)$heure_sup50_before);
-				$regulHeureSup50HT += ((double)$silae->heure_sup50ht - (double)$heure_sup50ht_before);
+				$regulHeureSup00 += ((double)$silae_tmpday->heure_sup00 - (double)$heure_sup00_before);
+				$regulHeureSup25 += ((double)$silae_tmpday->heure_sup25 - (double)$heure_sup25_before);
+				$regulHeureSup50 += ((double)$silae_tmpday->heure_sup50 - (double)$heure_sup50_before);
+				$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
 			}
 
 			if($res > 0) {
-				$silae->update($user);
+				$silae_tmpday->update($user);
 			}
 			elseif($res == 0) {
-				$silae->create($user);
+				$silae_tmpday->create($user);
 			}
 			else {
 				$error++;
 			}
 		}
 
-		$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $usertoprocess->id);
-		if(/*$newduration_heure_sup00 != $silae->heure_sup00 || $newduration_heure_sup25 != $silae->heure_sup25 || $newduration_heure_sup50 != $silae->heure_sup50 || */$newduration_heure_nuit != $silae->heure_nuit || $newduration_heure_route != $silae->heure_route || $repas[$idw] != $silae->repas || $kilometres[$idw] != $silae->kilometre || $indemnite_tt[$idw] != $silae->indemnite_tt) {
+		$res = ($silae_array[$tmpday]->id > 0 ? 1 : 0);
+		$silae_tmpday = ($silae_array[$tmpday]->id > 0 ? $silae_array[$tmpday] : new Silae($db));
+		if(/*$newduration_heure_sup00 != $silae_tmpday->heure_sup00 || $newduration_heure_sup25 != $silae_tmpday->heure_sup25 || $newduration_heure_sup50 != $silae_tmpday->heure_sup50 || */$newduration_heure_nuit != $silae_tmpday->heure_nuit || $newduration_heure_route != $silae_tmpday->heure_route || $repas[$idw] != $silae_tmpday->repas || $kilometres[$idw] != $silae_tmpday->kilometre || $indemnite_tt[$idw] != $silae_tmpday->indemnite_tt) {
 			// Agenda Heure Sup 0%
-			// if($newduration_heure_sup00 != $silae->heure_sup00) {
+			// if($newduration_heure_sup00 != $silae_tmpday->heure_sup00) {
 			// 	$new_value = formatValueForAgenda('double', $newduration_heure_sup00);
-			// 	$old_value = formatValueForAgenda('double', $silae->heure_sup00);
+			// 	$old_value = formatValueForAgenda('double', $silae_tmpday->heure_sup00);
 
 			// 	$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			// }
 
 			// // Agenda Heure Sup 25%
-			// if($newduration_heure_sup25 != $silae->heure_sup25) {
+			// if($newduration_heure_sup25 != $silae_tmpday->heure_sup25) {
 			// 	$new_value = formatValueForAgenda('double', $newduration_heure_sup25);
-			// 	$old_value = formatValueForAgenda('double', $silae->heure_sup25);
+			// 	$old_value = formatValueForAgenda('double', $silae_tmpday->heure_sup25);
 
 			// 	$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			// }
 
 			// // Agenda Heure Sup 50%
-			// if($newduration_heure_sup50 != $silae->heure_sup50) {
+			// if($newduration_heure_sup50 != $silae_tmpday->heure_sup50) {
 			// 	$new_value = formatValueForAgenda('double', $newduration_heure_sup50);
-			// 	$old_value = formatValueForAgenda('double', $silae->heure_sup50);
+			// 	$old_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50);
 
 			// 	$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			// }
 
 			// Agenda Heure Nuit
-			if($newduration_heure_nuit != $silae->heure_nuit) {
+			if($newduration_heure_nuit != $silae_tmpday->heure_nuit) {
 				$new_value = formatValueForAgenda('double', $newduration_heure_nuit / 3600);
-				$old_value = formatValueForAgenda('double', $silae->heure_nuit / 3600);
+				$old_value = formatValueForAgenda('double', $silae_tmpday->heure_nuit / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Nuit</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Heure Route
-			if($newduration_heure_route != $silae->heure_route) {
+			if($newduration_heure_route != $silae_tmpday->heure_route) {
 				$new_value = formatValueForAgenda('double', $newduration_heure_route / 3600);
-				$old_value = formatValueForAgenda('double', $silae->heure_route / 3600);
+				$old_value = formatValueForAgenda('double', $silae_tmpday->heure_route / 3600);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Heure Route</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Repas
-			if($repas[$idw] != $silae->repas) {
-				$new_value = formatValueForAgenda('int', $repas[$idw], $silae, 'repas');
-				$old_value = formatValueForAgenda('int', $silae->repas, $silae, 'repas');
+			if($repas[$idw] != $silae_tmpday->repas) {
+				$new_value = formatValueForAgenda('int', $repas[$idw], $silae_tmpday, 'repas');
+				$old_value = formatValueForAgenda('int', $silae_tmpday->repas, $silae_tmpday, 'repas');
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Repas</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Kilomètres
-			if(price2num($kilometres[$idw], 2) != price2num($silae->kilometres, 2)) {
+			if(price2num($kilometres[$idw], 2) != price2num($silae_tmpday->kilometres, 2)) {
 				$new_value = formatValueForAgenda('double', $kilometres[$idw]);
-				$old_value = formatValueForAgenda('double', $silae->kilometres);
+				$old_value = formatValueForAgenda('double', $silae_tmpday->kilometres);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Kilomètres</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
 
 			// Agenda Indemnite TT
-			if($indemnite_tt[$idw] != $silae->indemnite_tt) {
+			if($indemnite_tt[$idw] != $silae_tmpday->indemnite_tt) {
 				$new_value = formatValueForAgenda('boolean', $indemnite_tt[$idw]);
-				$old_value = formatValueForAgenda('boolean', $silae->indemnite_tt);
+				$old_value = formatValueForAgenda('boolean', $silae_tmpday->indemnite_tt);
 
 				$modification .= ($old_value != $new_value ? '<li><strong>Indemnité TT</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 			}
@@ -2167,42 +2174,42 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			// S'il existe une ligne et que tous les champs sont = null
 			if($res > 0 && /*(empty($newduration_heure_sup00) || $newduration_heure_sup00 == 0) && (empty($newduration_heure_sup25) || $newduration_heure_sup25 == 0) && (empty($newduration_heure_sup50) || $newduration_heure_sup50 == 0) && */
 			(empty($newduration_heure_nuit) || $newduration_heure_nuit == 0) && (empty($newduration_heure_route) || $newduration_heure_route == 0) && (empty($repas[$idw]) || $repas[$idw] == 0) && 
-			(empty($kilometres[$idw]) || $kilometres[$idw] == 0) && (empty($indemnite_tt[$idw]) || $indemnite_tt[$idw] == 0) && empty($silae->heure_sup00) && empty($silae->heure_sup25) && empty($silae->heure_sup50) && empty($silae->heure_sup50ht)) {
-				$result = $silae->delete($user);
+			(empty($kilometres[$idw]) || $kilometres[$idw] == 0) && (empty($indemnite_tt[$idw]) || $indemnite_tt[$idw] == 0) && empty($silae_tmpday->heure_sup00) && empty($silae_tmpday->heure_sup25) && empty($silae_tmpday->heure_sup50) && empty($silae_tmpday->heure_sup50ht)) {
+				$result = $silae_tmpday->delete($user);
 			}
 			// S'il existe une ligne et qu'au moins un champ a été modifié
-			elseif($res > 0 && (/*$newduration_heure_sup00 != $silae->heure_sup00 || $newduration_heure_sup25 != $silae->heure_sup25 || $newduration_heure_sup50 != $silae->heure_sup50 || */
-			$newduration_heure_nuit != $silae->heure_nuit || $newduration_heure_route != $silae->heure_route || $repas[$idw] != $silae->repas || $kilometres[$idw] != $silae->kilometres || $indemnite_tt[$idw] != $silae->indemnite_tt)) {
-				//$silae->heure_sup00 = $newduration_heure_sup00;
-				//$silae->heure_sup25 = $newduration_heure_sup25;
-				//$silae->heure_sup50 = $newduration_heure_sup50;
-				$silae->heure_nuit = $newduration_heure_nuit;
-				$silae->heure_route = $newduration_heure_route;
-				$silae->repas = $repas[$idw];
-				$silae->kilometres = ($kilometres[$idw] ? price2num($kilometres[$idw], 2) : '');
-				$silae->indemnite_tt = $indemnite_tt[$idw];
+			elseif($res > 0 && (/*$newduration_heure_sup00 != $silae_tmpday->heure_sup00 || $newduration_heure_sup25 != $silae_tmpday->heure_sup25 || $newduration_heure_sup50 != $silae_tmpday->heure_sup50 || */
+			$newduration_heure_nuit != $silae_tmpday->heure_nuit || $newduration_heure_route != $silae_tmpday->heure_route || $repas[$idw] != $silae_tmpday->repas || $kilometres[$idw] != $silae_tmpday->kilometres || $indemnite_tt[$idw] != $silae_tmpday->indemnite_tt)) {
+				//$silae_tmpday->heure_sup00 = $newduration_heure_sup00;
+				//$silae_tmpday->heure_sup25 = $newduration_heure_sup25;
+				//$silae_tmpday->heure_sup50 = $newduration_heure_sup50;
+				$silae_tmpday->heure_nuit = $newduration_heure_nuit;
+				$silae_tmpday->heure_route = $newduration_heure_route;
+				$silae_tmpday->repas = $repas[$idw];
+				$silae_tmpday->kilometres = ($kilometres[$idw] ? price2num($kilometres[$idw], 2) : '');
+				$silae_tmpday->indemnite_tt = $indemnite_tt[$idw];
 
-				$result = $silae->update($user);
+				$result = $silae_tmpday->update($user);
 			}
 			// S'il n'existe pas de ligne et qu'au moins un champ est différent de null
 			elseif($res == 0 && (/*!empty($newduration_heure_sup00) || !empty($newduration_heure_sup25) || !empty($newduration_heure_sup50) || */
 			!empty($newduration_heure_nuit) || !empty($newduration_heure_route) || !empty($repas[$idw]) || !empty($kilometres[$idw]) || !empty($indemnite_tt[$idw]))) {
-				// $silae->heure_sup00 = $newduration_heure_sup00;
-				// $silae->heure_sup25 = $newduration_heure_sup25;
-				// $silae->heure_sup50 = $newduration_heure_sup50;
-				$silae->heure_nuit = $newduration_heure_nuit;
-				$silae->heure_route = $newduration_heure_route;
-				$silae->repas = $repas[$idw];
-				$silae->kilometres = ($kilometres[$idw] ? price2num($kilometres[$idw], 2) : '');
-				$silae->indemnite_tt = $indemnite_tt[$idw];
-				$silae->fk_user = $usertoprocess->id;
-				$silae->date = $tmpday;
+				// $silae_tmpday->heure_sup00 = $newduration_heure_sup00;
+				// $silae_tmpday->heure_sup25 = $newduration_heure_sup25;
+				// $silae_tmpday->heure_sup50 = $newduration_heure_sup50;
+				$silae_tmpday->heure_nuit = $newduration_heure_nuit;
+				$silae_tmpday->heure_route = $newduration_heure_route;
+				$silae_tmpday->repas = $repas[$idw];
+				$silae_tmpday->kilometres = ($kilometres[$idw] ? price2num($kilometres[$idw], 2) : '');
+				$silae_tmpday->indemnite_tt = $indemnite_tt[$idw];
+				$silae_tmpday->fk_user = $usertoprocess->id;
+				$silae_tmpday->date = $tmpday;
 
-				$result = $silae->create($user);
+				$result = $silae_tmpday->create($user);
 			}
 
 			if ($result < 0) {
-				setEventMessages($silae->error, $silae->errors, 'errors');
+				setEventMessages($silae_tmpday->error, $silae_tmpday->errors, 'errors');
 				$error++;
 				break;
 			}
@@ -2524,58 +2531,61 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 		$heure_sup = new Projet_task_time_heure_sup($db);
 		$projet_task_time_other = New Projet_task_time_other($db);
 		$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+		$silae = new Silae($db);
+		$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 		for ($idw = 0; $idw < $nb_jour; $idw++) { 
-			$silae = new Silae($db);
 			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
-			$res = $silae->fetchSilaeWithoutId($dayinloopfromfirstdaytoshow, $usertoprocess->id);
 
-			$silae->date = $dayinloopfromfirstdaytoshow;
-			$silae->fk_user = $usertoprocess->id;
+			$res = ($silae_array[$dayinloopfromfirstdaytoshow]->id > 0 ? 1 : 0);
+			$silae_tmpday = ($silae_array[$dayinloopfromfirstdaytoshow]->id > 0 ? $silae_array[$dayinloopfromfirstdaytoshow] : new Silae($db));
+
+			$silae_tmpday->date = $dayinloopfromfirstdaytoshow;
+			$silae_tmpday->fk_user = $usertoprocess->id;
 			
 			if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
-				$heure_sup00_before = $silae->heure_sup00;
-				$heure_sup25_before = $silae->heure_sup25;
-				$heure_sup50_before = $silae->heure_sup50;
-				$heure_sup50ht_before = $silae->heure_sup50ht;
-				$silae->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
+				$heure_sup00_before = $silae_tmpday->heure_sup00;
+				$heure_sup25_before = $silae_tmpday->heure_sup25;
+				$heure_sup50_before = $silae_tmpday->heure_sup50;
+				$heure_sup50ht_before = $silae_tmpday->heure_sup50ht;
+				$silae_tmpday->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
 
 				// Agenda Heure Sup 0%
-				if($heure_sup00_before != $silae->heure_sup00) {
-					$new_value = formatValueForAgenda('double', $silae->heure_sup00 / 3600);
+				if($heure_sup00_before != $silae_tmpday->heure_sup00) {
+					$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup00 / 3600);
 					$old_value = formatValueForAgenda('double', $heure_sup00_before / 3600);
 	
 					$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 0%</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 				}
 	
 				// Agenda Heure Sup 25%
-				if($heure_sup25_before != $silae->heure_sup25) {
-					$new_value = formatValueForAgenda('double', $silae->heure_sup25 / 3600);
+				if($heure_sup25_before != $silae_tmpday->heure_sup25) {
+					$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup25 / 3600);
 					$old_value = formatValueForAgenda('double', $heure_sup25_before / 3600);
 	
 					$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 25%</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 				}
 	
 				// Agenda Heure Sup 50%
-				if($heure_sup50_before != $silae->heure_sup50) {
-					$new_value = formatValueForAgenda('double', $silae->heure_sup50 / 3600);
+				if($heure_sup50_before != $silae_tmpday->heure_sup50) {
+					$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50 / 3600);
 					$old_value = formatValueForAgenda('double', $heure_sup50_before / 3600);
 	
 					$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50%</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 				}
 
 				// Agenda Heure Sup 50% HT
-				if($heure_sup50ht_before != $silae->heure_sup50ht) {
-					$new_value = formatValueForAgenda('double', $silae->heure_sup50ht / 3600);
+				if($heure_sup50ht_before != $silae_tmpday->heure_sup50ht) {
+					$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50ht / 3600);
 					$old_value = formatValueForAgenda('double', $heure_sup50ht_before / 3600);
 	
 					$modification .= ($old_value != $new_value ? '<li><strong>Heure Sup 50% HT</strong> ('.dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 				}
 
 				if($dayinloopfromfirstdaytoshow < $first_day_month) {
-					$regulHeureSup00 += ((double)$silae->heure_sup00 - (double)$heure_sup00_before);
-					$regulHeureSup25 += ((double)$silae->heure_sup25 - (double)$heure_sup25_before);
-					$regulHeureSup50 += ((double)$silae->heure_sup50 - (double)$heure_sup50_before);
-					$regulHeureSup50HT += ((double)$silae->heure_sup50ht - (double)$heure_sup50ht_before);
+					$regulHeureSup00 += ((double)$silae_tmpday->heure_sup00 - (double)$heure_sup00_before);
+					$regulHeureSup25 += ((double)$silae_tmpday->heure_sup25 - (double)$heure_sup25_before);
+					$regulHeureSup50 += ((double)$silae_tmpday->heure_sup50 - (double)$heure_sup50_before);
+					$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
 				}
 			}
 
@@ -2595,10 +2605,10 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 			}
 
 			if($res > 0) {
-				$result = $silae->update($user);
+				$result = $silae_tmpday->update($user);
 			}
 			elseif($res == 0) {
-				$result = $silae->create($user);
+				$result = $silae_tmpday->create($user);
 			}
 			else {
 				$result = -1;
