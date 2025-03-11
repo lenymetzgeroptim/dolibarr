@@ -96,7 +96,7 @@ if (empty($reshook)) {
             $new_order['impact'] = $labels['impact']; // Ajouter "impact" à la fin
         }
 
-        if ($object->status == $object::STATUS_PRISE ||$object->status == $object::STATUS_VALIDATED) {
+        if ($object->status == $object::STATUS_VALIDATED) {
             $requiredFields = &$extrafields->attributes[$object->table_element]['required'];
             foreach ($requiredFields as &$field) {
                 $field = '1';

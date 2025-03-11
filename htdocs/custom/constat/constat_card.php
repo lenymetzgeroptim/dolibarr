@@ -313,13 +313,12 @@ if (($id || $ref) && $action == 'edit') {
 
 	// Étape 2 : Masquer les champs pour le premier appel
 	$fields_to_hide_first = [
-		'impactcomm',
-		'coutTotal',
-		'dateCloture',
 		'actionimmediate',
 		'actionimmediatecom',
 		'analyseCauseRacine',
 		'recurent',
+		'coutTotal',
+		'dateCloture',
 		'infoClient',
 		'commInfoClient',
 		'accordClient',
@@ -354,6 +353,7 @@ if (($id || $ref) && $action == 'edit') {
 
 	
 	$fields_to_hide_second = [
+		'impactcomm',
 		'dateEmeteur',
 		'ref',
 		'label',
@@ -421,68 +421,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('XXX'), $text, 'confirm_xxx', $formquestion, 0, 1, 220);
 	}
 
-
-	if ($action == 'setPrise' && $confirm == 'yes'){
-	
-		$subject = '[OPTIM Industries] Notification automatique constat vérifié ';
-	
-		$from = 'erp@optim-industries.fr';
-		
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$to .= $email . ", ";
-				}
-			}
-		}
-	
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Resp. Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-			}
-		}
-	
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql = "SELECT lastname, firstname FROM llx_user WHERE rowid = ".$object->fk_user_creat;
-		$resql = $db->query($sql);
-		$creator_name = "";
-		if ($resql) {
-			if ($db->num_rows($resql) > 0) {
-				$creator = $db->fetch_object($resql);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-		}
-	
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-		$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-	
-		$to = rtrim($to, ", ");
-		$message = $langs->transnoentitiesnoconv(" Bonjour, le constat ".$link." créé par ". $creator_name. " a été vérifié. Veuillez compléter votre partie et passer au statut suivant. Cordialement, votre système de notification.");
-
-	
-		$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			 setEventMessages($langs->trans("EmailSend"), null, 'warning');
-			// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-			// exit;
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-			</script>';
-		} 		
-	
-	}
 
 
 
@@ -675,14 +613,17 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		$to .= $tochef;
 		$to .= $toemeteur;
+		
 		$to = rtrim($to, ", ");
 		$msg =  $langs->transnoentitiesnoconv("Le constat  ".$link." créé par " .$creator_name. " est à classé par le service Q3SE votre system d'information");
 		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 		
 		// Send mail
 		$res = $cmail->sendfile();
+
 		if($res) {
 			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
+
 		} else {
 			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
 			print '<script>
@@ -692,7 +633,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 	
 
-	if ($action == 'setSolde' && $confirm == 'yes'){
+	if ($action == 'setSolde'){
 	
 		$subject = '[OPTIM Industries] Notification automatique constat soldé ';
 
@@ -716,8 +657,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		foreach($liste_utilisateur as $qualite){
 			if(!empty($qualite->email)){
 				$to .= $qualite->email;
-				
-	
 			}
 		}
 
@@ -739,6 +678,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		
 		$to = rtrim($to, ", ");
+		
 		$message = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été soldé. Le constat est donc terminé. Veuillez le passer au statut clôturé pour qu'il ne puisse être modifié. Cordialement, Votre système de notification.");
 		//$msg = 'test notif ( a ne pas prendre en compte si reçu )';
 		$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
@@ -769,19 +709,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$pasresponsableaffaire = 1; 
 	}
 
-	if( $action == 'setPrise'  && $confirm == 'yes' ){
-		$object->updatePrise();
 
-			$object->actionmsg = $langs->transnoentitiesnoconv("CONSTAT_PRISEInDolibarrr", $object->ref);
-			// Call trigger
-			$result = $object->call_trigger('CONSTAT_PRISE', $user);
-			if ($result < 0) {
-				$error++;
-			}
-			// End call triggers
-		
-
-	}
 	
 	if( $action == 'setEnCours'  && $confirm == 'yes' ){
 		$object->updateEnCours();
@@ -810,7 +738,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}
 			// End call triggers
 		
-
 	}
 
 	if ($action == 'setCloture' ) {
@@ -847,8 +774,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		if ($result < 0) {
 			$error++;
 		}
-			
-
 	}
 
 	if( $action == 'setDelete'  && $confirm == 'yes' ){
@@ -1086,8 +1011,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			if (
 				$object->status == $object::STATUS_EN_COURS || 
 				$object->status == $object::STATUS_VALIDATED || 
-				$object->status == $object::STATUS_DRAFT ||  
-				$object->status == $object::STATUS_PRISE ||  
+				$object->status == $object::STATUS_DRAFT ||    
 				$object->status == $object::STATUS_SOLDEE
 			) {
 				// Vérification des droits utilisateur et du statut
@@ -1111,7 +1035,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print "<script>showPopupMessage('L\'émetteur doit<br>remplir les champs en gras pour valider le constat. ', 'error');</script>";
 					if ($object->label != null && $object->site != null && $object->sujet != null) {
 						if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-							print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
+							print dolGetButtonAction('', $langs->trans('Créer'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
 						} 
 					}
 				}
@@ -1132,25 +1056,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 						}
 					}
 				}
-			} else {
-				// Passé au Status Vérifié
-				if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-					if ($object->status == $object::STATUS_VALIDATED) {
-						print dolGetButtonAction('', $langs->trans('passer au status vérifié'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setPrise&confirm=yes&token='.newToken(), '', $permissiontoadd);
-					}
-				}
-				if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-					if ($object->status == $object::STATUS_PRISE) {
-						
-						if ($object->typeConstat != null && 
-							!empty($object->array_options['options_impact']) && 
-							!empty($object->array_options['options_rubrique']) && 
-							!empty($object->array_options['options_processusconcern'])) {
-							print dolGetButtonAction('', $langs->trans('passer au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
-						}
-					}
-				}
-			}
+			} 
 			
 			if ( $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status == $object::STATUS_SOLDEE) {
@@ -1164,11 +1070,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}	
 			}
 			
-			if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-				if ($object->status == $object::STATUS_PRISE ) {
-					print "<script>showPopupMessage('Le constat est vérifié, informé le client (si nécessaire) puis complété les champs en gras pour passé au statut \'En Cours\', 'error');</script>";
-				}
-			}	
+			
 
 		// Passer au Status Soldé
 			global $db;
@@ -1238,10 +1140,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 
 
-
-
-			
-			
 			$sql = "SELECT 1 
 				FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug 
 				WHERE ug.fk_user = " . $user->id . " 
@@ -1266,16 +1164,17 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 
 			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-				error_log("Statut actuel : " . $object->status);
-				error_log("Valeur de STATUS_CLASSE : " . $object::STATUS_CLASSE);
+				
 			
 				// Afficher le bouton seulement si le constat N'EST PAS encore classé
-				if ($object->status != $object::STATUS_CLASSE) { 
+				if ($object->status != $object::STATUS_CLASSE && $object->status != $object::STATUS_CLOTURE) {
 					$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken();
 					print '<a href="#" onclick="confirmClasser(\'' . $url . '\')" class="butAction">' . $langs->trans('Classer le constat') . '</a>';
 				}
 	
 			}
+
+
 			?>
 			
 			<script type="text/javascript">
@@ -1302,7 +1201,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			
 			// Create a sale order
 			if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
-					if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_DRAFT ||  $object->status == $object::STATUS_PRISE ){
+					if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_DRAFT ){
 						print '<a class="butAction" href="#" onclick="window.open(\''.DOL_URL_ROOT.'/custom/actions/action_card.php?action=create&origin='.$object->element.'&originid='.$object->id.'&socid='.$object->socid.'\', \'_blank\'); return false;">'.$langs->trans("Créer action").'</a>';
 
 				 }
