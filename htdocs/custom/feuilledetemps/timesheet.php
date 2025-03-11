@@ -146,6 +146,7 @@ if($conf->global->FDT_DISPLAY_FULL_WEEK) {
 }
 
 $ecart_jour = num_between_day($firstdaytoshow, $first_day_month + 3600); // Nombre de jour à anticiper
+$ecart_jour_fin = num_between_day($firstdaytoshow, $last_day_month + 3600);
 
 
 // Chargement de la feuille de temps et Vérification de la possibilité de modifier la FDT
@@ -385,14 +386,14 @@ include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/actions.inc.php';
 $timeSpentDay = $object->timeDoneByDay($usertoprocess->id);
 $multiple_holiday = 0;
 $uncompleted_fdt = 0;
-// $isavailable = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, Holiday::STATUS_APPROVED2, array(4));
-// $holidayWithoutCanceled = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
+$isavailable = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, Holiday::STATUS_APPROVED2, array(4));
+$holidayWithoutCanceled = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
 	$dayinloopfromfirstdaytoshowgmt = dol_time_plus_duree($firstdaytoshowgmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
 
-	$isavailable[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, Holiday::STATUS_APPROVED2, array(4));
-	$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
+	// $isavailable[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, Holiday::STATUS_APPROVED2, array(4));
+	// $holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
 
 	$holidayTypeNeedHour = 1;
 	$holidayInSeveralDay = 0;
@@ -581,9 +582,9 @@ if (!empty($moreforfilter)) {
 	print '<div id="filtre" class="liste_titre liste_titre_bydiv centpercent">';
 	print $moreforfilter;
 	print '<div class="divsearchfield nowrap" style="float: right;">';
-	print_liste_field_titre($selectedfields, $_SERVER["PHP_SELF"], "", '', '', '', $sortfield, $sortorder, 'center maxwidthsearch ');
+	if(!$conf->global->FDT_DISPLAY_COLUMN) print_liste_field_titre($selectedfields, $_SERVER["PHP_SELF"], "", '', '', '', $sortfield, $sortorder, 'center maxwidthsearch ');
 	print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>';
-	print '<button type="button" title="Voir les favoris" id="seeFavoris" class="nobordertransp button_search_x" onclick="displayFav()" style="vertical-align: middle; margin-left: 4px;"><span class="far fa-star" style="font-size: large; color: var(--colorbackhmenu1);"></span></button>';;
+	if(!$conf->global->FDT_DISPLAY_COLUMN) print '<button type="button" title="Voir les favoris" id="seeFavoris" class="nobordertransp button_search_x" onclick="displayFav()" style="vertical-align: middle; margin-left: 4px;"><span class="far fa-star" style="font-size: large; color: var(--colorbackhmenu1);"></span></button>';;
 	print '</div>';
 	print '</div>';
 }
@@ -659,7 +660,7 @@ if (count($tasksarray) > 0 || $conf->global->FDT_DISPLAY_COLUMN) {
 	}
 
 	// Récupération des favoris
-	$favoris = $object->getFavoris($usertoprocess->id);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) $favoris = $object->getFavoris($usertoprocess->id);
 
 	// Récupération des notes
 	$notes = $task->fetchAllNotes($firstdaytoshow, $lastdaytoshow, $usertoprocess->id, ($conf->global->FDT_DISPLAY_COLUMN ? 1 : 0));
@@ -671,14 +672,14 @@ if (count($tasksarray) > 0 || $conf->global->FDT_DISPLAY_COLUMN) {
 	// Affichage de l'interieur du tableau
 	if(!$conf->global->FDT_DISPLAY_COLUMN) {
 		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek('timesheet', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
-															$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
+															$can_modify_fdt, $css, $css_holiday, $ecart_jour, $ecart_jour_fin, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
 															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
 															$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves);
 	}
 	else {
 		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek_Sigedi('timesheet', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
-																$can_modify_fdt, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
+																$can_modify_fdt, $css, $css_holiday, $ecart_jour, $ecart_jour_fin, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
 																$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 																$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs,
 																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves);

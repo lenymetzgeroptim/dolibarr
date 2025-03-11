@@ -274,6 +274,7 @@ $last_day_month = dol_get_last_day($year, $month);
 
 $nb_jour =  num_between_day($firstdaytoshow, $lastdaytoshow+3600) + 1; 
 $ecart_jour = num_between_day($firstdaytoshow, $object->date_debut + 3600);
+$ecart_jour_fin = num_between_day($firstdaytoshow, $object->date_fin + 3600);
 
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = dol_time_plus_duree($firstdaytoshow, $idw, 'd');
@@ -1240,14 +1241,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// Affichage de l'interieur du tableau
 		if(!$conf->global->FDT_DISPLAY_COLUMN) {
 			$totalforvisibletasks = FeuilleDeTempsLinesPerWeek('card', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
-															$modifier, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
+															$modifier, $css, $css_holiday, $ecart_jour, $ecart_jour_fin, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
 															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
 															array(), '', $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves);
 		}
 		else {
 			$totalforvisibletasks = FeuilleDeTempsLinesPerWeek_Sigedi('card', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
-															$modifier, $css, $css_holiday, $ecart_jour, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
+															$modifier, $css, $css_holiday, $ecart_jour, $ecart_jour_fin, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
 															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
 															array(), '', $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves);

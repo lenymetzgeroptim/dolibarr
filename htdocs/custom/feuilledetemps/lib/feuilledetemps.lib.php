@@ -119,6 +119,7 @@ function timesheet_prepare_head($mode, $fuser = null)
  * @param   string[]    $css								css pour la couleur des cases
  * @param   string[]    $css_holiday						css pour la couleur des cases
  * @param   int 	 	$num_first_day						Numero du 1er jour du mois (0 si celui-ci n'est pas présent dans les dates affichées)
+ * @param   int 	 	$num_last_day						Numero du dernier jour du mois (0 si celui-ci n'est pas différent du dernier jour du mois)
  * @param   string 	 	$type_deplacement					Type de déplacement de l'utilisateur : 'none', 'petitDeplacement' ou 'grandDeplacement'
  * @param   int[] 	 	$dayinloopfromfirstdaytoshow_array	Tableau avec l'ensemble des jours a afficher (amélioration de la performance)
  * @param   int 	 	$modifier_jour_conges				Droit de modifier les jours de congés
@@ -145,7 +146,7 @@ function timesheet_prepare_head($mode, $fuser = null)
  * @return  array				Array with time spent for $fuser for each day of week on tasks in $lines and substasks
  */
 function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytoshow, $fuser, $parent, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null, 
-									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
+									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $num_last_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
 									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
@@ -597,7 +598,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 						if ($dayWorkLoad > 0) {
 							$alreadyspent = convertSecondToTime($dayWorkLoad, 'allhourmin');
 						}
-						if($idw >= $num_first_day) {
+						if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
 							$total_work_task += (int)$dayWorkLoad;
 						}
 						$alttitle = $langs->trans("AddHereTimeSpentForDay", $tmparray['day'], $tmparray['mon']);
@@ -728,7 +729,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 								$heure_nuit = $heure_nuit_nf / 3600;
 							}
 
-							if($idw >= $num_first_day) {
+							if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
 								$total_heureNuit += $heure_nuit_nf;
 							}
 
@@ -749,7 +750,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 								$port_epi = $port_epi_nf / 3600;
 							}
 
-							if($idw >= $num_first_day) {
+							if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
 								$total_heureEPI += $port_epi_nf;
 							}
 
@@ -915,6 +916,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
  * @param   string[]    $css								css pour la couleur des cases
  * @param   string[]    $css_holiday						css pour la couleur des cases
  * @param   int 	 	$num_first_day						Numero du 1er jour du mois (0 si celui-ci n'est pas présent dans les dates affichées)
+ * @param   int 	 	$num_last_day						Numero du dernier jour du mois (0 si celui-ci n'est pas différent du dernier jour affiché)
  * @param   string 	 	$type_deplacement					Type de déplacement de l'utilisateur : 'none', 'petitDeplacement' ou 'grandDeplacement'
  * @param   int[] 	 	$dayinloopfromfirstdaytoshow_array	Tableau avec l'ensemble des jours a afficher (amélioration de la performance)
  * @param   int 	 	$modifier_jour_conges				Droit de modifier les jours de congés
@@ -941,7 +943,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
  * @return  array				Array with time spent for $fuser for each day of week on tasks in $lines and substasks
  */
 function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastdaytoshow, $fuser, $parent, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null, 
-									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
+									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $num_last_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
 									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
@@ -958,7 +960,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	$cptholiday = 0;
 
 	$fields = array(
-		'date' => array('text' => 'Date', 'visible' => 1, 'css' => 'fixed'),
+		'date' => array('text' => 'Date', 'visible' => 1, 'css' => 'fixed minwidth75'),
 		'total_semaine' => array('text' => 'Semaine', 'type' => 'duration', 'visible' => 1, 'css' => 'minwidth100'),
 		'absence' => array('text' => 'Absence'.$form->textwithpicto('', $conges_texte), 'visible' => 1, 'css' => 'minwidth100'),
 		'contrat' => array('text' => 'Contrat', 'type' => 'duration', 'visible' => 1),
@@ -968,6 +970,12 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 		'diff' => array('text' => 'Diff.', 'visible' => 1),
 		'site' => array('text' => 'SiteFDT', 'visible' => 1),
 		'affaire' => array('text' => 'Affaire', 'visible' => 1),
+	);
+
+	$total_array = array(
+		'heure_jour' => 0,
+		'heure_nuit' => 0,
+		'heure_total' => 0,
 	);
 
 	if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
@@ -980,6 +988,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	foreach($silae->fields as $key => $value) {
 		if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50', 'heure_sup50ht'))) {
 			$fields[$key] = array('text' => $value['label'],  'type' => 'duration', 'visible' => ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3));
+			$total_array[$key] = 0;
 		}
 	}
 
@@ -994,7 +1003,8 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 						'type' => $extrafields->attributes[$silae->table_element]['type'][$key],
 						'visible' => dol_eval($extrafields->attributes[$silae->table_element]['list'][$key], 1, 1, '2'),
 						'css' => $extrafields->attributes[$silae->table_element]['cssview'][$key]
-					);		
+					);	
+		$total_array[$key] = 0;	
 	}
 
 
@@ -1034,13 +1044,13 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 		if($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month) {
 			printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
-			$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
+			$num_first_day, $num_last_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
 			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $projectsListId, $silae_array);
 		}
 		else {
 			$total_array = printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
-			$num_first_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
+			$num_first_day, $num_last_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
 			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $projectsListId, $silae_array);
 		}
 	}
@@ -1072,7 +1082,7 @@ function printHeaderLine_Sigedi($fields) {
 }
 
 function printTotalLine_Sigedi($fields, $total_array) {
-	global $langs;
+	global $langs, $form;
 
 	print '<tr class="liste_totalcolumn">';
 	foreach($fields as $key => $value) {
@@ -1080,11 +1090,11 @@ function printTotalLine_Sigedi($fields, $total_array) {
 			continue;
 		}
 
-		if(!empty($total_array[$key])) {
-			$total = ($value['type'] != 'boolean' ? formatValueForAgenda($value['type'], $total_array[$key]) : $total_array[$key]);
+		if($key == 'date') {
+			$total = 'TOTAL'.$form->textwithpicto('', 'Le total prend en compte uniquement les jours du mois en cours');
 		}
-		elseif($key == 'date') {
-			$total = 'TOTAL';
+		elseif(!is_null($total_array[$key])) {
+			$total = ($value['type'] != 'boolean' ? formatValueForAgenda($value['type'], $total_array[$key]) : $total_array[$key]);
 		}
 		else {
 			$total = '';
@@ -1097,7 +1107,7 @@ function printTotalLine_Sigedi($fields, $total_array) {
 
 function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify, $modifier_jour_conges, 
 						 $holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
-						 $num_first_day, $timeHoliday, &$timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
+						 $num_first_day, $num_last_day, $timeHoliday, &$timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
 						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, &$cptholiday, $arraytypeleaves, &$task_load, $projectsListId, $silae_array) {
 	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object;
 	global $displayVerification;
@@ -1261,7 +1271,6 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$user_conges = 1;
 		}
 
-		// TODOL : gérer les 2024-06-03
 		if(dol_print_date($dayinloopfromfirstdaytoshow, '%Y-%m-%d') < '2024-06-03' && $heure_semaine == $conf->global->HEURE_SEMAINE) { 
 			$tmp_heure_semaine = 35;
 		}
@@ -1295,7 +1304,9 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			}
 
 			$totalforday += (int)$timespent->timespent_duration;
-			$total_array['heure_jour'] += (int)$timespent->timespent_duration;
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
+				$total_array['heure_jour'] += (int)$timespent->timespent_duration;
+			}
 
 			if($cpt == 0 && $mode == 'timesheet' && !$disabled && empty($timespent) && num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt, '', 1) == 0 /*&& empty($timeHoliday[(int)$weekNumber]) */&& empty($timeSpentWeek[(int)$weekNumber]) && !empty($standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')]) && $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] != $timeHolidayByDay[$dayinloopfromfirstdaytoshow]) {
 				if(!empty($timeHolidayByDay[$dayinloopfromfirstdaytoshow]) && $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] - $timeHolidayByDay[$dayinloopfromfirstdaytoshow]) {
@@ -1326,7 +1337,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			}
 
 			// Note 
-			$note = $notes[$dayinloopfromfirstdaytoshow][$cpt]; // TODOL : gérer les 0 en fonction de si on gère plusieurs notes sur un même jour ou non
+			$note = $notes[$dayinloopfromfirstdaytoshow][$cpt]; 
 			//$tableCellTimespent .= img_picto('Note', (empty($note) ? 'note_vide@feuilledetemps' : 'note_plein@feuilledetemps'), ' id="img_note_'.$cpt.'_'.$idw.'" style="display:inline-block; padding: 6px; vertical-align: middle;" onClick="openNote(\'note_'.$cpt.'_'.$idw.'\')"');
 			$tableCellTimespent .= '<span class="'.(empty($note) ? 'far' : 'fas').' fa-sticky-note" id="img_note_'.$cpt.'_'.$idw.'" style="padding: 6px;" onClick="openNote(\'note_'.$cpt.'_'.$idw.'\')"></span>';
 			$tableCellTimespent .= '<div class="modal" id="note_'.$cpt.'_'.$idw.'">';
@@ -1339,17 +1350,20 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$tableCellTimespent .= '</div></div>';
 
 			// Time
-			// TODOL : gérer les 0 pour pourvoir pointer dans plusieurs cas sur un même jour
 			$tableCellTimespent .= '<input type="text" style="border: 1px solid grey;" alt="'.$alttitle.'" title="'.$alttitle.'" '.($disabled ? 'disabled' : '').' 
 									 class="center smallpadd time_'.$idw.'" size="2" id="timeadded['.$idw.']['.$cpt.']" name="task['.$idw.']['.$cpt.']" value="'.$alreadyspent.'" 
 									 cols="2"  maxlength="5"';
 			$tableCellTimespent .= ' onfocus="this.oldvalue = this.value; this.oldvalue_focus = this.value;"';
 			$tableCellTimespent .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
-			$tableCellTimespent .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalSigedi(this, \'heure_jour\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\'); this.oldvalue = this.value;
+			$tableCellTimespent .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).');';
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellTimespent .= ' updateTotalSigedi(this, \'heure_jour\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');';
+			$tableCellTimespent .= ' this.oldvalue = this.value;
 									 updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
 									 deletePrefillingClass(this);"';
 			$tableCellTimespent .= ' onblur="regexEvent_TS(this,event,\''.$modeinput.'\'); validateTime(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.', 0,\''.$type_deplacement.'\', '.$tmp_heure_semaine_hs.', 0, '.$heure_max_jour.', '.$heure_max_semaine.');
-									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalSigedi(this, \'heure_jour\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\'); updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
+									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).');'; 
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellTimespent .= ' updateTotalSigedi(this, \'heure_jour\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');';
+			$tableCellTimespent .= ' updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
 									 deletePrefillingClass(this); autoFillSite(\''.$fuser->array_options['options_sitedefaut'].'\', '.$idw.', '.$cpt.')"';
 								  // validateTime_HS(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.', 0, 0, 0, 0, '.$tmp_heure_semaine_hs.');"';
 			//$tableCellTimespent .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
@@ -1363,10 +1377,9 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$heure_nuit_nf = $otherTaskTime['heure_nuit'][$dayinloopfromfirstdaytoshow][$timespent->timespent_id];
 			$heure_nuit = ($heure_nuit_nf > 0 ? number_format($heure_nuit_nf / 3600, 2, '.', '') : '');
 			$totalforday += (int)$heure_nuit_nf;
-			$total_array['heure_nuit'] += (int)$heure_nuit_nf;
 
-			if($idw >= $num_first_day) {
-				//$total_heureNuit += $heure_nuit_nf; // TODOL : Est-ce que je compte les jour en dehors du mois ?
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
+				$total_array['heure_nuit'] += (int)$heure_nuit_nf;
 			}
 
 			$tableCellHeureNuit .= '<input type="text"'.($disabled ? ' disabled' : '').' 
@@ -1375,10 +1388,14 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 									value="'.$heure_nuit.'" cols="2"  maxlength="5"';
 			$tableCellHeureNuit .= ' onfocus="this.oldvalue = this.value; this.oldvalue_focus = this.value;"';
 			$tableCellHeureNuit .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\')"';
-			$tableCellHeureNuit .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\'); this.oldvalue = this.value;
+			$tableCellHeureNuit .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).');'; 
+			if($idw > $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellHeureNuit .= ' updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');'; 
+			$tableCellHeureNuit .= ' this.oldvalue = this.value;
 									 updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');"';
 			$tableCellHeureNuit .= ' onblur="regexEvent_TS(this,event,\''.$modeinput.'\'); validateTime(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.', 0,\''.$type_deplacement.'\', '.$tmp_heure_semaine_hs.', 0, '.$heure_max_jour.', '.$heure_max_semaine.');
-									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).'); updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\'); updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
+									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).');'; 
+			if($idw > $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellHeureNuit .= ' updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');';
+			$tableCellHeureNuit .= ' updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
 									 autoFillSite(\''.$fuser->array_options['options_sitedefaut'].'\', '.$idw.', '.$cpt.')"';
 			$tableCellHeureNuit .= ' />';
 			$tableCellHeureNuit .= '</div>';
@@ -1408,7 +1425,9 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 					$tableCellTimespent .=  '"></div>';
 
 					$totalforday += (int)$timeonothertasks;
-					$total_array['heure_jour'] += (int)$timeonothertasks;
+					if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
+						$total_array['heure_jour'] += (int)$timeonothertasks;
+					}
 
 					$tableCellHeureNuit .= '<div><input style="visibility: hidden"></div>';
 					$tableCellSite .= '<div><input style="visibility: hidden"></div>';
@@ -1437,8 +1456,9 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		print '<td class="liste_total center hide'.$idw.($total != '00:00' ? ' bold' : '').($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'" align="center">';
 		print '<div class="totalDay'.$idw.'" '.(!empty($style) ? $style : '').'>'.$total;
 		print '</div></td>';
-		$total_array['heure_total'] += $totalforday;
-
+		if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
+			$total_array['heure_total'] += $totalforday;
+		}
 
 		// Diff
 		if(num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt, '', 1) != 0 && empty($timeHolidayByDay[$dayinloopfromfirstdaytoshow])) {
@@ -1477,7 +1497,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$moreparam = 'onfocus="this.oldvalue = this.value;"';
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
 				$moreparam .= ' maxlength="5"';
-				$moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
+				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
 				//$moreparam .= ($disabled ? ' disabled' : '');
 				$moreparam .= ' disabled';
 
@@ -1486,7 +1506,9 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 						print $silae->showInputField($value, $key, ($silae->$key / 3600), $moreparam, '['.$idw.']');
 					}
 				print '</td>';
-				$total_array[$key] += $silae->$key;
+				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
+					$total_array[$key] += $silae->$key;
+				}
 			}
 		}
 
@@ -1499,7 +1521,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 			print '<td class="center'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 			if($type == 'boolean') {
-				$moreparam = ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
+				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam = ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
 				$moreparam .= ($disabled ? ' disabled' : '');
 				$checked = '';
 				if (!empty($silae->array_options['options_'.$key])) $checked = ' checked';
@@ -1509,12 +1531,14 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$moreparam = 'onfocus="this.oldvalue = this.value;"';
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
 				$moreparam .= ' maxlength="7"';
-				if($idw > $num_first_day) $moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
+				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
 				$moreparam .= ($disabled ? ' disabled' : '');
 				print $extrafields->showInputField($key, $silae->array_options['options_'.$key], $moreparam, '['.$idw.']', '', 0, $silae->id, $silae->table_element);
 			}
 			print '</td>';
-			$total_array[$key] += $silae->array_options['options_'.$key];
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
+				$total_array[$key] += $silae->array_options['options_'.$key];
+			}
 		}
 
 	print '</tr>';
@@ -1559,7 +1583,7 @@ function ecart_lundi($date){
  * @param   int         $num_first_day			Numéro du 1er jour du mois (0 si celui-ci n'apparait pas sur les dates affichées)
  * @return  array								Tableau avec le nombre de chaque type de déplacement
  */
-function FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $num_first_day = null, $disabled, $addcolspan, $dayinloopfromfirstdaytoshow_array) {
+function FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $num_first_day = null, $num_last_day = null, $disabled, $addcolspan, $dayinloopfromfirstdaytoshow_array) {
 	global $conf, $db, $user, $langs, $form, $object;
 
 	$deplacement = New Deplacement($db);
@@ -1613,7 +1637,7 @@ function FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $f
 				print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
 			}
 
-			if($idw >= $num_first_day && $array_deplacement['deplacement_ponctuel'][$dayinloopfromfirstdaytoshow]) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['deplacement_ponctuel'][$dayinloopfromfirstdaytoshow]) {
 				$nb_deplacement_ponctuel++;
 			}
 
@@ -1685,25 +1709,25 @@ function FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $f
 				print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
 			}
 
-			if($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 1) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 1) {
 				$nb_type_deplacement['d1']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 2) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 2) {
 				$nb_type_deplacement['d2']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 3) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 3) {
 				$nb_type_deplacement['d3']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 4) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 4) {
 				$nb_type_deplacement['d4']++;
 			}
-			elseif($idw >= $num_first_day && ($array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 5 || $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 8 || $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 9)) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && ($array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 5 || $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 8 || $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 9)) {
 				$nb_type_deplacement['gd1']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 6) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 6) {
 				$nb_type_deplacement['gd2']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 7) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 7) {
 				$nb_type_deplacement['dom']++;
 			}
 
@@ -1739,13 +1763,13 @@ function FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $f
 				print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
 			}
 
-			if($idw >= $num_first_day && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 1) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 1) {
 				$nb_moyen_transport['VS']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 2) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 2) {
 				$nb_moyen_transport['A']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 3) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 3) {
 				$nb_moyen_transport['T']++;
 			}
 
@@ -1859,7 +1883,7 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
 			}
 
-			if($idw >= $num_first_day && $array_deplacement['deplacement_ponctuel'][$dayinloopfromfirstdaytoshow]) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['deplacement_ponctuel'][$dayinloopfromfirstdaytoshow]) {
 				$nb_deplacement_ponctuel++;
 			}
 
@@ -1929,25 +1953,25 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
 			}
 
-			if($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 1) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 1) {
 				$nb_type_deplacement['d1']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 2) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 2) {
 				$nb_type_deplacement['d2']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 3) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 3) {
 				$nb_type_deplacement['d3']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 4) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 4) {
 				$nb_type_deplacement['d4']++;
 			}
-			elseif($idw >= $num_first_day && ($array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 5 || $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 8 || $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 9)) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && ($array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 5 || $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 8 || $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 9)) {
 				$nb_type_deplacement['gd1']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 6) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 6) {
 				$nb_type_deplacement['gd2']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 7) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['type_deplacement'][$dayinloopfromfirstdaytoshow] == 7) {
 				$nb_type_deplacement['dom']++;
 			}
 
@@ -1984,13 +2008,13 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
 			}
 
-			if($idw >= $num_first_day && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 1) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 1) {
 				$nb_moyen_transport['VS']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 2) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 2) {
 				$nb_moyen_transport['A']++;
 			}
-			elseif($idw >= $num_first_day && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 3) {
+			elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $array_deplacement['moyen_transport'][$dayinloopfromfirstdaytoshow] == 3) {
 				$nb_moyen_transport['T']++;
 			}
 
@@ -2049,7 +2073,7 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				$heure_sup00 = $arraySilae['heure_sup00'][$dayinloopfromfirstdaytoshow] / 3600;
 			}
 
-			if($idw >= $num_first_day && $arraySilae['heure_sup00'][$dayinloopfromfirstdaytoshow] > 0) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_sup00'][$dayinloopfromfirstdaytoshow] > 0) {
 				$total_heure_sup00 += $arraySilae['heure_sup00'][$dayinloopfromfirstdaytoshow];
 			}
 
@@ -2110,7 +2134,7 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				$heure_sup25 = $arraySilae['heure_sup25'][$dayinloopfromfirstdaytoshow] / 3600;
 			}
 
-			if($idw >= $num_first_day && $arraySilae['heure_sup25'][$dayinloopfromfirstdaytoshow] > 0) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_sup25'][$dayinloopfromfirstdaytoshow] > 0) {
 				$total_heure_sup25 += $arraySilae['heure_sup25'][$dayinloopfromfirstdaytoshow];
 			}
 
@@ -2171,7 +2195,7 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				$heure_sup50 = $arraySilae['heure_sup50'][$dayinloopfromfirstdaytoshow] / 3600;
 			}
 
-			if($idw >= $num_first_day && $arraySilae['heure_sup50'][$dayinloopfromfirstdaytoshow] > 0) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_sup50'][$dayinloopfromfirstdaytoshow] > 0) {
 				$total_heure_sup50 += $arraySilae['heure_sup50'][$dayinloopfromfirstdaytoshow];
 			}
 
@@ -2233,7 +2257,7 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				$heure_sup50ht = $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] / 3600;
 			}
 
-			if($idw >= $num_first_day && $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
 				$total_heure_sup50ht += $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow];
 			}
 
@@ -2274,7 +2298,7 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				$heure_nuit = $arraySilae['heure_nuit'][$dayinloopfromfirstdaytoshow] / 3600;
 			}
 
-			if($idw >= $num_first_day && $arraySilae['heure_nuit'][$dayinloopfromfirstdaytoshow] > 0) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_nuit'][$dayinloopfromfirstdaytoshow] > 0) {
 				$total_heure_nuit+= $arraySilae['heure_nuit'][$dayinloopfromfirstdaytoshow];
 			}
 
@@ -2309,7 +2333,7 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				$heure_route = $arraySilae['heure_route'][$dayinloopfromfirstdaytoshow] / 3600;
 			}
 
-			if($idw >= $num_first_day && $arraySilae['heure_route'][$dayinloopfromfirstdaytoshow] > 0) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_route'][$dayinloopfromfirstdaytoshow] > 0) {
 				$total_heure_route+= $arraySilae['heure_route'][$dayinloopfromfirstdaytoshow];
 			}
 
@@ -2338,7 +2362,7 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 				print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
 			}
 
-			if($idw >= $num_first_day && $arraySilae['kilometres'][$dayinloopfromfirstdaytoshow] > 0) {
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['kilometres'][$dayinloopfromfirstdaytoshow] > 0) {
 				$total_kilometres+= $arraySilae['kilometres'][$dayinloopfromfirstdaytoshow];
 			}
 
@@ -2363,7 +2387,7 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 			print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
 		}
 
-		if($idw >= $num_first_day && $arraySilae['indemnite_tt'][$dayinloopfromfirstdaytoshow]) {
+		if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['indemnite_tt'][$dayinloopfromfirstdaytoshow]) {
 			$nb_indemnite_tt++;
 		}
 
@@ -2390,10 +2414,10 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 			print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
 		}
 
-		if($idw >= $num_first_day && $arraySilae['repas'][$dayinloopfromfirstdaytoshow] == 1) {
+		if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['repas'][$dayinloopfromfirstdaytoshow] == 1) {
 			$nb_repas['R1']++;
 		}
-		elseif($idw >= $num_first_day && $arraySilae['repas'][$dayinloopfromfirstdaytoshow] == 2) {
+		elseif($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['repas'][$dayinloopfromfirstdaytoshow] == 2) {
 			$nb_repas['R2']++;
 		}
 
