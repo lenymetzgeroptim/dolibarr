@@ -67,7 +67,7 @@ class actionsForm extends Form
 					$tplpath = $element.'/'.$subelement;
 				}
 				$tplname = 'linkedobjectblock';
-
+				
 				// To work with non standard path
 				if ($objecttype == 'facture') {
 					$tplpath = 'compta/'.$element;
@@ -119,11 +119,6 @@ class actionsForm extends Form
                         if (empty($conf->constat->enabled)) {
                             continue; // Do not show if module disabled
                         }
-                }elseif ($objecttype == 'action') {
-                    $tplpath = 'custom/'.$element;
-                    if (empty($conf->action->enabled)) {
-                        continue; // Do not show if module disabled
-                    }
                 }elseif ($objecttype == 'actions_action') {
                     $tplpath = 'custom/'.$element;
                     if (empty($conf->propal->enabled)) {
@@ -149,10 +144,10 @@ class actionsForm extends Form
 						continue; // Do not show if module disabled
 					}
 				}
-
+			
 				global $linkedObjectBlock;
 				$linkedObjectBlock = $objects;
-
+				
 				// Output template part (modules that overwrite templates must declare this into descriptor)
 				$dirtpls = array_merge($conf->modules_parts['tpl'], array('/'.$tplpath.'/tpl'));
                

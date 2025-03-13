@@ -123,7 +123,7 @@ class Action extends CommonObject
 		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>2, 'notnull'=>1, 'visible'=>4, 'noteditable'=>'1', 'default'=>'(PROV)', 'index'=>1, 'searchall'=>1, 'validate'=>'1', 'comment'=>"Reference of object"),
 		'numeroo' => array('type'=>'integer', 'label'=>'Numéro', 'enabled'=>'1', 'position'=>30, 'notnull'=>0, 'visible'=>0, 'index'=>1,),
 		'status' => array('type'=>'integer', 'label'=>'Statut', 'enabled'=>'1', 'position'=>32, 'notnull'=>1, 'visible'=>5, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Brouillon', '1'=>'Validé', '2'=>'En cours', '3'=>'Soldée', '9'=>'Classé'), 'validate'=>'1',),
-		'intervenant' => array('type'=>'integer:User:user/class/user.class.php:1', 'label'=>'Pilote', 'enabled'=>'1', 'position'=>42, 'notnull'=>0, 'visible'=>1, 'index'=>1,),
+		'intervenant' => array('type'=>'integer:User:user/class/user.class.php:1', 'label'=>'Pilote', 'enabled'=>'1', 'position'=>42, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
 		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>25, 'notnull'=>1, 'visible'=>5, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
 		'priority' => array('type'=>'integer', 'label'=>'Priorité', 'enabled'=>'1', 'position'=>31, 'notnull'=>1, 'visible'=>1,'arrayofkeyval'=>array('1'=>'1', '2'=>'2', '3'=>'3'), 'help'=>"Urgent et important : Priorité 1 (AC suivi mensuellement),Non urgent et important : Priorité 2 (Suivi 6mois),Urgent et pas important : Priorité 2 (Suivi 6mois),	Non urgent et pas important : Priorité 3 (Suivi 1an)",),																																
 		'alert' => array('type'=>'method:alerte', 'label'=>'Alerte', 'enabled'=>'1', 'position'=>33, 'notnull'=>0, 'visible'=>5, 'index'=>1, 'help'=>"Alerte visuelle pour le retard de l'action"),
@@ -636,7 +636,7 @@ class Action extends CommonObject
 
 				$this->fetch_optionals();
 				//$this->user_pilote = $this->listUserPilote();
-				//var_dump($rowid_constat);
+				
 				//$this->inanimation_talk(412);
 				
 			}
@@ -1570,6 +1570,7 @@ class Action extends CommonObject
 		$withsourcetype = false;
 
 		$parameters = array('sourcetype'=>$sourcetype, 'sourceid'=>$sourceid, 'targettype'=>$targettype, 'targetid'=>$targetid);
+		
 		// Hook for explicitly set the targettype if it must be differtent than $this->element
 		$reshook = $hookmanager->executeHooks('setLinkedObjectSourceTargetType', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
 		if ($reshook > 0) {
@@ -1578,7 +1579,7 @@ class Action extends CommonObject
 			if (!empty($hookmanager->resArray['targettype'])) $targettype = $hookmanager->resArray['targettype'];
 			if (!empty($hookmanager->resArray['targetid'])) $targetid = $hookmanager->resArray['targetid'];
 		}
-
+		
 		if (!empty($sourceid) && !empty($sourcetype) && empty($targetid)) {
 			$justsource = true; // the source (id and type) is a search criteria
 			if (!empty($targettype)) {
@@ -1603,53 +1604,51 @@ class Action extends CommonObject
 		 return -1;
 		 }*/
 
-		// Links between objects are stored in table element_element
-		$sql = 'SELECT rowid, fk_source, sourcetype, fk_target, targettype';
-		$sql .= ' FROM '.MAIN_DB_PREFIX.'element_element';
-		$sql .= " WHERE ";
-		// if ($justsource || $justtarget) {
-			// if ($justsource) {
-			// 	$sql .= "fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."'";
-			// 	if ($withtargettype) {
-			// 		$sql .= " AND targettype = '".$this->db->escape($targettype)."'";
-			// 	}
-			// } elseif ($justtarget) {
-				$sql .= "fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape('actions_action')."'";
-				// if ($withsourcetype) {
-				// 	$sql .= " AND sourcetype = '".$this->db->escape($sourcetype)."'";
-				// }
-		// 	}
-		// } else {
-		// 	$sql .= "(fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."')";
-		// 	$sql .= " ".$clause." (fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape($targettype)."')";
-		// }
-		$sql .= ' ORDER BY '.$orderby;
-
-		dol_syslog(get_class($this)."::fetchObjectLink", LOG_DEBUG);
-		$resql = $this->db->query($sql);
-		if ($resql) {
-			$num = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num) {
-				$obj = $this->db->fetch_object($resql);
-				// if ($justsource || $justtarget) {
-				// 	if ($justsource) {
-						// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
-					// } elseif ($justtarget) {
-					// 	$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
-					// }
-				// } else {
-				// 	if ($obj->fk_source == $sourceid && $obj->sourcetype == $sourcetype) {
-			 		// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
-				// 	}
-				// var_dump($obj->targettype);
-				// 	if ($obj->fk_target == $targetid && $obj->targettype == $targettype) {
-				 		$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
-				// 	}
-				// }
+		 $sql = 'SELECT rowid, fk_source, sourcetype, fk_target, targettype';
+		 $sql .= ' FROM '.MAIN_DB_PREFIX.'element_element';
+		 $sql .= " WHERE ";
+		 $sql .= " (fk_target = ".((int) $targetid)." AND targettype IN ('actions_action'))";  // Lien vers le target
+		 $sql .= " OR ";  // OU pour l'autre sens de la relation
+		 $sql .= " (fk_source = ".((int) $sourceid)." AND targettype IN ('actions_action'))";  // Lien vers le source où sourcetype = 'actions'
+		 $sql .= ' ORDER BY '.$orderby;
+		 
+		 dol_syslog(get_class($this)."::fetchObjectLink", LOG_DEBUG);
+		 $resql = $this->db->query($sql);
+		 
+		 if ($resql) {
+			 $num = $this->db->num_rows($resql);
+			 $i = 0;
+			 while ($i < $num) {
+				 $obj = $this->db->fetch_object($resql);
+		 
+				 // Si fk_source est égal à l'ID de l'objet actuel, cela signifie que nous devons utiliser fk_target
+				 if ($obj->fk_source == $sourceid) {
+					 // Regrouper uniquement les actions_action sous la clé 'action'
+					 if ($obj->targettype == 'actions_action') {
+						 $this->linkedObjectsIds['action'][$obj->rowid] = $obj->fk_target;
+					 } else {
+						 // Laisser les autres types inchangés
+						 $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
+					 }
+				 } 
+				 // Si fk_target est égal à l'ID de l'objet actuel, cela signifie que nous devons utiliser fk_source
+				 elseif ($obj->fk_target == $targetid) {
+					 // Regrouper uniquement les actions_action sous la clé 'action'
+					 if ($obj->sourcetype == 'actions_action') {
+						 $this->linkedObjectsIds['action'][$obj->rowid] = $obj->fk_source;
+					 } else {
+						 // Laisser les autres types inchangés
+						 $this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
+					 }
+				 }
+		 
+				 $i++;
+			 }
 		
-				$i++;
-			}
+		 
+		
+		 
+		 
 
 			if (!empty($this->linkedObjectsIds)) {
 				$tmparray = $this->linkedObjectsIds;
@@ -1765,11 +1764,13 @@ class Action extends CommonObject
 						$classname = 'Action';
 						$module = 'actions';
 					}
-
+					
 					// Here $module, $classfile and $classname are set, we can use them.
-					if ($conf->$module->enabled && (($element != $this->element) || $alsosametype)) {
+					
+					if ($conf->$module->enabled  || $alsosametype) {
 						if ($loadalsoobjects && (is_numeric($loadalsoobjects) || ($loadalsoobjects === $objecttype))) {
 							dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
+							
 							//print '/'.$classpath.'/'.$classfile.'.class.php '.class_exists($classname);
 							if (class_exists($classname)) {
 								foreach ($objectids as $i => $objectid) {	// $i is rowid into llx_element_element
@@ -1783,6 +1784,7 @@ class Action extends CommonObject
 						}
 					} else {
 						unset($this->linkedObjectsIds[$objecttype]);
+						
 					}
 				}
 			}
@@ -2268,8 +2270,9 @@ public function generateActionsReference($fk_project, $userId, $dateCreation)
 		$sql = "SELECT rowid, fk_source, sourcetype, fk_target, targettype";
 		$sql .= " FROM ".MAIN_DB_PREFIX."element_element";
 		$sql .= " WHERE fk_target = ".((int) $idaction);
-		$sql .= " AND sourcetype = 'constat'";
+		$sql .= " AND (sourcetype = 'constat' OR sourcetype = 'action')";
 		$sql .= " AND targettype = 'actions_action'";
+
 
 
 		$result = $this->db->query($sql);
