@@ -38,6 +38,7 @@ HOLIDAY_VALIDATE_TYPE = Types de congé qui nécessitent une approbation
 HOLIDAY_ONLY_CURRENT_MONTH = Rendre impossible la création d'un congé avant le mois en cours
 SetupCustom = Configuration Custom
 HolidaySetupPage = Configuration du module demandes de congé
+HOLIDAY_MENU_IN_FDT = Accès aux absences via le module feuille de temps
 
 
 #
