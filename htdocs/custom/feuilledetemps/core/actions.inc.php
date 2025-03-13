@@ -58,7 +58,7 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 		$projet_task_time_other = New Projet_task_time_other($db);
 		$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 		$silae = new Silae($db);
-		$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
+		if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 		for ($idw = 0; $idw < $nb_jour; $idw++) { 
 			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
 			$res = ($silae_array[$dayinloopfromfirstdaytoshow]->id > 0 ? 1 : 0);
@@ -256,7 +256,7 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 			$projet_task_time_other = New Projet_task_time_other($db);
 			$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 			$silae = new Silae($db);
-			$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
+			if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 			for ($idw = 0; $idw < $nb_jour; $idw++) { 
 				$deplacement = new Deplacement($db);
 				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
@@ -444,7 +444,7 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 			$projet_task_time_other = New Projet_task_time_other($db);
 			$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 			$silae = new Silae($db);
-			$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
+			if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 			for ($idw = 0; $idw < $nb_jour; $idw++) { 
 				$deplacement = new Deplacement($db);
 				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];

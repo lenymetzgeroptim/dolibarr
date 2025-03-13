@@ -993,7 +993,9 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	}
 
 	// Fetch optionals attributes and labels
-	$extrafields->fetch_name_optionals_label($silae->table_element);
+	if (empty($extrafields->attributes[$silae->table_element]['loaded'])) {
+		$extrafields->fetch_name_optionals_label($silae->table_element);
+	}
 	foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
 		// var_dump($key);
 		// var_dump($label);
@@ -1032,7 +1034,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 
 	$task = new extendedTask($db);
 	$filter = ' AND ptt.element_date >= "'.substr($db->idate($firstdaytoshow), 0, 10).'" AND ptt.element_date <= "'.substr($db->idate($lastdaytoshow), 0, 10).'"';
-	$timespent_month = $task->fetchAllTimeSpentByDate($fuser, $filter);
+	$timespent_month = $task->fetchAllTimeSpent($fuser, $filter);
 	$timeHolidayByDay = array();
 	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $fuser->id);
 

@@ -2126,7 +2126,7 @@ class FeuilleDeTemps extends CommonObject
 	// 	return $result;
 	// }
 
-	function timeHolidayWeek($user_id, $standard_week_hour = array(), $firstdate = '', $lastdate = '') {
+	function timeHolidayWeek($userstatic, $standard_week_hour = array(), $firstdate = '', $lastdate = '') {
 		global $conf, $langs, $mysoc;
 
 		$result = array();
@@ -2149,7 +2149,7 @@ class FeuilleDeTemps extends CommonObject
 		}
 
 		$statusofholidaytocheck =  array(Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1);
-		$isavailablefordayandusermonth = $holiday->verifDateHolidayForTimestampBetweenDate($user_id, $firstdate, $lastdate, $statusofholidaytocheck, array(4));
+		$isavailablefordayandusermonth = $holiday->verifDateHolidayForTimestampBetweenDate($userstatic->id, $firstdate, $lastdate, $statusofholidaytocheck, array(4));
 		$nb_jour = num_between_day($firstdate, $lastdate+3600); 
 
 		$firstdaygmt = dol_mktime(0, 0, 0, dol_print_date($firstdate, '%m'), dol_print_date($firstdate, '%d'), dol_print_date($firstdate, '%Y'), 'gmt');
@@ -2158,19 +2158,17 @@ class FeuilleDeTemps extends CommonObject
 		if($conf->donneesrh->enabled) {
 			$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
 			$userField = new UserField($this->db);
-			$userField->id = $user_id;
+			$userField->id = $userstatic->id;
 			$userField->table_element = 'donneesrh_Positionetcoefficient';
 			$userField->fetch_optionals();
 		}
-		$userstatic = new User($this->db);
-		$userstatic->fetch($user_id);
 
 		for ($idw = 0; $idw < $nb_jour; $idw++) { 
 			$tmpday = dol_time_plus_duree($firstdate, $idw, 'd');
 			$tmpdaygmt = dol_time_plus_duree($firstdaygmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
 
 			if (dol_print_date($tmpday, '%a') != 'Sam' && dol_print_date($tmpday, '%a') != 'Dim') {
-				// $isavailablefordayanduser = $holiday->verifDateHolidayForTimestamp($user_id, $tmpday, $statusofholidaytocheck, array(4));
+				// $isavailablefordayanduser = $holiday->verifDateHolidayForTimestamp($userstatic->id, $tmpday, $statusofholidaytocheck, array(4));
 				$isavailablefordayanduser = $isavailablefordayandusermonth[$tmpday];
 				$test = num_public_holiday($tmpdaygmt, $tmpdaygmt + 86400, $mysoc->country_code, 0, 0, 0, 0);
 
@@ -2399,7 +2397,7 @@ class FeuilleDeTemps extends CommonObject
 	 * Heures faites et à faire durant chaque semaine de la feuille de temps
 	 * @return array()
 	 */
-	function timeDoneByWeek($user_id, $firstdate = '', $lastdate = ''){
+	function timeDoneByWeek($usertoprocess, $firstdate = '', $lastdate = ''){
 		global $conf; 
 
 		$result = array();
@@ -2424,7 +2422,7 @@ class FeuilleDeTemps extends CommonObject
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_projet_task_time_other AS o ON o.fk_projet_task_time = et.rowid";
 			$sql .= " WHERE element_date >= '".$this->db->idate($firstdate)."'";
 			$sql .= " AND element_date < '".$this->db->idate($lastdate)."'";
-			$sql .= " AND fk_user = ".$user_id;
+			$sql .= " AND fk_user = ".$usertoprocess->id;
 			$sql .= " AND elementtype = 'task'";
 			$sql .= " GROUP BY DATE_FORMAT(element_date, '%u')";
 		}
@@ -2433,7 +2431,7 @@ class FeuilleDeTemps extends CommonObject
 			$sql .= " FROM ".MAIN_DB_PREFIX."element_time";
 			$sql .= " WHERE element_date >= '".$this->db->idate($firstdate)."'";
 			$sql .= " AND element_date < '".$this->db->idate($lastdate)."'";
-			$sql .= " AND fk_user = ".$user_id;
+			$sql .= " AND fk_user = ".$usertoprocess->id;
 			$sql .= " AND elementtype = 'task'";
 			$sql .= " GROUP BY DATE_FORMAT(element_date, '%u')";
 		}

@@ -369,9 +369,9 @@ else {
 }
 
 // Temps en congés par semaine
-$timeSpentWeek = $object->timeDoneByWeek($object->fk_user);
+$timeSpentWeek = $object->timeDoneByWeek($usertoprocess);
 // Temps travaillé par semaine
-$timeHoliday = $object->timeHolidayWeek($object->fk_user, $standard_week_hour);
+$timeHoliday = $object->timeHolidayWeek($usertoprocess, $standard_week_hour);
 
 // Types de congés 
 $typeleaves = $holiday->getTypesNoCP(-1, -1);

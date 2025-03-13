@@ -1143,6 +1143,68 @@ class Projet_task_time_other extends CommonObject
         }
     }
 
+	/**
+	 *  Load properties of many projet_task_time_other whithout ID.
+	 *		
+	 *  @param		array		IDs of project_task_time	
+	 *  @return     array|int   <0 if KO, array of projet_task_time_other object if OK
+	 */
+	public function fetchAllWithoutId($project_task_time)
+    {
+		$id = 0; 
+		$res_array = array();
+
+        if (empty($project_task_time)) {
+            return -1;
+        }
+  
+        $sql = "SELECT";
+        $sql .= " t.rowid,";
+        $sql .= " t.fk_projet_task_time,";
+        $sql .= " t.heure_nuit,";
+        $sql .= " t.port_epi,";
+		$sql .= " t.site,";
+		$sql .= " t.date_creation,";
+        $sql .= " t.tms,";
+		$sql .= " t.fk_user_creat,";
+        $sql .= " t.fk_user_modif";
+        $sql .= ' FROM '.MAIN_DB_PREFIX.$this->table_element.' as t';
+        $sql .= ' WHERE t.fk_projet_task_time IN ('.(implode(",", $project_task_time)).')';
+  
+		dol_syslog(get_class($this)."::fetchAllWithoutId", LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+			$i = 0;
+			$num = $this->db->num_rows($resql);
+
+			while ($i < $num) {
+                $obj = $this->db->fetch_object($resql);
+
+                $this->id = $obj->rowid;
+				$this->date_creation = $this->db->jdate($obj->date_creation);
+                $this->tms = $this->db->jdate($obj->tms);
+                $this->fk_projet_task_time = $obj->fk_projet_task_time;
+				$this->heure_nuit = $obj->heure_nuit;
+				$this->port_epi = $obj->port_epi;
+				$this->site = $obj->site;
+
+				$this->fk_user_creat = $obj->fk_user_creat;
+				$this->fk_user_modif = $obj->fk_user_modif;
+
+				$res_array[$this->fk_projet_task_time] = clone $this;
+				$i++;
+			}
+
+            $this->db->free($resql);
+            return $res_array;
+        } 
+		else {
+            $this->error = $this->db->lasterror();
+            $this->errors[] = $this->error;
+            return -1;
+        }
+    }
+
 
 	public function getOtherTime($datestart, $dateend, $userid = 0, $mode)
 	{

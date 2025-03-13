@@ -152,7 +152,9 @@ $sqlusedforexport = '';
 $typesHoliday = $holiday->getTypesNoCP();
 $silae = new Silae($db);
 $extrafields = new Extrafields($db);
-$extrafields->fetch_name_optionals_label($silae->table_element);
+if (empty($extrafields->attributes[$silae->table_element]['loaded'])) {
+	$extrafields->fetch_name_optionals_label($silae->table_element);
+}
 
 $head = array();
 $upload_dir = $conf->export->dir_temp.'/'.$user->id;

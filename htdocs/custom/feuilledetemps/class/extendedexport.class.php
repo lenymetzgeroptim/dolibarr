@@ -164,8 +164,8 @@ class ExtendedExportFDT extends Export
 					}	
 					
 					if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_obj->array_options['options_fk_employeur'] == 157)){
-						$timeHoliday = $object->timeHolidayWeek($id, $standard_week_hour, $date_debut, $date_fin);
-						$timeSpentWeek = $object->timeDoneByWeek($id, $date_debut, $date_fin);
+						$timeHoliday = $object->timeHolidayWeek($user_obj, $standard_week_hour, $date_debut, $date_fin);
+						$timeSpentWeek = $object->timeDoneByWeek($user_obj, $date_debut, $date_fin);
 						$societe = new Societe($this->db);
 						if(!empty($user_obj->array_options['options_antenne'])) {
 							$societe->fetch($user_obj->array_options['options_antenne']);

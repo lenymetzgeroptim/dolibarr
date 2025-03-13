@@ -312,7 +312,7 @@ class extendedTask extends Task
         }
     }
 
-    public function fetchAllTimeSpentByDate(User $userobj, $morewherefilter = '')
+    public function fetchAllTimeSpent(User $userobj, $morewherefilter = '')
     {
       $arrayres = array();
    
@@ -380,6 +380,45 @@ class extendedTask extends Task
           $newobj->timespent_note = $obj->note;
    
           $arrayres[$this->db->jdate($obj->task_date)][] = $newobj;
+   
+          $i++;
+        }
+   
+        $this->db->free($resql);
+      } else {
+        dol_print_error($this->db);
+        $this->error = "Error ".$this->db->lasterror();
+        return -1;
+      }
+   
+      return $arrayres;
+    }
+
+    public function fetchAllTimeSpentId(User $userobj, $morewherefilter = '')
+    {
+      $arrayres = array();
+   
+      $sql = "SELECT";
+      $sql .= " ptt.rowid";
+      $sql .= " FROM ".MAIN_DB_PREFIX."element_time as ptt, ".MAIN_DB_PREFIX."projet_task as pt, ".MAIN_DB_PREFIX."projet as p";
+      $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON p.fk_soc = s.rowid";
+      $sql .= " WHERE ptt.fk_element = pt.rowid AND pt.fk_projet = p.rowid";
+      $sql .= " AND ptt.elementtype = 'task'";
+      $sql .= " AND ptt.fk_user = ".((int) $userobj->id);
+      $sql .= " AND pt.entity IN (".getEntity('project').")";
+      if ($morewherefilter) {
+        $sql .= $morewherefilter;
+      }
+   
+      dol_syslog(get_class($this)."::fetchAllTimeSpentId", LOG_DEBUG);
+      $resql = $this->db->query($sql);
+      if ($resql) {
+        $num = $this->db->num_rows($resql);
+        $i = 0;
+        while ($i < $num) {
+          $obj = $this->db->fetch_object($resql);
+   
+          $arrayres[] = $obj->rowid;
    
           $i++;
         }

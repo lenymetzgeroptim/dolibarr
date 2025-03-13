@@ -42,10 +42,19 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	//$timeDoneByWeekBefore = $timeSpentWeek; 
 	$task = new extendedTask($db);
 	$filter = ' AND ptt.element_date >= "'.substr($db->idate($firstdaytoshow), 0, 10).'" AND ptt.element_date <= "'.substr($db->idate($lastdaytoshow), 0, 10).'"';
-	$timespent_month = $task->fetchAllTimeSpentByDate($usertoprocess, $filter);
+	$timespent_month = $task->fetchAllTimeSpent($usertoprocess, $filter);
+
 	$silae = new Silae($db);
-	$extrafields->fetch_name_optionals_label($silae->table_element);
-	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+	if (empty($extrafields->attributes[$silae->table_element]['loaded'])) {
+		$extrafields->fetch_name_optionals_label($silae->table_element);
+	}
+	if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+	
+	$all_id_timespent_month = $task->fetchAllTimeSpentId($usertoprocess, $filter);
+	$heure_other = new Projet_task_time_other($db);
+	if(is_null($heure_other_array)) $heure_other_array = $heure_other->fetchAllWithoutId($all_id_timespent_month);
+	
+	$task_loaded = array();
 
 	//foreach ($timetoadd as $day => $value) {     // Loop on each day
 	foreach($dayinloopfromfirstdaytoshow_array as $day => $tmpday) {
@@ -56,23 +65,36 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 			$task = new ExtendedTask($db);
 			$new_task = new ExtendedTask($db);
 			$timespent = new TimeSpent($db);
-			$heure_other = new Projet_task_time_other($db);
 
 			$timespent_tmp = $timespent_month[$tmpday][$cpt];
 			if($timespent_tmp->timespent_id > 0) {
-				$resheure_other = $heure_other->fetchWithoutId($timespent_tmp->timespent_id); // $res contient l'id du Projet_task_time_other correspondant, si celui-ci existe
+				$resheure_other = ($heure_other_array[$timespent_tmp->timespent_id]->id > 0 ? 1 : 0);
+				$heure_other_tmpday = ($heure_other_array[$timespent_tmp->timespent_id]->id > 0 ? $heure_other_array[$timespent_tmp->timespent_id] : new Projet_task_time_other($db));
 			}
 			else {
 				$resheure_other = 0;
+				$heure_other_tmpday = new Projet_task_time_other($db);
 			}
 			$task_changed = 0;
 
 			if($timespent_tmp->fk_task > 0) {
-				$task->fetch($timespent_tmp->fk_task);
+				if(empty($task_loaded[$timespent_tmp->fk_task])) {
+					$task->fetch($timespent_tmp->fk_task);
+					$task_loaded[$timespent_tmp->fk_task] = clone $task;
+				}
+				else {
+					$task = $task_loaded[$timespent_tmp->fk_task];
+				}
 			}
 
 			if($fk_task[$day][$cpt] > 0) {
-				$new_task->fetch($fk_task[$day][$cpt]);
+				if(empty($task_loaded[$fk_task[$day][$cpt]])) {
+					$new_task->fetch($fk_task[$day][$cpt]);
+					$task_loaded[$fk_task[$day][$cpt]] = clone $new_task;
+				}
+				else {
+					$new_task = $task_loaded[$fk_task[$day][$cpt]];
+				}
 			}
 
 			// if($note[$day][$cpt] !== null) {
@@ -158,7 +180,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 				if($timespent_tmp->timespent_id > 0) $timespent->fetch($timespent_tmp->timespent_id);
 
 				// Gestion des temps consommés
-				if ((int)$timespent_tmp->timespent_duration != (int)$newduration || (int)$timespent->fk_element != (int)$fk_task[$day][$cpt]) {
+				if ((int)$timespent_tmp->timespent_duration != (int)$newduration || !is_null($fk_task[$day][$cpt])) {
 					// Si le temps consommé existe déja et que tous les champs sont = null
 					if($timespent_tmp->timespent_id > 0 && $newduration == 0 && empty($timespent_tmp->timespent_note)){
 						// Agenda
@@ -173,7 +195,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 								$modification .= ($old_value != $new_value ? '<li><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 							}
 						}
-						
+
 						if($is_day_anticipe && $timespent_tmp->timespent_duration > 0) {
 							$new_value = formatValueForAgenda('duration', 0);
 							$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
@@ -182,7 +204,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 							$result = $timespent->update($user);
 						}
-						elseif($resheure_other != 0 || (!empty($heure_nuit[$day][$cpt]) && (int)$fk_task[$day][$cpt] > 0)){
+						elseif($resheure_other != 0 || (!empty($heure_nuit[$day][$cpt]) && $fk_task[$day][$cpt] !== '0')){
 							$timespent->element_duration = 0;		
 							$result = $timespent->update($user);
 						}
@@ -192,6 +214,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 					}
 					// Si le temps consommé existe déja et qu'il y a au moins une modification
 					else if($timespent_tmp->timespent_id > 0 && ($timespent_tmp->timespent_duration != $newduration || ($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0))){
+
 						// Agenda
 						if($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0) {
 							$task_changed = 1;
@@ -260,8 +283,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							$result = $timespent->create($user);
 
 							if ($resheure_other > 0){
-								$heure_other->fk_projet_task_time = $result;
-								$result = $heure_other->update($user);
+								$heure_other_tmpday->fk_projet_task_time = $result;
+								$result = $heure_other_tmpday->update($user);
 							}
 
 							$timespent_month[$tmpday][$cpt]->timespent_id = $result;
@@ -328,9 +351,10 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 
 			// Gestion des heures de nuit
-			if($heure_nuit[$day][$cpt] !== null) {	
+			if(!is_null($heure_nuit[$day][$cpt]) || !is_null($site[$day][$cpt])) {	
 				$timetoadd_heure_nuit = $heure_nuit[$day][$cpt];
 				$newduration_heure_nuit = 0;
+				$new_site = $site[$day][$cpt];
 
 				if (!empty($timetoadd_heure_nuit)) {
 					$newduration_heure_nuit = $timetoadd_heure_nuit * 3600;
@@ -353,12 +377,19 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 				$timespent->fetch($timespent_tmp->timespent_id);
 
+				if($site[$day][$cpt] !== null) {
+					$new_value = formatValueForAgenda('duration', $new_site);
+					$old_value = formatValueForAgenda('duration', $heure_other_tmpday->site);
+
+					$modification .= ($old_value != $new_value ? '<li><strong>Sites</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+				}
+
 				// S'il existe une ligne de Projet_task_time_other et que tous les champs sont = null
-				if($resheure_other > 0 && ($newduration_heure_nuit == 0)){
+				if($resheure_other > 0 && (($newduration_heure_nuit == 0 && !is_null($heure_nuit[$day][$cpt])) || $heure_other_tmpday->heure_nuit == 0) && ((empty($new_site) && !is_null($site[$day][$cpt])) || empty($heure_other_tmpday->site))){
 					// Agenda Heure nuit
-					if($heure_other->heure_nuit != $newduration_heure_nuit) {
+					if($heure_other_tmpday->heure_nuit != $newduration_heure_nuit) {
 						$new_value = formatValueForAgenda('duration', $newduration_heure_nuit);
-						$old_value = formatValueForAgenda('duration', $heure_other->heure_nuit);
+						$old_value = formatValueForAgenda('duration', $heure_other_tmpday->heure_nuit);
 
 						if($is_day_anticipe){
 							$modification .= ($old_value != $new_value ? '<li class="txt_heure_nuit_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -368,23 +399,25 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 						}
 					}
 
-					if($is_day_anticipe && $heure_other->heure_nuit > 0) {
+					if($is_day_anticipe && $heure_other_tmpday->heure_nuit > 0) {
 						$timespent->note = (!empty($timespent->note) ? $timespent->note.' / ' : '');
-						$timespent->note .= 'Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other->heure_nuit > 0 ? convertSecondToTime($heure_other->heure_nuit) : '00:00').' ➔ 00:00';
+						$timespent->note .= 'Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other_tmpday->heure_nuit > 0 ? convertSecondToTime($heure_other_tmpday->heure_nuit) : '00:00').' ➔ 00:00';
 
 						$result = $timespent->update($user);
 					}
 
-					$result = $heure_other->delete($user);
+					$result = $heure_other_tmpday->delete($user);
+					$resheure_other = 0;
+					$heure_other_tmpday = new Projet_task_time_other($db);
 				}
 				// S'il existe une ligne de Projet_task_time_other et qu'au moins un champ a été modifié
-				elseif ($resheure_other > 0 && ($heure_other->heure_nuit != $newduration_heure_nuit || $task_changed || ($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0))){
+				elseif ($resheure_other > 0 && ($heure_other_tmpday->heure_nuit != $newduration_heure_nuit || $heure_other_tmpday->site != $new_site || $task_changed || ($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0))){
 					// Agenda
 					if($task_changed || ($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0)) {
 						if($is_day_anticipe){
-							if($heure_other->heure_nuit > 0) {
+							if($heure_other_tmpday->heure_nuit > 0) {
 								$new_value = formatValueForAgenda('duration', 0);
-								$old_value = formatValueForAgenda('duration', $heure_other->heure_nuit);
+								$old_value = formatValueForAgenda('duration', $heure_other_tmpday->heure_nuit);
 								$modification .= '<li class="txt_heure_nuit_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";
 							}
 							$new_value = formatValueForAgenda('duration', $newduration_heure_nuit);
@@ -392,9 +425,9 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							$modification .= '<li class="txt_heure_nuit_before"><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";
 						}
 						elseif($object->id > 0){
-							if($heure_other->heure_nuit > 0) {
+							if($heure_other_tmpday->heure_nuit > 0) {
 								$new_value = formatValueForAgenda('duration', 0);
-								$old_value = formatValueForAgenda('duration', $heure_other->heure_nuit);
+								$old_value = formatValueForAgenda('duration', $heure_other_tmpday->heure_nuit);
 								$modification .= '<li class="txt_heure_nuit"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";
 							}
 
@@ -403,9 +436,9 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							$modification .= '<li class="txt_heure_nuit"><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>";					
 						}
 					}
-					elseif($heure_other->heure_nuit != $newduration_heure_nuit) {
+					elseif($heure_other_tmpday->heure_nuit != $newduration_heure_nuit) {
 						$new_value = formatValueForAgenda('duration', $newduration_heure_nuit);
-						$old_value = formatValueForAgenda('duration', $heure_other->heure_nuit);
+						$old_value = formatValueForAgenda('duration', $heure_other_tmpday->heure_nuit);
 
 						if($is_day_anticipe){
 							$modification .= ($old_value != $new_value ? '<li class="txt_heure_nuit_before"><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -432,7 +465,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 						$timespent->datec = $db->idate($now);
 						$timespent->thm = $usertoprocess->thm;
 
-						if($is_day_anticipe && $heure_other->heure_nuit != $newduration_heure_nuit) {
+						if($is_day_anticipe && $heure_other_tmpday->heure_nuit != $newduration_heure_nuit) {
 							$timespent->note = (!empty($timespent->note) ? $timespent->note.' / ' : '');
 							$new_value = formatValueForAgenda('duration', 0);
 							$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
@@ -445,33 +478,34 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 						$result = $timespent->create($user);
 
-						$heure_other->fk_projet_task_time = $result;
-						$heure_other->heure_nuit = $newduration_heure_nuit;
-						$result = $heure_other->update($user);
+						$heure_other_tmpday->fk_projet_task_time = $result;
+						if(!is_null($heure_nuit[$day][$cpt])) $heure_other_tmpday->heure_nuit = $newduration_heure_nuit;
+						if(!is_null($new_site)) $heure_other_tmpday->site = $new_site;
 
+						$result = $heure_other_tmpday->update($user);
+						
 						$timespent_month[$tmpday][$cpt]->timespent_id = $result;
 						$timespent_tmp = $timespent_month[$tmpday][$cpt];
 					}
-					elseif($heure_other->heure_nuit != $newduration_heure_nuit) {
+					elseif($heure_other_tmpday->heure_nuit != $newduration_heure_nuit) {
 						if($is_day_anticipe) {
 							$timespent->note = (!empty($timespent->note) ? $timespent->note.' / ' : '');
-							$timespent->note .= 'Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other->heure_nuit > 0 ? convertSecondToTime($heure_other->heure_nuit) : '00:00').' ➔ '.($newduration_heure_nuit > 0 ? convertSecondToTime($newduration_heure_nuit) : '00:00');
+							$timespent->note .= 'Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other_tmpday->heure_nuit > 0 ? convertSecondToTime($heure_other_tmpday->heure_nuit) : '00:00').' ➔ '.($newduration_heure_nuit > 0 ? convertSecondToTime($newduration_heure_nuit) : '00:00');
 								
 							$result = $timespent->update($user);
 						}
 
-						if($newduration_heure_nuit >= 0){
-							$heure_other->heure_nuit = $newduration_heure_nuit;
-						}
+						if(!is_null($heure_nuit[$day][$cpt])) $heure_other_tmpday->heure_nuit = $newduration_heure_nuit;
+						if(!is_null($new_site)) $heure_other_tmpday->site = $new_site;
 
-						$result = $heure_other->update($user);
+						$result = $heure_other_tmpday->update($user);
 					}
 				}
 				// S'il n'existe pas de ligne de Projet_task_time_other et qu'au moins un champ est != null
-				else if($resheure_other == 0 && $newduration_heure_nuit != 0 && $fk_task[$day][$cpt] > 0){
-					if($heure_other->heure_nuit != $newduration_heure_nuit) {
+				else if($resheure_other == 0 && ($newduration_heure_nuit != 0 || !empty($new_site)) && $fk_task[$day][$cpt] !== '0'){
+					if($heure_other_tmpday->heure_nuit != $newduration_heure_nuit) {
 						$new_value = formatValueForAgenda('duration', $newduration_heure_nuit);
-						$old_value = formatValueForAgenda('duration', $heure_other->heure_nuit);
+						$old_value = formatValueForAgenda('duration', $heure_other_tmpday->heure_nuit);
 
 						if($is_day_anticipe){
 							$modification .= ($old_value != $new_value ? '<li class="txt_heure_nuit_before"><strong>'.$new_task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
@@ -488,133 +522,82 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 						$result = $timespent->update($user);
 					}
 
-					$heure_other->fk_projet_task_time = $timespent->id ;
+					$heure_other_tmpday->fk_projet_task_time = $timespent->id ;
 
-					if($newduration_heure_nuit > 0){
-						$heure_other->heure_nuit = $newduration_heure_nuit;
+					if($newduration_heure_nuit > 0) $heure_other_tmpday->heure_nuit = $newduration_heure_nuit;
+					if(!empty($new_site)) $heure_other_tmpday->site = $new_site;
+
+					$result = $heure_other_tmpday->create($user);
+
+					$resheure_other = 1;
+				}
+
+				if ($result < 0) {
+					setEventMessages($heure_other_tmpday->error, $heure_other_tmpday->errors, 'errors');
+					$error++;
+					break;
+				}
+			}
+
+
+
+
+			// Autres
+			$res = ($silae_array[$tmpday]->id > 0 ? 1 : 0);
+			$silae_tmpday = ($silae_array[$tmpday]->id > 0 ? $silae_array[$tmpday] : new Silae($db));
+			$has_modif = 0;
+			$all_field_null = 1;
+			
+			foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+				if($key_post[$day] !== null || !empty($silae_tmpday->key)) {
+					$all_field_null = 0;
+				}
+
+				if (dol_eval($extrafields->attributes[$silae->table_element]['list'][$key], 1, 1, '2') != 1) {
+					continue;
+				}
+
+				$key_post = (GETPOST('options_'.$key)  ? GETPOST('options_'.$key)  : array());
+				$type = $extrafields->attributes[$silae->table_element]['type'][$key];
+
+				if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && ((isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] != 1) || (!isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] == 1)))) {
+					$has_modif = 1;
+					$new_val = $key_post[$day];
+					$new_val = ($type == 'boolean' && isset($new_val) ? 1 : $new_val);
+
+					// Agenda
+					if($new_value != $silae_tmpday->array_options['options_'.$key]) {
+						$new_value = formatValueForAgenda($type, $new_value);
+						$old_value = formatValueForAgenda($type, $silae_tmpday->array_options['options_'.$key]);
+
+						$modification .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 					}
-
-					$result = $heure_other->create($user);
-				}
-
-				if ($result < 0) {
-					setEventMessages($heure_other->error, $heure_other->errors, 'errors');
-					$error++;
-					break;
-				}
-				
-			}
-
-
-
-			// Gestion des sites
-			if($site[$day][$cpt] !== null) {
-				$new_site = $site[$day][$cpt];
-		
-				if(empty($timespent_tmp->timespent_id) && $fk_task[$day][$cpt] > 0) {
-					$timespent->fk_element = $fk_task[$day][$cpt];
-					$timespent->elementtype = 'task';
-					$timespent->element_date = $tmpday;
-					$timespent->element_datehour = $tmpday;
-					$timespent->fk_user = $usertoprocess->id;
-					$timespent->datec = $db->idate($now);
-					$timespent->thm = $usertoprocess->thm;
-
-					$result = $timespent->create($user);
 					
-					$timespent_month[$tmpday][$cpt]->timespent_id = $result;
-					$timespent_tmp = $timespent_month[$tmpday][$cpt];
-				}
-
-				$res = $heure_other->fetchWithoutId($timespent_tmp->timespent_id); // $res contient l'id du Projet_task_time_other correspondant, si celui-ci existe
-
-				$new_value = formatValueForAgenda('duration', $new_site);
-				$old_value = formatValueForAgenda('duration', $heure_other->site);
-
-				$modification .= ($old_value != $new_value ? '<li><strong>Sites</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
-
-				$timespent->fetch($timespent_tmp->timespent_id);
-
-				// S'il existe une ligne de Projet_task_time_other et que tous les champs sont = null
-				if($res > 0 && (empty($new_site) && $heure_other->heure_nuit == 0)){
-					$result = $heure_other->delete($user);
-				}
-				// S'il existe une ligne de Projet_task_time_other et qu'au moins un champ a été modifié
-				elseif ($res > 0 && $heure_other->site != $new_site){
-					$heure_other->site = $new_site;
-					$result = $heure_other->update($user);
-				}
-				// S'il n'existe pas de ligne de Projet_task_time_other et qu'au moins un champ est != null
-				else if($res == 0 && !empty($new_site)){
-					$heure_other->fk_projet_task_time = $timespent->id;
-					$heure_other->site = $new_site;
-					$result = $heure_other->create($user);
-				}
-
-				if ($result < 0) {
-					setEventMessages($heure_other->error, $heure_other->errors, 'errors');
-					$error++;
-					break;
+					$silae_tmpday->array_options['options_'.$key] = $new_val;
 				}
 			}
 
-		}
+			// S'il existe une ligne et que tous les champs sont = null
+			if($res > 0 && $all_field_null && is_null($silae_tmpday->heure_sup00) && is_null($silae_tmpday->heure_sup25) && is_null($silae_tmpday->heure_sup50) && is_null($silae_tmpday->heure_sup50ht)) {
+				$result = $silae_tmpday->delete($user);
+			}
+			// S'il existe une ligne et qu'au moins un champ a été modifié
+			elseif($res > 0 && $has_modif) {
+				$result = $silae_tmpday->update($user);
+			}
+			// S'il n'existe pas de ligne et qu'au moins un champ est différent de null
+			elseif($res == 0 && $has_modif) {
+				$silae_tmpday->fk_user = $usertoprocess->id;
+				$silae_tmpday->date = $tmpday;
 
-		// Autres
-		$res = ($silae_array[$tmpday]->id > 0 ? 1 : 0);
-		$silae_tmpday = ($silae_array[$tmpday]->id > 0 ? $silae_array[$tmpday] : new Silae($db));
-		$has_modif = 0;
-		$all_field_null = 1;
-		
-		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			if($key_post[$day] !== null || !empty($silae_tmpday->key)) {
-				$all_field_null = 0;
+				$result = $silae_tmpday->create($user);
 			}
 
-			if (dol_eval($extrafields->attributes[$silae->table_element]['list'][$key], 1, 1, '2') != 1) {
-				continue;
+			if ($result < 0) {
+				setEventMessages($silae_tmpday->error, $silae_tmpday->errors, 'errors');
+				$error++;
+				break;
 			}
-
-			$key_post = (GETPOST('options_'.$key)  ? GETPOST('options_'.$key)  : array());
-			$type = $extrafields->attributes[$silae->table_element]['type'][$key];
-
-			if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && ((isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] != 1) || (!isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] == 1)))) {
-				$has_modif = 1;
-				$new_val = $key_post[$day];
-				$new_val = ($type == 'boolean' && isset($new_val) ? 1 : $new_val);
-
-				// Agenda
-				if($new_value != $silae_tmpday->array_options['options_'.$key]) {
-					$new_value = formatValueForAgenda($type, $new_value);
-					$old_value = formatValueForAgenda($type, $silae_tmpday->array_options['options_'.$key]);
-
-					$modification .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
-				}
-				
-				$silae_tmpday->array_options['options_'.$key] = $new_val;
-			}
-		}
-
-		// S'il existe une ligne et que tous les champs sont = null
-		if($res > 0 && $all_field_null && empty($silae_tmpday->heure_sup00) && empty($silae_tmpday->heure_sup25) && empty($silae_tmpday->heure_sup50) && empty($silae_tmpday->heure_sup50ht)) {
-			$result = $silae_tmpday->delete($user);
-		}
-		// S'il existe une ligne et qu'au moins un champ a été modifié
-		elseif($res > 0 && $has_modif) {
-			$result = $silae_tmpday->update($user);
-		}
-		// S'il n'existe pas de ligne et qu'au moins un champ est différent de null
-		elseif($res == 0 && $has_modif) {
-			$silae_tmpday->fk_user = $usertoprocess->id;
-			$silae_tmpday->date = $tmpday;
-
-			$result = $silae_tmpday->create($user);
-		}
-
-		if ($result < 0) {
-			setEventMessages($silae_tmpday->error, $silae_tmpday->errors, 'errors');
-			$error++;
-			break;
 		}
 	}
 
@@ -1483,7 +1466,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 	if (!$error) {
 		$mail_hs = 0;
 
-		$timeDoneByWeekAfter = $object->timeDoneByWeek(($object->fk_user ? $object->fk_user : $usertoprocess->id));
+		$timeDoneByWeekAfter = $object->timeDoneByWeek($usertoprocess);
 
 		foreach($timeDoneByWeekAfter as $semaine => $temps){
 			if($temps > $heure_semaine_hs && $timeDoneByWeekBefore[$semaine] <= $heure_semaine_hs){ // Si il y a une semaine avec des hs et que ce n'était pas le cas avant les modifications
@@ -1701,7 +1684,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 	// $regul = new Regul($db);
 	// $resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 	$silae = new Silae($db);
-	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
+	if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 
 	$holiday_type = $_POST['holiday_type'];
 	$holiday_id = $_POST['holiday_id'];
@@ -1779,8 +1762,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 		}
 	}
 
-	$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
-	$timeHoliday = $object->timeHolidayWeek($object->fk_user, $standard_week_hour);
+	$timeSpentWeek = $object->timeDoneByWeek($usertoprocess);
+	$timeHoliday = $object->timeHolidayWeek($usertoprocess, $standard_week_hour);
 
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
@@ -1839,10 +1822,10 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 				$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
 			}
 
-			if($res > 0) {
+			if($res > 0 && ($heure_sup00_before != $silae_tmpday->heure_sup00 || $heure_sup25_before != $silae_tmpday->heure_sup25 || $heure_sup50_before != $silae_tmpday->heure_sup50 || $heure_sup50ht_before != $silae_tmpday->heure_sup50ht)) {
 				$silae_tmpday->update($user);
 			}
-			elseif($res == 0) {
+			elseif($res == 0 && ($silae_tmpday->heure_sup00 > 0 || $silae_tmpday->heure_sup25 > 0 || $silae_tmpday->heure_sup50 > 0 || $silae_tmpday->heure_sup50ht > 0)) {
 				$silae_tmpday->create($user);
 			}
 			else {
@@ -1876,7 +1859,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 	$modification = '';
 	$silae = new Silae($db);
-	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+	if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 
 	// $heure_sup00 = $_POST['heure_sup00'];
 	// $heure_sup25 = $_POST['heure_sup25'];
@@ -2007,8 +1990,8 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	}
 
 
-	$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
-	$timeHoliday = $object->timeHolidayWeek($object->fk_user, $standard_week_hour);
+	$timeSpentWeek = $object->timeDoneByWeek($usertoprocess);
+	$timeHoliday = $object->timeHolidayWeek($usertoprocess, $standard_week_hour);
 
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 
@@ -2093,10 +2076,10 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 				$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
 			}
 
-			if($res > 0) {
+			if($res > 0  && ($heure_sup00_before != $silae_tmpday->heure_sup00 || $heure_sup25_before != $silae_tmpday->heure_sup25 || $heure_sup50_before != $silae_tmpday->heure_sup50 || $heure_sup50ht_before != $silae_tmpday->heure_sup50ht)) {
 				$silae_tmpday->update($user);
 			}
-			elseif($res == 0) {
+			elseif($res == 0 && ($silae_tmpday->heure_sup00 > 0 || $silae_tmpday->heure_sup25 > 0 || $silae_tmpday->heure_sup50 > 0 || $silae_tmpday->heure_sup50ht > 0)) {
 				$silae_tmpday->create($user);
 			}
 			else {
@@ -2532,7 +2515,7 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 		$projet_task_time_other = New Projet_task_time_other($db);
 		$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 		$silae = new Silae($db);
-		$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+		if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 		for ($idw = 0; $idw < $nb_jour; $idw++) { 
 			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
 
@@ -2607,7 +2590,7 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 			if($res > 0) {
 				$result = $silae_tmpday->update($user);
 			}
-			elseif($res == 0) {
+			elseif($res == 0 && ($silae_tmpday->heure_sup00 > 0 || $silae_tmpday->heure_sup25 > 0 || $silae_tmpday->heure_sup50 > 0 || $silae_tmpday->heure_sup50ht > 0)) {
 				$result = $silae_tmpday->create($user);
 			}
 			else {

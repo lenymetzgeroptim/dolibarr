@@ -1289,7 +1289,9 @@ class Silae extends CommonObject
 		$res_array = array();
 		
 		//$extrafields = new ExtraFields($this->db);
-		$extrafields->fetch_name_optionals_label($this->table_element);
+		if (empty($extrafields->attributes[$this->table_element]['loaded'])) {
+			$extrafields->fetch_name_optionals_label($this->table_element);
+		}
 		$optionsArray = (!empty($extrafields->attributes[$this->table_element]['label']) ? $extrafields->attributes[$this->table_element]['label'] : null);
 
         $sql = "SELECT";

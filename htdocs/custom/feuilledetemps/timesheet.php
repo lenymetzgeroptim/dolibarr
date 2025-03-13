@@ -281,9 +281,9 @@ else {
 }
 
 // Temps en congés par semaine
-$timeHoliday = $object->timeHolidayWeek($usertoprocess->id, $standard_week_hour);
+$timeHoliday = $object->timeHolidayWeek($usertoprocess, $standard_week_hour);
 // Temps travaillé par semaine
-$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
+$timeSpentWeek = $object->timeDoneByWeek($usertoprocess);
 
 $permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read;
 if (!$permissiontoread) accessforbidden();
