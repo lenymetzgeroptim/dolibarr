@@ -1195,7 +1195,7 @@ class Regul extends CommonObject
 		$sql .= " d.heure_sup00,";
 		$sql .= " d.heure_sup25,";
 		$sql .= " d.heure_sup50,";
-		$sql .= " d.heure_sup50th";
+		$sql .= " d.heure_sup50ht";
         $sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_regul as d";
         $sql .= " WHERE d.date = '".($this->db->idate($date))."'";
         $sql .= " AND d.fk_user = ".((int) $fk_user);

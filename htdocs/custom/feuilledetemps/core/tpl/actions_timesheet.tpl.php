@@ -538,66 +538,66 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 					break;
 				}
 			}
+		}
 
 
 
+		// Autres
+		$res = ($silae_array[$tmpday]->id > 0 ? 1 : 0);
+		$silae_tmpday = ($silae_array[$tmpday]->id > 0 ? $silae_array[$tmpday] : new Silae($db));
+		$has_modif = 0;
+		$all_field_null = 1;
+		
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			$key_post = (GETPOST('options_'.$key)  ? GETPOST('options_'.$key)  : array());
+			$type = $extrafields->attributes[$silae->table_element]['type'][$key];
 
-			// Autres
-			$res = ($silae_array[$tmpday]->id > 0 ? 1 : 0);
-			$silae_tmpday = ($silae_array[$tmpday]->id > 0 ? $silae_array[$tmpday] : new Silae($db));
-			$has_modif = 0;
-			$all_field_null = 1;
-			
-			foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-				if($key_post[$day] !== null || !empty($silae_tmpday->key)) {
-					$all_field_null = 0;
+			if(!empty($key_post[$day]) || ($type != 'boolean' && is_null($key_post[$day]) && !empty($silae_tmpday->array_options['options_'.$key])) || ($type == 'boolean' && isset($key_post[$day]) && !empty($silae_tmpday->array_options['options_'.$key])) ) {
+				$all_field_null = 0;
+
+			}
+
+			if (dol_eval($extrafields->attributes[$silae->table_element]['list'][$key], 1, 1, '2') != 1) {
+				continue;
+			}
+
+			if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && ((isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] != 1) || (!isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] == 1)))) {
+				$has_modif = 1;
+				$new_val = $key_post[$day];
+				$new_val = ($type == 'boolean' && isset($new_val) ? 1 : $new_val);
+
+				// Agenda
+				if($new_value != $silae_tmpday->array_options['options_'.$key]) {
+					$new_value = formatValueForAgenda($type, $new_value);
+					$old_value = formatValueForAgenda($type, $silae_tmpday->array_options['options_'.$key]);
+
+					$modification .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 				}
-
-				if (dol_eval($extrafields->attributes[$silae->table_element]['list'][$key], 1, 1, '2') != 1) {
-					continue;
-				}
-
-				$key_post = (GETPOST('options_'.$key)  ? GETPOST('options_'.$key)  : array());
-				$type = $extrafields->attributes[$silae->table_element]['type'][$key];
-
-				if(($type != 'boolean' && $key_post[$day] !== null) || ($type == 'boolean' && ((isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] != 1) || (!isset($key_post[$day]) && $silae_tmpday->array_options['options_'.$key] == 1)))) {
-					$has_modif = 1;
-					$new_val = $key_post[$day];
-					$new_val = ($type == 'boolean' && isset($new_val) ? 1 : $new_val);
-
-					// Agenda
-					if($new_value != $silae_tmpday->array_options['options_'.$key]) {
-						$new_value = formatValueForAgenda($type, $new_value);
-						$old_value = formatValueForAgenda($type, $silae_tmpday->array_options['options_'.$key]);
-
-						$modification .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
-					}
-					
-					$silae_tmpday->array_options['options_'.$key] = $new_val;
-				}
+				
+				$silae_tmpday->array_options['options_'.$key] = $new_val;
 			}
+		}
 
-			// S'il existe une ligne et que tous les champs sont = null
-			if($res > 0 && $all_field_null && is_null($silae_tmpday->heure_sup00) && is_null($silae_tmpday->heure_sup25) && is_null($silae_tmpday->heure_sup50) && is_null($silae_tmpday->heure_sup50ht)) {
-				$result = $silae_tmpday->delete($user);
-			}
-			// S'il existe une ligne et qu'au moins un champ a été modifié
-			elseif($res > 0 && $has_modif) {
-				$result = $silae_tmpday->update($user);
-			}
-			// S'il n'existe pas de ligne et qu'au moins un champ est différent de null
-			elseif($res == 0 && $has_modif) {
-				$silae_tmpday->fk_user = $usertoprocess->id;
-				$silae_tmpday->date = $tmpday;
+		// S'il existe une ligne et que tous les champs sont = null
+		if($res > 0 && $all_field_null && is_null($silae_tmpday->heure_sup00) && is_null($silae_tmpday->heure_sup25) && is_null($silae_tmpday->heure_sup50) && is_null($silae_tmpday->heure_sup50ht)) {
+			$result = $silae_tmpday->delete($user);
+		}
+		// S'il existe une ligne et qu'au moins un champ a été modifié
+		elseif($res > 0 && $has_modif) {
+			$result = $silae_tmpday->update($user);
+		}
+		// S'il n'existe pas de ligne et qu'au moins un champ est différent de null
+		elseif($res == 0 && $has_modif) {
+			$silae_tmpday->fk_user = $usertoprocess->id;
+			$silae_tmpday->date = $tmpday;
 
-				$result = $silae_tmpday->create($user);
-			}
+			$result = $silae_tmpday->create($user);
+		}
 
-			if ($result < 0) {
-				setEventMessages($silae_tmpday->error, $silae_tmpday->errors, 'errors');
-				$error++;
-				break;
-			}
+		if ($result < 0) {
+			setEventMessages($silae_tmpday->error, $silae_tmpday->errors, 'errors');
+			$error++;
+			break;
 		}
 	}
 
@@ -2598,7 +2598,7 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 			}
 		}
 
-		if($result) {
+		if($result && !$conf->global->FDT_DISPLAY_COLUMN) {
 			$regul = new Regul($db);
 			$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 

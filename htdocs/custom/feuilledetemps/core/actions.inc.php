@@ -140,7 +140,7 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 			}
 		}
 
-		if($result) {
+		if($result && !$conf->global->FDT_DISPLAY_COLUMN) {
 			$regul = new Regul($db);
 			$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 
@@ -335,7 +335,7 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 				}
 			}
 
-			if($result) {
+			if($result && !$conf->global->FDT_DISPLAY_COLUMN) {
 				$regul = new Regul($db);
 				$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 
@@ -523,7 +523,7 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 				}
 			}
 
-			if($result) {
+			if($result && !$conf->global->FDT_DISPLAY_COLUMN) {
 				$regul = new Regul($db);
 				$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 
