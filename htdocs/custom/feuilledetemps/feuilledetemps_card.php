@@ -162,6 +162,7 @@ include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be includ
 
 $usertoprocess = new User($db);
 $usertoprocess->fetch($object->fk_user);
+$objectoffield = clone $usertoprocess;
 
 // Check for right
 if($conf->global->FDT_USER_APPROVER) {

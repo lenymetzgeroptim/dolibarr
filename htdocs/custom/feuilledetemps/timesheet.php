@@ -110,6 +110,7 @@ $project = new Project($db);
 $thirdpartystatic = new Societe($db);
 $holiday = new extendedHoliday($db);
 $taskstatic = new Task($db);
+$objectoffield = clone $usertoprocess;
 
 // Extra fields
 $extrafields = new ExtraFields($db);

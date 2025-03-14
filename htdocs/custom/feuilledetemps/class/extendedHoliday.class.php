@@ -639,14 +639,14 @@ class extendedHoliday extends Holiday
 		}	
 	}
 
-	public function getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser = null, $numberDay = 0, &$timeHolidayByDay = array()) {
+	public function getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $usertoprocess = null, $numberDay = 0, &$timeHolidayByDay = array()) {
 		global $conf; 
 
 		$droit_rtt = $this->holidayTypeDroitRTT();
 
-		if(empty($fuser)) {
-			$fuser = new User($this->db);
-			$fuser->fetch($this->fk_user);
+		if(empty($usertoprocess)) {
+			$usertoprocess = new User($this->db);
+			$usertoprocess->fetch($this->fk_user);
 		}
 
 		if($conf->donneesrh->enabled) {
@@ -711,10 +711,10 @@ class extendedHoliday extends Holiday
 			}
 			else {
 				$nbDay = floor(num_open_day($this->date_debut_gmt, $this->date_fin_gmt, 0, 1, $this->halfday));
-				$duration_hour = (dol_print_date($this->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+				$duration_hour = (dol_print_date($this->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
 			
 				if($this->halfday == 1 || $this->halfday == -1) { // gestion des demi journées
-					if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($fuser->array_options['options_pasdroitrtt']) || dol_print_date($this->date_fin, '%Y-%m-%d') < '2024-07-01')) {
+					if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt']) || dol_print_date($this->date_fin, '%Y-%m-%d') < '2024-07-01')) {
 						$duration_hour += 3.5 * 3600;
 					}
 					elseif(in_array($this->fk_type, $droit_rtt)) {

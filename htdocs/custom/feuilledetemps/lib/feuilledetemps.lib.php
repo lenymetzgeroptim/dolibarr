@@ -948,7 +948,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 									$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
 									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
 	global $conf, $db, $user, $langs;
-	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
+	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification, $objectoffield;
 	global $first_day_month, $last_day_month;
 	
 	$holiday = new extendedHoliday($db);
@@ -1111,7 +1111,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 						 $holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
 						 $num_first_day, $num_last_day, $timeHoliday, &$timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
 						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, &$cptholiday, $arraytypeleaves, &$task_load, $projectsListId, $silae_array) {
-	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object;
+	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object, $objectoffield;
 	global $displayVerification;
 
 	$formproject = new ExtendedFormProjets($db);

@@ -139,6 +139,8 @@ H_Dim_50 = H_Dim_50%
 SiteFDT = Site
 ApprobateurFDT = Approbateur des feuilles de temps
 NoRTT = Pas droit au RTT
+FdtVariableRestreinte = Vue restreinte des variables sur sa feuille de temps
+FdtAllVariable = Vue de toutes les variables sur sa feuille de temps
 
 
 #
