@@ -928,19 +928,31 @@ function getHabilitations($userId, $db) {
 }
 
 $sql = "SELECT  
-        u.firstname, u.lastname, u.office_phone, ctc.libelle, sp.fk_c_type_contact, sp.fk_socpeople,cct.type as contrat
-        FROM ".MAIN_DB_PREFIX."element_contact as sp 
-        JOIN ".MAIN_DB_PREFIX."user as u ON sp.fk_socpeople = u.rowid 
-        JOIN ".MAIN_DB_PREFIX."c_type_contact as ctc ON sp.fk_c_type_contact = ctc.rowid 
-        LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_positionetcoefficient_extrafields as drh 
-            ON drh.fk_object = u.rowid  
-        LEFT JOIN ".MAIN_DB_PREFIX."c_contrattravail as cct 
-            ON drh.contratdetravail = cct.rowid  
-        WHERE sp.element_id = $object->fk_project
-        AND sp.statut = 4
-        AND ctc.element = 'project'";
+        COALESCE(u.firstname, spc.firstname) AS firstname,
+        COALESCE(u.lastname, spc.lastname) AS lastname,
+        COALESCE(u.office_phone, spc.phone_mobile) AS phone,
+        ctc.libelle, 
+        sp.fk_c_type_contact, 
+        sp.fk_socpeople,
+        cct.type AS contrat
+    FROM ".MAIN_DB_PREFIX."element_contact AS sp 
+    LEFT JOIN ".MAIN_DB_PREFIX."user AS u 
+        ON sp.fk_socpeople = u.rowid 
+    LEFT JOIN ".MAIN_DB_PREFIX."socpeople AS spc 
+        ON sp.fk_socpeople = spc.rowid 
+    JOIN ".MAIN_DB_PREFIX."c_type_contact AS ctc 
+        ON sp.fk_c_type_contact = ctc.rowid 
+    LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_positionetcoefficient_extrafields AS drh 
+        ON drh.fk_object = u.rowid  
+    LEFT JOIN ".MAIN_DB_PREFIX."c_contrattravail AS cct 
+        ON drh.contratdetravail = cct.rowid  
+    WHERE sp.element_id = $object->fk_project
+    AND sp.statut = 4
+    AND ctc.element = 'project'";
+
 
 $resql = $db->query($sql);
+
 
 if ($resql) {
     $arrayresult = [];
@@ -963,7 +975,7 @@ if ($resql) {
 
 // Convertir les résultats en JSON
 $data = json_encode($arrayresult);
-
+var_dump($arrayresult);
 
 $otId = $object->id;
 
