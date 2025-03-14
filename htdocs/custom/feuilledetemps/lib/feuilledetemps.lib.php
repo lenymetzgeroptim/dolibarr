@@ -250,7 +250,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 		print '</tr>';
 
 		// Affichage de la ligne des congés			
-		$conges_texte = $holiday->getArrayHoliday($fuser->id, 0, 1);
+		if(empty($conf->global->HOLIDAY_HIDE_BALANCE)) $conges_texte = $holiday->getArrayHoliday($fuser->id, 0, 1);
 		$cptholiday = 0; 
 
 		print '<tr class="nostrong liste_titre fixed conges">';
@@ -955,7 +955,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	$silae = new Silae($db);
 	$task = new Task($db);
 
-	$conges_texte = $holiday->getArrayHoliday($fuser->id, 0, 1);
+	if(empty($conf->global->HOLIDAY_HIDE_BALANCE)) $conges_texte = $holiday->getArrayHoliday($fuser->id, 0, 1);
 	$total_array = array();
 	$cptholiday = 0;
 
