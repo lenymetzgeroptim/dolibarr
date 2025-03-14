@@ -539,6 +539,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		
 		// Send mail
 		$res = $cmail->sendfile();
+		var_dump($res);
 		if($res) {
 			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
 		} else {
@@ -620,6 +621,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		
 		// Send mail
 		$res = $cmail->sendfile();
+		var_dump($res);
 
 		if($res) {
 			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
@@ -685,6 +687,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		
 		// Send mail
 		$res = $cmail->sendfile();
+		var_dump($res);
 		if($res) {
 			 setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
 			// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);

@@ -308,6 +308,7 @@ class Constat extends CommonObject
 			$this->linked_objects = $this->linkedObjectsIds; // TODO Replace linked_objects with linkedObjectsIds
 		}
 		
+		$this->sendMailValidate();
 		
 		return $resultcreate;
 
@@ -783,12 +784,10 @@ class Constat extends CommonObject
 				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$this->id.'">'.$this->ref.'</a>';
 
 				$to = rtrim($to, ", ");
-				$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été validé. Veuillez compléter votre partie. Cordialement, votre système de notification.");
-				$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 				
-				$res = $cmail->sendfile();
-					
-				if($this->fk_project == null){
+				
+				
+				if($this->fk_project == null && $to == null){
 
 					$subject = '[OPTIM Industries] Notification automatique constat sans projet ';
 
@@ -833,12 +832,17 @@ class Constat extends CommonObject
 
 						
 						$to = rtrim($to, ", ");
+						var_dump(" constat sans projet");
+						var_dump($to);
+						exit;
 						$message = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été validé sans projet, Votre système de notification.");
 						//$msg = 'test notif ( a ne pas prendre en compte si reçu )';
 						$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 						
 						// Send mail
 						$res = $cmail->sendfile();
+						var_dump($res);
+						exit;
 						if($res) {
 							setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
 							// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
@@ -847,7 +851,15 @@ class Constat extends CommonObject
 							window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
 							</script>';
 						} 
-				}	
+				}else{
+				
+				$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été validé. Veuillez compléter votre partie. Cordialement, votre système de notification.");
+				$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
+				
+				$res = $cmail->sendfile();
+				}
+				
+				
 
 				$ret = $this->fetch($this->id); // Reload to get new records
 
@@ -909,17 +921,18 @@ class Constat extends CommonObject
 
 
 		$to = rtrim($to, ", ");
+		
 		$msg =  "test envoie de mail";
 		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 		
+		$result = $cmail->sendfile();
+		
 		//$isSend = $cmail->sendfile();	
-		if ($mail->error) {
-			$res = 0;
+		if (!$result) {
+			echo "Erreur d'envoi : " . $cmail->error;
+			exit;
 		}
-		// Send mail
-		if ($res) {
-			$res = $cmail->sendfile();
-		}
+		
 	}
 
 	
@@ -2005,11 +2018,15 @@ function subManager($inManager, $inSubmanager)
 				$to .= $toemeteur;
 				$to .= $torespQ3;
 				$to = rtrim($to, ", ");
+				var_dump("brouillon");
+				var_dump($to);
+				exit;
 				$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name. " est toujours à l'état de brouillon. Veuillez le passer à l'état validé. Cordialement, votre système de notification.");
 				$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$this->object->id);
 				
 				// Send mail
 				$res = $cmail->sendfile();
+				var_dump($res);
 				if($res) {
 					setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
 				} else {
@@ -2130,11 +2147,15 @@ function subManager($inManager, $inSubmanager)
 		$to .= $toemeteur;
 		$to .= $torespQ3;
 		$to = rtrim($to, ", ");
+		var_dump("toute action soldé");
+		var_dump($to);
+		exit;
 		$msg = $langs->transnoentitiesnoconv(" Bonjour, toutes les actions du constat " .$link." créé par ".$creator_name. " sont soldées. Cordialement, votre système de notification.");
 		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$this->object->id);
 		
 		// Send mail
 		$res = $cmail->sendfile();
+		var_dump($res);
 		if($res) {
 			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
 		} else {
