@@ -2908,7 +2908,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 				print '<td class="titlefield">'.$langs->trans("User").'</td>';
 				print '<td>';
 				print $userRequest->getNomUrlCustom(-1, 'leave');
-				$conges_texte = $object->getArrayHoliday($object->fk_user, 1, 1);
+				if (empty($conf->global->HOLIDAY_HIDE_BALANCE)) $conges_texte = $object->getArrayHoliday($object->fk_user, 1, 1);
 				print $form->textwithpicto('', $conges_texte);
 				print '</td></tr>';
 

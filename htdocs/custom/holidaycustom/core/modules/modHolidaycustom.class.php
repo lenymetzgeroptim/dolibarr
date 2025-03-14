@@ -469,7 +469,7 @@ class modHolidaycustom extends DolibarrModules
 				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 				'position'=>$r,
 				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
-				'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'perms'=> '$user->rights->holidaycustom->read && empty($conf->global->HOLIDAY_HIDE_BALANCE)',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
 				'target'=>'',
 				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
 			);
@@ -576,7 +576,7 @@ class modHolidaycustom extends DolibarrModules
 				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 				'position'=>$r,
 				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
-				'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'perms'=> '$user->rights->holidaycustom->read && empty($conf->global->HOLIDAY_HIDE_BALANCE)',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
 				'target'=>'',
 				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
 			);

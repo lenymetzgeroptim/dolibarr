@@ -119,6 +119,9 @@ $formSetup->newItem('HOLIDAY_ONLY_CURRENT_MONTH')->setAsYesNo();
 // HOLIDAY_MENU_IN_FDT
 $formSetup->newItem('HOLIDAY_MENU_IN_FDT')->setAsYesNo();
 
+// HOLIDAY_HIDE_BALANCE
+$formSetup->newItem('HOLIDAY_HIDE_BALANCE')->setAsYesNo();
+
 // // Setup conf for selection of an URL
 // $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM1');
 // $item->fieldOverride = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'];
