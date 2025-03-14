@@ -201,7 +201,7 @@ $item = $formSetup->newItem('FDT_STATUT_HOLIDAY')->setAsYesNo();
 $item = $formSetup->newItem('FDT_STATUT_HOLIDAY_VALIDATE_VERIF')->setAsYesNo();
 
 // FDT_SHORTCUT_HOLIDAY
-$item = $formSetup->newItem('FDT_SHORTCUT_HOLIDAY')->setAsYesNo();
+// $item = $formSetup->newItem('FDT_SHORTCUT_HOLIDAY')->setAsYesNo();
 
 // FDT_GENERATE_TASK_PROJECTCREATION
 $item = $formSetup->newItem('FDT_GENERATE_TASK_PROJECTCREATION')->setAsYesNo();
