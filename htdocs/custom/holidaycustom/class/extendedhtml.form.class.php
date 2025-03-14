@@ -60,7 +60,7 @@ class ExtendedFormHoliday extends Form
 
 		if ($typehour == 'select') {
 			$retstring .= '<select class="flat" id="select_' . $prefix . 'hour" name="' . $prefix . 'hour"' . ($disabled ? ' disabled' : '') . '>';
-			for ($hour = 0; $hour < 8; $hour++) {    // For a duration, we allow 24 hours
+			for ($hour = 0; $hour <= 8; $hour++) {    // For a duration, we allow 24 hours
 				$retstring .= '<option value="' . $hour . '"';
 				if (is_numeric($hourSelected) && $hourSelected == $hour) {
 					$retstring .= " selected";

@@ -351,7 +351,7 @@ if (empty($reshook)) {
 				$action = 'create';
 			}
 
-			if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 7)) {
+			if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 8)) {
 				setEventMessages($langs->trans("ErrorNbHourHoliday"), null, 'errors');
 				$error++;
 				$action = 'create';
@@ -363,11 +363,17 @@ if (empty($reshook)) {
 				$action = 'create';
 			}
 
-			if($needHour && !empty($duration_hour) && $duration_hour > 3600*7) {
-				setEventMessages($langs->trans("ErrorMaxHourHoliday"), null, 'errors');
+			if ($needHour && !empty($duration_hour) && !empty($conf->global->HOLIDAY_INHOUR_MAX_HOUR) && $duration_hour > ($conf->global->HOLIDAY_INHOUR_MAX_HOUR * 3600)) {
+				setEventMessages($langs->trans("ErrorMaxHourHoliday", $conf->global->HOLIDAY_INHOUR_MAX_HOUR), null, 'errors');
 				$error++;
 				$action = 'create';
 			}
+
+			// if($needHour && !empty($duration_hour) && $duration_hour > 3600*7) {
+			// 	setEventMessages($langs->trans("ErrorMaxHourHoliday"), null, 'errors');
+			// 	$error++;
+			// 	$action = 'create';
+			// }
 
 			// If no validator designated
 			/*if ($approverid < 1) {
@@ -898,7 +904,7 @@ if (empty($reshook)) {
 					exit;
 				}
 
-				if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 7)) {
+				if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 8)) {
 					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorNbHourHoliday');
 					exit;
 				}
@@ -908,7 +914,12 @@ if (empty($reshook)) {
 					exit;
 				}
 	
-				if($needHour && !empty($duration_hour) && $duration_hour > 3600*7) {
+				// if($needHour && !empty($duration_hour) && $duration_hour > 3600*7) {
+				// 	header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorMaxHourHoliday');
+				// 	exit;
+				// }
+
+				if ($needHour && !empty($duration_hour) && !empty($conf->global->HOLIDAY_INHOUR_MAX_HOUR) && $duration_hour > ($conf->global->HOLIDAY_INHOUR_MAX_HOUR * 3600)) {
 					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorMaxHourHoliday');
 					exit;
 				}
@@ -2582,7 +2593,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 					$errors[] = $langs->trans('ErrorNbMinHoliday');
 					break;
 				case 'ErrorMaxHourHoliday':
-					$errors[] = $langs->trans('ErrorMaxHourHoliday');
+					$errors[] = $langs->trans('ErrorMaxHourHoliday', $conf->global->HOLIDAY_INHOUR_MAX_HOUR);
 					break;
 				case 'Hour':
 					$errors[] = $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Hour"));
@@ -2864,7 +2875,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 						$errors[] = $langs->trans('ErrorNbMinHoliday');
 						break;
 					case 'ErrorMaxHourHoliday':
-						$errors[] = $langs->trans('ErrorMaxHourHoliday');
+						$errors[] = $langs->trans('ErrorMaxHourHoliday', $conf->global->HOLIDAY_INHOUR_MAX_HOUR);
 						break;
 					case 'Hour':
 						$errors[] = $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Hour"));
@@ -2908,7 +2919,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 				print '<td class="titlefield">'.$langs->trans("User").'</td>';
 				print '<td>';
 				print $userRequest->getNomUrlCustom(-1, 'leave');
-				$conges_texte = $object->getArrayHoliday($object->fk_user, 1, 1);
+				if (empty($conf->global->HOLIDAY_HIDE_BALANCE)) $conges_texte = $object->getArrayHoliday($object->fk_user, 1, 1);
 				print $form->textwithpicto('', $conges_texte);
 				print '</td></tr>';
 
