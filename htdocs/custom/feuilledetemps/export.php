@@ -1934,6 +1934,17 @@ if ($step == 1 || !$datatoexport) {
 		dol_mkdir($conf->export->dir_temp);
 	}
 
+	$day = (int)date('d');
+	if(empty($conf->global->FDT_DAY_FOR_NEXT_FDT) || $day >= $conf->global->FDT_DAY_FOR_NEXT_FDT) {
+		$year = GETPOST('exportdate_month') ? GETPOST('exportdate_month') : date('Y');
+		$month = GETPOST('exportdate_year') ? GETPOST('exportdate_year') : date('m');
+	}
+	else {
+		$now = dol_now();
+		$year = GETPOST('exportdate_month') ? GETPOST('exportdate_month') : dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%Y');
+		$month = GETPOST('exportdate_year') ? GETPOST('exportdate_year') : dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%m');
+	}
+
 	print '<div class="fichecenter">';
 		print '<div class="fichethirdleft">';
 		print '<div class="div-table-responsive-no-min">';
@@ -1946,9 +1957,9 @@ if ($step == 1 || !$datatoexport) {
 		print '<tr>';
 		print '<td align="center" colspan="2">';
 			print '<form name="exportFeuilleDeTemps" id="exportFeuilleDeTemps" action="'.$_SERVER["PHP_SELF"].'?step=1&action=buildalldoc&token='.newToken().'" method="POST">';
-			print $htmlother->select_month((GETPOST('exportdate_month') ? GETPOST('exportdate_month') : date("m")), 'exportdate_month', 0, 1, 'minwidth50 valignmiddle', false);
+			print $htmlother->select_month($month, 'exportdate_month', 0, 1, 'minwidth50 valignmiddle', false);
 			print ' ';
-			print $htmlother->select_year(GETPOST('exportdate_year'), 'exportdate_year', 0, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
+			print $htmlother->select_year($year, 'exportdate_year', 0, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
 			// Show existing generated documents
 			// NB: La fonction show_documents rescanne les modules qd genallowed=1, sinon prend $liste
 			print $formfile->showdocuments('export', '', $upload_dir, $_SERVER["PHP_SELF"].'?step=1', $liste, 1, (!empty($_POST['model']) ? $_POST['model'] : 'csv'), 1, 1, 0, 0, 0, '', '<input class="butAction" type="submit" value="'.$langs->trans('Export').'">', '', '', '', null, 0, 'remove_file', '', '^export_(analytique_pourcentage|donnees_variables|absences|heure_sup).*$');
