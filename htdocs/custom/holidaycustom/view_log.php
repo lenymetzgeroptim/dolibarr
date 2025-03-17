@@ -368,7 +368,7 @@ if (!empty($arrayfields['cpl.fk_type']['checked'])) {
 	}
 
 	print '<td class="liste_titre">';
-	print $form->selectarray('search_type', $arraytypeleaves, $search_type, 1, 0, 0, '', 0, 0, 0, '', '', 1);
+	print $form->selectarray('search_type', $arraytypeleaves, $search_type, 1, 0, 0, '', 0, 0, 0, 'ASC', '', 1);
 	print '</td>';
 }
 
