@@ -88,6 +88,7 @@ FDT_STANDARD_WEEK_SUNDAY_NO_RTT = Dimanche
 FDT_STANDARD_WEEK_FOR_HOLIDAY = Utiliser la semaine type pour la durée des congés en jour
 FDT_SHORTCUT_HOLIDAY = Raccourci pour créer un congés dans le menu feuille de temps
 FDT_SCREEN_VERIFICATION = Screen de la feuille de temps lors de la vérification
+FDT_SENDMAIL_FROM = Expéditeur du mail avec le bouton "Envoyer Mail" sur une feuille de temps
 
 
 #

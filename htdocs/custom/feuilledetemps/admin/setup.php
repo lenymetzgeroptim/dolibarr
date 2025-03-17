@@ -209,6 +209,10 @@ $item = $formSetup->newItem('FDT_GENERATE_TASK_PROJECTCREATION')->setAsYesNo();
 // FDT_SCREEN_VERIFICATION
 $item = $formSetup->newItem('FDT_SCREEN_VERIFICATION')->setAsYesNo();
 
+// FDT_SENDMAIL_FROM
+$item = $formSetup->newItem('FDT_SENDMAIL_FROM')->setAsString();
+
+
 
 // Titre FDT_STANDARD_WEEK
 $formSetup->newItem('FDT_STANDARD_WEEK')->setAsTitle();

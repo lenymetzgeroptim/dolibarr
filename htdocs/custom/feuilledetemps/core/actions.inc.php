@@ -807,7 +807,7 @@ if ($action == 'confirm_sendMail' && $confirm == 'yes' && $permissionToVerificat
 
 	global $dolibarr_main_url_root;
 	$subject = 'Remarque sur pointage';
-	$from = 'pointage@optim-industries.fr';
+	$from = $conf->global->FDT_SENDMAIL_FROM;
 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 	$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 	$link = '<a href="'.$urlwithroot.'/custom/feuilledetemps/feuilledetemps_card.php?id='.$object->id.'">'.$object->ref.'</a>';
