@@ -345,8 +345,15 @@ function toggleCheckboxesHoliday(source) {
 }
 
 function deletePrefillingClass(objet) {
-    if(objet.parentNode.classList.contains('prefilling_time')) {
+    if($(objet).attr('id') && $(objet).attr('id').includes('timeadded') && objet.parentNode.classList.contains('prefilling_time')) {
         objet.parentNode.classList.remove('prefilling_time')
+    }
+    else if(objet.value > 0 && $(objet).attr('id') && $(objet).attr('id').includes('fk_task')) {
+        var parentTr = $(objet).closest('tr');
+        var element = parentTr.find('.'+ objet.parentNode.classList[1] + '.prefilling_time');
+        if (element.length) {
+            element.removeClass('prefilling_time')
+        }
     }
 }
 

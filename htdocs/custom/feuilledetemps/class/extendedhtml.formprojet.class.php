@@ -50,7 +50,7 @@ class ExtendedFormProjets extends FormProjets
 	 * @param int 	$reload Execute sql to get task
 	 * @return string           Return html content
 	 */
-	public function selectTasksCustom($socid = -1, $selected = '', $htmlname = 'taskid', $maxlength = 24, $option_only = 0, $show_empty = '1', $discard_closed = 0, $forcefocus = 0, $disabled = 0, $morecss = 'maxwidth500', $projectsListId = '', $showmore = 'all', $usertofilter = null, $htmlid = '', $reload = 1, &$task_load)
+	public function selectTasksCustom($socid = -1, $selected = '', $htmlname = 'taskid', $maxlength = 24, $option_only = 0, $show_empty = '1', $discard_closed = 0, $forcefocus = 0, $disabled = 0, $morecss = 'maxwidth500', $projectsListId = '', $showmore = 'all', $usertofilter = null, $htmlid = '', $reload = 1, &$task_load, $moreparam)
 	{
 		global $user, $conf, $langs;
 
@@ -112,7 +112,7 @@ class ExtendedFormProjets extends FormProjets
 			}
 
 			if (empty($option_only)) {
-				$out .= '<select class="valignmiddle flat' . ($morecss ? ' ' . $morecss : '') . '"' . ($disabled ? ' disabled="disabled"' : '') . ' id="' . $htmlid . '" name="' . $htmlname . '">';
+				$out .= '<select class="valignmiddle flat' . ($morecss ? ' ' . $morecss : '') . '"' . ($disabled ? ' disabled="disabled"' : '') . ' id="' . $htmlid . '" name="' . $htmlname . '" '.$moreparam.'>';
 			}
 			if (!empty($show_empty)) {
 				$out .= '<option value="0" class="optiongrey">';
