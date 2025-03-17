@@ -432,7 +432,7 @@ class modHolidaycustom extends DolibarrModules
 			$this->menu[$r++]=array(
 				'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 				'type'=>'left',                          // This is a Top menu entry
-				'titre'=> $langs->trans("New"),
+				'titre'=> $langs->trans("MenuNewCP"),
 				'mainmenu'=>'hrm',
 				'leftmenu'=>'holiday_create',
 				'url'=>'/holidaycustom/card.php?action=create',
@@ -447,7 +447,7 @@ class modHolidaycustom extends DolibarrModules
 			$this->menu[$r++]=array(
 				'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 				'type'=>'left',                          // This is a Top menu entry
-				'titre'=> "Liste des congés",
+				'titre'=> $langs->trans("MenuListCP"),
 				'mainmenu'=>'hrm',
 				'leftmenu'=>'holiday_list',
 				'url'=>'/holidaycustom/list.php',
@@ -507,7 +507,7 @@ class modHolidaycustom extends DolibarrModules
 			$this->menu[$r++]=array(
 				'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 				'type'=>'left',                          // This is a Top menu entry
-				'titre'=>  "Import des congés",
+				'titre'=> $langs->trans("MenuImportCP"),
 				'mainmenu'=>'hrm',
 				'leftmenu'=>'holiday_import',
 				'url'=>'/holidaycustom/import.php',
@@ -539,11 +539,11 @@ class modHolidaycustom extends DolibarrModules
 			$this->menu[$r++]=array(
 				'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 				'type'=>'left',                          // This is a Top menu entry
-				'titre'=> $langs->trans("New"),
+				'titre'=> $langs->trans("MenuNewCP"),
 				'mainmenu'=>'feuilledetemps',
 				'leftmenu'=>'holiday_create',
 				'url'=>'/holidaycustom/card.php?action=create',
-				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 				'position'=>$r,
 				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
 				'perms'=> '$user->rights->holidaycustom->write',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
@@ -554,11 +554,11 @@ class modHolidaycustom extends DolibarrModules
 			$this->menu[$r++]=array(
 				'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 				'type'=>'left',                          // This is a Top menu entry
-				'titre'=> "Liste des congés",
+				'titre'=> $langs->trans("MenuListCP"),
 				'mainmenu'=>'feuilledetemps',
 				'leftmenu'=>'holiday_list',
 				'url'=>'/holidaycustom/list.php',
-				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 				'position'=>$r,
 				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
 				'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
@@ -614,11 +614,11 @@ class modHolidaycustom extends DolibarrModules
 			$this->menu[$r++]=array(
 				'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 				'type'=>'left',                          // This is a Top menu entry
-				'titre'=>  "Import des congés",
+				'titre'=>  $langs->trans("MenuImportCP"),
 				'mainmenu'=>'feuilledetemps',
 				'leftmenu'=>'holiday_import',
 				'url'=>'/holidaycustom/import.php',
-				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 				'position'=>$r,
 				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
 				'perms'=> '$user->rights->holidaycustom->import',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
