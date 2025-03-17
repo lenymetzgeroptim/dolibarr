@@ -21,6 +21,10 @@
 ModuleHolidaycustomName = Demandes de congé (Custom)
 # Module description 'ModuleHolidaycustomDesc'
 ModuleHolidaycustomDesc = Déclaration et suivi des congés des employés
+MenuNewCP = Nouveau congé
+MenuListCP = Liste des congés
+MenuImportCP = Import des congés
+
 
 #
 # Admin page

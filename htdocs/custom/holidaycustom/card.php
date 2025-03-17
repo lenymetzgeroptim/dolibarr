@@ -498,6 +498,16 @@ if (empty($reshook)) {
 					setEventMessages($object->error, $object->errors, 'errors');
 					$error++;
 				}
+				else {
+					if(!in_array($type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) && !in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE))) {
+						$object->statut = $object::STATUS_APPROVED2;
+						$res = $object->validate($user);
+						
+						if ($res <= 0) {
+							$error++;
+						}
+					}	
+				}
 			}
 
 			// Ajout des approbateurs : responsables de tâches et de projets
@@ -1190,8 +1200,8 @@ if (empty($reshook)) {
 					$user_static = new User($db);
 					$user_static->fetch($object->fk_user);
 					$list_validation = explode(',', $user_static->array_options['options_approbateurfdt']);
-					foreach($list_validation as $id){
-						$user_static->fetch($id);
+					foreach($list_validation as $id_validation){
+						$user_static->fetch($id_validation);
 						if(!empty($user_static->email)){
 							$emailTo .= $user_static->email.', ';
 						}
@@ -2442,8 +2452,8 @@ if (empty($reshook)) {
 					elseif($conf->global->HOLIDAY_FDT_APPROVER) {
 						$user_static = new User($db);
 						$list_validation = explode(',', $destinataire->array_options['options_approbateurfdt']);
-						foreach($list_validation as $id){
-							$user_static->fetch($id);
+						foreach($list_validation as $id_validation){
+							$user_static->fetch($id_validation);
 							if(!empty($user_static->email)){
 								$emailTo .= $user_static->email.', ';
 							}
