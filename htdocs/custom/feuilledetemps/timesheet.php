@@ -463,7 +463,7 @@ $projectsrole = $taskstatic->getUserRolesForProjectsOrTasks($usertoprocess, 0, (
 $tasksrole = $taskstatic->getUserRolesForProjectsOrTasks(0, $usertoprocess, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
 
 $array_js = array('/core/js/timesheet.js', '/custom/feuilledetemps/core/js/timesheet.js', '/custom/feuilledetemps/core/js/parameters.php');
-llxHeader("", $title, "", '', '', '', $array_js, '', '', 'classforhorizontalscrolloftabs feuilledetemps timesheet');
+llxHeader("", $title, "", '', '', '', $array_js, '', '', 'classforhorizontalscrolloftabs feuilledetemps timesheet'.($conf->global->FDT_DISPLAY_COLUMN ? ' displaycolumn' : ''));
 //print '<body onresize="redimenssion()">';
 
 print_barre_liste($title, $page, $_SERVER["PHP_SELF"], "", $sortfield, $sortorder, "", $num, '', 'object_timesheet_32@feuilledetemps');
@@ -525,7 +525,7 @@ print '<input type="hidden" name="day" value="'.$day.'">';
 print '<input type="hidden" name="month" value="'.$month.'">';
 print '<input type="hidden" name="year" value="'.$year.'">';
 print '<div class="floatleft right'.($conf->dol_optimize_smallscreen ? ' centpercent' : '').'">'.$nav.'</div>'; // We move this before the assign to components so, the default submit button is not the assign to.
-print '<div class="clearboth" style="padding-bottom: 20px;"></div>';
+print '<div class="clearboth" style="padding-bottom: 10px;"></div>';
 
 $tmpvar = "MAIN_SELECTEDFIELDS_".$varpage;
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
@@ -708,7 +708,7 @@ print '</div></div>';
 
 print '<input type="hidden" id="numberOfLines" name="numberOfLines" value="'.count($tasksarray).'"/>'."\n";
 
-print '<br><div class="center" style="margin-top: 14px;">';
+print '<div class="center" style="margin-top: 14px;">';
 
 // Affichage du bouton "ENREGISTRER"
 if($can_modify_fdt){

@@ -960,7 +960,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	$cptholiday = 0;
 
 	$fields = array(
-		'date' => array('text' => 'Date', 'visible' => 1, 'css' => 'fixed minwidth75'),
+		'date' => array('text' => 'Date', 'visible' => 1, 'css' => 'fixed minwidth80'),
 		'total_semaine' => array('text' => 'Semaine', 'type' => 'duration', 'visible' => 1, 'css' => 'minwidth100'),
 		'absence' => array('text' => 'Absence'.$form->textwithpicto('', $conges_texte), 'visible' => 1, 'css' => 'minwidth100'),
 		'contrat' => array('text' => 'Contrat', 'type' => 'duration', 'visible' => 1),
@@ -977,6 +977,10 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 		'heure_nuit' => 0,
 		'heure_total' => 0,
 	);
+
+	if($mode == 'card') {
+		$fields['date']['text'] = '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>'.$fields['date']['text'];
+	}
 
 	if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
 		$fields['absence']['text'] .= '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
@@ -1413,7 +1417,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 			// Affaires
-			$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width300', $projectsListId, 'projectstatut', $fuser, 'fk_task_'.$idw.'_'.$cpt, ($idw == 0 && $cpt == 0 ? 1 : 0), $task_load, 'onchange="deletePrefillingClass(this);"');
+			$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width150', $projectsListId, 'projectstatut', $fuser, 'fk_task_'.$idw.'_'.$cpt, ($idw == 0 && $cpt == 0 ? 1 : 0), $task_load, 'onchange="deletePrefillingClass(this);"');
 			//print $formproject->select_projects(-1, $timespent->fk_project, 'fk_project['.$idw.']', 0, 0, 1, 1, 0, $disabled, 0, '', 1, 0, 'maxwidth500', 'fk_project_'.$idw);
 			$tableCellAffaire .= '</div>';
 

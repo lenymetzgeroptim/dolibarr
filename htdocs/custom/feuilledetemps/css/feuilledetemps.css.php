@@ -164,8 +164,14 @@ div.mainmenu.feuilledetemps {
 	flex-direction: column;
 }
 
-#mainbody.feuilledetemps #id-right div.fiche form:not(.notoptoleftroright) {
+#mainbody.feuilledetemps:not(.displaycolumn) #id-right div.fiche form:not(.notoptoleftroright) {
 	height: calc(100vh - 400px);
+	display: flex;
+	flex-direction: column;
+}
+
+#mainbody.feuilledetemps.displaycolumn #id-right div.fiche form:not(.notoptoleftroright) {
+	height: calc(100vh - 200px);
 	display: flex;
 	flex-direction: column;
 }
@@ -793,4 +799,8 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 
 #tablelines_fdt.liste.column {
 	margin: 0 !important;
+}
+
+.minwidth80 {
+	min-width: 80px;
 }
