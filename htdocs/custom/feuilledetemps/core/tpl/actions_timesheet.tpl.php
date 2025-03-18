@@ -43,6 +43,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	$task = new extendedTask($db);
 	$filter = ' AND ptt.element_date >= "'.substr($db->idate($firstdaytoshow), 0, 10).'" AND ptt.element_date <= "'.substr($db->idate($lastdaytoshow), 0, 10).'"';
 	$timespent_month = $task->fetchAllTimeSpent($usertoprocess, $filter);
+	$txt_error = "Des heures n'ont pas été enregistrées car aucune affaire n'a été sélectionné sur la/les ligne(s) du ";
 
 	$silae = new Silae($db);
 	if (empty($extrafields->attributes[$silae->table_element]['loaded'])) {
@@ -338,6 +339,9 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 						$timespent_month[$tmpday][$cpt]->timespent_id = $result;
 						$timespent_tmp = $timespent_month[$tmpday][$cpt];
 					}
+					elseif(empty($timespent_tmp->timespent_id) && $newduration != 0 && empty($fk_task[$day][$cpt])) {
+						$txt_error .= dol_print_date($tmpday).', ';
+					}
 
 					if ($result < 0) {
 						setEventMessages($timespent->error, $timespent->errors, 'errors');
@@ -531,6 +535,9 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 					$resheure_other = 1;
 				}
+				elseif($resheure_other == 0 && ($newduration_heure_nuit != 0 || !empty($new_site)) && empty($fk_task[$day][$cpt])) {
+					$txt_error .= dol_print_date($tmpday).', ';
+				}
 
 				if ($result < 0) {
 					setEventMessages($heure_other_tmpday->error, $heure_other_tmpday->errors, 'errors');
@@ -641,12 +648,17 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 			include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
 		}
 
+		if($txt_error != "Des heures n'ont pas été enregistrées car aucune affaire n'a été sélectionné sur la/les ligne(s) du ") {
+			$txt_error = rtrim($txt_error, ", ");
+			setEventMessages($txt_error, null, 'errors');
+		}
+
 		if($action2 != "transmettre") {
 			if(strpos($_SERVER["PHP_SELF"], 'feuilledetemps_card') === false) {
 				setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 				// Redirect to avoid submit twice on back
-				//header('Location: '.$_SERVER["PHP_SELF"].'?'.$param);
-				//exit;
+				header('Location: '.$_SERVER["PHP_SELF"].'?'.$param);
+				exit;
 			}
 			else {
 				if($permissionToVerification && $object->status == $object::STATUS_VERIFICATION) {
@@ -655,8 +667,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 				else {
 					setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
 					// Redirect to avoid submit twice on back
-					//header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-					//exit;
+					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+					exit;
 				}
 			}
 		}
@@ -1848,8 +1860,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 		}
 
 		// Redirect to avoid submit twice on back
-		//header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-		//exit;
+		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+		exit;
 	}
 	
 }
