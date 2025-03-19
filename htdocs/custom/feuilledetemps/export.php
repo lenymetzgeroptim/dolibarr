@@ -257,7 +257,9 @@ elseif($datatoexport == 'donnees_variables') {
 			"fdt.status" => "Statut feuille de temps",
 		);
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			$array_export_fields[0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['label'][$key];
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_export_fields[0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['label'][$key];
+			}
 		}
 	}
 }
@@ -399,7 +401,9 @@ else {
 			"fdt.status" => "Statut feuille de temps",
 		);
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			$array_export_fields[1][0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['label'][$key];
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_export_fields[1][0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['label'][$key];
+			}
 		}
 	}
 	$array_export_fields[2][0] = array(
@@ -536,7 +540,9 @@ elseif($datatoexport == 'donnees_variables') {
 			"fdt.status" => "timesheet_16@feuilledetemps",
 		);
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			$array_export_entities[0]['silae_extrafields.'.$key] = 'timesheet_16@feuilledetemps';
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_export_entities[0]['silae_extrafields.'.$key] = 'timesheet_16@feuilledetemps';
+			}
 		}
 	}
 }
@@ -677,7 +683,9 @@ else {
 			"fdt.status" => "timesheet_16@feuilledetemps",
 		);
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			$array_export_entities[1][0]['silae_extrafields.'.$key] = 'timesheet_16@feuilledetemps';
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_export_entities[1][0]['silae_extrafields.'.$key] = 'timesheet_16@feuilledetemps';
+			}
 		}
 	}
 	$array_export_entities[2][0] = array(
@@ -812,7 +820,9 @@ elseif($datatoexport == 'donnees_variables') {
 			"fdt.status" => "Status",
 		);
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			$array_export_TypeFields[0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['type'][$key];
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_export_TypeFields[0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['type'][$key];
+			}
 		}
 	}
 }
@@ -956,7 +966,9 @@ else {
 			"fdt.status" => "Status",
 		);
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			$array_export_TypeFields[1][0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['type'][$key];
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_export_TypeFields[1][0]['silae_extrafields.'.$key] = $extrafields->attributes[$silae->table_element]['type'][$key];
+			}
 		}
 	}
 	$array_export_TypeFields[2][0] = array(
@@ -1093,7 +1105,9 @@ elseif($datatoexport == 'donnees_variables')  {
 			"fdt.status" => "llx_feuilledetemps_feuilledetemps",
 		);
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			$array_tablename[0]['silae_extrafields.'.$key] = 'llx_feuilledetemps_silae_extrafields';
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_tablename[0]['silae_extrafields.'.$key] = 'llx_feuilledetemps_silae_extrafields';
+			}
 		}
 	}
 }
@@ -1232,7 +1246,9 @@ else {
 			"fdt.status" => "llx_feuilledetemps_feuilledetemps",
 		);
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			$array_tablename[1][0]['silae_extrafields.'.$key] = 'llx_feuilledetemps_silae_extrafields';
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_tablename[1][0]['silae_extrafields.'.$key] = 'llx_feuilledetemps_silae_extrafields';
+			}
 		}
 	}
 	$array_tablename[2][0] = array(
@@ -1540,8 +1556,10 @@ if ($action == 'buildalldoc') {
 		);
 		$cpt = 4;
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-			$array_selected[1]['silae_extrafields.'.$key] = $cpt;
-			$cpt++;
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_selected[1]['silae_extrafields.'.$key] = $cpt;
+				$cpt++;
+			}
 		}
 	}
 	$array_selected[2] = array(

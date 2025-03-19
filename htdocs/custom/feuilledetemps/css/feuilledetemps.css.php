@@ -799,3 +799,7 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 .minwidth80 {
 	min-width: 80px;
 }
+
+.height20 {
+	height: 20px;
+}

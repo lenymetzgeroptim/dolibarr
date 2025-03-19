@@ -1001,29 +1001,18 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 		$extrafields->fetch_name_optionals_label($silae->table_element);
 	}
 	foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
-		// var_dump($key);
-		// var_dump($label);
-
 		$fields[$key] = array(
 						'text' => $label, 
 						'type' => $extrafields->attributes[$silae->table_element]['type'][$key],
 						'visible' => dol_eval($extrafields->attributes[$silae->table_element]['list'][$key], 1, 1, '2'),
 						'css' => $extrafields->attributes[$silae->table_element]['cssview'][$key]
 					);	
-		$total_array[$key] = 0;	
+
+		if($extrafields->attributes[$silae->table_element]['type'][$key] != 'text') $total_array[$key] = 0;	
 	}
 
-
-	// $numlines = count($lines);
-	// $lastprojectid = 0;
-	// $workloadforid = array();
 	$totalforvisibletasks = array();
-	// $lineswithoutlevel0 = array();
-	// $u = 0;
-	// $total_hs25 = 0;
-	// $total_hs50 = 0;
 	$nb_jour = sizeof($dayinloopfromfirstdaytoshow_array);
-	// $first_day_month = dol_time_plus_duree($firstdaytoshow, $num_first_day, 'd');
 	$task_load = array();
 
 	if (!$fuser->hasRight('projet', 'all', 'lire')) {
@@ -1536,6 +1525,11 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				if (!empty($silae->array_options['options_'.$key])) $checked = ' checked';
 				print '<input type="checkbox" class="flat valignmiddle'.($morecss ? ' '.$morecss : '').' maxwidthonsmartphone" name="options_'.$key.'['.$idw.']" id="options_'.$key.'['.$idw.']" '.$checked.$moreparam.'>';
 			}
+			elseif($type == 'text') {
+				require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+				$doleditor = new DolEditor('options_'.$key.'['.$idw.']', $silae->array_options['options_'.$key], '', 200, 'dolibarr_notes', 'In', false, false, false, ROWS_5, '90%');
+				print $doleditor->Create(1, '', true, '', '', '', $extrafields->attributes[$silae->table_element]['css'][$key]);
+			}
 			else {
 				$moreparam .= 'onfocus="this.oldvalue = this.value;"';
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
@@ -1545,7 +1539,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				print $extrafields->showInputField($key, $silae->array_options['options_'.$key], $moreparam, '['.$idw.']', '', 0, $silae->id, $silae->table_element);
 			}
 			print '</td>';
-			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
+			if(!is_null($total_array[$key]) && $idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
 				$total_array[$key] += $silae->array_options['options_'.$key];
 			}
 		}
