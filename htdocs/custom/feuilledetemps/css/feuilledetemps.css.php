@@ -524,6 +524,15 @@ tr > th:last-child.fixed {
 #tablelines_fdt > tbody > tr > td.totalweekcolumn {
 	border-right: 1px solid var(--colortopbordertitle1);
 	background-color: #f0f0f0;
+	vertical-align: bottom
+}
+
+#tablelines_fdt td.totalweekcolumn {
+    border-bottom: 1px solid var(--colortopbordertitle1);
+}
+
+#tablelines_fdt > tbody > tr:nth-last-child(8) > td.totalweekcolumn {
+	border-bottom: unset;
 }
 
 #tablelines_fdt> tbody > tr > td.holidaycolumn {
