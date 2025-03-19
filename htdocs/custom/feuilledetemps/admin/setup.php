@@ -159,6 +159,25 @@ $item = $formSetup->newItem('HOLIDAY_VALIDATED_COLOR');
 $item->setAsColor();
 $item->defaultFieldValue = '#abebc6';
 
+// Setup conf FDT_WEEKEND_COLOR
+$item = $formSetup->newItem('FDT_WEEKEND_COLOR');
+$item->setAsColor();
+$item->defaultFieldValue = '#eeeeee';
+
+// Setup conf FDT_ANTICIPE_COLOR
+$item = $formSetup->newItem('FDT_ANTICIPE_COLOR');
+$item->setAsColor();
+$item->defaultFieldValue = '#ebdef0';
+
+// Setup conf FDT_ANTICIPE_WEEKEND_COLOR
+$item = $formSetup->newItem('FDT_ANTICIPE_WEEKEND_COLOR');
+$item->setAsColor();
+$item->defaultFieldValue = '#dacce1';
+
+// Setup conf FDT_FERIE_COLOR
+$item = $formSetup->newItem('FDT_FERIE_COLOR');
+$item->setAsColor();
+$item->defaultFieldValue = '#f4eede';
 
 
 // Titre FDT

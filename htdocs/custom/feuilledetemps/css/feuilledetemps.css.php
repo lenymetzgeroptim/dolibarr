@@ -197,7 +197,7 @@ div.mainmenu.feuilledetemps {
 }
 
 #tablelines_fdt td.public_holiday {
-	background-color: #f4eede !important;
+	background-color: <?php print $conf->global->FDT_FERIE_COLOR ?> !important;
 }
 
 #tablelines_fdt .conges1allday {
@@ -255,15 +255,15 @@ div.mainmenu.feuilledetemps {
 }
 
 #tablelines_fdt td.before {
-	background-color: #ebdef0 !important;
+	background-color: <?php print $conf->global->FDT_ANTICIPE_COLOR ?> !important;
 }
 
 #tablelines_fdt td.before.weekend {
-	background-color: #dacce1 !important;
+	background-color: <?php print $conf->global->FDT_ANTICIPE_WEEKEND_COLOR ?> !important;
 }
 
 #tablelines_fdt td.weekend {
-	background-color: #eee !important;
+	background-color: <?php print $conf->global->FDT_WEEKEND_COLOR ?> !important;
 }
 
 th.daycolumn {
@@ -375,11 +375,11 @@ td > div > input.heure_epi {
 }
 
 .txt_before {
-	color: #c180da;
+	color: <?php print $conf->global->FDT_ANTICIPE_WEEKEND_COLOR ?> !important;
 }
 
 .txt_ferie {
-	color: #f4eede;
+	color: <?php print $conf->global->FDT_FERIE_COLOR ?> !important;
 }
 
 .txt_conges_brouillon {

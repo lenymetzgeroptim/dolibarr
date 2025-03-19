@@ -496,7 +496,9 @@ if(!$conf->global->FDT_DISPLAY_COLUMN) {
 }
 print '<strong>Code couleur : ';
 print '</span>';
-print '<span class="txt_before">Jours anticipés</span> - <span class="txt_ferie">Jours feriés</span> - <span class="txt_conges_brouillon">Absence en brouillon</span> - <span class="txt_conges_valide">Absence en Approbation n°1</span> - <span class="txt_conges_approuve1">Absence en Approbation n°2</span> - <span class="txt_conges_approuve2">Absence approuvée</span></strong>';
+print '<span class="txt_before">Jours anticipés</span> - <span class="txt_ferie">Jours fériés</span>';
+if(!$conf->global->FDT_DISPLAY_COLUMN) print ' - <span class="txt_conges_brouillon">Absence en brouillon</span> - <span class="txt_conges_valide">Absence en Approbation n°1</span> - <span class="txt_conges_approuve1">Absence en Approbation n°2</span> - <span class="txt_conges_approuve2">Absence approuvée</span>';
+print '</strong>';
 if(!$conf->global->FDT_DISPLAY_COLUMN) {
 	print '<span class="hideonsmartphone opacitymedium info_fdt">';
 	if($userInDeplacement) {
