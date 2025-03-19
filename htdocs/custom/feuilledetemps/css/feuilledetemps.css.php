@@ -778,11 +778,6 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 	margin-left: 0px; !important
 }
 
-.feuilledetemps div.prefilling_time input {
-	font-style: italic;
-	color: grey;
-}
-
 .feuilledetemps span.diffpositive {
 	color: blue;
 }

@@ -344,15 +344,36 @@ function toggleCheckboxesHoliday(source) {
     });
 }
 
-function deletePrefillingClass(objet) {
-    if($(objet).attr('id') && $(objet).attr('id').includes('timeadded') && objet.parentNode.classList.contains('prefilling_time')) {
+function deletePrefillingClass(objet, sitedefaut) {
+    if($(objet).attr('id') && $(objet).attr('id').includes('timeadded') && objet.value != '' && objet.parentNode.classList.contains('prefilling_time')) {
         objet.parentNode.classList.remove('prefilling_time')
+    }
+    else if($(objet).attr('id') && $(objet).attr('id').includes('timeadded') && objet.value == '' && !objet.parentNode.classList.contains('prefilling_time')) {
+        objet.parentNode.classList.add('prefilling_time')
     }
     else if(objet.value > 0 && $(objet).attr('id') && $(objet).attr('id').includes('fk_task')) {
         var parentTr = $(objet).closest('tr');
         var element = parentTr.find('.'+ objet.parentNode.classList[1] + '.prefilling_time');
         if (element.length) {
             element.removeClass('prefilling_time')
+            var input = element.find('input[type="text"]');
+            if (input.length) {
+                var placeholderValue = input.attr('placeholder'); 
+                if (placeholderValue) {
+                    input.val(placeholderValue); 
+                }
+            }
+
+            var id = $(objet).attr('id');
+            var regex = /^fk_task\_(\d+)\_(\d+)$/; 
+            var match = id.match(regex);
+            console.log(match);
+            console.log($(objet).attr('id'));
+            if (match) {
+                var idw = match[1];
+                var cpt = match[2];
+                autoFillSite(sitedefaut, idw, cpt);
+            }
         }
     }
 }

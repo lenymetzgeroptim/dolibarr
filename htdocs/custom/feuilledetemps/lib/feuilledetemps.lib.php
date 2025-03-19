@@ -1297,7 +1297,8 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			
 			$timespent = $timespent_month[$dayinloopfromfirstdaytoshow][$cpt];
 			$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
-
+			$prefilling_time = ''; 
+			
 			// Est-ce qu'on désactive l'input ou non ?
 			$disabled = 0;
 			if(!$modify || ($user_conges && !$modifier_jour_conges && empty($alreadyspent))) {
@@ -1317,13 +1318,13 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 			if($cpt == 0 && $mode == 'timesheet' && !$disabled && empty($timespent) && num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt, '', 1) == 0 /*&& empty($timeHoliday[(int)$weekNumber]) */&& empty($timeSpentWeek[(int)$weekNumber]) && !empty($standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')]) && $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] != $timeHolidayByDay[$dayinloopfromfirstdaytoshow]) {
 				if(!empty($timeHolidayByDay[$dayinloopfromfirstdaytoshow]) && $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] - $timeHolidayByDay[$dayinloopfromfirstdaytoshow]) {
-					$timespent->timespent_duration = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] - $timeHolidayByDay[$dayinloopfromfirstdaytoshow];
+					$prefilling_time = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] - $timeHolidayByDay[$dayinloopfromfirstdaytoshow];
 				}
 				else {
-					$timespent->timespent_duration = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
+					$prefilling_time = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
 				}
 				$class_timespent .= ' prefilling_time';
-				$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
+				$prefilling_time = (!empty($prefilling_time) ? number_format($prefilling_time / 3600, 2, '.', '') : '');
 			} 
 
 			if($cpt == 0) $tableCellTimespent = '<td class="center valignmiddle hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
@@ -1358,7 +1359,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 			// Time
 			$tableCellTimespent .= '<input type="text" style="border: 1px solid grey;" alt="'.$alttitle.'" title="'.$alttitle.'" '.($disabled ? 'disabled' : '').' 
-									 class="center smallpadd time_'.$idw.'" size="2" id="timeadded['.$idw.']['.$cpt.']" name="task['.$idw.']['.$cpt.']" value="'.$alreadyspent.'" 
+									 class="center smallpadd time_'.$idw.'" size="2" id="timeadded['.$idw.']['.$cpt.']" name="task['.$idw.']['.$cpt.']" placeholder="'.$prefilling_time.'" value="'.$alreadyspent.'" 
 									 cols="2"  maxlength="5"';
 			$tableCellTimespent .= ' onfocus="this.oldvalue = this.value; this.oldvalue_focus = this.value;"';
 			$tableCellTimespent .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
@@ -1366,12 +1367,12 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellTimespent .= ' updateTotalSigedi(this, \'heure_jour\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');';
 			$tableCellTimespent .= ' this.oldvalue = this.value;
 									 updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
-									 deletePrefillingClass(this);"';
+									 deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"';
 			$tableCellTimespent .= ' onblur="regexEvent_TS(this,event,\''.$modeinput.'\'); validateTime(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.', 0,\''.$type_deplacement.'\', '.$tmp_heure_semaine_hs.', 0, '.$heure_max_jour.', '.$heure_max_semaine.');
 									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).');'; 
 			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellTimespent .= ' updateTotalSigedi(this, \'heure_jour\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');';
 			$tableCellTimespent .= ' updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
-									 deletePrefillingClass(this); autoFillSite(\''.$fuser->array_options['options_sitedefaut'].'\', '.$idw.', '.$cpt.')"';
+									 deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\'); autoFillSite(\''.$fuser->array_options['options_sitedefaut'].'\', '.$idw.', '.$cpt.')"';
 								  // validateTime_HS(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.', 0, 0, 0, 0, '.$tmp_heure_semaine_hs.');"';
 			//$tableCellTimespent .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
 			$tableCellTimespent .= '	/>';
@@ -1417,7 +1418,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 			// Affaires
-			$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width150', $projectsListId, 'projectstatut', $fuser, 'fk_task_'.$idw.'_'.$cpt, ($idw == 0 && $cpt == 0 ? 1 : 0), $task_load, 'onchange="deletePrefillingClass(this);"');
+			$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width150', $projectsListId, 'projectstatut', $fuser, 'fk_task_'.$idw.'_'.$cpt, ($idw == 0 && $cpt == 0 ? 1 : 0), $task_load, 'onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"');
 			//print $formproject->select_projects(-1, $timespent->fk_project, 'fk_project['.$idw.']', 0, 0, 1, 1, 0, $disabled, 0, '', 1, 0, 'maxwidth500', 'fk_project_'.$idw);
 			$tableCellAffaire .= '</div>';
 
