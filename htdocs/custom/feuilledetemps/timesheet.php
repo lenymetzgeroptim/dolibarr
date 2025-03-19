@@ -350,7 +350,8 @@ $param .= ($search_task_ref ? '&search_task_ref='.urlencode($search_task_ref) : 
 $param .= ($search_task_label ? '&search_task_label='.urlencode($search_task_label) : '');
 $paramwithoutdate = $param;
 //if ($action2 == 'transmettre' || $action == 'confirm_transmettre') {
-	$param .= ($day ? '&day='.urlencode($day) : '').($month ? '&month='.urlencode($month) : '').($year ? '&year='.urlencode($year) : '');
+	$paramdate = ($day ? '&day='.urlencode($day) : '').($month ? '&month='.urlencode($month) : '').($year ? '&year='.urlencode($year) : '');
+	$param .= $paramdate;
 //}
 
 $search_array_options = $search_array_options_project;
@@ -552,7 +553,23 @@ if(!$user->rights->feuilledetemps->feuilledetemps->readall) {
 }
 $extendedUser = New ExtendedUser3($db);
 $exclude = $extendedUser->get_full_treeIds("statut <> 1");
-$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class="paddingright pictofixedwidth"').$form->select_dolusers($search_usertoprocessid ? $search_usertoprocessid : $usertoprocess->id, 'search_usertoprocessid', 0, $exclude, 0, $includeonly, null, 0, 0, 0, '', 0, '', 'maxwidth200');
+$usersee = $form->select_dolusers('', '', 0, $exclude, 0, $includeonly, null, 0, 0, 0, '', 0, '', '', 0, 2);
+$prev_user_id = (array_keys($usersee)[array_search($usertoprocess->id,array_keys($usersee))-1]);
+$next_user_id = (array_keys($usersee)[array_search($usertoprocess->id,array_keys($usersee))+1]);
+
+if($prev_user_id > 0 && $prev_user_id != $usertoprocess->id) $moreforfilter .= '<a style="color: #79633f;" class="inline-block" href="?search_usertoprocessid='.$prev_user_id.$paramdate.'">';
+else $moreforfilter .= '<a style="color: #ccc;">';
+$moreforfilter .= '<i class="fa fa-chevron-left paddingright paddingleft"></i>';
+if($prev_user_id > 0 && $prev_user_id != $usertoprocess->id) $moreforfilter .= '</a>';
+else $moreforfilter .= '</a>';
+$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class=""');
+if($next_user_id > 0 && $next_user_id != $usertoprocess->id) $moreforfilter .= '<a style="color: #79633f;" class="inline-block" href="?search_usertoprocessid='.$next_user_id.$paramdate.'">';
+else $moreforfilter .= '<a style="color: #ccc;">';
+$moreforfilter .= '<i class="fa fa-chevron-right paddingright paddingleft"></i>';
+if($next_user_id > 0 && $next_user_id != $usertoprocess->id) $moreforfilter .= '</a>';
+else $moreforfilter .= '</a>';
+
+$moreforfilter .= $form->select_dolusers($search_usertoprocessid ? $search_usertoprocessid : $usertoprocess->id, 'search_usertoprocessid', 0, $exclude, 0, $includeonly, null, 0, 0, 0, '', 0, '', 'maxwidth200');
 $moreforfilter .= '</div>';
 
 
