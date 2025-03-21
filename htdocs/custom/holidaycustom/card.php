@@ -1117,7 +1117,7 @@ if (empty($reshook)) {
 		$object->fetch($id);
 
 		// If this is a rough draft, canceled or refused
-		if ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED) {
+		if ($object->statut == Holiday::STATUS_DRAFT || $object->statut == Holiday::STATUS_CANCELED || $object->statut == Holiday::STATUS_REFUSED || ($object->array_options['options_statutfdt'] == 1 && $object->statut == Holiday::STATUS_APPROVED2 && !in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) && !in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 			if($conf->global->FDT_STATUT_HOLIDAY) {
 				$options_statutfdt =  $object->array_options['options_statutfdt'];
 			}
@@ -3378,7 +3378,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 					// if (($cancreate || $cancreateall) && $object->statut == Holiday::STATUS_CANCELED || (($cancreate || $cancreateall) && $object->statut > Holiday::STATUS_DRAFT)) {
 					// 	print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=backtodraft" class="butAction">'.$langs->trans("SetToDraft").'</a>';
 					// }
-					if ($candelete && $object->statut == Holiday::STATUS_DRAFT) {	// If draft or canceled or refused
+					if ($candelete && ($object->statut == Holiday::STATUS_DRAFT || ($object->array_options['options_statutfdt'] == 1 && $object->statut == Holiday::STATUS_APPROVED2 && !in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) && !in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE))))) {	// If draft or canceled or refused
 						print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=delete&token='.newToken().'" class="butActionDelete">'.$langs->trans("DeleteCP").'</a>';
 					}
 					

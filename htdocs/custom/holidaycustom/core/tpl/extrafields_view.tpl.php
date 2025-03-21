@@ -282,7 +282,7 @@ if (empty($reshook) && isset($extrafields->attributes[$object->table_element]['l
 				elseif ($tmpkeyextra == 'fk_validator2'){
 					print 'X';
 				}
-				elseif($tmpkeyextra == 'hour' ) {
+				elseif($tmpkeyextra == 'hour') {
 					if($value) {
 						if($conf->global->HOIDAY_DECIMAL_HOUR_FORMAT) {
 							print number_format($value / 3600, 2, '.', '');
