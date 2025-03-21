@@ -358,12 +358,12 @@ class modHolidaycustom extends DolibarrModules
 		$this->rights[$r][5] = ''; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
 
-		$this->rights[$r][0] = 20007;
-		$this->rights[$r][1] = 'Approve leave requests';
-		$this->rights[$r][2] = 'w';
-		$this->rights[$r][3] = 0;
-		$this->rights[$r][4] = 'approve';
-		$r++;
+		// $this->rights[$r][0] = 20007;
+		// $this->rights[$r][1] = 'Approve leave requests';
+		// $this->rights[$r][2] = 'w';
+		// $this->rights[$r][3] = 0;
+		// $this->rights[$r][4] = 'approve';
+		// $r++;
 
 		$this->rights[$r][0] = 20004; // Permission id (must not be already used)
 		$this->rights[$r][1] = 'Read leave requests for everybody'; // Permission label
