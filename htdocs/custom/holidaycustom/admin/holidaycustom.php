@@ -125,6 +125,9 @@ $formSetup->newItem('HOLIDAY_HIDE_BALANCE')->setAsYesNo();
 // HOLIDAY_INHOUR_MAX_HOUR
 $formSetup->newItem('HOLIDAY_INHOUR_MAX_HOUR')->setAsString();
 
+// HOLIDAY_MAIL_TO
+$formSetup->newItem('HOLIDAY_MAIL_TO')->setAsString();
+
 // // Setup conf for selection of an URL
 // $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM1');
 // $item->fieldOverride = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'];

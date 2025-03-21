@@ -832,11 +832,11 @@ if (empty($reshook)) {
 		// If no right to modify a request
 		if (!$cancreateall) {
 			if ($cancreate) {
-				if (!in_array($fuserid, $childids)) {
-					setEventMessages($langs->trans("UserNotInHierachy"), null, 'errors');
-					header('Location: '.$_SERVER["PHP_SELF"].'?action=create');
-					exit;
-				}
+				// if (!in_array($fuserid, $childids)) {
+				// 	setEventMessages($langs->trans("UserNotInHierachy"), null, 'errors');
+				// 	header('Location: '.$_SERVER["PHP_SELF"].'?action=create');
+				// 	exit;
+				// }
 			} else {
 				setEventMessages($langs->trans("NotEnoughPermissions"), null, 'errors');
 				header('Location: '.$_SERVER["PHP_SELF"].'?action=create');
@@ -847,7 +847,7 @@ if (empty($reshook)) {
 		$object->fetch($id);
 	
 		// If under validation
-		if ($object->statut == Holiday::STATUS_DRAFT) {
+		if ($object->statut == Holiday::STATUS_DRAFT || ($object->array_options['options_statutfdt'] == 1 && $object->statut == Holiday::STATUS_APPROVED2 && !in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) && !in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 			// If this is the requestor or has read/write rights
 			if ($cancreate) {
 				//$approverid = GETPOST('valideur', 'int');
@@ -1072,11 +1072,11 @@ if (empty($reshook)) {
 				// Update
 				$verif = $object->update($user);
 
-				if(!$error && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $conf->feuilledetemps->enabled && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($object->array_options['options_statutfdt'] == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
-					$to = 'pointage@optim-industries.fr';
+					$to = $conf->global->HOLIDAY_MAIL_TO;
 
 					$user_static = new User($db);
 					$user_static->fetch($object->fk_user);
@@ -1086,7 +1086,9 @@ if (empty($reshook)) {
 					$link = '<a href="'.$urlwithroot.'/custom/holidaycustom/card.php?id='.$object->id.'">'.$object->ref.'</a>';
 					$msg = $langs->transnoentitiesnoconv(($object->array_options['options_statutfdt'] == 2 ? "EMailTextCongesRegulerModify2" : "EMailTextCongesRegulerModify3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_fin, '%d/%m/%Y'), $link);
 					$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
-					$res = $mail->sendfile();
+					if(!empty($to)) {
+						$res = $mail->sendfile();
+					}
 				}
 
 				if ($verif <= 0) {
@@ -1126,11 +1128,11 @@ if (empty($reshook)) {
 
 			$result = $object->delete($user);
 
-			if(!$error && $result && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $options_statutfdt == 3)) {
+			if(!$error && $conf->feuilledetemps->enabled && $result && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $options_statutfdt == 3)) {
 				global $dolibarr_main_url_root;
 				$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 				$from = 'erp@optim-industries.fr';
-				$to = 'pointage@optim-industries.fr';
+				$to = $conf->global->HOLIDAY_MAIL_TO;;
 
 				$user_static = new User($db);
 				$user_static->fetch($object_fk_user);
@@ -1140,7 +1142,9 @@ if (empty($reshook)) {
 				$link = $object_ref;
 				$msg = $langs->transnoentitiesnoconv(($options_statutfdt == 2 ? "EMailTextCongesRegulerDelete2" : "EMailTextCongesRegulerDelete3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($date_debut, '%d/%m/%Y'), dol_print_date($date_fin, '%d/%m/%Y'), $link);
 				$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
-				$res = $mail->sendfile();
+				if(!empty($to)) {
+					$res = $mail->sendfile();
+				}
 			}
 
 		} else {
@@ -2097,11 +2101,11 @@ if (empty($reshook)) {
 					$action = '';
 				}
 
-				if(!$error && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $conf->feuilledetemps->enabled && $verif && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
-					$to = 'pointage@optim-industries.fr';
+					$to = $conf->global->HOLIDAY_MAIL_TO;
 
 					$user_static = new User($db);
 					$user_static->fetch($object->fk_user);
@@ -2111,7 +2115,9 @@ if (empty($reshook)) {
 					$link = '<a href="'.$urlwithroot.'/custom/holidaycustom/card.php?id='.$object->id.'">'.$object->ref.'</a>';
 					$msg = $langs->transnoentitiesnoconv(($options_statutfdt == 2 ? "EMailTextCongesRegulerRefuse2" : "EMailTextCongesRegulerRefuse3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_fin, '%d/%m/%Y'), $link);
 					$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
-					$res = $mail->sendfile();
+					if(!empty($to)) {
+						$res = $mail->sendfile();
+					}
 				}
 
 				if (!$error) {
@@ -2402,11 +2408,11 @@ if (empty($reshook)) {
 					}*/
 				}
 
-				if(!$error && $result && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $object->array_options['options_statutfdt'] == 3)) {
+				if(!$error && $conf->feuilledetemps->enabled && $result && $conf->global->FDT_STATUT_HOLIDAY && ($options_statutfdt == 2 || $object->array_options['options_statutfdt'] == 3)) {
 					global $dolibarr_main_url_root;
 					$subject = '[OPTIM Industries] Notification automatique Congés à réguler';
 					$from = 'erp@optim-industries.fr';
-					$to = 'pointage@optim-industries.fr'; 
+					$to = $conf->global->HOLIDAY_MAIL_TO;
 
 					$user_static = new User($db);
 					$user_static->fetch($object->fk_user);
@@ -2416,7 +2422,9 @@ if (empty($reshook)) {
 					$link = '<a href="'.$urlwithroot.'/custom/holidaycustom/card.php?id='.$object->id.'">'.$object->ref.'</a>';
 					$msg = $langs->transnoentitiesnoconv(($options_statutfdt == 2 ? "EMailTextCongesRegulerCancel2" : "EMailTextCongesRegulerCancel3"), $user_static->firstname.' '.$user_static->lastname, dol_print_date($object->date_debut, '%d/%m/%Y'), dol_print_date($object->date_debut, '%d/%m/%Y'), $link);
 					$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
-					$res = $mail->sendfile();
+					if(!empty($to)) {
+						$res = $mail->sendfile();
+					}
 				}
 
 				if (!$error) {
@@ -2899,8 +2907,8 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 			if ($canread) {
 				$head = holiday_prepare_head($object);
 
-				if (($action == 'edit' && $object->statut == Holiday::STATUS_DRAFT) || ($action == 'editvalidator1') || ($action == 'editvalidator2')) {
-					if ($action == 'edit' && $object->statut == Holiday::STATUS_DRAFT) {
+				if (($action == 'edit' && ($object->statut == Holiday::STATUS_DRAFT || ($object->array_options['options_statutfdt'] == 1 && $object->statut == Holiday::STATUS_APPROVED2 && !in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) && !in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE))))) || ($action == 'editvalidator1') || ($action == 'editvalidator2')) {
+					if ($action == 'edit' && ($object->statut == Holiday::STATUS_DRAFT || ($object->array_options['options_statutfdt'] == 1 && $object->statut == Holiday::STATUS_APPROVED2 && !in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) && !in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE))))) {
 						$edit = true;
 					}
 
@@ -3288,11 +3296,9 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 				// 	print $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id, $langs->trans("TitleSetToDraft"), $langs->trans("ConfirmSetToDraft"), "confirm_draft", '', 1, 1);
 				// }
 
-				if (($action == 'edit' && $object->statut == Holiday::STATUS_DRAFT) || ($action == 'editvalidator1') || ($action == 'editvalidator2')) {
-					if ($action == 'edit' && $object->statut == Holiday::STATUS_DRAFT) {
-						if ($cancreate && $object->statut == Holiday::STATUS_DRAFT) {
-							print $form->buttonsSaveCancel();
-						}
+				if (($action == 'edit' && ($object->statut == Holiday::STATUS_DRAFT || ($object->array_options['options_statutfdt'] == 1 && $object->statut == Holiday::STATUS_APPROVED2 && !in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) && !in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE))))) || ($action == 'editvalidator1') || ($action == 'editvalidator2')) {
+					if ($action == 'edit' && $cancreate && ($object->statut == Holiday::STATUS_DRAFT || ($object->array_options['options_statutfdt'] == 1 && $object->statut == Holiday::STATUS_APPROVED2 && !in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) && !in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE))))) {
+						print $form->buttonsSaveCancel();
 					}
 
 					print '</form>';
@@ -3303,7 +3309,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 
 					print '<div class="tabsAction">';
 
-					if ($cancreate && $object->statut == Holiday::STATUS_DRAFT) {
+					if ($cancreate && ($object->statut == Holiday::STATUS_DRAFT || ($object->array_options['options_statutfdt'] == 1 && $object->statut == Holiday::STATUS_APPROVED2 && !in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) && !in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE))))) {
 						print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken().'" class="butAction">'.$langs->trans("EditCP").'</a>';
 					}
 
