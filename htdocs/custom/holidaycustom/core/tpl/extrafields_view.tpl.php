@@ -283,8 +283,13 @@ if (empty($reshook) && isset($extrafields->attributes[$object->table_element]['l
 					print 'X';
 				}
 				elseif($tmpkeyextra == 'hour' ) {
-					if(!empty($value)) {
-						print convertSecondToTime($value,'allhourmin');
+					if($value) {
+						if($conf->global->HOIDAY_DECIMAL_HOUR_FORMAT) {
+							print number_format($value / 3600, 2, '.', '');
+						}
+						else {
+							print convertSecondToTime($value,'allhourmin');
+						}
 					}
 				}
 				else {
