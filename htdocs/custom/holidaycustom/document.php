@@ -143,7 +143,7 @@ if ($object->id) {
 
 	$head = holiday_prepare_head($object);
 
-	print dol_get_fiche_head($head, 'documents', $langs->trans("CPTitreMenu"), -1, 'holiday');
+	print dol_get_fiche_head($head, 'documents', $langs->trans("CPTitreMenu"), -1, $object->picto);
 
 
 	// Build file list

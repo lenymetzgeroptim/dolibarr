@@ -56,6 +56,7 @@ global $langs, $user;
 // Libraries
 require_once DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php";
 require_once '../lib/holiday.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/holidaycustom/class/holiday.class.php';
 
 // Translations
 $langs->loadLangs(array("admin", "holidaycustom@holidaycustom"));
@@ -89,7 +90,7 @@ if (!class_exists('FormSetup')) {
 	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formsetup.class.php';
 }
 $formSetup = new FormSetup($db);
-
+$holiday = new Holiday($db);
 
 // Enter here all parameters in your setup page
 
@@ -130,6 +131,11 @@ $formSetup->newItem('HOLIDAY_MAIL_TO')->setAsString();
 
 // HOIDAY_DECIMAL_HOUR_FORMAT
 $formSetup->newItem('HOIDAY_DECIMAL_HOUR_FORMAT')->setAsYesNo();
+
+// HOLIDAY_PICTO
+$item = $formSetup->newItem('HOLIDAY_PICTO');
+$item->defaultFieldValue = 'holiday';
+$item->setAsString();
 
 // // Setup conf for selection of an URL
 // $item = $formSetup->newItem('FORMTIONHABILITATION_MYPARAM1');
@@ -351,7 +357,7 @@ print load_fiche_titre($langs->trans($page_name), $linkback, 'title_setup');
 
 // Configuration header
 $head = holiday_admin_prepare_head();
-print dol_get_fiche_head($head, 'holidaycustom', $langs->trans($page_name), -1, "holiday");
+print dol_get_fiche_head($head, 'holidaycustom', $langs->trans($page_name), -1, $holiday->picto);
 
 // Setup page goes here
 echo '<span class="opacitymedium">'.$langs->trans("HolidaySetupPage").'</span><br><br>';

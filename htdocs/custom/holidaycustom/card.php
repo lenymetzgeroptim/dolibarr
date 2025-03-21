@@ -2563,7 +2563,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 		$errors[] = $langs->trans('CantCreateCP');
 	} else {
 		// Form to add a leave request
-		print load_fiche_titre($langs->trans('MenuAddCP'), '', 'title_hrm.png');
+		print load_fiche_titre($langs->trans('MenuAddCP'), '', $object->picto);
 
 		// Error management
 		if (GETPOST('error')) {
@@ -2919,7 +2919,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 					print '<input type="hidden" name="fuserid" value="'.$object->fk_user.'" />'."\n";
 				}
 
-				print dol_get_fiche_head($head, 'card', $langs->trans("CPTitreMenu"), -1, 'holiday');
+				print dol_get_fiche_head($head, 'card', $langs->trans("CPTitreMenu"), -1, $object->picto);
 
 				$linkback = '<a href="'.DOL_URL_ROOT.'/custom/holidaycustom/list.php?restore_lastsearch_values=1">'.$langs->trans("BackToList").'</a>';
 

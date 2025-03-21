@@ -27,7 +27,7 @@
 require '../../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/holiday/class/holiday.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/holidaycustom/class/holiday.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/holidaycustom/lib/holiday.lib.php';
 
 // Load translation files required by the page
@@ -36,6 +36,8 @@ $langs->loadLangs(array("admin", "errors", "holiday", "holidaycustom@holidaycust
 if (!$user->admin) {
 	accessforbidden();
 }
+
+$holiday = new Holiday($db);
 
 $action = GETPOST('action', 'aZ09');
 $value = GETPOST('value', 'alpha');
@@ -72,7 +74,6 @@ if ($action == 'updateMask') {
 } elseif ($action == 'specimen') { // For contract
 	$modele = GETPOST('module', 'alpha');
 
-	$holiday = new Holiday($db);
 	$holiday->initAsSpecimen();
 
 	// Search template files
@@ -165,7 +166,7 @@ print load_fiche_titre($langs->trans("HolidaySetup"), $linkback, 'title_setup');
 
 $head = holiday_admin_prepare_head();
 
-print dol_get_fiche_head($head, 'holiday', $langs->trans("Holidays"), -1, 'holiday');
+print dol_get_fiche_head($head, 'holiday', $langs->trans("Holidays"), -1, $holiday->picto);
 
 /*
  * Holiday Numbering model

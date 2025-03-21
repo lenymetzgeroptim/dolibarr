@@ -83,7 +83,7 @@ class modHolidaycustom extends DolibarrModules
 		// If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
 		// If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
 		// To use a supported fa-xxx css style of font awesome, use this->picto='xxx'
-		$this->picto = 'holiday';
+		$this->picto = $conf->global->HOLIDAY_PICTO;
 
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = array(
@@ -417,7 +417,7 @@ class modHolidaycustom extends DolibarrModules
 				'fk_menu'=>'fk_mainmenu=hrm',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 				'type'=>'left',                          // This is a Top menu entry
 				'titre'=>$langs->trans("CPTitreMenu"),
-				'prefix' => img_picto('', 'holiday', 'class="pictofixedwidth"'),
+				'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth"'),
 				'mainmenu'=>'hrm',
 				'leftmenu'=>'holiday',
 				'url'=>'/holidaycustom/list.php',
@@ -524,7 +524,7 @@ class modHolidaycustom extends DolibarrModules
 				'fk_menu'=>'fk_mainmenu=feuilledetemps',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 				'type'=>'left',                          // This is a Top menu entry
 				'titre'=>$langs->trans("CPTitreMenu"),
-				'prefix' => img_picto('', 'holiday', 'class="pictofixedwidth"'),
+				'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth"'),
 				'mainmenu'=>'feuilledetemps',
 				'leftmenu'=>'holiday',
 				'url'=>'/holidaycustom/list.php',

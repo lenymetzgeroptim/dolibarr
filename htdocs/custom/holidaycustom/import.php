@@ -81,7 +81,7 @@ $formfile = new FormFile($db);
 $title = $langs->trans('CPImport');
 
 llxHeader('', $title);
-print load_fiche_titre($title, '', 'title_hrm.png');
+print load_fiche_titre($title, '', $holiday->picto);
 
 $langs_tmp = $langs;
 $langs->tab_translate['Upload'] = 'Importer';

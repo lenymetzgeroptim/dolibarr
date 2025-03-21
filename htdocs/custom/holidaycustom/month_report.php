@@ -211,7 +211,7 @@ print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 print '<input type="hidden" name="page" value="'.$page.'">';
 print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
 
-print load_fiche_titre($langs->trans('MenuReportMonth'), '', 'title_hrm');
+print load_fiche_titre($langs->trans('MenuReportMonth'), '', $holidaystatic->picto);
 
 // Selection filter
 print '<div class="tabBar">';

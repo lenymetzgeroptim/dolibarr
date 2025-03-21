@@ -37,7 +37,7 @@ require_once DOL_DOCUMENT_ROOT.'/includes/Psr/autoloader.php';
  *	Class of the module paid holiday. Developed by Teclib ( http://www.teclib.com/ )
  */
 class Holiday extends CommonObject
-{
+{	
 	/**
 	 * @var string ID to identify managed object
 	 */
@@ -70,7 +70,7 @@ class Holiday extends CommonObject
 	 * @var string String with name of icon for myobject. Must be the part after the 'object_' into object_myobject.png
 	 */
 	public $picto = 'holiday';
-
+	
 	/**
 	 * @deprecated
 	 * @see $id
@@ -186,7 +186,14 @@ class Holiday extends CommonObject
 	 */
 	public function __construct($db)
 	{
+		global $conf; 
+
 		$this->db = $db;
+
+		/**
+		 * @var string String with name of icon for myobject. Must be the part after the 'object_' into object_myobject.png
+		 */
+		$this->picto = $conf->global->HOLIDAY_PICTO;
 	}
 
 
@@ -4391,7 +4398,7 @@ class Holiday extends CommonObject
 		}
 
 		if(!$only_solde) {
-			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', 'holiday', 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP_SOLDE > 0 ? ' amountpaymentcomplete' : ($nb_ACP_SOLDE < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP_SOLDE, 5).'</span>', $balancetoshow).'</div>';
+			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', $this->picto, 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP_SOLDE > 0 ? ' amountpaymentcomplete' : ($nb_ACP_SOLDE < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP_SOLDE, 5).'</span>', $balancetoshow).'</div>';
 			if($detail) {
 				$ret .= '<div class="valignmiddle div-balanceofleave center">';
 				$ret .= 'Dont <span class="balanceofleave valignmiddle amountpaymentcomplete">'.$nb_conges_brouillon.'</span> en brouillon, ';
@@ -4438,7 +4445,7 @@ class Holiday extends CommonObject
 			$ret .= '</table><br>';
 		}
 		else {
-			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', 'holiday', 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP > 0 ? ' amountpaymentcomplete' : ($nb_ACP < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP, 5).'</span>', $balancetoshow).'</div>';
+			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', $this->picto, 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP > 0 ? ' amountpaymentcomplete' : ($nb_ACP < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP, 5).'</span>', $balancetoshow).'</div>';
 			$ret .= '<div class="valignmiddle div-balanceofleave center">';
 			$ret .= 'Dont <span class="balanceofleave valignmiddle amountpaymentcomplete">'.$nb_conges_brouillon.'</span> en brouillon, ';
 			$ret .= '<span class="balanceofleave valignmiddle amountpaymentcomplete">'.$nb_conges_attente_approbation.'</span> en attente d\'approbation, ';

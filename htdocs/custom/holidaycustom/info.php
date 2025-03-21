@@ -98,7 +98,7 @@ if ($id > 0 || !empty($ref)) {
 
 	$head = holiday_prepare_head($object);
 
-	print dol_get_fiche_head($head, 'info', $langs->trans("Holiday"), -1, 'holiday');
+	print dol_get_fiche_head($head, 'info', $langs->trans("Holiday"), -1, $object->picto);
 
 	$linkback = '<a href="'.DOL_URL_ROOT.'/custom/holidaycustom/list.php?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
