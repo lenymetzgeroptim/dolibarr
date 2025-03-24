@@ -178,7 +178,7 @@ if (!$permissiontoread) {
 
 
 
-$data = json_decode(file_get_contents('php://input'), true); 
+$data = json_decode(file_get_contents('php://input'), true);
 
 // Commencer une transaction
 $db->begin();
@@ -186,6 +186,8 @@ $db->begin();
 try {
     $insertedCellIds = [];
     $receivedCellIds = [];
+    $receivedSubcontractors = []; // Stocker les sous-traitants reçus
+
     $otId = isset($data['otid']) ? intval($data['otid']) : 0;
 
     // Traiter chaque élément de `cardsData`
@@ -197,8 +199,7 @@ try {
             $y = isset($item['y']) ? intval($item['y']) : 0;
             $cellId = isset($item['id']) ? $db->escape($item['id']) : '';
 
-            // Ajouter l'ID reçu au tableau
-            $receivedCellIds[] = $cellId;
+            $receivedCellIds[] = $cellId; // Stocker les ID reçus
 
             // Vérifier si la cellule existe déjà
             $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND id_cellule = '$cellId'";
@@ -222,100 +223,66 @@ try {
                     throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule : " . $db->lasterror());
                 }
 
-                // Récupérer l'ID de la cellule insérée
                 $rowid = $db->last_insert_id(MAIN_DB_PREFIX . 'ot_ot_cellule');
                 $insertedCellIds[] = $rowid;
             }
 
-            // Gestion des utilisateurs liés pour les cartes de type 'card'
-            if ($type === 'card' && isset($item['userId']) && $item['userId'] > 0 && !empty($item['userId'])) {
-                $userId = intval($item['userId']);
-               
-                // Supprimer l'ancien utilisateur lié à cette carte (si existant)
-                $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne WHERE ot_cellule_id = $rowid";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de la suppression de l'utilisateur existant pour la carte : " . $db->lasterror());
-                }
+            // Gestion des sous-traitants pour les listes de type 'listesoustraitant'
+            if ($type === 'listesoustraitant' && isset($item['soustraitants']) && is_array($item['soustraitants'])) {
+                foreach ($item['soustraitants'] as $soustraitant) {
+                    $fk_socpeople = intval($soustraitant['soc_people']); // Récupérer l'ID du sous-traitant
+                    $fonction = $db->escape($soustraitant['fonction']);
+                    $contrat = $db->escape($soustraitant['contrat']);
+                    $habilitation = $db->escape($soustraitant['habilitation']);
 
-                // Ajouter le nouvel utilisateur
-                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user)
-                        VALUES ($rowid, $userId)";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de l'insertion de l'utilisateur lié à la carte : " . $db->lasterror());
-                }
-            }
+                    $receivedSubcontractors[] = $fk_socpeople; // Stocker les IDs reçus
 
-            // Gestion des listes et des utilisateurs associés pour les cartes de type 'list'
-            if ($type === 'list' && isset($item['userIds']) && is_array($item['userIds'])) {
-                // Supprimer les anciennes entrées
-                $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne WHERE ot_cellule_id = $rowid";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de la suppression des utilisateurs associés à la liste : " . $db->lasterror());
-                }
+                    // Vérifier si le sous-traitant est déjà enregistré
+                    $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
+                            WHERE ot_id = $otId AND fk_socpeople = $fk_socpeople";
+                    $resql = $db->query($sql);
 
-                // Ajouter les nouvelles entrées
-                foreach ($item['userIds'] as $userId) {
-                    $userId = intval($userId);
-                    $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user)
-                            VALUES ($rowid, $userId)";
-                    if (!$db->query($sql)) {
-                        throw new Exception("Erreur lors de l'insertion de l'utilisateur lié à la liste : " . $db->lasterror());
-                    }
-                }
-            }
+                    if ($resql && $db->num_rows($resql) > 0) {
+                        $row = $db->fetch_object($resql);
+                        $rowid = $row->rowid;
 
-            // Gestion des listes uniques et des utilisateurs associés pour 'listeunique'
-            if ($type === 'listeunique' && isset($item['userIds']) && is_array($item['userIds'])) {
-                // Supprimer les anciennes entrées
-                $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne WHERE ot_cellule_id = $rowid";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de la suppression des utilisateurs associés à la liste unique : " . $db->lasterror());
-                }
-
-                // Ajouter les nouvelles entrées
-                foreach ($item['userIds'] as $userId) {
-                    $userId = intval($userId);
-                    $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user)
-                            VALUES ($rowid, $userId)";
-                    if (!$db->query($sql)) {
-                        throw new Exception("Erreur lors de l'insertion de l'utilisateur lié à la liste unique : " . $db->lasterror());
+                        // Mise à jour des informations du sous-traitant
+                        $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
+                                SET fonction = '$fonction', contrat = '$contrat', habilitation = '$habilitation'
+                                WHERE rowid = $rowid AND ot_id = $otId";
+                        if (!$db->query($sql)) {
+                            throw new Exception("Erreur lors de la mise à jour du sous-traitant : " . $db->lasterror());
+                        }
+                    } else {
+                        // Insérer un nouveau sous-traitant
+                        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_sous_traitants (ot_id, fk_socpeople, fonction, contrat, habilitation) 
+                                VALUES ($otId, $fk_socpeople, '$fonction', '$contrat', '$habilitation')";
+                        if (!$db->query($sql)) {
+                            throw new Exception("Erreur lors de l'insertion du sous-traitant : " . $db->lasterror());
+                        }
                     }
                 }
             }
         }
     }
 
-    // Vérifier les cartes restantes dans la base de données
-    $existingCellIds = [];
-    $sql = "SELECT id_cellule FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId";
+    // Vérifier les sous-traitants existants dans la base de données
+    $existingSubcontractors = [];
+    $sql = "SELECT fk_socpeople FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants WHERE ot_id = $otId";
     $resql = $db->query($sql);
     if ($resql) {
         while ($row = $db->fetch_object($resql)) {
-            $existingCellIds[] = $row->id_cellule;
+            $existingSubcontractors[] = $row->fk_socpeople;
         }
     }
 
-    // Supprimer les cellules qui ne sont plus dans les données reçues
-    $cellIdsToDelete = array_diff($existingCellIds, $receivedCellIds);
-    foreach ($cellIdsToDelete as $cellIdToDelete) {
-        // Récupérer le rowid de la cellule à supprimer
-        $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE id_cellule = '$cellIdToDelete' AND ot_id = $otId";
-        $resql = $db->query($sql);
-        if ($resql && $db->num_rows($resql) > 0) {
-            $row = $db->fetch_object($resql);
-            $rowidToDelete = $row->rowid;
-
-            // Supprimer les utilisateurs associés
-            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne WHERE ot_cellule_id = $rowidToDelete";
-            if (!$db->query($sql)) {
-                throw new Exception("Erreur lors de la suppression des utilisateurs associés à la cellule id_cellule $cellIdToDelete : " . $db->lasterror());
-            }
-
-            // Supprimer la cellule
-            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE id_cellule = '$cellIdToDelete' AND ot_id = $otId";
-            if (!$db->query($sql)) {
-                throw new Exception("Erreur lors de la suppression de la cellule id_cellule $cellIdToDelete : " . $db->lasterror());
-            }
+    // Supprimer les sous-traitants qui ne sont plus dans les données reçues
+    $subcontractorsToDelete = array_diff($existingSubcontractors, $receivedSubcontractors);
+    foreach ($subcontractorsToDelete as $fk_socpeopleToDelete) {
+        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
+                WHERE ot_id = $otId AND fk_socpeople = $fk_socpeopleToDelete";
+        if (!$db->query($sql)) {
+            throw new Exception("Erreur lors de la suppression du sous-traitant fk_socpeople $fk_socpeopleToDelete : " . $db->lasterror());
         }
     }
 
@@ -325,14 +292,9 @@ try {
 } catch (Exception $e) {
     // En cas d'erreur, annuler la transaction
     $db->rollback();
-    // Loguer ou retourner l'erreur
     error_log($e->getMessage());
-    // Optionnel : retourner un message d'erreur à l'utilisateur
     echo json_encode(['error' => $e->getMessage()]);
 }
-
-
-
 
 
 
@@ -935,7 +897,10 @@ $sql = "
         ctc.libelle, 
         sp.fk_c_type_contact, 
         sp.fk_socpeople,
-        cct.type AS contrat
+        cct.type AS contrat,
+        ctc.source AS source,
+        NULL AS fonction,      -- Ajout pour aligner le nombre de colonnes
+        NULL AS habilitation   -- Ajout pour aligner le nombre de colonnes
     FROM ".MAIN_DB_PREFIX."element_contact AS sp 
     JOIN ".MAIN_DB_PREFIX."user AS u 
         ON sp.fk_socpeople = u.rowid 
@@ -947,7 +912,8 @@ $sql = "
         ON drh.contratdetravail = cct.rowid  
     WHERE sp.element_id = $object->fk_project
     AND sp.statut = 4
-    AND ctc.element = 'project')
+    AND ctc.element = 'project'
+    AND ctc.source = 'internal')
 
     UNION
 
@@ -958,30 +924,37 @@ $sql = "
         ctc.libelle, 
         sp.fk_c_type_contact, 
         sp.fk_socpeople,
-        NULL AS contrat
+        ots.contrat AS contrat,
+        ctc.source AS source,
+        ots.fonction,  
+        ots.habilitation  
     FROM ".MAIN_DB_PREFIX."element_contact AS sp 
     JOIN ".MAIN_DB_PREFIX."socpeople AS spc 
         ON sp.fk_socpeople = spc.rowid 
     JOIN ".MAIN_DB_PREFIX."c_type_contact AS ctc 
         ON sp.fk_c_type_contact = ctc.rowid 
+    LEFT JOIN ".MAIN_DB_PREFIX."ot_ot_sous_traitants AS ots 
+        ON sp.fk_socpeople = ots.fk_socpeople 
+        AND ots.ot_id = $object->id
     WHERE sp.element_id = $object->fk_project
     AND sp.statut = 4
-    AND ctc.element = 'project')";
-
-
+    AND ctc.element = 'project'
+    AND ctc.source = 'external')";
 
 $resql = $db->query($sql);
-
 
 if ($resql) {
     $arrayresult = [];
 
     while ($obj = $db->fetch_object($resql)) {
-        // Récupérer les fonctions sous forme de chaîne (ex: "RA-CT")
-        $obj->fonction = getFonctions($obj->fk_socpeople, $object->fk_project, $db);
-        
-        // Récupérer les habilitations sous forme de chaîne (ex: "B0-HN1-HN2")
-        $obj->habilitation = getHabilitations($obj->fk_socpeople, $db);
+        // Pour les utilisateurs internes, on récupère les fonctions et habilitations avec les fonctions externes
+        if ($obj->source == 'internal') {
+            // Récupérer les fonctions sous forme de chaîne (ex: "RA-CT")
+            $obj->fonction = getFonctions($obj->fk_socpeople, $object->fk_project, $db);
+            
+            // Récupérer les habilitations sous forme de chaîne (ex: "B0-HN1-HN2")
+            $obj->habilitation = getHabilitations($obj->fk_socpeople, $db);
+        }
 
         // Ajouter l'utilisateur au résultat final
         $arrayresult[] = $obj; 
@@ -990,11 +963,10 @@ if ($resql) {
     $arrayresult = array('error' => 'SQL query error: '.$db->lasterror());
 }
 
-
-
 // Convertir les résultats en JSON
 $data = json_encode($arrayresult);
-var_dump($arrayresult);
+
+
 
 $otId = $object->id;
 
@@ -1353,11 +1325,22 @@ print '<script>
 document.addEventListener("DOMContentLoaded", function() {
     let cellData = ' . $cellDataJson . ';
     let otId = ' . json_encode($otId) . ';
-    let jsdata = '.$data.';
     let userdata = ' . json_encode($userdata) . ';
     let userjson = ' . $userjson . ';
     let isDataSaved = false;
     let isUniqueListCreated = false;
+
+    let jsdata = '.$data.'; 
+    let users = typeof jsdata === "string" ? JSON.parse(jsdata) : jsdata;
+
+    let jsdatasoustraitants = users.filter(user => user.source === "external");
+    let jsdataFiltered = users.filter(user => user.source !== "external"); 
+
+    jsdata = jsdataFiltered;
+
+
+
+
 
 
 let columnsContainer = document.querySelector(".card-columns") ||
@@ -1420,7 +1403,7 @@ function displayUserList() {
                                 <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
                                 <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
                                 <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-                                <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
+                                <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
                                 <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
                             `;
                             ulElement.appendChild(li);
@@ -1430,6 +1413,10 @@ function displayUserList() {
                     });
 
                     attachUserRemoveListeners(list);
+
+  
+                    list.style.marginTop = "20px"; // Ajouter un espace de 20px en haut
+
                     columnsContainer.appendChild(list);
                 }
             });
@@ -1440,11 +1427,14 @@ function displayUserList() {
         // Si aucune liste BDD, créez une liste par défaut
         console.log("Aucune liste unique trouvée, création une nouvelle liste par défaut.");
         const uniqueList = createUniqueUserList();
+
+        // Ajouter un espace en haut de la liste par défaut
+        uniqueList.style.marginTop = "20px"; // Ajouter un espace de 20px en haut
+
         columnsContainer.appendChild(uniqueList);
     }
-
-  
 }
+
 
 
 
@@ -1564,7 +1554,7 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
                     <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
                     <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
                     <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-                    <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
+                    <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
                      <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>`;
                 ulElement.appendChild(li);
             } else {
@@ -1634,7 +1624,7 @@ function createUniqueUserList() {
             <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
             <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
             <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-            <div style="flex: 1; text-align: center;">${user.office_phone || "Non défini"}</div>
+            <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
         `;
 
         // Ajouter le bouton de suppression
@@ -1672,8 +1662,6 @@ function createUniqueUserList() {
 
     return list;
 }
-
-
 
 
 function deleteUniqueList(uniqueListId, list) {
@@ -1715,7 +1703,7 @@ function deleteUniqueList(uniqueListId, list) {
                             cardBody.innerHTML = `
                                 <p><strong>${role}</strong></p>
                                 <p>${contact.firstname} ${contact.lastname}</p>
-                                <p class="phone">Téléphone : ${contact.office_phone || "N/A"}</p>
+                                <p class="phone">Téléphone : ${contact.phone || "N/A"}</p>
                             `;
                         }
                     }
@@ -1733,6 +1721,107 @@ function deleteUniqueList(uniqueListId, list) {
         });
     }
 }
+
+
+function displaySoustraitantList(Soustraitants) {
+    // Vérifier si le tableau des sous-traitants est vide
+    if (Soustraitants.length === 0) {
+        return; // Ne rien faire si aucune donnée
+    }
+
+    // Créer la carte pour les sous-traitants (comme celle des utilisateurs uniques)
+    const list = document.createElement("div");
+    list.className = "user-list card soustraitant-list"; 
+
+    // Créer un conteneur pour le titre de la liste
+    const titleContainer = document.createElement("div");
+    titleContainer.style = "text-align: center; padding-bottom: 10px; margin-bottom: 10px; color: #333; font-weight: bold;";
+    const soustraitantTitle = document.createElement("h3");
+    soustraitantTitle.textContent = "Sous-traitants";
+    soustraitantTitle.style = "margin-top: 20px;";
+    titleContainer.appendChild(soustraitantTitle);
+
+    // Créer une légende pour la liste des sous-traitants
+    const legend = document.createElement("div");
+    legend.className = "list-legend";
+    legend.style = "display: flex; justify-content: space-between; padding: 10px; font-weight: bold; color: #333; margin-bottom: 10px; text-align: center;";
+    legend.innerHTML = ` 
+        <div style="flex: 1; text-align: center;">Nom Prénom</div>
+        <div style="flex: 1; text-align: center;">Fonction</div>
+        <div style="flex: 1; text-align: center;">Contrat</div>
+        <div style="flex: 1; text-align: center;">Habilitations</div>
+        <div style="flex: 1; text-align: center;">Téléphone</div>
+    `;
+
+    // Créer la liste non ordonnée des sous-traitants
+    const soustraitantList = document.createElement("ul");
+    soustraitantList.style = "list-style: none; padding: 0; margin: 0;";
+
+    // Ajouter les sous-traitants à la liste
+    Soustraitants.forEach(user => {
+        const li = document.createElement("li");
+        li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
+
+      
+        li.setAttribute("data-user-id", user.fk_socpeople);
+
+        // Remplacer les champs par des inputs pour pouvoir éditer les données
+        li.innerHTML = ` 
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">
+                <input type="text" class="fonction-input" placeholder="Fonction" value="${user.fonction || ""}" style="width: 90%; padding: 5px; border: none; border-bottom: 1px solid #333; text-align: center; background-color: transparent;">
+            </div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">
+                <input type="text" class="contrat-input" placeholder="Type de contrat" value="${user.contrat || ""}" style="width: 90%; padding: 5px; border: none; border-bottom: 1px solid #333; text-align: center; background-color: transparent;">
+            </div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">
+                <input type="text" class="habilitation-input" placeholder="Habilitation" value="${user.habilitation || ""}" style="width: 90%; padding: 5px; border: none; border-bottom: 1px solid #333; text-align: center; background-color: transparent;">
+            </div>
+            <div style="flex: 1; text-align: center;">
+                ${user.phone || "Non défini"}
+            </div>
+        `;
+        
+        soustraitantList.appendChild(li);
+        
+    });
+
+    // Ajouter le titre et la liste au conteneur
+    const listBody = document.createElement("div");
+    listBody.className = "list-body";
+    listBody.style = "padding: 15px;";
+    listBody.appendChild(titleContainer);  // Ajouter le titre
+    listBody.appendChild(legend);          // Ajouter la légende
+    listBody.appendChild(soustraitantList); // Ajouter la liste des sous-traitants
+
+    list.appendChild(listBody);
+
+    // Vérifier si la liste unique existe et ajouter les sous-traitants juste après
+    const uniqueListContainer = document.querySelector(".user-list.unique-list");
+    if (uniqueListContainer) {
+        uniqueListContainer.insertAdjacentElement("afterend", list);
+    } else {
+        document.body.appendChild(list);
+    }
+
+    // Attacher les écouteurs pour les champs de saisie
+    document.querySelectorAll(".fonction-input, .contrat-input, .habilitation-input").forEach(input => {
+        if (!input.dataset.listenerAttached) {
+            input.addEventListener("blur", saveData); // Appeler la fonction saveData lorsque utilisateur quitte un champ
+            input.dataset.listenerAttached = true;  // Empêcher de réattacher plusieurs fois le même écouteur
+        }
+    });
+}
+
+
+// Vérifier si `jsdatasoustraitants` contient des éléments et afficher la liste
+if (jsdatasoustraitants.length > 0) {
+    displaySoustraitantList(jsdatasoustraitants); // Appeler la fonction pour afficher la liste
+}
+console.log(jsdatasoustraitants);
+
+
+
 
 function deleteCard(card) {
     card.remove(); // Supprime la carte du DOM
@@ -1894,7 +1983,7 @@ function addItemToColumn(column, type) {
 
     document.querySelectorAll(".unique-list .list-title-input").forEach(input => {
         if (!input.dataset.listenerAttached) {
-            input.addEventListener("input", saveData);
+            input.addEventListener("blur", saveData);
             input.dataset.listenerAttached = true;
         }
     });
@@ -1902,7 +1991,7 @@ function addItemToColumn(column, type) {
     document.querySelectorAll(".unique-list .list-title-input").forEach(input => {
         if (!input.dataset.listenerAttached) {
             input.addEventListener("blur", function () {
-                saveData(); // Sauvegarder les données après modification
+                saveData(); 
             });
             input.dataset.listenerAttached = true;
         }
@@ -1932,10 +2021,12 @@ function attachEventListeners() {
     // Attacher des écouteurs sur les changements des champs de titre
     document.querySelectorAll(".title-input, .list-title-input").forEach(input => {
         if (!input.dataset.listenerAttached) {
-            input.addEventListener("input", saveData);
+            input.addEventListener("blur", saveData);
             input.dataset.listenerAttached = true;
         }
     });
+
+    
 
     // Attacher des écouteurs sur la suppression des cartes
     document.querySelectorAll(".card .delete-button").forEach(button => {
@@ -2072,27 +2163,66 @@ function saveData() {
     });
 
     document.querySelectorAll(".user-list.unique-list").forEach(function (uniqueList) {
-    let titleInput = uniqueList.querySelector(".list-title-input");
-    let uniqueListId = uniqueList.getAttribute("data-list-id");
+        let titleInput = uniqueList.querySelector(".list-title-input");
+        let uniqueListId = uniqueList.getAttribute("data-list-id");
 
-    if (titleInput) {
-        let title = titleInput.value;
-        let userIds = Array.from(uniqueList.querySelectorAll("li[data-user-id]")).map(function (li) {
-            return li.getAttribute("data-user-id");
-        }).filter((id, index, self) => self.indexOf(id) === index); // Supprimer les doublons si nécessaire
+        if (titleInput) {
+            let title = titleInput.value;
+            let userIds = Array.from(uniqueList.querySelectorAll("li[data-user-id]")).map(function (li) {
+                return li.getAttribute("data-user-id");
+            }).filter((id, index, self) => self.indexOf(id) === index); // Supprimer les doublons si nécessaire
 
-        let uniqueListCoordinates = {
-            title: title,
-            userIds: userIds,
-            type: "listeunique",
-            otid: otId,
-            id: 1
-        };
+            let uniqueListCoordinates = {
+                title: title,
+                userIds: userIds,
+                type: "listeunique",
+                otid: otId,
+                id: 1
+            };
 
-        cardsData.push(uniqueListCoordinates); // Ajouter la liste unique à cardsData
+            cardsData.push(uniqueListCoordinates); // Ajouter la liste unique à cardsData
     }
-});
 
+        document.querySelectorAll(".soustraitant-list").forEach(function (list) {
+    
+        let listId = 12; 
+        let title = "Sous-traitants"; // Le titre de la liste
+        let type = "listesoustraitant"; // Le type de la liste
+
+        let soustraitants = [];
+        
+        list.querySelectorAll("li").forEach(function (li) {
+            let name = li.querySelector("div:nth-child(1)").textContent.trim();
+            let fonction = li.querySelector(".fonction-input").value.trim();
+            let contrat = li.querySelector(".contrat-input").value.trim();
+            let habilitation = li.querySelector(".habilitation-input").value.trim();
+            let phone = li.querySelector("div:nth-child(5)").textContent.trim();
+            
+            
+            let socPeopleId = li.getAttribute("data-user-id");
+
+            // Ajouter le soc_peopleId aux données du sous-traitant
+            soustraitants.push({
+                name: name,
+                soc_people: socPeopleId,
+                fonction: fonction,
+                contrat: contrat,
+                habilitation: habilitation,
+                phone: phone
+                
+            });
+        });
+
+        // Ajout de la liste des sous-traitants dans cardsData
+        cardsData.push({
+            title: title,
+            type: type,
+            id: listId,
+            soustraitants: soustraitants // Contient les informations sur chaque sous-traitant
+        });
+    });
+
+});
 
     let payload = {
         otid: otId,
@@ -2102,24 +2232,33 @@ function saveData() {
     console.log(cardsData);
 
     fetch("ot_card.php?action=save", {
-        method: "GET"
-    }).then(() => {
-        fetch("ot_card.php", {
+    method: "GET",
+    })
+    .then(() => {
+        return fetch("ot_card.php", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(payload), // Envoyer les données avec otid et ids inclus
-            
-        })
-        
-        .then(response => response.text()) // Assurez-vous que la réponse est en JSON
-
-        .catch((error) => {
-            console.error("Erreur de sauvegarde:", error);
+            body: JSON.stringify(payload),
         });
-    });
+    })
+    .then(response => response.text()) // Assurez-vous que la réponse est en JSON ou texte
+    .then(data => {
+        console.log("Réponse du serveur :", cardsData);
     
+        onSaveSuccess();
+    })
+    .catch(error => {
+        console.error("Erreur de sauvegarde :", error);
+    });
+
+    // Callback après succès
+    function onSaveSuccess() {
+        console.log("Sauvegarde réussie !");
+        // Par exemple : Afficher un message, masquer un loader, ou actualiser
+    }
+
 }
     updateCards(); 
 });
