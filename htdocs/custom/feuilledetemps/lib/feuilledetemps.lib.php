@@ -150,7 +150,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
 									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
-	global $conf, $db, $user, $langs;
+	global $conf, $db, $user, $langs, $action;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
 
 	$holiday = new extendedHoliday($db);
@@ -883,7 +883,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 			FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $css_holiday, $num_first_day, !$modify, $dayinloopfromfirstdaytoshow_array);
 		}
 		else {
-			FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $num_first_day, !$modify, $addcolspan, $dayinloopfromfirstdaytoshow_array);
+			FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $fuser, $css, $num_first_day, $num_last_day, !$modify, $addcolspan, $dayinloopfromfirstdaytoshow_array);
 		}
 
 		print "</table>";
@@ -982,6 +982,9 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 		$fields['date']['text'] = '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>'.$fields['date']['text'];
 	}
 
+	if($user->rights->holidaycustom->write || $user->rights->holidaycustom->writeall) {
+		$fields['absence']['text'] .= ' <a target="_blank" href="'.DOL_URL_ROOT.'/custom/holidaycustom/card.php?action=create"><span title="'.$langs->trans("NewCP").'" class="fa fa-plus-circle"></span></a>';
+	}
 	if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
 		$fields['absence']['text'] .= '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
 	}
@@ -1104,7 +1107,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 						 $holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
 						 $num_first_day, $num_last_day, $timeHoliday, &$timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
 						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, &$cptholiday, $arraytypeleaves, &$task_load, $projectsListId, $silae_array) {
-	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object, $objectoffield;
+	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object, $objectoffield, $action;
 	global $displayVerification;
 
 	$formproject = new ExtendedFormProjets($db);
@@ -2884,7 +2887,7 @@ function showrefnav_custom($object, $paramid, $morehtml = '', $shownav = 1, $fie
 	if (is_array($arrayoflangcode) && count($arrayoflangcode)) {
 		if (!is_object($extralanguages)) {
 		include_once DOL_DOCUMENT_ROOT . '/core/class/extralanguages.class.php';
-		$extralanguages = new ExtraLanguages($this->db);
+		$extralanguages = new ExtraLanguages($object->db);
 		}
 		$extralanguages->fetch_name_extralanguages('societe');
 
@@ -2902,7 +2905,7 @@ function showrefnav_custom($object, $paramid, $morehtml = '', $shownav = 1, $fie
 			}
 		}
 		$ret .= '<!-- Show translations of name -->' . "\n";
-		$ret .= $this->textwithpicto('', $htmltext, -1, 'language', 'opacitymedium paddingleft');
+		$ret .= $object->textwithpicto('', $htmltext, -1, 'language', 'opacitymedium paddingleft');
 		}
 	}
 	} elseif ($object->element == 'member') {
