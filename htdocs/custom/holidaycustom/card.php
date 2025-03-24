@@ -145,7 +145,15 @@ if (empty($conf->holidaycustom->enabled)) accessforbidden();
 //$result = restrictedArea($user, 'holidaycustom', $object->id, 'holiday', '', '', 'rowid', $object->statut);
 
 if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
-	if($conf->donneesrh->enabled) {
+	$usertoprocess = new User($db);
+	if($object->fk_user > 0) {
+		$usertoprocess->fetch($object->fk_user);
+	}
+	elseif($fuserid > 0) {
+		$usertoprocess->fetch($fuserid);
+	}
+
+ 	if($conf->donneesrh->enabled) {
 		$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
 		$userField = new UserField($db);
 		$userField->id = $usertoprocess->id;
@@ -164,7 +172,18 @@ if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDA
 
 	// Semaine type
 	$standard_week_hour = array();
-	if($heure_semaine == $conf->global->HEURE_SEMAINE_NO_RTT) {
+	if($usertoprocess->array_options['options_semaine_type_lundi'] || $usertoprocess->array_options['options_semaine_type_mardi'] || $usertoprocess->array_options['options_semaine_type_mercredi'] || 
+	$usertoprocess->array_options['options_semaine_type_jeudi'] || $usertoprocess->array_options['options_semaine_type_vendredi'] || $usertoprocess->array_options['options_semaine_type_samedi'] || 
+	$usertoprocess->array_options['options_semaine_type_dimanche']) {
+		$standard_week_hour['Lundi'] = $usertoprocess->array_options['options_semaine_type_lundi'] * 3600;
+		$standard_week_hour['Mardi'] = $usertoprocess->array_options['options_semaine_type_mardi'] * 3600;
+		$standard_week_hour['Mercredi'] = $usertoprocess->array_options['options_semaine_type_mercredi'] * 3600;
+		$standard_week_hour['Jeudi'] = $usertoprocess->array_options['options_semaine_type_jeudi'] * 3600;
+		$standard_week_hour['Vendredi'] = $usertoprocess->array_options['options_semaine_type_vendredi'] * 3600;
+		$standard_week_hour['Samedi'] = $usertoprocess->array_options['options_semaine_type_samedi'] * 3600;
+		$standard_week_hour['Dimanche'] = $usertoprocess->array_options['options_semaine_type_dimanche'] * 3600;
+	}
+	elseif($heure_semaine == $conf->global->HEURE_SEMAINE_NO_RTT) {
 		$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
 		$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_NO_RTT * 3600;
 		$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT * 3600;
