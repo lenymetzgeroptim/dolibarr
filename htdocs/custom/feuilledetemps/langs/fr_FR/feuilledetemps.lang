@@ -147,6 +147,14 @@ NoRTT = Pas droit au RTT
 FdtVariableRestreinte = Vue restreinte des variables sur sa feuille de temps
 FdtAllVariable = Vue de toutes les variables sur sa feuille de temps
 NoteDeplacement = Note déplacements
+SemaineType = Semaine type 
+SemaineTypeLundi = Lundi
+SemaineTypeMardi = Mardi
+SemaineTypeMercredi = Mercredi
+SemaineTypeJeudi = Jeudi
+SemaineTypeVendredi = Vendredi
+SemaineTypeSamedi = Samedi
+SemaineTypeDimanche = Dimanche
 
 
 #

@@ -143,7 +143,18 @@ class ExtendedExportFDT extends Export
 					
 						// Semaine type
 						$standard_week_hour = array();
-						if($heure_semaine[$id] == $conf->global->HEURE_SEMAINE_NO_RTT) {
+						if($user_obj->array_options['options_semaine_type_lundi'] || $user_obj->array_options['options_semaine_type_mardi'] || $user_obj->array_options['options_semaine_type_mercredi'] || 
+						$user_obj->array_options['options_semaine_type_jeudi'] || $user_obj->array_options['options_semaine_type_vendredi'] || $user_obj->array_options['options_semaine_type_samedi'] || 
+						$user_obj->array_options['options_semaine_type_dimanche']) {
+							$standard_week_hour['Lundi'] = $user_obj->array_options['options_semaine_type_lundi'] * 3600;
+							$standard_week_hour['Mardi'] = $user_obj->array_options['options_semaine_type_mardi'] * 3600;
+							$standard_week_hour['Mercredi'] = $user_obj->array_options['options_semaine_type_mercredi'] * 3600;
+							$standard_week_hour['Jeudi'] = $user_obj->array_options['options_semaine_type_jeudi'] * 3600;
+							$standard_week_hour['Vendredi'] = $user_obj->array_options['options_semaine_type_vendredi'] * 3600;
+							$standard_week_hour['Samedi'] = $user_obj->array_options['options_semaine_type_samedi'] * 3600;
+							$standard_week_hour['Dimanche'] = $user_obj->array_options['options_semaine_type_dimanche'] * 3600;
+						}
+						elseif($heure_semaine[$id] == $conf->global->HEURE_SEMAINE_NO_RTT) {
 							$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
 							$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_NO_RTT * 3600;
 							$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT * 3600;
@@ -558,7 +569,18 @@ class ExtendedExportFDT extends Export
 								
 									// Semaine type
 									$standard_week_hour = array();
-									if($heure_semaine[$obj->rowid] == $conf->global->HEURE_SEMAINE_NO_RTT) {
+									if($obj->options_semaine_type_lundi || $obj->options_semaine_type_mardi || $obj->options_semaine_type_mercredi || 
+									$obj->options_semaine_type_jeudi || $obj->options_semaine_type_vendredi || $obj->options_semaine_type_samedi || 
+									$obj->options_semaine_type_dimanche) {
+										$standard_week_hour['Lundi'] = $obj->options_semaine_type_lundi * 3600;
+										$standard_week_hour['Mardi'] = $obj->options_semaine_type_mardi * 3600;
+										$standard_week_hour['Mercredi'] = $obj->options_semaine_type_mercredi * 3600;
+										$standard_week_hour['Jeudi'] = $obj->options_semaine_type_jeudi * 3600;
+										$standard_week_hour['Vendredi'] = $obj->options_semaine_type_vendredi * 3600;
+										$standard_week_hour['Samedi'] = $obj->options_semaine_type_samedi * 3600;
+										$standard_week_hour['Dimanche'] = $obj->options_semaine_type_dimanche * 3600;
+									}
+									elseif($heure_semaine[$obj->rowid] == $conf->global->HEURE_SEMAINE_NO_RTT) {
 										$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
 										$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_NO_RTT * 3600;
 										$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT * 3600;
@@ -733,7 +755,7 @@ class ExtendedExportFDT extends Export
 
 		// phpcs:enable
 		// Build the sql request
-		$sql = "SELECT DISTINCT u.rowid, ";
+		$sql = "SELECT DISTINCT u.rowid, eu.semaine_type_lundi, eu.semaine_type_mardi, eu.semaine_type_mercredi, eu.semaine_type_jeudi, eu.semaine_type_vendredi, eu.semaine_type_samedi, eu.semaine_type_dimanche";
 		$i = 0;
 	
 		//print_r($array_selected);
