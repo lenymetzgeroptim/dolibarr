@@ -569,16 +569,16 @@ class ExtendedExportFDT extends Export
 								
 									// Semaine type
 									$standard_week_hour = array();
-									if($obj->options_semaine_type_lundi || $obj->options_semaine_type_mardi || $obj->options_semaine_type_mercredi || 
-									$obj->options_semaine_type_jeudi || $obj->options_semaine_type_vendredi || $obj->options_semaine_type_samedi || 
-									$obj->options_semaine_type_dimanche) {
-										$standard_week_hour['Lundi'] = $obj->options_semaine_type_lundi * 3600;
-										$standard_week_hour['Mardi'] = $obj->options_semaine_type_mardi * 3600;
-										$standard_week_hour['Mercredi'] = $obj->options_semaine_type_mercredi * 3600;
-										$standard_week_hour['Jeudi'] = $obj->options_semaine_type_jeudi * 3600;
-										$standard_week_hour['Vendredi'] = $obj->options_semaine_type_vendredi * 3600;
-										$standard_week_hour['Samedi'] = $obj->options_semaine_type_samedi * 3600;
-										$standard_week_hour['Dimanche'] = $obj->options_semaine_type_dimanche * 3600;
+									if($obj->semaine_type_lundi || $obj->semaine_type_mardi || $obj->semaine_type_mercredi || 
+									$obj->semaine_type_jeudi || $obj->semaine_type_vendredi || $obj->semaine_type_samedi || 
+									$obj->semaine_type_dimanche) {
+										$standard_week_hour['Lundi'] = $obj->semaine_type_lundi * 3600;
+										$standard_week_hour['Mardi'] = $obj->semaine_type_mardi * 3600;
+										$standard_week_hour['Mercredi'] = $obj->semaine_type_mercredi * 3600;
+										$standard_week_hour['Jeudi'] = $obj->semaine_type_jeudi * 3600;
+										$standard_week_hour['Vendredi'] = $obj->semaine_type_vendredi * 3600;
+										$standard_week_hour['Samedi'] = $obj->semaine_type_samedi * 3600;
+										$standard_week_hour['Dimanche'] = $obj->semaine_type_dimanche * 3600;
 									}
 									elseif($heure_semaine[$obj->rowid] == $conf->global->HEURE_SEMAINE_NO_RTT) {
 										$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
@@ -755,7 +755,7 @@ class ExtendedExportFDT extends Export
 
 		// phpcs:enable
 		// Build the sql request
-		$sql = "SELECT DISTINCT u.rowid, eu.semaine_type_lundi, eu.semaine_type_mardi, eu.semaine_type_mercredi, eu.semaine_type_jeudi, eu.semaine_type_vendredi, eu.semaine_type_samedi, eu.semaine_type_dimanche";
+		$sql = "SELECT DISTINCT u.rowid, eu.semaine_type_lundi, eu.semaine_type_mardi, eu.semaine_type_mercredi, eu.semaine_type_jeudi, eu.semaine_type_vendredi, eu.semaine_type_samedi, eu.semaine_type_dimanche, ";
 		$i = 0;
 	
 		//print_r($array_selected);
