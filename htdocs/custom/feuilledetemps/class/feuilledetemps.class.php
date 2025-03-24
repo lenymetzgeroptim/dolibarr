@@ -4266,6 +4266,39 @@ class FeuilleDeTemps extends CommonObject
 		return $arrayres;
 	}
 
+	public function getUserImObserver()
+  	{
+		global $user; 
+
+		$arrayres = array();
+	
+		$sql = "SELECT DISTINCT";
+		$sql .= " u.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."user as u";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue ON u.rowid = ue.fk_object";
+		$sql .= " WHERE FIND_IN_SET($user->id, ue.observateurfdt) > 0";
+
+		dol_syslog(get_class($this)."::getUserImObserver", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				$arrayres[] = $obj->rowid;
+
+				$i++;
+			}
+		
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
+			$this->error = "Error ".$this->db->lasterror();
+			return -1;
+		}
+	
+		return $arrayres;
+	}
 }
 
 

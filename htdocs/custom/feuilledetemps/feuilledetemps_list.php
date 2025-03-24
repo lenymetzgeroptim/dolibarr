@@ -376,7 +376,7 @@ if(/*!$user->admin &&*/ !$user->rights->feuilledetemps->feuilledetemps->readall 
 	$user_hierarchy = $user->getAllChildIds(1);
 	$sql .= " AND (t.fk_user IN (".implode(', ', $user_hierarchy).")";
 	if($conf->global->FDT_USER_APPROVER) {
-		$sql .= " OR FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
+		$sql .= " OR FIND_IN_SET($user->id, ue.approbateurfdt) > 0 OR FIND_IN_SET($user->id, ue.observateurfdt) > 0";
 	}
 	else {
 		$sql .= " OR tv.fk_user_validation = ".$user->id;
@@ -385,7 +385,7 @@ if(/*!$user->admin &&*/ !$user->rights->feuilledetemps->feuilledetemps->readall 
 }
 else if(/*!$user->admin && */!$user->rights->feuilledetemps->feuilledetemps->readall && !$user->rights->feuilledetemps->feuilledetemps->readHierarchy){
 	if($conf->global->FDT_USER_APPROVER) {
-		$sql .= " AND (FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
+		$sql .= " AND (FIND_IN_SET($user->id, ue.approbateurfdt) > 0 OR FIND_IN_SET($user->id, ue.observateurfdt) > 0";
 	}
 	else {
 		$sql .= " AND (tv.fk_user_validation = ".$user->id;

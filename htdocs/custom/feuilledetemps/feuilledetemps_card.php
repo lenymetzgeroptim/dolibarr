@@ -204,7 +204,7 @@ if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 }
 
 $permissionToVerification = $user->rights->feuilledetemps->feuilledetemps->modify_verification;
-$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read);
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || in_array($user->id, explode(',', $usertoprocess->array_options['options_observateurfdt'])) || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read);
 if($conf->global->FDT_USER_APPROVER) {
 	$permissiontoadd = $userIsResp || $user->admin || $permissionToVerification; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 }

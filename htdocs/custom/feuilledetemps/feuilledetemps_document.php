@@ -157,8 +157,8 @@ if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 	}
 }
 
-$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read);
-$permissiontoadd = $permissiontoread; // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read) || in_array($user->id, explode(',', $usertoprocess->array_options['options_observateurfdt'])) ;
+$permissiontoadd = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read);
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();

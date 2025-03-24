@@ -175,6 +175,10 @@ else {
 	$object->date_fin = $lastdaytoshow;
 }
 
+if($conf->global->FDT_USER_APPROVER && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) ){
+	$can_modify_fdt = 0;
+}
+
 $nb_jour = num_between_day($firstdaytoshow, $lastdaytoshow - 3600) + 1; // Nombre de jour total à affiché
 
 for ($idw = 0; $idw < $nb_jour; $idw++) {
@@ -559,6 +563,7 @@ if(!$user->rights->feuilledetemps->feuilledetemps->readall) {
 	}
 	else {
 		$includeonly = $object->getUserImApprover();
+		$includeonly = array_merge($object->getUserImObserver());
 		if (!in_array($user->id, $includeonly)) {
 			$includeonly[] = $user->id;
 		}
@@ -743,11 +748,11 @@ print '<div class="center" style="margin-top: 14px;">';
 // Affichage du bouton "ENREGISTRER"
 if($can_modify_fdt){
 	print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butAction" name="save" value="'.dol_escape_htmltag($langs->trans("Save")).'" style="margin-right: 0px;height: 40px;accent-color: ;">';
-}
 
-// Affichage du bouton "TRANSMETRE"
-if($object->id == 0 || ($object->id > 0 && $object->status == FeuilleDeTemps::STATUS_DRAFT)){
-	print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butActionDelete" name="transmettre" value="Transmettre" style="margin-right: 0px;height: 40px;accent-color: ;">';
+	// Affichage du bouton "TRANSMETRE"
+	if($object->id == 0 || ($object->id > 0 && $object->status == FeuilleDeTemps::STATUS_DRAFT)){
+		print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butActionDelete" name="transmettre" value="Transmettre" style="margin-right: 0px;height: 40px;accent-color: ;">';
+	}
 }
 
 print '</div>';
