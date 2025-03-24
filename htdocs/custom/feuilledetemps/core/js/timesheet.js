@@ -360,20 +360,20 @@ function deletePrefillingClass(objet, sitedefaut) {
             if (input.length) {
                 var placeholderValue = input.attr('placeholder'); 
                 if (placeholderValue) {
+                    input.trigger('focus');  // Simule l'événement onfocus
                     input.val(placeholderValue); 
+                    //input.trigger('blur');  // Simule l'événement onfocus
                 }
             }
 
-            var id = $(objet).attr('id');
-            var regex = /^fk_task\_(\d+)\_(\d+)$/; 
-            var match = id.match(regex);
-            console.log(match);
-            console.log($(objet).attr('id'));
-            if (match) {
-                var idw = match[1];
-                var cpt = match[2];
-                autoFillSite(sitedefaut, idw, cpt);
-            }
+            // var id = $(objet).attr('id');
+            // var regex = /^fk_task\_(\d+)\_(\d+)$/; 
+            // var match = id.match(regex);
+            // if (match) {
+            //     var idw = match[1];
+            //     var cpt = match[2];
+            //     autoFillSite(sitedefaut, idw, cpt);
+            // }
         }
     }
 }
