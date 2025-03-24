@@ -34,7 +34,8 @@ if($conf->global->FDT_USE_HS_CASE) {
     echo 'var WRN_35H_DEPASSEMENT = "'.rtrim($langs->transnoentitiesnoconv('WRN_35H_DEPASSEMENT_USE_HS_CASE'))."\";\n";
 }
 else {
-    echo 'var WRN_35H_DEPASSEMENT = "'.rtrim($langs->transnoentitiesnoconv('WRN_35H_DEPASSEMENT'))."\";\n";
+    // echo 'var WRN_35H_DEPASSEMENT = "'.rtrim($langs->transnoentitiesnoconv('WRN_35H_DEPASSEMENT'))."\";\n";
+     echo 'var WRN_35H_DEPASSEMENT = "'."\";\n";
 }
 echo 'var WRN_PUBLIC_HOLIDAY = "'.rtrim($langs->transnoentitiesnoconv('WRN_PUBLIC_HOLIDAY'))."\";\n";
 echo 'var USE_HS_CASE ='.null2zero($conf->global->FDT_USE_HS_CASE).";\n";

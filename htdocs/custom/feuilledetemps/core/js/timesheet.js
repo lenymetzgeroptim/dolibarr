@@ -1144,7 +1144,7 @@ function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_sem
             heureCase = tempsCase.getMinutes() / 60 + tempsCase.getHours();
         }
 
-        if (hours > heure_semaine_hs && (hours - heureCase <= heure_semaine_hs)) {
+        if (WRN_35H_DEPASSEMENT && hours > heure_semaine_hs && (hours - heureCase <= heure_semaine_hs)) {
             $.jnotify(WRN_35H_DEPASSEMENT, 'warning', false);
         }
 
