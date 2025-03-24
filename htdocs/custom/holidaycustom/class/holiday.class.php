@@ -1404,9 +1404,9 @@ class Holiday extends CommonObject
 	 * 	@return boolean					False = New range overlap an existing holiday, True = no overlapping (is never on holiday during checked period).
 	 *  @see verifDateHolidayForTimestamp()
 	 */
-	public function verifDateHolidayCP($fk_user, $dateStart, $dateEnd, $halfday = 0)
+	public function verifDateHolidayCP($fk_user, $dateStart, $dateEnd, $halfday = 0, $filter = '')
 	{
-		$this->fetchByUser($fk_user, '', '');
+		$this->fetchByUser($fk_user, '', $filter);
 
 		foreach ($this->holiday as $infos_CP) {
 			if ($infos_CP['statut'] == 4) {

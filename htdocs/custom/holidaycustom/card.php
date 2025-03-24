@@ -910,6 +910,13 @@ if (empty($reshook)) {
 					exit;
 				}
 
+				// Check if there is already holiday for this period
+				$verifCP = $object->verifDateHolidayCP($object->fk_user, $date_debut, $date_fin, $halfday, " AND cp.rowid NOT IN ($object->id)");
+				if (!$verifCP) {
+					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=alreadyCP');
+					exit;
+				}
+
 				if(GETPOST('options_client_informe') == 1 && empty(GETPOST('options_nom_client'))){
 					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=NomClient');
 					exit;
@@ -2889,6 +2896,9 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 						break;
 					case 'DureeHoliday':
 						$errors[] = $langs->transnoentitiesnoconv('ErrorDureeCP');
+						break;
+					case 'alreadyCP':
+						$errors[] = $langs->trans('alreadyCPexist');
 						break;
 					case 'NoMotifRefuse':
 						$errors[] = $langs->transnoentitiesnoconv('NoMotifRefuseCP');
