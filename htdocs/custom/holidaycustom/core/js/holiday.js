@@ -32,3 +32,21 @@ function afficherNomClient(nom) {
         $('tr[id*=nom_client]').remove();
     }
 }
+
+$(document).ready(function () {
+    $("#date_debut_").on("change", function () {
+        let dateDebut = $(this).val(); // Récupère la date sous format "dd/MM/yyyy"
+
+        if (dateDebut && $("#date_fin_").val().trim() === "") {
+            $("#date_fin_").val(dateDebut); // Remplit le champ principal
+
+            let parts = dateDebut.split("/"); // Sépare en [jour, mois, année]
+            if (parts.length === 3) {
+                $("#date_fin_day").val(parts[0]);   // Jour
+                $("#date_fin_month").val(parts[1]); // Mois
+                $("#date_fin_year").val(parts[2]);  // Année
+            }
+        }
+    });
+});
+
