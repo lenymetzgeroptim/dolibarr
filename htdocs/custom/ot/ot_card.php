@@ -927,19 +927,18 @@ function getHabilitations($userId, $db) {
     return !empty($habilitationRefs) ? implode("-", $habilitationRefs) : null;
 }
 
-$sql = "SELECT  
-        COALESCE(u.firstname, spc.firstname) AS firstname,
-        COALESCE(u.lastname, spc.lastname) AS lastname,
-        COALESCE(u.office_phone, spc.phone_mobile) AS phone,
+$sql = "
+    (SELECT  
+        u.firstname,
+        u.lastname,
+        u.office_phone AS phone,
         ctc.libelle, 
         sp.fk_c_type_contact, 
         sp.fk_socpeople,
         cct.type AS contrat
     FROM ".MAIN_DB_PREFIX."element_contact AS sp 
-    LEFT JOIN ".MAIN_DB_PREFIX."user AS u 
+    JOIN ".MAIN_DB_PREFIX."user AS u 
         ON sp.fk_socpeople = u.rowid 
-    LEFT JOIN ".MAIN_DB_PREFIX."socpeople AS spc 
-        ON sp.fk_socpeople = spc.rowid 
     JOIN ".MAIN_DB_PREFIX."c_type_contact AS ctc 
         ON sp.fk_c_type_contact = ctc.rowid 
     LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_positionetcoefficient_extrafields AS drh 
@@ -948,7 +947,27 @@ $sql = "SELECT
         ON drh.contratdetravail = cct.rowid  
     WHERE sp.element_id = $object->fk_project
     AND sp.statut = 4
-    AND ctc.element = 'project'";
+    AND ctc.element = 'project')
+
+    UNION
+
+    (SELECT  
+        spc.firstname,
+        spc.lastname,
+        spc.phone_mobile AS phone,
+        ctc.libelle, 
+        sp.fk_c_type_contact, 
+        sp.fk_socpeople,
+        NULL AS contrat
+    FROM ".MAIN_DB_PREFIX."element_contact AS sp 
+    JOIN ".MAIN_DB_PREFIX."socpeople AS spc 
+        ON sp.fk_socpeople = spc.rowid 
+    JOIN ".MAIN_DB_PREFIX."c_type_contact AS ctc 
+        ON sp.fk_c_type_contact = ctc.rowid 
+    WHERE sp.element_id = $object->fk_project
+    AND sp.statut = 4
+    AND ctc.element = 'project')";
+
 
 
 $resql = $db->query($sql);
