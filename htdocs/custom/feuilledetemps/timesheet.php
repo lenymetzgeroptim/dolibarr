@@ -450,7 +450,7 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$css[$dayinloopfromfirstdaytoshow] .= ' public_holiday'; 
 	}
 
-	if(!$uncompleted_fdt && empty($css[$dayinloopfromfirstdaytoshow]) && empty($css_holiday[$dayinloopfromfirstdaytoshow]) && empty($timeSpentDay[dol_print_date($dayinloopfromfirstdaytoshow, "%d/%m/%Y")])) {
+	if(!$conf->global->FDT_DISPLAY_COLUMN && !$uncompleted_fdt && empty($css[$dayinloopfromfirstdaytoshow]) && empty($css_holiday[$dayinloopfromfirstdaytoshow]) && empty($timeSpentDay[dol_print_date($dayinloopfromfirstdaytoshow, "%d/%m/%Y")])) {
 		$uncompleted_fdt = 1;
 	}
 }
