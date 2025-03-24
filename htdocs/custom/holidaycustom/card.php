@@ -75,10 +75,10 @@ $extrafields = new ExtraFields($db);
 // fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
 
+$user_static = new User($db);
 if (($id > 0) || $ref) {
 	$object->fetch($id, $ref);
 
-	$user_static = new User($db);
 	$user_static->fetch($object->fk_user);
 
 	// Check current user can read this leave request
@@ -98,6 +98,9 @@ if (($id > 0) || $ref) {
 	if (!$canread) {
 		accessforbidden();
 	}
+}
+elseif(GETPOST('fuserid', 'int')) {
+	$user_static->fetch(GETPOST('fuserid', 'int'));
 }
 
 // Initialize technical object to manage hooks of page. Note that conf->hooks_modules contains array of hook context
@@ -279,7 +282,7 @@ if (empty($reshook)) {
 					if (empty($user->rights->holidaycustom->write)) {
 						$error++;
 						setEventMessages($langs->trans("NotEnoughPermissions"), null, 'errors');
-					} elseif (!in_array($fuserid, $childids)) {
+					} elseif (!in_array($fuserid, $childids) && (!in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt'])) || !$conf->global->HOLIDAY_FDT_APPROVER)) {
 						$error++;
 						setEventMessages($langs->trans("UserNotInHierachy"), null, 'errors');
 						$action = 'create';
@@ -288,7 +291,7 @@ if (empty($reshook)) {
 					if (empty($user->rights->holidaycustom->write) && empty($user->rights->holidaycustom->writeall)) {
 						$error++;
 						setEventMessages($langs->trans("NotEnoughPermissions"), null, 'errors');
-					} elseif (empty($user->rights->holidaycustom->writeall) && !in_array($fuserid, $childids)) {
+					} elseif (empty($user->rights->holidaycustom->writeall) && !in_array($fuserid, $childids) && (!in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt'])) || !$conf->global->HOLIDAY_FDT_APPROVER)) {
 						$error++;
 						setEventMessages($langs->trans("UserNotInHierachy"), null, 'errors');
 						$action = 'create';
@@ -2585,7 +2588,7 @@ llxHeader('', $title, $help_url, "", "", "", array('/custom/holidaycustom/core/j
 
 if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 	// If user has no permission to create a leave
-	if ((!in_array($fuserid, $childids) && empty($user->rights->holidaycustom->writeall)) || (in_array($fuserid, $childids) && empty($user->rights->holidaycustom->write))) {
+	if ((!in_array($fuserid, $childids) && empty($user->rights->holidaycustom->writeall) && (!in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt'])) || !$conf->global->HOLIDAY_FDT_APPROVER)) || (in_array($fuserid, $childids) && empty($user->rights->holidaycustom->write) && (!in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt'])) || !$conf->global->HOLIDAY_FDT_APPROVER))) {
 		$errors[] = $langs->trans('CantCreateCP');
 	} else {
 		// Form to add a leave request
