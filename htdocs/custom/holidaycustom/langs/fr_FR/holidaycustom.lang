@@ -48,6 +48,7 @@ HOLIDAY_INHOUR_MAX_HOUR = Nombre d'heures max d'un congé en heure
 HOLIDAY_MAIL_TO = Destinataire des mails concernant les congés à réguler
 HOIDAY_DECIMAL_HOUR_FORMAT = Heures au format décimal
 HOLIDAY_PICTO = Icône du module
+HOIDAY_AUTO_HOUR_WHOLE_DAY = Saisie automatique des heures pour une absence d'une journée complète
 
 
 #

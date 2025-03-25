@@ -132,6 +132,9 @@ $formSetup->newItem('HOLIDAY_MAIL_TO')->setAsString();
 // HOIDAY_DECIMAL_HOUR_FORMAT
 $formSetup->newItem('HOIDAY_DECIMAL_HOUR_FORMAT')->setAsYesNo();
 
+// HOIDAY_AUTO_HOUR_WHOLE_DAY
+$formSetup->newItem('HOIDAY_AUTO_HOUR_WHOLE_DAY')->setAsYesNo();
+
 // HOLIDAY_PICTO
 $item = $formSetup->newItem('HOLIDAY_PICTO');
 $item->defaultFieldValue = 'holiday';
