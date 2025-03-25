@@ -983,7 +983,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	}
 
 	if($user->rights->holidaycustom->write || $user->rights->holidaycustom->writeall) {
-		$fields['absence']['text'] .= ' <a target="_blank" href="'.DOL_URL_ROOT.'/custom/holidaycustom/card.php?action=create"><span title="'.$langs->trans("NewCP").'" class="fa fa-plus-circle"></span></a>';
+		$fields['absence']['text'] .= ' <a target="_blank" href="'.DOL_URL_ROOT.'/custom/holidaycustom/card.php?action=create&fuserid='.$fuser->id.'"><span title="'.$langs->trans("NewCP").'" class="fa fa-plus-circle"></span></a>';
 	}
 	if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
 		$fields['absence']['text'] .= '<input type="checkbox"'.(!$modify ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
