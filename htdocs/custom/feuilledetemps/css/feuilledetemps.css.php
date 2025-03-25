@@ -812,3 +812,7 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 .height20 {
 	height: 20px;
 }
+
+#tablelines_fdt.column .fas.fa-sticky-note {
+	color: rgb(198,25,44);
+}

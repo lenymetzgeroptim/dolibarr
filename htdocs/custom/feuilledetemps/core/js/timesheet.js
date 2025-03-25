@@ -259,7 +259,7 @@ function disableNullInput(columnmode) {
             }
         });
 
-        $('form[name="addtime"] textarea[name^="note"]:not(:disabled)').each(function (index, obj) {
+        $('form[name="addtime"] textarea[name^="note"]:not(:disabled), form[name="addtime"] textarea[name^="options_notedeplacement"]:not(:disabled)').each(function (index, obj) {
             if (obj.defaultValue == obj.value) {
                 $(obj).prop('disabled', true);
             }
@@ -2097,7 +2097,93 @@ document.addEventListener('DOMContentLoaded', function () {
         fullscreenContainer.style.display = 'none';
         $(".div-table-responsive").append(tableau);
     });
+
+    // Gestion de la non suppression du contenu des notes des jours anticipés
+    let textareas = document.querySelectorAll("textarea.no-delete[name*='note']");
+    let initialTexts = new Map();
+
+    // Stockage du texte initial
+    textareas.forEach(textarea => {
+        initialTexts.set(textarea, textarea.value);
+
+        textarea.addEventListener("input", function () {
+            let initialText = initialTexts.get(textarea);
+            
+            // Vérifie si le texte initial a été modifié
+            if (!textarea.value.startsWith(initialText)) {
+                textarea.value = initialText + textarea.value.slice(initialText.length);
+            }
+        });
+    });
+
+    // Sur écoute des changements des inputs timeadded et time_heure_nuit
+    $(document).on('input', 'input[id^="timeadded["], input[id^="time_heure_nuit["]', function () {
+        var id = $(this).attr('id');
+        var match = id.match(/^timeadded\[(\d+)\]\[(\d+)\]$|^time_heure_nuit\[(\d+)\]\[(\d+)\]$/);
+
+        if (match) {
+            var idw = match[1] || match[3]; // Récupérer idw (jour)
+            var index = parseInt(match[2] || match[4]); // Récupérer y (ligne)
+            updateNextInput(idw, index);
+        }
+    });
+
+    $(document).on('blur', 'input[id^="timeadded["], input[id^="time_heure_nuit["]', function () {
+        var id = $(this).attr('id');
+        var match = id.match(/^timeadded\[(\d+)\]\[(\d+)\]$|^time_heure_nuit\[(\d+)\]\[(\d+)\]$/);
+    
+        if (match) {
+            var idw = match[1] || match[3];
+            var index = parseInt(match[2] || match[4]);
+            
+            // Petite pause pour laisser le script de formatage s'exécuter
+            setTimeout(() => updateNextInput(idw, index), 50);
+        }
+    });
+
+    // Sur écoute des changements du select fk_task (format fk_task_x_y)
+    $(document).on('change', 'select[id^="fk_task_"]', function () {
+        var id = $(this).attr('id');
+        var match = id.match(/^fk_task_(\d+)_(\d+)$/);
+
+        if (match) {
+            var idw = match[1]; // Jour (x)
+            var index = parseInt(match[2]); // Ligne (y)
+            updateNextInput(idw, index);
+        }
+    });
 });
+
+function updateNextInput(idw, index) {
+    var timeInput = $(`[id='timeadded[${idw}][${index}]']`);
+    var nightInput = $(`[id='time_heure_nuit[${idw}][${index}]']`);
+    var fkTaskSelect = $(`#fk_task_${idw}_${index}`);
+
+    var nextIndex = index + 1;
+    var nextTimeInput = $(`[id='timeadded[${idw}][${nextIndex}]']`);
+    var nextNightInput = $(`[id='time_heure_nuit[${idw}][${nextIndex}]']`);
+    var nextFkTask = $(`#fk_task_${idw}_${nextIndex}`);
+
+    // Vérifier si les éléments existent
+    if (!fkTaskSelect.length || !timeInput.length || !nightInput.length) return;
+
+    var fkTaskValue = fkTaskSelect.val()?.trim() || "";
+    var timeValue = timeInput.val()?.trim() || "";
+    var nightValue = nightInput.val()?.trim() || "";
+
+    // La ligne suivante est activée SEULEMENT SI une tâche est sélectionnée ET qu'il y a des heures (jour ou nuit)
+    var isCurrentFilled = fkTaskValue !== "" && fkTaskValue != 0 && (timeValue !== "" || nightValue !== "");
+
+    if (isCurrentFilled) {
+        nextTimeInput.prop('disabled', false);
+        nextNightInput.prop('disabled', false);
+        nextFkTask.prop('disabled', false);
+    } else {
+        nextTimeInput.prop('disabled', true).val("");
+        nextNightInput.prop('disabled', true).val("");
+        nextFkTask.prop('disabled', true).val("");
+    }
+}
 
 // Define a function named time_convert with parameter num
 function time_convert(num) {

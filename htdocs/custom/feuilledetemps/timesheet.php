@@ -175,7 +175,7 @@ else {
 	$object->date_fin = $lastdaytoshow;
 }
 
-if($conf->global->FDT_USER_APPROVER && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) ){
+if(!$user->admin && $conf->global->FDT_USER_APPROVER && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) ){
 	$can_modify_fdt = 0;
 }
 
@@ -562,8 +562,7 @@ if(!$user->rights->feuilledetemps->feuilledetemps->readall) {
 		}
 	}
 	else {
-		$includeonly = $object->getUserImApprover();
-		$includeonly = array_merge($object->getUserImObserver());
+		$includeonly = array_merge($object->getUserImApprover(), $object->getUserImObserver());
 		if (!in_array($user->id, $includeonly)) {
 			$includeonly[] = $user->id;
 		}

@@ -1286,14 +1286,13 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		$tmparray = dol_getdate($dayinloopfromfirstdaytoshow);
 		$alttitle = $langs->trans("AddHereTimeSpentForDay", $tmparray['day'], $tmparray['mon']);
 		for($cpt = 0; $cpt < $conf->global->FDT_COLUMN_MAX_TASK_DAY; $cpt++) {
-			
 			$timespent = $timespent_month[$dayinloopfromfirstdaytoshow][$cpt];
 			$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
 			$prefilling_time = ''; 
 			
 			// Est-ce qu'on désactive l'input ou non ?
 			$disabled = 0;
-			if(!$modify || ($user_conges && !$modifier_jour_conges && empty($alreadyspent))) {
+			if(!$modify || ($user_conges && !$modifier_jour_conges && empty($alreadyspent)) || ($cpt > 0 && (!$timespent_month[$dayinloopfromfirstdaytoshow][$cpt-1] || !$timespent_month[$dayinloopfromfirstdaytoshow][$cpt-1]->fk_task))) {
 				$disabled = 1;
 			}
 
@@ -1344,7 +1343,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$tableCellTimespent .= '<div class = "modal-content">';
 			$tableCellTimespent .= '<span class="close" onclick="closeNotes2(this)">&times;</span>';
 			$tableCellTimespent .= '<a>'.$langs->trans('Note').' ('.dol_print_date($dayinloopfromfirstdaytoshow, '%a %d/%m/%y').")".'</a><br><br>';
-			$tableCellTimespent .= '<textarea class = "flat"  rows = "3"'.($disabled ? ' disabled' : '').' style = "width:350px; top:10px; max-width: 350px; min-width: 350px;"';
+			$tableCellTimespent .= '<textarea class = "'.($idw < $num_first_day ? 'no-delete' : '').' flat"  rows = "3"'.($disabled ? ' disabled' : '').' style = "min-height:200px; width:370px; top:10px; max-width: 370px; min-width: 370px;"';
 			$tableCellTimespent .= ' name = "note['.$idw.']['.$cpt.']"';
 			$tableCellTimespent .= '>'.$note.'</textarea>';
 			$tableCellTimespent .= '</div></div>';
@@ -1520,10 +1519,14 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$type = $extrafields->attributes[$silae->table_element]['type'][$key];
 
 			print '<td class="center'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+
 			$moreparam = '';
+			if(!$modify || ($user_conges && !$modifier_jour_conges)) {
+				$moreparam .= ' disabled';
+			}
+
 			if($type == 'boolean') {
 				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam = ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
-				$moreparam .= ($disabled ? ' disabled' : '');
 				$checked = '';
 				if (!empty($silae->array_options['options_'.$key])) $checked = ' checked';
 				print '<input type="checkbox" class="flat valignmiddle'.($morecss ? ' '.$morecss : '').' maxwidthonsmartphone" name="options_'.$key.'['.$idw.']" id="options_'.$key.'['.$idw.']" '.$checked.$moreparam.'>';
@@ -1538,7 +1541,6 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
 				$moreparam .= ' maxlength="7"';
 				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
-				$moreparam .= ($disabled ? ' disabled' : '');
 				print $extrafields->showInputField($key, $silae->array_options['options_'.$key], $moreparam, '['.$idw.']', '', 0, $silae->id, $silae->table_element);
 			}
 			print '</td>';

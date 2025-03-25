@@ -200,7 +200,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 						if($is_day_anticipe && $timespent_tmp->timespent_duration > 0) {
 							$new_value = formatValueForAgenda('duration', 0);
 							$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
-							$timespent->note = ' / Modification semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$task->label.") : $old_value ➔ $new_value";
+							$timespent->note = ' / Modification Heures Jour semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$task->label.") : $old_value ➔ $new_value";
 							$timespent->element_duration = 0;
 
 							$result = $timespent->update($user);
@@ -270,13 +270,17 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							//$timespent->fk_product = $this->timespent_fk_product;
 							$timespent->note = $tmpnote;
 							if($is_day_anticipe) {
-								$new_value = formatValueForAgenda('duration', 0);
-								$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
-								$timespent->note .= ' / Modification semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$task->label.") : $old_value ➔ $new_value";
-								
-								$new_value = formatValueForAgenda('duration', $newduration);
-								$old_value = formatValueForAgenda('duration', 0);
-								$timespent->note .= ' et Modification semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$new_task->label.") : $old_value ➔ $new_value";
+								if($timespent_tmp->timespent_duration > 0) {
+									$new_value = formatValueForAgenda('duration', 0);
+									$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
+									$timespent->note .= ' / Modification Heures Jour semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$task->label.") : $old_value ➔ $new_value";
+								}
+
+								if($newduration > 0) {
+									$new_value = formatValueForAgenda('duration', $newduration);
+									$old_value = formatValueForAgenda('duration', 0);
+									$timespent->note .= ' et Modification Heures Jour semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$new_task->label.") : $old_value ➔ $new_value";
+								}
 							}
 							$timespent->datec = $db->idate($now);
 							$timespent->thm = $usertoprocess->thm;
@@ -295,7 +299,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							if($is_day_anticipe) {
 								$new_value = formatValueForAgenda('duration', $newduration);
 								$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
-								$timespent->note .= ' / Modification semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$new_task->label.") : $old_value ➔ $new_value";
+								$timespent->note .= ' / Modification Heures Jour semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$new_task->label.") : $old_value ➔ $new_value";
 							}
 							$timespent->element_duration = $newduration;
 
@@ -329,7 +333,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 						if($is_day_anticipe && $newduration > 0) {
 							$new_value = formatValueForAgenda('duration', $newduration);
 							$old_value = formatValueForAgenda('duration', 0);
-							$timespent->note .= ' / Modification semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$new_task->label.") : $old_value ➔ $new_value";
+							$timespent->note .= ' / Modification Heures Jour semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$new_task->label.") : $old_value ➔ $new_value";
 						}
 						$timespent->datec = $db->idate($now);
 						$timespent->thm = $usertoprocess->thm;
@@ -405,7 +409,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 					if($is_day_anticipe && $heure_other_tmpday->heure_nuit > 0) {
 						$timespent->note = (!empty($timespent->note) ? $timespent->note.' / ' : '');
-						$timespent->note .= 'Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other_tmpday->heure_nuit > 0 ? convertSecondToTime($heure_other_tmpday->heure_nuit) : '00:00').' ➔ 00:00';
+						$timespent->note .= 'Modification Heures Nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other_tmpday->heure_nuit > 0 ? convertSecondToTime($heure_other_tmpday->heure_nuit) : '00:00').' ➔ 00:00';
 
 						$result = $timespent->update($user);
 					}
@@ -471,13 +475,17 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 						if($is_day_anticipe && $heure_other_tmpday->heure_nuit != $newduration_heure_nuit) {
 							$timespent->note = (!empty($timespent->note) ? $timespent->note.' / ' : '');
-							$new_value = formatValueForAgenda('duration', 0);
-							$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
-							$timespent->note .= ' / Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$task->label.") : $old_value ➔ $new_value";
+							if($heure_other_tmpday->heure_nuit) {
+								$new_value = formatValueForAgenda('duration', 0);
+								$old_value = formatValueForAgenda('duration', $heure_other_tmpday->heure_nuit);
+								$timespent->note .= ' / Modification Heures Nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$task->label.") : $old_value ➔ $new_value";
+							}
 
-							$new_value = formatValueForAgenda('duration', $newduration);
-							$old_value = formatValueForAgenda('duration', 0);
-							$timespent->note .= ' et Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$new_task->label.") : $old_value ➔ $new_value";
+							if($newduration_heure_nuit > 0) {
+								$new_value = formatValueForAgenda('duration', $newduration_heure_nuit);
+								$old_value = formatValueForAgenda('duration', 0);
+								$timespent->note .= ' et Modification Heures Nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.' sur '.$new_task->label.") : $old_value ➔ $new_value";
+							}
 						}
 
 						$result = $timespent->create($user);
@@ -494,7 +502,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 					elseif($heure_other_tmpday->heure_nuit != $newduration_heure_nuit) {
 						if($is_day_anticipe) {
 							$timespent->note = (!empty($timespent->note) ? $timespent->note.' / ' : '');
-							$timespent->note .= 'Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other_tmpday->heure_nuit > 0 ? convertSecondToTime($heure_other_tmpday->heure_nuit) : '00:00').' ➔ '.($newduration_heure_nuit > 0 ? convertSecondToTime($newduration_heure_nuit) : '00:00');
+							$timespent->note .= 'Modification Heures Nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other_tmpday->heure_nuit > 0 ? convertSecondToTime($heure_other_tmpday->heure_nuit) : '00:00').' ➔ '.($newduration_heure_nuit > 0 ? convertSecondToTime($newduration_heure_nuit) : '00:00');
 								
 							$result = $timespent->update($user);
 						}
@@ -521,7 +529,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 					if($is_day_anticipe) {
 						$timespent->note = (!empty($timespent->note) ? $timespent->note.' / ' : '');
-						$timespent->note .= 'Modification Heures de nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.'00:00'.' ➔ '.($newduration_heure_nuit > 0 ? convertSecondToTime($newduration_heure_nuit) : '00:00');
+						$timespent->note .= 'Modification Heures Nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.'00:00'.' ➔ '.($newduration_heure_nuit > 0 ? convertSecondToTime($newduration_heure_nuit) : '00:00');
 						
 						$result = $timespent->update($user);
 					}
@@ -554,7 +562,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 		$silae_tmpday = ($silae_array[$tmpday]->id > 0 ? $silae_array[$tmpday] : new Silae($db));
 		$has_modif = 0;
 		$all_field_null = 1;
-		
+		$timespent_note = '';
+
 		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
 			$key_post = (GETPOST('options_'.$key)  ? GETPOST('options_'.$key)  : array());
 			$type = $extrafields->attributes[$silae->table_element]['type'][$key];
@@ -574,15 +583,45 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 				$new_val = ($type == 'boolean' && isset($new_val) ? 1 : $new_val);
 
 				// Agenda
-				if($new_value != $silae_tmpday->array_options['options_'.$key]) {
-					$new_value = formatValueForAgenda($type, $new_value);
+				if($new_val != $silae_tmpday->array_options['options_'.$key]) {
+					$new_value = formatValueForAgenda($type, $new_val);
 					$old_value = formatValueForAgenda($type, $silae_tmpday->array_options['options_'.$key]);
 
 					$modification .= ($old_value != $new_value ? '<li><strong>'.$label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
+
+					if($is_day_anticipe) {
+						$timespent_note .= ' / Modification '.$label.' semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.") : $old_value ➔ $new_value";
+					}
 				}
-				
+
 				$silae_tmpday->array_options['options_'.$key] = $new_val;
 			}
+		}
+
+		if($timespent_note) {
+			if($timespent_month[$tmpday][0]->timespent_id > 0) {
+				$timespent->fetch($timespent_month[$tmpday][0]->timespent_id);
+			}
+			elseif($timespent_month[$tmpday][1]->timespent_id > 0) {
+				$timespent->fetch($timespent_month[$tmpday][1]->timespent_id);
+			}
+			elseif($timespent_month[$tmpday][2]->timespent_id > 0) {
+				$timespent->fetch($timespent_month[$tmpday][2]->timespent_id);
+			}
+			else {
+				$timespent->elementtype = 'task';
+				$timespent->element_date = $tmpday;
+				$timespent->element_datehour = $tmpday;
+				$timespent->fk_user = $usertoprocess->id;
+				$timespent->datec = $db->idate($now);
+				$timespent->thm = $usertoprocess->thm;
+
+				$result = $timespent->create($user);
+				$timespent_month[$tmpday][0]->timespent_id = $result;
+			}
+			
+			$timespent->note .= $timespent_note;
+			$timespent->update($user);
 		}
 
 		// S'il existe une ligne et que tous les champs sont = null

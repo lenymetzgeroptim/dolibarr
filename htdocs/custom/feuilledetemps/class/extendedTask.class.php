@@ -336,12 +336,13 @@ class extendedTask extends Task
       $sql .= " p.ref as project_ref,";
       $sql .= " p.title as project_label,";
       $sql .= " p.public as public";
-      $sql .= " FROM ".MAIN_DB_PREFIX."element_time as ptt, ".MAIN_DB_PREFIX."projet_task as pt, ".MAIN_DB_PREFIX."projet as p";
+      $sql .= " FROM ".MAIN_DB_PREFIX."element_time as ptt";
+      $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_task as pt ON ptt.fk_element = pt.rowid";
+      $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON pt.fk_projet = p.rowid";
       $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON p.fk_soc = s.rowid";
-      $sql .= " WHERE ptt.fk_element = pt.rowid AND pt.fk_projet = p.rowid";
-      $sql .= " AND ptt.elementtype = 'task'";
+      $sql .= " WHERE ptt.elementtype = 'task'";
       $sql .= " AND ptt.fk_user = ".((int) $userobj->id);
-      $sql .= " AND pt.entity IN (".getEntity('project').")";
+      $sql .= " AND (pt.entity IN (".getEntity('project').") OR ptt.fk_element = 0)";
       if ($morewherefilter) {
         $sql .= $morewherefilter;
       }
