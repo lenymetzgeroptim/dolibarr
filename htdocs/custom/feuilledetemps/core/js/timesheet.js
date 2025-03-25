@@ -2158,11 +2158,13 @@ function updateNextInput(idw, index) {
     var timeInput = $(`[id='timeadded[${idw}][${index}]']`);
     var nightInput = $(`[id='time_heure_nuit[${idw}][${index}]']`);
     var fkTaskSelect = $(`#fk_task_${idw}_${index}`);
+    var siteInput = $(`[id='site[${idw}][${index}]']`);
 
     var nextIndex = index + 1;
     var nextTimeInput = $(`[id='timeadded[${idw}][${nextIndex}]']`);
     var nextNightInput = $(`[id='time_heure_nuit[${idw}][${nextIndex}]']`);
     var nextFkTask = $(`#fk_task_${idw}_${nextIndex}`);
+    var nextSsiteInput = $(`[id='site[${idw}][${nextIndex}]']`);
 
     // Vérifier si les éléments existent
     if (!fkTaskSelect.length || !timeInput.length || !nightInput.length) return;
@@ -2178,10 +2180,12 @@ function updateNextInput(idw, index) {
         nextTimeInput.prop('disabled', false);
         nextNightInput.prop('disabled', false);
         nextFkTask.prop('disabled', false);
+        nextSsiteInput.prop('disabled', false);
     } else {
         nextTimeInput.prop('disabled', true).val("");
         nextNightInput.prop('disabled', true).val("");
         nextFkTask.prop('disabled', true).val("");
+        nextSsiteInput.prop('disabled', true).val("");
     }
 }
 
