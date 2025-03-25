@@ -355,7 +355,7 @@ if (empty($reshook)) {
 			$needHour = $object->holidayTypeNeedHour($type);
 
 			// If no hour and hour is required
-			if (empty($duration_hour) && $needHour == 1 && $date_debut == $date_fin) {
+			if (empty($duration_hour) && $needHour == 1 && $date_debut == $date_fin && (!$conf->global->HOIDAY_AUTO_HOUR_WHOLE_DAY || $halfday != 0)) {
 				setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Hour")), null, 'errors');
 				$error++;
 				$action = 'create';
@@ -475,10 +475,10 @@ if (empty($reshook)) {
 					}
 				}
 
-				if($needHour && $date_debut == $date_fin) {
+				if($needHour && $date_debut == $date_fin && !empty($duration_hour)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
-				elseif($needHour && $date_debut != $date_fin) {
+				elseif($needHour && ($date_debut != $date_fin || ($date_debut == $date_fin && $conf->global->HOIDAY_AUTO_HOUR_WHOLE_DAY && $halfday == 0))) {
 					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 0) + 1;
 						$duration_hour = 0;
@@ -928,7 +928,7 @@ if (empty($reshook)) {
 				$needHour = $object->holidayTypeNeedHour((int)$object->fk_type);
 
 				// If no hour and hour is required
-				if (empty($duration_hour) && $needHour == 1 && $date_debut == $date_fin) {
+				if (empty($duration_hour) && $needHour == 1 && $date_debut == $date_fin && (!$conf->global->HOIDAY_AUTO_HOUR_WHOLE_DAY || $halfday != 0)) {
 					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=Hour');
 					exit;
 				}
@@ -1057,10 +1057,10 @@ if (empty($reshook)) {
 					$object->array_options['options_nom_client'] = "";
 				}
 
-				if($needHour && $date_debut == $date_fin){
+				if($needHour && $date_debut == $date_fin && !empty($duration_hour)){
 					$object->array_options['options_hour'] = $duration_hour;
 				}
-				elseif($needHour && $date_debut != $date_fin) {
+				elseif($needHour && ($date_debut != $date_fin || ($date_debut == $date_fin && $conf->global->HOIDAY_AUTO_HOUR_WHOLE_DAY && $halfday == 0))) {
 					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 0) + 1;
 						$duration_hour = 0;
