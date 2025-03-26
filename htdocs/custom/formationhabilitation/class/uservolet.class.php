@@ -3977,7 +3977,7 @@ class UserVolet extends CommonObject
 				$obj = $this->db->fetch_object($resql);
 				
 				if($obj->rowid > 0) {
-					$this->fetch($obj->rowid );
+					$this->fetch($obj->rowid);
 					$res = $this->expire($user);
 
 					if($res < 0) {
@@ -3990,7 +3990,8 @@ class UserVolet extends CommonObject
 						global $dolibarr_main_url_root;
 
 						$user_static = new User($this->db);
-						$user_static->fetch($obj->fk_user);
+						$fk_user = new User($this->db);
+						$fk_user->fetch($this->fk_user);
 						
 						$user_group = new UserGroup($this->db);
 						$user_group->fetch(7);
@@ -4000,9 +4001,8 @@ class UserVolet extends CommonObject
 						$societe = New Societe($this->db);
 						$user_group->fetch(0, "Responsable d'antenne");
 						$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
-						$user_static->fetch($this->fk_user);
-						if($user_static->array_options['options_antenne'] > 0) {
-							$societe->fetch($user_static->array_options['options_antenne']);
+						if($fk_user->array_options['options_antenne'] > 0) {
+							$societe->fetch($fk_user->array_options['options_antenne']);
 							$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
 							$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
 						}
@@ -4028,16 +4028,16 @@ class UserVolet extends CommonObject
 						}
 						rtrim($to2, ', ');
 
-						if(!empty($user_static->email)) {
-							$to3 = $user_static->email;
+						if(!empty($fk_user->email)) {
+							$to3 = $fk_user->email;
 						}
 						
 						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
-						$message = $langs->transnoentitiesnoconv("EMailTextUserVoletExpire", $link);
+						$message = $langs->transnoentitiesnoconv("EMailTextUserVoletExpire", $link, $fk_user->firstname." ".$fk_user->lastname);
 						$link2 = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$user_static->id.'&onglet=formation">ici</a>';
-						$message2 = $langs->transnoentitiesnoconv("EMailTextUserVoletExpireRespAntenne", $link, $link2);
+						$message2 = $langs->transnoentitiesnoconv("EMailTextUserVoletExpireRespAntenne", $link, $fk_user->firstname." ".$fk_user->lastname, $link2);
 						$message3 = $langs->transnoentitiesnoconv("EMailTextUserVoletExpireForUser", $link);
 
 						$mail = new CMailFile(

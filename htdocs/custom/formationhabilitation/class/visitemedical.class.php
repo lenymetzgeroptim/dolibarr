@@ -1670,22 +1670,23 @@ class VisiteMedical extends CommonObject
 					global $dolibarr_main_url_root;
 
 					$societe = New Societe($this->db);
+					$fk_user = new User($this->db);
 					$user_static = new User($this->db);
 					$projectstatic = new Project($this->db);
 
 					// Responsable d'antenne
 					$user_group->fetch(0, "Responsable d'antenne");
 					$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
-					$user_static->fetch($obj->fk_user);
-					if($user_static->array_options['options_antenne'] > 0) {
-						$societe->fetch($user_static->array_options['options_antenne']);
+					$fk_user->fetch($obj->fk_user);
+					if($fk_user->array_options['options_antenne'] > 0) {
+						$societe->fetch($fk_user->array_options['options_antenne']);
 						$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
 						$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
 					}
 
 					// Responsable des projets
 					$filter = " AND dateo <= '".$this->db->idate($now)."' AND (datee >= '".$this->db->idate($now)."' OR datee IS NULL) AND fk_statut = 1 AND ec.fk_c_type_contact = 161";		
-					$liste_projet = $projectstatic->getProjectsAuthorizedForUser($user_static, 1, 0, 0, $filter); 
+					$liste_projet = $projectstatic->getProjectsAuthorizedForUser($fk_user, 1, 0, 0, $filter); 
 					foreach($liste_projet as $projetid => $ref) {
 						$projectstatic->fetch($projetid);
 						if(!$projectstatic->array_options['options_projetstructurel']) {
@@ -1701,12 +1702,12 @@ class VisiteMedical extends CommonObject
 					$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 					$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
-					if(!empty($user_static->email)) {
-						$to2 = $user_static->email;
+					if(!empty($fk_user->email)) {
+						$to2 = $fk_user->email;
 					}
 					
 					$to = '';
-					if($user_static->array_options['options_antenne'] == 158) {
+					if($fk_user->array_options['options_antenne'] == 158) {
 						$to .= $to_admin_go;
 						$to .= $to_admin;
 					}
@@ -1730,7 +1731,7 @@ class VisiteMedical extends CommonObject
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 					$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/visitemedical_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
-					$message = $langs->transnoentitiesnoconv("EMailTextVMExpire", $link);
+					$message = $langs->transnoentitiesnoconv("EMailTextVMExpire", $link, $fk_user->firstname." ".$fk_user->lastname);
 					$message2 = $langs->transnoentitiesnoconv("EMailTextVMExpireForUser", $link);
 
 					$mail = new CMailFile(
@@ -1790,14 +1791,14 @@ class VisiteMedical extends CommonObject
 
 				global $dolibarr_main_url_root;
 
-				$user_static = new User($this->db);
-				$user_static->fetch($obj->fk_user);
+				$fk_user = new User($this->db);
+				$fk_user->fetch($obj->fk_user);
 				
 				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 				$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
 				$to = '';
-				if($user_static->array_options['options_antenne'] == 158) {
+				if($fk_user->array_options['options_antenne'] == 158) {
 					$to .= $to_admin_go;
 					$to .= $to_admin;
 				}
@@ -1809,7 +1810,7 @@ class VisiteMedical extends CommonObject
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/visitemedical_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
-				$message = $langs->transnoentitiesnoconv("EMailTextVMExpireWarning", $link);
+				$message = $langs->transnoentitiesnoconv("EMailTextVMExpireWarning", $link, $fk_user->firstname." ".$fk_user->lastname);
 
 				$mail = new CMailFile(
 					$subject,
