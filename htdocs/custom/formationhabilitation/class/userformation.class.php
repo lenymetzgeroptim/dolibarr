@@ -883,7 +883,7 @@ class UserFormation extends CommonObject
 	
 				$to = '';
 				if(sizeof($arrayRespAntenneForMail) > 0) {
-					foreach($arrayRespAntenneForMail as $userid) {
+					foreach($arrayRespAntenneForMail as $user_id) {
 						$user_static->fetch($user_id);
 	
 						if(!empty($user_static->email)) {
