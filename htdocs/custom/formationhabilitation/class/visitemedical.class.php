@@ -1957,17 +1957,24 @@ class VisiteMedical extends CommonObject
 	function getAllNatureVisiteForUser($userid) {
 		$res = array();
 
-		$sql = "SELECT DISTINCT vm.naturevisite";
+		$sql = "SELECT DISTINCT vm.rowid, vm.naturevisite, vm.commentaire, vm.status";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
 		$sql .= " WHERE vm.fk_user = $userid";
 		$sql .= " AND (vm.status = ".self::STATUS_APTE." OR vm.status = ".self::STATUS_CONDITIONNEL.")";
+		//$sql .= " AND (vm.status = ".self::STATUS_APTE.")";
 
 		dol_syslog(get_class($this)."::getAllNatureVisiteForUser", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
 				foreach(explode(",", $obj->naturevisite) as $naturevisite) {
-					$res[] = $naturevisite;
+					if($obj->status == self::STATUS_APTE) {
+						$res['Apte'][$obj->rowid] = $naturevisite;
+					}
+					else {
+						$res['Conditionnelle']['naturevisite'][$obj->rowid] = $naturevisite;
+						$res['Conditionnelle']['commentaire'][$obj->rowid] = $obj->commentaire;
+					}
 				}
 			}
 
