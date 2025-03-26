@@ -315,6 +315,7 @@ FORMATIONHABILITATION_USERVOLET_DELLINKHabilitationInDolibarr = Suppression de l
 FORMATIONHABILITATION_USERVOLET_DELLINKAutorisationInDolibarr = Suppression de la liaison de l'autorisation %s sur le volet %s
 FORMATIONHABILITATION_USERVOLET_REFUSInDolibarr = Refus du volet pour la raison suivante : %s
 FORMATIONHABILITATION_UPDATEDOMAINEAPPLICATION_InDolibarr = Modification du domaine d'application de la ligne %s
+FORMATIONHABILITATION_USERVOLET_CANCELInDolibarr = Enregistrement %s clôturé
 
 USERFORMATION_CREATE_InDolibarr = Formation %s attribuée à %s
 USERFORMATION_UPDATE_InDolibarr = La formation %s de %s a été modifiée

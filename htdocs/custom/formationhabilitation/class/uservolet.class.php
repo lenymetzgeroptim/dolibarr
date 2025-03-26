@@ -1660,6 +1660,14 @@ class UserVolet extends CommonObject
 			return 0;
 		}
 
+		if($this->cloture) {
+			$result = $this->closeActiveUserVolet();
+
+			if($result < 0) {
+				$error++;
+			}
+		}
+
 		//Evenement Agenda
 		require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
 		$actioncomm = new ActionComm($this->db);
@@ -2327,6 +2335,8 @@ class UserVolet extends CommonObject
 	 */
 	public function close($user, $notrigger = 0)
 	{
+		global $langs; 
+
 		// Protection
 		// if ($this->status != self::STATUS_VALIDATED) {
 		// 	return 0;
@@ -2338,6 +2348,9 @@ class UserVolet extends CommonObject
 		 $this->error='Permission denied';
 		 return -1;
 		 }*/
+
+		$this->actionmsg = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_CANCELInDolibarr", $this->ref);
+		$this->actionmsg2 = $langs->transnoentities("FORMATIONHABILITATION_USERVOLET_CANCELInDolibarr", $this->ref);
 
 		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'USERVOLET_CANCEL');
 	}
@@ -3765,7 +3778,8 @@ class UserVolet extends CommonObject
 		elseif(!$all && !empty($fk_volet)) {
 			$sql .= " AND v.fk_volet IN (".$this->db->sanitize($this->db->escape($fk_volet)).")";
 		}
-		$sql .= " AND (v.status = ".self::STATUS_VALIDATED." OR v.status = ".self::STATUS_VALIDATION_WITHOUT_USER.")";
+		$sql .= " AND (v.status = ".self::STATUS_VALIDATED." OR v.status = ".self::STATUS_VALIDATION_WITHOUT_USER." OR v.status = ".self::STATUS_EXPIRE.
+				" OR v.status = ".self::STATUS_SUSPEND.")";
 
 		dol_syslog(get_class($this)."::getActiveUserVolet", LOG_DEBUG);
 		$resql = $this->db->query($sql);
