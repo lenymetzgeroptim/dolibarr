@@ -1418,8 +1418,8 @@ class ElementPrerequis extends CommonObject
 
 		foreach ($prerequisConditions as $condition_group => $prerequistype) {
 			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
+			$date_finvalidite_prerequis = '';
 			foreach ($prerequistype['formation'] as $formationid) {
-				$date_finvalidite_prerequis = '';
 				if ($formationid > 0 && in_array($formationid, $formations_user['id'])) {
 					if($date_finvalidite_prerequis == '' || $date_finvalidite_prerequis < $formations_user['date_finvalidite'][$formationid]) {
 						$date_finvalidite_prerequis = $formations_user['date_finvalidite'][$formationid];
