@@ -28,6 +28,7 @@ BoxTitleLatestModifiedFormation = Les dernières autorisations modifiées
 
 ListOfs = Liste des %s
 NewObj = Nouvelle %s
+Create=Créer
 ListOfsUnlinkedObject = Liste des %s non liées au volet
 ListOfsLinkedObject = Liste des %s liées au volet
 UserFormation = formations du collaborateur
