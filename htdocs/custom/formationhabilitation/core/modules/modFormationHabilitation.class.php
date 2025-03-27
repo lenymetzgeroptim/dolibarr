@@ -502,10 +502,15 @@ class modFormationHabilitation extends DolibarrModules
 		$r++;
 
 
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 0 + 0);
+		$this->rights[$r][1] = 'Lire ses propres Visites médicales';
+		$this->rights[$r][4] = 'visitemedical';
+		$this->rights[$r][5] = 'read';
+		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Lire les Visites médicales';
 		$this->rights[$r][4] = 'visitemedical';
-		$this->rights[$r][5] = 'read';
+		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Créer/Modifier les Visites médicales';
@@ -519,10 +524,15 @@ class modFormationHabilitation extends DolibarrModules
 		$r++;
 
 
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 0 + 0);
+		$this->rights[$r][1] = 'Lire ses propres Convocations';
+		$this->rights[$r][4] = 'convocation';
+		$this->rights[$r][5] = 'read';
+		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Lire les Convocations';
 		$this->rights[$r][4] = 'convocation';
-		$this->rights[$r][5] = 'read';
+		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Créer/Modifier les Convocations';

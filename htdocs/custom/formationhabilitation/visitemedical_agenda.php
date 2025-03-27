@@ -133,7 +133,7 @@ if ($id > 0 || !empty($ref)) {
 }
 
 // There is several ways to check permission.
-$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'read');
+$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'readall') || ($object->fk_user == $user->id && $user->hasRight('formationhabilitation', 'visitemedical', 'read'));
 $permissiontoadd = $user->hasRight('formationhabilitation', 'visitemedical', 'write');
 
 
