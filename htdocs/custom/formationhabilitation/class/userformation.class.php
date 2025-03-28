@@ -2345,7 +2345,7 @@ class UserFormation extends CommonObject
 								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 								$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 								$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'&onglet=formation">ici</a>';
-								$message = $langs->transnoentitiesnoconv("EMailTextFormationExpire", $formation->label, $fk_user->firstname." ".$fk_user->lastname, $this->ref, $link);
+								$message = $langs->transnoentitiesnoconv("EMailTextFormationExpire", $formation->label, $fk_user->firstname." ".$fk_user->lastname, $link);
 
 								$mail = new CMailFile(
 									$subject,
@@ -2459,7 +2459,7 @@ class UserFormation extends CommonObject
 								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 								$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 								$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'&onglet=formation">ici</a>';
-								$message = $langs->transnoentitiesnoconv("EMailTextFormationToProgram", $formation->label, $fk_user->firstname." ".$fk_user->lastname, $this->ref, $link);
+								$message = $langs->transnoentitiesnoconv("EMailTextFormationToProgram", $formation->label, $fk_user->firstname." ".$fk_user->lastname, $link);
 
 								$mail = new CMailFile(
 									$subject,
