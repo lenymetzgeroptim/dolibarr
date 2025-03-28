@@ -1835,6 +1835,8 @@ $(document).ready(function() {
     fetchSuppliersAndContacts();
 });
 
+let selectedContacts = [];  
+
 function createSupplierDropdown(suppliers) {
     const cardContainer = document.createElement("div");
     cardContainer.className = "cardsoustraitant";
@@ -1919,7 +1921,10 @@ function createSupplierDropdown(suppliers) {
         }
     });
 
-    selectContact.addEventListener("change", function() {
+  
+
+
+   selectContact.addEventListener("change", function() {
         const contactId = this.value;
         const supplierId = selectSupplier.value;
         if (contactId && supplierId) {
@@ -1928,21 +1933,21 @@ function createSupplierDropdown(suppliers) {
             if (contact) {
                 const dataRow = document.createElement("div");
                 dataRow.className = "data-row";
-                dataRow.setAttribute("data-contact-id", contactId); 
+                dataRow.setAttribute("data-contact-id", contactId);
                 dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
 
                 const fields = [
                     `${contact.firstname} ${contact.lastname}`,
                     `${supplier.supplier_name}`,
-                    `<input type="text" placeholder="Fonction" class="form-input">`,
-                    `<input type="text" placeholder="Contrat" class="form-input">`,
-                    `<input type="text" placeholder="Habilitations" class="form-input">`
+                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function">`,
+                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract">`,
+                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications">`
                 ];
 
                 fields.forEach(field => {
                     const fieldCell = document.createElement("div");
                     fieldCell.style.flex = "1";
-                    fieldCell.style.minWidth = "150px"; // Uniformise avec la légende
+                    fieldCell.style.minWidth = "150px"; // Uniformiser avec la légende
                     fieldCell.innerHTML = field;
                     dataRow.appendChild(fieldCell);
                 });
@@ -1952,23 +1957,56 @@ function createSupplierDropdown(suppliers) {
                 removeButton.textContent = "×";
                 removeButton.className = "remove-contact";
                 removeButton.addEventListener("click", function() {
+                    // Retirer le contact du tableau selectedContacts
+                    selectedContacts = selectedContacts.filter(c => c.contact_id !== contactId);
+                    
                     dataRow.remove();
-                    selectContact.innerHTML += `<option value="${contactId}">${contact.firstname} ${contact.lastname}</option>`; 
-
-                    if (document.querySelectorAll(".data-row").length === 0) {
-                        legendRow.style.display = "none"; 
-                    }
+                    saveData();
                 });
 
                 dataRow.appendChild(removeButton);
-                tableContainer.appendChild(dataRow); // On ajoute à tableContainer pour aligner avec la légende
+                tableContainer.appendChild(dataRow);
 
-                legendRow.style.display = "flex"; 
+                // Ajouter le contact dans le tableau selectedContacts avec les données des champs
+                selectedContacts.push({
+                    contact_id: contactId,
+                    firstname: contact.firstname,
+                    lastname: contact.lastname,
+                    supplier_name: supplier.supplier_name,
+                    supplier_id: supplierId,
+                    function: "",
+                    contract: "",
+                    qualifications: ""
+                });
+
+               
+                
 
                 selectContact.querySelector(`option[value="${contactId}"]`).remove();
             }
+            saveData();
         }
     });
+
+
+    tableContainer.addEventListener("blur", function(e) {
+        if (e.target && e.target.classList.contains("form-input")) {
+            const inputField = e.target;
+            const dataRow = inputField.closest(".data-row");
+            const contactId = dataRow.getAttribute("data-contact-id");
+
+            const selectedContact = selectedContacts.find(c => c.contact_id == contactId);
+            if (selectedContact) {
+                const fieldName = inputField.getAttribute("data-field"); // "function", "contract", "qualifications"
+                selectedContact[fieldName] = inputField.value; // Mettre à jour la valeur dans le tableau
+
+                
+            }
+            saveData();
+        }
+    }, true);
+
+
 }
 
 
@@ -2259,7 +2297,7 @@ function attachEventListeners() {
 attachEventListeners();
 function saveData() { 
     let cardsData = [];
-                
+    
     // Parcours de toutes les cartes pour récupérer les informations
     document.querySelectorAll(".card-column .card").forEach(function (card) {
         let titleInput = card.querySelector(".title-input");
@@ -2287,6 +2325,28 @@ function saveData() {
             cardsData.push(cardCoordinates);
         }
     });
+
+    // Récupérer les contacts sélectionnés et leurs informations
+    const contactsData = selectedContacts.map(contact => {
+        return {
+            contact_id: contact.contact_id,
+            firstname: contact.firstname,
+            lastname: contact.lastname,
+            supplier_name: contact.supplier_name,
+            supplier_id: contact.supplier_id,
+            function: contact.function,
+            contract: contact.contract,
+            qualifications: contact.qualifications
+        };
+    });
+
+    // Ajouter les contacts sélectionnés à cardsData
+    if (contactsData.length > 0) {
+        cardsData.push({
+            type: "contacts", // Type de donnée pour les contacts
+            contacts: contactsData
+        });
+    }
 
     // Parcours de toutes les listes pour récupérer les informations
     document.querySelectorAll(".card-column .user-list").forEach(function (list) {
@@ -2338,58 +2398,19 @@ function saveData() {
             };
 
             cardsData.push(uniqueListCoordinates); // Ajouter la liste unique à cardsData
-    }
-
-        document.querySelectorAll(".soustraitant-list").forEach(function (list) {
-    
-        let listId = 12; 
-        let title = "Sous-traitants"; // Le titre de la liste
-        let type = "listesoustraitant"; // Le type de la liste
-
-        let soustraitants = [];
-        
-        list.querySelectorAll("li").forEach(function (li) {
-            let name = li.querySelector("div:nth-child(1)").textContent.trim();
-            let fonction = li.querySelector(".fonction-input").value.trim();
-            let contrat = li.querySelector(".contrat-input").value.trim();
-            let habilitation = li.querySelector(".habilitation-input").value.trim();
-            let phone = li.querySelector("div:nth-child(5)").textContent.trim();
-            
-            
-            let socPeopleId = li.getAttribute("data-user-id");
-
-            // Ajouter le soc_peopleId aux données du sous-traitant
-            soustraitants.push({
-                name: name,
-                soc_people: socPeopleId,
-                fonction: fonction,
-                contrat: contrat,
-                habilitation: habilitation,
-                phone: phone
-                
-            });
-        });
-
-        // Ajout de la liste des sous-traitants dans cardsData
-        cardsData.push({
-            title: title,
-            type: type,
-            id: listId,
-            soustraitants: soustraitants // Contient les informations sur chaque sous-traitant
-        });
+        }
     });
-
-});
 
     let payload = {
         otid: otId,
-        cardsData: cardsData.length > 0 ? cardsData : null // Mettre null si vide
+        cardsData: cardsData.length > 0 ? cardsData : null, // Mettre null si vide
+        selectedContacts: contactsData.length > 0 ? contactsData : null // Inclure les contacts sélectionnés
     };
     
     console.log(cardsData);
 
     fetch("ot_card.php?action=save", {
-    method: "GET",
+        method: "GET",
     })
     .then(() => {
         return fetch("ot_card.php", {
@@ -2415,7 +2436,6 @@ function saveData() {
         console.log("Sauvegarde réussie !");
         // Par exemple : Afficher un message, masquer un loader, ou actualiser
     }
-
 }
     updateCards(); 
 });
