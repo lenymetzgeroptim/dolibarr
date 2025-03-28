@@ -1034,11 +1034,11 @@ $cellDataJson = json_encode($cellData);
 
 
 print '
-<style>
+
+    <style>
         /* Styles globaux */
         body {
             font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
             color: #333;
             margin: 0;
             padding: 0;
@@ -1056,8 +1056,6 @@ print '
             display: block; /* Forcer le bloc pour que la taille de la carte prenne toute la largeur */
         }
 
-
-        /* Header de la carte */
         .card-header {
             background-color: #2F508B;
             color: #fff;
@@ -1069,13 +1067,11 @@ print '
             text-align: center;
         }
 
-        /* Corps de la carte */
         .card-body {
             padding: 15px;
             text-align: center;
         }
 
-        /* Boutons */
         .btn {
             display: inline-block;
             padding: 8px 12px;
@@ -1108,11 +1104,10 @@ print '
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
         }
 
-       .btn-info:hover {
-        background-color: #3c9613; 
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
+        .btn-info:hover {
+            background-color: #3c9613; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
         }
-
 
         .btn-secondary:hover {
             background-color: #28508b;
@@ -1125,7 +1120,6 @@ print '
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
         }
 
-        /* Flexbox pour aligner les cartes */
         .card-container {
             display: flex;
             justify-content: space-between;
@@ -1134,9 +1128,7 @@ print '
             width: 100%;
         }
 
-
-        /* Styles pour les colonnes */
-       .card-column {
+        .card-column {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1145,12 +1137,10 @@ print '
             flex-grow: 1;
         }
 
-
         .card-column .card {
             margin: 10px 0; /* Ajouté pour espacer les cartes verticalement */
         }
 
-        /* Dropdown menu */
         .dropdown {
             position: relative;
             display: inline-block;
@@ -1165,8 +1155,8 @@ print '
             z-index: 1;
             left: 50%;
             transform: translateX(-50%);
-            top: 100%; /* Affiché sous le bouton */
-            margin-top: 1px; /* Espacement entre le bouton et le menu déroulant */
+            top: 100%; 
+            margin-top: 1px; 
         }
 
         .dropdown-content button {
@@ -1191,7 +1181,6 @@ print '
             display: block;
         }
 
-        /* Bouton de suppression */
         .delete-button {
             background-color: #dc3545;
             border: none;
@@ -1200,41 +1189,128 @@ print '
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
-            margin: 10px auto; /* Pour centrer le bouton horizontalement */
+            margin: 10px auto;
             display: block;
         }
-			.list-item {
-			padding: 10px;
-			border-bottom: 1px solid #ddd;
-		}
 
-		.list-item:last-child {
-			border-bottom: none;
-		}
+ .form-label {
+        display: block;
+        font-weight: bold;
+        margin-top: 10px;
+    }
 
-		.list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-}
+    select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+    }
 
-.list-item:last-child {
-    border-bottom: none;
-}
+    .contact-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        font-size: 14px;
+        background: #f1f1f1;
+        padding: 8px;
+        border-radius: 4px;
+    }
 
-.delete-item-button {
-    background: none;
-    border: none;
-    color: #dc3545;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 0;
-}
+    .contact-info input {
+        width: 100px;
+        padding: 5px;
+        font-size: 12px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+
+        /* Conteneur principal pour centrer la carte */
+        .supplier-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+        }
+
+        /* Carte principale */
+        .cardsoustraitant {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Titre de la carte */
+         .card-header-soustraitant {       
+            transition: transform 0.2s ease-in-out;
+            margin-bottom: 20px;
+            width: 100%;  /* surer que les cartes utilisent toute la largeur disponible */
+            height: auto; /* Laisse la hauteur se calculer selon le contenu */
+            position: relative;
+            display: block; /* Forcer le bloc pour que la taille de la carte prenne toute la largeur */
+        }
+            
+
+        /* Labels et Sélecteurs */
+        .cardsoustraitant label {
+            display: block;
+            font-weight: bold;
+            margin: 10px 0 5px;
+            text-align: left;
+        }
+
+        .cardsoustraitant select {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+
+        /* Section contact cachée par défaut */
+        .contact-container {
+            display: none;
+            margin-top: 15px;
+        }
+
+
+
+        /* Conteneur des détails du contact sous forme de tableau */
+        .cardsoustraitant .card-body {
+            display: table;
+            width: 100%;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        /* Ligne de légende */
+        .cardsoustraitant .legend-row {
+            display: table-row;
+            font-weight: bold;
+            text-align: center;
+            
+        }
+
+        /* Données des contacts */
+        .cardsoustraitant .data-row {
+            display: table-row;
+            text-align: center;
+            padding: 5px 0;
+        }
+
+
+
     </style>
-
-
 ';
 
 print '
@@ -1312,7 +1388,8 @@ print '
                     </div>
                     <div style="text-align: center; margin-top: 10px;">
                     </div>
-                    
+                    <div class="supplier-section">
+                    </div>
                 </div>
             </div>
         </div>
@@ -1723,103 +1800,183 @@ function deleteUniqueList(uniqueListId, list) {
 }
 
 
-function displaySoustraitantList(Soustraitants) {
-    // Vérifier si le tableau des sous-traitants est vide
-    if (Soustraitants.length === 0) {
-        return; // Ne rien faire si aucune donnée
+//---------------------------------------------------------------------------------------------------------------------------------------------------
+/**
+ * partie sous traitant
+ * 
+ */
+
+
+$(document).ready(function() {
+    // Fonction pour récupérer les fournisseurs et contacts via Ajax
+    function fetchSuppliersAndContacts() {
+        $.ajax({
+            url: "ajax/myobject.php",  // Assure-toi que le chemin est correct
+            type: "GET",
+            data: { mode: "getSuppliersAndContacts" },
+            dataType: "json",
+            success: function(response) {
+                console.log("Réponse Ajax reçue :", response); // Affiche la réponse complète
+
+                if (response.status === "success") {
+                    console.log("Données des fournisseurs :", response.data);  // Affiche les données des fournisseurs
+                    createSupplierDropdown(response.data);  // Ta fonction pour traiter les données
+                } else {
+                    console.error("Erreur dans la réponse:", response.message);  // Affiche les erreurs si nécessaire
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Erreur Ajax :", error);  
+            }
+        });
     }
 
-    // Créer la carte pour les sous-traitants (comme celle des utilisateurs uniques)
-    const list = document.createElement("div");
-    list.className = "user-list card soustraitant-list"; 
+    // Appel de la fonction pour récupérer les données dès que la page est prête
+    fetchSuppliersAndContacts();
+});
 
-    // Créer un conteneur pour le titre de la liste
-    const titleContainer = document.createElement("div");
-    titleContainer.style = "text-align: center; padding-bottom: 10px; margin-bottom: 10px; color: #333; font-weight: bold;";
-    const soustraitantTitle = document.createElement("h3");
-    soustraitantTitle.textContent = "Sous-traitants";
-    soustraitantTitle.style = "margin-top: 20px;";
-    titleContainer.appendChild(soustraitantTitle);
+function createSupplierDropdown(suppliers) {
+    const cardContainer = document.createElement("div");
+    cardContainer.className = "cardsoustraitant";
 
-    // Créer une légende pour la liste des sous-traitants
-    const legend = document.createElement("div");
-    legend.className = "list-legend";
-    legend.style = "display: flex; justify-content: space-between; padding: 10px; font-weight: bold; color: #333; margin-bottom: 10px; text-align: center;";
-    legend.innerHTML = ` 
-        <div style="flex: 1; text-align: center;">Nom Prénom</div>
-        <div style="flex: 1; text-align: center;">Fonction</div>
-        <div style="flex: 1; text-align: center;">Contrat</div>
-        <div style="flex: 1; text-align: center;">Habilitations</div>
-        <div style="flex: 1; text-align: center;">Téléphone</div>
-    `;
+    const cardTitle = document.createElement("h3");
+    cardTitle.textContent = "Sous traitants";
+    cardTitle.className = "card-header-soustraitant"; 
+    cardContainer.appendChild(cardTitle);
 
-    // Créer la liste non ordonnée des sous-traitants
-    const soustraitantList = document.createElement("ul");
-    soustraitantList.style = "list-style: none; padding: 0; margin: 0;";
+    const supplierLabel = document.createElement("label");
+    supplierLabel.textContent = "Sélectionnez un fournisseur :";
+    supplierLabel.className = "form-label"; 
 
-    // Ajouter les sous-traitants à la liste
-    Soustraitants.forEach(user => {
-        const li = document.createElement("li");
-        li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
+    const selectSupplier = document.createElement("select");
+    selectSupplier.className = "supplier-select";
+    selectSupplier.innerHTML = `<option value="">-- Choisissez un fournisseur --</option>` + 
+                               suppliers.map(supplier => `<option value="${supplier.supplier_id}">${supplier.supplier_name}</option>`).join("");
 
-      
-        li.setAttribute("data-user-id", user.fk_socpeople);
+    cardContainer.appendChild(supplierLabel);
+    cardContainer.appendChild(selectSupplier);
 
-        // Remplacer les champs par des inputs pour pouvoir éditer les données
-        li.innerHTML = ` 
-            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
-            <div style="flex: 1; text-align: center; padding-right: 10px;">
-                <input type="text" class="fonction-input" placeholder="Fonction" value="${user.fonction || ""}" style="width: 90%; padding: 5px; border: none; border-bottom: 1px solid #333; text-align: center; background-color: transparent;">
-            </div>
-            <div style="flex: 1; text-align: center; padding-right: 10px;">
-                <input type="text" class="contrat-input" placeholder="Type de contrat" value="${user.contrat || ""}" style="width: 90%; padding: 5px; border: none; border-bottom: 1px solid #333; text-align: center; background-color: transparent;">
-            </div>
-            <div style="flex: 1; text-align: center; padding-right: 10px;">
-                <input type="text" class="habilitation-input" placeholder="Habilitation" value="${user.habilitation || ""}" style="width: 90%; padding: 5px; border: none; border-bottom: 1px solid #333; text-align: center; background-color: transparent;">
-            </div>
-            <div style="flex: 1; text-align: center;">
-                ${user.phone || "Non défini"}
-            </div>
-        `;
-        
-        soustraitantList.appendChild(li);
-        
+    const contactContainer = document.createElement("div");
+    contactContainer.className = "contact-container";
+    const contactLabel = document.createElement("label");
+    contactLabel.textContent = "Sélectionnez un contact :";
+    contactLabel.className = "form-label"; 
+
+    const selectContact = document.createElement("select");
+    selectContact.className = "contact-select";
+    selectContact.innerHTML = `<option value="">-- Choisissez un contact --</option>`;
+
+    contactContainer.appendChild(contactLabel);
+    contactContainer.appendChild(selectContact);
+    cardContainer.appendChild(contactContainer);
+
+    document.querySelector(".supplier-section").appendChild(cardContainer);
+
+    // Conteneur pour regrouper la légende et les contacts
+    const tableContainer = document.createElement("div");
+    tableContainer.className = "table-container";
+    cardContainer.appendChild(tableContainer);
+
+    const legendRow = document.createElement("div");
+    legendRow.className = "legend-row";
+    legendRow.style.cssText = "display: flex; text-align: center; padding: 5px 0; font-weight: bold; display: none;";
+
+    const legendFields = ["Nom Prénom", "Entreprise", "Fonction", "Contrat", "Habilitations", ""];
+    legendFields.forEach(field => {
+        const fieldCell = document.createElement("div");
+        fieldCell.style.flex = "1";
+        fieldCell.style.minWidth = "150px"; // Ajout pour uniformiser la largeur
+        fieldCell.textContent = field;
+        legendRow.appendChild(fieldCell);
     });
 
-    // Ajouter le titre et la liste au conteneur
-    const listBody = document.createElement("div");
-    listBody.className = "list-body";
-    listBody.style = "padding: 15px;";
-    listBody.appendChild(titleContainer);  // Ajouter le titre
-    listBody.appendChild(legend);          // Ajouter la légende
-    listBody.appendChild(soustraitantList); // Ajouter la liste des sous-traitants
+    tableContainer.appendChild(legendRow);
 
-    list.appendChild(listBody);
+    const spacingDiv = document.createElement("div");
+    spacingDiv.style.height = "10px"; 
+    cardContainer.appendChild(spacingDiv);
 
-    // Vérifier si la liste unique existe et ajouter les sous-traitants juste après
-    const uniqueListContainer = document.querySelector(".user-list.unique-list");
-    if (uniqueListContainer) {
-        uniqueListContainer.insertAdjacentElement("afterend", list);
-    } else {
-        document.body.appendChild(list);
-    }
+    selectSupplier.addEventListener("change", function() {
+        const supplierId = this.value;
+        if (supplierId) {
+            const supplier = suppliers.find(s => s.supplier_id == supplierId);
+            if (supplier) {
+                selectContact.innerHTML = `<option value="">-- Choisissez un contact --</option>` +
+                    supplier.contacts
+                        .filter(contact => !document.querySelector(`[data-contact-id="${contact.contact_id}"]`))
+                        .map(contact => `<option value="${contact.contact_id}">${contact.firstname} ${contact.lastname}</option>`)
+                        .join("");
 
-    // Attacher les écouteurs pour les champs de saisie
-    document.querySelectorAll(".fonction-input, .contrat-input, .habilitation-input").forEach(input => {
-        if (!input.dataset.listenerAttached) {
-            input.addEventListener("blur", saveData); // Appeler la fonction saveData lorsque utilisateur quitte un champ
-            input.dataset.listenerAttached = true;  // Empêcher de réattacher plusieurs fois le même écouteur
+                contactContainer.style.display = "block"; 
+                
+                if (document.querySelectorAll(".data-row").length > 0) {
+                    legendRow.style.display = "flex"; 
+                }
+            }
+        } else {
+            contactContainer.style.display = "none"; 
+            legendRow.style.display = "none"; 
+        }
+    });
+
+    selectContact.addEventListener("change", function() {
+        const contactId = this.value;
+        const supplierId = selectSupplier.value;
+        if (contactId && supplierId) {
+            const supplier = suppliers.find(s => s.supplier_id == supplierId);
+            const contact = supplier.contacts.find(c => c.contact_id == contactId);
+            if (contact) {
+                const dataRow = document.createElement("div");
+                dataRow.className = "data-row";
+                dataRow.setAttribute("data-contact-id", contactId); 
+                dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
+
+                const fields = [
+                    `${contact.firstname} ${contact.lastname}`,
+                    `${supplier.supplier_name}`,
+                    `<input type="text" placeholder="Fonction" class="form-input">`,
+                    `<input type="text" placeholder="Contrat" class="form-input">`,
+                    `<input type="text" placeholder="Habilitations" class="form-input">`
+                ];
+
+                fields.forEach(field => {
+                    const fieldCell = document.createElement("div");
+                    fieldCell.style.flex = "1";
+                    fieldCell.style.minWidth = "150px"; // Uniformise avec la légende
+                    fieldCell.innerHTML = field;
+                    dataRow.appendChild(fieldCell);
+                });
+
+                const removeButton = document.createElement("div");
+                removeButton.style.cssText = "flex: 0.5; color: red; cursor: pointer;";
+                removeButton.textContent = "×";
+                removeButton.className = "remove-contact";
+                removeButton.addEventListener("click", function() {
+                    dataRow.remove();
+                    selectContact.innerHTML += `<option value="${contactId}">${contact.firstname} ${contact.lastname}</option>`; 
+
+                    if (document.querySelectorAll(".data-row").length === 0) {
+                        legendRow.style.display = "none"; 
+                    }
+                });
+
+                dataRow.appendChild(removeButton);
+                tableContainer.appendChild(dataRow); // On ajoute à tableContainer pour aligner avec la légende
+
+                legendRow.style.display = "flex"; 
+
+                selectContact.querySelector(`option[value="${contactId}"]`).remove();
+            }
         }
     });
 }
 
 
-// Vérifier si `jsdatasoustraitants` contient des éléments et afficher la liste
-if (jsdatasoustraitants.length > 0) {
-    displaySoustraitantList(jsdatasoustraitants); // Appeler la fonction pour afficher la liste
-}
-console.log(jsdatasoustraitants);
+// Appel de la fonction pour récupérer et afficher les fournisseurs
+fetchSuppliersAndContacts();
 
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
