@@ -967,7 +967,9 @@ class ExtendedExportFDT extends Export
 			}
 		}
 		elseif($datatoexport == 'absences') {
-			$sql .= " LEFT JOIN llx_donneesrh_Positionetcoefficient_extrafields AS drh ON drh.fk_object = u.rowid";
+			if($conf->donneesrh->enabled) {
+				$sql .= " LEFT JOIN llx_donneesrh_Positionetcoefficient_extrafields AS drh ON drh.fk_object = u.rowid";
+			}
 			$sql .= " LEFT JOIN llx_holiday AS h ON h.fk_user = u.rowid";
 			$sql .= " LEFT JOIN llx_c_holiday_types AS ht ON ht.rowid = h.fk_type";
 			$sql .= " LEFT JOIN llx_holiday_extrafields AS hef ON hef.fk_object = h.rowid";
