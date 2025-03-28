@@ -201,30 +201,32 @@ try {
 
             $receivedCellIds[] = $cellId; // Stocker les ID reçus
 
-            // Vérifier si la cellule existe déjà
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND id_cellule = '$cellId'";
-            $resql = $db->query($sql);
-            if ($resql && $db->num_rows($resql) > 0) {
-                $row = $db->fetch_object($resql);
-                $rowid = $row->rowid;
+            if ($type !== 'listesoustraitant') {
+                // Vérifier si la cellule existe déjà
+                $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND id_cellule = '$cellId'";
+                $resql = $db->query($sql);
+                if ($resql && $db->num_rows($resql) > 0) {
+                    $row = $db->fetch_object($resql);
+                    $rowid = $row->rowid;
 
-                // Mise à jour de la cellule existante
-                $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_cellule 
-                        SET x = $x, y = $y, type = '$type', title = '$title' 
-                        WHERE rowid = $rowid AND ot_id = $otId";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de la mise à jour de la cellule : " . $db->lasterror());
-                }
-            } else {
-                // Insérer une nouvelle cellule
-                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule (ot_id, x, y, type, title, id_cellule)
-                        VALUES ($otId, $x, $y, '$type', '$title', '$cellId')";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule : " . $db->lasterror());
-                }
+                    // Mise à jour de la cellule existante
+                    $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_cellule 
+                            SET x = $x, y = $y, type = '$type', title = '$title' 
+                            WHERE rowid = $rowid AND ot_id = $otId";
+                    if (!$db->query($sql)) {
+                        throw new Exception("Erreur lors de la mise à jour de la cellule : " . $db->lasterror());
+                    }
+                } else {
+                    // Insérer une nouvelle cellule
+                    $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule (ot_id, x, y, type, title, id_cellule)
+                            VALUES ($otId, $x, $y, '$type', '$title', '$cellId')";
+                    if (!$db->query($sql)) {
+                        throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule : " . $db->lasterror());
+                    }
 
-                $rowid = $db->last_insert_id(MAIN_DB_PREFIX . 'ot_ot_cellule');
-                $insertedCellIds[] = $rowid;
+                    $rowid = $db->last_insert_id(MAIN_DB_PREFIX . 'ot_ot_cellule');
+                    $insertedCellIds[] = $rowid;
+                }
             }
 
             // Gestion des sous-traitants pour les listes de type 'listesoustraitant'
@@ -989,7 +991,6 @@ $sql = "SELECT oc.rowid, oc.x, oc.y, oc.type, oc.title, oc.tms
         WHERE oc.ot_id = " . intval($otId) . "
         ORDER BY oc.x ASC, oc.y ASC, oc.tms DESC";
 
-
 $resql = $db->query($sql);
 
 $cellData = [];
@@ -999,13 +1000,34 @@ if ($resql) {
     }
 }
 
-// Convertir les données en JSON pour l'envoyer au JavaScript
-$cellDataJson = json_encode($cellData);
+// Récupérer les sous-traitants liés à l'OT
+$sql = "SELECT ots.rowid, ots.fk_socpeople, ots.fk_societe, ots.fonction, ots.contrat, ots.habilitation,
+               sp.firstname, sp.lastname, s.nom AS societe_nom
+        FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants AS ots
+        LEFT JOIN " . MAIN_DB_PREFIX . "socpeople AS sp ON ots.fk_socpeople = sp.rowid
+        LEFT JOIN " . MAIN_DB_PREFIX . "societe AS s ON ots.fk_societe = s.rowid
+        WHERE ots.ot_id = " . intval($otId);
 
+$resql = $db->query($sql);
 
+$subcontractors = [];
+if ($resql) {
+    while ($obj = $db->fetch_object($resql)) {
+        $subcontractors[] = [
+            'rowid' => $obj->rowid,
+            'fk_socpeople' => $obj->fk_socpeople,
+            'fk_societe' => $obj->fk_societe,
+            'fonction' => $obj->fonction,
+            'contrat' => $obj->contrat,
+            'habilitation' => $obj->habilitation,
+            'firstname' => $obj->firstname,
+            'lastname' => $obj->lastname,
+            'societe_nom' => $obj->societe_nom
+        ];
+    }
+}
 
-$userData = [];
-
+// Ajouter les utilisateurs aux cellules existantes
 foreach ($cellData as $cell) {
     // Requête pour récupérer les utilisateurs liés à chaque cellule
     $sql = "SELECT fk_user
@@ -1025,7 +1047,13 @@ foreach ($cellData as $cell) {
     $cell->userIds = $users;
 }
 
-// Convertir les données en JSON pour les envoyer au JS
+// Ajouter la liste des sous-traitants au tableau cellData
+$cellData[] = [
+    'type' => 'soustraitantlist',
+    'subcontractors' => $subcontractors
+];
+
+// Convertir les données en JSON pour les envoyer au JavaScript
 $cellDataJson = json_encode($cellData);
 
 
@@ -1407,7 +1435,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let userjson = ' . $userjson . ';
     let isDataSaved = false;
     let isUniqueListCreated = false;
-
+    console.log(cellData);
     let jsdata = '.$data.'; 
     let users = typeof jsdata === "string" ? JSON.parse(jsdata) : jsdata;
 
