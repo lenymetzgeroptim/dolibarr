@@ -230,12 +230,13 @@ try {
             // Gestion des sous-traitants pour les listes de type 'listesoustraitant'
             if ($type === 'listesoustraitant' && isset($item['soustraitants']) && is_array($item['soustraitants'])) {
                 foreach ($item['soustraitants'] as $soustraitant) {
-                    $fk_socpeople = intval($soustraitant['soc_people']); // Récupérer l'ID du sous-traitant
+                    $fk_socpeople = intval($soustraitant['soc_people']);
+                    $fk_societe = $db->escape($soustraitant['supplier_id']);
                     $fonction = $db->escape($soustraitant['fonction']);
                     $contrat = $db->escape($soustraitant['contrat']);
                     $habilitation = $db->escape($soustraitant['habilitation']);
-
-                    $receivedSubcontractors[] = $fk_socpeople; // Stocker les IDs reçus
+                   
+                    $receivedSubcontractors[] = $fk_socpeople; 
 
                     // Vérifier si le sous-traitant est déjà enregistré
                     $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
@@ -248,15 +249,15 @@ try {
 
                         // Mise à jour des informations du sous-traitant
                         $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
-                                SET fonction = '$fonction', contrat = '$contrat', habilitation = '$habilitation'
+                                SET fonction = '$fonction', contrat = '$contrat', habilitation = '$habilitation', fk_societe = '$fk_societe'
                                 WHERE rowid = $rowid AND ot_id = $otId";
                         if (!$db->query($sql)) {
                             throw new Exception("Erreur lors de la mise à jour du sous-traitant : " . $db->lasterror());
                         }
                     } else {
                         // Insérer un nouveau sous-traitant
-                        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_sous_traitants (ot_id, fk_socpeople, fonction, contrat, habilitation) 
-                                VALUES ($otId, $fk_socpeople, '$fonction', '$contrat', '$habilitation')";
+                        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_sous_traitants (ot_id, fk_socpeople, fonction, contrat, habilitation, fk_societe) 
+                                VALUES ($otId, $fk_socpeople, '$fonction', '$contrat', '$habilitation','$fk_societe')";
                         if (!$db->query($sql)) {
                             throw new Exception("Erreur lors de l'insertion du sous-traitant : " . $db->lasterror());
                         }
@@ -1444,7 +1445,7 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
 
 function displayUserList() {
     const existingUniqueList = document.querySelector(".user-list.unique-list");
-    console.log("Affichage de la liste unique.");
+    
 
     // Supprimer la liste par défaut si elle existe, pour éviter des doublons
     if (existingUniqueList) {
@@ -1456,7 +1457,7 @@ function displayUserList() {
         const hasUniqueList = cellData.some(cell => cell.type === "listeunique");
 
         if (hasUniqueList) {
-            console.log("Affichage de la liste unique depuis cellData.");
+            
             cellData.forEach(cell => {
                 if (cell.type === "listeunique") {
                     const list = createUniqueUserList();
@@ -1811,18 +1812,16 @@ $(document).ready(function() {
     // Fonction pour récupérer les fournisseurs et contacts via Ajax
     function fetchSuppliersAndContacts() {
         $.ajax({
-            url: "ajax/myobject.php",  // Assure-toi que le chemin est correct
+            url: "ajax/myobject.php",  
             type: "GET",
             data: { mode: "getSuppliersAndContacts" },
             dataType: "json",
-            success: function(response) {
-                console.log("Réponse Ajax reçue :", response); // Affiche la réponse complète
-
+            success: function(response) { 
                 if (response.status === "success") {
-                    console.log("Données des fournisseurs :", response.data);  // Affiche les données des fournisseurs
-                    createSupplierDropdown(response.data);  // Ta fonction pour traiter les données
+                   
+                    createSupplierDropdown(response.data);  
                 } else {
-                    console.error("Erreur dans la réponse:", response.message);  // Affiche les erreurs si nécessaire
+                    console.error("Erreur dans la réponse:", response.message);  
                 }
             },
             error: function(xhr, status, error) {
@@ -2329,22 +2328,22 @@ function saveData() {
     // Récupérer les contacts sélectionnés et leurs informations
     const contactsData = selectedContacts.map(contact => {
         return {
-            contact_id: contact.contact_id,
+            soc_people: contact.contact_id,
             firstname: contact.firstname,
             lastname: contact.lastname,
             supplier_name: contact.supplier_name,
             supplier_id: contact.supplier_id,
-            function: contact.function,
-            contract: contact.contract,
-            qualifications: contact.qualifications
+            fonction: contact.function,
+            contrat: contact.contract,
+            habilitation: contact.qualifications
         };
     });
 
     // Ajouter les contacts sélectionnés à cardsData
     if (contactsData.length > 0) {
         cardsData.push({
-            type: "contacts", // Type de donnée pour les contacts
-            contacts: contactsData
+            type: "listesoustraitant", // Type de donnée pour les contacts
+            soustraitants: contactsData
         });
     }
 
