@@ -155,7 +155,8 @@ $permissiontodelete = $user->rights->formationhabilitation->formation->delete ||
 $permissiontoreadline = $user->rights->formationhabilitation->userformation->readall;
 $permissiontoaddline = $user->rights->formationhabilitation->userformation->write;
 $permissiontodeleteline = $user->rights->formationhabilitation->userformation->delete;
-$permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
+$permissiontoreadcostpedagogique = $user->rights->formationhabilitation->formation->readcoutpedagogique;
+$permissiontoreadallcost = $user->rights->formationhabilitation->formation->readcoutall;
 $permissiontoforceline = $user->rights->formationhabilitation->userformation->force;
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/formation';
@@ -258,15 +259,17 @@ if (empty($reshook)) {
 unset($arrayfields['t.formateur']);
 unset($objectline->fields['fk_formation']);
 unset($arrayfields['t.fk_formation']);
-if(!$permissiontoreadcost) {
-    unset($objectline->fields['cout_pedagogique']);
+if(!$permissiontoreadallcost) {
     unset($objectline->fields['cout_mobilisation']);
-    unset($objectline->fields['cout_annexe']);
     unset($objectline->fields['cout_total']);
-    unset($arrayfields['t.cout_pedagogique']);
     unset($arrayfields['t.cout_mobilisation']);
-    unset($arrayfields['t.cout_annexe']);
     unset($arrayfields['t.cout_total']);
+}
+if(!$permissiontoreadcostpedagogique && !$permissiontoreadallcost) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_annexe']);
+    unset($arrayfields['t.cout_pedagogique']);
+    unset($arrayfields['t.cout_annexe']);
 
 	unset($object->fields['cout']);
 }

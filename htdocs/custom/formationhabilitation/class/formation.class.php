@@ -534,7 +534,7 @@ class Formation extends CommonObject
 			$actioncomm->userownerid = $user->id; // Owner of action
 			$actioncomm->fk_element  = $this->id;
 			$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
-			$actioncomm->extraparams  = 'cost';
+			$actioncomm->extraparams  = 'costpedagogique';
 			$ret = $actioncomm->create($user); // User creating action
 		}
 

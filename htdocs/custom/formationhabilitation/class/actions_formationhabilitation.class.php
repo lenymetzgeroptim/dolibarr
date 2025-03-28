@@ -86,8 +86,11 @@ class ActionsFormationHabilitation extends CommonHookActions
 	{
 		global $conf, $user, $langs;
 
-		if(!$user->rights->formationhabilitation->formation->readcout) {
+		if(!$user->rights->formationhabilitation->formation->readcoutpedagogique && !$user->rights->formationhabilitation->formation->readcoutall) {
 			$this->resprints = " AND a.extraparams IS NULL";
+		}
+		elseif(!$user->rights->formationhabilitation->formation->readcoutall) {
+			$this->resprints = " AND (a.extraparams IS NULL OR a.extraparams = 'costpedagogique')";
 		}
 
 		return 0; // or return 1 to replace standard code

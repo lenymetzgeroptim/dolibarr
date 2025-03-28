@@ -319,7 +319,7 @@ class UserFormation extends CommonObject
 			// $ret = $actioncomm->create($user); // User creating action
 		}
 
-		$msgAgendaCost = msgAgendaUpdate($this, 0, array(), array('cout_pedagogique', 'cout_mobilisation', 'cout_annexe', 'cout_total'));
+		$msgAgendaCost = msgAgendaUpdate($this, 0, array(), array('cout_pedagogique', 'cout_annexe'));
 		if($resultcreate && !empty($msgAgendaCost)) {
 			global $langs; 
 
@@ -351,7 +351,44 @@ class UserFormation extends CommonObject
 			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
 			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
 			$actioncomm->array_options['options_elementtype2'] = 'user';
-			$actioncomm->extraparams  = 'cost';
+			$actioncomm->extraparams  = 'costpedagogique';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
+		$msgAgendaCost = msgAgendaUpdate($this, 0, array(), array('cout_mobilisation', 'cout_total'));
+		if($resultcreate && !empty($msgAgendaCost)) {
+			global $langs; 
+
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_CREATE';
+			if($this->status == self::STATUS_PROGRAMMEE && $noaddline){
+				$actioncomm->label = $langs->transnoentities("USERFORMATION_PROGRAM_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			}
+			else {
+				$actioncomm->label = $langs->transnoentities("USERFORMATION_CREATE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			}			
+			$actioncomm->note_private = $msgAgendaCost;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->extraparams  = 'costmobilisation';
 			$actioncomm->array_options['options_fk_userformation'] = $this->id;
 			$ret = $actioncomm->create($user); // User creating action
 		}
@@ -627,7 +664,7 @@ class UserFormation extends CommonObject
 			// $ret = $actioncomm->create($user); // User creating action
 		}
 
-		$msgAgendaCost = msgAgendaUpdate($this, 1, array(), array('cout_pedagogique', 'cout_mobilisation', 'cout_annexe', 'cout_total'));
+		$msgAgendaCost = msgAgendaUpdate($this, 1, array(), array('cout_pedagogique', 'cout_annexe'));
 		if($resultupdate && !empty($msgAgendaCost) && !$noaction) {
 			$user_static = new User($this->db);
 			$formation_static = new Formation($this->db);
@@ -652,7 +689,37 @@ class UserFormation extends CommonObject
 			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
 			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
 			$actioncomm->array_options['options_elementtype2'] = 'user';
-			$actioncomm->extraparams  = 'cost';
+			$actioncomm->extraparams  = 'costpedagogique';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
+		$msgAgendaCost = msgAgendaUpdate($this, 1, array(), array('cout_mobilisation', 'cout_total'));
+		if($resultupdate && !empty($msgAgendaCost) && !$noaction) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_UPDATE';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_UPDATE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgendaCost;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->extraparams  = 'costmobilisation';
 			$actioncomm->array_options['options_fk_userformation'] = $this->id;
 			$ret = $actioncomm->create($user); // User creating action
 		}

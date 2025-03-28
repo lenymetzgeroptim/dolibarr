@@ -128,7 +128,8 @@ $permissiontoadd = $user->rights->formationhabilitation->userformation->write; /
 $permissiontodelete = $user->rights->formationhabilitation->userformation->delete;
 // $permissionnote = $user->rights->formationhabilitation->userformation->write; // Used by the include of actions_setnotes.inc.php
 // $permissiondellink = $user->rights->formationhabilitation->userformation->write; // Used by the include of actions_dellink.inc.php
-$permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
+$permissiontoreadcostpedagogique = $user->rights->formationhabilitation->formation->readcoutpedagogique;
+$permissiontoreadallcost = $user->rights->formationhabilitation->formation->readcoutall;
 
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/userformation';
@@ -198,13 +199,15 @@ if (empty($reshook)) {
 	// include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
-
-if(!$permissiontoreadcost) {
-    unset($object->fields['cout_pedagogique']);
+if(!$permissiontoreadallcost) {
     unset($object->fields['cout_mobilisation']);
-    unset($object->fields['cout_annexe']);
     unset($object->fields['cout_total']);
 }
+if(!$permissiontoreadcostpedagogique && !$permissiontoreadallcost) {
+	unset($object->fields['cout_pedagogique']);
+    unset($object->fields['cout_annexe']);
+}
+
 
 /*
  * View
@@ -417,7 +420,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Common attributes
-	if(!$permissiontoreadcost) {
+	if(!$permissiontoreadcostpedagogique && !$permissiontoreadallcost) {
 		$keyforbreak='nombre_heure';	// We change column just before this field
 	}
 	else {

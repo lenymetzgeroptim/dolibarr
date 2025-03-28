@@ -479,8 +479,11 @@ function show_actions_messaging_formationhabilitation($conf, $langs, $db, $filte
 			$sql .= natural_search('a.label', $filters['search_agenda_label']);
 		}
 
-		if(!$user->rights->formationhabilitation->formation->readcout) {
+		if(!$user->rights->formationhabilitation->formation->readcoutpedagogique && !$user->rights->formationhabilitation->formation->readcoutall) {
 			$sql .= " AND a.extraparams IS NULL";
+		}
+		elseif(!$user->rights->formationhabilitation->formation->readcoutall) {
+			$sql .= " AND (a.extraparams IS NULL OR a.extraparams = 'costpedagogique')";
 		}
 	}
 
@@ -1233,8 +1236,11 @@ function show_actions_done_formationhabilitation($conf, $langs, $db, $filterobj,
 			addEventTypeSQL($sql, $actioncode);
 		}
 
-		if(!$user->rights->formationhabilitation->formation->readcout) {
+		if(!$user->rights->formationhabilitation->formation->readcoutpedagogique && !$user->rights->formationhabilitation->formation->readcoutall) {
 			$sql .= " AND a.extraparams IS NULL";
+		}
+		elseif(!$user->rights->formationhabilitation->formation->readcoutall) {
+			$sql .= " AND (a.extraparams IS NULL OR a.extraparams = 'costpedagogique')";
 		}
 
 		addOtherFilterSQL($sql, $donetodo, $now, $filters);

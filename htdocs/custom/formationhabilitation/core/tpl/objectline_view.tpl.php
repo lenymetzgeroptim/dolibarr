@@ -38,7 +38,7 @@
  * $text, $description, $line
  */
 
-global $permissiontoreadcost, $permissiontoaddline, $permissiontoreadline, $permissiontodeleteline;
+global $permissiontoaddline, $permissiontoreadline, $permissiontodeleteline;
 global $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline, $objectparentline;
 global $disableedit, $disableremove, $enableunlink, $enablelink, $db;
 
