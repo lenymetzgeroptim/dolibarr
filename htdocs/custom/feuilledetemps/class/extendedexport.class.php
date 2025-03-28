@@ -482,6 +482,7 @@ class ExtendedExportFDT extends Export
 								$obj->pourcentage = round(($obj->total_task / (int)$obj->total) * 100, 2);
 								$sum_pourcentage += $obj->pourcentage;
 							}
+
 							$obj->axe = 'AXE 1';
 							$obj->fdt_date_debut = dol_print_date($obj->fdt_date_debut, '%d/%m/%Y');
 						}
@@ -854,10 +855,10 @@ class ExtendedExportFDT extends Export
 			}
 			elseif($key == 'pourcentage') {
 				if(!$conf->global->FDT_DISPLAY_COLUMN) {
-					$newfield = "SUM(tt.element_duration)/3600 as total_task, totalMonth.total as total";
+					$newfield = "COALESCE(SUM(tt.element_duration), 0) / 3600 as total_task, totalMonth.total as total";
 				}
 				else {
-					$newfield = "(SUM(tt.element_duration)/3600 + SUM(ptto.heure_nuit)/3600) as total_task, totalMonth.total as total";
+					$newfield = "(COALESCE(SUM(tt.element_duration), 0) / 3600 + COALESCE(SUM(ptto.heure_nuit), 0) / 3600) as total_task, totalMonth.total as total";
 				}
 			}
 			elseif($key == 'axe') {
@@ -873,8 +874,8 @@ class ExtendedExportFDT extends Export
 			$sql .= ", ht.in_hour as ht_in_hour";
 			$sql .= ", h.rowid as id_holiday";
 			$sql .= ", ht.code as ht_code";
-			$sql .= ", drh.pasdroitrtt as drh_pasdroitrtt";
-			$sql .= ", ht.droit_rtt as ht_droit_rtt";
+			//$sql .= ", drh.pasdroitrtt as drh_pasdroitrtt";
+			//$sql .= ", ht.droit_rtt as ht_droit_rtt";
 		}
 		elseif($datatoexport == 'heure_sup') {
 			$sql .= ", SUM(s.heure_sup00) as s_heure_sup00";
@@ -895,10 +896,10 @@ class ExtendedExportFDT extends Export
 			$sql .= " LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element";
 			$sql .= " LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet";
 			if(!$conf->global->FDT_DISPLAY_COLUMN) {
-				$sql .= " LEFT JOIN (SELECT u.rowid, SUM(tt.element_duration)/3600 as total FROM llx_user AS u LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet WHERE tt.elementtype = 'task'";
+				$sql .= " LEFT JOIN (SELECT u.rowid, COALESCE(SUM(tt.element_duration), 0) / 3600 as total FROM llx_user AS u LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet WHERE tt.elementtype = 'task'";
 			}
 			else {
-				$sql .= " LEFT JOIN (SELECT u.rowid, (SUM(tt.element_duration)/3600 + SUM(ptto .heure_nuit)/3600) as total FROM llx_user AS u LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid LEFT JOIN llx_feuilledetemps_projet_task_time_other AS ptto ON ptto.fk_projet_task_time = tt.rowid LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet WHERE tt.elementtype = 'task'";
+				$sql .= " LEFT JOIN (SELECT u.rowid, (COALESCE(SUM(tt.element_duration), 0) / 3600 + COALESCE(SUM(ptto.heure_nuit), 0) / 3600) as total FROM llx_user AS u LEFT JOIN llx_element_time AS tt ON tt.fk_user = u.rowid LEFT JOIN llx_feuilledetemps_projet_task_time_other AS ptto ON ptto.fk_projet_task_time = tt.rowid LEFT JOIN llx_projet_task AS pt ON pt.rowid = tt.fk_element LEFT JOIN llx_projet AS p ON p.rowid = pt.fk_projet WHERE tt.elementtype = 'task'";
 			}
 			if(!empty($array_filterValue['tt.element_date'])) {
 				$sql .= " AND date_format(tt.element_date,'%Y%m') = '".$array_filterValue['tt.element_date']."'";
