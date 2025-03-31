@@ -1167,7 +1167,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			if($idw + $numberDay > $nb_jour) $numberDay = $nb_jour - $idw;
 
 			$durationHoliday = $holiday->getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser, $numberDay, $timeHolidayByDay);
-			
+
 			if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
 				print '<td class="center '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
 			}
@@ -1208,7 +1208,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				if($idw + $numberDay > $nb_jour) $numberDay = $nb_jour - $idw;
 
 				$durationHoliday = $holiday->getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser, $numberDay, $timeHolidayByDay);
-				
+
 				if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
 					print '<td class="center '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
 				}
@@ -1264,8 +1264,8 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		}
 		
 		$user_conges = 0;
-		if(!$conges_hour && $isavailable[$dayinloopfromfirstdaytoshow]['morning'] == false && $isavailable[$dayinloopfromfirstdaytoshow]['morning_reason'] == "leave_request" 
-				&& $isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] == false && $isavailable[$dayinloopfromfirstdaytoshow]['afternoon_reason'] == "leave_request" && str_contains($css[$dayinloopfromfirstdaytoshow], 'onholidayallday')){
+		if((!$conges_hour || $timeHolidayByDay[$dayinloopfromfirstdaytoshow] >= $contrat) && $isavailable[$dayinloopfromfirstdaytoshow]['morning'] == false && $isavailable[$dayinloopfromfirstdaytoshow]['morning_reason'] == "leave_request" 
+				&& $isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] == false && $isavailable[$dayinloopfromfirstdaytoshow]['afternoon_reason'] == "leave_request" /*&& str_contains($css[$dayinloopfromfirstdaytoshow], 'onholidayallday')*/){
 			$user_conges = 1;
 		}
 
@@ -1526,7 +1526,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			}
 
 			if($type == 'boolean') {
-				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam = ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
+				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
 				$checked = '';
 				if (!empty($silae->array_options['options_'.$key])) $checked = ' checked';
 				print '<input type="checkbox" class="flat valignmiddle'.($morecss ? ' '.$morecss : '').' maxwidthonsmartphone" name="options_'.$key.'['.$idw.']" id="options_'.$key.'['.$idw.']" '.$checked.$moreparam.'>';
@@ -1534,10 +1534,10 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			elseif($type == 'text') {
 				require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 				$doleditor = new DolEditor('options_'.$key.'['.$idw.']', $silae->array_options['options_'.$key], '', 200, 'dolibarr_notes', 'In', false, false, false, ROWS_5, '90%');
-				print $doleditor->Create(1, '', true, '', '', '', $extrafields->attributes[$silae->table_element]['css'][$key]);
+				print $doleditor->Create(1, '', true, '', '', $moreparam, $extrafields->attributes[$silae->table_element]['css'][$key]);
 			}
 			else {
-				$moreparam .= 'onfocus="this.oldvalue = this.value;"';
+				$moreparam .= ' onfocus="this.oldvalue = this.value;"';
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
 				$moreparam .= ' maxlength="7"';
 				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $moreparam .= ' onchange="updateTotalSigedi(this, \''.$key.'\', \''.$type.'\');"';
