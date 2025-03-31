@@ -19,6 +19,7 @@ CREATE TABLE llx_ot_ot_sous_traitants(
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
 	ot_id integer NOT NULL, 
 	fk_socpeople integer,
+	fk_societe integer,
 	fonction varchar(255),
 	contrat varchar(255),
 	habilitation varchar(255),

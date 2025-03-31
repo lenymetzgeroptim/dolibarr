@@ -1473,7 +1473,7 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
 
 function displayUserList() {
     const existingUniqueList = document.querySelector(".user-list.unique-list");
-    
+    console.log("Affichage de la liste unique.")
 
     // Supprimer la liste par défaut si elle existe, pour éviter des doublons
     if (existingUniqueList) {
@@ -1547,7 +1547,6 @@ function displayUserList() {
 
 // Appeler la fonction pour afficher la liste lors du chargement de la page
 displayUserList();
-
 
     // Trier les utilisateurs par ordre croissant de nom (lastname)
     userjson.sort(function(a, b) {
@@ -2005,16 +2004,13 @@ function createSupplierDropdown(suppliers) {
                     contract: "",
                     qualifications: ""
                 });
-
-               
-                
+  
 
                 selectContact.querySelector(`option[value="${contactId}"]`).remove();
             }
             saveData();
         }
     });
-
 
     tableContainer.addEventListener("blur", function(e) {
         if (e.target && e.target.classList.contains("form-input")) {
@@ -2032,7 +2028,6 @@ function createSupplierDropdown(suppliers) {
             saveData();
         }
     }, true);
-
 
 }
 
