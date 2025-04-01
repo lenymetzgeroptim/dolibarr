@@ -536,20 +536,9 @@ class ExtendedExportFDT extends Export
 							// }
 
 							if($obj->ht_in_hour == 1) {
-								$obj->type = 'H';
-								$obj->valeur = $obj->hef_hour / 3600;
-							}
-							else {
-								$obj->type = 'J';
-								$obj->valeur = '';
-							}
-	
-							//if(empty($obj->drh_pasdroitrtt) && empty($obj->ht_droit_rtt)) {
-							if($obj->ht_in_hour == 1){ // Gestion des congés en heure qui sont sur plusieurs jours
 								$date_debut = dol_mktime(-1, -1, -1, substr($obj->h_date_debut, 3, 2), substr($obj->h_date_debut, 0, 2), substr($obj->h_date_debut, 6, 4));
 								$nb_jour = num_between_day($date_debut, dol_mktime(-1, -1, -1, substr($obj->h_date_fin, 3, 2), substr($obj->h_date_fin, 0, 2), substr($obj->h_date_fin, 6, 4)) + 3600, 1); 
-								$heure = $obj->valeur;
-
+								
 								if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 									if($conf->donneesrh->enabled && empty($heure_semaine[$obj->rowid])) {
 										$userstatic = new User($db);
@@ -599,40 +588,55 @@ class ExtendedExportFDT extends Export
 										$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_WITH_RTT * 3600;
 										$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_WITH_RTT * 3600;
 									}
-								}						
-	
-								for ($idw = 0; $idw < $nb_jour; $idw++) {
-									$dayinloopfromfirstdaytoshow = dol_time_plus_duree($date_debut, $idw, 'd');
-									$dayinloopfromfirstdaytoshowgmt = dol_mktime(0, 0, 0, dol_print_date($dayinloopfromfirstdaytoshow, '%m'), dol_print_date($dayinloopfromfirstdaytoshow, '%d'), dol_print_date($dayinloopfromfirstdaytoshow, '%Y'), 'gmt');
+								}		
 
-									if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Sam' && dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Dim' && num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt, '', 1) == 0) {
-										$obj->h_date_debut = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
-										$obj->h_date_fin = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
-	
-										if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
-											if($heure > $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] / 3600) {
-												$obj->valeur = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] / 3600;
-											}
-											else {
-												$obj->valeur = $heure;
-											}
-										}
-										else {
-											if($heure > 7) {
-												$obj->valeur = 7;
-											}
-											else {
-												$obj->valeur = $heure;
-											}
-										}
-	
-										$heure -= $obj->valeur;
-	
-										$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-									}
+								$obj->type = 'H';
+								if($nb_jour > 1 || ($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && $obj->hef_hour / 3600 >= $standard_week_hour[dol_print_date($date_debut, '%A')] / 3600)) {
+									$obj->valeur = '';
 								}
-								continue;
+								else {
+									$obj->valeur = $obj->hef_hour / 3600;
+								}								
 							}
+							else {
+								$obj->type = 'J';
+								$obj->valeur = '';
+							}
+	
+							//if(empty($obj->drh_pasdroitrtt) && empty($obj->ht_droit_rtt)) {
+							// if($obj->ht_in_hour == 1){ // Gestion des congés en heure qui sont sur plusieurs jours
+							// 	for ($idw = 0; $idw < $nb_jour; $idw++) {
+							// 		$dayinloopfromfirstdaytoshow = dol_time_plus_duree($date_debut, $idw, 'd');
+							// 		$dayinloopfromfirstdaytoshowgmt = dol_mktime(0, 0, 0, dol_print_date($dayinloopfromfirstdaytoshow, '%m'), dol_print_date($dayinloopfromfirstdaytoshow, '%d'), dol_print_date($dayinloopfromfirstdaytoshow, '%Y'), 'gmt');
+
+							// 		if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Sam' && dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Dim' && num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt, '', 1) == 0) {
+							// 			$obj->h_date_debut = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
+							// 			$obj->h_date_fin = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
+	
+							// 			if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+							// 				if($heure > $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] / 3600) {
+							// 					$obj->valeur = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] / 3600;
+							// 				}
+							// 				else {
+							// 					$obj->valeur = $heure;
+							// 				}
+							// 			}
+							// 			else {
+							// 				if($heure > 7) {
+							// 					$obj->valeur = 7;
+							// 				}
+							// 				else {
+							// 					$obj->valeur = $heure;
+							// 				}
+							// 			}
+	
+							// 			$heure -= $obj->valeur;
+	
+							// 			$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+							// 		}
+							// 	}
+							// 	continue;
+							// }
 						}
 						elseif($datatoexport == 'heure_sup') {
 							$obj->s_date = dol_print_date($obj->s_date, '%d/%m/%Y');
