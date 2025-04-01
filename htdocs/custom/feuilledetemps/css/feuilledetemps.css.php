@@ -490,6 +490,61 @@ tr > th:last-child.fixed {
 	z-index: 2;
 }
 
+.feuilledetemps .fixedcolumn2 {
+	z-index: 1;
+	position: sticky;
+	left: 97px;
+}
+
+.feuilledetemps .fixedcolumn3 {
+	z-index: 1;
+	position: sticky;
+	left: 213px;
+}
+
+.feuilledetemps .fixedcolumn4 {
+	z-index: 1;
+	position: sticky;
+	left: 329px;
+}
+
+.feuilledetemps .fixedcolumn5 {
+	z-index: 1;
+	position: sticky;
+	left: 400px;
+}
+
+.feuilledetemps .fixedcolumn6 {
+	z-index: 1;
+	position: sticky;
+	left: 516px;
+}
+
+.feuilledetemps .fixedcolumn7 {
+	z-index: 1;
+	position: sticky;
+	left: 592px;
+}
+
+.feuilledetemps .fixedcolumn8 {
+	z-index: 1;
+	position: sticky;
+	left: 648px;
+}
+
+.feuilledetemps .fixedcolumn9 {
+	z-index: 1;
+	position: sticky;
+	left: 704px;
+}
+
+.feuilledetemps .fixedcolumn10 {
+	z-index: 1;
+	position: sticky;
+	left: 925px;
+}
+
+
 
 
 
@@ -807,6 +862,18 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 
 .minwidth80 {
 	min-width: 80px;
+}
+
+.minwidth60 {
+	min-width: 60px;
+}
+
+.minwidth55 {
+	min-width: 55px;
+}
+
+.minwidth40 {
+	min-width: 40px;
 }
 
 .height20 {
