@@ -590,12 +590,13 @@ class ExtendedExportFDT extends Export
 									}
 								}		
 
-								$obj->type = 'H';
 								if($nb_jour > 1 || ($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && $obj->hef_hour / 3600 >= $standard_week_hour[dol_print_date($date_debut, '%A')] / 3600)) {
 									$obj->valeur = '';
+									$obj->type = 'J';
 								}
 								else {
 									$obj->valeur = $obj->hef_hour / 3600;
+									$obj->type = 'H';
 								}								
 							}
 							else {
