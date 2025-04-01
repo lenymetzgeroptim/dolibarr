@@ -135,6 +135,9 @@ $formSetup->newItem('HOIDAY_DECIMAL_HOUR_FORMAT')->setAsYesNo();
 // HOIDAY_AUTO_HOUR_WHOLE_DAY
 $formSetup->newItem('HOIDAY_AUTO_HOUR_WHOLE_DAY')->setAsYesNo();
 
+// HOLIDAY_FDT_LINK
+$formSetup->newItem('HOLIDAY_FDT_LINK')->setAsYesNo();
+
 // HOLIDAY_PICTO
 $item = $formSetup->newItem('HOLIDAY_PICTO');
 $item->defaultFieldValue = 'holiday';

@@ -3273,6 +3273,18 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 					print '</tr>';
 				}
 
+				if($conf->feuilledetemps->enabled && $conf->global->HOLIDAY_FDT_LINK) {
+					$feuilledetemps = new FeuilleDeTemps($db);
+					$fdt_month = $feuilledetemps->fetchWithUserAndDate($object->fk_user, $object->date_debut);
+					if ($fdt_month) {
+						$feuilledetemps->fetch($fdt_month->rowid);
+						print '<tr>';
+						print '<td>'.$langs->trans('FDTMonth').'</td>';
+						print '<td>'.$feuilledetemps->getNomUrl().'</td>';
+						print '</tr>';
+					}
+				}
+
 				print '</tbody>';
 				print '</table>';
 

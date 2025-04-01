@@ -49,6 +49,7 @@ HOLIDAY_MAIL_TO = Destinataire des mails concernant les congés à réguler
 HOIDAY_DECIMAL_HOUR_FORMAT = Heures au format décimal
 HOLIDAY_PICTO = Icône du module
 HOIDAY_AUTO_HOUR_WHOLE_DAY = Saisie automatique des heures pour une absence d'une journée complète
+HOLIDAY_FDT_LINK = Afficher un lien vers la feuille de temps sur les absences
 
 
 #
@@ -126,3 +127,4 @@ Code_silae = Code Silae
 In_hour = En heure
 Heure = Nombre d'heures
 Droit_rtt = Droit RTT
+FDTMonth = Feuille de temps du mois
