@@ -361,11 +361,11 @@ if (empty($reshook)) {
 				$action = 'create';
 			}
 
-			if($needHour && date("W", $date_debut) != date("W", $date_fin)) {
-				setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
-				$error++;
-				$action = 'create';
-			}
+			// if($needHour && date("W", $date_debut) != date("W", $date_fin)) {
+			// 	setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
+			// 	$error++;
+			// 	$action = 'create';
+			// }
 
 			if($needHour && $date_debut != $date_fin && $halfday != 0) {
 				setEventMessages($langs->trans("ErrorHalfdayHoliday"), null, 'errors');
@@ -933,10 +933,10 @@ if (empty($reshook)) {
 					exit;
 				}
 
-				if($needHour && date("W", $date_debut) != date("W", $date_fin)) {
-					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorWeekHoliday');
-					exit;
-				}
+				// if($needHour && date("W", $date_debut) != date("W", $date_fin)) {
+				// 	header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorWeekHoliday');
+				// 	exit;
+				// }
 	
 				if($needHour && $date_debut != $date_fin && $halfday != 0) {
 					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorHalfdayHoliday');
