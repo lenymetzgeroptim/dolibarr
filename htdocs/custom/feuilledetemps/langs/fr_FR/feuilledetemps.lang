@@ -94,6 +94,7 @@ FDT_SHORTCUT_HOLIDAY = Raccourci pour créer un congés dans le menu feuille de 
 FDT_SCREEN_VERIFICATION = Screen de la feuille de temps lors de la vérification
 FDT_SENDMAIL_FROM = Expéditeur du mail avec le bouton "Envoyer Mail" sur une feuille de temps
 FDT_VERIF_MODIFWHENHOLIDAY = Seul les personnes responsables de la vérif peuvent faire des modifications sur les journées entières d'absence
+FDT_SHOW_USERADRESS = Afficher l'adresse de l'utilisateur sur les feuilles de temps
 
 
 #

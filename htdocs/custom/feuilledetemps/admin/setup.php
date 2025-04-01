@@ -234,6 +234,9 @@ $item = $formSetup->newItem('FDT_SENDMAIL_FROM')->setAsString();
 // FDT_VERIF_MODIFWHENHOLIDAY
 $item = $formSetup->newItem('FDT_VERIF_MODIFWHENHOLIDAY')->setAsYesNo();
 
+// FDT_SHOW_USERADRESS
+$item = $formSetup->newItem('FDT_SHOW_USERADRESS')->setAsYesNo();
+
 
 // Titre FDT_STANDARD_WEEK
 $formSetup->newItem('FDT_STANDARD_WEEK')->setAsTitle();

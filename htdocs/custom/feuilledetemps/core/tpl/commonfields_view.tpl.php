@@ -36,6 +36,9 @@ if (!is_object($form)) {
 <!-- BEGIN PHP TEMPLATE commonfields_view.tpl.php -->
 <?php
 
+$fk_user = new User($db);
+$fk_user->fetch($object->fk_user);
+
 $object->fields = dol_sort_array($object->fields, 'position');
 
 if($action == 'editvalidator1' || $action == 'editvalidator2') {
@@ -114,6 +117,13 @@ foreach ($object->fields as $key => $val) {
 	}
 	if($object->status != $object::STATUS_VERIFICATION || ($key != 'prime_astreinte' && $key != 'prime_exceptionnelle' && $key != 'prime_objectif' && $key != 'prime_variable' && $key != 'prime_amplitude')) {
 		print $object->showOutputField($val, $key, $value, '', '', '', 0);
+		if($key == 'fk_user' && $conf->global->FDT_SHOW_USERADRESS) {
+			$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
+			if ($fulladress) {
+				print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
+				print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+			}
+		}
 	}
 	else {
 		print $object->showInputField($val, $key, $value, 'form="feuilleDeTempsForm"', '', '', 0, 1);
@@ -256,6 +266,13 @@ foreach ($object->fields as $key => $val) {
 	}
 	if($object->status != $object::STATUS_VERIFICATION || ($key != 'prime_astreinte' && $key != 'prime_exceptionnelle' && $key != 'prime_objectif' && $key != 'prime_variable' && $key != 'prime_amplitude')) {
 		print $object->showOutputField($val, $key, $value, '', '', '', 0);
+		if($key == 'fk_user' && $conf->global->FDT_SHOW_USERADRESS) {
+			$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
+			if ($fulladress) {
+				print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
+				print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+			}
+		}
 	}
 	else {
 		print $object->showInputField($val, $key, $value, 'form="feuilleDeTempsForm"', '', '', 0, 1);
@@ -419,6 +436,13 @@ if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 		}
 		if($object->status != $object::STATUS_VERIFICATION || ($key != 'prime_astreinte' && $key != 'prime_exceptionnelle' && $key != 'prime_objectif' && $key != 'prime_variable' && $key != 'prime_amplitude')) {
 			print $object->showOutputField($val, $key, $value, '', '', '', 0);
+			if($key == 'fk_user' && $conf->global->FDT_SHOW_USERADRESS) {
+				$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
+				if ($fulladress) {
+					print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
+					print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+				}
+			}
 		}
 		else {
 			print $object->showInputField($val, $key, $value, 'form="feuilleDeTempsForm"', '', '', 0, 1);
