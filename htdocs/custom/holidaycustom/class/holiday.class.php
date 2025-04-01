@@ -4017,6 +4017,35 @@ class Holiday extends CommonObject
 	}
 
 	/**
+	 *      List of holiday in hour
+	 *
+	 *      @return     array         <0 if KO, array of type if no
+	 */
+	public function holidayTypesInHour()
+	{
+		global $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
+		$sql .= " WHERE h.in_hour = 1";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			dol_print_error($this->db);
+			$this->error = $this->db->error();
+			return -1;
+		}
+	}
+
+	/**
 	 *     
 	 *
 	 *      @return     array()         Ids des types de congés qui ouvrent droit à RTT

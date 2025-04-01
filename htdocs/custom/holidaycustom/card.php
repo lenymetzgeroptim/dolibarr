@@ -326,7 +326,12 @@ if (empty($reshook)) {
 			}
 			if($conf->global->HOLIDAY_ONLY_CURRENT_MONTH) {
 				$now = dol_now();
-				$firstdaymonth = dol_get_first_day(dol_print_date($now, '%Y'), dol_print_date($now, '%m'));
+				if($conf->feuilledetemps->enabled && $conf->global->FDT_DAY_FOR_NEXT_FDT > 0 && dol_print_date($now, '%d') < $conf->global->FDT_DAY_FOR_NEXT_FDT) {
+					$firstdaymonth = dol_get_first_day(dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%Y'), dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%m'));
+				}
+				else {
+					$firstdaymonth = dol_get_first_day(dol_print_date($now, '%Y'), dol_print_date($now, '%m'));
+				}
 				$firstdayweek = dol_get_first_day_week(dol_print_date($firstdaymonth, '%d'), dol_print_date($firstdaymonth, '%m'), dol_print_date($firstdaymonth, '%Y'));
 				$firstdayweek = dol_mktime(-1, -1, -1, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
 				if (!empty($date_fin) && $date_fin < $firstdayweek) {
@@ -361,11 +366,11 @@ if (empty($reshook)) {
 				$action = 'create';
 			}
 
-			if($needHour && date("W", $date_debut) != date("W", $date_fin)) {
-				setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
-				$error++;
-				$action = 'create';
-			}
+			// if($needHour && date("W", $date_debut) != date("W", $date_fin)) {
+			// 	setEventMessages($langs->trans("ErrorWeekHoliday"), null, 'errors');
+			// 	$error++;
+			// 	$action = 'create';
+			// }
 
 			if($needHour && $date_debut != $date_fin && $halfday != 0) {
 				setEventMessages($langs->trans("ErrorHalfdayHoliday"), null, 'errors');
@@ -933,10 +938,10 @@ if (empty($reshook)) {
 					exit;
 				}
 
-				if($needHour && date("W", $date_debut) != date("W", $date_fin)) {
-					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorWeekHoliday');
-					exit;
-				}
+				// if($needHour && date("W", $date_debut) != date("W", $date_fin)) {
+				// 	header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorWeekHoliday');
+				// 	exit;
+				// }
 	
 				if($needHour && $date_debut != $date_fin && $halfday != 0) {
 					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorHalfdayHoliday');
@@ -3266,6 +3271,18 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 					print '<td>'.$langs->trans('DateRefusCP').'</td>';
 					print '<td>'.dol_print_date($object->date_refuse, 'dayhour', 'tzuser').'</td>';
 					print '</tr>';
+				}
+
+				if($conf->feuilledetemps->enabled && $conf->global->HOLIDAY_FDT_LINK) {
+					$feuilledetemps = new FeuilleDeTemps($db);
+					$fdt_month = $feuilledetemps->fetchWithUserAndDate($object->fk_user, $object->date_debut);
+					if ($fdt_month) {
+						$feuilledetemps->fetch($fdt_month->rowid);
+						print '<tr>';
+						print '<td>'.$langs->trans('FDTMonth').'</td>';
+						print '<td>'.$feuilledetemps->getNomUrl().'</td>';
+						print '</tr>';
+					}
 				}
 
 				print '</tbody>';
