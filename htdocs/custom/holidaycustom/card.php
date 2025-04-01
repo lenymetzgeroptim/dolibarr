@@ -326,7 +326,12 @@ if (empty($reshook)) {
 			}
 			if($conf->global->HOLIDAY_ONLY_CURRENT_MONTH) {
 				$now = dol_now();
-				$firstdaymonth = dol_get_first_day(dol_print_date($now, '%Y'), dol_print_date($now, '%m'));
+				if($conf->feuilledetemps->enabled && $conf->global->FDT_DAY_FOR_NEXT_FDT > 0 && dol_print_date($now, '%d') < $conf->global->FDT_DAY_FOR_NEXT_FDT) {
+					$firstdaymonth = dol_get_first_day(dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%Y'), dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%m'));
+				}
+				else {
+					$firstdaymonth = dol_get_first_day(dol_print_date($now, '%Y'), dol_print_date($now, '%m'));
+				}
 				$firstdayweek = dol_get_first_day_week(dol_print_date($firstdaymonth, '%d'), dol_print_date($firstdaymonth, '%m'), dol_print_date($firstdaymonth, '%Y'));
 				$firstdayweek = dol_mktime(-1, -1, -1, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
 				if (!empty($date_fin) && $date_fin < $firstdayweek) {
