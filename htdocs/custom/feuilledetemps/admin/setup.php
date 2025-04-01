@@ -231,6 +231,8 @@ $item = $formSetup->newItem('FDT_SCREEN_VERIFICATION')->setAsYesNo();
 // FDT_SENDMAIL_FROM
 $item = $formSetup->newItem('FDT_SENDMAIL_FROM')->setAsString();
 
+// FDT_VERIF_MODIFWHENHOLIDAY
+$item = $formSetup->newItem('FDT_VERIF_MODIFWHENHOLIDAY')->setAsYesNo();
 
 
 // Titre FDT_STANDARD_WEEK

@@ -226,21 +226,26 @@ if (!$permissiontoread) accessforbidden();
 
 // Gestion des droits de modification des inputs en fonction du statut de la feuille de temps
 $modifier_jour_conges = 1;
+$modifier = 0;
 if($object->status == FeuilleDeTemps::STATUS_DRAFT && $user->id == $usertoprocess->id){
 	$modifier = 1;
 	$modifier_jour_conges = 0;
 }
 elseif(($object->status == FeuilleDeTemps::STATUS_DRAFT) && $permissionToVerification){
 	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
 elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && $conf->global->FDT_USER_APPROVER && $userIsResp) {
 	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
 elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && !$conf->global->FDT_USER_APPROVER && $userIsResp && $resp_pas_valide) {
 	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
 elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION2 && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
 	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
 elseif($permissionToVerification && $object->status != FeuilleDeTemps::STATUS_VALIDATED && $object->status != FeuilleDeTemps::STATUS_EXPORTED) {
 	$modifier = 1;
@@ -248,9 +253,6 @@ elseif($permissionToVerification && $object->status != FeuilleDeTemps::STATUS_VA
 // elseif($object->status != FeuilleDeTemps::STATUS_VALIDATED && $user->rights->feuilledetemps->feuilledetemps->modify) {
 // 	$modifier = 1;
 // }
-else {
-	$modifier = 0;
-}
 
 // Gestion des dates
 $month = dol_print_date($object->date_debut, '%m');
