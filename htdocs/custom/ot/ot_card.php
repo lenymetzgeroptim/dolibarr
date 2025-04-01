@@ -1447,8 +1447,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-
-
 let columnsContainer = document.querySelector(".card-columns") ||
     document.querySelector("#card-columns") ||
     document.querySelector(".main-columns-container");
@@ -1462,7 +1460,6 @@ if (!columnsContainer) {
 }
 
 
-
 const uniqueJsData = jsdata.filter((value, index, self) => 
     index === self.findIndex((t) => (
         t.fk_socpeople === value.fk_socpeople
@@ -1470,11 +1467,9 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
 );
 
 
-
 function displayUserList() {
     const existingUniqueList = document.querySelector(".user-list.unique-list");
-    console.log("Affichage de la liste unique.")
-
+   
     // Supprimer la liste par défaut si elle existe, pour éviter des doublons
     if (existingUniqueList) {
         existingUniqueList.remove();
@@ -1482,12 +1477,23 @@ function displayUserList() {
 
     // Si des données de la BDD existent, créez la liste en utilisant ces données
     if (typeof cellData !== "undefined" && cellData.length > 0 && !isDataSaved) {
+    
         const hasUniqueList = cellData.some(cell => cell.type === "listeunique");
 
+                 if (!cellData.some(cell => cell.type === "listeunique")) {
+                    console.log("Aucune liste unique trouvée dans la BDD, création une liste vide.");
+                    const uniqueList = createUniqueUserList();
+                    uniqueList.style.marginTop = "20px"; 
+                    columnsContainer.appendChild(uniqueList);
+                }
+        
+        console.log("Affichaadade de la liste unique.")
         if (hasUniqueList) {
-            
+ 
             cellData.forEach(cell => {
                 if (cell.type === "listeunique") {
+                
+
                     const list = createUniqueUserList();
                     const titleInput = list.querySelector(".list-title-input");
                     titleInput.value = cell.title;
@@ -1529,7 +1535,10 @@ function displayUserList() {
 
             isDataSaved = true; // Marquer les données comme sauvegardées pour éviter la duplication
         }
+    
     } else if (!existingUniqueList) {
+        console.log("dadad");
+      console.log("de la liste unique.")
         // Si aucune liste BDD, créez une liste par défaut
         console.log("Aucune liste unique trouvée, création une nouvelle liste par défaut.");
         const uniqueList = createUniqueUserList();
@@ -1540,9 +1549,6 @@ function displayUserList() {
         columnsContainer.appendChild(uniqueList);
     }
 }
-
-
-
 
 
 // Appeler la fonction pour afficher la liste lors du chargement de la page
@@ -1636,8 +1642,6 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
  else if (cell.type === "listeunique") {
     // Vérifie si une liste unique avec ce titre existe déjà dans le DOM
     const existingUniqueList = document.querySelector(`.user-list.unique-list[data-list-id="${cell.title}"]`);
-    
-    
 
     if (isUniqueListCreated && !existingUniqueList) {
         console.log("La liste unique a été créée mais est plus dans le DOM. Mise à jour du contenu.");
@@ -1835,7 +1839,7 @@ function deleteUniqueList(uniqueListId, list) {
  */
 
 
-$(document).ready(function() {
+
     // Fonction pour récupérer les fournisseurs et contacts via Ajax
     function fetchSuppliersAndContacts() {
         $.ajax({
@@ -1859,11 +1863,16 @@ $(document).ready(function() {
 
     // Appel de la fonction pour récupérer les données dès que la page est prête
     fetchSuppliersAndContacts();
-});
+
 
 let selectedContacts = [];  
 
 function createSupplierDropdown(suppliers) {
+
+    const existingCard = document.querySelector(".cardsoustraitant");
+    if (existingCard) {
+        existingCard.remove();
+    }
     const cardContainer = document.createElement("div");
     cardContainer.className = "cardsoustraitant";
 
@@ -2170,7 +2179,6 @@ function updateUserIdsForCard(cell, newUserId) {
         // Si aucune donnée dans userIds, on linitialise avec ID du nouvel utilisateur
         cell.userIds = [newUserId];
     }
-
     console.log(`User ID mis à jour pour la carte avec le nouvel utilisateur: ${newUserId}`);
 }
 
@@ -2244,7 +2252,6 @@ function attachEventListeners() {
     });
 
     
-
     // Attacher des écouteurs sur la suppression des cartes
     document.querySelectorAll(".card .delete-button").forEach(button => {
         if (!button.dataset.listenerAttached) {
@@ -2304,7 +2311,10 @@ function attachEventListeners() {
                         userDisplay.textContent = selectedUser; // Afficher le nom de utilisateur
                     }
                     card.dataset.userId = selectedUser; // Mettre à jour ID utilisateur dans dataset
+                    console.log("Utilisateur sélectionné pour la carte :", selectedUser);
+                    console.log("Dataset après modification :", card.dataset.userId);
                     saveData(); // Sauvegarder les changements
+                    console.log("Sauvegarde après sélection");
                 }
             });
             dropdown.dataset.listenerAttached = true;
