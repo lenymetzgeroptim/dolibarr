@@ -4299,6 +4299,39 @@ class FeuilleDeTemps extends CommonObject
 	
 		return $arrayres;
 	}
+
+	public function fetchWithUserAndDate($user_id, $date_debut)
+	{
+		global $user; 
+
+		$arrayres = array();
+	
+		$sql = "SELECT ";
+		$sql .= " f.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps as f";
+		$sql .= " WHERE f.fk_user = $user_id";
+		$sql .= " AND DATE_FORMAT(f.date_debut, '%m') = ".dol_print_date($date_debut, 'm');
+
+		dol_syslog(get_class($this)."::fetchWithUserAndDate", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			if($num > 0){
+				$obj = $this->db->fetch_object($resql);
+				$this->db->free($resql);
+				return $obj;
+			}
+			else {
+				$this->db->free($resql);
+				return 0;
+			}
+		} else {
+			dol_print_error($this->db);
+			$this->error = "Error ".$this->db->lasterror();
+			return -1;
+		}
+  	}
+
 }
 
 
