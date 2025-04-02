@@ -118,6 +118,9 @@ $object = new FeuilleDeTemps($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->feuilledetemps->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array('feuilledetempslist')); // Note that conf->hooks_modules contains array
+$user_static = new User($db);
+$extrafieldsuser = new extrafields($db);
+$extrafieldsuser->fetch_name_optionals_label($user_static->table_element);
 
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
@@ -154,6 +157,7 @@ foreach ($object->fields as $key => $val) {
 }
 $search['fk_user_validation_1'] = GETPOST('search_fk_user_validation_1', 'alpha');
 $search['fk_user_validation_2'] = GETPOST('search_fk_user_validation_2', 'alpha');
+$search['ue.etablissement'] = implode(',', GETPOST('search_ue_options_etablissement', 'alpha'));
 
 // List of fields to search into when doing a "search in all"
 $fieldstosearchall = array();
@@ -186,6 +190,17 @@ foreach ($object->fields as $key => $val) {
 		);
 	}
 }
+// Add non object fields to fields for list
+if(!empty($extrafieldsuser->attributes['user']['list']['etablissement'])) {
+	$arrayfields['ue.etablissement'] = array(
+		'label'=>$extrafieldsuser->attributes['user']['label']['etablissement'], 
+		'checked'=>1, 
+		'position'=>$extrafieldsuser->attributes['user']['pos']['etablissement'], 
+		'enabled'=>$extrafieldsuser->attributes['user']['enabled']['etablissement'],
+		'help'=> $extrafieldsuser->attributes['user']['help']['etablissement']
+	);
+}
+
 // Extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 
@@ -246,6 +261,7 @@ if (empty($reshook)) {
 		}
 		$search['fk_user_validation_1'] = '';
 		$search['fk_user_validation_2'] = '';
+		$search['ue.etablissement'] = '';
 		$toselect = array();
 		$search_array_options = array();
 	}
@@ -288,6 +304,9 @@ if (!empty($extrafields->attributes[$object->table_element]['label'])) {
 		$sql .= ($extrafields->attributes[$object->table_element]['type'][$key] != 'separate' ? ", ef.".$key.' as options_'.$key.', ' : '');
 	}
 }
+if(!empty($extrafieldsuser->attributes['user']['list']['etablissement'])) {
+	$sql .= ", ue.etablissement as ue_etablissement";
+}
 // Add fields from hooks
 $parameters = array();
 $reshook = $hookmanager->executeHooks('printFieldListSelect', $parameters, $object); // Note that $action and $object may have been modified by hook
@@ -297,10 +316,8 @@ $sql .= " FROM ".MAIN_DB_PREFIX.$object->table_element." as t";
 if (isset($extrafields->attributes[$object->table_element]['label']) && is_array($extrafields->attributes[$object->table_element]['label']) && count($extrafields->attributes[$object->table_element]['label'])) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX.$object->table_element."_extrafields as ef on (t.rowid = ef.fk_object)";
 }
-if($conf->global->FDT_USER_APPROVER) {
-	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue on t.fk_user = ue.fk_object";	
-}
-else {
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue on t.fk_user = ue.fk_object";	
+if(!$conf->global->FDT_USER_APPROVER) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv on (tv.fk_feuilledetemps = t.rowid)";
 	if($search['fk_user_validation_1'] > 0){
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv1 on (tv1.fk_feuilledetemps = t.rowid";
@@ -351,7 +368,9 @@ foreach ($search as $key => $val) {
 		}
 	}
 }
-
+if (!empty($arrayfields['ue.etablissement']['checked']) && $search['ue.etablissement']) {
+	$sql .= natural_search('ue.etablissement', $search['ue.etablissement'], 2);
+} 
 // if($conf->global->FDT_USER_APPROVER) {
 // 	if($search['fk_user_validation_1'] > 0){
 // 		$sql .= " AND tv1.fk_feuilledetemps IS NOT NULL";
@@ -502,6 +521,7 @@ foreach ($search as $key => $val) {
 }
 $param .= "&search_fk_user_validation_1=".urlencode($search['fk_user_validation_1']);
 $param .= "&search_fk_user_validation_2=".urlencode($search['fk_user_validation_2']);
+$param .= "&search_ue_options_etablissement=".urlencode($search['ue.etablissement']);
 if ($optioncss != '') {
 	$param .= '&optioncss='.urlencode($optioncss);
 }
@@ -618,6 +638,11 @@ foreach ($object->fields as $key => $val) {
 		print '</td>';
 	}
 	if($key == 'fk_user'){
+		if (!empty($arrayfields['ue.etablissement']['checked'])) {
+			print '<td class="liste_titre">';
+			print $extrafieldsuser->showInputField("etablissement", $search['ue.etablissement'], '', '', 'search_ue_', '', 0, 'user', 1);
+			print '</td>';
+		}
 		if($conf->global->FDT_USER_APPROVER) {
 			print '<td class="liste_titre">';
 			print $form->select_dolusers((isset($search[$key.'_validation_1']) ? $search[$key.'_validation_1'] : ''), "search_".$key."_validation_1", 1, "", 0, $include, '', 0, 0, 0, $morefilter, 0, '', 'maxwidth150');
@@ -670,6 +695,9 @@ foreach ($object->fields as $key => $val) {
 		print getTitleFieldOfList($arrayfields['t.'.$key]['label'], 0, $_SERVER['PHP_SELF'], 't.'.$key, '', $param, ($cssforfield ? 'class="'.$cssforfield.'"' : ''), $sortfield, $sortorder, ($cssforfield ? $cssforfield.' ' : ''))."\n";
 	}
 	if($key == 'fk_user'){
+		if (!empty($arrayfields['ue.etablissement']['checked'])) {
+			print_liste_field_titre($arrayfields['ue.etablissement']['label'], $_SERVER["PHP_SELF"], "ue.etablissement", "", $param, "", $sortfield, $sortorder);
+		}
 		if($conf->global->FDT_USER_APPROVER) {
 			print '<th class="wrapcolumntitle liste_titre" title="1ère validation">1ère validation</th>';
 		}
@@ -700,13 +728,7 @@ if (isset($extrafields->attributes[$object->table_element]['computed']) && is_ar
 	}
 }
 
-$user_static = new User($db);
-// $user_static->fetchAll();
-// $tab_user = $user_static->users;
 $tab_user = array();
-$extrafieldsuser = new extrafields($db);
-$extrafieldsuser->fetch_name_optionals_label($user_static->table_element);
-
 // Loop on record
 // --------------------------------------------------------------------
 $i = 0;
@@ -786,6 +808,11 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 		}
 
 		if($key == 'fk_user'){
+			if (!empty($arrayfields['ue.etablissement']['checked'])) {
+				print '<td>';
+				print $extrafieldsuser->showOutputField("etablissement", $tab_user[$object->$key]->array_options['options_etablissement'], '',  $user_static->table_element);
+				print '</td>';
+			}
 			if($conf->global->FDT_USER_APPROVER) {
 				// 1er Approbateurs
 				print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
