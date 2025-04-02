@@ -2639,13 +2639,13 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 			}
 
 			if($res > 0) {
-				$result = $silae_tmpday->update($user);
+				$resultsilae = $silae_tmpday->update($user);
 			}
 			elseif($res == 0 && ($silae_tmpday->heure_sup00 > 0 || $silae_tmpday->heure_sup25 > 0 || $silae_tmpday->heure_sup50 > 0 || $silae_tmpday->heure_sup50ht > 0)) {
-				$result = $silae_tmpday->create($user);
+				$resultsilae = $silae_tmpday->create($user);
 			}
 			else {
-				$result = -1;
+				$resultsilae = -1;
 			}
 		}
 
