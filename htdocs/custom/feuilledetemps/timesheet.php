@@ -618,7 +618,7 @@ if (!empty($moreforfilter)) {
 	print $moreforfilter;
 	if($conf->global->FDT_SHOW_USERADRESS) {
 		$fk_user = new User($db);
-		$fk_user->fetch($object->fk_user);
+		$fk_user->fetch($usertoprocess->id);
 		$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
 		if ($fulladress) {
 			print '<div class="divsearchfield">';
