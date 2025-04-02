@@ -777,8 +777,9 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 				print $object->showOutputField($val, $key, $object->id, '');
 			} elseif ($key == 'fk_user' && $object->$key > 0) {
 				if(!key_exists($object->$key, $tab_user)) {
+					$user_static = new User($db);
 					$user_static->fetch($object->$key);
-					$tab_user[$object->$key] = clone $user_static;
+					$tab_user[$object->$key] = $user_static;
 				}
 				$user_static = $tab_user[$object->$key];
 				print $user_static->getNomUrl(3, "");
@@ -825,8 +826,9 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 				$list_validation1 = $object->listApprover1;
 				foreach($list_validation1[0] as $id => $id2){
 					if(!key_exists($id2, $tab_user)) {
+						$user_static = new User($db);
 						$user_static->fetch($id2);
-						$tab_user[$id2] = clone $user_static;
+						$tab_user[$id2] = $user_static;
 					}
 					$user_static = $tab_user[$id2];
 					print $user_static->getNomUrl(3, "").($list_validation1[1][$id2] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
@@ -839,8 +841,9 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 				$list_validation2 = $object->listApprover2;
 				foreach($list_validation2[0] as $id => $id2){
 					if(!key_exists($id2, $tab_user)) {
+						$user_static = new User($db);
 						$user_static->fetch($id2);
-						$tab_user[$id2] = clone $user_static;
+						$tab_user[$id2] = $user_static;
 					}
 					$user_static = $tab_user[$id2];
 					print $user_static->getNomUrl(3, "").($list_validation2[1][$id2] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
