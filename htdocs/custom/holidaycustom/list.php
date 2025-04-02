@@ -1015,16 +1015,18 @@ if ($resql) {
 				
 				if($conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
 					if(!key_exists($userstatic->id, $tab_user)) {
+						$user_static = new User($db);
 						$user_static->fetch($userstatic->id);
-						$tab_user[$userstatic->id] = clone $user_static;
+						$tab_user[$userstatic->id] = $user_static;
 					}
 					$user_static = $tab_user[$userstatic->id];
 					$list_validation1 = explode(",", $user_static->array_options['options_approbateurfdt']);
 					foreach($list_validation1 as $userid){
 						if($userid > 0) {
 							if(!key_exists($userid, $tab_user)) {
+								$user_static = new User($db);
 								$user_static->fetch($userid);
-								$tab_user[$userid] = clone $user_static;
+								$tab_user[$userid] = $user_static;
 							}
 
 							$user_static = $tab_user[$userid];
@@ -1037,8 +1039,9 @@ if ($resql) {
 					$list_validation1 = $object->listApprover1;
 					foreach($list_validation1[0] as $userid){
 						if(!key_exists($userid, $tab_user)) {
+							$user_static = new User($db);
 							$user_static->fetch($userid);
-							$tab_user[$userid] = clone $user_static;
+							$tab_user[$userid] = $user_static;
 						}
 
 						$user_static = $tab_user[$userid];
@@ -1061,8 +1064,9 @@ if ($resql) {
 				$list_validation2 = $object->listApprover2;
 				foreach($list_validation2[0] as $userid){
 					if(!key_exists($userid, $tab_user)) {
+						$user_static = new User($db);
 						$user_static->fetch($userid);
-						$tab_user[$userid] = clone $user_static;
+						$tab_user[$userid] = $user_static;
 					}
 					
 					$user_static = $tab_user[$userid];
