@@ -190,6 +190,14 @@ try {
 
     $otId = isset($data['otid']) ? intval($data['otid']) : 0;
 
+    // Récupérer toutes les cellules existantes pour cet OT
+    $existingCellIds = [];
+    $sql = "SELECT id_cellule, rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId";
+    $resql = $db->query($sql);
+    while ($row = $db->fetch_object($resql)) {
+        $existingCellIds[$row->id_cellule] = $row->rowid;
+    }
+
     // Traiter chaque élément de `cardsData`
     if (isset($data['cardsData']) && is_array($data['cardsData'])) {
         foreach ($data['cardsData'] as $item) {
@@ -202,12 +210,8 @@ try {
             $receivedCellIds[] = $cellId; // Stocker les ID reçus
 
             if ($type !== 'listesoustraitant') {
-                // Vérifier si la cellule existe déjà
-                $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND id_cellule = '$cellId'";
-                $resql = $db->query($sql);
-                if ($resql && $db->num_rows($resql) > 0) {
-                    $row = $db->fetch_object($resql);
-                    $rowid = $row->rowid;
+                if (isset($existingCellIds[$cellId])) {
+                    $rowid = $existingCellIds[$cellId];
 
                     // Mise à jour de la cellule existante
                     $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_cellule 
@@ -229,63 +233,73 @@ try {
                 }
             }
 
-            // Gestion des sous-traitants pour les listes de type 'listesoustraitant'
-            if ($type === 'listesoustraitant' && isset($item['soustraitants']) && is_array($item['soustraitants'])) {
-                foreach ($item['soustraitants'] as $soustraitant) {
-                    $fk_socpeople = intval($soustraitant['soc_people']);
-                    $fk_societe = $db->escape($soustraitant['supplier_id']);
-                    $fonction = $db->escape($soustraitant['fonction']);
-                    $contrat = $db->escape($soustraitant['contrat']);
-                    $habilitation = $db->escape($soustraitant['habilitation']);
-                   
-                    $receivedSubcontractors[] = $fk_socpeople; 
+            // Gestion des userIds pour le type 'card' (ajout ou mise à jour)
+            if ($type === 'card' && isset($item['userId'])) {
+                $userid = intval($item['userId']);
+                if (isset($existingCellIds[$cellId])) {
+                    $otCelluleId = $existingCellIds[$cellId];
 
-                    // Vérifier si le sous-traitant est déjà enregistré
-                    $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
-                            WHERE ot_id = $otId AND fk_socpeople = $fk_socpeople";
+                    // Vérifier si un userid est déjà enregistré
+                    $sql = "SELECT fk_user FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne WHERE ot_cellule_id = $otCelluleId";
                     $resql = $db->query($sql);
+                    $existingUser = $resql ? $db->fetch_object($resql) : null;
 
-                    if ($resql && $db->num_rows($resql) > 0) {
-                        $row = $db->fetch_object($resql);
-                        $rowid = $row->rowid;
-
-                        // Mise à jour des informations du sous-traitant
-                        $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
-                                SET fonction = '$fonction', contrat = '$contrat', habilitation = '$habilitation', fk_societe = '$fk_societe'
-                                WHERE rowid = $rowid AND ot_id = $otId";
-                        if (!$db->query($sql)) {
-                            throw new Exception("Erreur lors de la mise à jour du sous-traitant : " . $db->lasterror());
+                    if ($existingUser) {
+                        // Mettre à jour si le userId est différent
+                        if ($existingUser->fk_user != $userid) {
+                            $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_cellule_donne SET fk_user = $userid WHERE ot_cellule_id = $otCelluleId";
+                            if (!$db->query($sql)) {
+                                throw new Exception("Erreur lors de la mise à jour du userId dans ot_ot_cellule_donne : " . $db->lasterror());
+                            }
                         }
                     } else {
-                        // Insérer un nouveau sous-traitant
-                        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_sous_traitants (ot_id, fk_socpeople, fonction, contrat, habilitation, fk_societe) 
-                                VALUES ($otId, $fk_socpeople, '$fonction', '$contrat', '$habilitation','$fk_societe')";
+                        // Insérer un nouveau userId
+                        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user) VALUES ($otCelluleId, $userid)";
                         if (!$db->query($sql)) {
-                            throw new Exception("Erreur lors de l'insertion du sous-traitant : " . $db->lasterror());
+                            throw new Exception("Erreur lors de l'insertion du userId dans ot_ot_cellule_donne : " . $db->lasterror());
                         }
                     }
+                }
+            }
+
+            // Gestion des userIds pour 'listesoustraitant' (Ajout des sous-traitants)
+            if ($type === 'listesoustraitant' && isset($item['soustraitants'])) {
+                $subcontractors = $item['soustraitants'];
+                foreach ($subcontractors as $subcontractor) {
+                    // Insérer ou mettre à jour les sous-traitants ici
                 }
             }
         }
     }
 
-    // Vérifier les sous-traitants existants dans la base de données
-    $existingSubcontractors = [];
-    $sql = "SELECT fk_socpeople FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants WHERE ot_id = $otId";
-    $resql = $db->query($sql);
-    if ($resql) {
-        while ($row = $db->fetch_object($resql)) {
-            $existingSubcontractors[] = $row->fk_socpeople;
-        }
-    }
+    // Supprimer les cellules non reçues
+    $cellsToDelete = array_diff(array_keys($existingCellIds), $receivedCellIds);
+    if (!empty($cellsToDelete)) {
+        $cellsToDeleteString = implode("','", $cellsToDelete);
 
-    // Supprimer les sous-traitants qui ne sont plus dans les données reçues
-    $subcontractorsToDelete = array_diff($existingSubcontractors, $receivedSubcontractors);
-    foreach ($subcontractorsToDelete as $fk_socpeopleToDelete) {
-        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
-                WHERE ot_id = $otId AND fk_socpeople = $fk_socpeopleToDelete";
-        if (!$db->query($sql)) {
-            throw new Exception("Erreur lors de la suppression du sous-traitant fk_socpeople $fk_socpeopleToDelete : " . $db->lasterror());
+        // Récupérer les ID des cellules à supprimer
+        $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND id_cellule IN ('$cellsToDeleteString')";
+        $resql = $db->query($sql);
+        $cellIdsToDelete = [];
+
+        while ($row = $db->fetch_object($resql)) {
+            $cellIdsToDelete[] = $row->rowid;
+        }
+
+        if (!empty($cellIdsToDelete)) {
+            $cellIdsToDeleteString = implode(',', $cellIdsToDelete);
+
+            // Supprimer les entrées dans ot_ot_cellule_donne
+            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne WHERE ot_cellule_id IN ($cellIdsToDeleteString)";
+            if (!$db->query($sql)) {
+                throw new Exception("Erreur lors de la suppression des userIds liés aux cellules supprimées : " . $db->lasterror());
+            }
+
+            // Supprimer les cellules
+            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE rowid IN ($cellIdsToDeleteString)";
+            if (!$db->query($sql)) {
+                throw new Exception("Erreur lors de la suppression des cellules : " . $db->lasterror());
+            }
         }
     }
 
@@ -981,8 +995,6 @@ $filter = array('statut' => 1);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//Partie pour afficher les utilisateurs récupérés dans les tables ot_ot_cellule et ot_ot_cellule_donne
-
 $otId = $object->id;  // L'ID de l'OT actuel
 
 // Récupérer toutes les cellules liées à l'OT, triées par tms (le plus récent en premier)
@@ -1043,9 +1055,20 @@ foreach ($cellData as $cell) {
         }
     }
 
-    // Ajouter les utilisateurs à chaque cellule
-    $cell->userIds = $users;
+    // Ajouter les utilisateurs à chaque cellule en fonction du type de cellule
+    if ($cell->type == 'card') {
+        // Si la cellule est de type "card", on met les utilisateurs dans "userId"
+        if (count($users) > 0) {
+            $cell->userId = $users[0];  // On prend seulement le premier utilisateur (si existant)
+        } else {
+            $cell->userId = null;  // Si aucun utilisateur, on met null
+        }
+    } else {
+        // Pour les autres types, on garde les utilisateurs dans "userIds"
+        $cell->userIds = $users;
+    }
 }
+
 
 // Ajouter la liste des sous-traitants au tableau cellData
 $cellData[] = [
@@ -1580,29 +1603,40 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
     cellData.forEach(function(cell) {
         let column = cell.x;
 
-        if (cell.type === "card") {                                          
-            if (!addedCardTitles.has(cell.title)) {
-                const card = createEmptyCard(column);
-                const titleInput = card.querySelector(".title-input");
-                titleInput.value = cell.title;
+    if (cell.type === "card") {                                          
+    console.log(`Chargement de la carte ${cell.title} avec userId:`, cell.userId);
 
-                const nameDropdown = card.querySelector(".name-dropdown");
-                if (cell.userIds && cell.userIds.length > 0) {
-                    const userId = cell.userIds[0];
-                    const user = userjson.find(u => u.rowid === userId);
-                    if (user) {
-                        nameDropdown.value = userId;
-                    }
-                }
+    if (!addedCardTitles.has(cell.title)) {
+        const card = createEmptyCard(column);
+        const titleInput = card.querySelector(".title-input");
+        titleInput.value = cell.title;
 
-                const columnElement = document.querySelector(`.card-column:nth-child(${column})`);
-                if (columnElement) {
-                    columnElement.appendChild(card);
-                }
+        const nameDropdown = card.querySelector(".name-dropdown");
 
-                addedCardTitles.add(cell.title);
+        if (cell.userId) {  
+            const userId = cell.userId;  
+            console.log("User ID détecté :", userId);  // ✅ Vérifier si userId est bien récupéré
+
+            const user = userjson.find(u => u.rowid == userId);
+            if (user) {
+                nameDropdown.value = userId;
+            } else {
+                console.warn("⚠️ User introuvable avec ID :", userId);
             }
-        } else if (cell.type === "list") {
+        } else {
+            console.warn("⚠️ Aucun userId trouvé pour cette carte !");
+        }
+
+        const columnElement = document.querySelector(`.card-column:nth-child(${column})`);
+        if (columnElement) {
+            columnElement.appendChild(card);
+        }
+
+        addedCardTitles.add(cell.title);
+    }
+}
+
+ else if (cell.type === "list") {
     if (!addedListTitles.has(cell.title)) {
         const list = createUserList(column);
         const titleInput = list.querySelector(".list-title-input");
@@ -2172,12 +2206,12 @@ function attachUserRemoveListeners(list) {
 
 
 function updateUserIdsForCard(cell, newUserId) {
-    if (cell.userIds && cell.userIds.length > 0) {
+    if (cell.userId && cell.userId.length > 0) {
         // Mettre à jour utilisateur avec le dernier ID
-        cell.userIds = [newUserId]; // On garde uniquement le dernier utilisateur ajouté
+        cell.userId = [newUserId]; // On garde uniquement le dernier utilisateur ajouté
     } else {
-        // Si aucune donnée dans userIds, on linitialise avec ID du nouvel utilisateur
-        cell.userIds = [newUserId];
+        // Si aucune donnée dans userId, on linitialise avec ID du nouvel utilisateur
+        cell.userId = [newUserId];
     }
     console.log(`User ID mis à jour pour la carte avec le nouvel utilisateur: ${newUserId}`);
 }
@@ -2341,7 +2375,7 @@ function saveData() {
 
         if (titleInput && nameDropdown) {
             let title = titleInput.value;
-            let userId = card.dataset.userId || "undefined"; // Utiliser lID utilisateur stocké dans lattribut dataset
+            let userId = nameDropdown.value || card.dataset.userId || "undefined"; // Utiliser lID utilisateur stocké dans lattribut dataset
             let cardId = card.querySelector(".card-id").value; 
 
             let cardCoordinates = {
