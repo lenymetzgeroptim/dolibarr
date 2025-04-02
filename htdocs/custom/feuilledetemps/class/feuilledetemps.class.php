@@ -3762,6 +3762,60 @@ class FeuilleDeTemps extends CommonObject
 		return 1;
 	}
 
+	public function load_previous_next_ref_byusername($user_id, $date_debut)
+	{
+		global $user; 
+
+		$arrayres = array();
+	
+		$sql = 
+		"WITH OrderedUsers AS (
+			SELECT 
+				f.rowid AS feuilledetemps_id,
+				f.fk_user,
+				f.date_debut,
+				f.date_fin,
+				u.lastname,
+				u.firstname,
+				LAG(f.rowid) OVER (PARTITION BY f.date_debut, f.date_fin ORDER BY u.lastname, u.firstname) AS prev_feuilledetemps,
+				LEAD(f.rowid) OVER (PARTITION BY f.date_debut, f.date_fin ORDER BY u.lastname, u.firstname) AS next_feuilledetemps
+			FROM llx_feuilledetemps_feuilledetemps f
+			JOIN llx_user u ON f.fk_user = u.rowid
+		)
+		SELECT 
+			f_current.*,
+			f_prev.ref AS prev_feuilledetemps_ref,
+			f_next.ref AS next_feuilledetemps_ref
+		FROM OrderedUsers f_current
+		LEFT JOIN llx_feuilledetemps_feuilledetemps f_prev 
+			ON f_current.prev_feuilledetemps = f_prev.rowid
+		LEFT JOIN llx_feuilledetemps_feuilledetemps f_next 
+			ON f_current.next_feuilledetemps = f_next.rowid
+		WHERE f_current.fk_user = $user_id AND f_current.date_debut = '".$this->db->idate($date_debut)."'";
+		
+
+		dol_syslog(get_class($this)."::load_previous_next_ref_byusername", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			if($num > 0){
+				$obj = $this->db->fetch_object($resql);
+				$this->db->free($resql);
+				$this->ref_previous = $obj->prev_feuilledetemps_ref;
+				$this->ref_next = $obj->next_feuilledetemps_ref;
+				return 1;
+			}
+			else {
+				$this->db->free($resql);
+				return 0;
+			}
+		} else {
+			dol_print_error($this->db);
+			$this->error = "Error ".$this->db->lasterror();
+			return -1;
+		}
+  	}
+
 	/**
 	 *     Show a confirmation HTML form or AJAX popup.
 	 *     Easiest way to use this is with useajax=1.

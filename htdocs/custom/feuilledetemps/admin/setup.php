@@ -237,6 +237,9 @@ $item = $formSetup->newItem('FDT_VERIF_MODIFWHENHOLIDAY')->setAsYesNo();
 // FDT_SHOW_USERADRESS
 $item = $formSetup->newItem('FDT_SHOW_USERADRESS')->setAsYesNo();
 
+// FDT_ORDER_MATRICULE
+$item = $formSetup->newItem('FDT_ORDER_MATRICULE')->setAsYesNo();
+
 
 // Titre FDT_STANDARD_WEEK
 $formSetup->newItem('FDT_STANDARD_WEEK')->setAsTitle();
