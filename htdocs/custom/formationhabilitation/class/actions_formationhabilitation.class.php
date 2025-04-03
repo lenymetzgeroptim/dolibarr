@@ -95,7 +95,7 @@ class ActionsFormationHabilitation extends CommonHookActions
 			$this->resprints .= " AND (a.extraparams IS NULL OR a.extraparams = 'costpedagogique')";
 		}
 
-		if(($parameters['filterobj']->element == 'formation' && !$user->rights->formationhabilitation->userformation->readall) && ($parameters['filterobj']->element == 'habilitation' && !$user->rights->formationhabilitation->userhabilitation_autorisation->readall) && ($parameters['filterobj']->element == 'autorisation' && !$user->rights->formationhabilitation->userhabilitation_autorisation->readall)) {
+		if(($parameters['filterobj']->element == 'formation' && !$user->rights->formationhabilitation->userformation->readall) || ($parameters['filterobj']->element == 'habilitation' && !$user->rights->formationhabilitation->userhabilitation_autorisation->readall) || ($parameters['filterobj']->element == 'autorisation' && !$user->rights->formationhabilitation->userhabilitation_autorisation->readall)) {
 			$this->resprints .= " AND a.fk_action = 40";
 		}
 

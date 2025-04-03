@@ -117,6 +117,8 @@ class modFormationHabilitation extends DolibarrModules
 			'hooks' => array(
 				   'data' => array(
 				       'formationagenda',
+					   'habilitationagenda',
+					   'autorisationagenda',
 				   ),
 				   'entity' => '0',
 			),
