@@ -776,7 +776,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => 'isModEnabled(\'formationhabilitation\')',
-			 'perms' => '$user->hasRight(\'formationhabilitation\', \'visitemedical\', \'read\')',
+			 'perms' => '$user->hasRight(\'formationhabilitation\', \'visitemedical\', \'readall\')',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -808,7 +808,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => 'isModEnabled(\'formationhabilitation\')',
-			 'perms' => '$user->hasRight(\'formationhabilitation\', \'convocation\', \'read\')',
+			 'perms' => '$user->hasRight(\'formationhabilitation\', \'convocation\', \'readall\')',
 			 'target' => '',
 			 'user' => 2,
 		);
