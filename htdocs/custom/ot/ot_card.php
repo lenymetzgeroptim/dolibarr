@@ -302,11 +302,41 @@ try {
 
 
 
-            // Gestion des userId pour 'listesoustraitant' (Ajout des sous-traitants)
-            if ($type === 'listesoustraitant' && isset($item['soustraitants'])) {
-                $subcontractors = $item['soustraitants'];
-                foreach ($subcontractors as $subcontractor) {
-                    // Insérer ou mettre à jour les sous-traitants ici
+            // Gestion des sous-traitants pour les listes de type 'listesoustraitant'
+            if ($type === 'listesoustraitant' && isset($item['soustraitants']) && is_array($item['soustraitants'])) {
+                foreach ($item['soustraitants'] as $soustraitant) {
+                    $fk_socpeople = intval($soustraitant['soc_people']);
+                    $fk_societe = $db->escape($soustraitant['supplier_id']);
+                    $fonction = $db->escape($soustraitant['fonction']);
+                    $contrat = $db->escape($soustraitant['contrat']);
+                    $habilitation = $db->escape($soustraitant['habilitation']);
+                   
+                    $receivedSubcontractors[] = $fk_socpeople; 
+
+                    // Vérifier si le sous-traitant est déjà enregistré
+                    $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
+                            WHERE ot_id = $otId AND fk_socpeople = $fk_socpeople";
+                    $resql = $db->query($sql);
+
+                    if ($resql && $db->num_rows($resql) > 0) {
+                        $row = $db->fetch_object($resql);
+                        $rowid = $row->rowid;
+
+                        // Mise à jour des informations du sous-traitant
+                        $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
+                                SET fonction = '$fonction', contrat = '$contrat', habilitation = '$habilitation', fk_societe = '$fk_societe'
+                                WHERE rowid = $rowid AND ot_id = $otId";
+                        if (!$db->query($sql)) {
+                            throw new Exception("Erreur lors de la mise à jour du sous-traitant : " . $db->lasterror());
+                        }
+                    } else {
+                        // Insérer un nouveau sous-traitant
+                        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_sous_traitants (ot_id, fk_socpeople, fonction, contrat, habilitation, fk_societe) 
+                                VALUES ($otId, $fk_socpeople, '$fonction', '$contrat', '$habilitation','$fk_societe')";
+                        if (!$db->query($sql)) {
+                            throw new Exception("Erreur lors de l'insertion du sous-traitant : " . $db->lasterror());
+                        }
+                    }
                 }
             }
         }
@@ -1758,6 +1788,8 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
     });
 }
 
+
+
 function createUniqueUserList() {
     const list = document.createElement("div");
     list.className = "user-list card unique-list"; 
@@ -1942,7 +1974,6 @@ function deleteUniqueList(uniqueListId, list) {
 let selectedContacts = [];  
 
 function createSupplierDropdown(suppliers) {
-
     const existingCard = document.querySelector(".cardsoustraitant");
     if (existingCard) {
         existingCard.remove();
@@ -1988,24 +2019,76 @@ function createSupplierDropdown(suppliers) {
     tableContainer.className = "table-container";
     cardContainer.appendChild(tableContainer);
 
+    // Ajouter une légende pour le tableau
     const legendRow = document.createElement("div");
     legendRow.className = "legend-row";
-    legendRow.style.cssText = "display: flex; text-align: center; padding: 5px 0; font-weight: bold; display: flex;";
+    legendRow.style.cssText = "display: flex; text-align: center; padding: 5px 0; font-weight: bold;";
 
     const legendFields = ["Nom Prénom", "Entreprise", "Fonction", "Contrat", "Habilitations", ""];
     legendFields.forEach(field => {
         const fieldCell = document.createElement("div");
         fieldCell.style.flex = "1";
-        fieldCell.style.minWidth = "150px"; // Ajout pour uniformiser la largeur
         fieldCell.textContent = field;
         legendRow.appendChild(fieldCell);
     });
 
     tableContainer.appendChild(legendRow);
 
-    const spacingDiv = document.createElement("div");
-    spacingDiv.style.height = "10px"; 
-    cardContainer.appendChild(spacingDiv);
+    // Vérifier si des sous-traitants existent déjà dans cellData
+    if (cellData && Array.isArray(cellData)) {
+        const subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
+        
+        if (subcontractorData && subcontractorData.subcontractors) {
+              
+            subcontractorData.subcontractors.forEach(contact => {
+           
+                const dataRow = document.createElement("div");
+                dataRow.className = "data-row";
+                dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
+                dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
+
+                const fields = [
+                    `${contact.firstname} ${contact.lastname}`,
+                    `${contact.societe_nom}`,
+                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction}">`,
+                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat}">`,
+                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation}">`
+                ];
+
+                fields.forEach(field => {
+                    const fieldCell = document.createElement("div");
+                    fieldCell.style.flex = "1";
+                    fieldCell.innerHTML = field;
+                    dataRow.appendChild(fieldCell);
+                });
+
+                const removeButton = document.createElement("div");
+                removeButton.style.cssText = "flex: 0.5; color: red; cursor: pointer;";
+                removeButton.textContent = "×";
+                removeButton.className = "remove-contact";
+                removeButton.addEventListener("click", function() {
+                    selectedContacts = selectedContacts.filter(c => c.contact_id !== contact.fk_socpeople);
+                    dataRow.remove();
+                    saveData();
+                });
+
+                dataRow.appendChild(removeButton);
+                tableContainer.appendChild(dataRow);
+
+                // Ajouter le contact dans selectedContacts pour éviter les doublons
+                selectedContacts.push({
+                    contact_id: contact.fk_socpeople,
+                    firstname: contact.firstname,
+                    lastname: contact.lastname,
+                    supplier_name: contact.societe_nom,
+                    supplier_id: contact.fk_societe,
+                    function: contact.fonction,
+                    contract: contact.contrat,
+                    qualifications: contact.habilitation
+                });
+            });
+        }
+    }
 
     selectSupplier.addEventListener("change", function() {
         const supplierId = this.value;
@@ -2019,21 +2102,13 @@ function createSupplierDropdown(suppliers) {
                         .join("");
 
                 contactContainer.style.display = "block"; 
-                
-                if (document.querySelectorAll(".data-row").length > 0) {
-                    legendRow.style.display = "flex"; 
-                }
             }
         } else {
             contactContainer.style.display = "none"; 
-            legendRow.style.display = "none"; 
         }
     });
 
-  
-
-
-   selectContact.addEventListener("change", function() {
+    selectContact.addEventListener("change", function() {
         const contactId = this.value;
         const supplierId = selectSupplier.value;
         if (contactId && supplierId) {
@@ -2056,7 +2131,6 @@ function createSupplierDropdown(suppliers) {
                 fields.forEach(field => {
                     const fieldCell = document.createElement("div");
                     fieldCell.style.flex = "1";
-                    fieldCell.style.minWidth = "150px"; // Uniformiser avec la légende
                     fieldCell.innerHTML = field;
                     dataRow.appendChild(fieldCell);
                 });
@@ -2066,9 +2140,7 @@ function createSupplierDropdown(suppliers) {
                 removeButton.textContent = "×";
                 removeButton.className = "remove-contact";
                 removeButton.addEventListener("click", function() {
-                    // Retirer le contact du tableau selectedContacts
                     selectedContacts = selectedContacts.filter(c => c.contact_id !== contactId);
-                    
                     dataRow.remove();
                     saveData();
                 });
@@ -2076,7 +2148,7 @@ function createSupplierDropdown(suppliers) {
                 dataRow.appendChild(removeButton);
                 tableContainer.appendChild(dataRow);
 
-                // Ajouter le contact dans le tableau selectedContacts avec les données des champs
+                // Ajouter le contact dans le tableau selectedContacts
                 selectedContacts.push({
                     contact_id: contactId,
                     firstname: contact.firstname,
@@ -2087,31 +2159,29 @@ function createSupplierDropdown(suppliers) {
                     contract: "",
                     qualifications: ""
                 });
-  
-
+                
                 selectContact.querySelector(`option[value="${contactId}"]`).remove();
             }
             saveData();
         }
     });
 
-    tableContainer.addEventListener("blur", function(e) {
-        if (e.target && e.target.classList.contains("form-input")) {
-            const inputField = e.target;
-            const dataRow = inputField.closest(".data-row");
-            const contactId = dataRow.getAttribute("data-contact-id");
+    document.querySelector(".table-container").addEventListener("blur", function (e) {
+    if (e.target && e.target.classList.contains("form-input")) {
+        const inputField = e.target;
+        const dataRow = inputField.closest(".data-row");
+        const contactId = dataRow.getAttribute("data-contact-id");
 
-            const selectedContact = selectedContacts.find(c => c.contact_id == contactId);
-            if (selectedContact) {
-                const fieldName = inputField.getAttribute("data-field"); // "function", "contract", "qualifications"
-                selectedContact[fieldName] = inputField.value; // Mettre à jour la valeur dans le tableau
-
-                
-            }
-            saveData();
+        // Trouver le contact correspondant dans `selectedContacts`
+        const selectedContact = selectedContacts.find(c => c.contact_id == contactId);
+        if (selectedContact) {
+            const fieldName = inputField.getAttribute("data-field");
+            selectedContact[fieldName] = inputField.value; // Mettre à jour la valeur
         }
-    }, true);
 
+        saveData(); // Sauvegarder les modifications
+    }
+}, true);
 }
 
 
@@ -2419,12 +2489,12 @@ function saveData() {
 
         if (titleInput && nameDropdown) {
             let title = titleInput.value;
-            let userId = nameDropdown.value || card.dataset.userId || "undefined"; // Utiliser lID utilisateur stocké dans lattribut dataset
+            let userId = nameDropdown.value || card.dataset.userId || "undefined";
             let cardId = card.querySelector(".card-id").value; 
 
             let cardCoordinates = {
                 title: title,
-                userId: userId, // Stocker lID unique de lutilisateur
+                userId: userId, 
                 type: card.classList.contains("user-list") ? "list" : "card",
                 otid: otId, 
                 id: cardId, 
@@ -2437,26 +2507,58 @@ function saveData() {
     });
 
     // Récupérer les contacts sélectionnés et leurs informations
-    const contactsData = selectedContacts.map(contact => {
-        return {
-            soc_people: contact.contact_id,
-            firstname: contact.firstname,
-            lastname: contact.lastname,
-            supplier_name: contact.supplier_name,
-            supplier_id: contact.supplier_id,
-            fonction: contact.function,
-            contrat: contact.contract,
-            habilitation: contact.qualifications
+    console.log("Contacts sélectionnés :", selectedContacts);
+
+const contactsData = selectedContacts.map(contact => {
+    console.log("Contact :", contact);
+    return {
+        soc_people: contact.contact_id,
+        firstname: contact.firstname,
+        lastname: contact.lastname,
+        supplier_name: contact.supplier_name,
+        supplier_id: contact.supplier_id,
+        fonction: contact.function,
+        contrat: contact.contract,
+        habilitation: contact.qualifications
+    };
+});
+console.log("Contacts collectés :", contactsData);
+
+
+   // Ajouter ou mettre à jour les contacts sélectionnés dans cardsData
+if (contactsData.length > 0) {
+    let existingSubcontractorList = cardsData.find(item => item.type === "listesoustraitant");
+
+    if (!existingSubcontractorList) {
+        console.log("Aucune liste de sous-traitants existante, création dune nouvelle liste.");
+        existingSubcontractorList = {
+            type: "listesoustraitant",
+            soustraitants: []
         };
+        cardsData.push(existingSubcontractorList);
+    }
+
+    console.log("Sous-traitants existants avant mise à jour :", existingSubcontractorList.soustraitants);
+
+    // Parcourir les sous-traitants récupérés de la base de données
+    contactsData.forEach(contact => {
+        const existingContact = existingSubcontractorList.soustraitants.find(
+            c => c.soc_people == contact.soc_people
+        );
+
+        if (existingContact) {
+            console.log(`Mise à jour du sous-traitant existant :`, contact);
+            // Mettre à jour les informations du sous-traitant existant
+            Object.assign(existingContact, contact);
+        } else {
+            console.log(`Ajout un nouveau sous-traitant :`, contact);
+            // Ajouter un nouveau sous-traitant
+            existingSubcontractorList.soustraitants.push(contact);
+        }
     });
 
-    // Ajouter les contacts sélectionnés à cardsData
-    if (contactsData.length > 0) {
-        cardsData.push({
-            type: "listesoustraitant", // Type de donnée pour les contacts
-            soustraitants: contactsData
-        });
-    }
+    console.log("Sous-traitants après mise à jour :", existingSubcontractorList.soustraitants);
+}
 
     // Parcours de toutes les listes pour récupérer les informations
     document.querySelectorAll(".card-column .user-list").forEach(function (list) {
