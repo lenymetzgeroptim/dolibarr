@@ -230,6 +230,7 @@ try {
 
                     $rowid = $db->last_insert_id(MAIN_DB_PREFIX . 'ot_ot_cellule');
                     $insertedCellIds[] = $rowid;
+                    $existingCellIds[$cellId] = $rowid;
                 }
             }
 
@@ -262,7 +263,7 @@ try {
                 }
             }
 
-            // Gestion des userIds pour 'list' et 'listeunique' (ajout, mise à jour et suppression)
+            // GESTION DES userIds POUR LES LISTES ET LISTEUNIQUE
             if (($type === 'list' || $type === 'listeunique') && isset($item['userIds']) && is_array($item['userIds'])) {
                 $userIds = $item['userIds']; // Récupère les userIds depuis le JSON
                 if (isset($existingCellIds[$cellId])) {
@@ -287,11 +288,9 @@ try {
                         }
                     }
 
-                    // Ajouter ou mettre à jour les userIds présents dans le JSON
+                    // Ajouter les nouveaux userIds qui ne sont pas encore enregistrés
                     foreach ($userIds as $userid) {
-                        // Vérifier si l'userId est déjà présent dans la base de données pour cette cellule
                         if (!in_array($userid, $existingUserIds)) {
-                            // Insérer un nouvel userId
                             $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user) VALUES ($otCelluleId, $userid)";
                             if (!$db->query($sql)) {
                                 throw new Exception("Erreur lors de l'insertion du userId dans ot_ot_cellule_donne : " . $db->lasterror());
@@ -300,6 +299,7 @@ try {
                     }
                 }
             }
+
 
 
             // Gestion des userId pour 'listesoustraitant' (Ajout des sous-traitants)
@@ -2114,74 +2114,12 @@ function createSupplierDropdown(suppliers) {
 
 }
 
-// Fonction pour afficher les contacts déjà enregistrés (au rechargement de la page)
-function displaySelectedContacts() {
-    const tableContainer = document.querySelector(".table-container");
-
-   
-    tableContainer.innerHTML = "";
-
-    
-    const legendRow = document.createElement("div");
-    legendRow.className = "legend-row";
-    legendRow.style.cssText = "display: flex; text-align: center; padding: 5px 0; font-weight: bold;";
-
-    const legendFields = ["Nom Prénom", "Entreprise", "Fonction", "Contrat", "Habilitations", ""];
-    legendFields.forEach(field => {
-        const fieldCell = document.createElement("div");
-        fieldCell.style.flex = "1";
-        fieldCell.style.minWidth = "150px";
-        fieldCell.textContent = field;
-        legendRow.appendChild(fieldCell);
-    });
-    tableContainer.appendChild(legendRow);
-
-    // Ajouter chaque contact présent dans cellData
-    cellData.forEach(contact => {
-        const dataRow = document.createElement("div");
-        dataRow.className = "data-row";
-        dataRow.setAttribute("data-contact-id", contact.contact_id);
-        dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
-
-        const fields = [
-            `${contact.firstname} ${contact.lastname}`,
-            contact.supplier_name,
-            `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.function || ''}">`,
-            `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contract || ''}">`,
-            `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.qualifications || ''}">`
-        ];
-
-        fields.forEach(field => {
-            const fieldCell = document.createElement("div");
-            fieldCell.style.flex = "1";
-            fieldCell.style.minWidth = "150px";
-            fieldCell.innerHTML = field;
-            dataRow.appendChild(fieldCell);
-        });
-
-        // Bouton pour supprimer le contact
-        const removeButton = document.createElement("div");
-        removeButton.style.cssText = "flex: 0.5; color: red; cursor: pointer;";
-        removeButton.textContent = "×";
-        removeButton.className = "remove-contact";
-        removeButton.addEventListener("click", function() {
-            // Retirer le contact de cellData
-            cellData = cellData.filter(c => c.contact_id !== contact.contact_id);
-            dataRow.remove();
-            saveData(); // Sauvegarder à nouveau les données après suppression
-        });
-
-        dataRow.appendChild(removeButton);
-        tableContainer.appendChild(dataRow);
-    });
-}
 
 
 // Appel de la fonction pour récupérer et afficher les fournisseurs
 fetchSuppliersAndContacts();
 
-// Ensuite, on affiche les sous-traitants existants de la BDD
-displaySelectedContacts();
+
 
 
 
