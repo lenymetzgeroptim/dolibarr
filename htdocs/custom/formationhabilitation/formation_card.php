@@ -171,6 +171,9 @@ if (!$permissiontoread) accessforbidden();
 
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
 
+// Permet d'avoir les noms complet dans le multiselect des formations 
+$conf->global->MAIN_DISABLE_TRUNC = 1;
+
 /*
  * Actions
  */

@@ -173,6 +173,9 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
+// Permet d'avoir les noms complet dans le multiselect des formations 
+$conf->global->MAIN_DISABLE_TRUNC = 1;
+
 
 /*
  * Actions
