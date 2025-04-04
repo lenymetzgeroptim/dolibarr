@@ -2166,6 +2166,8 @@ function createSupplierDropdown(suppliers) {
         }
     });
 
+    
+
     document.querySelector(".table-container").addEventListener("blur", function (e) {
     if (e.target && e.target.classList.contains("form-input")) {
         const inputField = e.target;
@@ -2525,7 +2527,7 @@ const contactsData = selectedContacts.map(contact => {
 console.log("Contacts collectés :", contactsData);
 
 
-   // Ajouter ou mettre à jour les contacts sélectionnés dans cardsData
+// Ajouter ou mettre à jour les contacts sélectionnés dans cardsData
 if (contactsData.length > 0) {
     let existingSubcontractorList = cardsData.find(item => item.type === "listesoustraitant");
 
@@ -2549,15 +2551,20 @@ if (contactsData.length > 0) {
         if (existingContact) {
             console.log(`Mise à jour du sous-traitant existant :`, contact);
             // Mettre à jour les informations du sous-traitant existant
-            Object.assign(existingContact, contact);
+           // Object.assign(existingContact, contact);
         } else {
-            console.log(`Ajout un nouveau sous-traitant :`, contact);
+            console.log(`Ajout dun nouveau sous-traitant :`, contact);
             // Ajouter un nouveau sous-traitant
             existingSubcontractorList.soustraitants.push(contact);
         }
     });
 
-    console.log("Sous-traitants après mise à jour :", existingSubcontractorList.soustraitants);
+    // Supprimer les doublons dans la liste des sous-traitants
+    existingSubcontractorList.soustraitants = existingSubcontractorList.soustraitants.filter((contact, index, self) =>
+        index === self.findIndex(c => c.soc_people === contact.soc_people)
+    );
+
+    console.log("Sous-traitants après suppression des doublons :", existingSubcontractorList.soustraitants);
 }
 
     // Parcours de toutes les listes pour récupérer les informations
