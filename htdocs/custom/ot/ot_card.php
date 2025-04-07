@@ -2135,13 +2135,37 @@ function createSupplierDropdown(suppliers) {
     }
 });
 
+selectSupplier.addEventListener("change", function() {
+    const supplierId = this.value;
+    if (supplierId) {
+        const supplier = suppliers.find(s => s.supplier_id == supplierId);
+        if (supplier) {
+            selectContact.innerHTML = `<option value="">-- Choisissez un contact --</option>` +
+                supplier.contacts
+                    .filter(contact => !document.querySelector(`[data-contact-id="${contact.contact_id}"]`))
+                    .map(contact => `<option value="${contact.contact_id}">${contact.firstname} ${contact.lastname}</option>`)
+                    .join("");
+
+            // Ajouter une option pour créer un nouveau contact
+            const createContactOption = document.createElement("option");
+            createContactOption.value = "create_contact";
+            createContactOption.textContent = "Créer un nouveau contact";
+            selectContact.appendChild(createContactOption);
+
+            contactContainer.style.display = "block"; 
+        }
+    } else {
+        contactContainer.style.display = "none"; 
+    }
+});
+
 selectContact.addEventListener("change", function() {
     const contactId = this.value;
     const supplierId = selectSupplier.value;
 
     if (contactId === "create_contact" && supplierId) {
-        // Rediriger vers la page de création de contact
-        const createContactUrl = `/contact/card.php?socid=${supplierId}&action=create&backtopage=%2Fsociete%2Fcontact.php%3Fsocid%3D${supplierId}`;
+        // Rediriger vers la page de création de contact avec retour à la page de OT
+        const createContactUrl = `/contact/card.php?socid=${supplierId}&action=create&backtopage=${encodeURIComponent(`/custom/ot/ot_card.php?id=7&save_lastsearch_values=1`)}`;
         window.location.href = createContactUrl;
     } else if (contactId && supplierId) {
         const supplier = suppliers.find(s => s.supplier_id == supplierId);
@@ -2197,7 +2221,6 @@ selectContact.addEventListener("change", function() {
         saveData();
     }
 });
-
     
 
     document.querySelector(".table-container").addEventListener("blur", function (e) {
