@@ -546,9 +546,6 @@ tr > th:last-child.fixed {
 
 
 
-
-
-
 /* Gestion des bordures */
 
 .feuilledetemps [class^="liste_total_semaine"] {
@@ -591,7 +588,7 @@ tr > th:last-child.fixed {
 }
 
 #tablelines_fdt> tbody > tr > td.holidaycolumn {
-	border-right: 1px solid rgb(82, 82, 82);
+	<!-- border-right: 1px solid rgb(82, 82, 82); -->
 	border-bottom: none;
 	background-color: #f0f0f0;
 }
@@ -603,13 +600,17 @@ tr > th:last-child.fixed {
 }
 
 #tablelines_fdt> tbody > tr > td.holidaycolumnmultiple2 {
-	border-right: 1px solid rgb(82, 82, 82);
+	<!-- border-right: 1px solid rgb(82, 82, 82); -->
 	border-bottom: none;
 	background-color: #f0f0f0;
 }
 
 #tablelines_fdt> thead > tr > th.columntitle {
 	border-bottom: 1px solid var(--colortopbordertitle1);
+}
+
+#tablelines_fdt> tbody > tr > td.affairecolumn {
+	border-right: 1px solid rgb(82, 82, 82);
 }
 
 

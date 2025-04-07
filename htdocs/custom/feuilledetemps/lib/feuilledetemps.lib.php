@@ -1321,7 +1321,8 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			if($cpt == 0) $tableCellTimespent = '<td class="center fixedcolumn5 valignmiddle hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 			if($cpt == 0) $tableCellHeureNuit = '<td class="center fixedcolumn6 valignmiddle hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 			if($cpt == 0) $tableCellSite = '<td class="center fixedcolumn9'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-			if($cpt == 0) $tableCellAffaire = '<td class="center fixedcolumn10'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+			if($cpt == 0) $tableCellAffaire = '<td class="center affairecolumn fixedcolumn10'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+			if($cpt == 0) $tableCellNoteModal = '<div class="center">';
 
 			$tableCellTimespent .= '<div class="multipleLineColumn line_'.$idw.'_'.$cpt.$class.$class_timespent.'">';
 			$tableCellHeureNuit .= '<div class="multipleLineColumn line_'.$idw.'_'.$cpt.$class.'">';
@@ -1339,14 +1340,14 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$note = $notes[$dayinloopfromfirstdaytoshow][$cpt]; 
 			//$tableCellTimespent .= img_picto('Note', (empty($note) ? 'note_vide@feuilledetemps' : 'note_plein@feuilledetemps'), ' id="img_note_'.$cpt.'_'.$idw.'" style="display:inline-block; padding: 6px; vertical-align: middle;" onClick="openNote(\'note_'.$cpt.'_'.$idw.'\')"');
 			$tableCellTimespent .= '<span class="'.(empty($note) ? 'far' : 'fas').' fa-sticky-note" id="img_note_'.$cpt.'_'.$idw.'" style="padding: 6px;" onClick="openNote(\'note_'.$cpt.'_'.$idw.'\')"></span>';
-			$tableCellTimespent .= '<div class="modal" id="note_'.$cpt.'_'.$idw.'">';
-			$tableCellTimespent .= '<div class = "modal-content">';
-			$tableCellTimespent .= '<span class="close" onclick="closeNotes2(this)">&times;</span>';
-			$tableCellTimespent .= '<a>'.$langs->trans('Note').' ('.dol_print_date($dayinloopfromfirstdaytoshow, '%a %d/%m/%y').")".'</a><br><br>';
-			$tableCellTimespent .= '<textarea class = "'.($idw < $num_first_day ? 'no-delete' : '').' flat"  rows = "3"'.($disabled ? ' disabled' : '').' style = "min-height:200px; width:370px; top:10px; max-width: 370px; min-width: 370px;"';
-			$tableCellTimespent .= ' name = "note['.$idw.']['.$cpt.']"';
-			$tableCellTimespent .= '>'.$note.'</textarea>';
-			$tableCellTimespent .= '</div></div>';
+			$tableCellNoteModal .= '<div class="modal" id="note_'.$cpt.'_'.$idw.'">';
+			$tableCellNoteModal .= '<div class = "modal-content">';
+			$tableCellNoteModal .= '<span class="close" onclick="closeNotes2(this)">&times;</span>';
+			$tableCellNoteModal .= '<a>'.$langs->trans('Note').' ('.dol_print_date($dayinloopfromfirstdaytoshow, '%a %d/%m/%y').")".'</a><br><br>';
+			$tableCellNoteModal .= '<textarea class = "'.($idw < $num_first_day ? 'no-delete' : '').' flat"  rows = "3"'.($disabled ? ' disabled' : '').' style = "min-height:200px; width:370px; top:10px; max-width: 370px; min-width: 370px;"';
+			$tableCellNoteModal .= ' name = "note['.$idw.']['.$cpt.']"';
+			$tableCellNoteModal .= '>'.$note.'</textarea>';
+			$tableCellNoteModal .= '</div></div>';
 
 			// Time
 			$tableCellTimespent .= '<input type="text" style="border: 1px solid grey;" alt="'.$alttitle.'" title="'.$alttitle.'" '.($disabled ? 'disabled' : '').' 
@@ -1437,11 +1438,13 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$tableCellHeureNuit .= '</td>';
 				$tableCellSite .= '</td>';
 				$tableCellAffaire .= '</td>';
+				$tableCellNoteModal .= '</div>';
 			} 
 		}
 
 		print $tableCellTimespent;
 		print $tableCellHeureNuit;
+		print $tableCellNoteModal;
 
 
 
