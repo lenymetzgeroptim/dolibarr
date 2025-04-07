@@ -1510,9 +1510,6 @@ if ($action == 'buildalldoc') {
 		$date_fin = dol_get_last_day(GETPOST("exportdate_year", 'int'), GETPOST("exportdate_month", 'int'));
 	}
 
-	$objexport = new ExtendedExportFDT($db);
-
-
 	$array_selected[0] = array(
 		"eu.matricule" => 1,
 		"axe" => 2,
@@ -1642,6 +1639,126 @@ if ($action == 'buildalldoc') {
 			}
 		}
 
+		header("Location: ".$_SERVER["PHP_SELF"].'?step=1');
+		return;
+	}
+}
+
+if ($action == 'buildalldoctest') {
+	$error = 0;
+	$max_execution_time_for_importexport = (empty($conf->global->EXPORT_MAX_EXECUTION_TIME) ? 300 : $conf->global->EXPORT_MAX_EXECUTION_TIME); // 5mn if not defined
+	$max_time = @ini_get("max_execution_time");
+	if ($max_time && $max_time < $max_execution_time_for_importexport) {
+		dol_syslog("max_execution_time=".$max_time." is lower than max_execution_time_for_importexport=".$max_execution_time_for_importexport.". We try to increase it dynamically.");
+		@ini_set("max_execution_time", $max_execution_time_for_importexport); // This work only if safe mode is off. also web servers has timeout of 300
+	}
+
+	$date_debut = 0;
+	$date_fin = 0;
+	if (GETPOST("exporttestdate_month", 'int') > 0 && GETPOST("exporttestdate_year", 'int') > 0) {
+		$date_debut = dol_mktime(-1, -1, -1, GETPOST("exporttestdate_month", 'int'), 1, GETPOST("exporttestdate_year", 'int'));
+		$date_fin = dol_get_last_day(GETPOST("exporttestdate_year", 'int'), GETPOST("exporttestdate_month", 'int'));
+	}
+
+	$array_selected[0] = array(
+		"eu.matricule" => 1,
+		"axe" => 2,
+		"section" => 3,
+		"pourcentage" => 4,
+		"fdt.date_debut" => 5,
+	);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$array_selected[1] = array(
+			"eu.matricule" => 1,
+			"u.lastname" => 2,
+			"u.firstname" => 3,
+			"petit_deplacement1" => 4,
+			"petit_deplacement2" => 5,
+			"petit_deplacement3" => 6,
+			"petit_deplacement4" => 7,
+			"repas1" => 8,
+			"repas2" => 9,
+			"heure_route" => 10,
+			"kilometres" => 11,
+			"kilometres_rappel" => 12,
+			"grand_deplacement1" => 13,
+			"grand_deplacement2" => 14,
+			"grand_deplacement3" => 15,
+			"indemnite_tt" => 16,
+			"fdt.prime_astreinte" => 17,
+			"fdt.prime_exceptionnelle" => 18,
+			"fdt.prime_objectif" => 19,
+			"fdt.prime_variable" => 20,
+			"fdt.prime_amplitude" => 21,
+			"heure_nuit50" => 22,
+			"heure_nuit75" => 23,
+			"heure_nuit100" => 24
+		);
+	}
+	else {
+		$array_selected[1] = array(
+			"eu.matricule" => 1,
+			"u.lastname" => 2,
+			"u.firstname" => 3,
+		);
+		$cpt = 4;
+		foreach ($extrafields->attributes[$silae->table_element]['label'] as $key => $label) {
+			if($extrafields->attributes[$silae->table_element]['printable'][$key]) {
+				$array_selected[1]['silae_extrafields.'.$key] = $cpt;
+				$cpt++;
+			}
+		}
+	}
+	$array_selected[2] = array(
+		"eu.matricule" => 1,
+		"ht.code_silae" => 2,
+		"valeur" => 3,
+		"h.date_debut" => 4,
+		"h.date_fin" => 5,
+		"type" => 6
+	);
+	$array_selected[3] = array(
+		"eu.matricule" => 1,
+		"code" => 2,
+		"valeur" => 3,
+		"s.date" => 4,
+		"s.date2" => 5,
+		"type" => 6
+	);
+
+	$array_filtervalue[0] = array(
+		"tt.element_date" => GETPOST("exporttestdate_year", 'int').str_pad(GETPOST("exporttestdate_month", 'int'), 2, '0', STR_PAD_LEFT),
+	);
+	$array_filtervalue[1] = array(
+		"fdt.date_debut" => GETPOST("exporttestdate_year", 'int').str_pad(GETPOST("exporttestdate_month", 'int'), 2, '0', STR_PAD_LEFT),
+	);
+	$array_filtervalue[2] = array(
+		"h.date_debut" => dol_mktime(-1, -1, -1, GETPOST("exporttestdate_month", 'int'), 1, GETPOST("exporttestdate_year", 'int')),
+		"h.date_fin" => dol_get_last_day(GETPOST("exporttestdate_year", 'int'), GETPOST("exporttestdate_month", 'int')),
+	);
+	$array_filtervalue[3] = array(
+		"s.date" => GETPOST("exporttestdate_year", 'int').str_pad(GETPOST("exporttestdate_month", 'int'), 2, '0', STR_PAD_LEFT),
+	);
+
+	$array_export_special[0] = '';
+	$array_export_special[1] = '';
+	$array_export_special[2] = '';
+	$array_export_special[3] = '';
+
+	// Build export file
+	for($i = 0; $i < 4; $i++) {
+		$result = $objexport->build_file_bis($user, GETPOST('model', 'alpha'), $datatoexport[$i], $array_selected[$i], $array_filtervalue[$i], '', $array_export_fields[$i], $array_export_TypeFields[$i], $array_export_special[$i]);
+		if ($result < 0) {
+			$error++;
+			setEventMessages($objexport->error, $objexport->errors, 'errors');
+			$sqlusedforexport = $objexport->sqlusedforexport;
+		} else {
+			setEventMessages("Fichier généré", null, 'mesgs');
+			$sqlusedforexport = $objexport->sqlusedforexport;
+		}
+	}
+
+	if(!$error) {		
 		header("Location: ".$_SERVER["PHP_SELF"].'?step=1');
 		return;
 	}
@@ -1925,15 +2042,10 @@ if ($step == 1 || !$datatoexport) {
 	$htmltabloflibs .= '</tr>'."\n";
 
 	$liste = $objmodelexport->listOfAvailableExportFormat($db);
-	$liste2 = $liste;
 	$listeall = $liste;
 	foreach ($listeall as $key => $val) {
 		if (preg_match('/__\(Disabled\)__/', $listeall[$key])) {
 			$listeall[$key] = preg_replace('/__\(Disabled\)__/', '('.$langs->transnoentitiesnoconv("Disabled").')', $listeall[$key]);
-			unset($liste[$key]);
-			unset($liste2[$key]);
-		}
-		if($key != 'excel2007') {
 			unset($liste[$key]);
 		}
 
@@ -1965,26 +2077,48 @@ if ($step == 1 || !$datatoexport) {
 
 	print '<div class="fichecenter">';
 		print '<div class="fichethirdleft">';
-		print '<div class="div-table-responsive-no-min">';
-		print '<table class="noborder centpercent">';
-		print '<tr class="liste_titre">';
-		print '<th colspan="2">';
-		print $langs->trans("Export Feuille de temps");
-		print '</th>';
-		print '</tr>';
-		print '<tr>';
-		print '<td align="center" colspan="2">';
-			print '<form name="exportFeuilleDeTemps" id="exportFeuilleDeTemps" action="'.$_SERVER["PHP_SELF"].'?step=1&action=buildalldoc&token='.newToken().'" method="POST">';
-			print $htmlother->select_month($month, 'exportdate_month', 0, 1, 'minwidth50 valignmiddle', false);
-			print ' ';
-			print $htmlother->select_year($year, 'exportdate_year', 0, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
-			// Show existing generated documents
-			// NB: La fonction show_documents rescanne les modules qd genallowed=1, sinon prend $liste
-			print $formfile->showdocuments('export', '', $upload_dir, $_SERVER["PHP_SELF"].'?step=1', $liste, 1, (!empty($_POST['model']) ? $_POST['model'] : 'csv'), 1, 1, 0, 0, 0, '', '<input class="butAction" type="submit" value="'.$langs->trans('Export').'">', '', '', '', null, 0, 'remove_file', '', '^export_(analytique_pourcentage|donnees_variables|absences|heure_sup).*$');
-			print '</form>';
-		print '</td>';
-		print '</tr>';
-		print '</table></div></div>';
+			print '<div class="div-table-responsive-no-min">';
+			print '<table class="noborder centpercent">';
+			print '<tr class="liste_titre">';
+			print '<th colspan="2">';
+			print $langs->trans("Export Feuille de temps");
+			print '</th>';
+			print '</tr>';
+			print '<tr>';
+			print '<td align="center" colspan="2">';
+				print '<form name="exportFeuilleDeTemps" id="exportFeuilleDeTemps" action="'.$_SERVER["PHP_SELF"].'?step=1&action=buildalldoc&token='.newToken().'" method="POST">';
+				print $htmlother->select_month($month, 'exportdate_month', 0, 1, 'minwidth50 valignmiddle', false);
+				print ' ';
+				print $htmlother->select_year($year, 'exportdate_year', 0, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
+				// Show existing generated documents
+				// NB: La fonction show_documents rescanne les modules qd genallowed=1, sinon prend $liste
+				print $formfile->showdocuments('export', '', $upload_dir, $_SERVER["PHP_SELF"].'?step=1', array('excel2007' => 'Excel 2007'), 1, (!empty($_POST['model']) ? $_POST['model'] : 'csv'), 1, 1, 0, 0, 0, '', '<input class="butAction" type="submit" value="'.$langs->trans('Export').'">', '', '', '', null, 0, 'remove_file', '', '^export_(analytique_pourcentage|donnees_variables|absences|heure_sup).*$');
+				print '</form>';
+			print '</td>';
+			print '</tr>';
+			print '</table></div>';
+
+			print '<br><div class="div-table-responsive-no-min">';
+			print '<table class="noborder centpercent">';
+			print '<tr class="liste_titre">';
+			print '<th colspan="2">';
+			print $langs->trans("Export Test Feuille de temps");
+			print '</th>';
+			print '</tr>';
+			print '<tr>';
+			print '<td align="center" colspan="2">';
+				print '<form name="exportTestFeuilleDeTemps" id="exportTestFeuilleDeTemps" action="'.$_SERVER["PHP_SELF"].'?step=1&action=buildalldoctest&token='.newToken().'" method="POST">';
+				print $htmlother->select_month($month, 'exporttestdate_month', 0, 1, 'minwidth50 valignmiddle', false);
+				print ' ';
+				print $htmlother->select_year($year, 'exporttestdate_year', 0, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
+				// Show existing generated documents
+				// NB: La fonction show_documents rescanne les modules qd genallowed=1, sinon prend $liste
+				print $formfile->showdocuments('export', '', $upload_dir, $_SERVER["PHP_SELF"].'?step=1', array('excel2007' => 'Excel 2007'), 1, (!empty($_POST['model']) ? $_POST['model'] : 'csv'), 1, 1, 0, 0, 0, '', '<input class="butAction" type="submit" value="'.$langs->trans('Export').'">', '', '', '', null, 0, 'remove_file', '', '^exporttest_(analytique_pourcentage|donnees_variables|absences|heure_sup).*$');
+				print '</form>';
+			print '</td>';
+			print '</tr>';
+			print '</table></div>';
+		print '</div>';
 
 		if($conf->donneesrh->enabled) {
 			print '<div class="fichetwothirdright">';
@@ -2007,7 +2141,7 @@ if ($step == 1 || !$datatoexport) {
 				print $htmlother->select_year((GETPOST('exportdate_endyear') ? GETPOST('exportdate_endyear') : date("Y")), 'exportdate_endyear', 1, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
 				// Show existing generated documents
 				// NB: La fonction show_documents rescanne les modules qd genallowed=1, sinon prend $liste
-				print $formfile->showdocuments('export', '', $upload_dir, $_SERVER["PHP_SELF"].'?step=1', $liste2, 1, (!empty($_POST['model']) ? $_POST['model'] : 'csv'), 1, 1, 0, 0, 0, '', '<input class="butAction" type="submit" value="'.$langs->trans('Export').'">', '', '', '', null, 0, 'remove_file', '', '^export_ObservationCompta\..*$');
+				print $formfile->showdocuments('export', '', $upload_dir, $_SERVER["PHP_SELF"].'?step=1', $liste, 1, (!empty($_POST['model']) ? $_POST['model'] : 'csv'), 1, 1, 0, 0, 0, '', '<input class="butAction" type="submit" value="'.$langs->trans('Export').'">', '', '', '', null, 0, 'remove_file', '', '^export_ObservationCompta\..*$');
 				print '</form>';
 			print '</td>';
 			print '</tr>';

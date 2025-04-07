@@ -377,7 +377,12 @@ class ExtendedExportFDT extends Export
 				if (!empty($conf->global->EXPORT_PREFIX_SPEC)) {
 					$filename = $conf->global->EXPORT_PREFIX_SPEC."_".$datatoexport;
 				} else {
-					$filename = "export_".$datatoexport;
+					if(GETPOST('action', 'aZ09') != 'buildalldoctest') {
+						$filename = "export_".$datatoexport;
+					}
+					else {
+						$filename = "exporttest_".$datatoexport;
+					}
 					if(GETPOST('action', 'aZ09') == 'buildalldoc') {
 						$filename .= '_'.dol_print_date(dol_now(), '%Y%m%d_%H%M%S');
 					}
@@ -734,7 +739,7 @@ class ExtendedExportFDT extends Export
 					// Close file
 					$objmodel->close_file();
 	
-					if($datatoexport == 'absences' && $conf->global->FDT_STATUT_HOLIDAY) {
+					if($datatoexport == 'absences' && $conf->global->FDT_STATUT_HOLIDAY && GETPOST('action', 'aZ09') != 'buildalldoctest') {
 						require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedHoliday.class.php';
 						$holiday = new extendedHoliday($this->db);
 						$result = $holiday->setStatutExported($all_holiday);

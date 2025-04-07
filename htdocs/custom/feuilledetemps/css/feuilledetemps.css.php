@@ -784,12 +784,11 @@ body.feuilledetemps .ui-widget.ui-widget-content {
 	width: 100%;
 }
 
-#exportObservationCompta,
-#exportFeuilleDeTemps {
+#exportObservationCompta, #exportFeuilleDeTemps, #exportTestFeuilleDeTemps {
 	text-align: center;
 }
 
-form#exportFeuilleDeTemps #builddoc_generatebutton {
+form#exportFeuilleDeTemps #builddoc_generatebutton, form#exportTestFeuilleDeTemps #builddoc_generatebutton {
 	visibility: hidden;
 }
 
