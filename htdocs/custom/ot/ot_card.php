@@ -1007,8 +1007,10 @@ $sql = "
         sp.fk_socpeople,
         cct.type AS contrat,
         ctc.source AS source,
-        NULL AS fonction,      -- Ajout pour aligner le nombre de colonnes
-        NULL AS habilitation   -- Ajout pour aligner le nombre de colonnes
+        NULL AS fonction,      
+        NULL AS habilitation,
+        NULL AS fk_societe,
+        NULL AS societe_nom  
     FROM ".MAIN_DB_PREFIX."element_contact AS sp 
     JOIN ".MAIN_DB_PREFIX."user AS u 
         ON sp.fk_socpeople = u.rowid 
@@ -1029,13 +1031,17 @@ $sql = "
         spc.firstname,
         spc.lastname,
         spc.phone_mobile AS phone,
+        
         ctc.libelle, 
         sp.fk_c_type_contact, 
         sp.fk_socpeople,
+        
         ots.contrat AS contrat,
         ctc.source AS source,
         ots.fonction,  
-        ots.habilitation  
+        ots.habilitation,
+        spc.fk_soc as fk_societe,
+        s.nom AS societe_nom
     FROM ".MAIN_DB_PREFIX."element_contact AS sp 
     JOIN ".MAIN_DB_PREFIX."socpeople AS spc 
         ON sp.fk_socpeople = spc.rowid 
@@ -1044,6 +1050,8 @@ $sql = "
     LEFT JOIN ".MAIN_DB_PREFIX."ot_ot_sous_traitants AS ots 
         ON sp.fk_socpeople = ots.fk_socpeople 
         AND ots.ot_id = $object->id
+    LEFT JOIN ".MAIN_DB_PREFIX."societe AS s 
+        ON spc.fk_soc = s.rowid
     WHERE sp.element_id = $object->fk_project
     AND sp.statut = 4
     AND ctc.element = 'project'
@@ -1558,6 +1566,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     jsdata = jsdataFiltered;
 
+    console.log("les autres", jsdataFiltered);
+    console.log("soustraitants", jsdatasoustraitants);
 
 
 
@@ -2061,8 +2071,17 @@ function createSupplierDropdown(suppliers) {
         
         if (subcontractorData && subcontractorData.subcontractors) {
               
-            subcontractorData.subcontractors.forEach(contact => {
-           
+            // Récupérer les sous-traitants déjà enregistrés dans la base de données
+            const registeredSubcontractors = cellData.find(cell => cell.type === "soustraitantlist")?.subcontractors || [];
+
+            // Extraire les IDs des sous-traitants déjà enregistrés
+            const registeredIds = registeredSubcontractors.map(sub => sub.fk_socpeople);
+
+            // Filtrer les sous-traitants provenant du projet pour exclure ceux déjà enregistrés
+            const filteredSubcontractors = jsdatasoustraitants.filter(sub => !registeredIds.includes(sub.fk_socpeople));
+
+            // Afficher les sous-traitants filtrés
+            filteredSubcontractors.forEach(contact => {
                 const dataRow = document.createElement("div");
                 dataRow.className = "data-row";
                 dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
@@ -2071,9 +2090,9 @@ function createSupplierDropdown(suppliers) {
                 const fields = [
                     `${contact.firstname} ${contact.lastname}`,
                     `${contact.societe_nom}`,
-                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction}">`,
-                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat}">`,
-                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation}">`
+                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function">`,
+                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract">`,
+                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications">`
                 ];
 
                 fields.forEach(field => {
@@ -2103,9 +2122,9 @@ function createSupplierDropdown(suppliers) {
                     lastname: contact.lastname,
                     supplier_name: contact.societe_nom,
                     supplier_id: contact.fk_societe,
-                    function: contact.fonction,
-                    contract: contact.contrat,
-                    qualifications: contact.habilitation
+                    function: "",
+                    contract: "",
+                    qualifications: ""
                 });
             });
         }
