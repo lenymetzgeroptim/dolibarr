@@ -300,8 +300,6 @@ try {
                 }
             }
 
-
-
             // Gestion des sous-traitants pour les listes de type 'listesoustraitant'
             if ($type === 'listesoustraitant' && isset($item['soustraitants']) && is_array($item['soustraitants'])) {
                 foreach ($item['soustraitants'] as $soustraitant) {
@@ -310,8 +308,8 @@ try {
                     $fonction = $db->escape($soustraitant['fonction']);
                     $contrat = $db->escape($soustraitant['contrat']);
                     $habilitation = $db->escape($soustraitant['habilitation']);
-                   
-                    $receivedSubcontractors[] = $fk_socpeople; 
+
+                    $receivedSubcontractors[] = $fk_socpeople; // Stocker les sous-traitants reçus
 
                     // Vérifier si le sous-traitant est déjà enregistré
                     $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
@@ -332,13 +330,36 @@ try {
                     } else {
                         // Insérer un nouveau sous-traitant
                         $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_sous_traitants (ot_id, fk_socpeople, fonction, contrat, habilitation, fk_societe) 
-                                VALUES ($otId, $fk_socpeople, '$fonction', '$contrat', '$habilitation','$fk_societe')";
+                                VALUES ($otId, $fk_socpeople, '$fonction', '$contrat', '$habilitation', '$fk_societe')";
                         if (!$db->query($sql)) {
                             throw new Exception("Erreur lors de l'insertion du sous-traitant : " . $db->lasterror());
                         }
                     }
                 }
+
+                // Supprimer les sous-traitants non reçus
+                $sql = "SELECT fk_socpeople FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants WHERE ot_id = $otId";
+                $resql = $db->query($sql);
+                $existingSubcontractors = [];
+
+                while ($row = $db->fetch_object($resql)) {
+                    $existingSubcontractors[] = $row->fk_socpeople;
+                }
+
+                $subcontractorsToDelete = array_diff($existingSubcontractors, $receivedSubcontractors);
+                if (!empty($subcontractorsToDelete)) {
+                    $subcontractorsToDeleteString = implode(',', $subcontractorsToDelete);
+
+                    $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants WHERE ot_id = $otId AND fk_socpeople IN ($subcontractorsToDeleteString)";
+                    if (!$db->query($sql)) {
+                        throw new Exception("Erreur lors de la suppression des sous-traitants obsolètes : " . $db->lasterror());
+                    }
+                }
             }
+
+
+            
+            
         }
     }
 
@@ -2508,64 +2529,61 @@ function saveData() {
         }
     });
 
-    // Récupérer les contacts sélectionnés et leurs informations
-    console.log("Contacts sélectionnés :", selectedContacts);
 
-const contactsData = selectedContacts.map(contact => {
-    console.log("Contact :", contact);
-    return {
-        soc_people: contact.contact_id,
-        firstname: contact.firstname,
-        lastname: contact.lastname,
-        supplier_name: contact.supplier_name,
-        supplier_id: contact.supplier_id,
-        fonction: contact.function,
-        contrat: contact.contract,
-        habilitation: contact.qualifications
-    };
-});
-console.log("Contacts collectés :", contactsData);
-
-
-// Ajouter ou mettre à jour les contacts sélectionnés dans cardsData
-if (contactsData.length > 0) {
-    let existingSubcontractorList = cardsData.find(item => item.type === "listesoustraitant");
-
-    if (!existingSubcontractorList) {
-        console.log("Aucune liste de sous-traitants existante, création dune nouvelle liste.");
-        existingSubcontractorList = {
-            type: "listesoustraitant",
-            soustraitants: []
+    const contactsData = selectedContacts.map(contact => {
+        
+        return {
+            soc_people: contact.contact_id,
+            firstname: contact.firstname,
+            lastname: contact.lastname,
+            supplier_name: contact.supplier_name,
+            supplier_id: contact.supplier_id,
+            fonction: contact.function,
+            contrat: contact.contract,
+            habilitation: contact.qualifications
         };
-        cardsData.push(existingSubcontractorList);
-    }
-
-    console.log("Sous-traitants existants avant mise à jour :", existingSubcontractorList.soustraitants);
-
-    // Parcourir les sous-traitants récupérés de la base de données
-    contactsData.forEach(contact => {
-        const existingContact = existingSubcontractorList.soustraitants.find(
-            c => c.soc_people == contact.soc_people
-        );
-
-        if (existingContact) {
-            console.log(`Mise à jour du sous-traitant existant :`, contact);
-            // Mettre à jour les informations du sous-traitant existant
-           // Object.assign(existingContact, contact);
-        } else {
-            console.log(`Ajout dun nouveau sous-traitant :`, contact);
-            // Ajouter un nouveau sous-traitant
-            existingSubcontractorList.soustraitants.push(contact);
-        }
     });
 
-    // Supprimer les doublons dans la liste des sous-traitants
-    existingSubcontractorList.soustraitants = existingSubcontractorList.soustraitants.filter((contact, index, self) =>
-        index === self.findIndex(c => c.soc_people === contact.soc_people)
-    );
 
-    console.log("Sous-traitants après suppression des doublons :", existingSubcontractorList.soustraitants);
-}
+    // Ajouter ou mettre à jour les contacts sélectionnés dans cardsData
+    if (contactsData.length > 0) {
+        let existingSubcontractorList = cardsData.find(item => item.type === "listesoustraitant");
+
+        if (!existingSubcontractorList) {
+            //console.log("Aucune liste de sous-traitants existante, création dune nouvelle liste.");
+            existingSubcontractorList = {
+                type: "listesoustraitant",
+                soustraitants: []
+            };
+            cardsData.push(existingSubcontractorList);
+        }
+
+        //console.log("Sous-traitants existants avant mise à jour :", existingSubcontractorList.soustraitants);
+
+        // Parcourir les sous-traitants récupérés de la base de données
+        contactsData.forEach(contact => {
+            const existingContact = existingSubcontractorList.soustraitants.find(
+                c => c.soc_people == contact.soc_people
+            );
+
+            if (existingContact) {
+                
+                // Mettre à jour les informations du sous-traitant existant
+            // Object.assign(existingContact, contact);
+            } else {
+                
+                // Ajouter un nouveau sous-traitant
+                existingSubcontractorList.soustraitants.push(contact);
+            }
+        });
+
+        // Supprimer les doublons dans la liste des sous-traitants
+        existingSubcontractorList.soustraitants = existingSubcontractorList.soustraitants.filter((contact, index, self) =>
+            index === self.findIndex(c => c.soc_people === contact.soc_people)
+        );
+
+        //console.log("Sous-traitants après suppression des doublons :", existingSubcontractorList.soustraitants);
+    }
 
     // Parcours de toutes les listes pour récupérer les informations
     document.querySelectorAll(".card-column .user-list").forEach(function (list) {
