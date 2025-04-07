@@ -1175,6 +1175,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
 	print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
 	print '<input type="hidden" name="mode" value="'.$mode.'">';
+	print '<input type="hidden" id="fuserid" value="'.$usertoprocess->id.'"/>';
 
 	if($modifier && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
 		print '<input type="hidden" name="action" value="addtime">';

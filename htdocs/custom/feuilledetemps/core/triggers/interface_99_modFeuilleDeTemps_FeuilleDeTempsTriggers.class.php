@@ -334,8 +334,6 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 
 			case 'PROJECT_CREATE' :
 				if($conf->global->FDT_GENERATE_TASK_PROJECTCREATION) {
-					$this->db->begin();
-
 					$task = new Task($this->db);
 
 					$task->ref = $object->ref;
@@ -347,10 +345,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					$res = $task->create($user);
 
 					if ($res) {
-						$this->db->commit();
 						return 1;
 					} else {
-						$this->db->rollback();
 						return -1;
 					}
 				}
@@ -358,8 +354,6 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 
 			case 'PROJECT_MODIFY' :
 				if($conf->global->FDT_GENERATE_TASK_PROJECTCREATION) {
-					$this->db->begin();
-
 					$task = new Task($this->db);
 					$res = $task->fetch(0, $object->oldcopy->ref);
 
@@ -373,10 +367,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 						$res = $task->update($user);
 
 						if ($res) {
-							$this->db->commit();
 							return 1;
 						} else {
-							$this->db->rollback();
 							return -1;
 						}
 					}

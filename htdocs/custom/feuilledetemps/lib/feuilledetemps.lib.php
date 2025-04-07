@@ -21,7 +21,6 @@
  * \brief   Library files with common functions for FeuilleDeTemps
  */
 
-require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedhtml.formprojet.class.php';
 
 /**
  * Prepare admin pages header
@@ -1018,11 +1017,6 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	$nb_jour = sizeof($dayinloopfromfirstdaytoshow_array);
 	$task_load = array();
 
-	if (!$fuser->hasRight('projet', 'all', 'lire')) {
-		$projectstatic = new Project($db);
-		$projectsListId = $projectstatic->getProjectsAuthorizedForUser($fuser, 0, 1);
-	}
-
 	print '<div class="div-table-responsive" style="min-height: 0px">';
 	print '<table class="tagtable liste listwithfilterbefore column" id="tablelines_fdt">'."\n";			
 
@@ -1043,13 +1037,13 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 			printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
 			$num_first_day, $num_last_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $projectsListId, $silae_array);
+			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $silae_array);
 		}
 		else {
 			$total_array = printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
 			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
 			$num_first_day, $num_last_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $projectsListId, $silae_array);
+			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $silae_array);
 		}
 	}
 
@@ -1106,11 +1100,10 @@ function printTotalLine_Sigedi($fields, $total_array) {
 function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify, $modifier_jour_conges, 
 						 $holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
 						 $num_first_day, $num_last_day, $timeHoliday, &$timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
-						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, &$cptholiday, $arraytypeleaves, &$task_load, $projectsListId, $silae_array) {
+						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, &$cptholiday, $arraytypeleaves, &$task_load, $silae_array) {
 	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object, $objectoffield, $action;
 	global $displayVerification;
 
-	$formproject = new ExtendedFormProjets($db);
 	$projet_task_time_other = new Projet_task_time_other($db);
 	$holiday = new extendedHoliday($db);
 	$silae = new Silae($db);
@@ -1327,7 +1320,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$tableCellTimespent .= '<div class="multipleLineColumn line_'.$idw.'_'.$cpt.$class.$class_timespent.'">';
 			$tableCellHeureNuit .= '<div class="multipleLineColumn line_'.$idw.'_'.$cpt.$class.'">';
 			$tableCellSite .= '<div class="multipleLineColumn line_'.$idw.'_'.$cpt.$class.'">';
-			$tableCellAffaire .= '<div class="multipleLineColumn line_'.$idw.'_'.$cpt.$class.'">';
+			$tableCellAffaire .= '<div class="multipleLineColumn width150 minwidth150imp line_'.$idw.'_'.$cpt.$class.'">';
 
 			if($cpt == $timespent_number - 1 && $timespent_number < $conf->global->FDT_COLUMN_MAX_TASK_DAY) {
 				$tableCellTimespent .= '<span class="fas fa-plus" style="margin-left: 8px;" onclick="addTimespentLine(this, '.$idw.', '.$cpt.');"></span>';
@@ -1410,8 +1403,8 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 			// Affaires
-			$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width150', $projectsListId, 'projectstatut', $fuser, 'fk_task_'.$idw.'_'.$cpt, ($idw == 0 && $cpt == 0 ? 1 : 0), $task_load, 'onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"');
-			//print $formproject->select_projects(-1, $timespent->fk_project, 'fk_project['.$idw.']', 0, 0, 1, 1, 0, $disabled, 0, '', 1, 0, 'maxwidth500', 'fk_project_'.$idw);
+			$tableCellAffaire .= '<select data-selected="'.$timespent->fk_task.'" class="select-task valignmiddle flat width150" id="fk_task_'.$idw.'_'.$cpt.'" name="fk_task['.$idw.']['.$cpt.']" onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"></select>';
+			//$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width150', $projectsListId, 'projectstatut', $fuser, 'fk_task_'.$idw.'_'.$cpt, ($idw == 0 && $cpt == 0 ? 1 : 0), $task_load, 'onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"');
 			$tableCellAffaire .= '</div>';
 
 

@@ -588,6 +588,7 @@ else $moreforfilter .= '</a>';
 
 $moreforfilter .= $form->select_dolusers($search_usertoprocessid ? $search_usertoprocessid : $usertoprocess->id, 'search_usertoprocessid', 0, $exclude, 0, $includeonly, null, 0, 0, 0, '', 0, '', 'maxwidth200');
 $moreforfilter .= '</div>';
+$moreforfilter .= '<input type="hidden" id="fuserid" value="'.$usertoprocess->id.'"/>';
 
 
 // Filtre

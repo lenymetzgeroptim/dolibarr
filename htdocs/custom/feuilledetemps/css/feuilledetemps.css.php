@@ -884,3 +884,7 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 #tablelines_fdt.column .fas.fa-sticky-note {
 	color: rgb(198,25,44);
 }
+
+td.affairecolumn span.select2-container {
+    width: 100% !important;
+}

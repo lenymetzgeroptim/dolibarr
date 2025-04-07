@@ -1737,7 +1737,6 @@ function updateTotal_DeplacementPonctuel(nb_jour, num_first_day) {
 
 // Permet de mettre à jour le total de type de déplacement
 function updateTotal_TypeDeplacement(nb_jour, num_first_day) {
-    console.log('test');
     arrayTotalTypeDeplacement = { 'D1': 0, 'D2': 0, 'D3': 0, 'D4': 0, 'GD1': 0, 'GD2': 0, 'DOM': 0 };
     arrayTitle = { 1: 'D1', 2: 'D2', 3: 'D3', 4: 'D4', 5: 'GD1', 6: 'GD2', 7: 'DOM', 8: 'GD1', 9: 'GD1' }
 
@@ -2201,3 +2200,96 @@ function time_convert(num) {
     // Return the result as a string in the format "hours:minutes"
     return hours + ":" + minutes;
 }
+
+$(document).ready(function () {
+    const selectedTasks = {};
+    const fuserid = $('#fuserid').val();
+
+    $('.select-task').each(function () {
+        const $select = $(this);
+        const selectedId = $select.data('selected');
+        const selectId = $select.attr('id'); // Utiliser l'id du select pour l'associer à selectedtask
+
+        // Initialisation de Select2 avec Ajax
+        $select.select2({
+            ajax: {
+                url: '/custom/feuilledetemps/ajax/get_tasks.php', // ton endpoint PHP
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        fuserid: fuserid
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.map(task => ({
+                            id: task.id,
+                            text: task.ref,
+                            disabled: task.disabled || false
+                        }))
+                    };
+                },
+                cache: true
+            },
+            placeholder: 'Sélectionner une tâche',
+            minimumInputLength: 1,
+            language: {
+                inputTooShort: function () {
+                    return 'Tapez au moins un caractère pour commencer la recherche';
+                },
+                noResults: function () {
+                    return 'Aucun résultat trouvé';
+                },
+                searching: function () {
+                    return 'Recherche en cours...';
+                },
+                loadingMore: function () {
+                    return 'Chargement de plus de résultats...';
+                }
+            }
+        });
+
+        // Si une valeur est pré-sélectionnée, on la charge manuellement (car Select2 n’a pas encore les données en Ajax)
+        if (selectedId) {
+            $.ajax({
+                type: 'GET',
+                url: '/custom/feuilledetemps/ajax/get_tasks.php',
+                data: { 
+                    task_id: selectedId,
+                    fuserid: fuserid
+                },
+                dataType: 'json'
+            }).then(function (data) {
+                const task = data[0]; // on suppose que le résultat est un tableau [{id, ref}]
+                const option = new Option(task.ref, task.id, true, true);
+                $select.append(option).trigger('change'); // Ajoute l'option et informe Select2 du changement
+            });
+        }
+
+        // Lorsqu'un changement se produit dans la sélection
+        $select.on('change', function () {
+            const selectedValue = $(this).val();
+            selectedTasks[selectId] = selectedValue; // Enregistrer l'ID du task dans selectedTasks
+
+            selectedtask = selectedValue;
+        });
+
+        // Lorsque le select2 est ouvert, on force la recherche sur l'élément pré-sélectionné
+        $select.on('select2:open', function () {
+            const selectedtask = selectedTasks[selectId]; // Récupérer la valeur spécifique à ce select
+            if (selectedtask) {
+                // Trouver l'élément pré-sélectionné dans la liste des options
+                const selectedOption = $select.find(`option[value="${selectedtask}"]`);
+                const selectedText = selectedOption.text(); // Le label de l'élément pré-sélectionné
+
+                // Utiliser la méthode `trigger` pour envoyer le texte de la recherche
+                if (selectedText) {
+                    // Simuler la saisie du texte du label pour activer la recherche
+                    $select.data('select2').dropdown.$search.val(selectedText).trigger('input');
+                }
+            }
+        });
+    });
+});
