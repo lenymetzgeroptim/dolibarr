@@ -968,7 +968,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 		'heure_total' => array('text' => 'Total', 'type' => 'duration', 'visible' => 1, 'css' => 'fixedcolumn7 minwidth40'),
 		'diff' => array('text' => 'Diff.', 'visible' => 1, 'css' => 'fixedcolumn8 minwidth40'),
 		'site' => array('text' => 'SiteFDT', 'visible' => 1, 'css' => 'fixedcolumn9'),
-		'affaire' => array('text' => 'Affaire', 'visible' => 1, 'css' => 'fixedcolumn10'),
+		'affaire' => array('text' => 'Affaire', 'visible' => 1, 'css' => 'fixedcolumn10 affairecolumn'),
 	);
 
 	$total_array = array(

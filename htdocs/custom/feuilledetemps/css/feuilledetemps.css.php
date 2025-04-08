@@ -609,9 +609,10 @@ tr > th:last-child.fixed {
 	border-bottom: 1px solid var(--colortopbordertitle1);
 }
 
-#tablelines_fdt> tbody > tr > td.affairecolumn {
+#tablelines_fdt> tbody > tr > td.affairecolumn, #tablelines_fdt th.affairecolumn  {
 	border-right: 1px solid rgb(82, 82, 82);
 }
+
 
 
 

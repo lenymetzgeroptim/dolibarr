@@ -1879,9 +1879,6 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 			elseif($res == 0 && ($silae_tmpday->heure_sup00 > 0 || $silae_tmpday->heure_sup25 > 0 || $silae_tmpday->heure_sup50 > 0 || $silae_tmpday->heure_sup50ht > 0)) {
 				$silae_tmpday->create($user);
 			}
-			else {
-				$error++;
-			}
 		}
 	}
 
@@ -2132,9 +2129,6 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 			}
 			elseif($res == 0 && ($silae_tmpday->heure_sup00 > 0 || $silae_tmpday->heure_sup25 > 0 || $silae_tmpday->heure_sup50 > 0 || $silae_tmpday->heure_sup50ht > 0)) {
 				$silae_tmpday->create($user);
-			}
-			else {
-				$error++;
 			}
 		}
 
