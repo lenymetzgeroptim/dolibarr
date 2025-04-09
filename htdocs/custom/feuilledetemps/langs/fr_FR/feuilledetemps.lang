@@ -22,11 +22,12 @@ ModuleFeuilleDeTempsName = Feuille de temps
 # Module description 'ModuleFeuilleDeTempsDesc'
 ModuleFeuilleDeTempsDesc = Permet la gestion des feuilles de temps
 ListOfValidate = Liste des %s à valider
-projectExport = Export
+ExportsSilae = Exports Silae
 timesheet_16@feuilledetemps = Feuille de temps
 FeuilleDeTempsExportCompta = Observations pour la compta
 ObservationComptas = Liste des observations pour la compta
 ActionsOnFeuilleDeTemps = Actions sur la feuille de temps
+ExportsOther = Exports Autres
 
 #
 # Admin page
