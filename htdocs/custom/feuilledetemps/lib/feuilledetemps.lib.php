@@ -1382,12 +1382,12 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$tableCellHeureNuit .= ' onfocus="this.oldvalue = this.value; this.oldvalue_focus = this.value;"';
 			$tableCellHeureNuit .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\')"';
 			$tableCellHeureNuit .= ' onkeyup="updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).');'; 
-			if($idw > $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellHeureNuit .= ' updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');'; 
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellHeureNuit .= ' updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');'; 
 			$tableCellHeureNuit .= ' this.oldvalue = this.value;
 									 updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');"';
 			$tableCellHeureNuit .= ' onblur="regexEvent_TS(this,event,\''.$modeinput.'\'); validateTime(this,'.$idw.','.$ecart_lundi.',\''.$modeinput.'\','.$nb_jour.', 0,\''.$type_deplacement.'\', '.$tmp_heure_semaine_hs.', 0, '.$heure_max_jour.', '.$heure_max_semaine.');
 									 updateTotal_TS(this, '.$idw.',\''.$modeinput.'\', 0, '.$num_first_day.', '.($timeHolidayByDay[$dayinloopfromfirstdaytoshow] / 3600).');'; 
-			if($idw > $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellHeureNuit .= ' updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');';
+			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) $tableCellHeureNuit .= ' updateTotalSigedi(this, \'heure_nuit\', \'duration\'); updateTotalSigedi(this, \'heure_total\', \'duration\');';
 			$tableCellHeureNuit .= ' updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');
 									 autoFillSite(\''.$fuser->array_options['options_sitedefaut'].'\', '.$idw.', '.$cpt.')"';
 			$tableCellHeureNuit .= ' />';
