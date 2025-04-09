@@ -961,7 +961,7 @@ if (($id || $ref) && $action == 'edit') {
 
 // Part to show record
 if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
-	llxHeader('', $title, $help_url, '', '', '', array('/core/js/timesheet.js', '/custom/feuilledetemps/core/js/timesheet.js' , '/custom/feuilledetemps/core/js/parameters.php' , '	includes/node_modules/html2canvas/dist/html2canvas.min.js'), '', '', 'classforhorizontalscrolloftabs feuilledetemps'.($conf->global->FDT_DISPLAY_COLUMN ? ' displaycolumn' : ''));
+	llxHeader('', $title, $help_url, '', '', '', '', '	includes/node_modules/html2canvas/dist/html2canvas.min.js'), '', '', 'classforhorizontalscrolloftabs feuilledetemps'.($conf->global->FDT_DISPLAY_COLUMN ? ' displaycolumn' : ''));
 	//print '<body onresize="redimenssion()">';
 
 	$res = $object->fetch_optionals();

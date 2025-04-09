@@ -1,5 +1,5 @@
-
-/* Copyright (C) 2021 Lény Metzger  <leny-07@hotmail.fr>
+<?php
+/* Copyright (C) 2025 METZGER Leny <l.metzger@optim-industries.fr>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,7 +13,88 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Library javascript to enable Browser notifications
  */
+
+if (!defined('NOREQUIREUSER')) {
+	define('NOREQUIREUSER', '1');
+}
+if (!defined('NOREQUIREDB')) {
+	define('NOREQUIREDB', '1');
+}
+if (!defined('NOREQUIRESOC')) {
+	define('NOREQUIRESOC', '1');
+}
+if (!defined('NOREQUIRETRAN')) {
+	define('NOREQUIRETRAN', '1');
+}
+if (!defined('NOCSRFCHECK')) {
+	define('NOCSRFCHECK', 1);
+}
+if (!defined('NOTOKENRENEWAL')) {
+	define('NOTOKENRENEWAL', 1);
+}
+if (!defined('NOLOGIN')) {
+	define('NOLOGIN', 1);
+}
+if (!defined('NOREQUIREMENU')) {
+	define('NOREQUIREMENU', 1);
+}
+if (!defined('NOREQUIREHTML')) {
+	define('NOREQUIREHTML', 1);
+}
+if (!defined('NOREQUIREAJAX')) {
+	define('NOREQUIREAJAX', '1');
+}
+
+
+/**
+ * \file    feuilledetemps/js/feuilledetemps.js.php
+ * \ingroup feuilledetemps
+ * \brief   JavaScript file for module FeuilleDeTemps.
+ */
+
+// Load Dolibarr environment
+$res = 0;
+// Try main.inc.php into web root known defined into CONTEXT_DOCUMENT_ROOT (not always defined)
+if (!$res && !empty($_SERVER["CONTEXT_DOCUMENT_ROOT"])) {
+	$res = @include $_SERVER["CONTEXT_DOCUMENT_ROOT"]."/main.inc.php";
+}
+// Try main.inc.php into web root detected using web root calculated from SCRIPT_FILENAME
+$tmp = empty($_SERVER['SCRIPT_FILENAME']) ? '' : $_SERVER['SCRIPT_FILENAME']; $tmp2 = realpath(__FILE__); $i = strlen($tmp) - 1; $j = strlen($tmp2) - 1;
+while ($i > 0 && $j > 0 && isset($tmp[$i]) && isset($tmp2[$j]) && $tmp[$i] == $tmp2[$j]) {
+	$i--;
+	$j--;
+}
+if (!$res && $i > 0 && file_exists(substr($tmp, 0, ($i + 1))."/main.inc.php")) {
+	$res = @include substr($tmp, 0, ($i + 1))."/main.inc.php";
+}
+if (!$res && $i > 0 && file_exists(substr($tmp, 0, ($i + 1))."/../main.inc.php")) {
+	$res = @include substr($tmp, 0, ($i + 1))."/../main.inc.php";
+}
+// Try main.inc.php using relative path
+if (!$res && file_exists("../../main.inc.php")) {
+	$res = @include "../../main.inc.php";
+}
+if (!$res && file_exists("../../../main.inc.php")) {
+	$res = @include "../../../main.inc.php";
+}
+if (!$res) {
+	die("Include of main fails");
+}
+
+// Define js type
+header('Content-Type: application/javascript');
+// Important: Following code is to cache this file to avoid page request by browser at each Dolibarr page access.
+// You can use CTRL+F5 to refresh your browser cache.
+if (empty($dolibarr_nocache)) {
+	header('Cache-Control: max-age=3600, public, must-revalidate');
+} else {
+	header('Cache-Control: no-cache');
+}
+?>
+
 
 function autoFillSite(sitedefaut, day, cpt){
     heure = $('input[name="task[' + day + '][' + cpt + ']"').val();
@@ -352,8 +433,9 @@ function deletePrefillingClass(objet, sitedefaut) {
         objet.parentNode.classList.add('prefilling_time')
     }
     else if(objet.value > 0 && $(objet).attr('id') && $(objet).attr('id').includes('fk_task')) {
+        const lineClass = $(objet).parent().attr('class').split(' ').find(c => c.includes('line_'));
         var parentTr = $(objet).closest('tr');
-        var element = parentTr.find('.'+ objet.parentNode.classList[1] + '.prefilling_time');
+        var element = parentTr.find('.'+ lineClass + '.prefilling_time');
         if (element.length) {
             element.removeClass('prefilling_time')
             var input = element.find('input[type="text"]');
@@ -2213,7 +2295,7 @@ $(document).ready(function () {
         // Initialisation de Select2 avec Ajax
         $select.select2({
             ajax: {
-                url: '/custom/feuilledetemps/ajax/get_tasks.php', // ton endpoint PHP
+                url: './ajax/get_tasks.php', 
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -2255,7 +2337,7 @@ $(document).ready(function () {
         if (selectedId) {
             $.ajax({
                 type: 'GET',
-                url: '/custom/feuilledetemps/ajax/get_tasks.php',
+                url: './ajax/get_tasks.php', 
                 data: { 
                     task_id: selectedId,
                     fuserid: fuserid
@@ -2293,3 +2375,6 @@ $(document).ready(function () {
         });
     });
 });
+
+
+

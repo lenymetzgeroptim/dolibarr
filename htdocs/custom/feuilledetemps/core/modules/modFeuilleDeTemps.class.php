@@ -112,7 +112,9 @@ class modFeuilleDeTemps extends DolibarrModules
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
-				//   '/feuilledetemps/js/feuilledetemps.js.php',
+				'/feuilledetemps/js/feuilledetemps.js.php',
+				'/feuilledetemps/js/parameters.php',
+				'/core/js/timesheet.js',
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
