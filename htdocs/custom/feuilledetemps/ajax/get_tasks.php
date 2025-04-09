@@ -92,7 +92,7 @@ if (!$user->hasRight('feuilledetemps', 'feuilledetemps', 'read')) {
 
 dol_syslog("Call ajax feuilledetemps/ajax/get_tasks.php");
 
-top_httphead();
+top_httphead('application/json');
 
 $search = $db->escape($search);
 
