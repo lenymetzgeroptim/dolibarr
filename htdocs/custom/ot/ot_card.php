@@ -2033,7 +2033,9 @@ function deleteUniqueList(uniqueListId, list) {
     fetchSuppliersAndContacts();
 
 
-let selectedContacts = [];  
+
+
+let selectedContacts = [];
 
 function createSupplierDropdown(suppliers) {
     const existingCard = document.querySelector(".cardsoustraitant");
@@ -2045,34 +2047,8 @@ function createSupplierDropdown(suppliers) {
 
     const cardTitle = document.createElement("h3");
     cardTitle.textContent = "Sous traitants";
-    cardTitle.className = "card-header-soustraitant"; 
+    cardTitle.className = "card-header-soustraitant";
     cardContainer.appendChild(cardTitle);
-
-    const supplierLabel = document.createElement("label");
-    supplierLabel.textContent = "Sélectionnez un fournisseur :";
-    supplierLabel.className = "form-label"; 
-
-    const selectSupplier = document.createElement("select");
-    selectSupplier.className = "supplier-select";
-    selectSupplier.innerHTML = `<option value="">-- Choisissez un fournisseur --</option>` + 
-                               suppliers.map(supplier => `<option value="${supplier.supplier_id}">${supplier.supplier_name}</option>`).join("");
-
-    cardContainer.appendChild(supplierLabel);
-    cardContainer.appendChild(selectSupplier);
-
-    const contactContainer = document.createElement("div");
-    contactContainer.className = "contact-container";
-    const contactLabel = document.createElement("label");
-    contactLabel.textContent = "Sélectionnez un contact :";
-    contactLabel.className = "form-label"; 
-
-    const selectContact = document.createElement("select");
-    selectContact.className = "contact-select";
-    selectContact.innerHTML = `<option value="">-- Choisissez un contact --</option>`;
-
-    contactContainer.appendChild(contactLabel);
-    contactContainer.appendChild(selectContact);
-    cardContainer.appendChild(contactContainer);
 
     document.querySelector(".supplier-section").appendChild(cardContainer);
 
@@ -2096,8 +2072,45 @@ function createSupplierDropdown(suppliers) {
 
     tableContainer.appendChild(legendRow);
 
-    // Vérifier si des sous-traitants existent déjà dans cellData
-    if (cellData && Array.isArray(cellData)) {
+    // Si les sous-traitants du projet existent (via jsdatasoustraitants)
+    if (jsdatasoustraitants && Array.isArray(jsdatasoustraitants) && jsdatasoustraitants.length > 0) {
+        jsdatasoustraitants.forEach(contact => {
+            const dataRow = document.createElement("div");
+            dataRow.className = "data-row";
+            dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
+            dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
+
+            const fields = [
+                `${contact.firstname} ${contact.lastname}`,
+                `${contact.societe_nom}`,
+                `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
+                `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
+                `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
+            ];
+
+            fields.forEach(field => {
+                const fieldCell = document.createElement("div");
+                fieldCell.style.flex = "1";
+                fieldCell.innerHTML = field;
+                dataRow.appendChild(fieldCell);
+            });
+
+            tableContainer.appendChild(dataRow);
+
+            // Ajouter le contact dans selectedContacts pour éviter les doublons
+            selectedContacts.push({
+                contact_id: contact.fk_socpeople,
+                firstname: contact.firstname,
+                lastname: contact.lastname,
+                supplier_name: contact.societe_nom,
+                supplier_id: contact.fk_societe,
+                function: contact.fonction,
+                contract: contact.contrat,
+                qualifications: contact.habilitation
+            });
+        });
+    } else if (cellData && Array.isArray(cellData)) {
+        // Sinon, afficher les sous-traitants enregistrés dans cellData
         const subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
 
         if (subcontractorData && subcontractorData.subcontractors) {
@@ -2122,17 +2135,6 @@ function createSupplierDropdown(suppliers) {
                     dataRow.appendChild(fieldCell);
                 });
 
-                const removeButton = document.createElement("div");
-                removeButton.style.cssText = "flex: 0.5; color: red; cursor: pointer;";
-                removeButton.textContent = "×";
-                removeButton.className = "remove-contact";
-                removeButton.addEventListener("click", function() {
-                    selectedContacts = selectedContacts.filter(c => c.contact_id !== contact.fk_socpeople);
-                    dataRow.remove();
-                    saveData();
-                });
-
-                dataRow.appendChild(removeButton);
                 tableContainer.appendChild(dataRow);
 
                 // Ajouter le contact dans selectedContacts pour éviter les doublons
@@ -2150,134 +2152,23 @@ function createSupplierDropdown(suppliers) {
         }
     }
 
-    selectSupplier.addEventListener("change", function() {
-    const supplierId = this.value;
-    if (supplierId) {
-        const supplier = suppliers.find(s => s.supplier_id == supplierId);
-        if (supplier) {
-            selectContact.innerHTML = `<option value="">-- Choisissez un contact --</option>` +
-                supplier.contacts
-                    .filter(contact => !document.querySelector(`[data-contact-id="${contact.contact_id}"]`))
-                    .map(contact => `<option value="${contact.contact_id}">${contact.firstname} ${contact.lastname}</option>`)
-                    .join("");
-
-            // Ajouter une option pour créer un nouveau contact
-            const createContactOption = document.createElement("option");
-            createContactOption.value = "create_contact";
-            createContactOption.textContent = "Créer un nouveau contact";
-            selectContact.appendChild(createContactOption);
-
-            contactContainer.style.display = "block"; 
-        }
-    } else {
-        contactContainer.style.display = "none"; 
-    }
-});
-
-selectSupplier.addEventListener("change", function() {
-    const supplierId = this.value;
-    if (supplierId) {
-        const supplier = suppliers.find(s => s.supplier_id == supplierId);
-        if (supplier) {
-            selectContact.innerHTML = `<option value="">-- Choisissez un contact --</option>` +
-                supplier.contacts
-                    .filter(contact => !document.querySelector(`[data-contact-id="${contact.contact_id}"]`))
-                    .map(contact => `<option value="${contact.contact_id}">${contact.firstname} ${contact.lastname}</option>`)
-                    .join("");
-
-            // Ajouter une option pour créer un nouveau contact
-            const createContactOption = document.createElement("option");
-            createContactOption.value = "create_contact";
-            createContactOption.textContent = "Créer un nouveau contact";
-            selectContact.appendChild(createContactOption);
-
-            contactContainer.style.display = "block"; 
-        }
-    } else {
-        contactContainer.style.display = "none"; 
-    }
-});
-
-selectContact.addEventListener("change", function() {
-    const contactId = this.value;
-    const supplierId = selectSupplier.value;
-
-    if (contactId === "create_contact" && supplierId) {
-        // Rediriger vers la page de création de contact avec retour à la page de OT
-        const createContactUrl = `/contact/card.php?socid=${supplierId}&action=create&backtopage=${encodeURIComponent(`/custom/ot/ot_card.php?id=7&save_lastsearch_values=1`)}`;
-        window.location.href = createContactUrl;
-    } else if (contactId && supplierId) {
-        const supplier = suppliers.find(s => s.supplier_id == supplierId);
-        const contact = supplier.contacts.find(c => c.contact_id == contactId);
-        if (contact) {
-            const dataRow = document.createElement("div");
-            dataRow.className = "data-row";
-            dataRow.setAttribute("data-contact-id", contactId);
-            dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
-
-            const fields = [
-                `${contact.firstname} ${contact.lastname}`,
-                `${supplier.supplier_name}`,
-                `<input type="text" placeholder="Fonction" class="form-input" data-field="function">`,
-                `<input type="text" placeholder="Contrat" class="form-input" data-field="contract">`,
-                `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications">`
-            ];
-
-            fields.forEach(field => {
-                const fieldCell = document.createElement("div");
-                fieldCell.style.flex = "1";
-                fieldCell.innerHTML = field;
-                dataRow.appendChild(fieldCell);
-            });
-
-            const removeButton = document.createElement("div");
-            removeButton.style.cssText = "flex: 0.5; color: red; cursor: pointer;";
-            removeButton.textContent = "×";
-            removeButton.className = "remove-contact";
-            removeButton.addEventListener("click", function() {
-                selectedContacts = selectedContacts.filter(c => c.contact_id !== contactId);
-                dataRow.remove();
-                saveData();
-            });
-
-            dataRow.appendChild(removeButton);
-            tableContainer.appendChild(dataRow);
-
-            // Ajouter le contact dans le tableau selectedContacts
-            selectedContacts.push({
-                contact_id: contactId,
-                firstname: contact.firstname,
-                lastname: contact.lastname,
-                supplier_name: supplier.supplier_name,
-                supplier_id: supplierId,
-                function: "",
-                contract: "",
-                qualifications: ""
-            });
-            
-            selectContact.querySelector(`option[value="${contactId}"]`).remove();
-        }
-        saveData();
-    }
-});
-    
-
+    // Ajouter un écouteur pour sauvegarder les modifications
     document.querySelector(".table-container").addEventListener("blur", function (e) {
-    if (e.target && e.target.classList.contains("form-input")) {
-        const inputField = e.target;
-        const dataRow = inputField.closest(".data-row");
-        const contactId = dataRow.getAttribute("data-contact-id");
+        if (e.target && e.target.classList.contains("form-input")) {
+            const inputField = e.target;
+            const dataRow = inputField.closest(".data-row");
+            const contactId = dataRow.getAttribute("data-contact-id");
 
-        // Trouver le contact correspondant dans `selectedContacts`
-        const selectedContact = selectedContacts.find(c => c.contact_id == contactId);
-        if (selectedContact) {
-            const fieldName = inputField.getAttribute("data-field");
-            selectedContact[fieldName] = inputField.value; // Mettre à jour la valeur
+            // Trouver le contact correspondant dans `selectedContacts`
+            const selectedContact = selectedContacts.find(c => c.contact_id == contactId);
+            if (selectedContact) {
+                const fieldName = inputField.getAttribute("data-field");
+                selectedContact[fieldName] = inputField.value; // Mettre à jour la valeur
+            }
+
+            saveData(); // Sauvegarder les modifications
         }
-
-        saveData(); // Sauvegarder les modifications
-    }
-}, true);
+    }, true);
 }
 
 
