@@ -337,24 +337,25 @@ try {
                     }
                 }
 
-                // Supprimer les sous-traitants non reçus
-                $sql = "SELECT fk_socpeople FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants WHERE ot_id = $otId";
-                $resql = $db->query($sql);
-                $existingSubcontractors = [];
+                // Supprimer les sous-traitants non reçus, mais uniquement ceux qui ne proviennent pas du projet
+                    $sql = "SELECT fk_socpeople FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants WHERE ot_id = $otId";
+                    $resql = $db->query($sql);
+                    $existingSubcontractors = [];
 
-                while ($row = $db->fetch_object($resql)) {
-                    $existingSubcontractors[] = $row->fk_socpeople;
-                }
-
-                $subcontractorsToDelete = array_diff($existingSubcontractors, $receivedSubcontractors);
-                if (!empty($subcontractorsToDelete)) {
-                    $subcontractorsToDeleteString = implode(',', $subcontractorsToDelete);
-
-                    $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants WHERE ot_id = $otId AND fk_socpeople IN ($subcontractorsToDeleteString)";
-                    if (!$db->query($sql)) {
-                        throw new Exception("Erreur lors de la suppression des sous-traitants obsolètes : " . $db->lasterror());
+                    while ($row = $db->fetch_object($resql)) {
+                        $existingSubcontractors[] = $row->fk_socpeople;
                     }
-                }
+
+                    // Ne supprimer que les sous-traitants qui ne sont pas dans les données reçues ET qui ne proviennent pas du projet
+                    $subcontractorsToDelete = array_diff($existingSubcontractors, $receivedSubcontractors);
+                    if (!empty($subcontractorsToDelete)) {
+                        $subcontractorsToDeleteString = implode(',', $subcontractorsToDelete);
+
+                        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants WHERE ot_id = $otId AND fk_socpeople IN ($subcontractorsToDeleteString)";
+                        if (!$db->query($sql)) {
+                            throw new Exception("Erreur lors de la suppression des sous-traitants obsolètes : " . $db->lasterror());
+                        }
+                    }
             }
 
 
@@ -1121,10 +1122,10 @@ $sql = "SELECT ots.rowid, ots.fk_socpeople, ots.fk_societe, ots.fonction, ots.co
 
 $resql = $db->query($sql);
 
-$subcontractors = [];
+$subcontractorsFromDB = [];
 if ($resql) {
     while ($obj = $db->fetch_object($resql)) {
-        $subcontractors[] = [
+        $subcontractorsFromDB[] = [
             'rowid' => $obj->rowid,
             'fk_socpeople' => $obj->fk_socpeople,
             'fk_societe' => $obj->fk_societe,
@@ -1137,6 +1138,36 @@ if ($resql) {
         ];
     }
 }
+
+// Fusionner les sous-traitants provenant du projet avec ceux de la base de données
+$allSubcontractors = $subcontractorsFromDB;
+
+// Ajouter les sous-traitants provenant du projet qui ne sont pas encore dans la base de données
+foreach ($jsdatasoustraitants as $sub) {
+    $existsInDB = array_filter($subcontractorsFromDB, function ($dbSub) use ($sub) {
+        return $dbSub['fk_socpeople'] == $sub['fk_socpeople'];
+    });
+
+    if (empty($existsInDB)) {
+        $allSubcontractors[] = [
+            'rowid' => null,
+            'fk_socpeople' => $sub['fk_socpeople'],
+            'fk_societe' => $sub['fk_societe'],
+            'fonction' => $sub['fonction'] ?? '',
+            'contrat' => $sub['contrat'] ?? '',
+            'habilitation' => $sub['habilitation'] ?? '',
+            'firstname' => $sub['firstname'],
+            'lastname' => $sub['lastname'],
+            'societe_nom' => $sub['societe_nom']
+        ];
+    }
+}
+
+// Ajouter les sous-traitants au tableau cellData
+$cellData[] = [
+    'type' => 'soustraitantlist',
+    'subcontractors' => $allSubcontractors
+];
 
 // Ajouter les utilisateurs aux cellules existantes
 foreach ($cellData as $cell) {
@@ -2068,20 +2099,9 @@ function createSupplierDropdown(suppliers) {
     // Vérifier si des sous-traitants existent déjà dans cellData
     if (cellData && Array.isArray(cellData)) {
         const subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
-        
+
         if (subcontractorData && subcontractorData.subcontractors) {
-              
-            // Récupérer les sous-traitants déjà enregistrés dans la base de données
-            const registeredSubcontractors = cellData.find(cell => cell.type === "soustraitantlist")?.subcontractors || [];
-
-            // Extraire les IDs des sous-traitants déjà enregistrés
-            const registeredIds = registeredSubcontractors.map(sub => sub.fk_socpeople);
-
-            // Filtrer les sous-traitants provenant du projet pour exclure ceux déjà enregistrés
-            const filteredSubcontractors = jsdatasoustraitants.filter(sub => !registeredIds.includes(sub.fk_socpeople));
-
-            // Afficher les sous-traitants filtrés
-            filteredSubcontractors.forEach(contact => {
+            subcontractorData.subcontractors.forEach(contact => {
                 const dataRow = document.createElement("div");
                 dataRow.className = "data-row";
                 dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
@@ -2090,9 +2110,9 @@ function createSupplierDropdown(suppliers) {
                 const fields = [
                     `${contact.firstname} ${contact.lastname}`,
                     `${contact.societe_nom}`,
-                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function">`,
-                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract">`,
-                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications">`
+                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
+                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
+                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
                 ];
 
                 fields.forEach(field => {
@@ -2122,9 +2142,9 @@ function createSupplierDropdown(suppliers) {
                     lastname: contact.lastname,
                     supplier_name: contact.societe_nom,
                     supplier_id: contact.fk_societe,
-                    function: "",
-                    contract: "",
-                    qualifications: ""
+                    function: contact.fonction,
+                    contract: contact.contrat,
+                    qualifications: contact.habilitation
                 });
             });
         }
