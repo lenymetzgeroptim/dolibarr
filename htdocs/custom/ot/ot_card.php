@@ -1592,7 +1592,8 @@ document.addEventListener("DOMContentLoaded", function() {
     let jsdata = '.$data.'; 
     let users = typeof jsdata === "string" ? JSON.parse(jsdata) : jsdata;
 
-    let jsdatasoustraitants = users.filter(user => user.source === "external");
+    
+    let jsdatasoustraitants = users.filter(user => user.source === "external" && user.fk_c_type_contact === "1031141");
     let jsdataFiltered = users.filter(user => user.source !== "external"); 
 
     jsdata = jsdataFiltered;
@@ -2074,42 +2075,80 @@ function createSupplierDropdown() {
     tableContainer.appendChild(legendRow);
 
     // Vérifier si les données de jsdatasoustraitants ont déjà été enregistrées
-    let subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
+    const subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
 
-    if (!subcontractorData) {
-        // Enregistrer les données de jsdatasoustraitants dans cellData, même si elles sont vides
-        cellData.push({
-            type: "soustraitantlist",
-            subcontractors: jsdatasoustraitants || [] // Enregistrer un tableau vide si jsdatasoustraitants est vide
+    if (!subcontractorData || (subcontractorData.subcontractors && subcontractorData.subcontractors.length === 0)) {
+    
+        // Si les données ne sont pas enregistrées, utiliser jsdatasoustraitants
+        if (jsdatasoustraitants && Array.isArray(jsdatasoustraitants) && jsdatasoustraitants.length > 0) {
+            jsdatasoustraitants.forEach(contact => {
+                const dataRow = document.createElement("div");
+                dataRow.className = "data-row";
+                dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
+                dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
+
+                const fields = [
+                    `${contact.firstname} ${contact.lastname}`,
+                    `${contact.societe_nom}`,
+                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
+                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
+                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
+                ];
+
+                fields.forEach(field => {
+                    const fieldCell = document.createElement("div");
+                    fieldCell.style.flex = "1";
+                    fieldCell.innerHTML = field;
+                    dataRow.appendChild(fieldCell);
+                });
+
+                tableContainer.appendChild(dataRow);
+
+                // Ajouter le contact dans selectedContacts pour éviter les doublons
+                selectedContacts.push({
+                    contact_id: contact.fk_socpeople,
+                    firstname: contact.firstname,
+                    lastname: contact.lastname,
+                    supplier_name: contact.societe_nom,
+                    supplier_id: contact.fk_societe,
+                    function: contact.fonction,
+                    contract: contact.contrat,
+                    qualifications: contact.habilitation
+                });
+            });
+
+            // Enregistrer les données dans cellData
+            cellData.push({
+                type: "soustraitantlist",
+                subcontractors: jsdatasoustraitants
+            });
+        }
+    } else {
+        // Si les données sont déjà enregistrées, afficher uniquement celles de cellData
+        subcontractorData.subcontractors.forEach(contact => {
+            const dataRow = document.createElement("div");
+            dataRow.className = "data-row";
+            dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
+            dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
+
+            const fields = [
+                `${contact.firstname} ${contact.lastname}`,
+                `${contact.societe_nom}`,
+                `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
+                `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
+                `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
+            ];
+
+            fields.forEach(field => {
+                const fieldCell = document.createElement("div");
+                fieldCell.style.flex = "1";
+                fieldCell.innerHTML = field;
+                dataRow.appendChild(fieldCell);
+            });
+
+            tableContainer.appendChild(dataRow);
         });
-
-        subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
     }
-
-    // Afficher les données enregistrées dans cellData
-    subcontractorData.subcontractors.forEach(contact => {
-        const dataRow = document.createElement("div");
-        dataRow.className = "data-row";
-        dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
-        dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
-
-        const fields = [
-            `${contact.firstname} ${contact.lastname}`,
-            `${contact.societe_nom}`,
-            `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
-            `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
-            `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
-        ];
-
-        fields.forEach(field => {
-            const fieldCell = document.createElement("div");
-            fieldCell.style.flex = "1";
-            fieldCell.innerHTML = field;
-            dataRow.appendChild(fieldCell);
-        });
-
-        tableContainer.appendChild(dataRow);
-    });
 
     // Ajouter un écouteur pour sauvegarder les modifications
     document.querySelector(".table-container").addEventListener("blur", function (e) {
@@ -2129,6 +2168,7 @@ function createSupplierDropdown() {
         }
     }, true);
 }
+
 
 
 // Appel de la fonction pour récupérer et afficher les fournisseurs
