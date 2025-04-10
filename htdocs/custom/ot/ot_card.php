@@ -1592,7 +1592,6 @@ document.addEventListener("DOMContentLoaded", function() {
     let jsdata = '.$data.'; 
     let users = typeof jsdata === "string" ? JSON.parse(jsdata) : jsdata;
 
-    
     let jsdatasoustraitants = users.filter(user => user.source === "external" && user.fk_c_type_contact === "1031141");
     let jsdataFiltered = users.filter(user => user.source !== "external"); 
 
@@ -2043,7 +2042,6 @@ function createSupplierDropdown() {
     if (existingCard) {
         existingCard.remove();
     }
-
     const cardContainer = document.createElement("div");
     cardContainer.className = "cardsoustraitant";
 
@@ -2074,57 +2072,53 @@ function createSupplierDropdown() {
 
     tableContainer.appendChild(legendRow);
 
-    // Vérifier si les données de jsdatasoustraitants ont déjà été enregistrées
+    // Vérifier si les données de `cellData` contiennent des sous-traitants
     const subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
+   
+    if ((!subcontractorData || !subcontractorData.subcontractors || subcontractorData.subcontractors.length === 0) 
+    && jsdatasoustraitants && Array.isArray(jsdatasoustraitants) && jsdatasoustraitants.length > 0) {
+    console.log("test");
+        // Afficher les sous-traitants de `jsdatasoustraitants` une seule fois
+        jsdatasoustraitants.forEach(contact => {
+            const dataRow = document.createElement("div");
+            dataRow.className = "data-row";
+            dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
+            dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
 
-    if (!subcontractorData || (subcontractorData.subcontractors && subcontractorData.subcontractors.length === 0)) {
-    
-        // Si les données ne sont pas enregistrées, utiliser jsdatasoustraitants
-        if (jsdatasoustraitants && Array.isArray(jsdatasoustraitants) && jsdatasoustraitants.length > 0) {
-            jsdatasoustraitants.forEach(contact => {
-                const dataRow = document.createElement("div");
-                dataRow.className = "data-row";
-                dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
-                dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
+            const fields = [
+                `${contact.firstname} ${contact.lastname}`,
+                `${contact.societe_nom}`,
+                `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
+                `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
+                `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
+            ];
 
-                const fields = [
-                    `${contact.firstname} ${contact.lastname}`,
-                    `${contact.societe_nom}`,
-                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
-                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
-                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
-                ];
-
-                fields.forEach(field => {
-                    const fieldCell = document.createElement("div");
-                    fieldCell.style.flex = "1";
-                    fieldCell.innerHTML = field;
-                    dataRow.appendChild(fieldCell);
-                });
-
-                tableContainer.appendChild(dataRow);
-
-                // Ajouter le contact dans selectedContacts pour éviter les doublons
-                selectedContacts.push({
-                    contact_id: contact.fk_socpeople,
-                    firstname: contact.firstname,
-                    lastname: contact.lastname,
-                    supplier_name: contact.societe_nom,
-                    supplier_id: contact.fk_societe,
-                    function: contact.fonction,
-                    contract: contact.contrat,
-                    qualifications: contact.habilitation
-                });
+            fields.forEach(field => {
+                const fieldCell = document.createElement("div");
+                fieldCell.style.flex = "1";
+                fieldCell.innerHTML = field;
+                dataRow.appendChild(fieldCell);
             });
 
-            // Enregistrer les données dans cellData
-            cellData.push({
-                type: "soustraitantlist",
-                subcontractors: jsdatasoustraitants
+            tableContainer.appendChild(dataRow);
+
+            // Ajouter le contact dans `selectedContacts` pour éviter les doublons
+            selectedContacts.push({
+                contact_id: contact.fk_socpeople,
+                firstname: contact.firstname,
+                lastname: contact.lastname,
+                supplier_name: contact.societe_nom,
+                supplier_id: contact.fk_societe,
+                function: contact.fonction,
+                contract: contact.contrat,
+                qualifications: contact.habilitation
             });
-        }
-    } else {
-        // Si les données sont déjà enregistrées, afficher uniquement celles de cellData
+        });
+
+        // Sauvegarder les données après affichage
+        saveData();
+    } else if (subcontractorData && subcontractorData.subcontractors) {
+        // Afficher uniquement les sous-traitants enregistrés dans `cellData`
         subcontractorData.subcontractors.forEach(contact => {
             const dataRow = document.createElement("div");
             dataRow.className = "data-row";
@@ -2147,6 +2141,18 @@ function createSupplierDropdown() {
             });
 
             tableContainer.appendChild(dataRow);
+
+            // Ajouter le contact dans `selectedContacts` pour éviter les doublons
+            selectedContacts.push({
+                contact_id: contact.fk_socpeople,
+                firstname: contact.firstname,
+                lastname: contact.lastname,
+                supplier_name: contact.societe_nom,
+                supplier_id: contact.fk_societe,
+                function: contact.fonction,
+                contract: contact.contrat,
+                qualifications: contact.habilitation
+            });
         });
     }
 
@@ -2168,7 +2174,6 @@ function createSupplierDropdown() {
         }
     }, true);
 }
-
 
 
 // Appel de la fonction pour récupérer et afficher les fournisseurs
