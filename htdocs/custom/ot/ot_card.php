@@ -1675,20 +1675,19 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
 let isDataInitialized = false; // Variable pour vérifier si les données ont été initialisées
 
 function initializeCellData() {
+    // Initialiser `cellData` uniquement une fois avec les données de `jsdata`
     if (!isDataInitialized) {
         console.log("Initialisation de cellData avec jsdataFiltered.");
-
-        // Créer une copie profonde de jsdataFiltered pour éviter les effets secondaires
         cellData = jsdataFiltered.map(user => ({
             type: "listeunique",
             title: "Liste unique",
-            userIds: [user.fk_socpeople], // Conserver les IDs des utilisateurs
-            userDetails: jsdataFiltered.find(u => u.fk_socpeople === user.fk_socpeople) // Inclure les détails utilisateur
+            userIds: [user.fk_socpeople]
         }));
-
-        isDataInitialized = true; // Marquer initialisation comme terminée
+        
+        // Marquer que les données ont été initialisées
+        isDataInitialized = true;
     } else {
-        console.log("cellData est déjà initialisé. Aucune mise à jour.");
+        console.log("cellData est déjà initialisé. Aucune mise à jour depuis jsdataFiltered.");
     }
 }
 
@@ -1697,7 +1696,7 @@ function initializeCellData() {
 function displayUserList() {
     const existingUniqueList = document.querySelector(".user-list.unique-list");
 
-    // Supprimer la liste par défaut si elle existe
+    // Supprimer la liste par défaut si elle existe, pour éviter des doublons
     if (existingUniqueList) {
         existingUniqueList.remove();
     }
@@ -1706,17 +1705,30 @@ function displayUserList() {
     const uniqueListCell = cellData.find(cell => cell.type === "listeunique");
 
     if (uniqueListCell) {
-        // Créer et afficher la liste unique avec les utilisateurs de `cellData`
+        // Vérifier si `userIds` est vide
+        if (!uniqueListCell.userIds || uniqueListCell.userIds.length === 0) {
+            console.log("Liste unique trouvée mais vide, remplissage avec les données de jsdataFiltered.");
+            uniqueListCell.userIds = jsdataFiltered.map(user => user.fk_socpeople); // Ajouter les utilisateurs depuis jsdataFiltered
+        } else {
+            console.log("Liste unique trouvée avec des données, vérification des utilisateurs existants.");
+            // Filtrer les utilisateurs pour inclure ceux qui existent dans `jsdata` ou dans `cellData`
+            uniqueListCell.userIds = uniqueListCell.userIds.filter(userId =>
+                jsdata.some(user => user.fk_socpeople === userId) || // Utilisateur présent dans jsdata
+                cellData.some(cell => cell.type === "listeunique" && cell.userIds.includes(userId)) // Utilisateur présent dans cellData
+            );
+        }
+
+        // Créer et afficher la liste unique avec les utilisateurs filtrés
         const list = createUniqueUserList(uniqueListCell.userIds);
         list.querySelector(".list-title-input").value = uniqueListCell.title || "Liste unique";
         columnsContainer.appendChild(list);
     } else {
         console.log("Aucune liste unique trouvée, création une nouvelle liste.");
-        // Créer une nouvelle liste unique avec les utilisateurs de `cellData`
+        // Créer une nouvelle liste unique avec les utilisateurs de `jsdataFiltered`
         const newUniqueList = {
             type: "listeunique",
             title: "Liste unique",
-            userIds: cellData.map(cell => cell.userIds).flat() // On récupère tous les userIds
+            userIds: jsdataFiltered.map(user => user.fk_socpeople)
         };
         cellData.push(newUniqueList);
 
@@ -1725,7 +1737,7 @@ function displayUserList() {
         columnsContainer.appendChild(list);
     }
 
-    isDataSaved = true; // Marquer les données comme sauvegardées
+    isDataSaved = true; // Marquer les données comme sauvegardées pour éviter la duplication
 }
 
 
