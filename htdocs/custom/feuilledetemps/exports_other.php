@@ -32,6 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/exports/class/export.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/export/modules_export.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/modules/modFeuilleDeTemps.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/silae.class.php';
 
 // Load translation files required by the page
 $langs->loadlangs(array('admin', 'exports', 'other', 'users', 'companies', 'projects', 'suppliers', 'products', 'bank', 'bills'));
@@ -83,56 +84,56 @@ $langs->loadlangs(array('admin', 'exports', 'other', 'users', 'companies', 'proj
 // );
 
 // // Translation code, array duplicated in import.php, was not synchronized, TODO put it somewhere only once
-// $entitytolang = array(
-// 	'user'         => 'User',
-// 	'company'      => 'Company',
-// 	'contact'      => 'Contact',
-// 	'invoice'      => 'Bill',
-// 	'invoice_line' => 'InvoiceLine',
-// 	'order'        => 'Order',
-// 	'order_line'   => 'OrderLine',
-// 	'propal'       => 'Proposal',
-// 	'propal_line'  => 'ProposalLine',
-// 	'intervention' => 'Intervention',
-// 	'inter_line'   => 'InterLine',
-// 	'member'       => 'Member',
-// 	'member_type'  => 'MemberType',
-// 	'subscription' => 'Subscription',
-// 	'tax'          => 'SocialContribution',
-// 	'tax_type'     => 'DictionarySocialContributions',
-// 	'account'      => 'BankTransactions',
-// 	'payment'      => 'Payment',
-// 	'product'      => 'Product',
-// 	'virtualproduct'  => 'AssociatedProducts',
-// 	'subproduct'      => 'SubProduct',
-// 	'product_supplier_ref'      => 'SupplierPrices',
-// 	'service'      => 'Service',
-// 	'stock'        => 'Stock',
-// 	'movement'	   => 'StockMovement',
-// 	'batch'        => 'Batch',
-// 	'stockbatch'   => 'StockDetailPerBatch',
-// 	'warehouse'    => 'Warehouse',
-// 	'category'     => 'Category',
-// 	'other'        => 'Other',
-// 	'trip'         => 'TripsAndExpenses',
-// 	'securityevent' => 'SecurityEvent',
-// 	'shipment'     => 'Shipments',
-// 	'shipment_line' => 'ShipmentLine',
-// 	'project'      => 'Projects',
-// 	'projecttask'  => 'Tasks',
-// 	'resource'     => 'Resource',
-// 	'task_time'    => 'TaskTimeSpent',
-// 	'action'       => 'Event',
-// 	'expensereport' => 'ExpenseReport',
-// 	'expensereport_line' => 'ExpenseReportLine',
-// 	'holiday'      => 'TitreRequestCP',
-// 	'contract'     => 'Contract',
-// 	'contract_line' => 'ContractLine',
-// 	'translation'  => 'Translation',
-// 	'bom'          => 'BOM',
-// 	'bomline'      => 'BOMLine',
-// 	'conferenceorboothattendee' => 'Attendee'
-// );
+$entitytolang = array(
+	'user'         => 'User',
+	'company'      => 'Company',
+	'contact'      => 'Contact',
+	'invoice'      => 'Bill',
+	'invoice_line' => 'InvoiceLine',
+	'order'        => 'Order',
+	'order_line'   => 'OrderLine',
+	'propal'       => 'Proposal',
+	'propal_line'  => 'ProposalLine',
+	'intervention' => 'Intervention',
+	'inter_line'   => 'InterLine',
+	'member'       => 'Member',
+	'member_type'  => 'MemberType',
+	'subscription' => 'Subscription',
+	'tax'          => 'SocialContribution',
+	'tax_type'     => 'DictionarySocialContributions',
+	'account'      => 'BankTransactions',
+	'payment'      => 'Payment',
+	'product'      => 'Product',
+	'virtualproduct'  => 'AssociatedProducts',
+	'subproduct'      => 'SubProduct',
+	'product_supplier_ref'      => 'SupplierPrices',
+	'service'      => 'Service',
+	'stock'        => 'Stock',
+	'movement'	   => 'StockMovement',
+	'batch'        => 'Batch',
+	'stockbatch'   => 'StockDetailPerBatch',
+	'warehouse'    => 'Warehouse',
+	'category'     => 'Category',
+	'other'        => 'Other',
+	'trip'         => 'TripsAndExpenses',
+	'securityevent' => 'SecurityEvent',
+	'shipment'     => 'Shipments',
+	'shipment_line' => 'ShipmentLine',
+	'project'      => 'Projects',
+	'projecttask'  => 'Tasks',
+	'resource'     => 'Resource',
+	'task_time'    => 'TaskTimeSpent',
+	'action'       => 'Event',
+	'expensereport' => 'ExpenseReport',
+	'expensereport_line' => 'ExpenseReportLine',
+	'holiday'      => 'TitreRequestCP',
+	'contract'     => 'Contract',
+	'contract_line' => 'ContractLine',
+	'translation'  => 'Translation',
+	'bom'          => 'BOM',
+	'bomline'      => 'BOMLine',
+	'conferenceorboothattendee' => 'Attendee'
+);
 
 $array_selected = isset($_SESSION["export_selected_fields"]) ? $_SESSION["export_selected_fields"] : array();
 $array_filtervalue = isset($_SESSION["export_filtered_fields"]) ? $_SESSION["export_filtered_fields"] : array();
@@ -156,6 +157,11 @@ $user_extrafields = new Extrafields($db);
 if (empty($user_extrafields->attributes[$user_static->table_element]['loaded'])) {
 	$user_extrafields->fetch_name_optionals_label($user_static->table_element);
 }
+$silae = new Silae($db);
+$silae_extrafields = new Extrafields($db);
+if (empty($silae_extrafields->attributes[$silae->table_element]['loaded'])) {
+	$silae_extrafields->fetch_name_optionals_label($silae->table_element);
+}
 
 $head = array();
 $upload_dir = $conf->export->dir_temp.'/'.$user->id;
@@ -170,15 +176,16 @@ if (!$user->rights->feuilledetemps->feuilledetemps->export) {
 
 $link = "/custom/feuilledetemps/exports_other.php";
 
-if(empty($datatoexport) && $export_code >= 0) {
-	if($export_code == '0') {
-		$datatoexport = 'heure_nuit_dimanche';
-	}
-	else {
+if(empty($datatoexport) /* && $export_code >= 0*/) {
+	// if($export_code == '0') {
+	// 	$datatoexport = 'heure_nuit_dimanche';
+	// }
+	// else {
 		$datatoexport = array(
 			0 => "heure_nuit_dimanche", 
+			1 => "recap_pointages", 
 		);
-	}
+	// }
 }
 
 if($datatoexport == 'heure_nuit_dimanche') {
@@ -186,7 +193,12 @@ if($datatoexport == 'heure_nuit_dimanche') {
 		"u.firstname" => "Prénom",
 		"u.lastname" => "Nom",
 		"jour" => "Jour",
-		"element_date" => "Date",
+		"et.element_date" => "Date",
+		"t.ref" => "Réf Tâche",
+		"t.label" => "Nom Tâche",
+		"p.ref" => "Réf Projet",
+		"p.title" => "Nom Projet",
+		"pto.site" => "Site",
 		"heures" => "Heures"
 	);
 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
@@ -198,14 +210,30 @@ if($datatoexport == 'heure_nuit_dimanche') {
 	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
 		$objexport->array_export_fields[0]["eu.antenne"] = "Antenne";
 	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_nuit_100'])) {
+		$objexport->array_export_fields[0]["es.h_nuit_100"] = "H_Nuit_100";
+	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_75'])) {
+		$objexport->array_export_fields[0]["es.h_dim_75"] = "H_Dim_75";
+	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_50'])) {
+		$objexport->array_export_fields[0]["es.h_dim_50"] = "H_Dim_50";
+	}
 }
-else {
+elseif($datatoexport == 'recap_pointages') {
 	$objexport->array_export_fields[0] = array(
 		"u.firstname" => "Prénom",
 		"u.lastname" => "Nom",
 		"jour" => "Jour",
-		"element_date" => "Date",
-		"heures" => "Heures"
+		"e.date_jour" => "Date",
+		"t.ref" => "Réf Tâche",
+		"t.label" => "Nom Tâche",
+		"p.ref" => "Réf Projet",
+		"p.title" => "Nom Projet",
+		"pto.site" => "Site",
+		"e.heures_jour" => "Heures Jour",
+		"e.heures_nuit" => "Heures Nuit",
+		"e.total_heures" => "Total Heures"
 	);
 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
 		$objexport->array_export_fields[0]["eu.matricule"] = "Matricule";
@@ -217,13 +245,50 @@ else {
 		$objexport->array_export_fields[0]["eu.antenne"] = "Antenne";
 	}
 }
+// else {
+// 	$objexport->array_export_fields[0] = array(
+// 		"u.firstname" => "Prénom",
+// 		"u.lastname" => "Nom",
+// 		"jour" => "Jour",
+// 		"et.element_date" => "Date",
+// 		"t.ref" => "Réf Tâche",
+// 		"t.label" => "Nom Tâche",
+// 		"p.ref" => "Réf Projet",
+// 		"p.title" => "Nom Projet",
+// 		"pto.site" => "Site",
+// 		"heures" => "Heures"
+// 	);
+// 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
+// 		$objexport->array_export_fields[0]["eu.matricule"] = "Matricule";
+// 	}
+// 	if(isset($user_extrafields->attributes['user']['type']['etablissement'])) {
+// 		$objexport->array_export_fields[0]["eu.etablissement"] = "Etablissement";
+// 	}
+// 	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
+// 		$objexport->array_export_fields[0]["eu.antenne"] = "Antenne";
+// 	}
+// 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_nuit_100'])) {
+// 		$objexport->array_export_fields[0]["es.h_nuit_100"] = "H_Nuit_100";
+// 	}
+// 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_75'])) {
+// 		$objexport->array_export_fields[0]["es.h_dim_75"] = "H_Dim_75";
+// 	}
+// 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_50'])) {
+// 		$objexport->array_export_fields[0]["es.h_dim_50"] = "H_Dim_50";
+// 	}
+// }
 
 if($datatoexport == 'heure_nuit_dimanche') {
 	$objexport->array_export_entities[0] = array(
 		"u.firstname" => "user",
 		"u.lastname" => "user",
 		"jour" => "timesheet_16@feuilledetemps",
-		"element_date" => "timesheet_16@feuilledetemps",
+		"et.element_date" => "timesheet_16@feuilledetemps",
+		"t.ref" => "projecttask",
+		"t.label" => "projecttask",
+		"p.ref" => "project",
+		"p.title" => "project",
+		"pto.site" => "timesheet_16@feuilledetemps",
 		"heures" => "timesheet_16@feuilledetemps"
 	);
 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
@@ -235,25 +300,73 @@ if($datatoexport == 'heure_nuit_dimanche') {
 	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
 		$objexport->array_export_entities[0]["eu.antenne"] = "user";
 	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_nuit_100'])) {
+		$objexport->array_export_entities[0]["es.h_nuit_100"] = "timesheet_16@feuilledetemps";
+	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_75'])) {
+		$objexport->array_export_entities[0]["es.h_dim_75"] = "timesheet_16@feuilledetemps";
+	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_50'])) {
+		$objexport->array_export_entities[0]["es.h_dim_50"] = "timesheet_16@feuilledetemps";
+	}
 }
-else {
-	$array_export_entities[0] = array(
+elseif($datatoexport == 'recap_pointages') {
+	$objexport->array_export_entities[0] = array(
 		"u.firstname" => "user",
 		"u.lastname" => "user",
 		"jour" => "timesheet_16@feuilledetemps",
-		"element_date" => "timesheet_16@feuilledetemps",
-		"heures" => "timesheet_16@feuilledetemps"
+		"e.date_jour" => "timesheet_16@feuilledetemps",
+		"t.ref" => "projecttask",
+		"t.label" => "projecttask",
+		"p.ref" => "project",
+		"p.title" => "project",
+		"pto.site" => "timesheet_16@feuilledetemps",
+		"e.heures_jour" => "timesheet_16@feuilledetemps",
+		"e.heures_nuit" => "timesheet_16@feuilledetemps",
+		"e.total_heures" => "timesheet_16@feuilledetemps"
 	);
 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
-		$array_export_entities[0]["eu.matricule"] = "user";
+		$objexport->array_export_entities[0]["eu.matricule"] = "user";
 	}
 	if(isset($user_extrafields->attributes['user']['type']['etablissement'])) {
-		$array_export_entities[0]["eu.etablissement"] = "user";
+		$objexport->array_export_entities[0]["eu.etablissement"] = "user";
 	}
 	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
-		$array_export_entities[0]["eu.antenne"] = "user";
+		$objexport->array_export_entities[0]["eu.antenne"] = "user";
 	}
 }
+// else {
+// 	$objexport->array_export_entities[0] = array(
+// 		"u.firstname" => "user",
+// 		"u.lastname" => "user",
+// 		"jour" => "timesheet_16@feuilledetemps",
+// 		"et.element_date" => "timesheet_16@feuilledetemps",
+// 		"t.ref" => "projecttask",
+// 		"t.label" => "projecttask",
+// 		"p.ref" => "project",
+// 		"p.title" => "project",
+// 		"pto.site" => "timesheet_16@feuilledetemps",
+// 		"heures" => "timesheet_16@feuilledetemps"
+// 	);
+// 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
+// 		$objexport->array_export_entities[0]["eu.matricule"] = "user";
+// 	}
+// 	if(isset($user_extrafields->attributes['user']['type']['etablissement'])) {
+// 		$objexport->array_export_entities[0]["eu.etablissement"] = "user";
+// 	}
+// 	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
+// 		$objexport->array_export_entities[0]["eu.antenne"] = "user";
+// 	}
+// 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_nuit_100'])) {
+// 		$objexport->array_export_entities[0]["es.h_nuit_100"] = "timesheet_16@feuilledetemps";
+// 	}
+// 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_75'])) {
+// 		$objexport->array_export_entities[0]["es.h_dim_75"] = "timesheet_16@feuilledetemps";
+// 	}
+// 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_50'])) {
+// 		$objexport->array_export_entities[0]["es.h_dim_50"] = "timesheet_16@feuilledetemps";
+// 	}
+// }
 
 
 if($datatoexport == 'heure_nuit_dimanche') {
@@ -261,7 +374,12 @@ if($datatoexport == 'heure_nuit_dimanche') {
 		"u.firstname" => "Text",
 		"u.lastname" => "Text",
 		"jour" => "",
-		"element_date" => "Date",
+		"et.element_date" => "Date",
+		"t.ref" => "Text",
+		"t.label" => "Text",
+		"p.ref" => "Text",
+		"p.title" => "Text",
+		"pto.site" => "Text",
 		"heures" => ""
 	);
 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
@@ -273,14 +391,30 @@ if($datatoexport == 'heure_nuit_dimanche') {
 	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
 		$objexport->array_export_TypeFields[0]["eu.antenne"] = "Text";
 	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_nuit_100'])) {
+		$objexport->array_export_TypeFields[0]["es.h_nuit_100"] = "Numeric";
+	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_75'])) {
+		$objexport->array_export_TypeFields[0]["es.h_dim_75"] = "Numeric";
+	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_50'])) {
+		$objexport->array_export_TypeFields[0]["es.h_dim_50"] = "Numeric";
+	}
 }
-else {
+elseif($datatoexport == 'recap_pointages') {
 	$objexport->array_export_TypeFields[0] = array(
 		"u.firstname" => "Text",
 		"u.lastname" => "Text",
 		"jour" => "",
-		"element_date" => "Date",
-		"heures" => ""
+		"e.date_jour" => "Date",
+		"t.ref" => "Text",
+		"t.label" => "Text",
+		"p.ref" => "Text",
+		"p.title" => "Text",
+		"pto.site" => "Text",
+		"e.heures_jour" => "Numeric",
+		"e.heures_nuit" => "Numeric",
+		"e.total_heures" => "Numeric"
 	);
 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
 		$objexport->array_export_TypeFields[0]["eu.matricule"] = "Numeric";
@@ -292,14 +426,45 @@ else {
 		$objexport->array_export_TypeFields[0]["eu.antenne"] = "Text";
 	}
 }
-
+// else {
+// 	$objexport->array_export_TypeFields[0] = array(
+// 		"u.firstname" => "Text",
+// 		"u.lastname" => "Text",
+// 		"jour" => "",
+// 		"et.element_date" => "Date",
+// 		"t.ref" => "Text",
+// 		"t.label" => "Text",
+// 		"p.ref" => "Text",
+// 		"p.title" => "Text",
+// 		"pto.site" => "Text",
+// 		"heures" => ""
+// 	);
+// 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
+// 		$objexport->array_export_TypeFields[0]["eu.matricule"] = "Numeric";
+// 	}
+// 	if(isset($user_extrafields->attributes['user']['type']['etablissement'])) {
+// 		$objexport->array_export_TypeFields[0]["eu.etablissement"] = "Text";
+// 	}
+// 	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
+// 		$objexport->array_export_TypeFields[0]["eu.antenne"] = "Text";
+// 	}
+// 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_nuit_100'])) {
+// 		$objexport->array_export_TypeFields[0]["es.h_nuit_100"] = "Numeric";
+// 	}
+// 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_75'])) {
+// 		$objexport->array_export_TypeFields[0]["es.h_dim_75"] = "Numeric";
+// 	}
+// 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_50'])) {
+// 		$objexport->array_export_TypeFields[0]["es.h_dim_50"] = "Numeric";
+// 	}
+// }
 
 // if($datatoexport == 'heure_nuit_dimanche') {
 // 	$objexport->array_tablename[0] = array(
 // 		"u.firstname" => "llx_user",
 // 		"u.lastname" => "llx_user",
 // 		"jour" => "llx_element_time",
-// 		"element_date" => "llx_element_time",
+// 		"et.element_date" => "llx_element_time",
 // 		"heures" => ""
 // 	);
 // 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
@@ -317,7 +482,7 @@ else {
 // 		"u.firstname" => "llx_user",
 // 		"u.lastname" => "llx_user",
 // 		"jour" => "llx_element_time",
-// 		"element_date" => "llx_element_time",
+// 		"et.element_date" => "llx_element_time",
 // 		"heures" => ""
 // 	);
 // 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
@@ -339,7 +504,18 @@ if($datatoexport == 'heure_nuit_dimanche')  {
 	$objexport->array_export_module[0] = new modFeuilleDeTemps($db);
 	$objexport->array_export_perms[0] = $user->rights->feuilledetemps->feuilledetemps->export;
 	$objexport->array_export_icon[0] = "timesheet_16@feuilledetemps";
-	$objexport->array_export_special[0] = "";
+	$objexport->array_export_examplevalues[0] = "";
+	$objexport->array_export_help[0] = "";
+	$objexport->array_export_dependencies[0] = "";
+	$objexport->array_export_FilterValue = $array_filtervalue;
+}
+if($datatoexport == 'recap_pointages')  {
+	$objexport->array_export_code_for_sort[0] = '02_recap_pointages';
+	$objexport->array_export_code[0] = 'recap_pointages';
+	$objexport->array_export_label[0] = "Recap des pointages";
+	$objexport->array_export_module[0] = new modFeuilleDeTemps($db);
+	$objexport->array_export_perms[0] = $user->rights->feuilledetemps->feuilledetemps->export;
+	$objexport->array_export_icon[0] = "timesheet_16@feuilledetemps";
 	$objexport->array_export_examplevalues[0] = "";
 	$objexport->array_export_help[0] = "";
 	$objexport->array_export_dependencies[0] = "";
@@ -352,21 +528,269 @@ else {
 	$objexport->array_export_module[0] = new modFeuilleDeTemps($db);
 	$objexport->array_export_perms[0] = $user->rights->feuilledetemps->feuilledetemps->export;
 	$objexport->array_export_icon[0] = "timesheet_16@feuilledetemps";
-	$objexport->array_export_special[0] = "";
 	$objexport->array_export_examplevalues[0] = "";
 	$objexport->array_export_help[0] = "";
 	$objexport->array_export_dependencies[0] = "";
+
+	$objexport->array_export_code_for_sort[1] = '02_recap_pointages';
+	$objexport->array_export_code[1] = 'recap_pointages';
+	$objexport->array_export_label[1] = "Recap des pointages";
+	$objexport->array_export_module[1] = new modFeuilleDeTemps($db);
+	$objexport->array_export_perms[1] = $user->rights->feuilledetemps->feuilledetemps->export;
+	$objexport->array_export_icon[1] = "timesheet_16@feuilledetemps";
+	$objexport->array_export_examplevalues[1] = "";
+	$objexport->array_export_help[1] = "";
+	$objexport->array_export_dependencies[1] = "";
+
 	$objexport->array_export_FilterValue = array();
+
 }
 
-$objexport->array_export_sql_start[0] = "";
-$objexport->array_export_sql_end[0] = "";
-$objexport->array_export_sql_order[0] = "";
+if($datatoexport == 'recap_pointages')  {
+	$objexport->array_export_sql_start[0] = 
+	" WITH RECURSIVE absences AS (
+		SELECT 
+			h.fk_user AS user_id,
+			DATE(h.date_debut) AS date_jour,
+			DATE(h.date_fin) AS date_fin,
+			ct.code AS type_absence,
+			hef.hour AS duree_absence
+		FROM llx_holiday h
+		LEFT JOIN llx_holiday_extrafields hef ON hef.fk_object = h.rowid
+		LEFT JOIN llx_c_holiday_types ct ON ct.rowid = h.fk_type
+		WHERE hef.statutfdt = 3
 
-$sqlquery = '';
+		UNION ALL
+
+		SELECT 
+			user_id,
+			DATE_ADD(date_jour, INTERVAL 1 DAY),
+			date_fin,
+			type_absence,
+			duree_absence
+		FROM absences
+		WHERE date_jour < date_fin
+		),
+
+		heures_travail AS (
+		SELECT 
+			et.fk_user AS user_id,
+			DATE(et.element_date) AS date_jour,
+			et.element_duration / 3600 AS heures_jour,
+			pto.heure_nuit / 3600 AS heures_nuit,
+			(COALESCE(et.element_duration, 0) + COALESCE(pto.heure_nuit, 0)) / 3600 AS total_heures
+		FROM llx_element_time et
+		LEFT JOIN llx_feuilledetemps_projet_task_time_other pto ON pto.fk_projet_task_time = et.rowid
+		WHERE et.elementtype = 'task'
+		),
+
+		heures_travail_absences AS (
+		SELECT 
+			user_id,
+			date_jour,
+			NULL AS type_absence,
+			NULL AS duree_absence,
+			heures_jour,
+			heures_nuit,
+			total_heures,
+			'travail' AS type_event
+		FROM heures_travail
+
+		UNION ALL
+
+		SELECT 
+			user_id,
+			date_jour,
+			type_absence,
+			duree_absence,
+			NULL AS heures_jour,
+			NULL AS heures_nuit,
+			NULL AS total_heures,
+			'absence' AS type_event
+		FROM absences
+		)";
+}
+else {
+	$objexport->array_export_sql_start[0] = "SELECT DISTINCT ";
+}
+
 if($datatoexport == 'heure_nuit_dimanche') {
+	$objexport->array_export_sql_end[0] .= " FROM llx_element_time as et
+				LEFT JOIN llx_feuilledetemps_projet_task_time_other as pto ON pto.fk_projet_task_time = et.rowid
+				LEFT JOIN llx_projet_task as t ON t.rowid = et.fk_element AND elementtype = 'task'
+				LEFT JOIN llx_projet as p ON p.rowid = t.fk_projet
+				FULL JOIN llx_feuilledetemps_silae as s ON s.date = et.element_date
+				LEFT JOIN llx_feuilledetemps_silae_extrafields as es ON es.fk_object = s.rowid
+				LEFT JOIN llx_user as u ON u.rowid = et.fk_user
+				LEFT JOIN llx_user_extrafields as eu ON eu.fk_object = u.rowid";
+	$objexport->array_export_sql_end[0] .= " WHERE 1=1 AND elementtype = 'task'";
+
+	$objexport->array_export_sql_order[0] .= " HAVING heures > 0";
+
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_nuit_100'])) {
+		$objexport->array_export_sql_order[0] .= " OR es.h_nuit_100 > 0";
+	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_75'])) {
+		$objexport->array_export_sql_order[0] .= " OR es.h_dim_75 > 0";
+	}
+	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_50'])) {
+		$objexport->array_export_sql_order[0] .= " OR es.h_dim_50 > 0";
+	}
+}
+elseif($datatoexport == 'recap_pointages') {
+	$objexport->array_export_sql_end[0] .= " FROM heures_travail_absences e
+				LEFT JOIN llx_user u ON u.rowid = e.user_id
+				LEFT JOIN llx_user_extrafields eu ON eu.fk_object = u.rowid";
+	$objexport->array_export_sql_end[0] .= " WHERE 1=1";
+
+	$objexport->array_export_sql_order[0] .= " ORDER BY u.lastname, u.firstname, e.date_jour";
+}
+
+// Gestion des CASE
+if($datatoexport == 'heure_nuit_dimanche' || $datatoexport == 'recap_pointages') {
+	if(isset($user_extrafields->attributes['user']['type']['etablissement'])) {
+		$objexport->array_export_special_custom[0]["eu.etablissement"] = "CASE_select";
+	}
+	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
+		$objexport->array_export_special_custom[0]["eu.antenne"] = "CASE_sellist";
+	}
+
+	if(isset($user_extrafields->attributes['user']['type']['etablissement'])) {
+		$objexport->array_export_special_custom_extrafields[0]["eu.etablissement"] = $user_extrafields;
+	}
+	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
+		$objexport->array_export_special_custom_extrafields[0]["eu.antenne"] = $user_extrafields;
+	}
+
+	if(isset($user_extrafields->attributes['user']['type']['etablissement'])) {
+		$objexport->array_export_special_custom_tablename[0]["eu.etablissement"] = 'user';
+	}
+	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
+		$objexport->array_export_special_custom_tablename[0]["eu.antenne"] = 'user';
+	}
+}
+
+if(!empty($datatoexport)) {
+	foreach($objexport->array_export_special_custom[0] as $key => $special) {
+		$extrafields_obj = $objexport->array_export_special_custom_extrafields[0][$key];
+		$tablename = $objexport->array_export_special_custom_tablename[0][$key];
+
+		if($special == 'CASE_select') {
+			foreach($extrafields_obj->attributes[$tablename]['param'][end(explode('.', $key))]['options'] as $key2 => $val) {
+				$objexport->array_export_case[0][$key][$key2] = $val;
+			}
+		}
+		elseif($special == 'CASE_sellist') {
+			$param_options = $extrafields_obj->attributes[$tablename]['param'][end(explode('.', $key))]['options'];
+			if (is_array($param_options)) {
+				$param_list = array_keys($param_options);
+				$InfoFieldList = explode(":", $param_list[0]);
+				$parentName = '';
+				$parentField = '';
+				$keyList = (empty($InfoFieldList[2]) ? 'rowid' : $InfoFieldList[2].' as rowid');
+
+				if (count($InfoFieldList) > 4 && !empty($InfoFieldList[4])) {
+					if (strpos($InfoFieldList[4], 'extra.') !== false) {
+						$keyList = 'main.'.$InfoFieldList[2].' as rowid';
+					} else {
+						$keyList = $InfoFieldList[2].' as rowid';
+					}
+				}
+				if (count($InfoFieldList) > 3 && !empty($InfoFieldList[3])) {
+					list($parentName, $parentField) = explode('|', $InfoFieldList[3]);
+					$keyList .= ', '.$parentField;
+				}
+
+				$filter_categorie = false;
+				if (count($InfoFieldList) > 5) {
+					if ($InfoFieldList[0] == 'categorie') {
+						$filter_categorie = true;
+					}
+				}
+
+				$fields_label = explode('|', $InfoFieldList[1]);
+				if (is_array($fields_label)) {
+					$keyList .= ', ';
+					$keyList .= implode(', ', $fields_label);
+				}
+
+				$sqlwhere = '';
+				$sql = "SELECT ".$keyList;
+				$sql .= ' FROM '.$db->prefix().$InfoFieldList[0];
+				if (!empty($InfoFieldList[4])) {
+					// can use current entity filter
+					if (strpos($InfoFieldList[4], '$ENTITY$') !== false) {
+						$InfoFieldList[4] = str_replace('$ENTITY$', $conf->entity, $InfoFieldList[4]);
+					}
+					// can use SELECT request
+					if (strpos($InfoFieldList[4], '$SEL$') !== false) {
+						$InfoFieldList[4] = str_replace('$SEL$', 'SELECT', $InfoFieldList[4]);
+					}
+
+					// current object id can be use into filter
+					if (strpos($InfoFieldList[4], '$ID$') !== false && !empty($objectid)) {
+						$InfoFieldList[4] = str_replace('$ID$', $objectid, $InfoFieldList[4]);
+					} else {
+						$InfoFieldList[4] = str_replace('$ID$', '0', $InfoFieldList[4]);
+					}
+					//We have to join on extrafield table
+					if (strpos($InfoFieldList[4], 'extra.') !== false) {
+						$sql .= ' as main, '.$db->prefix().$InfoFieldList[0].'_extrafields as extra';
+						$sqlwhere .= " WHERE extra.fk_object=main.".$InfoFieldList[2]." AND ".$InfoFieldList[4];
+					} else {
+						$sqlwhere .= " WHERE ".$InfoFieldList[4];
+					}
+				} else {
+					$sqlwhere .= ' WHERE 1=1';
+				}
+				// Some tables may have field, some other not. For the moment we disable it.
+				if (in_array($InfoFieldList[0], array('tablewithentity'))) {
+					$sqlwhere .= ' AND entity = '.((int) $conf->entity);
+				}
+				$sql .= $sqlwhere;
+				//print $sql;
+
+				$sql .= ' ORDER BY '.implode(', ', $fields_label);
+
+				$resql = $db->query($sql);
+				if ($resql) {
+					$num = $db->num_rows($resql);
+					$i = 0;
+					while ($i < $num) {
+						$labeltoshow = '';
+						$obj = $db->fetch_object($resql);
+
+						// Several field into label (eq table:code|label:rowid)
+						$notrans = false;
+						$fields_label = explode('|', $InfoFieldList[1]);
+						if (is_array($fields_label) && count($fields_label) > 1) {
+							$notrans = true;
+							foreach ($fields_label as $field_toshow) {
+								$labeltoshow .= $obj->$field_toshow.' ';
+							}
+						} else {
+							$labeltoshow = $obj->{$InfoFieldList[1]};
+						}
+						$labeltoshow = $labeltoshow;
+						$objexport->array_export_case[0][$key][$obj->rowid] = $labeltoshow;
+						$i++;
+					}
+					$db->free($resql);
+				} else {
+					print 'Error in request '.$sql.' '.$db->lasterror().'. Check setup of extra parameters.<br>';
+				}
+			}
+		}
+	}
+
+}
+
+
+// Reqête SQL
+$sqlquery = '';
+if(!empty($datatoexport)) {
+	$sqlquery .= $objexport->array_export_sql_start[0];
 	$i = 0;
-	$sqlquery .= "SELECT ";
 	foreach ($objexport->array_export_fields[0] as $key => $value) {
 		if (!array_key_exists($key, $array_selected)) {
 			continue; // Field not selected
@@ -380,13 +804,21 @@ if($datatoexport == 'heure_nuit_dimanche') {
 			$i++;
 		}
 
-		if($key == 'heures') {
+		if($objexport->array_export_case[0][$key]) {
+			$newfield = "CASE";
+			foreach($objexport->array_export_case[0][$key] as $when => $then) {
+				$newfield .= " WHEN $key = '$when' THEN '$then'";
+			}
+			$newfield .= " ELSE ''";
+			$newfield .= " END AS ".str_replace(array('.', '-', '(', ')'), '_', $key);
+		}
+		elseif($datatoexport == 'heure_nuit_dimanche' && $key == 'heures') {
 			$newfield = "CASE
 							WHEN DAYNAME(et.element_date) = 'sunday' THEN (COALESCE(et.element_duration, 0) + COALESCE(pto.heure_nuit, 0)) / 3600
 							ELSE pto.heure_nuit / 3600
 						END AS heures";
 		}
-		elseif($key == "jour") {
+		elseif($datatoexport == 'heure_nuit_dimanche' && $key == "jour") {
 			$newfield = "CASE DAYOFWEEK(et.element_date)
 							WHEN 1 THEN 'dimanche'
 							WHEN 2 THEN 'lundi'
@@ -397,19 +829,28 @@ if($datatoexport == 'heure_nuit_dimanche') {
 							WHEN 7 THEN 'samedi'
 						END AS jour";
 		}
+		elseif($datatoexport == 'recap_pointages' && $key == "jour") {
+			$newfield = "CASE DAYOFWEEK(e.date_jour)
+							WHEN 1 THEN 'dimanche'
+							WHEN 2 THEN 'lundi'
+							WHEN 3 THEN 'mardi'
+							WHEN 4 THEN 'mercredi'
+							WHEN 5 THEN 'jeudi'
+							WHEN 6 THEN 'vendredi'
+							WHEN 7 THEN 'samedi'
+						END AS jour";
+		}
 		elseif (strpos($key, ' as ') === false) {
-			$newfield = $key.' as '.str_replace(array('.', '-', '(', ')'), '_', $key);
+			$newfield = $key.' as '.str_replace(array('.', '-', '(', ')', '/'), '_', $key);
 		} else {
 			$newfield = $key;
 		}
 
 		$sqlquery .= $newfield;
 	}
-	$sqlquery .= " FROM llx_element_time as et
-				LEFT JOIN llx_feuilledetemps_projet_task_time_other as pto ON pto.fk_projet_task_time = et.rowid
-				LEFT JOIN llx_user as u ON u.rowid = et.fk_user
-				LEFT JOIN llx_user_extrafields as eu ON eu.fk_object = u.rowid";
-	$sqlquery .= " WHERE 1=1";
+
+	$sqlquery .= $objexport->array_export_sql_end[0];
+
 	if (is_array($objexport->array_export_FilterValue) && !empty($objexport->array_export_FilterValue)) {
 		$sqlWhere = '';
 		// Loop on each condition to add
@@ -419,12 +860,27 @@ if($datatoexport == 'heure_nuit_dimanche') {
 			}
 
 			if ($value != '') {
-				$sqlWhere .= " AND ".$objexport->build_filterQuery($objexport->array_export_TypeFields[0][$key], $key, $objexport->array_export_FilterValue[$key]);
+				if($objexport->array_export_case[0][$key]) {
+					$sqlWhere = " AND CASE";
+					foreach($objexport->array_export_case[0][$key] as $when => $then) {
+						$sqlWhere .= " WHEN $key = '$when' THEN '$then'";
+					}
+					$sqlWhere .= " ELSE ''";
+					$sqlWhere .= " END = '".$objexport->array_export_FilterValue[$key]."'";
+				}
+				else {
+					$sqlWhere .= " AND ".$objexport->build_filterQuery($objexport->array_export_TypeFields[0][$key], $key, $objexport->array_export_FilterValue[$key]);
+				}
 			}
 		}
 		$sqlquery .= $sqlWhere;
 	}
-	$sqlquery .= " HAVING heures > 0";
+
+	$sqlquery .= $objexport->array_export_sql_order[0];
+}
+
+if(str_contains($sqlquery, 'FULL JOIN')) {
+	$sqlquery = str_replace('FULL JOIN', 'LEFT JOIN', $sqlquery).' UNION '.str_replace('FULL JOIN', 'RIGHT JOIN', $sqlquery);
 }
 
 /*
