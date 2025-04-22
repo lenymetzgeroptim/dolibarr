@@ -503,7 +503,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 						$timespent_month[$tmpday][$cpt]->timespent_id = $result;
 						$timespent_tmp = $timespent_month[$tmpday][$cpt];
 					}
-					elseif($heure_other_tmpday->heure_nuit != $newduration_heure_nuit) {
+					elseif($heure_other_tmpday->heure_nuit != $newduration_heure_nuit || $heure_other_tmpday->site != $new_site) {
 						if($is_day_anticipe) {
 							$timespent->note = (!empty($timespent->note) ? $timespent->note.' / ' : '');
 							$timespent->note .= 'Modification Heures Nuit semaine anticipée (le '.dol_print_date(dol_now(), '%d/%m/%Y').' par '.$user->login.') : '.($heure_other_tmpday->heure_nuit > 0 ? convertSecondToTime($heure_other_tmpday->heure_nuit) : '00:00').' ➔ '.($newduration_heure_nuit > 0 ? convertSecondToTime($newduration_heure_nuit) : '00:00');

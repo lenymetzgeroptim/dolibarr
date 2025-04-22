@@ -108,7 +108,7 @@ function autoFillSite(sitedefaut, day, cpt){
 }
 
 function forceUppercase(input) {
-    input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '');
+    input.value = input.value.toUpperCase().replace(/[^A-Z\s]/g, '');
 }
 
 function addTimespentLine(button, idw, cpt) {
