@@ -627,8 +627,7 @@ tr > th:last-child.fixed {
 .feuilledetemps #fullScreen {
     border: solid 1px #d7d7d7;
     border-radius: 5px;
-    font-size: 1.5em;
-	vertical-align: middle;
+	padding: 5px;
 }
 
 .feuilledetemps button#fullScreen {

@@ -190,7 +190,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 		print '<tr class="liste_titre favoris">';
 		print '<th class="fixed" colspan="'.(2 + $addcolspan).'" style="min-width: 500px;">';
 		if($mode == 'card') {
-			print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>';
+			print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand" style="font-size: 1.7em;"></span></button>';
 			print $fuser->getNomUrl(1);
 		}
 		print '</th>';
@@ -978,7 +978,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	);
 
 	if($mode == 'card') {
-		$fields['date']['text'] = '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>'.$fields['date']['text'];
+		$fields['date']['text'] = '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand" style="font-size: 1.7em;"></span></button>'.$fields['date']['text'];
 	}
 
 	if($user->rights->holidaycustom->write || $user->rights->holidaycustom->writeall) {

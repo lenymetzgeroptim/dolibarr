@@ -620,17 +620,25 @@ if (!empty($moreforfilter)) {
 	if($conf->global->FDT_SHOW_USERADRESS) {
 		$fk_user = new User($db);
 		$fk_user->fetch($usertoprocess->id);
+
+		print '<div class="divsearchfield">';
+
+		if($fk_user->array_options['options_matricule']) {
+			print " ".img_picto($langs->trans("Matricule"), 'fontawesome_id-card-alt_fas_#aaa');
+			print ' <span style="font-style: italic;color: #757575;">'.$fk_user->array_options['options_matricule']."</span>";
+		}
+
 		$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
 		if ($fulladress) {
-			print '<div class="divsearchfield">';
 			print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
 			print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
-			print '</div>';
 		}
+
+		print '</div>';
 	}
 	print '<div class="divsearchfield nowrap" style="float: right;">';
 	if(!$conf->global->FDT_DISPLAY_COLUMN) print_liste_field_titre($selectedfields, $_SERVER["PHP_SELF"], "", '', '', '', $sortfield, $sortorder, 'center maxwidthsearch ');
-	print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>';
+	print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand" style="font-size: 1.7em;"></span></button>';
 	if(!$conf->global->FDT_DISPLAY_COLUMN) print '<button type="button" title="Voir les favoris" id="seeFavoris" class="nobordertransp button_search_x" onclick="displayFav()" style="vertical-align: middle; margin-left: 4px;"><span class="far fa-star" style="font-size: large; color: var(--colorbackhmenu1);"></span></button>';;
 	print '</div>';
 	print '</div>';
