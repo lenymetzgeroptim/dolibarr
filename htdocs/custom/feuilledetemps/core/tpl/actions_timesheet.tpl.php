@@ -182,7 +182,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 				// Gestion des temps consommés
 				if ((int)$timespent_tmp->timespent_duration != (int)$newduration || !is_null($fk_task[$day][$cpt])) {
-					// Si le temps consommé existe déja et que tous les champs sont = null
+					// Si le temps consommé existe déja et que tous les champs sont = null					
 					if($timespent_tmp->timespent_id > 0 && $newduration == 0 && empty($timespent_tmp->timespent_note)){
 						// Agenda
 						if($timespent_tmp->timespent_duration != $newduration) {
@@ -196,7 +196,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 								$modification .= ($old_value != $new_value ? '<li><strong>'.$task->label.'</strong> ('.dol_print_date($tmpday, '%d/%m/%Y').") : $old_value ➔ $new_value</li>" : '');
 							}
 						}
-
+						
 						if($is_day_anticipe && $timespent_tmp->timespent_duration > 0) {
 							$new_value = formatValueForAgenda('duration', 0);
 							$old_value = formatValueForAgenda('duration', $timespent_tmp->timespent_duration);
@@ -205,7 +205,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 
 							$result = $timespent->update($user);
 						}
-						elseif($resheure_other != 0 || (!empty($heure_nuit[$day][$cpt]) && $fk_task[$day][$cpt] !== '0')){
+						elseif(($resheure_other > 0 && ($heure_nuit[$day][$cpt] > 0 || ($heure_other_tmpday->heure_nuit != 0 && is_null($heure_nuit[$day][$cpt])))) || ($heure_nuit[$day][$cpt] > 0 && $fk_task[$day][$cpt] !== '0')){
 							$timespent->element_duration = 0;		
 							$result = $timespent->update($user);
 						}
@@ -417,6 +417,10 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 					$result = $heure_other_tmpday->delete($user);
 					$resheure_other = 0;
 					$heure_other_tmpday = new Projet_task_time_other($db);
+
+					if($timespent_tmp->timespent_id > 0 && empty($timespent_tmp->element_duration) && empty($timespent_tmp->timespent_note)) {
+						$result = $timespent->delete($user);
+					}
 				}
 				// S'il existe une ligne de Projet_task_time_other et qu'au moins un champ a été modifié
 				elseif ($resheure_other > 0 && ($heure_other_tmpday->heure_nuit != $newduration_heure_nuit || $heure_other_tmpday->site != $new_site || $task_changed || ($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0))){
