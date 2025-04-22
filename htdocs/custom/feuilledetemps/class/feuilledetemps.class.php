@@ -2215,7 +2215,12 @@ class FeuilleDeTemps extends CommonObject
 				}
 				elseif(($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) && $isavailablefordayanduser['hour'][0] > 0){ // Congés en heure
 					if($isavailablefordayanduser['nb_jour'][0] > 1) {
-						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600));
+						if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
+						}
+						else {
+							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600));
+						}
 					}
 					else {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / 3600));
