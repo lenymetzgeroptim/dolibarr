@@ -1211,6 +1211,7 @@ foreach ($cellData as $cell) {
             u.lastname,
             u.office_phone AS phone,        
             cct.type AS contrat
+            
         FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne AS ocd
         JOIN " . MAIN_DB_PREFIX . "user AS u 
             ON ocd.fk_user = u.rowid
@@ -1219,7 +1220,7 @@ foreach ($cellData as $cell) {
         LEFT JOIN " . MAIN_DB_PREFIX . "c_contrattravail AS cct 
             ON drh.contratdetravail = cct.rowid
         WHERE ocd.ot_cellule_id = " . intval($cell->rowid);
-
+        
         $resql = $db->query($sql);
         $userDetails = [];
         $seenUserIds = [];
@@ -1238,9 +1239,9 @@ foreach ($cellData as $cell) {
                     'phone' => $user->phone,
                     'contrat' => $user->contrat ?? 'Non défini',
                     'fonction' => getFonctions($user->userId, $object->fk_project, $db) ?? 'Non définie',
-                    
                     'habilitation' => getHabilitations($user->userId, $db) ?? 'Aucune habilitation'
                 ];
+                
             }
         } else {
             echo "Erreur SQL : " . $db->lasterror();
@@ -1672,27 +1673,6 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
     ))
 );
 
-let isDataInitialized = false; // Variable pour vérifier si les données ont été initialisées
-
-function initializeCellData() {
-    // Initialiser `cellData` uniquement une fois avec les données de `jsdata`
-    if (!isDataInitialized) {
-        console.log("Initialisation de cellData avec jsdataFiltered.");
-        cellData = jsdataFiltered.map(user => ({
-            type: "listeunique",
-            title: "Liste unique",
-            userIds: [user.fk_socpeople]
-        }));
-        
-        // Marquer que les données ont été initialisées
-        isDataInitialized = true;
-    } else {
-        console.log("cellData est déjà initialisé. Aucune mise à jour depuis jsdataFiltered.");
-    }
-}
-
-
-    
 function displayUserList() {
     const existingUniqueList = document.querySelector(".user-list.unique-list");
 
@@ -1701,45 +1681,83 @@ function displayUserList() {
         existingUniqueList.remove();
     }
 
-    // Vérifier si `cellData` contient une ligne de type `listeunique`
-    const uniqueListCell = cellData.find(cell => cell.type === "listeunique");
+    // Vérifier si des données de la BDD existent dans `cellData`
+    if (typeof cellData !== "undefined" && cellData.length > 0) {
+        const hasUniqueList = cellData.some(cell => cell.type === "listeunique");
 
-    if (uniqueListCell) {
-        // Vérifier si `userIds` est vide
-        if (!uniqueListCell.userIds || uniqueListCell.userIds.length === 0) {
-            console.log("Liste unique trouvée mais vide, remplissage avec les données de jsdataFiltered.");
-            uniqueListCell.userIds = jsdataFiltered.map(user => user.fk_socpeople); // Ajouter les utilisateurs depuis jsdataFiltered
+        if (hasUniqueList) {
+            console.log("Affichage de la liste unique depuis la BDD.");
+            cellData.forEach(cell => {
+                if (cell.type === "listeunique") {
+                    const listVersion = parseInt(cell.version || 1); // Version de la liste dans la BDD
+                    const domVersion = existingUniqueList ? parseInt(existingUniqueList.dataset.version || 0) : 0;
+
+                    // Comparer les versions
+                    if (listVersion > domVersion) {
+                        console.log(`Mise à jour de la liste unique (version ${listVersion}).`);
+                        const list = createUniqueUserList();
+
+                        // Remplir le titre de la liste
+                        const titleInput = list.querySelector(".list-title-input");
+                        titleInput.value = cell.title;
+
+                        // Vérifier si `userDetails` est défini et est un tableau
+                        if (Array.isArray(cell.userDetails)) {
+                            // Remplir les utilisateurs de la liste depuis `cellData`
+                            const ulElement = list.querySelector("ul");
+                            ulElement.innerHTML = ""; // Vider la liste avant de la remplir
+                            cell.userDetails.forEach(user => {
+                                const li = document.createElement("li");
+                                li.setAttribute("data-user-id", user.userId);
+                                li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
+
+                                li.innerHTML = `
+                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+                                    <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
+                                    <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
+                                `;
+                                ulElement.appendChild(li);
+                            });
+                        } else {
+                            console.warn(`userDetails est manquant ou nest pas un tableau pour la cellule avec le titre : ${cell.title}`);
+                        }
+
+                        // Ajouter la version au DOM
+                        list.dataset.version = listVersion;
+
+                        attachUserRemoveListeners(list);
+
+                        // Ajouter la liste au conteneur
+                        columnsContainer.appendChild(list);
+                    } else {
+                        console.log("La version de la liste unique est déjà à jour.");
+                    }
+                }
+            });
         } else {
-            console.log("Liste unique trouvée avec des données, vérification des utilisateurs existants.");
-            // Filtrer les utilisateurs pour inclure ceux qui existent dans `jsdata` ou dans `cellData`
-            uniqueListCell.userIds = uniqueListCell.userIds.filter(userId =>
-                jsdata.some(user => user.fk_socpeople === userId) || // Utilisateur présent dans jsdata
-                cellData.some(cell => cell.type === "listeunique" && cell.userIds.includes(userId)) // Utilisateur présent dans cellData
-            );
+            console.log("Aucune liste unique trouvée dans la BDD, création dune nouvelle liste.");
+            const uniqueList = createUniqueUserList();
+            uniqueList.style.marginTop = "20px"; // Ajouter un espace de 20px en haut
+            uniqueList.dataset.version = 1; // Initialiser la version à 1
+            columnsContainer.appendChild(uniqueList);
+
+            // Sauvegarder la nouvelle liste dans la BDD
+            saveData();
         }
-
-        // Créer et afficher la liste unique avec les utilisateurs filtrés
-        const list = createUniqueUserList(uniqueListCell.userIds);
-        list.querySelector(".list-title-input").value = uniqueListCell.title || "Liste unique";
-        columnsContainer.appendChild(list);
     } else {
-        console.log("Aucune liste unique trouvée, création une nouvelle liste.");
-        // Créer une nouvelle liste unique avec les utilisateurs de `jsdataFiltered`
-        const newUniqueList = {
-            type: "listeunique",
-            title: "Liste unique",
-            userIds: jsdataFiltered.map(user => user.fk_socpeople)
-        };
-        cellData.push(newUniqueList);
+        console.log("Aucune donnée dans `cellData`, création dune nouvelle liste par défaut.");
+        const uniqueList = createUniqueUserList();
+        uniqueList.style.marginTop = "20px"; // Ajouter un espace de 20px en haut
+        uniqueList.dataset.version = 1; // Initialiser la version à 1
+        columnsContainer.appendChild(uniqueList);
 
-        const list = createUniqueUserList(newUniqueList.userIds);
-        list.querySelector(".list-title-input").value = newUniqueList.title;
-        columnsContainer.appendChild(list);
+        // Sauvegarder la nouvelle liste dans la BDD
+        saveData();
     }
-
-    isDataSaved = true; // Marquer les données comme sauvegardées pour éviter la duplication
 }
-
 
 // Appeler la fonction pour afficher la liste lors du chargement de la page
 displayUserList();
@@ -1757,7 +1775,11 @@ displayUserList();
         alluser += `<option value="${user.rowid}">${user.lastname} ${user.firstname}</option>`;
     });
 
-    
+    // Générer les options de  uniqueJsData
+    let userOptions = `<option value="" disabled selected>Sélectionner un utilisateur</option>`;
+    uniqueJsData.forEach(function(user) {
+        userOptions += `<option value="${user.fk_socpeople}">${user.firstname} ${user.lastname}</option>`;
+    });
 
 if (typeof cellData !== "undefined" && cellData.length > 0) {
     const addedCardTitles = new Set();
@@ -1883,15 +1905,15 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
 
 
 
-function createUniqueUserList(userIds) {
+function createUniqueUserList() {
     const list = document.createElement("div");
-    list.className = "user-list card unique-list";
+    list.className = "user-list card unique-list"; 
 
     // Ajouter un ID unique
-    const uniqueListId = `unique_${Date.now()}`;
+    const uniqueListId = `unique_${Date.now()}`; 
     list.setAttribute("data-list-id", uniqueListId);
 
-    // Créer un conteneur pour le titre
+    // Créer un conteneur pour le titre avec le trait rouge
     const titleContainer = document.createElement("div");
     titleContainer.style = "text-align: center; padding-bottom: 10px; margin-bottom: 10px; color: #333; font-weight: bold;";
 
@@ -1903,12 +1925,12 @@ function createUniqueUserList(userIds) {
     listTitleInput.required = true;
     listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
 
-    titleContainer.appendChild(listTitleInput);
+    titleContainer.appendChild(listTitleInput); // Ajout du titre dans son conteneur
 
-    // Créer une légende
+    // Créer une légende pour décrire les informations
     const legend = document.createElement("div");
     legend.className = "list-legend";
-    legend.style = "display: flex; justify-content: space-between; padding: 10px; font-weight: bold; color: #333; margin-bottom: 10px; text-align: center;";
+    legend.style = "display: flex; justify-content: space-between; padding: 10px; font-weight: bold; color: #333; margin-bottom: 10px; text-align: center;"; // Centrer la légende
     legend.innerHTML = `
         <div style="flex: 1; text-align: center;">Nom Prénom</div>
         <div style="flex: 1; text-align: center;">Fonction</div>
@@ -1920,31 +1942,36 @@ function createUniqueUserList(userIds) {
     const ulElement = document.createElement("ul");
     ulElement.style = "list-style: none; padding: 0; margin: 0;";
 
-    // Remplir la liste avec les utilisateurs correspondant aux `userIds`
-    userIds.forEach(userId => {
-        const user = jsdata.find(u => u.fk_socpeople === userId);
-        if (user) {
-            const li = document.createElement("li");
-            li.setAttribute("data-user-id", userId);
-            li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
+    // Remplir les utilisateurs de la liste depuis uniqueJsData
+    uniqueJsData.forEach(user => {
+        const li = document.createElement("li");
+        li.setAttribute("data-user-id", user.fk_socpeople);
+        li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;"; // Centrer les éléments de utilisateur
 
-            li.innerHTML = `
-                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
-                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
-                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
-                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-                <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
-                <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
-            `;
-            ulElement.appendChild(li);
-        }
+        // Créer une ligne avec les informations de utilisateur, réparties uniformément
+        li.innerHTML = `
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+            <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
+        `;
+
+        // Ajouter le bouton de suppression
+        const removeSpan = document.createElement("span");
+        removeSpan.textContent = "×";
+        removeSpan.style = "color:red; cursor:pointer;";
+        removeSpan.className = "remove-user";
+        li.appendChild(removeSpan);
+
+        ulElement.appendChild(li);
     });
 
     const listBody = document.createElement("div");
     listBody.className = "list-body";
-    listBody.style = "text-align: left; color: #333; padding-left: 20px; padding-right: 20px;";
-    listBody.appendChild(titleContainer);
-    listBody.appendChild(legend);
+    listBody.style = "text-align: left; color: #333; padding-left: 20px; padding-right: 20px;"; // Ajouter des espaces à gauche et à droite
+    listBody.appendChild(titleContainer);  // Ajouter le titre avec le trait rouge
+    listBody.appendChild(legend);  // Ajouter la légende en haut de la liste
     listBody.appendChild(ulElement);
 
     list.appendChild(listBody);
@@ -1954,12 +1981,13 @@ function createUniqueUserList(userIds) {
     deleteListButton.style = "margin-bottom: 25px; display: inline-block;";
     deleteListButton.textContent = "Supprimer";
 
-    deleteListButton.addEventListener("click", function () {
-        deleteUniqueList(uniqueListId, list);
+    deleteListButton.addEventListener("click", function() {
+        deleteUniqueList(uniqueListId, list); // Passez également `list` à la fonction
     });
 
     list.appendChild(deleteListButton);
 
+    // Attacher les écouteurs de suppression utilisateur
     attachUserRemoveListeners(list);
 
     return list;
