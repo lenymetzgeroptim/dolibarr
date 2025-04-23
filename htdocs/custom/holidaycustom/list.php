@@ -202,6 +202,11 @@ if (empty($conf->holidaycustom->enabled)) {
 	exit();
 }
 
+// Ne pas afficher la colonne "Approbateur" si aucun type d'absence ne doit être approuvé
+if(empty($conf->global->HOLIDAY_VALIDATE_TYPE)) {
+	unset($arrayfields['cp.fk_validator']);
+}
+
 /*
  * Actions
  */
@@ -268,7 +273,6 @@ if (empty($reshook)) {
 
 	include DOL_DOCUMENT_ROOT.'/custom/holidaycustom/core/actions_massactions.inc.php';
 }
-
 
 
 
@@ -1004,7 +1008,7 @@ if ($resql) {
 				}
 			}
 			if (!empty($arrayfields['cp.fk_user']['checked'])) {
-				print '<td class="tdoverflowmax150">'.$userstatic->getNomUrlCustom(-1, 'leave').'</td>';
+				print '<td class="tdoverflowmax200">'.$userstatic->getNomUrlCustom(-1, 'leave', 0, 0, 35).'</td>';
 				if (!$i) {
 					$totalarray['nbfield']++;
 				}
