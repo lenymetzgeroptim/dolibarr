@@ -1,0 +1,375 @@
+# Copyright (C) 2022 METZGER Leny <l.metzger@optim-industries.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleFormationHabilitationName'
+ModuleFormationHabilitationName = Formation - Habilitation
+# Module description 'ModuleFormationHabilitationDesc'
+ModuleFormationHabilitationDesc = Permet la gestion des formation et des habilitations des collaborateurs. Gestion des périodes de recyclage avec envoi d'alertes.
+FormationHabilitationArea = Formation - Habilitation
+BoxTitleLatestModifiedHabilitation = Les dernières habilitations modifiées
+BoxTitleLatestModifiedFormation = Les dernières formations modifiées
+BoxTitleLatestModifiedFormation = Les dernières autorisations modifiées
+
+ListOfs = Liste des %s
+NewObj = Nouvelle %s
+Create=Créer
+ListOfsUnlinkedObject = Liste des %s non liées au volet
+ListOfsLinkedObject = Liste des %s liées au volet
+UserFormation = formations du collaborateur
+UserHabilitation = habilitations du collaborateur
+UserAutorisation = autorisations du collaborateur
+UserFormationuser = collaborateurs possèdant la formation
+UserHabilitationuser = collaborateurs possèdant l'habilitation
+UserAutorisationuser = collaborateurs possèdant l'autorisation
+UserFormationUserVolet = formations
+UserHabilitationUserVolet = habilitations
+UserAutorisationUserVolet = autorisations
+UserFormations = Formations des collaborateurs
+UserHabilitations = Habilitations des collaborateurs
+UserAutorisations = Autorisations des collaborateurs
+UserVolet = Volet d'un collaborateur
+UserVolets = Volets des collaborateurs
+
+
+#
+# Admin page
+#
+FormationHabilitationSetup = Paramètrage du module Formation - Habilitation
+Settings = Paramètre
+FormationHabilitationSetupPage = Paramètrage du module Formation - Habilitation
+FamilleFormation = Famille de formation
+SousDomaineFormation = Domaine de formation
+ExamensMedicaux = Examens Médicaux
+DomainesApplication = Domaines d'application
+MotifVisite = Motifs visite médicale
+ApprobationVoletTitle = Approbation des volets
+FORMTIONHABILITATION_APPROBATEURVOLET1 = Approbation n°1
+FORMTIONHABILITATION_APPROBATEURVOLET2 = Approbation n°2
+FORMTIONHABILITATION_APPROBATEURVOLET3 = Approbation n°3
+FORMTIONHABILITATION_APPROBATEURVOLET4 = Approbation n°4
+FORMTIONHABILITATION_APPROBATIONVOLET = Approbation(s) réalisée(s) pour le volet %s
+FormationTitle = Formations
+VoletTitle = Volets
+FORMTIONHABILITATION_SOUPLESSEFORMATION = Activer la période de souplesse
+UserFormationLines = Formations des collaborateurs
+fa-user-graduate_fas_#1f3d89 = Formations des collaborateurs
+fa-graduation-cap_fas_#1f3d89 = Formations
+QualificationProfesionnelle = Qualifications profesionnelle
+FORMTIONHABILITATION_VOLETDURATIONMAX = Durée maximale des volets (en mois)
+
+
+#
+# About page
+#
+About = A propos
+FormationHabilitationAbout = A propos du module Formation - Habilitation
+FormationHabilitationAboutPage = A propos du module Formation - Habilitation
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
+
+
+#
+# Attribut Volet
+# 
+Long_label = Libellé long
+Nb_initial = Nombre d'initial
+Nb_recyclage = Nombre de recyclage
+Nb_passerelle = Nombre de passerelle
+Typevolet = Type
+Validationvolet = Validation
+DictionnaryTypeVoletHelp = 1 = Volet de formation<br>2 = Volet d'habilitation<br>3 = Volet d'autorisation<br>4 = Autres
+DictionnaryValidationVoletHelp = 1 = Approbation n°1 uniquement<br>2 = Approbation n°2 uniquement<br>3 = Approbation n°3 uniquement<br>4 = Approbation n°4 uniquement<br>5 = Approbation n°1 et 2 uniquement<br>6 = Approbation n°1 et 3 uniquement<br>7 = Approbation n°1 et 4 uniquement<br>8 = Approbation n°2 et 3 uniquement<br>9 = Approbation n°2 et 4 uniquement<br>10 = Approbation n°3 et 4 uniquement<br>11 = Approbation n°1, 2 et 3<br>12 = Approbation n°1, 2 et 4<br>13 = Approbation n°2, 3, 4<br>14 = Approbation n°1, 2, 3 et 4<br>
+ApprobationVolet = En cours d'approbation
+ApprobationVoletGroupe = Approbation du groupe %s en attente
+ApprobationVoletCollaborateur = Approbation du collaborateur en attente
+DictionnaryModelHelp = 1 = Identité<br>2 = Formation<br>3 = Entreprise<br>4 = Habiliation<br>5 = Médical<br>6 = Autorisation
+GeneratePDF = Générer PDF
+NommagePDF = Nommage du pdf
+TypeVolet = Type
+ModelPDF = Modèle du pdf
+LongLabel = Libellé long
+QualifPro = Qualification profesionnelle
+ClotureOtherVolet = Clôture des anciens volets
+
+
+#
+# Attribut Formation
+# 
+RefExterne = Réf. Externe 
+NombreHeure = Durée
+CoutFormation = Coût estimé
+PeriodeRecyclage = Période de recyclage 
+PeriodeSouplesse = Période de souplesse
+PeriodeSouplesseBloquant = Période de souplesse bloquante
+CoutMobilisation = Coût mobilisation
+CoutPedagogique = Coût pédagogique
+CoutAnnexe = Coût annexe
+CoutTotal = Coût total
+Prerequis = Prérequis
+FormationsSuperieur = Formations supérieures
+SousDomaine = Sous domaine
+DelaisProgrammation = Délais programmation
+PrevuPIF = Prévue au PIF
+NonRenouvelee = Non renouvelée
+
+
+#
+# Attribut Habiliation _ Autorisation
+# 
+ValiditeEmployeur = Durée de validité de l'employeur
+DomaineApplication = Domaine d'application (défaut)
+
+
+#
+# Attribut Visites Medicales
+# 
+VisiteMedical = Visite Médicale
+VisiteMedicals = Visites médicale
+ObjetVisite = Objet
+MotifVisite = Motif ponctuel
+DemandeurVisite = Demandeur
+DateVisite = Date de la visite
+DateFinValidite = Date de fin de validité 
+CoutVisite = Coût
+NatureVisite = Nature visite médicale
+Utilisateur = Collaborateur
+
+#
+# Attribut Convocation
+# 
+NatureConvoc = Nature
+CentreMedecine = Centre de medecine
+ExamenARéaliser = Examen(s) à réaliser
+OrganismeConvoc = Organisme / Employeur
+
+
+#
+# Attribut User Formation
+# 
+DateDebutFormation = Date début
+DateFinFormation = Date de fin
+DateFinValiditeFormation = Fin de validité
+InterneExterne = Effectuée en
+Organisme = Organisme / Formatteur
+Formateur = Organisme / Formateur
+Organisme2 = Organisme
+Formateur2 = Formateur
+HeureDebut = Heure début
+HeureFin = Heure de fin
+LieuFormation = Lieu de formation
+
+
+#
+# Attribut User Habilitation
+# 
+DateHabilitation = Date d'obtention de l'habilitation
+DateFinHabilitation = Date de fin de validité de la formation
+
+
+#
+# Attribut User Autorisation
+# 
+DateAutorisation = Date d'obtention de l'autorisation
+DateFinAutorisation = Date de fin de validité de la formation
+
+
+#
+# Attribut Volet
+# 
+DateDebutVolet = Date début
+DateFinVolet = Date de fin de validité
+MotifRefus = Motif du refus
+DateDebutPrimo = Date début primo intervenant
+DateFinPrimo = Date fin primo intervenant
+
+
+#
+# Page de confirmation
+#
+ValidateFormation = Valider la formation
+ValidateHabilitation = Valider l'habilitation
+ValidateAutorisation = Valider l'autorisation
+ConfirmValidateFormation = Êtes-vous sûr de vouloir valider la formation ?
+ConfirmValidateHabilitation = Êtes-vous sûr de vouloir valider l'habilitation ?
+ConfirmValidateAutorisation = Êtes-vous sûr de vouloir valider l'autorisation ?
+DeleteFormation = Supprimer la formation
+DeleteHabilitation = Supprimer l'habilitation
+DeleteAutorisation = Supprimer l'autorisation
+ClotureFormation = Clôturer la formation
+ClotureHabilitation = Clôturer l'habilitation
+ClotureAutorisation = Clôturer l'autorisation
+ConfirmCloseFormation = Êtes-vous sûr de vouloir clôturer la formation ?
+ConfirmCloseHabilitation = Êtes-vous sûr de vouloir clôturer l'habilitation ?
+ConfirmCloseAutorisation = Êtes-vous sûr de vouloir clôturer l'autorisation ?
+ProgrammerFormation = Programmer la formation
+ConfirmProgrammerFormation = Êtes-vous sûr de vouloir programmer la formation ?
+AddLine = Ajout d'une formation au collaborateur
+ConfirmAddLine = Êtes-vous sûr de vouloir ajouter cette formation ?
+ConfirmAddLineWithDeletion = Êtes-vous sûr de vouloir ajouter cette formation ? Cela clôturera les formations %s
+ConfirmAddLineWithProgrammation = Êtes-vous sûr de vouloir ajouter cette formation ? Cela reprogrammera les formations %s
+ValiderFormation = Valider la formation
+ConfirmValiderFormation = Êtes-vous sûr de vouloir valider la formation ?
+ConfirmValiderFormation2 = Êtes-vous sûr de vouloir valider la formation ? Cela clôturera les formations %s
+ConfirmMassValidationHabilitationQuestion = Etes vous sûrs de vouloir valider les %s enregistrement(s) sélectionné(s) ? Un nouveau volet %s sera émis<br>Les habilitations suivantes seront clôturées : %s
+ConfirmMassValidationAutorisationQuestion = Etes vous sûrs de vouloir valider les %s enregistrement(s) sélectionné(s) ? Un nouveau volet %s sera émis<br>Les autorisations suivantes seront clôturées : %s
+RecordsValidated = %s enregistrement(s) validés
+RecordValidated = %s enregistrement validé
+NoRecordValidated = Aucun enregistrement validé
+ImpossibleToValidateWithThisStatut = Impossible de valider %s à cause du statut
+ValidateAndGenerateUserVolet = Valider et générer volet
+ConfirmValidateUserVoletWithClose = Êtes-vous sûr de vouloir valider le volet ? <strong>Un volet actif sera clôturé</strong>
+ConfirmValidateUserVolet = Êtes-vous sûr de vouloir valider le volet ?
+ValidateUserVolet = Valider le volet
+ConfirmCloseVM = Êtes-vous sûr de vouloir clôturer la visite médicale ?
+ConfirmMassCloseQuestion = Etes vous sûrs de vouloir valider les %s enregistrement(s) sélectionné(s) ?
+ConfirmMassClose = Confirmation de clôture en masse
+RecordsClosed=%s enregistrement(s) clôturé(s)
+RecordClosed=Enregistrement clôturée
+NoRecordClosed=Aucun enregistrement clôturé
+ConfirmGenerateAutohabilitation = Etes vous sûrs de vouloir générer les habilitation(s) sélectionnée(s) ?
+ConfirmGenerateAutoautorisation = Etes vous sûrs de vouloir générer les autorisation(s) sélectionnée(s) ?
+RefuseUserVolet = Refuser le volet
+ConfirmRefuseUserVolet = Êtes-vous sûr de vouloir refuser le volet ? Il sera renvoyer au 1er approbateur
+
+
+#
+# Erreur
+#
+ErrorPrerequisFormation = Le collaborateur ne possède pas les formations requises
+ErrorPrerequisAptitude = Le collaborateur ne possède pas l'aptitude médicale %s qui est requise
+ErrorFormationAlreadyExist = Impossible d'ajouter cette formation car le collaborateur la possède déja (Il faut forcer la création)
+ErrorPrerequisFormationAptitude = Le collaborateur ne possède pas les prérequis
+ErrorUserHasSameUserHabilitation = Le collaborateur possède déja l'habilitation %s avec les mêmes dates
+ErrorUserHasSameUserAutorisation = Le collaborateur possède déja l'autorisation %s avec les mêmes dates
+ErrorFormationUnsatisfate = Impossible de valider la formation car le résultat est non satisfaisant
+
+#
+# Email
+#
+EMailTextHabilitationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les habilitations suivantes sont à valider pour %s : %s<br><br>Cordialement
+EMailTextAutorisationCreation = Bonjour,<br><br>Suite à la validation de la formation %s, les autorisations suivantes sont à valider pour %s : %s<br><br>Cordialement
+EMailTextVisiteMedicaleConditionnel = Bonjour,<br><br>La visite médicale de %s %s est conditionnelle, vous pouvez la consulter %s.<br>Commentaire : %s<br><br>Cordialement
+EMailTextUserVoletCreate = Bonjour,<br><br>Le volet %s de %s a été créé par %s. Un membre du groupe %s doit le valider %s<br><br>Cordialement
+EMailTextUserVoletNeedValidate = Bonjour,<br><br>Le volet %s de %s a été validé par %s. Un membre du groupe %s doit le valider %s<br><br>Cordialement
+EMailTextUserVoletValidate = Bonjour,<br><br>Votre volet %s a été validé par %s<br><br>Cordialement
+EMailTextUserVoletValidateWhenCreate = Bonjour,<br><br>Un nouveau volet %s vous a été assigné<br><br>Cordialement
+EMailTextUserVoletValidateUser = Bonjour,<br><br>Votre volet %s a été validé par %s. Vous devez également le valider<br><br>Cordialement
+EMailTextUserVoletRefus = Bonjour,<br><br>Le volet %s a été refusé par %s pour le motif suivant : %s<br><br>Cordialement
+EMailTextVMExpire = Bonjour,<br><br>La visite médicale %s de %s a expirée<br><br>Cordialement
+EMailTextVMExpireForUser = Bonjour,<br><br>Votre visite médicale %s a expirée<br><br>Cordialement
+EMailTextVMExpireWarning = Bonjour,<br><br>La visite médicale %s de %s expire dans moins de 2 mois<br><br>Cordialement
+EMailTextUserVoletExpire = Bonjour,<br><br>Le volet %s de %s a expiré<br><br>Cordialement
+EMailTextUserVoletExpireForUser = Bonjour,<br><br>Votre volet %s a expiré<br><br>Cordialement
+EMailTextUserVoletExpireRespAntenne = Bonjour,<br><br>Le volet %s de %s a expiré. Vous pouvez en générer un nouveau %s<br><br>Cordialement
+EMailTextFormationClose = Bonjour,<br><br>La formation %s de %s a été cloturée, vous pouvez consulter la liste des formations %s<br><br>Cordialement
+EMailTextFormationExpire = Bonjour,<br><br>La formation %s de %s a expirée, vous pouvez consulter la liste des formations %s<br><br>Cordialement
+EMailTextFormationToProgram = Bonjour,<br><br>La formation %s de %s est a programmer, vous pouvez consulter la liste des formations %s<br><br>Cordialement
+EMailTextAutorisationClose = Bonjour,<br><br>L'autorisation %s de %s a été cloturée, vous pouvez consulter la liste des autorisations %s<br><br>Cordialement
+EMailTextAutorisationExpire = Bonjour,<br><br>L'autorisation %s de %s a expirée, vous pouvez consulter la liste des autorisations %s<br><br>Cordialement
+EMailTextAutorisationExpireForUser = Bonjour,<br><br>Votre autorisation %s a expirée, vous pouvez consulter la liste de vos autorisations %s<br><br>Cordialement
+EMailTextHabilitationClose = Bonjour,<br><br>L'habilitation %s de %s a été cloturée, vous pouvez consulter la liste des habilitations %s<br><br>Cordialement
+EMailTextHabilitationExpire = Bonjour,<br><br>L'habilitation %s de %s a expirée, vous pouvez consulter la liste des habilitations %s<br><br>Cordialement
+EMailTextHabilitationExpireForUser = Bonjour,<br><br>Votre habilitation %s a expirée, vous pouvez consulter la liste de vos habilitations %s<br><br>Cordialement
+
+
+#
+# Evenement Agenda
+#
+FORMATIONHABILITATION_VALIDATE_WITHOUT_USERInDolibarr = Validation du volet %s
+FORMATIONHABILITATION_USERVOLET_VALIDATEUSERInDolibarr = Validation du volet %s par le collaborateur
+FORMATIONHABILITATION_USERVOLET_VALIDATEInDolibarr = Validation du volet %s par le groupe %s
+CLOTUREInDolibarr = Enregistrement %s clôturé
+REOPENInDolibarr = Enregistrement %s rouvert
+CLOSEInDolibarr = Enregistrement %s clôturé
+EXPIREInDolibarr = Enregistrement %s expiré
+SUSPENDInDolibarr = Enregistrement %s suspendu
+UNSUSPENDInDolibarr = Enregistrement %s non suspendu
+FORMATIONHABILITATION_PREREQUISFOMRATION_CREATEInDolibarr = Création d'un prérequis
+FORMATIONHABILITATION_PREREQUISFOMRATION_MODIFYInDolibarr = Modification d'un prérequis
+FORMATIONHABILITATION_PREREQUISFOMRATION_DELETEInDolibarr = Suppression d'un prérequis
+FORMATIONHABILITATION_USERVOLET_ADDLINKFormationInDolibarr = Liaison de la formation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_ADDLINKHabilitationInDolibarr = Liaison de l'habilitation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_ADDLINKAutorisationInDolibarr = Liaison de l'autorisation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_DELLINKFormationInDolibarr = Suppression de la liaison de la formation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_DELLINKHabilitationInDolibarr = Suppression de la liaison de l'habilitation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_DELLINKAutorisationInDolibarr = Suppression de la liaison de l'autorisation %s sur le volet %s
+FORMATIONHABILITATION_USERVOLET_REFUSInDolibarr = Refus du volet pour la raison suivante : %s
+FORMATIONHABILITATION_UPDATEDOMAINEAPPLICATION_InDolibarr = Modification du domaine d'application de la ligne %s
+FORMATIONHABILITATION_USERVOLET_CANCELInDolibarr = Enregistrement %s clôturé
+
+USERFORMATION_CREATE_InDolibarr = Formation %s attribuée à %s
+USERFORMATION_UPDATE_InDolibarr = La formation %s de %s a été modifiée
+USERFORMATION_VALIDATE_InDolibarr = La formation %s de %s a été validée
+USERFORMATION_PROGRAM_InDolibarr = La formation %s de %s a été programmée
+USERFORMATION_TOPROGRAM_InDolibarr = La formation %s de %s est à programmer
+USERFORMATION_CLOSE_InDolibarr = La formation %s de %s a été clôturée
+USERFORMATION_EXPIRE_InDolibarr = La formation %s de %s a expirée
+USERFORMATION_SUSPEND_InDolibarr = La formation %s de %s a été suspendue
+USERFORMATION_UNSUSPEND_InDolibarr = La formation %s de %s n'est plus suspendue
+USERFORMATION_DELETE_InDolibarr = La formation %s de %s a été supprimée
+
+USERHABILITATION_CREATE_InDolibarr = Habilitation %s attribuée à %s
+USERHABILITATION_FORCECREATE_InDolibarr = Habilitation %s attribuée à %s (Création forcé)
+USERHABILITATION_AUTOCREATE_InDolibarr = Habilitation %s automatiquement attribuée à %s
+USERHABILITATION_UPDATE_InDolibarr = L'habilitation %s de %s a été modifiée
+USERHABILITATION_VALIDATE_InDolibarr = L'habilitation %s de %s a été validée
+USERHABILITATION_CLOSE_InDolibarr = L'habilitation %s de %s a été clôturée
+USERHABILITATION_EXPIRE_InDolibarr = L'habilitation %s de %s a expirée
+USERHABILITATION_SUSPEND_InDolibarr = L'habilitation %s de %s a été suspendue
+USERHABILITATION_UNSUSPEND_InDolibarr = L'habilitation %s de %s n'est plus suspendue
+USERHABILITATION_DELETE_InDolibarr = L'habilitation %s de %s a été supprimée
+
+USERAUTORISATION_CREATE_InDolibarr = Autorisation %s attribuée à %s
+USERAUTORISATION_FORCECREATE_InDolibarr = Habilitation %s attribuée à %s (Création forcé)
+USERAUTORISATION_AUTOCREATE_InDolibarr = Autorisation %s automatiquement attribuée à %s
+USERAUTORISATION_UPDATE_InDolibarr = L'autorisation %s de %s a été modifiée
+USERAUTORISATION_VALIDATE_InDolibarr = L'autorisation %s de %s a été validée
+USERAUTORISATION_CLOSE_InDolibarr = L'autorisation %s de %s a été clôturée
+USERAUTORISATION_EXPIRE_InDolibarr = L'autorisation %s de %s a expirée
+USERAUTORISATION_SUSPEND_InDolibarr = L'autorisation %s de %s a été suspendue
+USERAUTORISATION_UNSUSPEND_InDolibarr = L'autorisation %s de %s n'est plus suspendue
+USERAUTORISATION_DELETE_InDolibarr = L'autorisation %s de %s a été supprimée
+
+ActionAC_USERFORMATION = Formation du collaborateur
+ActionAC_USERAUTORISATION = Autorisation du collaborateur
+ActionAC_USERHABILITATION = Habilitation du collaborateur
+
+
+
+#
+# Autres
+#
+ForceCreation = Forcer la création
+PrerequisObjects = Prérequis
+PrerequisObjectsFormation = Prérequis de formation
+PrerequisObjectsVisiteMedicale = Prérequis de nature de visite médicale
+PrerequisObjectsAutre = Prérequis autres
+Suspend = Suspendu
+SuspendLong = Suspendu pour inaptitude médicale
+GenerateAuto = Génération automatique
+habilitationtogenerate = Habilitation(s) à générer
+autorisationtogenerate = Autorisation(s) à générer
+Refuse = Refuser
+NotificationRespAntenne = Notifier le responsable d'antenne de la creation d'habilitations/autorisation
+GenerationVoletFormation = Génération du volet de formation
+GenerationAndCloseVoletFormation = Génération(s) et clôture(s) des volets de formation

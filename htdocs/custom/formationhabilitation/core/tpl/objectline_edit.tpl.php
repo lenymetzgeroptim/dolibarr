@@ -32,8 +32,8 @@
  * $canchangeproduct (0 by default, 1 to allow to change the product if it is a predefined product)
  */
 
-$permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
-$permissiontoreadCoutMobilisation = $user->rights->formationhabilitation->formation->readcoutmobilisation;
+global $object, $objectline;
+global $permissiontoaddline;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
@@ -41,33 +41,58 @@ if (empty($object) || !is_object($object)) {
 	exit;
 }
 
-$objectline = new ObservationCompta($this->db);
-$formother = new FormOther($db);
+if (!$permissiontoaddline) {
+	exit;
+}
 
+$objectline->fields = dol_sort_array($objectline->fields, 'position');
+
+if($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation') {
+	unset($line->fields['status']['arrayofkeyval'][2]);
+	unset($line->fields['status']['arrayofkeyval'][3]);
+}
 
 print "<!-- BEGIN PHP TEMPLATE objectline_edit.tpl.php -->\n";
 
 print '<tr class="oddeven tredited">';
 print '<input type="hidden" name="lineid" value="'.$line->id.'">';
 foreach($objectline->fields as $key => $val){
-	if($key != 'date_start' && $key != 'date_end' && $key != 'type' && $key != 'observation'){
+	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4) {
+		continue;
+	}
+
+	if(($key == 'fk_societe' && $line->interne_externe == 2) || ($key == 'formateur' && $line->interne_externe != 2)) {
+		print '<td style="display: none;" class="center linecol'.$key.' nowrap">'.$objectline->showInputField($val, $key, $line->$key, 'form="addline"').'</td>';
 		continue;
 	}
 	
-	print '<td class="center linecol'.$key.' nowrap">';
-	if($key == 'date_start' || $key == 'date_end') {
-		print $formother->select_month(dol_print_date($line->$key, '%m'), $key.'month', 1, 1, 'minwidth50 valignmiddle', true);
-		print ' ';
-		print $formother->select_year(dol_print_date($line->$key, '%Y'), $key.'year', 0, 1, 5, 0, 0, '', 'minwidth50 maxwidth75imp valignmiddle', true);
+	$cssforfield = (!empty($val['css']) ? $val['css'] : 'center');
+	print '<td class="linecol'.$key.' nowrap '.$cssforfield.'">';
+	if($key == 'ref'){
+		print $line->getNomUrl(0, 'nolink', 1);
 	}
-	else { 
-		print $line->showInputField($val, $key, $line->$key);
+	elseif($object->element == 'formation' && $key == 'fk_user'){
+		print $line->showOutputField($val, $key, $line->$key);
+		print '<input type="hidden" id="'.$key.'" name="'.$key.'" value="'.$line->$key.'"></input>';
+	}
+	elseif($object->element == 'user' && ($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation')){
+		print $line->showOutputField($val, $key, $line->$key);
+		print '<input type="hidden" id="'.$key.'" name="'.$key.'" value="'.$line->$key.'"></input>';
+	}
+	elseif($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total' || $key == 'date_finvalidite_formation' || $key == 'date_fin_autorisation' || $key == 'date_fin_habilitation'){
+		print $line->showOutputField($val, $key, $line->$key);
+	}
+	elseif($key == 'status') {
+		print $line->getLibStatut(2);
+	}
+	else {
+		print $line->showInputField($val, $key, $line->$key, 'form="addline"');
 	}
 	print '</td>';
 }
 
 print '<td class="center valignmiddle" colspan="3">';
-print '<input type="submit" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save" value="'.$langs->trans("Save").'"><br>';
+print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save" value="'.$langs->trans("Save").'">';
 print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
 print '</td>';
 
