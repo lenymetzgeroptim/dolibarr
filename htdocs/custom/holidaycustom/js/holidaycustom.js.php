@@ -99,6 +99,7 @@ if (empty($dolibarr_nocache)) {
 
 $holiday = new Holiday($db);
 $holidayTypeNeedHour = $holiday->holidayTypesInHour();
+$holidayTypeHelfday = $holiday->holidayTypesHalfday();
 
 ?>
 
@@ -136,6 +137,16 @@ function checkHourField() {
     }
 }
 
+function checkHalfdayField() {
+    if (<?php echo '["' . implode('","', $holidayTypeHelfday) . '"]' ?>.includes($('#type').val())) {
+        $('#starthalfday').prop("disabled", false).trigger('change.select2');
+        $('#endhalfday').prop("disabled", false).trigger('change.select2');
+    } else {
+        $('#starthalfday').val("morning").prop("disabled", true).trigger('change');
+        $('#endhalfday').val("afternoon").prop("disabled", true).trigger('change');
+    }
+}
+
 function FillDateFin() {
     let dateDebut = $("#date_debut_").val(); // Récupère la date sous format "dd/MM/yyyy"
 
@@ -153,8 +164,10 @@ function FillDateFin() {
 
 $(document).ready(function () {
     checkHourField();
+    checkHalfdayField();
 
     $('select#type').change(checkHourField);
+    $('select#type').change(checkHalfdayField);
     // const inputs_date = document.querySelectorAll("#date_debut_day, #date_fin_day, #date_debut_month, #date_fin_month, #date_debut_year, #date_fin_year");
     const inputs_date = document.querySelectorAll("#date_debut_day, #date_fin_day");
     inputs_date.forEach((input) => {

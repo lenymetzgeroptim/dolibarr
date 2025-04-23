@@ -226,7 +226,7 @@ class modHolidaycustom extends DolibarrModules
 			// Label of tables
 			'tablib'=>array("DictionaryHolidayTypes", "DictionaryPublicHolidays"),
 			// Request to select fields
-			'tabsql'=>array("SELECT h.rowid as rowid, h.code, h.code_silae, h.label, h.affect, h.delay, h.newbymonth, h.fk_country as country_id, h.in_hour, h.droit_rtt, c.code as country_code, c.label as 
+			'tabsql'=>array("SELECT h.rowid as rowid, h.code, h.code_silae, h.label, h.affect, h.delay, h.newbymonth, h.fk_country as country_id, h.in_hour, h.halfday, h.droit_rtt, c.code as country_code, c.label as 
 			country, h.active FROM ".MAIN_DB_PREFIX."c_holiday_types as h LEFT JOIN ".MAIN_DB_PREFIX."c_country as c ON h.fk_country=c.rowid WHERE 
 			(h.code <> 'CP_ANC_ACQUIS' AND h.code <> 'CP_ANC_PRIS' AND h.code <> 'CP_FRAC_ACQUIS' AND h.code <> 'CP_FRAC_PRIS' AND h.code <> 'CP_N_ACQUIS' 
 			AND h.code <> 'CP_N_PRIS' AND h.code <> 'CP_N-1_ACQUIS' AND h.code <> 'CP_N-1_PRIS' AND h.code <> 'RTT_ACQUIS' AND h.code <> 'RTT_PRIS')", 
@@ -234,11 +234,11 @@ class modHolidaycustom extends DolibarrModules
 			// Sort order
 			'tabsqlsort'=>array("country ASC, code ASC", "country, year ASC, month ASC, day ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("code,code_silae,label,affect,delay,newbymonth,country_id,in_hour,droit_rtt,country", "code,dayrule,year,month,day,country_id,country"),
+			'tabfield'=>array("code,code_silae,label,affect,delay,newbymonth,country_id,in_hour,halfday,droit_rtt,country", "code,dayrule,year,month,day,country_id,country"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("code,code_silae,label,affect,delay,newbymonth,in_hour,droit_rtt,country", "code,dayrule,day,month,year,country"),
+			'tabfieldvalue'=>array("code,code_silae,label,affect,delay,newbymonth,in_hour,halfday,droit_rtt,country", "code,dayrule,day,month,year,country"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("code,code_silae,label,affect,delay,newbymonth,in_hour,droit_rtt,fk_country", "code,dayrule,day,month,year,fk_country"),
+			'tabfieldinsert'=>array("code,code_silae,label,affect,delay,newbymonth,in_hour,halfday,droit_rtt,fk_country", "code,dayrule,day,month,year,fk_country"),
 			// Name of columns with primary key (try to always name it 'rowid')
 			'tabrowid'=>array("", "id"),
 			// Condition to show each dictionary

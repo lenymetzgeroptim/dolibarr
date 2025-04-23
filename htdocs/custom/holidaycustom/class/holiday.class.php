@@ -4017,6 +4017,40 @@ class Holiday extends CommonObject
 	}
 
 	/**
+	 *      Does the type of holiday can be halfday?
+	 *
+	 *      @return     int         <0 if KO, 0 if no, 1 if yes
+	 */
+	public function holidayTypeCanHalfday($type)
+	{
+		global $user;
+
+		if(empty($type)) {
+			return -1;
+		}
+
+		$sql = "SELECT h.halfday";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
+		if(is_numeric($type)) {
+			$sql .= " WHERE h.rowid = ".$type;
+		}
+		else {
+			$sql .= " WHERE h.code = '".$type."'";
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$obj = $this->db->fetch_object($resql);
+			$this->db->free($resql);
+			return $obj->halfday;
+		} else {
+			dol_print_error($this->db);
+			$this->error = $this->db->error();
+			return -1;
+		}
+	}
+
+	/**
 	 *      List of holiday in hour
 	 *
 	 *      @return     array         <0 if KO, array of type if no
@@ -4029,6 +4063,36 @@ class Holiday extends CommonObject
 		$sql = "SELECT h.rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
 		$sql .= " WHERE h.in_hour = 1";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			dol_print_error($this->db);
+			$this->error = $this->db->error();
+			return -1;
+		}
+	}
+
+	
+	/**
+	 *      List of holiday that can be taken as half-days
+	 *
+	 *      @return     array         <0 if KO, array of type if no
+	 */
+	public function holidayTypesHalfday()
+	{
+		global $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
+		$sql .= " WHERE h.halfday = 1";
 
 		$resql = $this->db->query($sql);
 		if ($resql) {

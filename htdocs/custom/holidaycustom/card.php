@@ -358,6 +358,7 @@ if (empty($reshook)) {
 			}
 
 			$needHour = $object->holidayTypeNeedHour($type);
+			$canHalfday = $object->holidayTypeCanHalfday($type);
 
 			// If no hour and hour is required
 			if (empty($duration_hour) && $needHour == 1 && $date_debut == $date_fin && (!$conf->global->HOIDAY_AUTO_HOUR_WHOLE_DAY || $halfday != 0)) {
@@ -429,7 +430,13 @@ if (empty($reshook)) {
 				$object->fk_type = $type;
 				$object->date_debut = $date_debut;
 				$object->date_fin = $date_fin;
-				$object->halfday = $halfday;
+
+				if($canHalfday) {
+					$object->halfday = $halfday;
+				}
+				else {
+					$object->halfday = 0;
+				}
 
 				// Gestion des approbateurs
 				if(!$conf->global->HOLIDAY_FDT_APPROVER && (in_array($type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
@@ -931,6 +938,7 @@ if (empty($reshook)) {
 				}
 
 				$needHour = $object->holidayTypeNeedHour((int)$object->fk_type);
+				$canHalfday = $object->holidayTypeCanHalfday($type);
 
 				// If no hour and hour is required
 				if (empty($duration_hour) && $needHour == 1 && $date_debut == $date_fin && (!$conf->global->HOIDAY_AUTO_HOUR_WHOLE_DAY || $halfday != 0)) {
@@ -1054,7 +1062,13 @@ if (empty($reshook)) {
 						$object->array_options['options_fk_validator2'] = null;
 					}
 				}
-				$object->halfday = $halfday;
+
+				if($canHalfday) {
+					$object->halfday = $halfday;
+				}
+				else {
+					$object->halfday = 0;
+				}
 
 				// Fill array 'array_options' with data from add form
 				$ret = $extrafields->setOptionalsFromPost(null, $object, '@GETPOSTISSET');
