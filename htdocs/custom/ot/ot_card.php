@@ -206,6 +206,8 @@ try {
             $x = isset($item['x']) ? intval($item['x']) : 0;
             $y = isset($item['y']) ? intval($item['y']) : 0;
             $cellId = isset($item['id']) ? $db->escape($item['id']) : '';
+            $role = isset($item['role']) ? $db->escape($item['role']) : '';
+            $userId = isset($item['userId']) ? intval($item['userId']) : null;
 
             $receivedCellIds[] = $cellId; // Stocker les ID reçus
 
@@ -233,6 +235,34 @@ try {
                     $existingCellIds[$cellId] = $rowid;
                 }
             }
+
+            // Gestion des rôles principaux (RA, Q3, PCR)
+        if ($type === 'cardprincipale' && in_array($role, ['RA', 'Q3', 'PCR'])) {
+            // Vérifier si une cellule existe déjà pour ce rôle
+            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND type = '$type' AND title = '$role'";
+            $resql = $db->query($sql);
+            $row = $resql ? $db->fetch_object($resql) : null;
+
+            if (!$row) {
+                // Insérer une nouvelle cellule
+                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule (ot_id, type, title) 
+                        VALUES ($otId, '$type', '$role')";
+                if (!$db->query($sql)) {
+                    throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule : " . $db->lasterror());
+                }
+                $otCelluleId = $db->last_insert_id(MAIN_DB_PREFIX . 'ot_ot_cellule');
+
+                // Insérer dans ot_ot_cellule_donne
+                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user, role) 
+                        VALUES ($otCelluleId, $userId, '$role')";
+                if (!$db->query($sql)) {
+                    throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule_donne : " . $db->lasterror());
+                }
+            } else {
+                // Si la cellule existe déjà, ne rien faire (pas de mise à jour)
+                continue;
+            }
+        }
 
             // Gestion des userId pour le type 'card' (ajout ou mise à jour)
             if ($type === 'card' && isset($item['userId'])) {
@@ -1112,6 +1142,41 @@ if ($resql) {
     }
 }
 
+// Ajouter les utilisateurs aux cellules existantes
+foreach ($cellData as $cell) {
+    // Vérifier si la cellule est valide
+    if (!is_object($cell) || !isset($cell->rowid)) {
+        continue;
+    }
+
+    // Ajouter les informations utilisateur uniquement pour les cards principales
+    if ($cell->type === 'cardprincipale') {
+        $sql = "SELECT 
+                    u.rowid AS userId,
+                    u.firstname,
+                    u.lastname,
+                    u.office_phone AS phone
+                FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne AS ocd
+                JOIN " . MAIN_DB_PREFIX . "user AS u ON ocd.fk_user = u.rowid
+                WHERE ocd.ot_cellule_id = " . intval($cell->rowid);
+
+        $resql = $db->query($sql);
+
+        if ($resql) {
+            $user = $db->fetch_object($resql);
+            if ($user) {
+                // Ajouter les informations utilisateur à la cellule
+                $cell->userId = $user->userId;
+                $cell->firstname = $user->firstname;
+                $cell->lastname = $user->lastname;
+                $cell->phone = $user->phone ?? 'Non défini';
+            }
+        } else {
+            echo "Erreur SQL : " . $db->lasterror();
+        }
+    }
+}
+
 // Récupérer les sous-traitants liés à l'OT
 $sql = "SELECT ots.rowid, ots.fk_socpeople, ots.fk_societe, ots.fonction, ots.contrat, ots.habilitation,
                sp.firstname, sp.lastname, s.nom AS societe_nom
@@ -1717,7 +1782,7 @@ function displayUserList() {
                                     <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
                                     <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
                                     <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
-                                    <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
+                                    
                                 `;
                                 ulElement.appendChild(li);
                             });
@@ -1999,48 +2064,79 @@ function deleteUniqueList(uniqueListId, list) {
 }
 
 
-    // Fonction pour mettre à jour les cartes avec des données dynamiques
-    function updateCards() {
-        var cardHeaders = {
-            "ResponsableAffaire": null,
-            "ResponsableQ3SE": null,
-            "PCRReferent": null
-        };
+function updateCards() {
+    var cardHeaders = {
+        "ResponsableAffaire": null,
+        "ResponsableQ3SE": null,
+        "PCRReferent": null
+    };
 
-        jsdata.forEach(function(contact) {
-            switch(contact.fk_c_type_contact) {
-                case "160":
-                    cardHeaders["ResponsableAffaire"] = contact;
+    // Vérifier si les données sont dans `cellData`
+    cellData.forEach(function(cell) {
+        if (cell.type === "cardprincipale" && cell.title) {
+            switch (cell.title) {
+                case "RA":
+                    cardHeaders["ResponsableAffaire"] = cell;
                     break;
-                case "1032000":
-                    cardHeaders["ResponsableQ3SE"] = contact;
+                case "Q3":
+                    cardHeaders["ResponsableQ3SE"] = cell;
                     break;
-                case "1032001":
-                    cardHeaders["PCRReferent"] = contact;
+                case "PCR":
+                    cardHeaders["PCRReferent"] = cell;
                     break;
             }
-        });
+        }
+    });
 
-        for (var role in cardHeaders) {
-            if (cardHeaders.hasOwnProperty(role)) {
-                var contact = cardHeaders[role];
-                if (contact) {
-                    var selector = `.card[data-role="${role}"]`;
-                    var card = document.querySelector(selector);
-                    if (card) {
-                        var cardBody = card.querySelector(".card-body");
-                        if (cardBody) {
+    // Si les données ne sont pas dans `cellData`, fallback sur `jsdata`
+    jsdata.forEach(function(contact) {
+        if (!cardHeaders["ResponsableAffaire"] && contact.fk_c_type_contact === "160") {
+            cardHeaders["ResponsableAffaire"] = contact;
+        }
+        if (!cardHeaders["ResponsableQ3SE"] && contact.fk_c_type_contact === "1032000") {
+            cardHeaders["ResponsableQ3SE"] = contact;
+        }
+        if (!cardHeaders["PCRReferent"] && contact.fk_c_type_contact === "1032001") {
+            cardHeaders["PCRReferent"] = contact;
+        }
+    });
+
+    // Mettre à jour les cartes dans le DOM
+    for (var role in cardHeaders) {
+        if (cardHeaders.hasOwnProperty(role)) {
+            var contact = cardHeaders[role];
+            if (contact) {
+                var selector = `.card[data-role="${role}"]`;
+                var card = document.querySelector(selector);
+                if (card) {
+                    var cardBody = card.querySelector(".card-body");
+                    if (cardBody) {
+                        // Si les données viennent de `cellData`, afficher les informations correspondantes
+                        if (contact.type === "cardprincipale") {
+                            cardBody.innerHTML = `
+                                <p><strong>${role}</strong></p>
+                                <p>${contact.userName || "Nom inconnu"}</p>
+                                <p class="phone">Téléphone : ${contact.phone || "N/A"}</p>
+                            `;
+                        } else {
+                            // Sinon, afficher les données depuis `jsdata`
                             cardBody.innerHTML = `
                                 <p><strong>${role}</strong></p>
                                 <p>${contact.firstname} ${contact.lastname}</p>
                                 <p class="phone">Téléphone : ${contact.phone || "N/A"}</p>
                             `;
                         }
+
+                        // Désactiver les champs pour empêcher la modification
+                        card.querySelectorAll("input, select, button").forEach(function(field) {
+                            field.disabled = true;
+                        });
                     }
                 }
             }
         }
     }
+}
 
  function attachDeleteListener(card) {
     var deleteButton = card.querySelector(".delete-button");
@@ -2655,6 +2751,24 @@ function saveData() {
             };
 
             cardsData.push(uniqueListCoordinates); // Ajouter la liste unique à cardsData
+        }
+    });
+
+// Ajouter les informations des rôles principaux (ResponsableAffaire, ResponsableQ3SE, PCRReferent)
+    const roleMapping = {
+        "160": "RA", // ResponsableAffaire
+        "1032000": "Q3", // ResponsableQ3SE
+        "1032001": "PCR" // PCRReferent
+    };
+
+    jsdata.forEach(function(contact) {
+        if (roleMapping[contact.fk_c_type_contact]) {
+            cardsData.push({
+                type: "cardprincipale", // Type fixe
+                role: roleMapping[contact.fk_c_type_contact], // Nom abrégé du rôle
+                userId: contact.fk_socpeople, // ID de utilisateur
+                userName: `${contact.firstname} ${contact.lastname}` // Nom complet de utilisateur
+            });
         }
     });
 
