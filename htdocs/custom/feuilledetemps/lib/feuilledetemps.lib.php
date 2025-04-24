@@ -1403,7 +1403,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 			// Affaires
-			$tableCellAffaire .= '<select data-selected="'.$timespent->fk_task.'" class="select-task valignmiddle flat width150" id="fk_task_'.$idw.'_'.$cpt.'" name="fk_task['.$idw.']['.$cpt.']" onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"></select>';
+			$tableCellAffaire .= '<select '.($disabled ? ' disabled' : '').' data-selected="'.$timespent->fk_task.'" class="select-task valignmiddle flat width150" id="fk_task_'.$idw.'_'.$cpt.'" name="fk_task['.$idw.']['.$cpt.']" onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"></select>';
 			//$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width150', $projectsListId, 'projectstatut', $fuser, 'fk_task_'.$idw.'_'.$cpt, ($idw == 0 && $cpt == 0 ? 1 : 0), $task_load, 'onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"');
 			$tableCellAffaire .= '</div>';
 

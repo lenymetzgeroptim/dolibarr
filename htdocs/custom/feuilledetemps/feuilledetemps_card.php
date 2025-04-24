@@ -235,6 +235,10 @@ elseif(($object->status == FeuilleDeTemps::STATUS_DRAFT) && $permissionToVerific
 	$modifier = 1;
 	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
+elseif($object->status == FeuilleDeTemps::STATUS_DRAFT && $conf->global->FDT_USER_APPROVER && $userIsResp) {
+	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
+}
 elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && $conf->global->FDT_USER_APPROVER && $userIsResp) {
 	$modifier = 1;
 	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;

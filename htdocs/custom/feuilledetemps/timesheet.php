@@ -175,7 +175,7 @@ else {
 	$object->date_fin = $lastdaytoshow;
 }
 
-if(!$user->admin && $conf->global->FDT_USER_APPROVER && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) ){
+if(!$user->admin && $conf->global->FDT_USER_APPROVER && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) && ($user->id != $usertoprocess->id || !$user->rights->feuilledetemps->feuilledetemps->read)){
 	$can_modify_fdt = 0;
 }
 
