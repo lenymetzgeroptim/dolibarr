@@ -225,15 +225,15 @@ elseif($datatoexport == 'recap_pointages') {
 		"u.firstname" => "Prénom",
 		"u.lastname" => "Nom",
 		"jour" => "Jour",
-		"e.date_jour" => "Date",
+		"et.element_date" => "Date",
 		"t.ref" => "Réf Tâche",
 		"t.label" => "Nom Tâche",
 		"p.ref" => "Réf Projet",
 		"p.title" => "Nom Projet",
 		"pto.site" => "Site",
-		"e.heures_jour" => "Heures Jour",
-		"e.heures_nuit" => "Heures Nuit",
-		"e.total_heures" => "Total Heures"
+		"heures_jour" => "Heures Jour",
+		"heures_nuit" => "Heures Nuit",
+		"total_heures" => "Total Heures"
 	);
 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
 		$objexport->array_export_fields[0]["eu.matricule"] = "Matricule";
@@ -315,15 +315,15 @@ elseif($datatoexport == 'recap_pointages') {
 		"u.firstname" => "user",
 		"u.lastname" => "user",
 		"jour" => "timesheet_16@feuilledetemps",
-		"e.date_jour" => "timesheet_16@feuilledetemps",
+		"et.element_date" => "timesheet_16@feuilledetemps",
 		"t.ref" => "projecttask",
 		"t.label" => "projecttask",
 		"p.ref" => "project",
 		"p.title" => "project",
 		"pto.site" => "timesheet_16@feuilledetemps",
-		"e.heures_jour" => "timesheet_16@feuilledetemps",
-		"e.heures_nuit" => "timesheet_16@feuilledetemps",
-		"e.total_heures" => "timesheet_16@feuilledetemps"
+		"heures_jour" => "timesheet_16@feuilledetemps",
+		"heures_nuit" => "timesheet_16@feuilledetemps",
+		"total_heures" => "timesheet_16@feuilledetemps"
 	);
 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
 		$objexport->array_export_entities[0]["eu.matricule"] = "user";
@@ -406,15 +406,15 @@ elseif($datatoexport == 'recap_pointages') {
 		"u.firstname" => "Text",
 		"u.lastname" => "Text",
 		"jour" => "",
-		"e.date_jour" => "Date",
+		"et.element_date" => "Date",
 		"t.ref" => "Text",
 		"t.label" => "Text",
 		"p.ref" => "Text",
 		"p.title" => "Text",
 		"pto.site" => "Text",
-		"e.heures_jour" => "Numeric",
-		"e.heures_nuit" => "Numeric",
-		"e.total_heures" => "Numeric"
+		"heures_jour" => "Numeric",
+		"heures_nuit" => "Numeric",
+		"total_heures" => "Numeric"
 	);
 	if(isset($user_extrafields->attributes['user']['type']['matricule'])) {
 		$objexport->array_export_TypeFields[0]["eu.matricule"] = "Numeric";
@@ -507,7 +507,7 @@ if($datatoexport == 'heure_nuit_dimanche')  {
 	$objexport->array_export_examplevalues[0] = "";
 	$objexport->array_export_help[0] = "";
 	$objexport->array_export_dependencies[0] = "";
-	$objexport->array_export_FilterValue = $array_filtervalue;
+	$objexport->array_export_FilterValue = ($array_filtervalue ? $array_filtervalue : array());
 }
 if($datatoexport == 'recap_pointages')  {
 	$objexport->array_export_code_for_sort[0] = '02_recap_pointages';
@@ -519,7 +519,7 @@ if($datatoexport == 'recap_pointages')  {
 	$objexport->array_export_examplevalues[0] = "";
 	$objexport->array_export_help[0] = "";
 	$objexport->array_export_dependencies[0] = "";
-	$objexport->array_export_FilterValue = $array_filtervalue;
+	$objexport->array_export_FilterValue = ($array_filtervalue ? $array_filtervalue : array());
 }
 else {
 	$objexport->array_export_code_for_sort[0] = '01_heure_nuit_dimanche';
@@ -543,76 +543,75 @@ else {
 	$objexport->array_export_dependencies[1] = "";
 
 	$objexport->array_export_FilterValue = array();
-
 }
 
-if($datatoexport == 'recap_pointages')  {
-	$objexport->array_export_sql_start[0] = 
-	" WITH RECURSIVE absences AS (
-		SELECT 
-			h.fk_user AS user_id,
-			DATE(h.date_debut) AS date_jour,
-			DATE(h.date_fin) AS date_fin,
-			ct.code AS type_absence,
-			hef.hour AS duree_absence
-		FROM llx_holiday h
-		LEFT JOIN llx_holiday_extrafields hef ON hef.fk_object = h.rowid
-		LEFT JOIN llx_c_holiday_types ct ON ct.rowid = h.fk_type
-		WHERE hef.statutfdt = 3
+// if($datatoexport == 'recap_pointages')  {
+// 	$objexport->array_export_sql_start[0] = 
+// 	" WITH RECURSIVE absences AS (
+// 		SELECT 
+// 			h.fk_user AS user_id,
+// 			DATE(h.date_debut) AS date_jour,
+// 			DATE(h.date_fin) AS date_fin,
+// 			ct.code AS type_absence,
+// 			hef.hour AS duree_absence
+// 		FROM llx_holiday h
+// 		LEFT JOIN llx_holiday_extrafields hef ON hef.fk_object = h.rowid
+// 		LEFT JOIN llx_c_holiday_types ct ON ct.rowid = h.fk_type
+// 		WHERE hef.statutfdt = 3
 
-		UNION ALL
+// 		UNION ALL
 
-		SELECT 
-			user_id,
-			DATE_ADD(date_jour, INTERVAL 1 DAY),
-			date_fin,
-			type_absence,
-			duree_absence
-		FROM absences
-		WHERE date_jour < date_fin
-		),
+// 		SELECT 
+// 			user_id,
+// 			DATE_ADD(date_jour, INTERVAL 1 DAY),
+// 			date_fin,
+// 			type_absence,
+// 			duree_absence
+// 		FROM absences
+// 		WHERE date_jour < date_fin
+// 		),
 
-		heures_travail AS (
-		SELECT 
-			et.fk_user AS user_id,
-			DATE(et.element_date) AS date_jour,
-			et.element_duration / 3600 AS heures_jour,
-			pto.heure_nuit / 3600 AS heures_nuit,
-			(COALESCE(et.element_duration, 0) + COALESCE(pto.heure_nuit, 0)) / 3600 AS total_heures
-		FROM llx_element_time et
-		LEFT JOIN llx_feuilledetemps_projet_task_time_other pto ON pto.fk_projet_task_time = et.rowid
-		WHERE et.elementtype = 'task'
-		),
+// 		heures_travail AS (
+// 		SELECT 
+// 			et.fk_user AS user_id,
+// 			DATE(et.element_date) AS date_jour,
+// 			et.element_duration / 3600 AS heures_jour,
+// 			pto.heure_nuit / 3600 AS heures_nuit,
+// 			(COALESCE(et.element_duration, 0) + COALESCE(pto.heure_nuit, 0)) / 3600 AS total_heures
+// 		FROM llx_element_time et
+// 		LEFT JOIN llx_feuilledetemps_projet_task_time_other pto ON pto.fk_projet_task_time = et.rowid
+// 		WHERE et.elementtype = 'task'
+// 		),
 
-		heures_travail_absences AS (
-		SELECT 
-			user_id,
-			date_jour,
-			NULL AS type_absence,
-			NULL AS duree_absence,
-			heures_jour,
-			heures_nuit,
-			total_heures,
-			'travail' AS type_event
-		FROM heures_travail
+// 		heures_travail_absences AS (
+// 		SELECT 
+// 			user_id,
+// 			date_jour,
+// 			NULL AS type_absence,
+// 			NULL AS duree_absence,
+// 			heures_jour,
+// 			heures_nuit,
+// 			total_heures,
+// 			'travail' AS type_event
+// 		FROM heures_travail
 
-		UNION ALL
+// 		UNION ALL
 
-		SELECT 
-			user_id,
-			date_jour,
-			type_absence,
-			duree_absence,
-			NULL AS heures_jour,
-			NULL AS heures_nuit,
-			NULL AS total_heures,
-			'absence' AS type_event
-		FROM absences
-		)";
-}
-else {
+// 		SELECT 
+// 			user_id,
+// 			date_jour,
+// 			type_absence,
+// 			duree_absence,
+// 			NULL AS heures_jour,
+// 			NULL AS heures_nuit,
+// 			NULL AS total_heures,
+// 			'absence' AS type_event
+// 		FROM absences
+// 		)";
+// }
+// else {
 	$objexport->array_export_sql_start[0] = "SELECT DISTINCT ";
-}
+// }
 
 if($datatoexport == 'heure_nuit_dimanche') {
 	$objexport->array_export_sql_end[0] .= " FROM llx_element_time as et
@@ -623,9 +622,9 @@ if($datatoexport == 'heure_nuit_dimanche') {
 				LEFT JOIN llx_feuilledetemps_silae_extrafields as es ON es.fk_object = s.rowid
 				LEFT JOIN llx_user as u ON u.rowid = et.fk_user
 				LEFT JOIN llx_user_extrafields as eu ON eu.fk_object = u.rowid";
-	$objexport->array_export_sql_end[0] .= " WHERE 1=1 AND elementtype = 'task'";
+	$objexport->array_export_sql_end[0] .= " WHERE 1=1 AND et.elementtype = 'task'";
 
-	$objexport->array_export_sql_order[0] .= " HAVING heures > 0";
+	$objexport->array_export_sql_order[0] .= " HAVING 1=1 AND heures > 0";
 
 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_nuit_100'])) {
 		$objexport->array_export_sql_order[0] .= " OR es.h_nuit_100 > 0";
@@ -638,12 +637,26 @@ if($datatoexport == 'heure_nuit_dimanche') {
 	}
 }
 elseif($datatoexport == 'recap_pointages') {
-	$objexport->array_export_sql_end[0] .= " FROM heures_travail_absences e
-				LEFT JOIN llx_user u ON u.rowid = e.user_id
-				LEFT JOIN llx_user_extrafields eu ON eu.fk_object = u.rowid";
-	$objexport->array_export_sql_end[0] .= " WHERE 1=1";
+	$objexport->array_export_sql_end[0] .= " FROM llx_element_time as et
+				LEFT JOIN llx_feuilledetemps_projet_task_time_other as pto ON pto.fk_projet_task_time = et.rowid
+				LEFT JOIN llx_projet_task as t ON t.rowid = et.fk_element AND elementtype = 'task'
+				LEFT JOIN llx_projet as p ON p.rowid = t.fk_projet
+				FULL JOIN llx_feuilledetemps_silae as s ON s.date = et.element_date
+				LEFT JOIN llx_feuilledetemps_silae_extrafields as es ON es.fk_object = s.rowid
+				LEFT JOIN llx_user as u ON u.rowid = et.fk_user
+				LEFT JOIN llx_user_extrafields as eu ON eu.fk_object = u.rowid";
+	$objexport->array_export_sql_end[0] .= " WHERE 1=1 AND et.elementtype = 'task'";
+	$objexport->array_export_sql_order[0] = " HAVING 1=1";
+}
 
-	$objexport->array_export_sql_order[0] .= " ORDER BY u.lastname, u.firstname, e.date_jour";
+if($datatoexport == 'heure_nuit_dimanche') {
+}
+elseif($datatoexport == 'recap_pointages') {
+	$objexport->array_export_transformfields[0] = array(
+		"heures_jour" => "(et.element_duration / 3600) as heures_jour",
+		"heures_nuit" => "(pto.heure_nuit / 3600) as heures_nuit",
+		"total_heures" => "((COALESCE(et.element_duration, 0) + COALESCE(pto.heure_nuit, 0)) / 3600) as total_heures"
+	);
 }
 
 // Gestion des CASE
@@ -818,7 +831,7 @@ if(!empty($datatoexport)) {
 							ELSE pto.heure_nuit / 3600
 						END AS heures";
 		}
-		elseif($datatoexport == 'heure_nuit_dimanche' && $key == "jour") {
+		elseif($key == "jour") {
 			$newfield = "CASE DAYOFWEEK(et.element_date)
 							WHEN 1 THEN 'dimanche'
 							WHEN 2 THEN 'lundi'
@@ -829,16 +842,8 @@ if(!empty($datatoexport)) {
 							WHEN 7 THEN 'samedi'
 						END AS jour";
 		}
-		elseif($datatoexport == 'recap_pointages' && $key == "jour") {
-			$newfield = "CASE DAYOFWEEK(e.date_jour)
-							WHEN 1 THEN 'dimanche'
-							WHEN 2 THEN 'lundi'
-							WHEN 3 THEN 'mardi'
-							WHEN 4 THEN 'mercredi'
-							WHEN 5 THEN 'jeudi'
-							WHEN 6 THEN 'vendredi'
-							WHEN 7 THEN 'samedi'
-						END AS jour";
+		elseif ($objexport->array_export_transformfields[0][$key]) {
+			$newfield = $objexport->array_export_transformfields[0][$key];
 		}
 		elseif (strpos($key, ' as ') === false) {
 			$newfield = $key.' as '.str_replace(array('.', '-', '(', ')', '/'), '_', $key);
@@ -856,6 +861,9 @@ if(!empty($datatoexport)) {
 		// Loop on each condition to add
 		foreach ($objexport->array_export_FilterValue as $key => $value) {
 			if (preg_match('/GROUP_CONCAT/i', $key)) {
+				continue;
+			}
+			if($objexport->array_export_transformfields[0][$key]) {
 				continue;
 			}
 
@@ -877,6 +885,34 @@ if(!empty($datatoexport)) {
 	}
 
 	$sqlquery .= $objexport->array_export_sql_order[0];
+
+	if (is_array($objexport->array_export_FilterValue) && !empty($objexport->array_export_FilterValue)) {
+		$sqlHaving = '';
+		// Loop on each condition to add
+		foreach ($objexport->array_export_FilterValue as $key => $value) {
+			if (preg_match('/GROUP_CONCAT/i', $key)) {
+				continue;
+			}
+			if(!$objexport->array_export_transformfields[0][$key]) {
+				continue;
+			}
+
+			if ($value != '') {
+				if($objexport->array_export_case[0][$key]) {
+					$sqlHaving = " AND CASE";
+					foreach($objexport->array_export_case[0][$key] as $when => $then) {
+						$sqlHaving .= " WHEN $key = '$when' THEN '$then'";
+					}
+					$sqlHaving .= " ELSE ''";
+					$sqlHaving .= " END = '".$objexport->array_export_FilterValue[$key]."'";
+				}
+				else {
+					$sqlHaving .= " AND ".$objexport->build_filterQuery($objexport->array_export_TypeFields[0][$key], $key, $objexport->array_export_FilterValue[$key]);
+				}
+			}
+		}
+		$sqlquery .= $sqlHaving;
+	}
 }
 
 if(str_contains($sqlquery, 'FULL JOIN')) {
@@ -1536,10 +1572,10 @@ if ($step == 3 && $datatoexport) {
 		if (!empty($Typefieldsarray[$code])) {	// Example: Text, List:c_country:label:rowid, Number, Boolean
 			$szInfoFiltre = $objexport->genDocFilter($Typefieldsarray[$code]);
 			if ($szInfoFiltre) {	// Is there an info help for this filter ?
-				$tmp = $objexport->build_filterField($Typefieldsarray[$code], $code, $ValueFilter);
+				$tmp = $objexport->build_filterField($Typefieldsarray[$code], (preg_match('/\bas\b\s+(.*)$/i', $code, $m) ? trim($m[1]) : $code), $ValueFilter);
 				print $form->textwithpicto($tmp, $szInfoFiltre);
 			} else {
-				print $objexport->build_filterField($Typefieldsarray[$code], $code, $ValueFilter);
+				print $objexport->build_filterField($Typefieldsarray[$code], (preg_match('/\bas\b\s+(.*)$/i', $code, $m) ? trim($m[1]) : $code), $ValueFilter);
 			}
 		}
 		print '</td>';
