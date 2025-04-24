@@ -399,8 +399,12 @@ try {
     if (!empty($cellsToDelete)) {
         $cellsToDeleteString = implode("','", $cellsToDelete);
 
-        // Récupérer les ID des cellules à supprimer
-        $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND id_cellule IN ('$cellsToDeleteString')";
+        // Récupérer les ID des cellules à supprimer, en excluant les `cardprincipale`
+        $sql = "SELECT rowid 
+                FROM " . MAIN_DB_PREFIX . "ot_ot_cellule 
+                WHERE ot_id = $otId 
+                AND id_cellule IN ('$cellsToDeleteString') 
+                AND type != 'cardprincipale'";
         $resql = $db->query($sql);
         $cellIdsToDelete = [];
 
