@@ -322,6 +322,7 @@ class extendedHoliday extends Holiday
 					$date_fin_gmt = $this->db->jdate($obj->date_end, 1);
 
 					$nb_jour =  num_between_day($this->db->jdate($obj->date_start), $this->db->jdate($obj->date_end)+3600, 1); 
+					$num_open_day = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
 					for($idw = 0; $idw < $nb_jour; $idw++) {
 						$dayinloop = dol_time_plus_duree($this->db->jdate($obj->date_start), $idw, 'd');
 
@@ -336,7 +337,7 @@ class extendedHoliday extends Holiday
 						}
 						$droitrtt_array[$dayinloop][] = $obj->droit_rtt;
 						$in_hour_array[$dayinloop][] = $obj->in_hour;
-						$nb_jour_array[$dayinloop][] = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
+						$nb_jour_array[$dayinloop][] = $num_open_day;
 					}
 					$i++;
 				}
