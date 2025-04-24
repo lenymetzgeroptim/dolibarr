@@ -1170,6 +1170,12 @@ foreach ($cellData as $cell) {
                 $cell->firstname = $user->firstname;
                 $cell->lastname = $user->lastname;
                 $cell->phone = $user->phone ?? 'Non défini';
+            } else {
+                // Si aucun utilisateur n'est trouvé
+                $cell->userId = null;
+                $cell->firstname = 'Non défini';
+                $cell->lastname = 'Non défini';
+                $cell->phone = 'Non défini';
             }
         } else {
             echo "Erreur SQL : " . $db->lasterror();
@@ -2088,16 +2094,40 @@ function updateCards() {
         }
     });
 
-    // Si les données ne sont pas dans `cellData`, fallback sur `jsdata`
+    // Si les données ne sont pas dans `cellData`, les récupérer depuis `jsdata`
     jsdata.forEach(function(contact) {
         if (!cardHeaders["ResponsableAffaire"] && contact.fk_c_type_contact === "160") {
-            cardHeaders["ResponsableAffaire"] = contact;
+            cardHeaders["ResponsableAffaire"] = {
+                type: "cardprincipale",
+                title: "RA",
+                firstname: contact.firstname,
+                lastname: contact.lastname,
+                phone: contact.phone || "N/A",
+                userId: contact.fk_socpeople
+            };
+            saveData(); // Enregistrer dans la BDD
         }
         if (!cardHeaders["ResponsableQ3SE"] && contact.fk_c_type_contact === "1032000") {
-            cardHeaders["ResponsableQ3SE"] = contact;
+            cardHeaders["ResponsableQ3SE"] = {
+                type: "cardprincipale",
+                title: "Q3",
+                firstname: contact.firstname,
+                lastname: contact.lastname,
+                phone: contact.phone || "N/A",
+                userId: contact.fk_socpeople
+            };
+            saveData(); // Enregistrer dans la BDD
         }
         if (!cardHeaders["PCRReferent"] && contact.fk_c_type_contact === "1032001") {
-            cardHeaders["PCRReferent"] = contact;
+            cardHeaders["PCRReferent"] = {
+                type: "cardprincipale",
+                title: "PCR",
+                firstname: contact.firstname,
+                lastname: contact.lastname,
+                phone: contact.phone || "N/A",
+                userId: contact.fk_socpeople
+            };
+            saveData(); // Enregistrer dans la BDD
         }
     });
 
@@ -2105,38 +2135,39 @@ function updateCards() {
     for (var role in cardHeaders) {
         if (cardHeaders.hasOwnProperty(role)) {
             var contact = cardHeaders[role];
-            if (contact) {
-                var selector = `.card[data-role="${role}"]`;
-                var card = document.querySelector(selector);
-                if (card) {
-                    var cardBody = card.querySelector(".card-body");
-                    if (cardBody) {
-                        // Si les données viennent de `cellData`, afficher les informations correspondantes
-                        if (contact.type === "cardprincipale") {
-                            cardBody.innerHTML = `
-                                <p><strong>${role}</strong></p>
-                                <p>${contact.userName || "Nom inconnu"}</p>
-                                <p class="phone">Téléphone : ${contact.phone || "N/A"}</p>
-                            `;
-                        } else {
-                            // Sinon, afficher les données depuis `jsdata`
-                            cardBody.innerHTML = `
-                                <p><strong>${role}</strong></p>
-                                <p>${contact.firstname} ${contact.lastname}</p>
-                                <p class="phone">Téléphone : ${contact.phone || "N/A"}</p>
-                            `;
-                        }
+            var selector = `.card[data-role="${role}"]`;
+            var card = document.querySelector(selector);
 
-                        // Désactiver les champs pour empêcher la modification
-                        card.querySelectorAll("input, select, button").forEach(function(field) {
-                            field.disabled = true;
-                        });
+            if (card) {
+                var cardBody = card.querySelector(".card-body");
+
+                if (cardBody) {
+                    if (contact && contact.type === "cardprincipale") {
+                        // Afficher les informations si elles sont présentes
+                        cardBody.innerHTML = `
+                            <p><strong>${role}</strong></p>
+                            <p>${contact.firstname || "Nom inconnu"} ${contact.lastname || ""}</p>
+                            <p class="phone">Téléphone : ${contact.phone || "N/A"}</p>
+                        `;
+                    } else {
+                        // Si aucune donnée nest disponible, vider la carte
+                        cardBody.innerHTML = `
+                            <p><strong>${role}</strong></p>
+                            <p>Aucune donnée disponible</p>
+                        `;
                     }
+
+                    // Désactiver les champs pour empêcher la modification
+                    card.querySelectorAll("input, select, button").forEach(function(field) {
+                        field.disabled = true;
+                    });
                 }
             }
         }
     }
 }
+
+
 
  function attachDeleteListener(card) {
     var deleteButton = card.querySelector(".delete-button");
