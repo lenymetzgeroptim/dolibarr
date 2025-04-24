@@ -120,41 +120,41 @@ function afficherTableaux() {
                 <td style="background-color:#2f508b; text-align:center; width:25%"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff"><strong>'.$conf->global->JOUR_SANS_ACC_AVEC_ARRET.'</strong></span></span></span></td>
             </tr>
             <tr>
-                <th colspan="2" scope="row" style="background-color:#ffffff; text-align:left"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#c0392b">'.$conf->global->JOUR_SANS_ACC_AVEC_ARRET_COM.'</span></span></span></th>
+                <th colspan="2" scope="row" style="background-color:#ffffff; text-align:left"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#c0392b">'.nl2br($conf->global->JOUR_SANS_ACC_AVEC_ARRET_COM).'</span></span></span></th>
             </tr>
             <tr>
                 <th scope="row" style="background-color:#cccccc"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff">Sans arrêt</span></span></span></th>
                 <td style="background-color:#cccccc; text-align:center"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff"><strong>'.$conf->global->JOUR_SANS_ACC_SANS_ARRET.'</strong></span></span></span></td>
             </tr>
             <tr>
-                <th colspan="2" scope="row" style="background-color:#ffffff; text-align:left"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#c0392b">'.$conf->global->JOUR_SANS_ACC_SANS_ARRET_COM.'</span></span></span></th>
+                <th colspan="2" scope="row" style="background-color:#ffffff; text-align:left"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#c0392b">'.nl2br($conf->global->JOUR_SANS_ACC_SANS_ARRET_COM).'</span></span></span></th>
             </tr>
             <tr>
                 <th scope="row" style="background-color:#2f508b"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff">De trajet</span></span></span></th>
                 <td style="background-color:#2f508b; text-align:center"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff"><strong>'.$conf->global->JOUR_SANS_ACC_TRAJET.'</strong></span></span></span></td>
             </tr>
             <tr>
-                <th colspan="2" scope="row" style="text-align:left"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#c0392b">'.$conf->global->JOUR_SANS_ACC_TRAJET_COM.'</span></span></span></th>
+                <th colspan="2" scope="row" style="text-align:left"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#c0392b">'.nl2br($conf->global->JOUR_SANS_ACC_TRAJET_COM).'</span></span></span></th>
             </tr>
         </tbody>
     </table>
 
     <div><br /><br />
-    <span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><u>Remontées du mois de '.$conf->global->__MONTH_TEXT__.' </u>: (<a href="https://erp.optim-industries.fr/custom/remonteessse/remonteessse_list.php">Liste complète</a>)</strong></span></span>
+    <span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><u>Remontées du mois de '.dol_print_date(dol_now(), '%B').' </u>: (<a href="https://erp.optim-industries.fr/custom/remonteessse/remonteessse_list.php">Liste complète</a>)</strong></span></span>
 
     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse; height:158px; margin-top:10px; width:50%">
         <tbody>
             <tr>
                 <th scope="row" style="background-color:#2f508b; width:25%"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff"><strong>VDR-NORD </strong></span></span></span></th>
-                <td style="background-color:#2f508b; width:75%"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.$conf->global->REMONTEES_SSE_VDRNORD.'</span></strong></span></span></td>
+                <td style="background-color:#2f508b; width:75%"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.nl2br($conf->global->REMONTEES_SSE_VDRNORD).'</span></strong></span></span></td>
             </tr>
             <tr>
                 <th scope="row" style="background-color:#cccccc"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff"><strong>GRAND-OUEST</strong></span></span></span></th>
-                <td style="background-color:#cccccc"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.$conf->global->REMONTEES_SSE_GRANDOUEST.'</span></strong></span></span></td>
+                <td style="background-color:#cccccc"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.nl2br($conf->global->REMONTEES_SSE_GRANDOUEST).'</span></strong></span></span></td>
             </tr>
             <tr>
                 <th scope="row" style="background-color:#2f508b"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff"><strong>SUD-EST</strong></span></span></span></th>
-                <td style="background-color:#2f508b"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.$conf->global->REMONTEES_SSE_SUDEST.'</span></strong></span></span></td>
+                <td style="background-color:#2f508b"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.nl2br($conf->global->REMONTEES_SSE_SUDEST).'</span></strong></span></span></td>
             </tr>
         </tbody>
     </table>';
