@@ -479,17 +479,17 @@ class ExtendedExportFDT extends Export
 	
 						if($datatoexport == 'analytique_pourcentage') {
 							$obj2 = $this->db->fetch_object($resql2);
-								if($obj2->eu_matricule != $obj->eu_matricule) {
+							if($obj2->eu_matricule != $obj->eu_matricule) {
 								$obj->pourcentage = 100 - $sum_pourcentage;
 								$sum_pourcentage = 0;
 							}
 							else {
-								$obj->pourcentage = round(($obj->total_task / (int)$obj->total) * 100, 2);
+								$obj->pourcentage = round(($obj->total_task / $obj->total) * 100, 2);
 								$sum_pourcentage += $obj->pourcentage;
 							}
 
 							$obj->axe = 'AXE 1';
-							$obj->fdt_date_debut = dol_print_date($obj->fdt_date_debut, '%d/%m/%Y');
+							$obj->fdt_date_debut = '01/'.substr($array_filterValue['tt.element_date'], 4, 2).'/'.substr($array_filterValue['tt.element_date'], 0, 4);
 						}
 						elseif($datatoexport == 'donnees_variables') {
 							if(!$conf->global->FDT_DISPLAY_COLUMN) {
