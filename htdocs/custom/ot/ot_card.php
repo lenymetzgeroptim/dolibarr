@@ -236,33 +236,51 @@ try {
                 }
             }
 
-            // Gestion des rôles principaux (RA, Q3, PCR)
-        if ($type === 'cardprincipale' && in_array($role, ['RA', 'Q3', 'PCR'])) {
-            // Vérifier si une cellule existe déjà pour ce rôle
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND type = '$type' AND title = '$role'";
-            $resql = $db->query($sql);
-            $row = $resql ? $db->fetch_object($resql) : null;
 
-            if (!$row) {
-                // Insérer une nouvelle cellule
-                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule (ot_id, type, title) 
-                        VALUES ($otId, '$type', '$role')";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule : " . $db->lasterror());
+            if ($type === 'cardprincipale' && in_array($role, ['RA', 'Q3', 'PCR'])) {
+                // Vérifier si une cellule existe déjà pour ce rôle
+                $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND type = '$type' AND title = '$role'";
+                $resql = $db->query($sql);
+                $row = $resql ? $db->fetch_object($resql) : null;
+            
+                if (!$row) {
+                    // Insérer une nouvelle cellule pour le rôle avec un userId vide
+                    $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule (ot_id, type, title) 
+                            VALUES ($otId, 'cardprincipale', '$role')";
+                    if (!$db->query($sql)) {
+                        throw new Exception("Erreur lors de l'insertion de la carte principale pour le rôle $role : " . $db->lasterror());
+                    }
+                    $otCelluleId = $db->last_insert_id(MAIN_DB_PREFIX . 'ot_ot_cellule');
+            
+                    // Insérer dans ot_ot_cellule_donne avec un userId vide
+                    $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user, role) 
+                            VALUES ($otCelluleId, NULL, '$role')";
+                    if (!$db->query($sql)) {
+                        throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule_donne : " . $db->lasterror());
+                    }
+                } else {
+                    // Si la cellule existe déjà, mettre à jour le userId si nécessaire
+                    $otCelluleId = $row->rowid;
+                    $sql = "SELECT fk_user FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne WHERE ot_cellule_id = $otCelluleId";
+                    $resql = $db->query($sql);
+                    $existingUser = $resql ? $db->fetch_object($resql) : null;
+            
+                    if ($existingUser && $existingUser->fk_user != $userId) {
+                        // Mettre à jour le userId si différent
+                        $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_cellule_donne SET fk_user = $userId WHERE ot_cellule_id = $otCelluleId";
+                        if (!$db->query($sql)) {
+                            throw new Exception("Erreur lors de la mise à jour du userId dans ot_ot_cellule_donne : " . $db->lasterror());
+                        }
+                    } elseif (!$existingUser) {
+                        // Insérer un nouveau userId si aucun n'existe
+                        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user, role) 
+                                VALUES ($otCelluleId, $userId, '$role')";
+                        if (!$db->query($sql)) {
+                            throw new Exception("Erreur lors de l'insertion du userId dans ot_ot_cellule_donne : " . $db->lasterror());
+                        }
+                    }
                 }
-                $otCelluleId = $db->last_insert_id(MAIN_DB_PREFIX . 'ot_ot_cellule');
-
-                // Insérer dans ot_ot_cellule_donne
-                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user, role) 
-                        VALUES ($otCelluleId, $userId, '$role')";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule_donne : " . $db->lasterror());
-                }
-            } else {
-                // Si la cellule existe déjà, ne rien faire (pas de mise à jour)
-                continue;
             }
-        }
 
             // Gestion des userId pour le type 'card' (ajout ou mise à jour)
             if ($type === 'card' && isset($item['userId'])) {
@@ -399,12 +417,8 @@ try {
     if (!empty($cellsToDelete)) {
         $cellsToDeleteString = implode("','", $cellsToDelete);
 
-        // Récupérer les ID des cellules à supprimer, en excluant les `cardprincipale`
-        $sql = "SELECT rowid 
-                FROM " . MAIN_DB_PREFIX . "ot_ot_cellule 
-                WHERE ot_id = $otId 
-                AND id_cellule IN ('$cellsToDeleteString') 
-                AND type != 'cardprincipale'";
+        // Récupérer les ID des cellules à supprimer
+        $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND id_cellule IN ('$cellsToDeleteString')";
         $resql = $db->query($sql);
         $cellIdsToDelete = [];
 
@@ -1274,55 +1288,70 @@ foreach ($cellData as $cell) {
     }
 }
 
+// Ajouter les utilisateurs aux cellules existantes
 foreach ($cellData as $cell) {
+    // Vérifier si la cellule est valide
     if (!is_object($cell) || !isset($cell->rowid)) {
         continue;
     }
 
-    if ($cell->type === 'listeunique') {
-        $sql = "SELECT  
-            u.rowid AS userId,
-            u.firstname,
-            u.lastname,
-            u.office_phone AS phone,        
-            cct.type AS contrat
-            
-        FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne AS ocd
-        JOIN " . MAIN_DB_PREFIX . "user AS u 
-            ON ocd.fk_user = u.rowid
-        LEFT JOIN " . MAIN_DB_PREFIX . "donneesrh_positionetcoefficient_extrafields AS drh 
-            ON drh.fk_object = u.rowid
-        LEFT JOIN " . MAIN_DB_PREFIX . "c_contrattravail AS cct 
-            ON drh.contratdetravail = cct.rowid
-        WHERE ocd.ot_cellule_id = " . intval($cell->rowid);
-        
+    // Ajouter les informations utilisateur uniquement pour les cards principales
+    if ($cell->type === 'cardprincipale') {
+        $sql = "SELECT 
+                    u.rowid AS userId,
+                    u.firstname,
+                    u.lastname,
+                    u.office_phone AS phone
+                FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne AS ocd
+                JOIN " . MAIN_DB_PREFIX . "user AS u ON ocd.fk_user = u.rowid
+                WHERE ocd.ot_cellule_id = " . intval($cell->rowid);
+
         $resql = $db->query($sql);
-        $userDetails = [];
-        $seenUserIds = [];
 
         if ($resql) {
-            while ($user = $db->fetch_object($resql)) {
-                if (in_array($user->userId, $seenUserIds)) {
-                    continue; // déjà traité
-                }
-                $seenUserIds[] = $user->userId;
-
-                $userDetails[] = [
-                    'userId' => $user->userId,
-                    'firstname' => $user->firstname,
-                    'lastname' => $user->lastname,
-                    'phone' => $user->phone,
-                    'contrat' => $user->contrat ?? 'Non défini',
-                    'fonction' => getFonctions($user->userId, $object->fk_project, $db) ?? 'Non définie',
-                    'habilitation' => getHabilitations($user->userId, $db) ?? 'Aucune habilitation'
-                ];
-                
+            $user = $db->fetch_object($resql);
+            if ($user) {
+                // Ajouter les informations utilisateur à la cellule
+                $cell->userId = $user->userId;
+                $cell->firstname = $user->firstname;
+                $cell->lastname = $user->lastname;
+                $cell->phone = $user->phone ?? 'Non défini';
+            } else {
+                // Si aucun utilisateur n'est trouvé
+                $cell->userId = null;
+                $cell->firstname = 'Non défini';
+                $cell->lastname = 'Non défini';
+                $cell->phone = 'Non défini';
             }
         } else {
             echo "Erreur SQL : " . $db->lasterror();
         }
+    }
+}
 
-        $cell->userDetails = $userDetails;
+// Ajouter les cartes principales manquantes si elles n'existent pas dans cellData
+$roles = ['RA', 'Q3', 'PCR'];
+foreach ($roles as $role) {
+    $exists = false;
+    foreach ($cellData as $cell) {
+        if ($cell->type === 'cardprincipale' && $cell->title === $role) {
+            $exists = true;
+            break;
+        }
+    }
+
+    if (!$exists) {
+        $cellData[] = (object) [
+            'type' => 'cardprincipale',
+            'title' => $role,
+            'rowid' => null,
+            'x' => null,
+            'y' => null,
+            'userId' => null,
+            'firstname' => 'Non défini',
+            'lastname' => 'Non défini',
+            'phone' => 'Non défini'
+        ];
     }
 }
 
@@ -1718,7 +1747,7 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log(cellData);
     let jsdata = '.$data.'; 
     let users = typeof jsdata === "string" ? JSON.parse(jsdata) : jsdata;
-
+    let selectedContacts = [];
     let jsdatasoustraitants = users.filter(user => user.source === "external" && user.fk_c_type_contact === "1031141");
     let jsdataFiltered = users.filter(user => user.source !== "external"); 
 
@@ -2081,7 +2110,7 @@ function updateCards() {
         "PCRReferent": null
     };
 
-    // Vérifier si les données sont dans `cellData`
+    // Vérifier si les données sont dans `cellData` (BDD)
     cellData.forEach(function(cell) {
         if (cell.type === "cardprincipale" && cell.title) {
             switch (cell.title) {
@@ -2098,7 +2127,7 @@ function updateCards() {
         }
     });
 
-    // Si les données ne sont pas dans `cellData`, les récupérer depuis `jsdata`
+    // Si les données ne sont pas dans `cellData`, les récupérer depuis `jsdata` (projet)
     jsdata.forEach(function(contact) {
         if (!cardHeaders["ResponsableAffaire"] && contact.fk_c_type_contact === "160") {
             cardHeaders["ResponsableAffaire"] = {
@@ -2109,9 +2138,8 @@ function updateCards() {
                 phone: contact.phone || "N/A",
                 userId: contact.fk_socpeople
             };
-            saveData(); // Enregistrer dans la BDD
         }
-        if (!cardHeaders["ResponsableQ3SE"] && contact.fk_c_type_contact === "1032000") {
+        if (!cardHeaders["ResponsableQ3SE"] && contact.fk_c_type_contact === "1031142") {
             cardHeaders["ResponsableQ3SE"] = {
                 type: "cardprincipale",
                 title: "Q3",
@@ -2120,9 +2148,8 @@ function updateCards() {
                 phone: contact.phone || "N/A",
                 userId: contact.fk_socpeople
             };
-            saveData(); // Enregistrer dans la BDD
         }
-        if (!cardHeaders["PCRReferent"] && contact.fk_c_type_contact === "1032001") {
+        if (!cardHeaders["PCRReferent"] && contact.fk_c_type_contact === "1031143") {
             cardHeaders["PCRReferent"] = {
                 type: "cardprincipale",
                 title: "PCR",
@@ -2131,7 +2158,6 @@ function updateCards() {
                 phone: contact.phone || "N/A",
                 userId: contact.fk_socpeople
             };
-            saveData(); // Enregistrer dans la BDD
         }
     });
 
@@ -2154,7 +2180,7 @@ function updateCards() {
                             <p class="phone">Téléphone : ${contact.phone || "N/A"}</p>
                         `;
                     } else {
-                        // Si aucune donnée nest disponible, vider la carte
+                        // Si aucune donnée est disponible, vider la carte
                         cardBody.innerHTML = `
                             <p><strong>${role}</strong></p>
                             <p>Aucune donnée disponible</p>
@@ -2219,7 +2245,7 @@ function updateCards() {
 
 
 
-let selectedContacts = [];
+
 
 function createSupplierDropdown() {
     const existingCard = document.querySelector(".cardsoustraitant");
@@ -2789,21 +2815,36 @@ function saveData() {
         }
     });
 
-// Ajouter les informations des rôles principaux (ResponsableAffaire, ResponsableQ3SE, PCRReferent)
     const roleMapping = {
         "160": "RA", // ResponsableAffaire
-        "1032000": "Q3", // ResponsableQ3SE
-        "1032001": "PCR" // PCRReferent
+        "1031142": "Q3", // ResponsableQ3SE
+        "1031143": "PCR" // PCRReferent
     };
 
-    jsdata.forEach(function(contact) {
-        if (roleMapping[contact.fk_c_type_contact]) {
+    // Ajouter systématiquement les cartes principales (RA, Q3, PCR) si elles ne sont pas déjà dans cardsData
+    Object.values(roleMapping).forEach(function (role) {
+        const existingCard = cardsData.find(card => card.type === "cardprincipale" && card.role === role);
+        if (!existingCard) {
             cardsData.push({
-                type: "cardprincipale", // Type fixe
-                role: roleMapping[contact.fk_c_type_contact], // Nom abrégé du rôle
-                userId: contact.fk_socpeople, // ID de utilisateur
-                userName: `${contact.firstname} ${contact.lastname}` // Nom complet de utilisateur
+                type: "cardprincipale",
+                role: role,
+                userId: null, // Pas utilisateur par défaut
+                userName: null // Pas de nom par défaut
             });
+        }
+    });
+
+    // Mettre à jour les cartes principales avec les données de jsdata si disponibles
+    jsdata.forEach(function (contact) {
+        if (roleMapping[contact.fk_c_type_contact]) {
+            const role = roleMapping[contact.fk_c_type_contact];
+            const existingCard = cardsData.find(card => card.type === "cardprincipale" && card.role === role);
+
+            if (existingCard) {
+                // Mettre à jour la carte principale avec les informations de utilisateur
+                existingCard.userId = contact.fk_socpeople;
+                existingCard.userName = `${contact.firstname} ${contact.lastname}`;
+            }
         }
     });
 
