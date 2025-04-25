@@ -2131,6 +2131,41 @@ function updateCards() {
         }
     });
 
+    // Ajouter des cartes vides si certains rôles sont absents dans `jsdata`
+    if (!cardHeaders["ResponsableAffaire"]) {
+        cardHeaders["ResponsableAffaire"] = {
+            type: "cardprincipale",
+            title: "RA",
+            firstname: null,
+            lastname: null,
+            phone: null,
+            userId: null
+        };
+        saveData(); // Enregistrer la carte vide dans la BDD
+    }
+    if (!cardHeaders["ResponsableQ3SE"]) {
+        cardHeaders["ResponsableQ3SE"] = {
+            type: "cardprincipale",
+            title: "Q3",
+            firstname: null,
+            lastname: null,
+            phone: null,
+            userId: null
+        };
+        saveData(); // Enregistrer la carte vide dans la BDD
+    }
+    if (!cardHeaders["PCRReferent"]) {
+        cardHeaders["PCRReferent"] = {
+            type: "cardprincipale",
+            title: "PCR",
+            firstname: null,
+            lastname: null,
+            phone: null,
+            userId: null
+        };
+        saveData(); // Enregistrer la carte vide dans la BDD
+    }
+
     // Mettre à jour les cartes dans le DOM
     for (var role in cardHeaders) {
         if (cardHeaders.hasOwnProperty(role)) {
@@ -2792,17 +2827,34 @@ function saveData() {
         "1031143": "PCR" // PCRReferent
     };
 
+    // Ajouter les cartes principales depuis jsdata
     jsdata.forEach(function(contact) {
         if (roleMapping[contact.fk_c_type_contact]) {
             cardsData.push({
-                type: "cardprincipale", // Type fixe
-                role: roleMapping[contact.fk_c_type_contact], // Nom abrégé du rôle
-                userId: contact.fk_socpeople, // ID de utilisateur
-                userName: `${contact.firstname} ${contact.lastname}` // Nom complet de utilisateur
+                type: "cardprincipale",
+                role: roleMapping[contact.fk_c_type_contact],
+                userId: contact.fk_socpeople,
+                userName: `${contact.firstname} ${contact.lastname}`
             });
         }
     });
 
+    // Ajouter des cartes principales vides si elles ne sont pas présentes
+    Object.keys(roleMapping).forEach(function(key) {
+        const role = roleMapping[key];
+        const existingCard = cardsData.find(card => card.type === "cardprincipale" && card.role === role);
+
+        if (!existingCard) {
+            cardsData.push({
+                type: "cardprincipale",
+                role: role,
+                userId: null,
+                userName: null
+            });
+        }
+    });
+
+    
     let payload = {
         otid: otId,
         cardsData: cardsData.length > 0 ? cardsData : null, // Mettre null si vide
