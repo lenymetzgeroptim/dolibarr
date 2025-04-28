@@ -350,7 +350,8 @@ function disableNullInput(columnmode) {
             let initialValue = $(this).find("option[selected]").val(); 
             let currentValue = $(this).val(); 
 
-            if(initialValue == undefined) initialValue = '0'
+            if(initialValue == undefined || initialValue == null) initialValue = '0'
+            if(currentValue == undefined || currentValue == null) currentValue = '0'
             
             if (initialValue === currentValue) {
                 $(this).prop("disabled", true); 
@@ -370,8 +371,8 @@ function disableNullInput(columnmode) {
                 let initialValue = fk_task_obj.find("option[selected]").val(); 
                 let currentValue = fk_task_obj.val(); 
 
-
-                if(initialValue == undefined) initialValue = '0'
+                if(initialValue == undefined || initialValue == null) initialValue = '0'
+                if(currentValue == undefined || currentValue == null) currentValue = '0'
 
                 if (initialValue !== currentValue) {
                     $(obj).prop('disabled', false);
@@ -392,8 +393,8 @@ function disableNullInput(columnmode) {
                 let initialValue = fk_task_obj.find("option[selected]").val(); 
                 let currentValue = fk_task_obj.val(); 
 
-
-                if(initialValue == undefined) initialValue = '0'
+                if(initialValue == undefined || initialValue == null) initialValue = '0'
+                if(currentValue == undefined || currentValue == null) currentValue = '0'
 
                 if (initialValue !== currentValue) {
                     $(obj).prop('disabled', false);

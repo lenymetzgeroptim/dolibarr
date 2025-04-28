@@ -206,7 +206,9 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							$result = $timespent->update($user);
 						}
 						elseif(($resheure_other > 0 && ($heure_nuit[$day][$cpt] > 0 || ($heure_other_tmpday->heure_nuit != 0 && is_null($heure_nuit[$day][$cpt])))) || ($heure_nuit[$day][$cpt] > 0 && $fk_task[$day][$cpt] !== '0')){
-							$timespent->element_duration = 0;		
+							$timespent->element_duration = 0;	
+							if($fk_task[$day][$cpt] > 0) $timespent->fk_element = $fk_task[$day][$cpt];	
+
 							$result = $timespent->update($user);
 						}
 						elseif(!$is_day_anticipe){		
@@ -254,7 +256,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 							}
 						}
 					
-						if($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0) {
+						if($timespent->fk_element != $fk_task[$day][$cpt] && $fk_task[$day][$cpt] > 0 && $newduration > 0) {
 							$tmpnote = $timespent->note;
 
 							$res_del = $timespent->delete($user);
@@ -368,7 +370,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 					$newduration_heure_nuit = $timetoadd_heure_nuit * 3600;
 				}
 		
-				if(empty($timespent_tmp->timespent_id) && $fk_task[$day][$cpt] > 0) {
+				if(empty($timespent_tmp->timespent_id) && $fk_task[$day][$cpt] > 0 && $heure_nuit[$day][$cpt] > 0) {
 					$timespent->fk_element = $fk_task[$day][$cpt];
 					$timespent->elementtype = 'task';
 					$timespent->element_date = $tmpday;
@@ -393,7 +395,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 				}
 
 				// S'il existe une ligne de Projet_task_time_other et que tous les champs sont = null
-				if($resheure_other > 0 && (($newduration_heure_nuit == 0 && !is_null($heure_nuit[$day][$cpt])) || $heure_other_tmpday->heure_nuit == 0) && ((empty($new_site) && !is_null($site[$day][$cpt])) || empty($heure_other_tmpday->site))){
+				if($resheure_other > 0 && ($newduration_heure_nuit == 0 && (!is_null($heure_nuit[$day][$cpt]) || $heure_other_tmpday->heure_nuit == 0)) && (((empty($new_site) && (!is_null($site[$day][$cpt]) || empty($heure_other_tmpday->site))) || empty($timespent->element_duration)))){
 					// Agenda Heure nuit
 					if($heure_other_tmpday->heure_nuit != $newduration_heure_nuit) {
 						$new_value = formatValueForAgenda('duration', $newduration_heure_nuit);
@@ -418,7 +420,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 					$resheure_other = 0;
 					$heure_other_tmpday = new Projet_task_time_other($db);
 
-					if($timespent_tmp->timespent_id > 0 && empty($timespent_tmp->element_duration) && empty($timespent_tmp->timespent_note)) {
+					if($timespent_tmp->timespent_id > 0 && empty($timespent->element_duration) && empty($timespent->timespent_note)) {
 						$result = $timespent->delete($user);
 					}
 				}
