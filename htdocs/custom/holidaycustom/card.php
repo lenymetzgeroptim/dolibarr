@@ -518,7 +518,7 @@ if (empty($reshook)) {
 				if($conf->global->FDT_STATUT_HOLIDAY) {
 					$form = new Form($db);
 					$userstatic->fetch($object->fk_user);
-					if($object->fk_type == 4 || ($userstatic->array_options['options_employeur'] != 1 && $conf->global->FDT_MANAGE_EMPLOYER)) {
+					if(($object->fk_type == 4 && !$conf->global->FDT_EXPORT_REPOS_COMPENSATEUR) || ($userstatic->array_options['options_employeur'] != 1 && $conf->global->FDT_MANAGE_EMPLOYER)) {
 						$object->array_options['options_statutfdt'] = 4;
 					}
 					elseif(in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
