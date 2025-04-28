@@ -645,6 +645,8 @@ class ExtendedExportFDT extends Export
 							// }
 						}
 						elseif($datatoexport == 'repos_compensateur') {	
+							$all_holiday[] = $obj->id_holiday;
+
 							$obj->typerepos = 'RCC Pris';
 						}
 						elseif($datatoexport == 'heure_sup') {
@@ -742,7 +744,7 @@ class ExtendedExportFDT extends Export
 					// Close file
 					$objmodel->close_file();
 	
-					if($datatoexport == 'absences' && $conf->global->FDT_STATUT_HOLIDAY && GETPOST('action', 'aZ09') != 'buildalldoctest') {
+					if(($datatoexport == 'absences' || $datatoexport == 'repos_compensateur') && $conf->global->FDT_STATUT_HOLIDAY && GETPOST('action', 'aZ09') != 'buildalldoctest') {
 						require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedHoliday.class.php';
 						$holiday = new extendedHoliday($this->db);
 						$result = $holiday->setStatutExported($all_holiday);

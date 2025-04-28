@@ -1695,11 +1695,11 @@ elseif ($conf->global->FDT_STATUT_HOLIDAY && $conf->global->FDT_STATUT_HOLIDAY_V
 		$holiday->fetch($holiday_id[$key]);
 		if($holiday->array_options['options_statutfdt'] == 1 && !$error) {
 			$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
-			if(in_array($holiday->fk_type, $exclude_type)) {
-				$holiday->array_options['options_statutfdt'] = 3;
+			if(!in_array($holiday->fk_type, $exclude_type) || ($holiday->fk_type == 11 && $conf->global->FDT_EXPORT_REPOS_COMPENSATEUR)) {
+				$holiday->array_options['options_statutfdt'] = 2;
 			}
 			else {
-				$holiday->array_options['options_statutfdt'] = 2;
+				$holiday->array_options['options_statutfdt'] = 3;
 			}
 			$result = $holiday->updateExtended($user);
 		}
@@ -1802,11 +1802,11 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 
 		if($conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
 			$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
-			if(in_array($holiday->fk_type, $exclude_type)) {
-				$holiday->array_options['options_statutfdt'] = 3;
+			if(!in_array($holiday->fk_type, $exclude_type) || ($holiday->fk_type == 11 && $conf->global->FDT_EXPORT_REPOS_COMPENSATEUR)) {
+				$holiday->array_options['options_statutfdt'] = 2;
 			}
 			else {
-				$holiday->array_options['options_statutfdt'] = 2;
+				$holiday->array_options['options_statutfdt'] = 3;
 			}
 			$result = $holiday->updateExtended($user);
 		}
@@ -2026,11 +2026,11 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 
 		if($conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF && $holiday_valide[$key] && $holiday->array_options['options_statutfdt'] == 1 && !$error) {
 			$exclude_type = explode(",", $conf->global->HOLIDAYTYPE_EXLUDED_EXPORT);
-			if(in_array($holiday->fk_type, $exclude_type)) {
-				$holiday->array_options['options_statutfdt'] = 3;
+			if(!in_array($holiday->fk_type, $exclude_type) || ($holiday->fk_type == 11 && $conf->global->FDT_EXPORT_REPOS_COMPENSATEUR)) {
+				$holiday->array_options['options_statutfdt'] = 2;
 			}
 			else {
-				$holiday->array_options['options_statutfdt'] = 2;
+				$holiday->array_options['options_statutfdt'] = 3;
 			}
 			$result = $holiday->updateExtended($user);
 		}

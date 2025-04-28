@@ -1902,8 +1902,8 @@ if ($action == 'buildalldoctest') {
 	}
 
 	if(!$error) {		
-		//header("Location: ".$_SERVER["PHP_SELF"].'?step=1');
-		//return;
+		header("Location: ".$_SERVER["PHP_SELF"].'?step=1');
+		return;
 	}
 }
 
