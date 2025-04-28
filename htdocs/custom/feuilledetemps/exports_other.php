@@ -640,10 +640,10 @@ elseif($datatoexport == 'recap_pointages') {
 	$objexport->array_export_sql_end[0] .= " FROM llx_element_time as et
 				LEFT JOIN llx_feuilledetemps_projet_task_time_other as pto ON pto.fk_projet_task_time = et.rowid
 				LEFT JOIN llx_projet_task as t ON t.rowid = et.fk_element AND elementtype = 'task'
-				LEFT JOIN llx_projet as p ON p.rowid = t.fk_projet
-				FULL JOIN llx_feuilledetemps_silae as s ON s.date = et.element_date
-				LEFT JOIN llx_feuilledetemps_silae_extrafields as es ON es.fk_object = s.rowid
-				LEFT JOIN llx_user as u ON u.rowid = et.fk_user
+				LEFT JOIN llx_projet as p ON p.rowid = t.fk_projet";
+	$objexport->array_export_sql_end[0] .= " FULL JOIN llx_feuilledetemps_silae as s ON s.date = et.element_date
+				LEFT JOIN llx_feuilledetemps_silae_extrafields as es ON es.fk_object = s.rowid";
+	$objexport->array_export_sql_end[0] .= " LEFT JOIN llx_user as u ON u.rowid = et.fk_user
 				LEFT JOIN llx_user_extrafields as eu ON eu.fk_object = u.rowid";
 	$objexport->array_export_sql_end[0] .= " WHERE 1=1 AND et.elementtype = 'task'";
 	$objexport->array_export_sql_order[0] = " HAVING 1=1";
@@ -1417,9 +1417,9 @@ if ($step == 2 && $datatoexport) {
 	if (count($array_selected)) {
 		// If filters exist
 		if ($usefilters && isset($objexport->array_export_TypeFields[0]) && is_array($objexport->array_export_TypeFields[0])) {
-			print '<a class="butAction" href="'.$link.'?step=3&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
+			print '<a class="butAction" href="'.DOL_URL_ROOT.$link.'?step=3&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
 		} else {
-			print '<a class="butAction" href="'.$link.'?step=4&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
+			print '<a class="butAction" href="'.DOL_URL_ROOT.$link.'?step=4&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
 		}
 	} else {
 		print '<a class="butActionRefused classfortooltip" href="#" title="'.dol_escape_htmltag($langs->trans("SelectAtLeastOneField")).'">'.$langs->trans("NextStep").'</a>';
@@ -1786,7 +1786,7 @@ if ($step == 4 && $datatoexport) {
 	print '<div class="tabsAction">';
 
 	if (count($array_selected)) {
-		print '<a class="butAction" href="'.$link.'?step='.($step + 1).'&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
+		print '<a class="butAction" href="'.DOL_URL_ROOT.$link.'?step='.($step + 1).'&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
 	}
 
 	print '</div>';
