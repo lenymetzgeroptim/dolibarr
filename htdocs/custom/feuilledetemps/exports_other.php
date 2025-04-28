@@ -174,7 +174,7 @@ if (!$user->rights->feuilledetemps->feuilledetemps->export) {
 	accessforbidden();
 }
 
-$link = "/custom/feuilledetemps/exports_other.php";
+$link = DOL_URL_ROOT."/custom/feuilledetemps/exports_other.php";
 
 if(empty($datatoexport) /* && $export_code >= 0*/) {
 	// if($export_code == '0') {
@@ -1203,7 +1203,7 @@ if ($step == 1 || !$datatoexport) {
 
 	$h = 0;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=1';
+	$head[$h][0] = $link.'?step=1';
 	$head[$h][1] = $langs->trans("Step")." 1";
 	$hselected = $h;
 	$h++;
@@ -1238,7 +1238,7 @@ if ($step == 1 || !$datatoexport) {
 			print $label;
 			print '</td><td class="right">';
 			if ($objexport->array_export_perms[$key]) {
-				print '<a href="'.DOL_URL_ROOT.$link.'?step=2&module_position='.$objexport->array_export_module[$key]->module_position.'&datatoexport='.$objexport->array_export_code[$key].'">'.img_picto($langs->trans("NewExport"), 'next', 'class="fa-15"').'</a>';
+				print '<a href="'.$link.'?step=2&module_position='.$objexport->array_export_module[$key]->module_position.'&datatoexport='.$objexport->array_export_code[$key].'">'.img_picto($langs->trans("NewExport"), 'next', 'class="fa-15"').'</a>';
 			} else {
 				print '<span class="opacitymedium">'.$langs->trans("NotEnoughPermissions").'</span>';
 			}
@@ -1263,11 +1263,11 @@ if ($step == 2 && $datatoexport) {
 
 	$h = 0;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=1';
+	$head[$h][0] = $link.'?step=1';
 	$head[$h][1] = $langs->trans("Step")." 1";
 	$h++;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=2&datatoexport='.$datatoexport;
+	$head[$h][0] = $link.'?step=2&datatoexport='.$datatoexport;
 	$head[$h][1] = $langs->trans("Step")." 2";
 	$hselected = $h;
 	$h++;
@@ -1417,9 +1417,9 @@ if ($step == 2 && $datatoexport) {
 	if (count($array_selected)) {
 		// If filters exist
 		if ($usefilters && isset($objexport->array_export_TypeFields[0]) && is_array($objexport->array_export_TypeFields[0])) {
-			print '<a class="butAction" href="'.DOL_URL_ROOT.$link.'?step=3&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
+			print '<a class="butAction" href="'.$link.'?step=3&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
 		} else {
-			print '<a class="butAction" href="'.DOL_URL_ROOT.$link.'?step=4&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
+			print '<a class="butAction" href="'.$link.'?step=4&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
 		}
 	} else {
 		print '<a class="butActionRefused classfortooltip" href="#" title="'.dol_escape_htmltag($langs->trans("SelectAtLeastOneField")).'">'.$langs->trans("NextStep").'</a>';
@@ -1431,7 +1431,7 @@ if ($step == 2 && $datatoexport) {
 if ($step == 3 && $datatoexport) {
 	if (count($array_selected) < 1) {      // This occurs when going back to page after sessecion expired
 		// Switch to step 2
-		header("Location: ".DOL_URL_ROOT.$link.'?step=2&datatoexport='.$datatoexport);
+		header("Location: ".$link.'?step=2&datatoexport='.$datatoexport);
 		exit;
 	}
 
@@ -1444,15 +1444,15 @@ if ($step == 3 && $datatoexport) {
 
 	$h = 0;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=1';
+	$head[$h][0] = $link.'?step=1';
 	$head[$h][1] = $langs->trans("Step")." 1";
 	$h++;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=2&datatoexport='.$datatoexport;
+	$head[$h][0] = $link.'?step=2&datatoexport='.$datatoexport;
 	$head[$h][1] = $langs->trans("Step")." 2";
 	$h++;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=3&datatoexport='.$datatoexport;
+	$head[$h][0] = $link.'?step=3&datatoexport='.$datatoexport;
 	$head[$h][1] = $langs->trans("Step")." 3";
 	$hselected = $h;
 	$h++;
@@ -1600,7 +1600,7 @@ if ($step == 3 && $datatoexport) {
 if ($step == 4 && $datatoexport) {
 	if (count($array_selected) < 1) {     // This occurs when going back to page after sessecion expired
 		// Switch to step 2
-		header("Location: ".DOL_URL_ROOT.$link.'?step=2&datatoexport='.$datatoexport);
+		header("Location: ".$link.'?step=2&datatoexport='.$datatoexport);
 		exit;
 	}
 
@@ -1616,23 +1616,23 @@ if ($step == 4 && $datatoexport) {
 	$stepoffset = 0;
 	$h = 0;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=1';
+	$head[$h][0] = $link.'?step=1';
 	$head[$h][1] = $langs->trans("Step")." 1";
 	$h++;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=2&datatoexport='.$datatoexport;
+	$head[$h][0] = $link.'?step=2&datatoexport='.$datatoexport;
 	$head[$h][1] = $langs->trans("Step")." 2";
 	$h++;
 
 	// If filters exist
 	if ($usefilters && isset($objexport->array_export_TypeFields[0]) && is_array($objexport->array_export_TypeFields[0])) {
-		$head[$h][0] = DOL_URL_ROOT.$link.'?step=3&datatoexport='.$datatoexport;
+		$head[$h][0] = $link.'?step=3&datatoexport='.$datatoexport;
 		$head[$h][1] = $langs->trans("Step")." 3";
 		$h++;
 		$stepoffset++;
 	}
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=4&datatoexport='.$datatoexport;
+	$head[$h][0] = $link.'?step=4&datatoexport='.$datatoexport;
 	$head[$h][1] = $langs->trans("Step")." ".(3 + $stepoffset);
 	$hselected = $h;
 	$h++;
@@ -1786,7 +1786,7 @@ if ($step == 4 && $datatoexport) {
 	print '<div class="tabsAction">';
 
 	if (count($array_selected)) {
-		print '<a class="butAction" href="'.DOL_URL_ROOT.$link.'?step='.($step + 1).'&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
+		print '<a class="butAction" href="'.$link.'?step='.($step + 1).'&datatoexport='.$datatoexport.'">'.$langs->trans("NextStep").'</a>';
 	}
 
 	print '</div>';
@@ -1874,7 +1874,7 @@ if ($step == 4 && $datatoexport) {
 if ($step == 5 && $datatoexport) {
 	if (count($array_selected) < 1) {      // This occurs when going back to page after session expired
 		// Switch to step 2
-		header("Location: ".DOL_URL_ROOT.$link.'?step=2&datatoexport='.$datatoexport);
+		header("Location: ".$link.'?step=2&datatoexport='.$datatoexport);
 		exit;
 	}
 
@@ -1890,27 +1890,27 @@ if ($step == 5 && $datatoexport) {
 	$h = 0;
 	$stepoffset = 0;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=1';
+	$head[$h][0] = $link.'?step=1';
 	$head[$h][1] = $langs->trans("Step")." 1";
 	$h++;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=2&datatoexport='.$datatoexport;
+	$head[$h][0] = $link.'?step=2&datatoexport='.$datatoexport;
 	$head[$h][1] = $langs->trans("Step")." 2";
 	$h++;
 
 	// si le filtrage est parameter pour l'export ou pas
 	if ($usefilters && isset($objexport->array_export_TypeFields[0]) && is_array($objexport->array_export_TypeFields[0])) {
-		$head[$h][0] = DOL_URL_ROOT.$link.'?step=3&datatoexport='.$datatoexport;
+		$head[$h][0] = $link.'?step=3&datatoexport='.$datatoexport;
 		$head[$h][1] = $langs->trans("Step")." 3";
 		$h++;
 		$stepoffset++;
 	}
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=4&datatoexport='.$datatoexport;
+	$head[$h][0] = $link.'?step=4&datatoexport='.$datatoexport;
 	$head[$h][1] = $langs->trans("Step")." ".(3 + $stepoffset);
 	$h++;
 
-	$head[$h][0] = DOL_URL_ROOT.$link.'?step=5&datatoexport='.$datatoexport;
+	$head[$h][0] = $link.'?step=5&datatoexport='.$datatoexport;
 	$head[$h][1] = $langs->trans("Step")." ".(4 + $stepoffset);
 	$hselected = $h;
 	$h++;

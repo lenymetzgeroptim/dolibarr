@@ -644,6 +644,9 @@ class ExtendedExportFDT extends Export
 							// 	continue;
 							// }
 						}
+						elseif($datatoexport == 'repos_compensateur') {	
+							$obj->typerepos = 'RCC Pris';
+						}
 						elseif($datatoexport == 'heure_sup') {
 							$obj->s_date = dol_print_date($obj->s_date, '%d/%m/%Y');
 							$obj->s_date2 = dol_print_date($obj->s_date2, '%d/%m/%Y');
@@ -778,7 +781,7 @@ class ExtendedExportFDT extends Export
 				continue; // A field that must not appears into SQL
 			}
 
-			if($key == 'code' || $key == 'hdebut' || $key == 'hfin' || $key == 'kilometres_rappel' || $key == 'grand_deplacement3' || $key == 'valeur') {
+			if($key == 'code' || $key == 'hdebut' || $key == 'hfin' || $key == 'kilometres_rappel' || $key == 'grand_deplacement3' || $key == 'valeur' || $key == 'typerepos') {
 				continue;
 			}
 
@@ -874,11 +877,17 @@ class ExtendedExportFDT extends Export
 			elseif($key == 'axe') {
 				$newfield = "null as axe";
 			}
+			elseif($datatoexport == 'repos_compensateur' && $key == 'date') {
+				$newfield = "CONCAT(h.date_debut, ' - ', h.date_fin) as date";
+			}
+			elseif($datatoexport == 'repos_compensateur' && $key == 'nom_prenom') {
+				$newfield = "CONCAT(u.firstname, ' ', u.lastname) as nom_prenom";
+			}
 	
 			$sql .= $newfield;
 		}
 
-		if($datatoexport == 'absences') {
+		if($datatoexport == 'absences' || $datatoexport == 'repos_compensateur') {
 			$sql .= ", h.halfday as h_halfday";
 			$sql .= ", hef.hour as hef_hour";
 			$sql .= ", ht.in_hour as ht_in_hour";
@@ -977,7 +986,7 @@ class ExtendedExportFDT extends Export
 				$sql .= " LEFT JOIN llx_feuilledetemps_silae_extrafields AS silae_extrafields ON silae_extrafields.fk_object = silae.rowid";
 			}
 		}
-		elseif($datatoexport == 'absences') {
+		elseif($datatoexport == 'absences' || $datatoexport == 'repos_compensateur') {
 			if($conf->donneesrh->enabled) {
 				$sql .= " LEFT JOIN llx_donneesrh_Positionetcoefficient_extrafields AS drh ON drh.fk_object = u.rowid";
 			}
@@ -1019,6 +1028,9 @@ class ExtendedExportFDT extends Export
 				if($datatoexport == 'absences' && ($key == 'h.date_debut' || $key == 'h.date_fin')) {
 					continue;
 				}
+				if($datatoexport == 'repos_compensateur' && ($key == 'date' )) {
+					continue;
+				}
 				elseif ($value != '') {
 					if($datatoexport == 'heure_sup' && $key == 's.date2') { 
 						$sqlWhere .= " AND ".$this->build_filterQuery($array_export_TypeFields[$indice][$key], 's.date', $array_filterValue[$key]);
@@ -1052,6 +1064,35 @@ class ExtendedExportFDT extends Export
 				if(!empty($conf->global->HOLIDAYTYPE_EXLUDED_EXPORT)) {
 					$sqlWhere .= " AND ht.rowid NOT IN (".$conf->global->HOLIDAYTYPE_EXLUDED_EXPORT.")";
 				}
+			}
+			if($datatoexport == 'repos_compensateur') {
+				if(!empty($array_filterValue["date"])) {
+					$sqlWhere .= " AND ".$this->build_filterQuery("Date", "fdt.date_debut", $array_filterValue["date"]);
+					$sqlWhere .= " AND ".$this->build_filterQuery("Date", "fdt.date_fin", $array_filterValue["date"]);
+					if($conf->global->FDT_DISPLAY_FULL_WEEK) {
+						$first_day = dol_mktime(-1, -1, -1, substr($array_filterValue["date"], 4, 2), 1, substr($array_filterValue["date"], 0, 4));
+						$first_day = dol_time_plus_duree($first_day, -$conf->global->JOUR_ANTICIPES, 'd');
+						$first_day = dol_get_first_day_week(dol_print_date($first_day, '%d'), dol_print_date($first_day, '%m'), dol_print_date($first_day, '%Y'));
+						$first_day = dol_mktime(0, 0, 0, $first_day['first_month'], $first_day['first_day'], $first_day['first_year']);
+						
+						$last_day = dol_get_last_day(substr($array_filterValue["date"], 0, 4), substr($array_filterValue["date"], 4, 2));
+						$last_day = dol_time_plus_duree($last_day, 1, 'w');
+						$last_day = dol_get_first_day_week(dol_print_date($last_day, '%d'), dol_print_date($last_day, '%m'), dol_print_date($last_day, '%Y'));
+						$last_day = dol_mktime(0, 0, 0, $last_day['first_month'], $last_day['first_day'], $last_day['first_year']);
+
+						$sqlWhere .= " AND (h.date_debut < '".$this->db->idate($last_day)."' AND h.date_fin >= '".$this->db->idate($first_day)."')";
+					}
+					else {
+						$first_day = dol_mktime(-1, -1, -1, substr($array_filterValue["date"], 4, 2), 1, substr($array_filterValue["date"], 0, 4));
+						$first_day = dol_time_plus_duree($first_day, -$conf->global->JOUR_ANTICIPES, 'd');
+						
+						$last_day = dol_get_last_day(substr($array_filterValue["date"], 0, 4), substr($array_filterValue["date"], 4, 2));
+						
+						$sqlWhere .= " AND (h.date_debut <= '".$this->db->idate($last_day)."' AND h.date_fin >= '".$this->db->idate($first_day)."')";
+					}
+				}
+				$sqlWhere .= " AND h.statut NOT IN (1,4,5)";
+				$sqlWhere .= " AND ht.code = 'RC'";
 			}
 			elseif($datatoexport == 'heure_sup') {
 				$sqlWhere .= " AND (s.heure_sup00 > 0 OR s.heure_sup00 < 0 OR s.heure_sup25 > 0 OR s.heure_sup25 < 0 OR s.heure_sup50 > 0 OR s.heure_sup50 < 0 OR s.heure_sup50ht > 0 OR s.heure_sup50ht < 0)";

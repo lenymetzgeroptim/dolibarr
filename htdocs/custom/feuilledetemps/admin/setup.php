@@ -240,6 +240,8 @@ $item = $formSetup->newItem('FDT_SHOW_USERADRESS')->setAsYesNo();
 // FDT_ORDER_MATRICULE
 $item = $formSetup->newItem('FDT_ORDER_MATRICULE')->setAsYesNo();
 
+// FDT_EXPORT_REPOS_COMPENSATEUR
+$item = $formSetup->newItem('FDT_EXPORT_REPOS_COMPENSATEUR')->setAsYesNo();
 
 // Titre FDT_STANDARD_WEEK
 $formSetup->newItem('FDT_STANDARD_WEEK')->setAsTitle();
