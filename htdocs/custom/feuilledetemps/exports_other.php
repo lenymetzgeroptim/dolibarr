@@ -509,7 +509,7 @@ if($datatoexport == 'heure_nuit_dimanche')  {
 	$objexport->array_export_dependencies[0] = "";
 	$objexport->array_export_FilterValue = ($array_filtervalue ? $array_filtervalue : array());
 }
-if($datatoexport == 'recap_pointages')  {
+elseif($datatoexport == 'recap_pointages')  {
 	$objexport->array_export_code_for_sort[0] = '02_recap_pointages';
 	$objexport->array_export_code[0] = 'recap_pointages';
 	$objexport->array_export_label[0] = "Recap des pointages";
@@ -615,34 +615,34 @@ else {
 
 if($datatoexport == 'heure_nuit_dimanche') {
 	$objexport->array_export_sql_end[0] .= " FROM llx_element_time as et
-				LEFT JOIN llx_feuilledetemps_projet_task_time_other as pto ON pto.fk_projet_task_time = et.rowid
+				LEFT JOIN llx_feuilledetemps_projet_task_time_other as pto ON pto.fk_projet_task_time = et.rowid AND pto.heure_nuit > 0
 				LEFT JOIN llx_projet_task as t ON t.rowid = et.fk_element AND elementtype = 'task'
 				LEFT JOIN llx_projet as p ON p.rowid = t.fk_projet
 				FULL JOIN llx_feuilledetemps_silae as s ON s.date = et.element_date
 				LEFT JOIN llx_feuilledetemps_silae_extrafields as es ON es.fk_object = s.rowid
 				LEFT JOIN llx_user as u ON u.rowid = et.fk_user
 				LEFT JOIN llx_user_extrafields as eu ON eu.fk_object = u.rowid";
-	$objexport->array_export_sql_end[0] .= " WHERE 1=1 AND et.elementtype = 'task'";
-
-	$objexport->array_export_sql_order[0] .= " HAVING 1=1 AND heures > 0";
-
+	$objexport->array_export_sql_end[0] .= " WHERE 1=1 AND et.elementtype = 'task' AND ((DAYNAME(et.element_date) = 'sunday' OR pto.heure_nuit > 0)";
 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_nuit_100'])) {
-		$objexport->array_export_sql_order[0] .= " OR es.h_nuit_100 > 0";
+		$objexport->array_export_sql_end[0] .= " OR es.h_nuit_100 > 0";
 	}
 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_75'])) {
-		$objexport->array_export_sql_order[0] .= " OR es.h_dim_75 > 0";
+		$objexport->array_export_sql_end[0] .= " OR es.h_dim_75 > 0";
 	}
 	if(isset($silae_extrafields->attributes['feuilledetemps_silae']['type']['h_dim_50'])) {
-		$objexport->array_export_sql_order[0] .= " OR es.h_dim_50 > 0";
+		$objexport->array_export_sql_end[0] .= " OR es.h_dim_50 > 0";
 	}
+	$objexport->array_export_sql_end[0] .= ")";
+
+	$objexport->array_export_sql_order[0] .= " HAVING 1=1 AND heures > 0";
 }
 elseif($datatoexport == 'recap_pointages') {
 	$objexport->array_export_sql_end[0] .= " FROM llx_element_time as et
 				LEFT JOIN llx_feuilledetemps_projet_task_time_other as pto ON pto.fk_projet_task_time = et.rowid
 				LEFT JOIN llx_projet_task as t ON t.rowid = et.fk_element AND elementtype = 'task'
 				LEFT JOIN llx_projet as p ON p.rowid = t.fk_projet";
-	$objexport->array_export_sql_end[0] .= " FULL JOIN llx_feuilledetemps_silae as s ON s.date = et.element_date
-				LEFT JOIN llx_feuilledetemps_silae_extrafields as es ON es.fk_object = s.rowid";
+	// $objexport->array_export_sql_end[0] .= " FULL JOIN llx_feuilledetemps_silae as s ON s.date = et.element_date
+	// 			LEFT JOIN llx_feuilledetemps_silae_extrafields as es ON es.fk_object = s.rowid";
 	$objexport->array_export_sql_end[0] .= " LEFT JOIN llx_user as u ON u.rowid = et.fk_user
 				LEFT JOIN llx_user_extrafields as eu ON eu.fk_object = u.rowid";
 	$objexport->array_export_sql_end[0] .= " WHERE 1=1 AND et.elementtype = 'task'";
