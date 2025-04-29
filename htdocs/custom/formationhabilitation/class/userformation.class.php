@@ -125,7 +125,7 @@ class UserFormation extends CommonObject
 		"date_debut_formation" => array("type"=>"date", "label"=>"DateDebutFormation", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1",),
 		"date_fin_formation" => array("type"=>"date", "label"=>"DateFinFormation", "enabled"=>"1", 'position'=>39, 'notnull'=>1, "visible"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "8" => "Suspendue", "9" => "Cloturée"), "validate"=>"1",),
-		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"4",),
+		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"1",),
 		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>46, 'notnull'=>0, "visible"=>"4",),
 		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"4",),
 		"date_finvalidite_formation" => array("type"=>"date", "label"=>"DateFinValiditeFormation", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
@@ -170,8 +170,6 @@ class UserFormation extends CommonObject
 	public $prevupif;
 	public $non_renouvelee;
 	public $ex_status;
-
-	private $type_code = 'AC_USERFORMATION';
 	// END MODULEBUILDER PROPERTIES
 
 

@@ -102,8 +102,8 @@ foreach($objectline->fields as $key => $val){
 				print $line->getNomUrl(0, 'nolink', 1);
 			}
 		}
-		elseif((($key == 'date_finvalidite_formation' && $action == 'edit_datefinvalidite') || ($key == 'date_fin_habilitation' && $action == 'edit_datefinhabilitation') || ($key == 'date_fin_autorisation' && $action == 'edit_datefinautorisation') || ($key == 'cout_pedagogique' && $action == 'edit_coutpedagogique') 
-		|| ($key == 'cout_mobilisation' && $action == 'edit_coutmobilisation') || ($key == 'domaineapplication' && $action == 'edit_domaineapplication')) && $permissiontoaddline && $line->id == $lineid) {
+		elseif((($key == 'date_finvalidite_formation' && $action == 'edit_datefinvalidite') || ($key == 'date_fin_habilitation' && $action == 'edit_datefinhabilitation') || ($key == 'date_fin_autorisation' && $action == 'edit_datefinautorisation') || /*($key == 'cout_pedagogique' && $action == 'edit_coutpedagogique') 
+		||*/ ($key == 'cout_mobilisation' && $action == 'edit_coutmobilisation') || ($key == 'domaineapplication' && $action == 'edit_domaineapplication')) && $permissiontoaddline && $line->id == $lineid) {
 			print $line->showInputField($val, $key, $line->$key, 'form="addline"');
 			print '<input type="hidden" form="addline" name="lineid" value="'.$line->id.'">';
 		}
@@ -114,9 +114,9 @@ foreach($objectline->fields as $key => $val){
 		if($object->element == 'user' && $key == 'date_finvalidite_formation' && $permissiontoaddline && $action != 'edit_datefinvalidite') {
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_datefinvalidite&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
-		elseif($object->element == 'user' && $key == 'cout_pedagogique' && $permissiontoaddline && $action != 'edit_coutpedagogique') {
-			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_coutpedagogique&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
-		}
+		// elseif($object->element == 'user' && $key == 'cout_pedagogique' && $permissiontoaddline && $action != 'edit_coutpedagogique') {
+		// 	print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_coutpedagogique&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+		// }
 		elseif($object->element == 'user' && $key == 'cout_mobilisation' && $permissiontoaddline && $action != 'edit_coutmobilisation') {
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_coutmobilisation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
