@@ -157,3 +157,23 @@ td.linecolstatus a[aria-label="Programmer"] {
 #description_action_formationhabilitation span div {
 	display: inline;
 }
+
+.formationhabilitation .gantt .rhscrpad {
+	left: 0 !important;
+}
+
+.formationhabilitation .gantt div.gmain.gmainleft {
+	flex: 0 0 auto !important;
+	position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+.formationhabilitation .gantt div.gmain.gmainright {
+	overflow: unset;
+}
+
+.formationhabilitation .gantt div.gchartcontainer {
+	overflow: auto;
+    max-height: 500px;
+}

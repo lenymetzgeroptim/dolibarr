@@ -373,3 +373,4 @@ Refuse = Refuser
 NotificationRespAntenne = Notifier le responsable d'antenne de la creation d'habilitations/autorisation
 GenerationVoletFormation = Génération du volet de formation
 GenerationAndCloseVoletFormation = Génération(s) et clôture(s) des volets de formation
+NoHabilitations = Aucune habilitation

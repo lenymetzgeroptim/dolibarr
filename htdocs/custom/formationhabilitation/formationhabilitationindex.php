@@ -59,11 +59,14 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/formation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/habilitation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/userhabilitation.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/class/extendedUser3.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("formationhabilitation@formationhabilitation"));
 
 $action = GETPOST('action', 'aZ09');
+$search_user = (!GETPOST('search_user', 'intcomma') && !GETPOST('search_user_multiselect', 'int') ? array($user->id) : explode(",", GETPOST('search_user', 'intcomma')));
+$search_habilitation = (!GETPOST('search_habilitation', 'intcomma') ? explode(",", GETPOST('search_habilitation', 'intcomma')) : array());
 
 
 // Security check
@@ -96,8 +99,8 @@ $max = $conf->global->MAIN_SIZE_SHORTLIST_LIMIT;
 $form = new Form($db);
 $formfile = new FormFile($db);
 $userHabilitation = new UserHabilitation($db);
-$Habilitation = new Habilitation($db);
-$user_static = new User($db);
+$habilitation = new Habilitation($db);
+$user_static = new ExtendedUser3($db);
 
 $arrayofcss = array('/includes/jsgantt/jsgantt.css');
 
@@ -108,7 +111,7 @@ if (!empty($conf->use_javascript_ajax)) {
 	);
 }
 
-llxHeader("", $langs->trans("FormationHabilitationArea"), '', '', 0, 0, $arrayofjs, $arrayofcss);
+llxHeader("", $langs->trans("FormationHabilitationArea"), '', '', 0, 0, $arrayofjs, $arrayofcss, '', 'classforhorizontalscrolloftabs formationhabilitation');
 
 print load_fiche_titre($langs->trans("FormationHabilitationArea"), '', 'object_module_32@formationhabilitation');
 
@@ -224,12 +227,44 @@ print '<div class="fichecenter">';
 
 // Diagramme de Gantt
 if (!empty($conf->formationhabilitation->enabled) && $user->rights->formationhabilitation->userhabilitation_autorisation->readall) {
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+		print '<input type="hidden" name="token" value="'.newToken().'">';
+		// print '<input type="hidden" name="action" value="add">';
+
+		print '<table class="table_filter noborder centpercent">';
+			print '<tr class="liste_titre">';
+				print '<td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td>';
+			print '</tr>';
+
+			// Ligne 1 : Salariés, Emploi, Compétence
+			print '<tr>';
+				print '<td class="">';
+					print $langs->trans("User") . ' &nbsp;';
+					print img_picto('', 'user', 'class="pictofixedwidth"');
+					$user_array = $user_static->getAllUserName();
+					print $form->multiselectarray('search_user', $user_array, $search_user, 0, 0, '', 0, 0, '', '', 'Tout le monde');
+				print '</td>';
+
+				print '<td class="">';
+					print $langs->trans("Habilitation") . ' &nbsp;';
+					print img_picto('', 'fa-cog_fa_#c46c0e', 'class="pictofixedwidth"');
+					$habilitation_array = $habilitation->getAllHabilitationLabel();
+					print $form->multiselectarray('search_habilitation', $habilitation_array, $search_habilitation, 0, 0, '', 0, 0, '', '', 'Toutes les habilitation');
+				print '</td>';
+			print '</tr>';
+		print '</table>';
+
+		print '<div class="center">';
+		print '<input type="submit" class="button valignmiddle" value="'.$langs->trans("Search").'">';
+		print '</div>';
+	print '</form><br>';
+
 	// Get list of habilitations
-	$userhabilitationarray = $userHabilitation->fetchAllWithUser('ASC', 'u.lastname', 0, 0, array("u.statut" => 1));
+	$userhabilitationarray = $userHabilitation->fetchAllWithUser('ASC', 'u.lastname', 0, 0, array("u.statut" => 1, "t.fk_user" => implode(",", $search_user)));
 	$user_static->fetchAll('', '', 0, 0, array("statut" => 1));
 	$linearray = $userhabilitationarray;
 
-	$habilitationarray = $Habilitation->fetchAll();
+	//$habilitationarray = $habilitation->fetchAll();
 
 	// How the date for data are formated (format used bu jsgantt)
 	$dateformatinput = 'yyyy-mm-dd';
@@ -237,7 +272,7 @@ if (!empty($conf->formationhabilitation->enabled) && $user->rights->formationhab
 	$dateformatinput2 = 'standard';
 
 	$date_start = dol_get_first_day(dol_print_date($now, 'Y'), dol_print_date($now, 'm'));
-	$date_end = dol_get_last_day(dol_print_date($now, 'Y') + 2, dol_print_date($now, 'm'));
+	$date_end = dol_get_last_day(dol_print_date($now, 'Y') + 3, dol_print_date($now, 'm'));
 
 	if (count($linearray) > 0) { // Show Gant diagram from $userhabilitationarray using JSGantt
 		$dateformat = $langs->trans("FormatDateShortJQuery"); // Used by include ganttchart.inc.php later
@@ -438,21 +473,10 @@ if (!empty($conf->formationhabilitation->enabled) && $user->rights->formationhab
 		print "\n";
 
 		if (!empty($conf->use_javascript_ajax)) {
-			$moreforfilter = '<div class="liste_titre liste_titre_bydiv centpercent">';
+			print '<div class="div-table-responsive">';
+			print '<div class="liste_titre liste_titre_bydiv centpercent">'.'</div>';
 
-			$moreforfilter .= '<div class="divsearchfield">';
-			//$moreforfilter .= $langs->trans("TasksAssignedTo").': ';
-			//$moreforfilter .= $form->select_dolusers($tmpuser->id > 0 ? $tmpuser->id : '', 'search_user_id', 1);
-			$moreforfilter .= '&nbsp;';
-			$moreforfilter .= '</div>';
-
-			$moreforfilter .= '</div>';
-
-			print $moreforfilter;
-
-			print '<div class="div-table-responsive" style="max-height: 500px; overflow: auto;">';
-
-			print '<div id="tabs" class="gantt" style="width: 80vw;">'."\n";
+			print '<div id="tabs" class="gantt"">'."\n";
 			include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/habilitations_ganttchart.inc.php';
 			print '</div>'."\n";
 
@@ -462,7 +486,7 @@ if (!empty($conf->formationhabilitation->enabled) && $user->rights->formationhab
 			print $langs->trans("AvailableOnlyIfJavascriptAndAjaxNotDisabled");
 		}
 	} else {
-		print '<div class="opacitymedium">'.$langs->trans("NoLines").'</div>';
+		print '<div class="info">'.$langs->trans("NoHabilitations").'</div>';
 	}
 }
 
