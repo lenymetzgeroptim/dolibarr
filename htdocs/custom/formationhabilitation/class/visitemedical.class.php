@@ -1970,10 +1970,11 @@ class VisiteMedical extends CommonObject
 			while ($obj = $this->db->fetch_object($resql)) {
 				foreach(explode(",", $obj->naturevisite) as $naturevisite) {
 					if($obj->status == self::STATUS_APTE) {
-						$res['Apte'][$obj->rowid] = $naturevisite;
+						$res['Apte'][] = $naturevisite;
 					}
 					else {
-						$res['Conditionnelle']['naturevisite'][$obj->rowid] = $naturevisite;
+						$res['Conditionnelle']['rowid'][$naturevisite] = $obj->rowid;
+						$res['Conditionnelle']['naturevisite'][] = $naturevisite;
 						$res['Conditionnelle']['commentaire'][$obj->rowid] = $obj->commentaire;
 					}
 				}

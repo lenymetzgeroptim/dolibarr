@@ -134,7 +134,7 @@ class UserVolet extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>-1, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "2" => "En cours d'approbation", "3" => "En cours d'approbation", "4" => "En cours d'approbation", "7" => "Expiré", "8" => "Suspendu", "9" => "Clôtur&eacute;"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("4" => "Valid&eacute; (Collaborateur)", "5" => "Valid&eacute;", "7" => "Expir&eacute;", "8" => "Suspendu", "9" => "Clôtur&eacute;", "0" => "En cours d'approbation (Administratif)", "1" => "En cours d'approbation (RD)", "2" => "En cours d'approbation (Direction)"), "validate"=>"1",),
 		"fk_user" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
 		"fk_volet" => array("type"=>"integer:volet:custom/formationhabilitation/class/volet.class.php:0:(status:=:1)", "label"=>"Volet", "enabled"=>"1", 'position'=>35, 'notnull'=>1, "visible"=>"1",),
 		"datedebutvolet" => array("type"=>"date", "label"=>"DateDebutVolet", "enabled"=>"1", 'position'=>50, 'notnull'=>0, "visible"=>"1",),
@@ -148,6 +148,7 @@ class UserVolet extends CommonObject
 		"fk_user_valid_intervenant" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserValidationIntervenant", "enabled"=>"1", 'position'=>561, 'notnull'=>-1, "visible"=>"-2",),
 		"fk_action_valid_employeur" => array("type"=>"integer:commaction:comm/action/class/commaction.class.php", "label"=>"ActionValidationEmployeur", "enabled"=>"1", 'position'=>552, 'notnull'=>-1, "visible"=>"-2",),
 		"fk_action_valid_intervenant" => array("type"=>"integer:commaction:comm/action/class/commaction.class.php", "label"=>"ActionValidationIntervenant", "enabled"=>"1", 'position'=>562, 'notnull'=>-1, "visible"=>"-2",),
+		"ex_status" => array("type"=>"integer", "label"=>"ExStatus", "enabled"=>"1", 'position'=>1999, 'notnull'=>0, "visible"=>"0", "arrayofkeyval"=>array("{0:Brouillon" => "1:Validé,2:En cours d'approbation,3:En cours d'approbation,4:En cours d'approbation,7:Expiré,8:Suspendu,9:Clôturé}"),),
 	);
 	public $rowid;
 	public $ref;
@@ -172,6 +173,7 @@ class UserVolet extends CommonObject
 	public $fk_user_valid_intervenant;
 	public $fk_action_valid_employeur;
 	public $fk_action_valid_intervenant;
+	public $ex_status;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -2208,6 +2210,7 @@ class UserVolet extends CommonObject
 		// Validate
 		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
 		$sql .= " SET status = ".self::STATUS_SUSPEND;
+		$sql .= ", ex_status = ".$this->status;
 		$sql .= " WHERE rowid = ".((int) $this->id);
 
 		dol_syslog(get_class($this)."::suspend()", LOG_DEBUG);
@@ -2229,6 +2232,7 @@ class UserVolet extends CommonObject
 
 		// Set new ref and current status
 		if (!$error) {
+			$this->ex_status = $this->status;
 			$this->status = self::STATUS_SUSPEND;
 		}
 
@@ -2268,7 +2272,8 @@ class UserVolet extends CommonObject
 
 		// Validate
 		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-		$sql .= " SET status = ".self::STATUS_VALIDATION_WITHOUT_USER;
+		$sql .= " SET status = ".$this->ex_status;
+		$sql .= ", ex_status = NULL";
 		$sql .= " WHERE rowid = ".((int) $this->id);
 
 		dol_syslog(get_class($this)."::unsuspend()", LOG_DEBUG);
@@ -2290,7 +2295,8 @@ class UserVolet extends CommonObject
 
 		// Set new ref and current status
 		if (!$error) {
-			$this->status = self::STATUS_VALIDATION_WITHOUT_USER;
+			$this->status = $this->ex_status;
+			$this->ex_status = '';
 		}
 
 		if (!$error) {
