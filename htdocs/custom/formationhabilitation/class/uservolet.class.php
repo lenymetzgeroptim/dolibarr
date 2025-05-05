@@ -3472,13 +3472,18 @@ class UserVolet extends CommonObject
 		$objecttmp = new $objectclass($this->db);
 		$objectparenttmp = new $objectparentclass($this->db);
 
+		$volet = new Volet($this->db);
 		$uservolet = new self($this->db);
 		$user_static = new User($this->db);
 		$user_static->fetch($userid);
 
 		$voletsCreate = array(); 
+		$linesForVolet = array();
+		$voletEquivalent = array();
 
 		dol_syslog(get_class($this)."::generateNewVoletHabilitationAutorisation", LOG_DEBUG);
+
+		// Vérification avant création => Est-ce que le même volet avec les mêmes lignes n'existent pas déja
 		foreach($validateObjects as $validateObject) { // On boucle sur toutes les lignes ajouté
 			if($objecttmp->element == 'userhabilitation') {
 				$objectparenttmp->fetch($validateObject->fk_habilitation);
@@ -3490,6 +3495,32 @@ class UserVolet extends CommonObject
 			$voletsForObject = explode(',', $objectparenttmp->fk_volet);
 			foreach($voletsForObject as $voletid) {
 				if($voletid > 0) {
+					$linesForVolet[$voletid][$validateObject->id] = $validateObject->id;
+				}
+			}
+		}
+		$voletEquivalent = $this->getVoletEquivalent($linesForVolet, $userid, GETPOST('qualif_pro', 'int'));
+
+		foreach($validateObjects as $validateObject) { // On boucle sur toutes les lignes ajouté
+			if($objecttmp->element == 'userhabilitation') {
+				$objectparenttmp->fetch($validateObject->fk_habilitation);
+			}
+			elseif($objecttmp->element == 'userautorisation') {
+				$objectparenttmp->fetch($validateObject->fk_autorisation);
+			}
+
+			$voletsForObject = explode(',', $objectparenttmp->fk_volet);
+			foreach($voletsForObject as $voletid) {
+				if($voletid > 0) {
+					if(in_array($voletid, $voletEquivalent) ) {
+						if(!array_key_exists($voletid, $voletsCreate)) {
+							$voletsCreate[$voletid] = $voletid;
+							$volet->fetch($voletid);
+							setEventMessages($langs->trans("NoVoletCreatedBecauseEquivalent", $volet->nommage), null, 'warnings');
+						}
+						continue;
+					}
+
 					$volet = new Volet($this->db);
 					$volet->fetch($voletid); 
 
@@ -3537,6 +3568,7 @@ class UserVolet extends CommonObject
 						$this->error = "Impossible de lier la ligne ".$validateObject->ref." sur le volet ".$volet->label;
 						break;
 					}
+					
 				}
 			}
 		}
@@ -4008,6 +4040,78 @@ class UserVolet extends CommonObject
 			$this->error = $this->db->lasterror();
 			return -1;
 		}
+	}
+
+	/**
+	 * Récupère les lignes liées à un UserVolet
+	 *
+	 * 	@param  int		$id_uservolet       	Id of UserVolet
+	 *  @return	array|int		array of id lines id OK, < 0 if KO
+	 */
+	public function getLinesLinked($id_uservolet)
+	{
+		global $conf, $user;
+
+		$res = array();
+
+		$sql = "SELECT e.fk_source";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as uv";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as e ON e.fk_target = uv.rowid AND e.targettype = '".$this->module."_".$this->element."'";
+		$sql .= " WHERE uv.rowid = $id_uservolet";
+
+		dol_syslog(get_class($this)."::getLinesLinked", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->fk_source] = $obj->fk_source;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * Récupère les volets actifs équivalent au volet dans $linesForVolet
+	 *
+	 * 	@param  array		$linesForVolet     array with $idVolet => List of lines id 
+	 *  @return	array|int		array with volets id if OK, < 0 if KO
+	 */
+	public function getVoletEquivalent($linesForVolet, $fk_user, $qualif_pro)
+	{
+		global $conf, $user;
+
+		$userVolet = new UserVolet($this->db);
+		$res = array();
+
+		foreach($linesForVolet as $idvolet => $lines) {
+			$sql = "SELECT uv.rowid";
+			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_uservolet as uv";
+			$sql .= " WHERE uv.fk_user = $fk_user";
+			$sql .= " AND uv.status <= ".self::STATUS_VALIDATED;
+			$sql .= " AND uv.fk_volet = $idvolet";
+			$sql .= " AND uv.qualif_pro = $qualif_pro";
+
+			dol_syslog(get_class($this)."::getVoletEquivalent", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if ($resql) {
+				while($obj = $this->db->fetch_object($resql)) {
+					if($lines == $this->getLinesLinked($obj->rowid)) {
+						$res[] = $idvolet;
+						break;
+					}
+				}
+			} else {
+				$this->error = $this->db->lasterror();
+				return -1;
+			}
+		}
+
+		$this->db->free($resql);
+		return $res;
 	}
 
 	public function getDateFinVolet($volet){

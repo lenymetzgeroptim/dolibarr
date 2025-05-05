@@ -250,6 +250,7 @@ ConfirmGenerateAutohabilitation = Etes vous sûrs de vouloir générer les habil
 ConfirmGenerateAutoautorisation = Etes vous sûrs de vouloir générer les autorisation(s) sélectionnée(s) ?
 RefuseUserVolet = Refuser le volet
 ConfirmRefuseUserVolet = Êtes-vous sûr de vouloir refuser le volet ? Il sera renvoyer au 1er approbateur
+NoVoletCreatedBecauseEquivalent = Le volet %s n'a pas été créé car le même volet existe déja
 
 
 #

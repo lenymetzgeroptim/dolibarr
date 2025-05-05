@@ -848,7 +848,7 @@ class UserAutorisation extends CommonObject
 
 		if ($this->status != self::STATUS_AUTORISABLE) {
 			$this->errors[] = $langs->trans('ImpossibleToValidateWithThisStatut', $this->ref);
-			return 0;
+			return -1;
 		}
 
 		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
