@@ -1913,7 +1913,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' &
 	$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 	$modification = '';
 	$silae = new Silae($db);
-	if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 
 	// $heure_sup00 = $_POST['heure_sup00'];
 	// $heure_sup25 = $_POST['heure_sup25'];
