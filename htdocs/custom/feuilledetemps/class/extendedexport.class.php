@@ -880,7 +880,7 @@ class ExtendedExportFDT extends Export
 				$newfield = "null as axe";
 			}
 			elseif($datatoexport == 'repos_compensateur' && $key == 'date') {
-				$newfield = "CONCAT(h.date_debut, ' - ', h.date_fin) as date";
+				$newfield = "CONCAT(DATE_FORMAT(h.date_debut, \"%d/%m/%Y\"), ' - ', DATE_FORMAT(h.date_fin, \"%d/%m/%Y\")) as date";
 			}
 			elseif($datatoexport == 'repos_compensateur' && $key == 'nom_prenom') {
 				$newfield = "CONCAT(u.firstname, ' ', u.lastname) as nom_prenom";
