@@ -1741,7 +1741,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtimeVerification' && GET
 	// $regul = new Regul($db);
 	// $resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 	$silae = new Silae($db);
-	if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
+	$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $object->fk_user);
 
 	$holiday_type = $_POST['holiday_type'];
 	$holiday_id = $_POST['holiday_id'];
@@ -2566,7 +2566,7 @@ if ($action == 'confirm_transmettre' && $confirm == 'yes' && $object->id > 0){
 		$projet_task_time_other = New Projet_task_time_other($db);
 		$otherTime = $projet_task_time_other->getOtherTimeDay($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 		$silae = new Silae($db);
-		if(is_null($silae_array)) $silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+		$silae_array = $silae->fetchAllSilaeWithoutId($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 		for ($idw = 0; $idw < $nb_jour; $idw++) { 
 			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw];
 
