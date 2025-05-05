@@ -334,37 +334,47 @@ function formationhabilitationUserPrepareHead($object)
  */
 function formationhabilitationIndexPrepareHead($object)
 {
-	global $langs, $conf;
+	global $langs, $conf, $user;
 
 	$langs->load("formationhabilitation@formationhabilitation");
 
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=formation';
-	$head[$h][1] = $langs->trans("Formations");
-	$head[$h][2] = 'formation';
-	$h++;
+	if ($user->rights->formationhabilitation->userformation->read || $user->rights->formationhabilitation->userformation->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=formation';
+		$head[$h][1] = $langs->trans("Formations");
+		$head[$h][2] = 'formation';
+		$h++;
+	}
 
-	$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=habilitation';
-	$head[$h][1] = $langs->trans("Habilitations");
-	$head[$h][2] = 'habilitation';
-	$h++;
+	if ($user->rights->formationhabilitation->userhabilitation_autorisation->read || $user->rights->formationhabilitation->userhabilitation_autorisation->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=habilitation';
+		$head[$h][1] = $langs->trans("Habilitations");
+		$head[$h][2] = 'habilitation';
+		$h++;
+	}
 
-	$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=autorisation';
-	$head[$h][1] = $langs->trans("Autorisations");
-	$head[$h][2] = 'autorisation';
-	$h++;
+	if ($user->rights->formationhabilitation->userhabilitation_autorisation->read || $user->rights->formationhabilitation->userhabilitation_autorisation->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=autorisation';
+		$head[$h][1] = $langs->trans("Autorisations");
+		$head[$h][2] = 'autorisation';
+		$h++;
+	}
 
-	$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=volet';
-	$head[$h][1] = $langs->trans("Volets");
-	$head[$h][2] = 'volet';
-	$h++;
+	if ($user->rights->formationhabilitation->uservolet->read || $user->rights->formationhabilitation->uservolet->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=volet';
+		$head[$h][1] = $langs->trans("Volets");
+		$head[$h][2] = 'volet';
+		$h++;
+	}
 
-	$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=visitemedical';
-	$head[$h][1] = $langs->trans("Visites médicale");
-	$head[$h][2] = 'visitemedical';
-	$h++;
+	if ($user->rights->formationhabilitation->visitemedical->read || $user->rights->formationhabilitation->visitemedical->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=visitemedical';
+		$head[$h][1] = $langs->trans("Visites médicale");
+		$head[$h][2] = 'visitemedical';
+		$h++;
+	}
 
 	// Show more tabs from modules
 	// Entries must be declared in modules descriptor with line
