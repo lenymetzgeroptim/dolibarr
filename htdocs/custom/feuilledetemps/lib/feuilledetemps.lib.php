@@ -2837,7 +2837,7 @@ function showrefnav_custom($object, $paramid, $morehtml = '', $shownav = 1, $fie
 	if (empty($user_extrafields->attributes[$user_static->table_element]['loaded'])) {
 		$user_extrafields->fetch_name_optionals_label($user_static->table_element);
 	}
-	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
+	if(isset($user_extrafields->attributes['user']['type']['etablissement'])) {
 		//$filter = 'and SUBSTR(te.ref, 1, 9) < "'.substr($object->ref, 0, 9).'" AND CHAR_LENGTH(te.ref) = 16 AND te.date_debut = "'.$object->db->idate($object->date_debut).'"';
 		$filter = " WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(te.ref, '_', 2), '_', -1) < ".explode('_', $object->ref)[1]." AND SUBSTRING_INDEX(te.ref, '_', -1) = '".explode('_', $object->ref)[2]."' AND CHAR_LENGTH(te.ref) = 16";
 		//$filter2 = 'and SUBSTR(te.ref, 1, 9) > "'.substr($object->ref, 0, 9).'" AND CHAR_LENGTH(te.ref) = 16 AND te.date_debut = "'.$object->db->idate($object->date_debut).'"';

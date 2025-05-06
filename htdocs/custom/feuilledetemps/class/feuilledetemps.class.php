@@ -3794,7 +3794,7 @@ class FeuilleDeTemps extends CommonObject
 		if($etablissement !== null) {
 			$sql .= " WHERE ue.etablissement = $etablissement";
 		}
-		$sql = ")
+		$sql .= ")
 		SELECT 
 			f_current.*,
 			f_prev.ref AS prev_feuilledetemps_ref,
