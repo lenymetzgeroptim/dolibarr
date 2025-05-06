@@ -295,7 +295,7 @@ else {
 	$date_start = dol_get_first_day(dol_print_date($now, 'Y'), dol_print_date($now, 'm'));
 	$date_end = dol_get_last_day(dol_print_date($now, 'Y') + 3, dol_print_date($now, 'm'));
 
-	if (count($linearray) > 0) { // Show Gant diagram from $userhabilitationarray using JSGantt
+	if (count($linearray) > 0 && count($linearray) <= 1000) { // Show Gant diagram from $userhabilitationarray using JSGantt
 		$dateformat = $langs->trans("FormatDateShortJQuery"); // Used by include ganttchart.inc.php later
 		$datehourformat = $langs->trans("FormatDateShortJQuery").' '.$langs->trans("FormatHourShortJQuery"); // Used by include ganttchart.inc.php later
 		
@@ -515,11 +515,11 @@ else {
 		print "\n";
 
 		if (!empty($conf->use_javascript_ajax)) {
-			print '<div class="div-table-responsive">';
-			print '<div class="liste_titre liste_titre_bydiv centpercent">'.'</div>';
+			print '<div class="div-table-responsive" style="width: fit-content; margin: auto; max-width: 100%;">';
 
 			print '<div id="tabs" class="gantt"">'."\n";
-			include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/habilitations_ganttchart.inc.php';
+			print '<div class="liste_titre liste_titre_bydiv centpercent">'.'</div>';
+			include_once DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/formationhabilitation_ganttchart.inc.php';
 			print '</div>'."\n";
 
 			print '</div>';
@@ -527,7 +527,10 @@ else {
 			$langs->load("admin");
 			print $langs->trans("AvailableOnlyIfJavascriptAndAjaxNotDisabled");
 		}
-	} else {
+	} elseif(count($linearray) > 1000) {
+		print '<div class="error">'.$langs->trans("ErrorNumberLines").'</div>';
+	} 
+	else {
 		if($onglet == 'formation') {
 			print '<div class="info">'.$langs->trans("NoFormation").'</div>';
 		}

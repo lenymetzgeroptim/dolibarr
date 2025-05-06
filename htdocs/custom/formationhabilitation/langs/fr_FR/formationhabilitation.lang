@@ -263,6 +263,7 @@ ErrorPrerequisFormationAptitude = Le collaborateur ne possède pas les prérequi
 ErrorUserHasSameUserHabilitation = Le collaborateur possède déja l'habilitation %s avec les mêmes dates
 ErrorUserHasSameUserAutorisation = Le collaborateur possède déja l'autorisation %s avec les mêmes dates
 ErrorFormationUnsatisfate = Impossible de valider la formation car le résultat est non satisfaisant
+ErrorNumberLines = Il n'est pas possible d'afficher autant de lignes. Veuillez faire un filtre plus restrictif.
 
 #
 # Email
