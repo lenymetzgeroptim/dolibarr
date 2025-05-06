@@ -4093,7 +4093,9 @@ class UserVolet extends CommonObject
 			$sql .= " WHERE uv.fk_user = $fk_user";
 			$sql .= " AND uv.status <= ".self::STATUS_VALIDATED;
 			$sql .= " AND uv.fk_volet = $idvolet";
-			$sql .= " AND uv.qualif_pro = $qualif_pro";
+			if(!empty($qualif_pro)) {
+				$sql .= " AND uv.qualif_pro = $qualif_pro";
+			}
 
 			dol_syslog(get_class($this)."::getVoletEquivalent", LOG_DEBUG);
 			$resql = $this->db->query($sql);

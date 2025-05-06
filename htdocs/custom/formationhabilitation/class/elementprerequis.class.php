@@ -1439,7 +1439,7 @@ class ElementPrerequis extends CommonObject
 				}
 			}
 			
-			if(empty($date_finvalidite) || $date_finvalidite > $date_finvalidite_prerequis) {
+			if(!empty($date_finvalidite_prerequis) && (empty($date_finvalidite) || $date_finvalidite > $date_finvalidite_prerequis)) {
 				$date_finvalidite = $date_finvalidite_prerequis;
 			}
 		}
