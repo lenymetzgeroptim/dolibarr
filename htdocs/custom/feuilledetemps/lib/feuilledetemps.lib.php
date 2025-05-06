@@ -2728,7 +2728,7 @@ function dol_banner_tab_custom($object, $paramid, $morehtml = '', $shownav = 1, 
 }
 
 function showrefnav_custom($object, $paramid, $morehtml = '', $shownav = 1, $fieldid = 'rowid', $fieldref = 'ref', $morehtmlref = '', $moreparam = '', $nodbprefix = 0, $morehtmlleft = '', $morehtmlstatus = '', $morehtmlright = '', $buttonAction = '') {
-	global $conf, $langs, $hookmanager, $extralanguages;
+	global $conf, $langs, $hookmanager, $extralanguages, $db;
 
 	$ret = '';
 	if (empty($fieldid)) {
@@ -2829,6 +2829,34 @@ function showrefnav_custom($object, $paramid, $morehtml = '', $shownav = 1, $fie
 		$ret .= img_object('', 'fontawesome_user_fas_#2f508b');
 		$ret .= '<li class="pagination">' . $next_refByUser . '</li>';
 		$ret .= '</ul></div>';
+	}
+
+	$user_static = new User($db);
+	$user_static->fetch($object->fk_user);
+	$user_extrafields = new Extrafields($db);
+	if (empty($user_extrafields->attributes[$user_static->table_element]['loaded'])) {
+		$user_extrafields->fetch_name_optionals_label($user_static->table_element);
+	}
+	if(isset($user_extrafields->attributes['user']['type']['antenne'])) {
+		//$filter = 'and SUBSTR(te.ref, 1, 9) < "'.substr($object->ref, 0, 9).'" AND CHAR_LENGTH(te.ref) = 16 AND te.date_debut = "'.$object->db->idate($object->date_debut).'"';
+		$filter = " WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(te.ref, '_', 2), '_', -1) < ".explode('_', $object->ref)[1]." AND SUBSTRING_INDEX(te.ref, '_', -1) = '".explode('_', $object->ref)[2]."' AND CHAR_LENGTH(te.ref) = 16";
+		//$filter2 = 'and SUBSTR(te.ref, 1, 9) > "'.substr($object->ref, 0, 9).'" AND CHAR_LENGTH(te.ref) = 16 AND te.date_debut = "'.$object->db->idate($object->date_debut).'"';
+		$filter2 = " WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(te.ref, '_', 2), '_', -1) > ".explode('_', $object->ref)[1]." AND SUBSTRING_INDEX(te.ref, '_', -1) = '".explode('_', $object->ref)[2]."' AND CHAR_LENGTH(te.ref) = 16";
+		if($conf->global->FDT_ORDER_MATRICULE) {
+			$object->load_previous_next_ref_bymatricule($object->fk_user, $object->date_debut, $user_static->array_options['options_etablissement']);
+		}
+		else {
+			$object->load_previous_next_ref_byusername($object->fk_user, $object->date_debut, $user_static->array_options['options_etablissement']);
+		}
+		$previous_refByUser = $object->ref_previous ? '<a accesskey="p" title="' . $stringforfirstkey . ' p" class="classfortooltip" href="' . $navurl . '?' . $paramid . '=' . urlencode($object->ref_previous) . $moreparam . '"><i class="fa fa-chevron-left"></i></a>' : '<span class="inactive"><i class="fa fa-chevron-left opacitymedium"></i></span>';
+		$next_refByUser = $object->ref_next ? '<a accesskey="n" title="' . $stringforfirstkey . ' n" class="classfortooltip" href="' . $navurl . '?' . $paramid . '=' . urlencode($object->ref_next) . $moreparam . '"><i class="fa fa-chevron-right"></i></a>' : '<span class="inactive"><i class="fa fa-chevron-right opacitymedium"></i></span>';
+		if ($previous_ref || $next_ref || $morehtml) {
+			$ret .= '<div class="pagination paginationref"><ul class="right">';
+			$ret .= '<li class="pagination">' . $previous_refByUser . '</li>';
+			$ret .= img_object('', 'fontawesome_fa-house-user_fas_#2f508b');
+			$ret .= '<li class="pagination">' . $next_refByUser . '</li>';
+			$ret .= '</ul></div>';
+		}
 	}
 
 	if ($previous_ref || $next_ref || $morehtml) {
