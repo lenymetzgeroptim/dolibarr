@@ -189,7 +189,8 @@ if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 }
 
 if($permissionToVerification) {
-	print '<textarea id="observationFDT" name="observationFDT" form="feuilleDeTempsForm" class="textarea_observation">';
+	$css = ($conf->global->FDT_DISPLAY_COLUMN ? 'height: 18px; margin-bottom: 0;' : '');
+	print '<textarea id="observationFDT" name="observationFDT" form="feuilleDeTempsForm" class="textarea_observation" style="'.$css.'">';
 	print $object->observation;
 	print '</textarea>';
 }
