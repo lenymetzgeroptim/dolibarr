@@ -124,7 +124,7 @@ class ExtendedExportFDT extends Export
 
 				$userstatic->fetchAll('', 't.lastname', 0, 0, $filter);
 				foreach($userstatic->users as $id => $user_obj) {
-					if($user_obj->array_options['options_employeur'] == 1) {
+					if($user_obj->array_options['options_fk_employeur'] == 157) {
 						$timeHoliday = $object->timeHolidayWeek($id, $date_debut, $date_fin);
 						$timeSpentWeek = $object->timeDoneByWeek($id, $date_debut, $date_fin);
 						$societe = new Societe($this->db);
@@ -139,8 +139,8 @@ class ExtendedExportFDT extends Export
 						if($datatoexport == "total_hour_week") {
 							while ($dayinloop <= $date_fin) {							
 								$obj->week = date("W", $dayinloop);
-								$obj->total_work = ($timeSpentWeek[date("W", $dayinloop)] > 0 ? $timeSpentWeek[date("W", $dayinloop)] : 0);
-								$obj->total_holiday = ($timeHoliday[date("W", $dayinloop)] > 0 ? $timeHoliday[date("W", $dayinloop)] : 0);
+								$obj->total_work = ($timeSpentWeek[(int)date("W", $dayinloop)] > 0 ? $timeSpentWeek[(int)date("W", $dayinloop)] : 0);
+								$obj->total_holiday = ($timeHoliday[(int)date("W", $dayinloop)] > 0 ? $timeHoliday[(int)date("W", $dayinloop)] : 0);
 								$obj->total_hour = $obj->total_work + $obj->total_holiday;
 
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
@@ -243,7 +243,7 @@ class ExtendedExportFDT extends Export
 				foreach($userstatic->users as $id => $user_obj) {
 					$userField->id = $id;
 					$userField->fetch_optionals();
-					if($user_obj->array_options['options_employeur'] == 1 && (empty($userField->array_options['options_datedepart']) || $userField->array_options['options_datedepart'] >= $date_debut)) {
+					if($user_obj->array_options['options_fk_employeur'] == 157 && (empty($userField->array_options['options_datedepart']) || $userField->array_options['options_datedepart'] >= $date_debut)) {
 						$societe = new Societe($this->db);
 
 						$obj->eu_matricule = $user_obj->array_options['options_matricule'];
@@ -825,7 +825,7 @@ class ExtendedExportFDT extends Export
 			$sql .= " AND date_format(s.date,'%Y%m') = date_format(fdt.date_debut,'%Y%m') AND date_format(s.date,'%Y%m') = date_format(fdt.date_fin,'%Y%m')";
 		}
 
-		$sql .= " WHERE 1 = 1 AND u.statut = 1 AND eu.employeur = 1";
+		$sql .= " WHERE 1 = 1 AND u.statut = 1 AND eu.fk_employeur = 157";
 		if($datatoexport == 'analytique_pourcentage'){
 			$sql .= " AND tt.elementtype = 'task'";
 		}

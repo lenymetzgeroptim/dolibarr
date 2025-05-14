@@ -207,7 +207,7 @@ class FeuilleDeTemps extends CommonObject
 		if (empty($conf->multicompany->enabled) && isset($this->fields['entity'])) {
 			$this->fields['entity']['enabled'] = 0;
 		}
-
+		
 		// Example to show how to set values of fields definition dynamically
 		/*if ($user->rights->feuilledetemps->feuilledetemps->read) {
 			$this->fields['myfield']['visible'] = 1;
@@ -1286,7 +1286,7 @@ class FeuilleDeTemps extends CommonObject
 			
 			//$langs->load("feuilledetemps@feuilledetemps");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if($user_fdt->array_options['options_employeur'] == 1) {
+			if($user_fdt->array_options['options_fk_employeur'] == 157) {
 				$this->labelStatus[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {
@@ -1298,7 +1298,7 @@ class FeuilleDeTemps extends CommonObject
 			$this->labelStatus[self::STATUS_EXPORTED] = $langs->trans('Exportée');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->trans('Disabled');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if($user_fdt->array_options['options_employeur'] == 1) {
+			if($user_fdt->array_options['options_fk_employeur'] == 157) {
 				$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {
@@ -1548,7 +1548,7 @@ class FeuilleDeTemps extends CommonObject
 			$fdt = new FeuilleDeTemps($this->db);
 			$form = new Form($this->db);
 			$users_array = $user_static->get_full_treeIds('u.statut = 1');
-			$month = dol_print_date(dol_now(), '%m');
+			$month = dol_print_date(dol_now(), '%m%Y');
 			$fdt->date_debut = dol_get_first_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
 			$fdt->date_fin = dol_get_last_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
 

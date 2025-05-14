@@ -133,8 +133,6 @@ function disableNullInput() {
     });
     $('form[name="addtime"] textarea[name^="note"]').each(function (index, obj) {
         if (obj.defaultValue == obj.value) {
-            console.log(obj.defaultValue);
-            console.log(obj.value);
             $(obj).prop('disabled', true);;
         }
     });

@@ -57,7 +57,7 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $userIsResp && $resp_
 			$object->updateTaskValidation($user->id, 1, 1, 2);
 		}
 		
-		if($usertoprocess->array_options['options_employeur'] == 1) {
+		if($usertoprocess->array_options['options_fk_employeur'] == 157) {
 			$object->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATION1ET2InDolibarr", $object->ref);
 			$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATION1ET2InDolibarr", $object->ref);
 
@@ -221,7 +221,7 @@ if ($action == 'confirm_validate2' && $confirm == 'yes' && $userIsRespProjet) {
 
 	$list_valideur = $object->listApprover2;
 	if(!in_array(0, $list_valideur[1])) {
-		if($usertoprocess->array_options['options_employeur'] == 1) {
+		if($usertoprocess->array_options['options_fk_employeur'] == 157) {
 			$object->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_VERIFICATIONInDolibarr", $object->ref);
 			$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_VERIFICATIONInDolibarr", $object->ref);
 
