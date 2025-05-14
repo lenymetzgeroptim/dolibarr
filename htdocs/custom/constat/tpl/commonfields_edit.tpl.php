@@ -41,6 +41,11 @@ if ($object->status == $object::STATUS_DRAFT) {
 	$object->fields['site'] ['notnull'] = 1;
 	$object->fields['sujet'] ['notnull'] = 1;
 }
+
+if ($object->status == $object::STATUS_SOLDEE) {
+	$object->fields['dateCloture'] ['notnull'] = 1;
+}
+
 ?>
 <!-- BEGIN PHP TEMPLATE commonfields_edit.tpl.php -->
 <?php
@@ -75,7 +80,7 @@ foreach ($object->fields as $key => $val) {
 /*affichage des noms des champs de la liste lié au role Emeteur */
 
 if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user->id || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE) {
-		$keys = array( 'dateEmeteur','date_eche', 'fk_project','site', 'sujet','descriptionConstat', 'description', 'impactNonConfo', 'ref', 'label');
+		$keys = array( 'dateEmeteur','fk_project','site', 'sujet','descriptionConstat', 'impactNonConfo', 'ref', 'label');
 		if(in_array($key, $keys)) {
 			print '<tr class="field_'.$key.'"><td';
 			print ' class="titlefieldcreate';
@@ -123,6 +128,7 @@ if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user
 		}
 			
 	}
+
 /*affichage des zone a remplir des champs de la liste lié au role Emeteur */
 
 if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user->id || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE) {
@@ -137,18 +143,7 @@ if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user
 					print $object->showInputField($val, $key == 'p_year' ? '' : $key, $value, '', '', '', 0);
 				}
 			}
-        }elseif($key == 'date_eche') {  
-            if (!empty($val['noteditable'])) {
-				print $object->showOutputField($val, $key, $value, '', '', '', 0);
-			} else {
-				if ($key == 'lang') {
-					print img_picto('', 'language', 'class="pictofixedwidth"');
-					print $formadmin->select_language($value, $key, 0, null, 1, 0, 0, 'minwidth300', 2);
-				} else {
-					print $object->showInputField($val, $key == 'p_year' ? '' : $key, $value, '', '', '', 0);
-				}
-			}
-		}
+        }
 		elseif($key == 'fk_project') {  
             if (!empty($val['noteditable'])) {
 				print $object->showOutputField($val, $key, $value, '', '', '', 0);
@@ -183,18 +178,7 @@ if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user
 				}
 			} 
 		}
-		elseif($key == 'description') {  
-            if (!empty($val['noteditable'])) {
-				print $object->showOutputField($val, $key, $value, '', '', '', 0);
-			} else {
-				if ($key == 'lang') {
-					print img_picto('', 'language', 'class="pictofixedwidth"');
-					print $formadmin->select_language($value, $key, 0, null, 1, 0, 0, 'minwidth300', 2);
-				} else {
-					print $object->showInputField($val, $key == 'p_year' ? '' : $key, $value, '', '', '', 0);
-				}
-			} 
-		}elseif($key == 'impactNonConfo') {  
+		elseif($key == 'impactNonConfo') {  
             if (!empty($val['noteditable'])) {
 				print $object->showOutputField($val, $key, $value, '', '', '', 0);
 			} else {
@@ -246,7 +230,7 @@ if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user
 /*affichage des noms des champs de la liste lié au role Responsable Affaire */
 
 	if (in_array($object->status, [1,3, 4, 5, 7, 9]) && ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE)) {
-		$keys = array('num_commande','impactcomm','processusconcerne', 'radioprotectionInfo', 'radioprotection', 'surete', 'actionimmediate','actionimmediatecom', 'rubrique', 'typeConstat', 'impactNonFactu', 'impactTemps', 'impactAnalyse', 'impactContractuel', 'impactFinnancier','infoClient','commInfoClient','commRespAff');
+		$keys = array('num_commande','date_eche','impactcomm','processusconcerne', 'radioprotectionInfo', 'radioprotection', 'surete', 'actionimmediate','actionimmediatecom', 'rubrique', 'typeConstat', 'impactNonFactu', 'impactTemps', 'impactAnalyse', 'impactContractuel', 'impactFinnancier','infoClient','commInfoClient','commRespAff');
 			if(in_array($key, $keys)) {
 				
 				print '<tr class="field_'.$key.'"><td';
@@ -294,8 +278,8 @@ if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user
 				}
 			}
 	}
-/*affichage des zone a remplir des champs de la liste lié au role Responsable Affaire */
 
+/*affichage des zone a remplir des champs de la liste lié au role Responsable Affaire */
 if (in_array($object->status, [1,3, 4, 5, 7, 9]) && ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE)) {
         if ($key == 'impactFinnancier') {  
             if (!empty($val['noteditable'])) {
@@ -308,7 +292,19 @@ if (in_array($object->status, [1,3, 4, 5, 7, 9]) && ( ($user->rights->constat->c
 					print $object->showInputField($val, $key == 'p_year' ? '' : $key, $value, '', '', '', 0);
 				}
 			}
-        }elseif($key == 'num_commande') {  
+        }
+		elseif($key == 'date_eche') {  
+            if (!empty($val['noteditable'])) {
+				print $object->showOutputField($val, $key, $value, '', '', '', 0);
+			} else {
+				if ($key == 'lang') {
+					print img_picto('', 'language', 'class="pictofixedwidth"');
+					print $formadmin->select_language($value, $key, 0, null, 1, 0, 0, 'minwidth300', 2);
+				} else {
+					print $object->showInputField($val, $key == 'p_year' ? '' : $key, $value, '', '', '', 0);
+				}
+			}
+		}elseif($key == 'num_commande') {  
             if (!empty($val['noteditable'])) {
 				print $object->showOutputField($val, $key, $value, '', '', '', 0);
 			} else {

@@ -23,7 +23,7 @@ CREATE TABLE llx_constat_constat(
 	fk_user_creat integer NOT NULL, 
 	fk_project integer, 
 	site integer, 
-	dateEmeteur  timestamp, 
+	dateEmeteur  date, 
 	sujet integer, 
 	typeConstat integer, 
 	actionimmediate boolean, 
