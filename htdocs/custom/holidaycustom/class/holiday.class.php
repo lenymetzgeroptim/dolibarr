@@ -193,7 +193,7 @@ class Holiday extends CommonObject
 		/**
 		 * @var string String with name of icon for myobject. Must be the part after the 'object_' into object_myobject.png
 		 */
-		$this->picto = $conf->global->HOLIDAY_PICTO;
+		$this->picto = ($conf->global->HOLIDAY_PICTO ? $conf->global->HOLIDAY_PICTO : 'holiday');
 	}
 
 
