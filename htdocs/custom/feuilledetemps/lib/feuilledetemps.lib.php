@@ -148,7 +148,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $num_last_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
+									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, $appel_actif = 0, $nb_appel = 0){
 	global $conf, $db, $user, $langs, $action;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
 
@@ -804,9 +804,11 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 			$nb_appel++;
 			if ($lines[$i]->id > 0) {				
 				$ret = FeuilleDeTempsLinesPerWeek($mode, $inc, $firstdaytoshow, $lastdaytoshow, $fuser, $lines[$i]->id, ($parent == 0 ? $lineswithoutlevel0 : $lines), $level, $projectsrole, $tasksrole, $mine, $restricteditformytask, $isavailable, $oldprojectforbreak, $arrayfields, $extrafields, 
-				$modify, $css, $css_holiday, $num_first_day, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, $temps_prec, $temps_suiv, 
-				$temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, $favoris, $param,
-				$totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $appel_actif, $nb_appel);
+				$modify, $css, $css_holiday, $num_first_day, $num_last_day, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 
+				$modifier_jour_conges, $temps_prec, $temps_suiv, 
+				$temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, 
+				$timeHoliday, $heure_semaine, $heure_semaine_hs, $favoris, $param,
+				$totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, $appel_actif, $nb_appel);
 				foreach ($ret as $key => $val) {
 					$totalforvisibletasks[$key] += $val;
 				}
@@ -937,15 +939,13 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
  * @param   double[] 	$totalforeachday					Total des heures par jour pour la différence avec les tâches affichées
  * @param   array	 	$holiday_without_canceled			Tableau avec les congés non annulés de l'utilisateur
  * @param   int	 		$multiple_holiday					Est-ce qu'il faut 2 lignes pour les congés ?
- * @param   int 	 	$appel_actif						Numéro d'appel récursif pour gérer le footer du tableau
- * @param   int 	 	$nb_appel							Nombre d'appel récursif pour gérer le header du tableau
  * @return  array				Array with time spent for $fuser for each day of week on tasks in $lines and substasks
  */
 function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastdaytoshow, $fuser, $parent, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null, 
 									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $num_last_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
+									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves){
 	global $conf, $db, $user, $langs;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification, $objectoffield;
 	global $first_day_month, $last_day_month;

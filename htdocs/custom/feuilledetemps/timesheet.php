@@ -478,7 +478,7 @@ if ($morewherefilter) {	// Get all task without any filter, so we can show total
 $projectsrole = $taskstatic->getUserRolesForProjectsOrTasks($usertoprocess, 0, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
 $tasksrole = $taskstatic->getUserRolesForProjectsOrTasks(0, $usertoprocess, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
 
-// $array_js = array('/core/js/timesheet.js', '/custom/feuilledetemps/core/js/timesheet.js', '/custom/feuilledetemps/core/js/parameters.php');
+$array_js = array('/core/js/timesheet.js', '/custom/feuilledetemps/js/feuilledetemps.js.php', '/custom/feuilledetemps/js/parameters.php');
 llxHeader("", $title, "", '', '', '', $array_js, '', '', 'classforhorizontalscrolloftabs feuilledetemps timesheet'.($conf->global->FDT_DISPLAY_COLUMN ? ' displaycolumn' : ''));
 //print '<body onresize="redimenssion()">';
 
