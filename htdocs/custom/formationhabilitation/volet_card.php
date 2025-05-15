@@ -579,59 +579,59 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 
 
-	// Select mail models is same action as presend
-	if (GETPOST('modelselected')) {
-		$action = 'presend';
-	}
+	// // Select mail models is same action as presend
+	// if (GETPOST('modelselected')) {
+	// 	$action = 'presend';
+	// }
 
-	if ($action != 'presend') {
-		print '<div class="fichecenter"><div class="fichehalfleft">';
-		print '<a name="builddoc"></a>'; // ancre
+	// if ($action != 'presend') {
+	// 	print '<div class="fichecenter"><div class="fichehalfleft">';
+	// 	print '<a name="builddoc"></a>'; // ancre
 
-		$includedocgeneration = 0;
+	// 	$includedocgeneration = 0;
 
-		// Documents
-		if ($includedocgeneration) {
-			$objref = dol_sanitizeFileName($object->ref);
-			$relativepath = $objref.'/'.$objref.'.pdf';
-			$filedir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
-			$urlsource = $_SERVER["PHP_SELF"]."?id=".$object->id;
-			$genallowed = $permissiontoread; // If you can read, you can build the PDF to read content
-			$delallowed = $permissiontoadd; // If you can create/edit, you can remove a file on card
-			print $formfile->showdocuments('formationhabilitation:Volet', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
-		}
+	// 	// Documents
+	// 	if ($includedocgeneration) {
+	// 		$objref = dol_sanitizeFileName($object->ref);
+	// 		$relativepath = $objref.'/'.$objref.'.pdf';
+	// 		$filedir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
+	// 		$urlsource = $_SERVER["PHP_SELF"]."?id=".$object->id;
+	// 		$genallowed = $permissiontoread; // If you can read, you can build the PDF to read content
+	// 		$delallowed = $permissiontoadd; // If you can create/edit, you can remove a file on card
+	// 		print $formfile->showdocuments('formationhabilitation:Volet', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
+	// 	}
 
-		// Show links to link elements
-		$linktoelem = $form->showLinkToObjectBlock($object, null, array('volet'));
-		$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
+	// 	// Show links to link elements
+	// 	$linktoelem = $form->showLinkToObjectBlock($object, null, array('volet'));
+	// 	$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 
 
-		print '</div><div class="fichehalfright">';
+	// 	print '</div><div class="fichehalfright">';
 
-		$MAXEVENT = 10;
+	// 	$MAXEVENT = 10;
 
-		$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/formationhabilitation/volet_agenda.php', 1).'?id='.$object->id);
+	// 	$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/formationhabilitation/volet_agenda.php', 1).'?id='.$object->id);
 
-		// List of actions on element
-		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
-		$formactions = new FormActions($db);
-		$somethingshown = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
+	// 	// List of actions on element
+	// 	include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
+	// 	$formactions = new FormActions($db);
+	// 	$somethingshown = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
 
-		print '</div></div>';
-	}
+	// 	print '</div></div>';
+	// }
 
-	//Select mail models is same action as presend
-	if (GETPOST('modelselected')) {
-		$action = 'presend';
-	}
+	// //Select mail models is same action as presend
+	// if (GETPOST('modelselected')) {
+	// 	$action = 'presend';
+	// }
 
-	// Presend form
-	$modelmail = 'volet';
-	$defaulttopic = 'InformationMessage';
-	$diroutput = $conf->formationhabilitation->dir_output;
-	$trackid = 'volet'.$object->id;
+	// // Presend form
+	// $modelmail = 'volet';
+	// $defaulttopic = 'InformationMessage';
+	// $diroutput = $conf->formationhabilitation->dir_output;
+	// $trackid = 'volet'.$object->id;
 
-	include DOL_DOCUMENT_ROOT.'/core/tpl/card_presend.tpl.php';
+	// include DOL_DOCUMENT_ROOT.'/core/tpl/card_presend.tpl.php';
 }
 
 // End of page

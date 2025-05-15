@@ -223,7 +223,7 @@ print '<div class="fichecenter">';
 // print '</div>';
 
 // Diagramme de Gantt
-if (! empty($conf->formationhabilitation->enabled) && $user->rights->formationhabilitation->formation->read) {
+if (!empty($conf->formationhabilitation->enabled) && $user->rights->formationhabilitation->userhabilitation_autorisation->readall) {
 	// Get list of habilitations
 	$userhabilitationarray = $userHabilitation->fetchAllWithUser('ASC', 'u.lastname', 0, 0, array("u.statut" => 1));
 	$user_static->fetchAll('', '', 0, 0, array("statut" => 1));

@@ -79,7 +79,7 @@ foreach($objectline->fields as $key => $val){
 		print $line->showOutputField($val, $key, $line->$key);
 		print '<input type="hidden" id="'.$key.'" name="'.$key.'" value="'.$line->$key.'"></input>';
 	}
-	elseif($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total' || $key == 'date_finvalidite_formation'){
+	elseif($key == 'cout_pedagogique' || $key == 'cout_mobilisation' || $key == 'cout_total' || $key == 'date_finvalidite_formation' || $key == 'date_fin_autorisation' || $key == 'date_fin_habilitation'){
 		print $line->showOutputField($val, $key, $line->$key);
 	}
 	elseif($key == 'status') {

@@ -240,6 +240,12 @@ elseif($action == 'edit_coutpedagogique') {
 elseif($action == 'edit_coutmobilisation') {
     print '<input type="hidden" name="action" value="updatecoutmobilisation">';
 }
+elseif($action == 'edit_datefinhabilitation') {
+    print '<input type="hidden" name="action" value="updatedatefinhabilitation">';
+}
+elseif($action == 'edit_datefinautorisation') {
+    print '<input type="hidden" name="action" value="updatedatefinautorisation">';
+}
 else {
     print '<input type="hidden" name="action" value="addline">';
 }

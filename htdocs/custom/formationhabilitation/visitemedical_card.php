@@ -133,7 +133,7 @@ if (empty($action) && empty($id) && empty($ref)) {
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
 
 // There is several ways to check permission.
-$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'read');
+$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'readall') || ($object->fk_user == $user->id && $user->hasRight('formationhabilitation', 'visitemedical', 'read'));
 $permissiontoadd = $user->hasRight('formationhabilitation', 'visitemedical', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 $permissiontodelete = $user->hasRight('formationhabilitation', 'visitemedical', 'delete');
 

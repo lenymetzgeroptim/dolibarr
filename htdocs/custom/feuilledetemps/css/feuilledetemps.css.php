@@ -164,8 +164,14 @@ div.mainmenu.feuilledetemps {
 	flex-direction: column;
 }
 
-#mainbody.feuilledetemps #id-right div.fiche form:not(.notoptoleftroright) {
+#mainbody.feuilledetemps:not(.displaycolumn) #id-right div.fiche form:not(.notoptoleftroright) {
 	height: calc(100vh - 400px);
+	display: flex;
+	flex-direction: column;
+}
+
+#mainbody.feuilledetemps.displaycolumn #id-right div.fiche form:not(.notoptoleftroright) {
+	height: calc(100vh - 200px);
 	display: flex;
 	flex-direction: column;
 }
@@ -191,7 +197,7 @@ div.mainmenu.feuilledetemps {
 }
 
 #tablelines_fdt td.public_holiday {
-	background-color: #f4eede !important;
+	background-color: <?php print $conf->global->FDT_FERIE_COLOR ?> !important;
 }
 
 #tablelines_fdt .conges1allday {
@@ -249,26 +255,30 @@ div.mainmenu.feuilledetemps {
 }
 
 #tablelines_fdt td.before {
-	background-color: #ebdef0 !important;
+	background-color: <?php print $conf->global->FDT_ANTICIPE_COLOR ?> !important;
 }
 
 #tablelines_fdt td.before.weekend {
-	background-color: #dacce1 !important;
+	background-color: <?php print $conf->global->FDT_ANTICIPE_WEEKEND_COLOR ?> !important;
 }
 
 #tablelines_fdt td.weekend {
-	background-color: #eee !important;
+	background-color: <?php print $conf->global->FDT_WEEKEND_COLOR ?> !important;
 }
 
-tr.conges th.statut1 {
+th.daycolumn {
+	background-color: var(--colorbacktitle1);
+}
+
+tr.conges th.statut1, td.statut1 {
 	border: red 4px solid !important;
 }
 
-tr.conges th.statut2 {
+tr.conges th.statut2, td.statut2 {
 	border: #0087ff 4px solid !important;
 }
 
-tr.conges th.statut3 {
+tr.conges th.statut3, td.statut3 {
 	border: #0087ff 4px solid !important;
 }
 
@@ -365,11 +375,11 @@ td > div > input.heure_epi {
 }
 
 .txt_before {
-	color: #c180da;
+	color: <?php print $conf->global->FDT_ANTICIPE_WEEKEND_COLOR ?> !important;
 }
 
 .txt_ferie {
-	color: #f4eede;
+	color: <?php print $conf->global->FDT_FERIE_COLOR ?> !important;
 }
 
 .txt_conges_brouillon {
@@ -480,7 +490,59 @@ tr > th:last-child.fixed {
 	z-index: 2;
 }
 
+.feuilledetemps .fixedcolumn2 {
+	z-index: 1;
+	position: sticky;
+	left: 97px;
+}
 
+.feuilledetemps .fixedcolumn3 {
+	z-index: 1;
+	position: sticky;
+	left: 213px;
+}
+
+.feuilledetemps .fixedcolumn4 {
+	z-index: 1;
+	position: sticky;
+	left: 329px;
+}
+
+.feuilledetemps .fixedcolumn5 {
+	z-index: 1;
+	position: sticky;
+	left: 400px;
+}
+
+.feuilledetemps .fixedcolumn6 {
+	z-index: 1;
+	position: sticky;
+	left: 516px;
+}
+
+.feuilledetemps .fixedcolumn7 {
+	z-index: 1;
+	position: sticky;
+	left: 592px;
+}
+
+.feuilledetemps .fixedcolumn8 {
+	z-index: 1;
+	position: sticky;
+	left: 648px;
+}
+
+.feuilledetemps .fixedcolumn9 {
+	z-index: 1;
+	position: sticky;
+	left: 704px;
+}
+
+.feuilledetemps .fixedcolumn10 {
+	z-index: 1;
+	position: sticky;
+	left: 925px;
+}
 
 
 
@@ -490,7 +552,7 @@ tr > th:last-child.fixed {
 	border-top: 1px solid var(--colortopbordertitle1);
 }
 
-.feuilledetemps [class^="liste_total_semaine"]:not(.liste_total_semaine_1) {
+.feuilledetemps [class^="liste_total_semaine"]:not(.liste_total_semaine_1):not(.totalweekcolumn) {
 	border-left: 1px solid var(--colortopbordertitle1);
 }
 
@@ -511,6 +573,47 @@ tr > th:last-child.fixed {
 	width: 100%
 }
 
+#tablelines_fdt > tbody > tr > td.totalweekcolumn {
+	border-right: 1px solid var(--colortopbordertitle1);
+	background-color: #f0f0f0;
+	vertical-align: bottom
+}
+
+#tablelines_fdt td.totalweekcolumn {
+    border-bottom: 1px solid var(--colortopbordertitle1);
+}
+
+#tablelines_fdt > tbody > tr:nth-last-child(8) > td.totalweekcolumn {
+	border-bottom: unset;
+}
+
+#tablelines_fdt> tbody > tr > td.holidaycolumn {
+	<!-- border-right: 1px solid rgb(82, 82, 82); -->
+	border-bottom: none;
+	background-color: #f0f0f0;
+}
+
+#tablelines_fdt> tbody > tr > td.holidaycolumnmultiple1 {
+	border-right: 1px solid var(--colortopbordertitle1);
+	border-bottom: none;
+	background-color: #f0f0f0;
+}
+
+#tablelines_fdt> tbody > tr > td.holidaycolumnmultiple2 {
+	<!-- border-right: 1px solid rgb(82, 82, 82); -->
+	border-bottom: none;
+	background-color: #f0f0f0;
+}
+
+#tablelines_fdt> thead > tr > th.columntitle {
+	border-bottom: 1px solid var(--colortopbordertitle1);
+}
+
+#tablelines_fdt> tbody > tr > td.affairecolumn, #tablelines_fdt th.affairecolumn  {
+	border-right: 1px solid rgb(82, 82, 82);
+}
+
+
 
 
 
@@ -524,8 +627,7 @@ tr > th:last-child.fixed {
 .feuilledetemps #fullScreen {
     border: solid 1px #d7d7d7;
     border-radius: 5px;
-    font-size: 1.5em;
-	vertical-align: middle;
+	padding: 5px;
 }
 
 .feuilledetemps button#fullScreen {
@@ -534,6 +636,11 @@ tr > th:last-child.fixed {
 
 .feuilledetemps #fullScreen:hover {
 	background-color: #d7d7d7;
+}
+
+.feuilledetemps tr.liste_totalcolumn th {
+	background-color: var(--colorbacktitle1);
+  	border-top: 1px solid var(--colortopbordertitle1);
 }
 
 
@@ -677,12 +784,11 @@ body.feuilledetemps .ui-widget.ui-widget-content {
 	width: 100%;
 }
 
-#exportObservationCompta,
-#exportFeuilleDeTemps {
+#exportObservationCompta, #exportFeuilleDeTemps, #exportTestFeuilleDeTemps {
 	text-align: center;
 }
 
-form#exportFeuilleDeTemps #builddoc_generatebutton {
+form#exportFeuilleDeTemps #builddoc_generatebutton, form#exportTestFeuilleDeTemps #builddoc_generatebutton {
 	visibility: hidden;
 }
 
@@ -713,4 +819,71 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 .feuilledetemps .titlefield {
 	min-width: unset !important;
  	width: fit-content;
+}
+
+#tablelines_fdt > tbody > tr > td > div.multipleLineColumn {
+	margin-bottom: 4px;
+  	margin-top: 4px;
+}
+
+.feuilledetemps .displaynone {
+	display: none;
+}
+
+.feuilledetemps .visibilityhidden {
+	visibility: hidden;
+}
+
+.feuilledetemps .mt0 {
+	margin-top: 0px; !important
+}
+
+.feuilledetemps .ml0 {
+	margin-left: 0px; !important
+}
+
+.feuilledetemps span.diffpositive {
+	color: blue;
+}
+
+.feuilledetemps span.diffnegative {
+	color: red;
+}
+
+.feuilledetemps tr.liste_totalcolumn {
+	z-index: 1;
+  	position: sticky;
+  	bottom: 0;
+}
+
+#tablelines_fdt.liste.column {
+	margin: 0 !important;
+}
+
+.minwidth80 {
+	min-width: 80px;
+}
+
+.minwidth60 {
+	min-width: 60px;
+}
+
+.minwidth55 {
+	min-width: 55px;
+}
+
+.minwidth40 {
+	min-width: 40px;
+}
+
+.height20 {
+	height: 20px;
+}
+
+#tablelines_fdt.column .fas.fa-sticky-note {
+	color: rgb(198,25,44);
+}
+
+td.affairecolumn span.select2-container {
+    width: 100% !important;
 }

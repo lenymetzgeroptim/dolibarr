@@ -42,7 +42,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedUser.class.
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/deplacement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/silae.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/regul.class.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
+if($conf->donneesrh->enabled)  require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("feuilledetemps@feuilledetemps", 'projects', 'users', 'companies', 'holidaycustom@holidaycustom'));
@@ -63,24 +63,31 @@ if ($mode == 'mine') {
 	$mine = 1;
 }
 
+$modeinput = ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? 'hours_decimal' : 'hours');
 $socid = 0;
 $now = dol_now();
 
-$year = GETPOST('reyear', 'int') ?GETPOST('reyear', 'int') : (GETPOST("year", 'int') ?GETPOST("year", "int") : date("Y"));
-$month = GETPOST('remonth', 'int') ?GETPOST('remonth', 'int') : (GETPOST("month", 'int') ?GETPOST("month", "int") : date("m"));
-$day = GETPOST('reday', 'int') ?GETPOST('reday', 'int') : (GETPOST("day", 'int') ?GETPOST("day", "int") : date("d"));
+$day = GETPOST('reday', 'int') ?GETPOST('reday', 'int') : (GETPOST("day", 'int') ?GETPOST("day", "int") : date('d'));
 $day = (int)$day;
 
-$search_usertoprocessid = (!empty($_POST['search_usertoprocessid']) ? $_POST['search_usertoprocessid'] : $_GET['search_usertoprocessid']);
+if(empty($conf->global->FDT_DAY_FOR_NEXT_FDT) || $day >= $conf->global->FDT_DAY_FOR_NEXT_FDT) {
+	$year = GETPOST('reyear', 'int') ?GETPOST('reyear', 'int') : (GETPOST("year", 'int') ?GETPOST("year", "int") : date('Y'));
+	$month = GETPOST('remonth', 'int') ?GETPOST('remonth', 'int') : (GETPOST("month", 'int') ?GETPOST("month", "int") : date('m'));
+}
+else {
+	$year = GETPOST('reyear', 'int') ?GETPOST('reyear', 'int') : (GETPOST("year", 'int') ?GETPOST("year", "int") : dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%Y'));
+	$month = GETPOST('remonth', 'int') ?GETPOST('remonth', 'int') : (GETPOST("month", 'int') ?GETPOST("month", "int") : dol_print_date(dol_time_plus_duree($now, -1, 'm'), '%m'));
+}
+
+$search_usertoprocessid = (!empty($_POST['search_usertoprocessid']) && empty(GETPOST("save")) ? $_POST['search_usertoprocessid'] : $_GET['search_usertoprocessid']);
 $search_task_ref = GETPOST('search_task_ref', 'alpha', 3);
 $search_task_label = GETPOST('search_task_label', 'alpha', 3);
 $search_project_ref = GETPOST('search_project_ref', 'alpha', 3);
 $search_thirdparty = GETPOST('search_thirdparty', 'alpha', 3);
 $search_declared_progress = GETPOST('search_declared_progress', 'alpha', 3);
 
-
 // Déclaration des objets
-if (empty($search_usertoprocessid) || $search_usertoprocessid == $user->id) {
+if (empty($search_usertoprocessid) || $search_usertoprocessid == $user->id || GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) {
 	$usertoprocess = $user;
 	$search_usertoprocessid = $usertoprocess->id;
 } elseif ($search_usertoprocessid > 0) {
@@ -103,6 +110,7 @@ $project = new Project($db);
 $thirdpartystatic = new Societe($db);
 $holiday = new extendedHoliday($db);
 $taskstatic = new Task($db);
+$objectoffield = clone $usertoprocess;
 
 // Extra fields
 $extrafields = new ExtraFields($db);
@@ -123,12 +131,23 @@ $next_year  = $next['year'];
 $next_month = $next['month'];
 
 $first_day_month = dol_get_first_day($year, $month);
+$last_day_month = dol_get_last_day($year, $month);
 $firstdaytoshow = dol_time_plus_duree($first_day_month, -$conf->global->JOUR_ANTICIPES, 'd');
+if($conf->global->FDT_DISPLAY_FULL_WEEK) {
+	$firstdayweek = dol_get_first_day_week(dol_print_date($firstdaytoshow, '%d'), dol_print_date($firstdaytoshow, '%m'), dol_print_date($firstdaytoshow, '%Y'));
+	$firstdaytoshow = dol_mktime(0, 0, 0, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
+}
 $firstdaytoshowgmt = dol_mktime(0, 0, 0, dol_print_date($firstdaytoshow, '%m'), dol_print_date($firstdaytoshow, '%d'), dol_print_date($firstdaytoshow, '%Y'), 'gmt');
 $lastdaytoshow = dol_get_last_day($year, $month);
+$month_fdt = date('mY', $lastdaytoshow);
+if($conf->global->FDT_DISPLAY_FULL_WEEK) {
+	$lastdaytoshow = dol_time_plus_duree($lastdaytoshow, 1, 'w');
+	$firstdayweek = dol_get_first_day_week(dol_print_date($lastdaytoshow, '%d'), dol_print_date($lastdaytoshow, '%m'), dol_print_date($lastdaytoshow, '%Y'));
+	$lastdaytoshow = dol_mktime(0, 0, 0, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
+}
 
 $ecart_jour = num_between_day($firstdaytoshow, $first_day_month + 3600); // Nombre de jour à anticiper
-$month_fdt = date('mY', $lastdaytoshow);
+$ecart_jour_fin = num_between_day($firstdaytoshow, $last_day_month + 3600);
 
 
 // Chargement de la feuille de temps et Vérification de la possibilité de modifier la FDT
@@ -137,12 +156,14 @@ $can_modify_fdt = 1;
 if($object_id > 0) {
 	$object->fetch($object_id);
 
-	$list_resp_task = $object->listApprover1;
-	if(in_array(1, $list_resp_task[1])){
-		$resp_task_valide = 1;
-	}
-	else {
-		$resp_task_valide = 0;
+	if(!$conf->global->FDT_USER_APPROVER) {
+		$list_resp_task = $object->listApprover1;
+		if(in_array(1, $list_resp_task[1])){
+			$resp_task_valide = 1;
+		}
+		else {
+			$resp_task_valide = 0;
+		}
 	}
 
 	if($object->status != FeuilleDeTemps::STATUS_DRAFT){
@@ -154,11 +175,11 @@ else {
 	$object->date_fin = $lastdaytoshow;
 }
 
-$month_now = date('m');
-$nb_jour = num_between_day($firstdaytoshow, $lastdaytoshow - 3600) + 1; // Nombre de jour total à affiché
+if(!$user->admin && $conf->global->FDT_USER_APPROVER && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) ){
+	$can_modify_fdt = 0;
+}
 
-$timeHoliday = $object->timeHolidayWeek($usertoprocess->id);
-$timeSpentWeek = $object->timeDoneByWeek($usertoprocess->id);
+$nb_jour = num_between_day($firstdaytoshow, $lastdaytoshow - 3600) + 1; // Nombre de jour total à affiché
 
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = dol_time_plus_duree($firstdaytoshow, $idw, 'd');
@@ -186,39 +207,110 @@ $search_array_options_project = $extrafields->getOptionalsFromPost('projet', '',
 $search_array_options_task = $extrafields->getOptionalsFromPost('projet_task', '', 'search_task_');
 
 if(!empty($_POST["transmettre"])) {
-	$massaction = "transmettre";
+	$action2 = "transmettre";
 }
 
-$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
-$userField_deplacement = new UserField($db);
-$userField_deplacement->id = $usertoprocess->id;
-$userField_deplacement->table_element = 'donneesrh_Deplacement';
-$userField_deplacement->fetch_optionals();
-
-// Gestion des types de déplacement
 $userInDeplacement = 0;
-$typeDeplacement = 'none';
+$type_deplacement = 'none';
 $userInGrandDeplacement = 0;
-if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
-	$userInDeplacement = 1;
-	$typeDeplacement = 'petitDeplacement';
-}
-if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
-	$userInGrandDeplacement = 1;
-	$typeDeplacement = 'grandDeplacement';
-}
+if($conf->donneesrh->enabled) {
+	$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
+	$userField_deplacement = new UserField($db);
+	$userField_deplacement->id = $usertoprocess->id;
+	$userField_deplacement->table_element = 'donneesrh_Deplacement';
+	$userField_deplacement->fetch_optionals();
 
+	// Gestion des types de déplacement
+	if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
+		$userInDeplacement = 1;
+		$type_deplacement = 'petitDeplacement';
+	}
+	if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
+		$userInGrandDeplacement = 1;
+		$type_deplacement = 'grandDeplacement';
+	}
+}
 
 // Nombre d'heures par semaine à faire et avant de pouvoir avoir des hs
-$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
-$userField = new UserField($db);
-$userField->id = $usertoprocess->id;
-$userField->table_element = 'donneesrh_Positionetcoefficient';
-$userField->fetch_optionals();
+if($conf->donneesrh->enabled) {
+	$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+	$userField = new UserField($db);
+	$userField->id = $usertoprocess->id;
+	$userField->table_element = 'donneesrh_Positionetcoefficient';
+	$userField->fetch_optionals();
 
-$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
-$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
-$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
+	$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+}
+else {
+	$heure_semaine = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	$heure_semaine = (!empty($usertoprocess->array_options['options_horairehebdomadaire']) ? $usertoprocess->array_options['options_horairehebdomadaire'] : $heure_semaine);
+	$heure_semaine_hs = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+}
+
+// Nombre d'heures max par jour et semaine
+if(empty($usertoprocess->array_options['options_heuremaxjour']) || !$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+    $heure_max_jour = ($conf->global->HEURE_MAX_JOUR > 0 ? $conf->global->HEURE_MAX_JOUR : 0);
+}
+else {
+	$heure_max_jour = $usertoprocess->array_options['options_heuremaxjour'];
+}
+
+if(empty($usertoprocess->array_options['options_heuremaxsemaine']) || !$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+	$heure_max_semaine = ($conf->global->HEURE_MAX_SEMAINE > 0 ? $conf->global->HEURE_MAX_SEMAINE : 0);
+}
+else {
+	$heure_max_semaine = $usertoprocess->array_options['options_heuremaxsemaine'];
+}
+
+// Semaine type
+$standard_week_hour = array();
+if($usertoprocess->array_options['options_semaine_type_lundi'] || $usertoprocess->array_options['options_semaine_type_mardi'] || $usertoprocess->array_options['options_semaine_type_mercredi'] || 
+$usertoprocess->array_options['options_semaine_type_jeudi'] || $usertoprocess->array_options['options_semaine_type_vendredi'] || $usertoprocess->array_options['options_semaine_type_samedi'] || 
+$usertoprocess->array_options['options_semaine_type_dimanche']) {
+	$standard_week_hour['Lundi'] = $usertoprocess->array_options['options_semaine_type_lundi'] * 3600;
+	$standard_week_hour['Mardi'] = $usertoprocess->array_options['options_semaine_type_mardi'] * 3600;
+	$standard_week_hour['Mercredi'] = $usertoprocess->array_options['options_semaine_type_mercredi'] * 3600;
+	$standard_week_hour['Jeudi'] = $usertoprocess->array_options['options_semaine_type_jeudi'] * 3600;
+	$standard_week_hour['Vendredi'] = $usertoprocess->array_options['options_semaine_type_vendredi'] * 3600;
+	$standard_week_hour['Samedi'] = $usertoprocess->array_options['options_semaine_type_samedi'] * 3600;
+	$standard_week_hour['Dimanche'] = $usertoprocess->array_options['options_semaine_type_dimanche'] * 3600;
+}
+elseif($heure_semaine == $conf->global->HEURE_SEMAINE_NO_RTT) {
+	$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
+	$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_NO_RTT * 3600;
+	$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT * 3600;
+	$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_NO_RTT * 3600;
+	$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_NO_RTT * 3600;
+	$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_NO_RTT * 3600;
+	$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_NO_RTT * 3600;
+}
+else {
+	$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_WITH_RTT * 3600;
+	$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_WITH_RTT * 3600;
+	$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT * 3600;
+	$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_WITH_RTT * 3600;
+	$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_WITH_RTT * 3600;
+	$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_WITH_RTT * 3600;
+	$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_WITH_RTT * 3600;
+}
+
+// Temps en congés par semaine
+$timeHoliday = $object->timeHolidayWeek($usertoprocess, $standard_week_hour);
+// Temps travaillé par semaine
+$timeSpentWeek = $object->timeDoneByWeek($usertoprocess);
+
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read;
+if (!$permissiontoread) accessforbidden();
+
+// Types de congés 
+$typeleaves = $holiday->getTypesNoCP(-1, -1);
+$arraytypeleaves = array();
+foreach ($typeleaves as $key => $val) {
+	$labeltoshow = $val['code'];
+	$arraytypeleaves[$val['rowid']] = $labeltoshow;
+}
 
 
 /*
@@ -239,7 +331,7 @@ if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x'
 	$search_array_options_task = array();
 
 	// We redefine $usertoprocess
-	$usertoprocess = $user;
+	//$usertoprocess = $user;
 }
 
 $onlyopenedproject = -1;
@@ -272,8 +364,9 @@ $param .= ($search_thirdparty ? '&search_thirdparty='.urlencode($search_thirdpar
 $param .= ($search_task_ref ? '&search_task_ref='.urlencode($search_task_ref) : '');
 $param .= ($search_task_label ? '&search_task_label='.urlencode($search_task_label) : '');
 $paramwithoutdate = $param;
-//if ($massaction == 'transmettre' || $action == 'confirm_transmettre') {
-	$param .= ($day ? '&day='.urlencode($day) : '').($month ? '&month='.urlencode($month) : '').($year ? '&year='.urlencode($year) : '');
+//if ($action2 == 'transmettre' || $action == 'confirm_transmettre') {
+	$paramdate = ($day ? '&day='.urlencode($day) : '').($month ? '&month='.urlencode($month) : '').($year ? '&year='.urlencode($year) : '');
+	$param .= $paramdate;
 //}
 
 $search_array_options = $search_array_options_project;
@@ -302,25 +395,35 @@ include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/tpl/actions_timesheet.tpl
 
 include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/actions.inc.php';
 
-// Gestion des congés et des jours feriés
+/*
+ * View
+ */
+
+ // Gestion des congés et des jours feriés
 $timeSpentDay = $object->timeDoneByDay($usertoprocess->id);
 $multiple_holiday = 0;
 $uncompleted_fdt = 0;
+$isavailable = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, Holiday::STATUS_APPROVED2, array(4));
+$holidayWithoutCanceled = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
 	$dayinloopfromfirstdaytoshowgmt = dol_time_plus_duree($firstdaytoshowgmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
 
-	$isavailable[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, Holiday::STATUS_APPROVED2, array(4));
-	$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
+	// $isavailable[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, Holiday::STATUS_APPROVED2, array(4));
+	// $holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
 
 	$holidayTypeNeedHour = 1;
+	$holidayInSeveralDay = 0;
 	for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['code']); $i++) {
 		if(!$holiday->holidayTypeNeedHour($isavailable[$dayinloopfromfirstdaytoshow]['code'][$i])) {
 			$holidayTypeNeedHour = 0;
 		}
+		if($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['nb_jour'][$i] > 1) {
+			$holidayInSeveralDay = 1;
+		}
 	}
 
-	if (!$isavailable[$dayinloopfromfirstdaytoshow]['morning'] && !$isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] && !$holidayTypeNeedHour) {
+	if (!$isavailable[$dayinloopfromfirstdaytoshow]['morning'] && !$isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] && (!$holidayTypeNeedHour || $holidayInSeveralDay)) {
 		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';
 	} elseif(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim'){
 		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';
@@ -352,7 +455,7 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$css[$dayinloopfromfirstdaytoshow] .= ' weekend';
 	}
 
-	if($dayinloopfromfirstdaytoshow < $first_day_month){
+	if($dayinloopfromfirstdaytoshow < $first_day_month || $dayinloopfromfirstdaytoshow > $last_day_month){
 		$css[$dayinloopfromfirstdaytoshow] .= ' before';
 	}
 
@@ -362,14 +465,10 @@ for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$css[$dayinloopfromfirstdaytoshow] .= ' public_holiday'; 
 	}
 
-	if(!$uncompleted_fdt && empty($css[$dayinloopfromfirstdaytoshow]) && empty($css_holiday[$dayinloopfromfirstdaytoshow]) && empty($timeSpentDay[dol_print_date($dayinloopfromfirstdaytoshow, "%d/%m/%Y")])) {
+	if(!$conf->global->FDT_DISPLAY_COLUMN && !$uncompleted_fdt && empty($css[$dayinloopfromfirstdaytoshow]) && empty($css_holiday[$dayinloopfromfirstdaytoshow]) && empty($timeSpentDay[dol_print_date($dayinloopfromfirstdaytoshow, "%d/%m/%Y")])) {
 		$uncompleted_fdt = 1;
 	}
 }
-
-/*
- * View
- */
 
 $title = $langs->trans("FeuilleDeTemps");
 
@@ -379,15 +478,15 @@ if ($morewherefilter) {	// Get all task without any filter, so we can show total
 $projectsrole = $taskstatic->getUserRolesForProjectsOrTasks($usertoprocess, 0, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
 $tasksrole = $taskstatic->getUserRolesForProjectsOrTasks(0, $usertoprocess, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
 
-$array_js = array('/core/js/timesheet.js', '/custom/feuilledetemps/core/js/timesheet.js', '/custom/feuilledetemps/core/js/parameters.php');
-llxHeader("", $title, "", '', '', '', $array_js, '', '', 'classforhorizontalscrolloftabs feuilledetemps timesheet');
+// $array_js = array('/core/js/timesheet.js', '/custom/feuilledetemps/core/js/timesheet.js', '/custom/feuilledetemps/core/js/parameters.php');
+llxHeader("", $title, "", '', '', '', $array_js, '', '', 'classforhorizontalscrolloftabs feuilledetemps timesheet'.($conf->global->FDT_DISPLAY_COLUMN ? ' displaycolumn' : ''));
 //print '<body onresize="redimenssion()">';
 
 print_barre_liste($title, $page, $_SERVER["PHP_SELF"], "", $sortfield, $sortorder, "", $num, '', 'object_timesheet_32@feuilledetemps');
 
 // Affichage des fenêtres de confirmation
 $formconfirm = '';
-if ($massaction == 'transmettre') {
+if ($action2 == 'transmettre') {
 	$question = 'Voulez vous transmettre votre feuille de temps pour validation ?';
 	$question .= ($uncompleted_fdt ? '<br><span style="color: #be0000; font-size: initial;"><strong>⚠ Le pointage n\'a pas été renseigné en totalité</strong></span>' : '');
 	$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?'.$param, $langs->trans('Transmission'), $question, 'confirm_transmettre', '', 0, 1);
@@ -403,22 +502,28 @@ print 'Fonctionnement';
 print '</div>';
 print '<div id="fonctionnement">';
 print '<span class="hideonsmartphone opacitymedium">';
-print 'Cette vue est restreinte aux projets ou tâches pour lesquels vous êtes un contact affecté.. Seuls les projets ouverts sont visibles (les projets à l\'état brouillon ou fermé ne sont pas visibles).<br>';
-print 'Seules les tâches qui vous sont assignées sont visibles.<br>';
-print '<strong>Temps de travail :</strong> Veuillez renseigner vos horaires pour chaque jour du mois (max : 10h par jour et 48h par semaine).<br>';
-print '<strong>Heure sup :</strong> Si vous entrez + de '.$heure_semaine_hs.'h, 2 nouvelles cases apparaissent. Dans la case <span class="txt_hs25">bleue</span>, entrez les heures entre '.$heure_semaine_hs.'h et '.$conf->global->HEURE_SUP1.'h. Dans la case <span class="txt_hs50">orange</span>, entrez les heures entre '.$conf->global->HEURE_SUP1.'h et '.$conf->global->HEURE_MAX_SEMAINE.'h.<br>';
-print '<strong>Autres :</strong> Vous pouvez également renseigner les autres types d\'heures en cochant la case correspondante sur la tache. (max : temps de travail du jour concerné).<br>';
+if(!$conf->global->FDT_DISPLAY_COLUMN) {
+	print 'Cette vue est restreinte aux projets ou tâches pour lesquels vous êtes un contact affecté.. Seuls les projets ouverts sont visibles (les projets à l\'état brouillon ou fermé ne sont pas visibles).<br>';
+	print 'Seules les tâches qui vous sont assignées sont visibles.<br>';
+	print '<strong>Temps de travail :</strong> Veuillez renseigner vos horaires pour chaque jour du mois (max : 10h par jour et 48h par semaine).<br>';
+	print '<strong>Heure sup :</strong> Si vous entrez + de '.$heure_semaine_hs.'h, 2 nouvelles cases apparaissent. Dans la case <span class="txt_hs25">bleue</span>, entrez les heures entre '.$heure_semaine_hs.'h et '.$conf->global->HEURE_SUP1.'h. Dans la case <span class="txt_hs50">orange</span>, entrez les heures entre '.$conf->global->HEURE_SUP1.'h et '.$conf->global->HEURE_MAX_SEMAINE.'h.<br>';
+	print '<strong>Autres :</strong> Vous pouvez également renseigner les autres types d\'heures en cochant la case correspondante sur la tache. (max : temps de travail du jour concerné).<br>';
+}
 print '<strong>Code couleur : ';
 print '</span>';
-print '<span class="txt_before">Jours anticipés</span> - <span class="txt_ferie">Jours feriés</span> - <span class="txt_conges_brouillon">Absence en brouillon</span> - <span class="txt_conges_valide">Absence en Approbation n°1</span> - <span class="txt_conges_approuve1">Absence en Approbation n°2</span> - <span class="txt_conges_approuve2">Absence approuvée</span></strong>';
-print '<span class="hideonsmartphone opacitymedium info_fdt">';
-if($userInDeplacement) {
-	print '<br>D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
+print '<span class="txt_before">Jours anticipés</span> - <span class="txt_ferie">Jours fériés</span>';
+if(!$conf->global->FDT_DISPLAY_COLUMN) print ' - <span class="txt_conges_brouillon">Absence en brouillon</span> - <span class="txt_conges_valide">Absence en Approbation n°1</span> - <span class="txt_conges_approuve1">Absence en Approbation n°2</span> - <span class="txt_conges_approuve2">Absence approuvée</span>';
+print '</strong>';
+if(!$conf->global->FDT_DISPLAY_COLUMN) {
+	print '<span class="hideonsmartphone opacitymedium info_fdt">';
+	if($userInDeplacement) {
+		print '<br>D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
+	}
+	if($userInGrandDeplacement) {
+		print '<br>GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
+	}	
+	print '<br>Les heures de route ne doivent pas être pointées';
 }
-if($userInGrandDeplacement) {
-	print '<br>GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
-}	
-print '<br>Les heures de route ne doivent pas être pointées';
 print '</span><br><br>';
 print '</div></div>';
 
@@ -438,7 +543,7 @@ print '<input type="hidden" name="day" value="'.$day.'">';
 print '<input type="hidden" name="month" value="'.$month.'">';
 print '<input type="hidden" name="year" value="'.$year.'">';
 print '<div class="floatleft right'.($conf->dol_optimize_smallscreen ? ' centpercent' : '').'">'.$nav.'</div>'; // We move this before the assign to components so, the default submit button is not the assign to.
-print '<div class="clearboth" style="padding-bottom: 20px;"></div>';
+print '<div class="clearboth" style="padding-bottom: 10px;"></div>';
 
 $tmpvar = "MAIN_SELECTEDFIELDS_".$varpage;
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
@@ -449,48 +554,92 @@ $moreforfilter .= '<div class="divsearchfield">';
 $moreforfilter .= '<div class="inline-block hideonsmartphone"></div>';
 $projectListResp = $project->getProjectsAuthorizedForUser($user, 1, 1, 0, " AND ec.fk_c_type_contact = 160");
 $userList = $projectstatic->getUserForProjectLeader($projectListResp);
-if(!$user->rights->feuilledetemps->feuilledetemps->read) {
-	$includeonly = array_merge($userList, $user->getAllChildIds(1));
-	if (empty($user->rights->user->user->lire)) {
-		$includeonly = array($user->id);
+if(!$user->rights->feuilledetemps->feuilledetemps->readall) {
+	if(!$conf->global->FDT_USER_APPROVER) {
+		$includeonly = array_merge($userList, $user->getAllChildIds(1));
+		if (empty($user->rights->user->user->lire)) {
+			$includeonly = array($user->id);
+		}
+	}
+	else {
+		$includeonly = array_merge($object->getUserImApprover(), $object->getUserImObserver());
+		if (!in_array($user->id, $includeonly)) {
+			$includeonly[] = $user->id;
+		}
 	}
 }
 $extendedUser = New ExtendedUser3($db);
-$exlude = $extendedUser->get_full_treeIds("statut <> 1");
-$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class="paddingright pictofixedwidth"').$form->select_dolusers($search_usertoprocessid ? $search_usertoprocessid : $usertoprocess->id, 'search_usertoprocessid', 0, $exlude, 0, $includeonly, null, 0, 0, 0, '', 0, '', 'maxwidth200');
+$exclude = $extendedUser->get_full_treeIds("statut <> 1");
+$usersee = $form->select_dolusers('', '', 0, $exclude, 0, $includeonly, null, 0, 0, 0, '', 0, '', '', 0, 2);
+$prev_user_id = (array_keys($usersee)[array_search($usertoprocess->id,array_keys($usersee))-1]);
+$next_user_id = (array_keys($usersee)[array_search($usertoprocess->id,array_keys($usersee))+1]);
+
+if($prev_user_id > 0 && $prev_user_id != $usertoprocess->id) $moreforfilter .= '<a style="color: #79633f;" class="inline-block" href="?search_usertoprocessid='.$prev_user_id.$paramdate.'">';
+else $moreforfilter .= '<a style="color: #ccc;">';
+$moreforfilter .= '<i class="fa fa-chevron-left paddingright paddingleft"></i>';
+if($prev_user_id > 0 && $prev_user_id != $usertoprocess->id) $moreforfilter .= '</a>';
+else $moreforfilter .= '</a>';
+$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class=""');
+if($next_user_id > 0 && $next_user_id != $usertoprocess->id) $moreforfilter .= '<a style="color: #79633f;" class="inline-block" href="?search_usertoprocessid='.$next_user_id.$paramdate.'">';
+else $moreforfilter .= '<a style="color: #ccc;">';
+$moreforfilter .= '<i class="fa fa-chevron-right paddingright paddingleft"></i>';
+if($next_user_id > 0 && $next_user_id != $usertoprocess->id) $moreforfilter .= '</a>';
+else $moreforfilter .= '</a>';
+
+$moreforfilter .= $form->select_dolusers($search_usertoprocessid ? $search_usertoprocessid : $usertoprocess->id, 'search_usertoprocessid', 0, $exclude, 0, $includeonly, null, 0, 0, 0, '', 0, '', 'maxwidth200');
 $moreforfilter .= '</div>';
+$moreforfilter .= '<input type="hidden" id="fuserid" value="'.$usertoprocess->id.'"/>';
 
 
 // Filtre
-if (empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT)) {
+if (empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT) && !$conf->global->FDT_DISPLAY_COLUMN) {
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<div class="inline-block"></div>';
-	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Project'), 'project', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_project_ref" class="maxwidth100" value="'.dol_escape_htmltag($search_project_ref).'">';
+	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Project'), 'project', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_project_ref" id="search_project_ref" class="maxwidth100" value="'.dol_escape_htmltag($search_project_ref).'">';
 	$moreforfilter .= '</div>';
 
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<div class="inline-block"></div>';
-	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('ThirdParty'), 'company', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_thirdparty" class="maxwidth100" value="'.dol_escape_htmltag($search_thirdparty).'">';
+	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('ThirdParty'), 'company', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_thirdparty" id="search_thirdparty" class="maxwidth100" value="'.dol_escape_htmltag($search_thirdparty).'">';
 	$moreforfilter .= '</div>';
 
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<div class="inline-block"></div>';
-	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Task'), 'projecttask', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_task_label" class="maxwidth100" value="'.dol_escape_htmltag($search_task_label).'">';
-	$moreforfilter .= '</div>';
-
-	$moreforfilter .= '<div class="divsearchfield nowrap">';
-	$searchpicto = $form->showFilterAndCheckAddButtons(0);
-	$moreforfilter .= $searchpicto;
+	$moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('Task'), 'projecttask', 'class="paddingright pictofixedwidth"').'<input type="text" name="search_task_label" id="search_task_label" class="maxwidth100" value="'.dol_escape_htmltag($search_task_label).'">';
 	$moreforfilter .= '</div>';
 }
+
+$moreforfilter .= '<div class="divsearchfield nowrap">';
+$searchpicto = $form->showFilterAndCheckAddButtons(0);
+$moreforfilter .= $searchpicto;
+$moreforfilter .= '</div>';
 
 if (!empty($moreforfilter)) {
 	print '<div id="filtre" class="liste_titre liste_titre_bydiv centpercent">';
 	print $moreforfilter;
+	if($conf->global->FDT_SHOW_USERADRESS) {
+		$fk_user = new User($db);
+		$fk_user->fetch($usertoprocess->id);
+
+		print '<div class="divsearchfield">';
+
+		if($fk_user->array_options['options_matricule']) {
+			print " ".img_picto($langs->trans("Matricule"), 'fontawesome_id-card-alt_fas_#aaa');
+			print ' <span style="font-style: italic;color: #757575;">'.$fk_user->array_options['options_matricule']."</span>";
+		}
+
+		$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
+		if ($fulladress) {
+			print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
+			print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+		}
+
+		print '</div>';
+	}
 	print '<div class="divsearchfield nowrap" style="float: right;">';
-	print_liste_field_titre($selectedfields, $_SERVER["PHP_SELF"], "", '', '', '', $sortfield, $sortorder, 'center maxwidthsearch ');
-	print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>';
-	print '<button type="button" title="Voir les favoris" id="seeFavoris" class="nobordertransp button_search_x" onclick="displayFav()" style="vertical-align: middle; margin-left: 4px;"><span class="far fa-star" style="font-size: large; color: var(--colorbackhmenu1);"></span></button>';;
+	if(!$conf->global->FDT_DISPLAY_COLUMN) print_liste_field_titre($selectedfields, $_SERVER["PHP_SELF"], "", '', '', '', $sortfield, $sortorder, 'center maxwidthsearch ');
+	print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand" style="font-size: 1.7em;"></span></button>';
+	if(!$conf->global->FDT_DISPLAY_COLUMN) print '<button type="button" title="Voir les favoris" id="seeFavoris" class="nobordertransp button_search_x" onclick="displayFav()" style="vertical-align: middle; margin-left: 4px;"><span class="far fa-star" style="font-size: large; color: var(--colorbackhmenu1);"></span></button>';;
 	print '</div>';
 	print '</div>';
 }
@@ -514,312 +663,90 @@ foreach ($arrayfields as $key => $val) {
 }
 
 
-print '<div class="div-table-responsive" style="min-height: 0px">';
-print '<table class="tagtable liste '.($moreforfilter ? " listwithfilterbefore" : "").'" id="tablelines_fdt">'."\n";
-print '<thead>';
-print '<tr class="liste_titre favoris">';
-print '<th class="fixed" colspan="'.(2 + $addcolspan).'" style="min-width: 500px;"></th>';
-
-
-// Affichage des jours de la semaine
-for ($idw = 0; $idw < $nb_jour; $idw++) {
-	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-
-	if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-		print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none; border-top: none !important; z-index:1;" width="9%"></th>';
-	}
-
-	print '<th width="9%" align="center" style="min-width: 90px; z-index: 1" class="bold hide'.$idw.' day">';
-	print dol_print_date($dayinloopfromfirstdaytoshow, '%a');
-	print '<br>'.dol_print_date($dayinloopfromfirstdaytoshow, 'dayreduceformat').'</th>';
-}
-print '<th class="fixed total_title" width="9%" style="min-width: 90px;"><strong>TOTAL</strong></th>';
-print "</tr>";
-
-
-// Affichage de la ligne avec le total de chaque semaine
-print '<tr class="liste_titre fixed favoris">';
-print '<th class="fixed" colspan="'.(2 + $addcolspan).'"></th>';
-$semaine = 1;
-for ($idw = 0; $idw < $nb_jour; $idw++) {			
-	$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-	$ecart_lundi = ecart_lundi($tmpday);
-	$weekNumber = date("W", $tmpday);
-
-	if ($idw == 0) {
-		$taille = 7-$ecart_lundi;
-	}
-	elseif (dol_print_date($tmpday, '%a') == 'Lun' && $nb_jour - $idw < 7 && $idw-$ecart_lundi > 23 && dol_print_date($lastdaytoshow, '%a') != 'Dim'){
-		$taille = $nb_jour - $idw;
-	}
-	elseif (dol_print_date($tmpday, '%a') == 'Lun' && $idw != 0) {	
-		$taille = 7;
-		$date = dol_time_plus_duree($tmpday, 7, 'd');
-
-		if($first_day_month == $tmpday){
-			print '<th style="min-width: 90px; border-left: 1px solid var(--colortopbordertitle1); border-bottom: none; border-top: none !important; z-index:1;" width="9%"></th>';
-		}
-		elseif($first_day_month > $tmpday && $first_day_month < $date){
-			$taille++;
-			$idw--;
-		}
-	}
-
-	$premier_jour = $idw;
-	$dernier_jour = $idw+$taille-1;
-
-	print '<th class="liste_total_semaine_'.$semaine.'" align="center" colspan='.$taille.'><strong>Semaine '.$weekNumber.' : <span class="totalSemaine" name="totalSemaine'.$weekNumber.'" id="totalSemaine'.$semaine.'_'.$premier_jour.'_'.$dernier_jour.'">&nbsp</span></strong></td>';
-	$semaine++;
-	$idw += $taille - 1;
-}
-print '<th class="fixed total_week"></th>';
-print '</tr>';
-
-
-// Affichage de la ligne des congés
-$holiday = new extendedHoliday($db);
-$typeleaves = $holiday->getTypesNoCP(-1, -1);
-$arraytypeleaves = array();
-foreach ($typeleaves as $key => $val) {
-	$labeltoshow = $val['code'];
-	$arraytypeleaves[$val['rowid']] = $labeltoshow;
-}	
-	
-$conges_texte = $holiday->getArrayHoliday($usertoprocess->id, 0, 1);
-$cpt = 0; 
-
-print '<tr class="nostrong liste_titre fixed conges">';
-	print '<th colspan="'.(2 + $addcolspan).'" '.($multiple_holiday ? 'rowspan="2"' : '').' class="fixed"><strong>Congés</strong>';
-	print $form->textwithpicto('', $conges_texte);
-	print '</th>';
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-		$keysuffix = '['.$idw.']';
-
-		if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-			print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
-		}
-
-		if(!empty($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][0])) {
-			$holiday->fetch((int)$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
-			$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-			$droit_rtt = $holiday->holidayTypeDroitRTT();
-				
-			if(!empty($holiday->array_options['options_hour'])) {
-				$durationHoliday = $holiday->array_options['options_hour'];
-			}
-			else {
-				$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-				$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-				if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += 3.5 * 3600;
-				}
-				elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-				}
-				elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-				}
-				$durationHoliday = $duration_hour;
-			}
-
-			if($idw + $numberDay > $nb_jour) {
-				$numberDay = $nb_jour - $idw;
-			}
-			
-			print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
-
-			print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
-			print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
-
-			$idw += $numberDay - 1;
-			$cpt++;
-		}
-		else {
-			print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
-		}
-
-		print '</th>';
-	}
-	print '<th class="liste_total center fixed total_holiday"></th>';
-print '</tr>';
-
-if($multiple_holiday) {
-	print '<tr class="nostrong liste_titre conges">';
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-		$keysuffix = '['.$idw.']';
-
-		if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-			print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
-		}
-
-		if(!empty($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][1])) {
-			$holiday->fetch((int)$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][1]);
-			$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-			$droit_rtt = $holiday->holidayTypeDroitRTT();
-				
-			if(!empty($holiday->array_options['options_hour'])) {
-				$durationHoliday = $holiday->array_options['options_hour'];
-			}
-			else {
-				$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-				$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-				if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += 3.5 * 3600;
-				}
-				elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-				}
-				elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-					$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-				}
-				$durationHoliday = $duration_hour;
-			}
-
-			if($idw + $numberDay > $nb_jour) {
-				$numberDay = $nb_jour - $idw;
-			}
-			
-			print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
-
-			print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
-			print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']" disabled', 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
-
-			$idw += $numberDay - 1;
-			$cpt++;
-		}
-		else {
-			print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'">';
-		}
-
-		print '</th>';
-	}
-	print '<th class="liste_total center fixed total_holiday"></th>';
-	print '</tr>';
-}
-
-print '</thead>';
-
 $tasksarray = $taskstatic->getTasksArray(0, 0, 0, $socid, 0, $search_project_ref, $onlyopenedproject, $morewherefilter, 0, 0, $extrafields); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
 
 // Calculate total for all tasks
-$listofdistinctprojectid = array(); // List of all distinct projects
-if (is_array($tasksarraywithoutfilter) && count($tasksarraywithoutfilter)) {
-	foreach ($tasksarraywithoutfilter as $tmptask) {
-		$listofdistinctprojectid[$tmptask->fk_project] = $tmptask->fk_project;
+if(!$conf->global->FDT_DISPLAY_COLUMN) {
+	$listofdistinctprojectid = array(); // List of all distinct projects
+	if (is_array($tasksarraywithoutfilter) && count($tasksarraywithoutfilter)) {
+		foreach ($tasksarraywithoutfilter as $tmptask) {
+			$listofdistinctprojectid[$tmptask->fk_project] = $tmptask->fk_project;
+		}
+	}
+	$totalforeachday = array();
+	$timeSpentMonth = array();
+	foreach ($listofdistinctprojectid as $tmpprojectid) {
+		$projectstatic->id = $tmpprojectid;
+		$projectstatic->loadTimeSpent_month($firstdaytoshow, 0, $usertoprocess->id); // Load time spent from table projet_task_time for the project into this->weekWorkLoad and this->weekWorkLoadPerTask for all days of a week
+		$timeSpentMonth[$projectstatic->id]['weekWorkLoad'] = $projectstatic->weekWorkLoad;
+		$timeSpentMonth[$projectstatic->id]['weekWorkLoadPerTask'] = $projectstatic->weekWorkLoadPerTask;
+		for ($idw = 0; $idw < $nb_jour; $idw++) {
+			$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
+			$totalforeachday[$tmpday] += $projectstatic->weekWorkLoad[$tmpday];
+		}
 	}
 }
-$totalforeachday = array();
-$timeSpentMonth = array();
-foreach ($listofdistinctprojectid as $tmpprojectid) {
-	$projectstatic->id = $tmpprojectid;
-	$projectstatic->loadTimeSpent_month($firstdaytoshow, 0, $usertoprocess->id); // Load time spent from table projet_task_time for the project into this->weekWorkLoad and this->weekWorkLoadPerTask for all days of a week
-	$timeSpentMonth[$projectstatic->id]['weekWorkLoad'] = $projectstatic->weekWorkLoad;
-	$timeSpentMonth[$projectstatic->id]['weekWorkLoadPerTask'] = $projectstatic->weekWorkLoadPerTask;
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-		$totalforeachday[$tmpday] += $projectstatic->weekWorkLoad[$tmpday];
-	}
+else {
+	$totalforeachday2 = $projectstatic->getTotalForEachDay($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 }
 
 // By default, we can edit only tasks we are assigned to
 $restrictviewformytask = ((!isset($conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED)) ? 2 : $conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED);
-if (count($tasksarray) > 0) {
+if (count($tasksarray) > 0 || $conf->global->FDT_DISPLAY_COLUMN) {
 	$j = 0;
 	$level = 0;
 
 	// Récupération des temps précédent et suivant qui ne sont pas affichés
-	$temps_prec = $object->getTempsSemainePrecedente($firstdaytoshow, $usertoprocess);
-	$temps_suiv = $object->getTempsSemaineSuivante($lastdaytoshow, $usertoprocess);
-	$temps_prec_hs25 = $object->getHS25SemainePrecedente($firstdaytoshow, $usertoprocess);
-	$temps_suiv_hs25 = $object->getHS25SemaineSuivante($lastdaytoshow, $usertoprocess);
-	$temps_prec_hs50 = $object->getHS50SemainePrecedente($firstdaytoshow, $usertoprocess);
-	$temps_suiv_hs50 = $object->getHS50SemaineSuivante($lastdaytoshow, $usertoprocess);
+	if(!$conf->global->FDT_DISPLAY_FULL_WEEK) {
+		$temps_prec = $object->getTempsSemainePrecedente($firstdaytoshow, $usertoprocess);
+		$temps_suiv = $object->getTempsSemaineSuivante($lastdaytoshow, $usertoprocess);
+		$temps_prec_hs25 = $object->getHS25SemainePrecedente($firstdaytoshow, $usertoprocess);
+		$temps_suiv_hs25 = $object->getHS25SemaineSuivante($lastdaytoshow, $usertoprocess);
+		$temps_prec_hs50 = $object->getHS50SemainePrecedente($firstdaytoshow, $usertoprocess);
+		$temps_suiv_hs50 = $object->getHS50SemaineSuivante($lastdaytoshow, $usertoprocess);
+	}
+	else {
+		$temps_prec = 0;
+		$temps_suiv = 0;
+		$temps_prec_hs25 = 0;
+		$temps_suiv_hs25 = 0;
+		$temps_prec_hs50 = 0;
+		$temps_suiv_hs50 = 0;
+	}
 
 	// Récupération des favoris
-	$favoris = $object->getFavoris($usertoprocess->id);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) $favoris = $object->getFavoris($usertoprocess->id);
 
 	// Récupération des notes
-	$notes = $task->fetchAllNotes($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+	$notes = $task->fetchAllNotes($firstdaytoshow, $lastdaytoshow, $usertoprocess->id, ($conf->global->FDT_DISPLAY_COLUMN ? 1 : 0));
 
 	// Récupération des autres temps (compagnonnage/heure de nuit/heure de route/epi respiratoire)
 	$projet_task_time_other = New Projet_task_time_other($db);
-	$otherTime = $projet_task_time_other->getOtherTime($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+	$otherTaskTime = $projet_task_time_other->getOtherTime($firstdaytoshow, $lastdaytoshow, $usertoprocess->id, ($conf->global->FDT_DISPLAY_COLUMN ? 'column' : ''));
 
 	// Affichage de l'interieur du tableau
-	$totalforvisibletasks = FeuilleDeTempsLinesPerWeek($j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
-														$nb_jour, $can_modify_fdt, $css, $ecart_jour, $typeDeplacement, $dayinloopfromfirstdaytoshow_array, 0, 
-														$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $month_now, $timeHoliday, $heure_semaine, $heure_semaine_hs, $usertoprocess, $favoris, $param);
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek('timesheet', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
+															$can_modify_fdt, $css, $css_holiday, $ecart_jour, $ecart_jour_fin, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
+															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
+															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
+															$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves);
+	}
+	else {
+		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek_Sigedi('timesheet', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
+																$can_modify_fdt, $css, $css_holiday, $ecart_jour, $ecart_jour_fin, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 0, 
+																$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
+																$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs,
+																$favoris, $param, $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves);
+	}
 } else {
-	print '<tr><td colspan="'.(4 + $addcolspan + $nb_jour).'"><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
+	print '<div class="div-table-responsive" style="min-height: 0px">';
+	print '<table class="tagtable liste listwithfilterbefore column">'."\n";	
+	print '<tr><td><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
+	print '</table>';
+	print '</div>';
 }
 
-// Is there a diff between selected/filtered tasks and all tasks ?
-$isdiff = 0;
-if (count($totalforeachday)) {
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-		$timeonothertasks = ($totalforeachday[$tmpday] - $totalforvisibletasks[$tmpday]);
-		if ($timeonothertasks) {
-			$isdiff = 1;
-			break;
-		}
-	}
-}
-
-// There is a diff between total shown on screen and total spent by user, so we add a line with all other cumulated time of user
-if ($isdiff) {
-	print '<tr class="oddeven othertaskwithtime favoris">';
-	print '<td class="nowrap fixed" colspan="'.(2 + $addcolspan).'">'.$langs->trans("OtherFilteredTasks").'</td>';
-
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-
-		if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-			print '<td></td>';
-		}
-
-		print '<td class="center hide'.$idw.' '.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-		$timeonothertasks = ($totalforeachday[$dayinloopfromfirstdaytoshow] - $totalforvisibletasks[$dayinloopfromfirstdaytoshow]);
-		if ($timeonothertasks) {
-			print '<span class="timesheetalreadyrecorded" title="texttoreplace"><input type="text" class="center smallpadd time_'.$idw.'" size="2" disabled id="timespent[-1]['.$idw.']" name="task[-1]['.$idw.']" value="';
-			print convertSecondToTime($timeonothertasks, 'allhourmin');
-			print '"></span>';
-		}
-		print '</td>';
-	}
-
-	print ' <td class="liste_total fixed"></td>';
-	print '</tr>';
-}
-
-// Affichage du total
-if ($conf->use_javascript_ajax) {
-	print '<tr class="trforbreak favoris">';
-	print '<td class="fixed" colspan="'.(2 + $addcolspan).'">';
-	print $langs->trans("Total");
-	print '<span class="opacitymediumbycolor">  - '.$langs->trans("ExpectedWorkedHours").': <strong>'.price($usertoprocess->weeklyhours, 1, $langs, 0, 0).'</strong></span>';
-	print '</td>';
-
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-		
-		if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-			print '<td style="border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;"></td>';
-		}
-
-		$total = (convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') != '0' ? convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') : '00:00');
-		print '<td class="liste_total hide'.$idw.($total != '00:00' ? ' bold' : '').'" align="center"><div class="totalDay'.$idw.'" '.(!empty($style) ? $style : '').'>'.$total.'</div></td>';
-	}
-	print '<td class="liste_total center fixed"><div class="totalDayAll">&nbsp;</div></td>';
-	print '</tr>';
-}
-
-FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $usertoprocess, $css, $ecart_jour, !$can_modify_fdt, $addcolspan, $dayinloopfromfirstdaytoshow_array, $month_now);
-
-print "</table>";
-print '</div>';
 
 // Tableau Full Screen
 print '<div id="fullscreenContainer" tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-dialog-buttons ui-draggable" aria-describedby="dialog-confirm" aria-labelledby="ui-id-1" style="height: calc(100vh - 62px); width: calc(100vw - 9px); top: 53px; display: none;">';
@@ -835,23 +762,22 @@ print '</div></div>';
 
 print '<input type="hidden" id="numberOfLines" name="numberOfLines" value="'.count($tasksarray).'"/>'."\n";
 
-print '<br><div class="center" style="margin-top: 14px;">';
+print '<div class="center" style="margin-top: 14px;">';
 
 // Affichage du bouton "ENREGISTRER"
 if($can_modify_fdt){
-	print '<input onclick="disableNullInput()" type="submit" class="butAction" name="save" value="'.dol_escape_htmltag($langs->trans("Save")).'" style="margin-right: 0px;height: 40px;accent-color: ;">';
-}
+	print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butAction" name="save" value="'.dol_escape_htmltag($langs->trans("Save")).'" style="margin-right: 0px;height: 40px;accent-color: ;">';
 
-// Affichage du bouton "TRANSMETRE"
-if($object->id == 0 || ($object->id > 0 && $object->status == FeuilleDeTemps::STATUS_DRAFT)){
-	print '<input onclick="disableNullInput()" type="submit" class="butActionDelete" name="transmettre" value="Transmettre" style="margin-right: 0px;height: 40px;accent-color: ;">';
+	// Affichage du bouton "TRANSMETRE"
+	if($object->id == 0 || ($object->id > 0 && $object->status == FeuilleDeTemps::STATUS_DRAFT)){
+		print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butActionDelete" name="transmettre" value="Transmettre" style="margin-right: 0px;height: 40px;accent-color: ;">';
+	}
 }
 
 print '</div>';
 print '</form>'."\n\n";
 
 // Appel des fonctions JS
-$modeinput = 'hours';
 if ($conf->use_javascript_ajax) {	
 	print "\n<!-- JS CODE TO ENABLE Tooltips on all object with class classfortooltip -->\n";
 	print '<script type="text/javascript">'."\n";
@@ -901,13 +827,13 @@ if ($conf->use_javascript_ajax) {
 			if(dol_print_date($tmpday, '%a') == 'Dim' || dol_print_date($tmpday, '%d/%m/%Y') == dol_print_date($lastdaytoshow, '%d/%m/%Y')) {
 				$weekNumber = date("W", $tmpday);
 				if($weekNumber == date("W", $firstdaytoshow)) {
-					print ' updateTotalWeek('.($temps_prec ? $temps_prec : 0).', 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(\''.$modeinput.'\', '.($temps_prec ? $temps_prec : 0).', 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 				elseif($weekNumber == date("W", $lastdaytoshow)) {
-					print ' updateTotalWeek(0, '.($temps_suiv ? $temps_suiv : 0).', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(\''.$modeinput.'\', 0, '.($temps_suiv ? $temps_suiv : 0).', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 				else {
-					print ' updateTotalWeek(0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 			}
 		}

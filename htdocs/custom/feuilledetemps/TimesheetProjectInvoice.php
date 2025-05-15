@@ -350,7 +350,7 @@ if(!$user->rights->feuilledetemps->feuilledetemps->facturertemps){
 *
 * Put here all code to build page
 ****************************************************/
-$morejs = array("/custom/feuilledetemps/core/js/parameters.php", "/custom/feuilledetemps/core/js/timesheet.js");
+// $morejs = array("/custom/feuilledetemps/core/js/parameters.php", "/custom/feuilledetemps/core/js/timesheet.js");
 llxHeader('', $langs->trans('TimesheetToInvoice'), '', '', '', '', $morejs);
 print "<div> <!-- module body-->";
 $project= new Project($db);

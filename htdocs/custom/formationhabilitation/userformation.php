@@ -114,7 +114,8 @@ if($onglet == 'formation' || empty($onglet)) {
     $permissiontoreadline = $user->rights->formationhabilitation->userformation->readall || ($object->id == $user->id && $user->rights->formationhabilitation->userformation->read);
     $permissiontoaddline = $user->rights->formationhabilitation->userformation->write;
     $permissiontodeleteline = $user->rights->formationhabilitation->userformation->delete;
-    $permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
+    $permissiontoreadcostpedagogique = $user->rights->formationhabilitation->formation->readcoutpedagogique;
+    $permissiontoreadallcost = $user->rights->formationhabilitation->formation->readcoutall;
     //$permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne);
     $permissiontoforceline = $user->rights->formationhabilitation->userformation->force;
 }
@@ -326,15 +327,17 @@ print $formconfirm;
 unset($arrayfields['t.formateur']);
 unset($objectline->fields['fk_user']);
 unset($arrayfields['t.fk_user']);
-if(!$permissiontoreadcost) {
-    unset($objectline->fields['cout_pedagogique']);
+if(!$permissiontoreadallcost) {
     unset($objectline->fields['cout_mobilisation']);
-    unset($objectline->fields['cout_annexe']);
     unset($objectline->fields['cout_total']);
-    unset($arrayfields['t.cout_pedagogique']);
     unset($arrayfields['t.cout_mobilisation']);
-    unset($arrayfields['t.cout_annexe']);
     unset($arrayfields['t.cout_total']);
+}
+if(!$permissiontoreadcostpedagogique && !$permissiontoreadallcost) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_annexe']);
+    unset($arrayfields['t.cout_pedagogique']);
+    unset($arrayfields['t.cout_annexe']);
 }
 
 dol_banner_tab($object, 'id', $linkback, $user->rights->user->user->lire || $user->admin);

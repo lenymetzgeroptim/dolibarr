@@ -1994,9 +1994,11 @@ class UserAutorisation extends CommonObject
 					else {
 						$this->output .= "L'autorisation $obj->ref a été passé au statut 'Expirée'<br>";
 
-						$user_static = new User($this->db);
-						$user_static->fetch($obj->fk_user);
-						
+						$fk_user = new User($this->db);
+						$fk_user->fetch($obj->fk_user);
+						$autorisation = new Autorisation($this->db);
+						$autorisation->fetch($obj->fk_autorisation);
+
 						$user_group = new UserGroup($this->db);
 						$user_group->fetch(7);
 						$liste_user = $user_group->listUsersForGroup('u.statut=1');
@@ -2012,15 +2014,15 @@ class UserAutorisation extends CommonObject
 						}
 						rtrim($to, ', ');
 
-						if(!empty($user_static->email)) {
-							$to2 = $user_static->email;
+						if(!empty($fk_user->email)) {
+							$to2 = $fk_user->email;
 						}
 						
 						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=autorisation">ici</a>';
-						$message = $langs->transnoentitiesnoconv("EMailTextAutorisationExpire",  $this->ref, $link);
-						$message2 = $langs->transnoentitiesnoconv("EMailTextAutorisationExpireForUser",  $this->ref, $link);
+						$message = $langs->transnoentitiesnoconv("EMailTextAutorisationExpire", $autorisation->label, $fk_user->firstname." ".$fk_user->lastname, $link);
+						$message2 = $langs->transnoentitiesnoconv("EMailTextAutorisationExpireForUser", $autorisation->label, $link);
 
 						$mail = new CMailFile(
 							$subject,

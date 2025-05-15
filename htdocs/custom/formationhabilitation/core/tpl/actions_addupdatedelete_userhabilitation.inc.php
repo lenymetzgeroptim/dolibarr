@@ -196,3 +196,38 @@ if ($action == 'confirm_generation_auto' && $confirm == 'yes' && $permissiontoad
     }
     $action = '';
 }
+
+if ($action == 'updatedatefinhabilitation' && !$cancel && $permissiontoaddline) {
+	$db->begin();
+
+	if($lineid > 0){
+		$objectline->fetch($lineid);
+		$objectline->oldcopy = clone $objectline;
+
+		// if (empty(GETPOST("date_fin_habilitationmonth", 'int')) || empty(GETPOST("date_fin_habilitationday", 'int')) || empty(GETPOST("date_fin_habilitationyear", 'int'))) {
+		// 	setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFinHabilitarion")), null, 'errors');
+		// 	$error++;
+		// }
+		$date_finhabilitation = dol_mktime(-1, -1, -1, GETPOST("date_fin_habilitationmonth", 'int'), GETPOST("date_fin_habilitationday", 'int'), GETPOST("date_fin_habilitationyear", 'int'));
+
+		if(!$error) {
+			$objectline->date_fin_habilitation = $date_finhabilitation; 
+			$objectline->update($user);
+		}
+		
+		if (!$error) {
+			$db->commit();
+			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
+			exit;
+		} else {
+			$db->rollback();
+			setEventMessages($objectline->error, $objectline->errors, 'warnings');
+			$action = 'edit_datefinhabilitation';
+		}
+	}
+	else {
+		$langs->load("errors");
+		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+	}
+}

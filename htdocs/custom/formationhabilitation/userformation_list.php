@@ -180,6 +180,8 @@ $arrayfields = dol_sort_array($arrayfields, 'position');
 $permissiontoread = $user->rights->formationhabilitation->userformation->readall;
 $permissiontoadd = $user->rights->formationhabilitation->userformation->write;
 $permissiontodelete = $user->rights->formationhabilitation->userformation->delete;
+$permissiontoreadcostpedagogique = $user->rights->formationhabilitation->formation->readcoutpedagogique;
+$permissiontoreadallcost = $user->rights->formationhabilitation->formation->readcoutall;
 
 // Security check (enable the most restrictive one)
 if ($user->socid > 0) accessforbidden();
@@ -189,6 +191,15 @@ if ($user->socid > 0) accessforbidden();
 //restrictedArea($user, $object->element, $object->id, $object->table_element, '', 'fk_soc', 'rowid', $isdraft);
 if (empty($conf->formationhabilitation->enabled)) accessforbidden('Moule not enabled');
 if (!$permissiontoread) accessforbidden();
+
+if(!$permissiontoreadallcost) {
+    unset($arrayfields['t.cout_mobilisation']);
+    unset($arrayfields['t.cout_total']);
+}
+if(!$permissiontoreadcostpedagogique && !$permissiontoreadallcost) {
+    unset($arrayfields['t.cout_pedagogique']);
+    unset($arrayfields['t.cout_annexe']);
+}
 
 
 

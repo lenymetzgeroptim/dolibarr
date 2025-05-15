@@ -319,7 +319,7 @@ class UserFormation extends CommonObject
 			// $ret = $actioncomm->create($user); // User creating action
 		}
 
-		$msgAgendaCost = msgAgendaUpdate($this, 0, array(), array('cout_pedagogique', 'cout_mobilisation', 'cout_annexe', 'cout_total'));
+		$msgAgendaCost = msgAgendaUpdate($this, 0, array(), array('cout_pedagogique', 'cout_annexe'));
 		if($resultcreate && !empty($msgAgendaCost)) {
 			global $langs; 
 
@@ -351,7 +351,44 @@ class UserFormation extends CommonObject
 			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
 			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
 			$actioncomm->array_options['options_elementtype2'] = 'user';
-			$actioncomm->extraparams  = 'cost';
+			$actioncomm->extraparams  = 'costpedagogique';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
+		$msgAgendaCost = msgAgendaUpdate($this, 0, array(), array('cout_mobilisation', 'cout_total'));
+		if($resultcreate && !empty($msgAgendaCost)) {
+			global $langs; 
+
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_CREATE';
+			if($this->status == self::STATUS_PROGRAMMEE && $noaddline){
+				$actioncomm->label = $langs->transnoentities("USERFORMATION_PROGRAM_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			}
+			else {
+				$actioncomm->label = $langs->transnoentities("USERFORMATION_CREATE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			}			
+			$actioncomm->note_private = $msgAgendaCost;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->extraparams  = 'costmobilisation';
 			$actioncomm->array_options['options_fk_userformation'] = $this->id;
 			$ret = $actioncomm->create($user); // User creating action
 		}
@@ -627,7 +664,7 @@ class UserFormation extends CommonObject
 			// $ret = $actioncomm->create($user); // User creating action
 		}
 
-		$msgAgendaCost = msgAgendaUpdate($this, 1, array(), array('cout_pedagogique', 'cout_mobilisation', 'cout_annexe', 'cout_total'));
+		$msgAgendaCost = msgAgendaUpdate($this, 1, array(), array('cout_pedagogique', 'cout_annexe'));
 		if($resultupdate && !empty($msgAgendaCost) && !$noaction) {
 			$user_static = new User($this->db);
 			$formation_static = new Formation($this->db);
@@ -652,7 +689,37 @@ class UserFormation extends CommonObject
 			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
 			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
 			$actioncomm->array_options['options_elementtype2'] = 'user';
-			$actioncomm->extraparams  = 'cost';
+			$actioncomm->extraparams  = 'costpedagogique';
+			$actioncomm->array_options['options_fk_userformation'] = $this->id;
+			$ret = $actioncomm->create($user); // User creating action
+		}
+
+		$msgAgendaCost = msgAgendaUpdate($this, 1, array(), array('cout_mobilisation', 'cout_total'));
+		if($resultupdate && !empty($msgAgendaCost) && !$noaction) {
+			$user_static = new User($this->db);
+			$formation_static = new Formation($this->db);
+			$user_static->fetch($this->fk_user);
+			$formation_static->fetch($this->fk_formation);
+
+			require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->type_code   = $this->type_code; // Type of event ('AC_OTH', 'AC_OTH_AUTO', 'AC_XXX'...)
+			$actioncomm->code        = $this->type_code.'_UPDATE';
+			$actioncomm->label       = $langs->transnoentities("USERFORMATION_UPDATE_InDolibarr", $formation_static->label, $user_static->firstname.' '.$user_static->lastname);		// Label of event
+			$actioncomm->note_private = $msgAgendaCost;	// Description
+			$actioncomm->fk_project  = '';
+			$actioncomm->datep       = $now;
+			$actioncomm->datef       = $now;
+			$actioncomm->percentage  = -1; // Not applicable
+			$actioncomm->socid       = '';
+			$actioncomm->contact_id  = ''; // deprecated, now managed by setting $actioncomm->socpeopleassigned later
+			$actioncomm->authorid    = $user->id; // User saving action
+			$actioncomm->userownerid = $user->id; // Owner of action
+			$actioncomm->fk_element  = $this->fk_formation;
+			$actioncomm->elementtype = 'formation'.($this->module ? '@'.$this->module : '');
+			$actioncomm->array_options['options_fk_element2'] = $this->fk_user;
+			$actioncomm->array_options['options_elementtype2'] = 'user';
+			$actioncomm->extraparams  = 'costmobilisation';
 			$actioncomm->array_options['options_fk_userformation'] = $this->id;
 			$ret = $actioncomm->create($user); // User creating action
 		}
@@ -883,7 +950,7 @@ class UserFormation extends CommonObject
 	
 				$to = '';
 				if(sizeof($arrayRespAntenneForMail) > 0) {
-					foreach($arrayRespAntenneForMail as $userid) {
+					foreach($arrayRespAntenneForMail as $user_id) {
 						$user_static->fetch($user_id);
 	
 						if(!empty($user_static->email)) {
@@ -2135,7 +2202,7 @@ class UserFormation extends CommonObject
 
 
 		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité < DateJour => Expirée ou Clôturée
-		$sql = "SELECT uf.rowid, uf.ref, uf.fk_user";
+		$sql = "SELECT uf.rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
@@ -2147,7 +2214,7 @@ class UserFormation extends CommonObject
 		$sql .= " AND uf.date_finvalidite_formation < '".substr($this->db->idate($now), 0, 10)."'";
 
 		// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité > DateJour + $delaisprogrammation mois => A programmer
-		$sql2 = "SELECT uf.rowid, uf.ref, uf.fk_user";
+		$sql2 = "SELECT uf.rowid";
 		$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 		$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 		$sql2 .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
@@ -2183,7 +2250,6 @@ class UserFormation extends CommonObject
 				$obj = $this->db->fetch_object($resql2);
 				if(!in_array($obj->rowid, $tab_id)) {
 					$tab_id2[] = $obj->rowid;
-					$this->output .= "La formation $obj->ref a été passé au statut 'A programmer'<br>";
 				}
 				$i++;
 			}	
@@ -2214,13 +2280,15 @@ class UserFormation extends CommonObject
 							if($rescloture) {
 								$this->output .= "La formation $this->ref a été passé au statut 'Clôturée'<br>";
 
-								$user_static = new User($this->db);
-								$user_static->fetch($obj->fk_user);
+								$fk_user = new User($this->db);
+								$fk_user->fetch($this->fk_user);
+								$formation = new Formation($this->db);
+								$formation->fetch($this->fk_formation);
 
 								$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 								$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
-								if($user_static->array_options['options_antenne'] == 158) {
+								if($fk_user->array_options['options_antenne'] == 158) {
 									$to = $to_admin_go;
 								}
 								else {
@@ -2229,8 +2297,8 @@ class UserFormation extends CommonObject
 								
 								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 								$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-								$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=formation">ici</a>';
-								$message = $langs->transnoentitiesnoconv("EMailTextFormationClose",  $this->ref, $link);
+								$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'&onglet=formation">ici</a>';
+								$message = $langs->transnoentitiesnoconv("EMailTextFormationClose", $formation->label, $fk_user->firstname." ".$fk_user->lastname, $link);
 
 								$mail = new CMailFile(
 									$subject,
@@ -2259,13 +2327,15 @@ class UserFormation extends CommonObject
 							if($rescloture) {
 								$this->output .= "La formation $this->ref a été passé au statut 'Expirée'<br>";
 
-								$user_static = new User($this->db);
-								$user_static->fetch($obj->fk_user);
+								$fk_user = new User($this->db);
+								$fk_user->fetch($this->fk_user);
+								$formation = new Formation($this->db);
+								$formation->fetch($this->fk_formation);
 
 								$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 								$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
-								if($user_static->array_options['options_antenne'] == 158) {
+								if($fk_user->array_options['options_antenne'] == 158) {
 									$to = $to_admin_go;
 								}
 								else {
@@ -2274,8 +2344,8 @@ class UserFormation extends CommonObject
 								
 								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 								$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-								$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=formation">ici</a>';
-								$message = $langs->transnoentitiesnoconv("EMailTextFormationExpire",  $this->ref, $link);
+								$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'&onglet=formation">ici</a>';
+								$message = $langs->transnoentitiesnoconv("EMailTextFormationExpire", $formation->label, $fk_user->firstname." ".$fk_user->lastname, $link);
 
 								$mail = new CMailFile(
 									$subject,
@@ -2309,57 +2379,111 @@ class UserFormation extends CommonObject
 
 			// Gestion des formations avec periode de recyclage mais pas de periode de souplesse dont DateFinValidité > DateJour + $delaisprogrammation mois => A programmer
 			if(!empty($tab_id2)){
-				$ID = implode(",", $tab_id2);
+				// $ID = implode(",", $tab_id2);
 
-				$sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
-				$sql .= " SET uf.status = ".self::STATUS_A_PROGRAMMER;
-				$sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
+				// $sql = "UPDATE ".MAIN_DB_PREFIX."formationhabilitation_userformation uf";
+				// $sql .= " SET uf.status = ".self::STATUS_A_PROGRAMMER;
+				// $sql .= " WHERE uf.rowid IN (".$this->db->sanitize($ID).")";
 
-				$resql = $this->db->query($sql);
-				if ($resql) {
-					$this->db->commit();
+				// $resql = $this->db->query($sql);
+				// if ($resql) {
+				// 	$this->db->commit();
 
-					$user_static = new User($this->db);
-					$user_static->fetch($obj->fk_user);
+				// 	$user_static = new User($this->db);
+				// 	$user_static->fetch($this->fk_user);
 
-					$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
-					$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+				// 	$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+				// 	$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
-					if($user_static->array_options['options_antenne'] == 158) {
-						$to = $to_admin_go;
-					}
-					else {
-						$to = $to_admin;
-					}
+				// 	if($user_static->array_options['options_antenne'] == 158) {
+				// 		$to = $to_admin_go;
+				// 	}
+				// 	else {
+				// 		$to = $to_admin;
+				// 	}
 					
-					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-					$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=formation">ici</a>';
-					$message = $langs->transnoentitiesnoconv("EMailTextFormationToProgram",  $this->ref, $link);
+				// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				// 	$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				// 	$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'&onglet=formation">ici</a>';
+				// 	$message = $langs->transnoentitiesnoconv("EMailTextFormationToProgram",  $this->ref, $link);
 
-					$mail = new CMailFile(
-						$subject,
-						$to,
-						$from,
-						$message,
-						array(),
-						array(),
-						array(),
-						'',
-						'',
-						0,
-						1,
-						'',
-						''
-					);
+				// 	$mail = new CMailFile(
+				// 		$subject,
+				// 		$to,
+				// 		$from,
+				// 		$message,
+				// 		array(),
+				// 		array(),
+				// 		array(),
+				// 		'',
+				// 		'',
+				// 		0,
+				// 		1,
+				// 		'',
+				// 		''
+				// 	);
 
-					if(!empty($to)) {
-						$resultmail = $mail->sendfile();
+				// 	if(!empty($to)) {
+				// 		$resultmail = $mail->sendfile();
+				// 	}
+				// }
+				// else{
+				// 	$this->error = $this->db->lasterror();
+				// 	$error++;
+				// }
+			
+				foreach($tab_id2 as $userformation_id) {
+					if($userformation_id > 0) {
+						$this->fetch($userformation_id);
+						if($this->non_renouvelee == 0) {
+							$resto_program = $this->to_program($user);
+
+							if($resto_program) {
+								$this->output .= "La formation $this->ref a été passé au statut 'A programmer'<br>";
+
+								$fk_user = new User($this->db);
+								$fk_user->fetch($this->fk_user);
+								$formation = new Formation($this->db);
+								$formation->fetch($this->fk_formation);
+
+								$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
+								$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
+
+								if($fk_user->array_options['options_antenne'] == 158) {
+									$to = $to_admin_go;
+								}
+								else {
+									$to = $to_admin;
+								}
+								
+								$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+								$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+								$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'&onglet=formation">ici</a>';
+								$message = $langs->transnoentitiesnoconv("EMailTextFormationToProgram", $formation->label, $fk_user->firstname." ".$fk_user->lastname, $link);
+
+								$mail = new CMailFile(
+									$subject,
+									$to,
+									$from,
+									$message,
+									array(),
+									array(),
+									array(),
+									'',
+									'',
+									0,
+									1,
+									'',
+									''
+								);
+							}
+						}
+
+						if($resto_program < 0) {
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
 					}
-				}
-				else{
-					$this->error = $this->db->lasterror();
-					$error++;
 				}
 			}
 		} else {
@@ -2369,7 +2493,7 @@ class UserFormation extends CommonObject
 
 		if(getDolGlobalString('FORMTIONHABILITATION_SOUPLESSEFORMATION') == 1) {
 			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse > DateJour => Expirée ou Cloturée
-			$sql = "SELECT uf.rowid, uf.ref, uf.fk_user";
+			$sql = "SELECT uf.rowid, uf.ref";
 			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 			$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
@@ -2379,7 +2503,7 @@ class UserFormation extends CommonObject
 			$sql .= " AND DATE_ADD(uf.date_finvalidite_formation, INTERVAL f.periode_souplesse MONTH) < '".substr($this->db->idate($now), 0, 10)."'";
 
 			// Gestion des formations avec periode de recyclage et periode de souplesse (non restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => A programmer
-			$sql2 = "SELECT uf.rowid, uf.ref, uf.fk_user";
+			$sql2 = "SELECT uf.rowid, uf.ref";
 			$sql2 .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 			$sql2 .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 			$sql2 .= " WHERE uf.date_finvalidite_formation IS NOT NULL";
@@ -2478,7 +2602,7 @@ class UserFormation extends CommonObject
 
 
 			// Gestion des formations avec periode de recyclage et periode de souplesse (restrictive) dont DateFinValidite + PeriodeSouplesse < DateJour => Expirée ou Clôturée
-			$sql = "SELECT uf.rowid, uf.ref, uf.fk_user";
+			$sql = "SELECT uf.rowid, uf.ref";
 			$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as uf";
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation f ON f.rowid = uf.fk_formation";
 			$sql .= " WHERE uf.date_finvalidite_formation IS NOT NULL";

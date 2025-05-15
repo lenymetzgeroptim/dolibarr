@@ -144,7 +144,7 @@ class extendedTask extends Task
     *  @param	int		    $fk_user 	Id of User
     *  @return  array		Tableau avec l'ensemble des notes 
     */
-    public function fetchAllNotes($date_debut, $date_fin, $fk_user)
+    public function fetchAllNotes($date_debut, $date_fin, $fk_user, $columnmode = 0)
     {
         global $langs;
         $notes = array();
@@ -163,7 +163,12 @@ class extendedTask extends Task
             $num = $this->db->num_rows($resql);
             for($i=0; $i<$num; $i++){
                 $obj = $this->db->fetch_object($resql);
-                $notes[$obj->fk_element][$this->db->jdate($obj->element_date)] = $obj->note;
+                if($columnmode) {
+                    $notes[$this->db->jdate($obj->element_date)][] = $obj->note;
+                }
+                else {
+                    $notes[$obj->fk_element][$this->db->jdate($obj->element_date)] = $obj->note;
+                }
             }
             $this->db->free($resql);
             return $notes;
@@ -305,5 +310,127 @@ class extendedTask extends Task
             dol_print_error($this->db);
             return $result;
         }
+    }
+
+    public function fetchAllTimeSpent(User $userobj, $morewherefilter = '')
+    {
+      $arrayres = array();
+   
+      $sql = "SELECT";
+      $sql .= " s.rowid as socid,";
+      $sql .= " s.nom as thirdparty_name,";
+      $sql .= " s.email as thirdparty_email,";
+      $sql .= " ptt.rowid,";
+      $sql .= " ptt.fk_element as fk_task,";
+      $sql .= " ptt.element_date as task_date,";
+      $sql .= " ptt.element_datehour as task_datehour,";
+      $sql .= " ptt.element_date_withhour as task_date_withhour,";
+      $sql .= " ptt.element_duration as task_duration,";
+      $sql .= " ptt.fk_user,";
+      $sql .= " ptt.note,";
+      $sql .= " ptt.thm,";
+      $sql .= " pt.rowid as task_id,";
+      $sql .= " pt.ref as task_ref,";
+      $sql .= " pt.label as task_label,";
+      $sql .= " p.rowid as project_id,";
+      $sql .= " p.ref as project_ref,";
+      $sql .= " p.title as project_label,";
+      $sql .= " p.public as public";
+      $sql .= " FROM ".MAIN_DB_PREFIX."element_time as ptt";
+      $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_task as pt ON ptt.fk_element = pt.rowid";
+      $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON pt.fk_projet = p.rowid";
+      $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON p.fk_soc = s.rowid";
+      $sql .= " WHERE ptt.elementtype = 'task'";
+      $sql .= " AND ptt.fk_user = ".((int) $userobj->id);
+      $sql .= " AND (pt.entity IN (".getEntity('project').") OR ptt.fk_element = 0)";
+      if ($morewherefilter) {
+        $sql .= $morewherefilter;
+      }
+   
+      dol_syslog(get_class($this)."::fetchAllTimeSpent", LOG_DEBUG);
+      $resql = $this->db->query($sql);
+      if ($resql) {
+        $num = $this->db->num_rows($resql);
+   
+        $i = 0;
+        while ($i < $num) {
+          $obj = $this->db->fetch_object($resql);
+   
+          $newobj = new stdClass();
+   
+          $newobj->socid              = $obj->socid;
+          $newobj->thirdparty_name    = $obj->thirdparty_name;
+          $newobj->thirdparty_email   = $obj->thirdparty_email;
+   
+          $newobj->fk_project     = $obj->project_id;
+          $newobj->project_ref    = $obj->project_ref;
+          $newobj->project_label = $obj->project_label;
+          $newobj->public       = $obj->project_public;
+   
+          $newobj->fk_task      = $obj->task_id;
+          $newobj->task_ref = $obj->task_ref;
+          $newobj->task_label = $obj->task_label;
+   
+          $newobj->timespent_id = $obj->rowid;
+          $newobj->timespent_date = $this->db->jdate($obj->task_date);
+          $newobj->timespent_datehour = $this->db->jdate($obj->task_datehour);
+          $newobj->timespent_withhour = $obj->task_date_withhour;
+          $newobj->timespent_duration = $obj->task_duration;
+          $newobj->timespent_fk_user = $obj->fk_user;
+          $newobj->timespent_thm = $obj->thm; // hourly rate
+          $newobj->timespent_note = $obj->note;
+   
+          $arrayres[$this->db->jdate($obj->task_date)][] = $newobj;
+   
+          $i++;
+        }
+   
+        $this->db->free($resql);
+      } else {
+        dol_print_error($this->db);
+        $this->error = "Error ".$this->db->lasterror();
+        return -1;
+      }
+   
+      return $arrayres;
+    }
+
+    public function fetchAllTimeSpentId(User $userobj, $morewherefilter = '')
+    {
+      $arrayres = array();
+   
+      $sql = "SELECT";
+      $sql .= " ptt.rowid";
+      $sql .= " FROM ".MAIN_DB_PREFIX."element_time as ptt, ".MAIN_DB_PREFIX."projet_task as pt, ".MAIN_DB_PREFIX."projet as p";
+      $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON p.fk_soc = s.rowid";
+      $sql .= " WHERE ptt.fk_element = pt.rowid AND pt.fk_projet = p.rowid";
+      $sql .= " AND ptt.elementtype = 'task'";
+      $sql .= " AND ptt.fk_user = ".((int) $userobj->id);
+      $sql .= " AND pt.entity IN (".getEntity('project').")";
+      if ($morewherefilter) {
+        $sql .= $morewherefilter;
+      }
+   
+      dol_syslog(get_class($this)."::fetchAllTimeSpentId", LOG_DEBUG);
+      $resql = $this->db->query($sql);
+      if ($resql) {
+        $num = $this->db->num_rows($resql);
+        $i = 0;
+        while ($i < $num) {
+          $obj = $this->db->fetch_object($resql);
+   
+          $arrayres[] = $obj->rowid;
+   
+          $i++;
+        }
+   
+        $this->db->free($resql);
+      } else {
+        dol_print_error($this->db);
+        $this->error = "Error ".$this->db->lasterror();
+        return -1;
+      }
+   
+      return $arrayres;
     }
 }
