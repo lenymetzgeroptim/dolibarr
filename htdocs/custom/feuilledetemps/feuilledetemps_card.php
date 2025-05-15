@@ -92,7 +92,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/deplacement.class.p
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/silae.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/regul.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/observationcompta.class.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
+if($conf->donneesrh->enabled) require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedProjet.class.php';
 dol_include_once('/feuilledetemps/class/feuilledetemps.class.php');
 dol_include_once('/feuilledetemps/lib/feuilledetemps_feuilledetemps.lib.php');
@@ -122,7 +122,12 @@ if ($mode == 'mine') {
 	$mine = 1;
 }
 
+$modeinput = ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? 'hours_decimal' : 'hours');
 $socid = 0;
+
+if(!empty($_POST["verification"])) {
+	$action2 = "verification";
+}
 
 // Initialize technical objects
 $object = new FeuilleDeTemps($db);
@@ -157,29 +162,38 @@ include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be includ
 
 $usertoprocess = new User($db);
 $usertoprocess->fetch($object->fk_user);
+$objectoffield = clone $usertoprocess;
 
 // Check for right
-$list_resp_task = $object->listApprover1;
-if(in_array($user->id, $list_resp_task[0])){
-	$userIsResp = 1;
-	if($list_resp_task[1][$user->id] == 0){
-		$resp_pas_valide = 1;
+if($conf->global->FDT_USER_APPROVER) {
+	if(in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt']))){
+		$userIsResp = 1;
+	}
+}
+else {
+	$list_resp_task = $object->listApprover1;
+	if(in_array($user->id, $list_resp_task[0])){
+		$userIsResp = 1;
+		if($list_resp_task[1][$user->id] == 0){
+			$resp_pas_valide = 1;
+		}
+		else {
+			$resp_pas_valide = 0;
+		}
 	}
 	else {
-		$resp_pas_valide = 0;
+		$userIsResp = 0;
+	}
+	
+	$list_resp_projet = $object->listApprover2;
+	if(in_array($user->id, $list_resp_projet[0])){
+		$userIsRespProjet = 1;
+	}
+	else {
+		$userIsRespProjet = 0;
 	}
 }
-else {
-	$userIsResp = 0;
-}
 
-$list_resp_projet = $object->listApprover2;
-if(in_array($user->id, $list_resp_projet[0])){
-	$userIsRespProjet = 1;
-}
-else {
-	$userIsRespProjet = 0;
-}
 
 $userIsInHierarchy = 0;
 if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
@@ -190,8 +204,13 @@ if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 }
 
 $permissionToVerification = $user->rights->feuilledetemps->feuilledetemps->modify_verification;
-$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read || $userIsInHierarchy || $user->admin || ($userIsResp || $userIsRespProjet || $user->id == $object->fk_user) ;
-$permissiontoadd = $userIsResp || $userIsRespProjet || $user->admin || (empty($list_resp_task[0]) && empty($list_resp_projet[0]) && $user->id == $object->fk_user || $permissionToVerification); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || in_array($user->id, explode(',', $usertoprocess->array_options['options_observateurfdt'])) || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read);
+if($conf->global->FDT_USER_APPROVER) {
+	$permissiontoadd = $userIsResp || $user->admin || $permissionToVerification; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+}
+else {
+	$permissiontoadd = $userIsResp || $userIsRespProjet || $user->admin || (empty($list_resp_task[0]) && empty($list_resp_projet[0]) && $user->id == $object->fk_user || $permissionToVerification); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+}
 $permissiontodelete = $user->rights->feuilledetemps->feuilledetemps->delete;
 $permissionnote = $permissiontoadd; // Used by the include of actions_setnotes.inc.php
 $permissiondellink = $permissiontoadd; // Used by the include of actions_dellink.inc.php
@@ -207,18 +226,30 @@ if (!$permissiontoread) accessforbidden();
 
 // Gestion des droits de modification des inputs en fonction du statut de la feuille de temps
 $modifier_jour_conges = 1;
+$modifier = 0;
 if($object->status == FeuilleDeTemps::STATUS_DRAFT && $user->id == $usertoprocess->id){
 	$modifier = 1;
 	$modifier_jour_conges = 0;
 }
 elseif(($object->status == FeuilleDeTemps::STATUS_DRAFT) && $permissionToVerification){
 	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
-elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && $userIsResp && $resp_pas_valide) {
+elseif($object->status == FeuilleDeTemps::STATUS_DRAFT && $conf->global->FDT_USER_APPROVER && $userIsResp) {
 	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
-elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION2 && $userIsRespProjet) {
+elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && $conf->global->FDT_USER_APPROVER && $userIsResp) {
 	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
+}
+elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && !$conf->global->FDT_USER_APPROVER && $userIsResp && $resp_pas_valide) {
+	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
+}
+elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION2 && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
+	$modifier = 1;
+	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
 elseif($permissionToVerification && $object->status != FeuilleDeTemps::STATUS_VALIDATED && $object->status != FeuilleDeTemps::STATUS_EXPORTED) {
 	$modifier = 1;
@@ -226,142 +257,147 @@ elseif($permissionToVerification && $object->status != FeuilleDeTemps::STATUS_VA
 // elseif($object->status != FeuilleDeTemps::STATUS_VALIDATED && $user->rights->feuilledetemps->feuilledetemps->modify) {
 // 	$modifier = 1;
 // }
-else {
-	$modifier = 0;
-}
 
 // Gestion des dates
 $month = dol_print_date($object->date_debut, '%m');
 $year = dol_print_date($object->date_debut, '%Y');
 
 $firstdaytoshow = dol_time_plus_duree($object->date_debut, -$conf->global->JOUR_ANTICIPES, 'd');
+if($conf->global->FDT_DISPLAY_FULL_WEEK) {
+	$firstdayweek = dol_get_first_day_week(dol_print_date($firstdaytoshow, '%d'), dol_print_date($firstdaytoshow, '%m'), dol_print_date($firstdaytoshow, '%Y'));
+	$firstdaytoshow = dol_mktime(0, 0, 0, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
+}
 $firstdaytoshowgmt = dol_mktime(0, 0, 0, dol_print_date($firstdaytoshow, '%m'), dol_print_date($firstdaytoshow, '%d'), dol_print_date($firstdaytoshow, '%Y'), 'gmt');
 $lastdaytoshow = $object->date_fin;
+if($conf->global->FDT_DISPLAY_FULL_WEEK) {
+	$lastdaytoshow = dol_time_plus_duree($lastdaytoshow, 1, 'w');
+	$firstdayweek = dol_get_first_day_week(dol_print_date($lastdaytoshow, '%d'), dol_print_date($lastdaytoshow, '%m'), dol_print_date($lastdaytoshow, '%Y'));
+	$lastdaytoshow = dol_mktime(0, 0, 0, $firstdayweek['first_month'], $firstdayweek['first_day'], $firstdayweek['first_year']);
+	$lastdaytoshow = dol_time_plus_duree($lastdaytoshow, -1, 'd');
+}
 
 $first_day_month = $object->date_debut; 
+$last_day_month = dol_get_last_day($year, $month);
 
 $nb_jour =  num_between_day($firstdaytoshow, $lastdaytoshow+3600) + 1; 
 $ecart_jour = num_between_day($firstdaytoshow, $object->date_debut + 3600);
-$month_now = date('m');
+$ecart_jour_fin = num_between_day($firstdaytoshow, $object->date_fin + 3600);
 
 for ($idw = 0; $idw < $nb_jour; $idw++) {
 	$dayinloopfromfirstdaytoshow = dol_time_plus_duree($firstdaytoshow, $idw, 'd');
 	$dayinloopfromfirstdaytoshow_array[$idw] = $dayinloopfromfirstdaytoshow; 
 }
 
-$timeSpentWeek = $object->timeDoneByWeek($object->fk_user);
-$timeHoliday = $object->timeHolidayWeek($object->fk_user);
 $is_semaine_anticipe = 0;
 $addcolspan = 0;
 
-
 // Gestion des types de déplacement de l'utilisateur
-$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
-$userField_deplacement = new UserField($db);
-$userField_deplacement->id = $object->fk_user;
-$userField_deplacement->table_element = 'donneesrh_Deplacement';
-$userField_deplacement->fetch_optionals();
-
 $userInDeplacement = 0;
-$typeDeplacement = 'none';
+$type_deplacement = 'none';
 $userInGrandDeplacement = 0;
-if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
-	$userInDeplacement = 1;
-	$typeDeplacement = 'petitDeplacement';
-}
-if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
-	$userInGrandDeplacement = 1;
-	$typeDeplacement = 'grandDeplacement';
-}
-
-// Gestion des repas de l'utilisateur
 $userRepas = 0;
-if($userField_deplacement->array_options['options_panier1'] == '1') {
-	$userRepas = 1;
-}
-elseif($userField_deplacement->array_options['options_panier2'] == '1') {
-	$userRepas = 2;
+if($conf->donneesrh->enabled) {
+	$extrafields->fetch_name_optionals_label('donneesrh_Deplacement');
+	$userField_deplacement = new UserField($db);
+	$userField_deplacement->id = $object->fk_user;
+	$userField_deplacement->table_element = 'donneesrh_Deplacement';
+	$userField_deplacement->fetch_optionals();
+
+	if(!empty($userField_deplacement->array_options['options_d_1']) || !empty($userField_deplacement->array_options['options_d_2']) || !empty($userField_deplacement->array_options['options_d_3']) || !empty($userField_deplacement->array_options['options_d_4'])) {
+		$userInDeplacement = 1;
+		$type_deplacement = 'petitDeplacement';
+	}
+	if(!empty($userField_deplacement->array_options['options_gd1']) || !empty($userField_deplacement->array_options['options_gd3']) || !empty($userField_deplacement->array_options['options_gd4'])) {
+		$userInGrandDeplacement = 1;
+		$type_deplacement = 'grandDeplacement';
+	}
+
+	// Gestion des repas de l'utilisateur
+	if($userField_deplacement->array_options['options_panier1'] == '1') {
+		$userRepas = 1;
+	}
+	elseif($userField_deplacement->array_options['options_panier2'] == '1') {
+		$userRepas = 2;
+	}
 }
 
 // Nombre d'heures par semaine à faire et avant de pouvoir avoir des hs
-$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
-$userField = new UserField($db);
-$userField->id = $usertoprocess->id;
-$userField->table_element = 'donneesrh_Positionetcoefficient';
-$userField->fetch_optionals();
+if($conf->donneesrh->enabled) {
+	$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+	$userField = new UserField($db);
+	$userField->id = $usertoprocess->id;
+	$userField->table_element = 'donneesrh_Positionetcoefficient';
+	$userField->fetch_optionals();
 
-$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
-$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
-$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
-
-
-// Gestion des congés et des jours feriés
-$all_holiday_validate = 1;
-$multiple_holiday = 0;
-for ($idw = 0; $idw < $nb_jour; $idw++) {
-	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
-	$dayinloopfromfirstdaytoshowgmt = dol_time_plus_duree($firstdaytoshowgmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
-
-	$isavailable[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, Holiday::STATUS_APPROVED2, array(4));
-	$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
-
-	$holidayTypeNeedHour = 1;
-	for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['code']); $i++) {
-		if(!$holiday->holidayTypeNeedHour($isavailable[$dayinloopfromfirstdaytoshow]['code'][$i])) {
-			$holidayTypeNeedHour = 0;
-		}
-	}
-
-	if (!$isavailable[$dayinloopfromfirstdaytoshow]['morning'] && !$isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] && !$holidayTypeNeedHour) {
-		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';
-	} elseif(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim'){
-		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';
-	} elseif (!$isavailable[$dayinloopfromfirstdaytoshow]['morning']) {
-		$css[$dayinloopfromfirstdaytoshow] .= ' onholidaymorning';
-	} elseif (!$isavailable[$dayinloopfromfirstdaytoshow]['afternoon']) {
-		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayafternoon';
-	} 
-
-	if(!$multiple_holiday && sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid']) > 1) {
-		$multiple_holiday = 1;
-	}
-
-	if (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['morning'] && !$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['afternoon']) {
-		for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut']); $i++) {
-			$css_holiday[$dayinloopfromfirstdaytoshow][$i] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'][$i].'allday';
-		}
-	} elseif (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['morning']) {
-		for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut']); $i++) {
-			$css_holiday[$dayinloopfromfirstdaytoshow][$i] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'][$i].'morning';
-		}
-	} elseif (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['afternoon']) {
-		for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut']); $i++) {
-			$css_holiday[$dayinloopfromfirstdaytoshow][$i] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'][$i].'afternoon';
-		}	
-	}
-
-	for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statutfdt']); $i++) {
-		if($all_holiday_validate && $holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statutfdt'][$i] == 1) {
-			$all_holiday_validate = 0;
-		}
-	}
-
-	if (dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Sam' || dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {	// This is a day is not inside the setup of working days, so we use a week-end css.
-		$css[$dayinloopfromfirstdaytoshow] .= ' weekend';
-	}
-
-	if($dayinloopfromfirstdaytoshow < $first_day_month){
-		$css[$dayinloopfromfirstdaytoshow] .= ' before';
-	}
-
-	$test = num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt + 86400, $mysoc->country_code, 0, 0, 0, 0);
-	if ($test) {
-		$isavailable[$dayinloopfromfirstdaytoshow] = array('morning'=>false, 'afternoon'=>false, 'morning_reason'=>'public_holiday', 'afternoon_reason'=>'public_holiday');
-		$css[$dayinloopfromfirstdaytoshow] .= ' public_holiday'; 
-	}
+	$heure_semaine = (!empty($userField->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	$heure_semaine = (!empty($userField->array_options['options_horairehebdomadaire']) ? $userField->array_options['options_horairehebdomadaire'] : $heure_semaine);
+	$heure_semaine_hs = (!empty($userField->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+}
+else {
+	$heure_semaine = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ?  $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
+	$heure_semaine = (!empty($usertoprocess->array_options['options_horairehebdomadaire']) ? $usertoprocess->array_options['options_horairehebdomadaire'] : $heure_semaine);
+	$heure_semaine_hs = (!empty($usertoprocess->array_options['options_pasdroitrtt']) ? $conf->global->HEURE_SEMAINE_NO_RTT : $conf->global->HEURE_SEMAINE);
 }
 
+// Nombre d'heures max par jour et semaine
+if(empty($usertoprocess->array_options['options_heuremaxjour']) || !$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+    $heure_max_jour = ($conf->global->HEURE_MAX_JOUR > 0 ? $conf->global->HEURE_MAX_JOUR : 0);
+}
+else {
+	$heure_max_jour = $usertoprocess->array_options['options_heuremaxjour'];
+}
 
+if(empty($usertoprocess->array_options['options_heuremaxsemaine']) || !$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+	$heure_max_semaine = ($conf->global->HEURE_MAX_SEMAINE > 0 ? $conf->global->HEURE_MAX_SEMAINE : 0);
+}
+else {
+	$heure_max_semaine = $usertoprocess->array_options['options_heuremaxsemaine'];
+}
+
+// Semaine type
+$standard_week_hour = array();
+if($usertoprocess->array_options['options_semaine_type_lundi'] || $usertoprocess->array_options['options_semaine_type_mardi'] || $usertoprocess->array_options['options_semaine_type_mercredi'] || 
+$usertoprocess->array_options['options_semaine_type_jeudi'] || $usertoprocess->array_options['options_semaine_type_vendredi'] || $usertoprocess->array_options['options_semaine_type_samedi'] || 
+$usertoprocess->array_options['options_semaine_type_dimanche']) {
+	$standard_week_hour['Lundi'] = $usertoprocess->array_options['options_semaine_type_lundi'] * 3600;
+	$standard_week_hour['Mardi'] = $usertoprocess->array_options['options_semaine_type_mardi'] * 3600;
+	$standard_week_hour['Mercredi'] = $usertoprocess->array_options['options_semaine_type_mercredi'] * 3600;
+	$standard_week_hour['Jeudi'] = $usertoprocess->array_options['options_semaine_type_jeudi'] * 3600;
+	$standard_week_hour['Vendredi'] = $usertoprocess->array_options['options_semaine_type_vendredi'] * 3600;
+	$standard_week_hour['Samedi'] = $usertoprocess->array_options['options_semaine_type_samedi'] * 3600;
+	$standard_week_hour['Dimanche'] = $usertoprocess->array_options['options_semaine_type_dimanche'] * 3600;
+}
+elseif($heure_semaine == $conf->global->HEURE_SEMAINE_NO_RTT) {
+	$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_NO_RTT * 3600;
+	$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_NO_RTT * 3600;
+	$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT * 3600;
+	$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_NO_RTT * 3600;
+	$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_NO_RTT * 3600;
+	$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_NO_RTT * 3600;
+	$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_NO_RTT * 3600;
+}
+else {
+	$standard_week_hour['Lundi'] = $conf->global->FDT_STANDARD_WEEK_MONDAY_WITH_RTT * 3600;
+	$standard_week_hour['Mardi'] = $conf->global->FDT_STANDARD_WEEK_TUESDAY_WITH_RTT * 3600;
+	$standard_week_hour['Mercredi'] = $conf->global->FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT * 3600;
+	$standard_week_hour['Jeudi'] = $conf->global->FDT_STANDARD_WEEK_THURSDAY_WITH_RTT * 3600;
+	$standard_week_hour['Vendredi'] = $conf->global->FDT_STANDARD_WEEK_FRIDAY_WITH_RTT * 3600;
+	$standard_week_hour['Samedi'] = $conf->global->FDT_STANDARD_WEEK_SATURDAY_WITH_RTT * 3600;
+	$standard_week_hour['Dimanche'] = $conf->global->FDT_STANDARD_WEEK_SUNDAY_WITH_RTT * 3600;
+}
+
+// Temps en congés par semaine
+$timeSpentWeek = $object->timeDoneByWeek($usertoprocess);
+// Temps travaillé par semaine
+$timeHoliday = $object->timeHolidayWeek($usertoprocess, $standard_week_hour);
+
+// Types de congés 
+$typeleaves = $holiday->getTypesNoCP(-1, -1);
+$arraytypeleaves = array();
+foreach ($typeleaves as $key => $val) {
+	$labeltoshow = $val['code'];
+	$arraytypeleaves[$val['rowid']] = $labeltoshow;
+}
 
 /*
  * Actions
@@ -552,7 +588,53 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'savevalidator1' && !empty($user->rights->feuilledetemps->changeappro)) {
+	if ($action == 'savehs50ht' && $permissionToVerification) {
+		$db->begin();
+
+		$regul = new Regul($db);
+		$resregul = $regul->fetchWithoutId($object->date_debut, $usertoprocess->id);
+		$regulHeureSup50HT = GETPOST('regulHeureSup50HT') * 3600;
+		
+		$new_value = formatValueForAgenda('double', $regulHeureSup50HT / 3600);
+		$old_value = formatValueForAgenda('double', $regul->heure_sup50ht / 3600);
+		$modification = ($old_value != $new_value ? "<strong>Regul Heure Sup 50% HT</strong> : $old_value ➔ $new_value" : '');
+
+		$regul->heure_sup50ht = $regulHeureSup50HT;
+
+		if($resregul > 0) {
+			$res = $regul->update($user);
+		}
+		elseif ($resregul == 0) {
+			$regul->date = $first_day_month;
+			$regul->fk_user = $usertoprocess->id;
+
+			$result = $regul->create($user);
+		}
+
+		if($res < 0) {
+			$error++;
+		}
+		
+		if (!$error) {
+			$db->commit();
+
+			if($modification != '') {
+				$object->actiontypecode = 'AC_FDT_VERIF';
+				$object->actionmsg2 = "Mise à jour des données de vérification de la feuille de temps $object->ref";
+				$object->actionmsg = $modification;
+				$object->call_trigger(strtoupper(get_class($object)).'_MODIFY', $user);
+			}
+
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+			exit;
+		} else {
+			$db->rollback();
+			setEventMessages($regul->error, $regul->errors, 'warnings');
+			$action = 'ediths50';
+		}
+	}
+
+	if ($action == 'savevalidator1' && !empty($user->rights->feuilledetemps->changeappro) && !$conf->global->FDT_USER_APPROVER) {
 		$db->begin();
 
 		$object->oldcopy = dol_clone($object);
@@ -648,7 +730,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'savevalidator2' && !empty($user->rights->feuilledetemps->changeappro)) {
+	if ($action == 'savevalidator2' && !empty($user->rights->feuilledetemps->changeappro) && !$conf->global->FDT_USER_APPROVER) {
 		$db->begin();
 
 		$object->oldcopy = dol_clone($object);
@@ -760,6 +842,76 @@ include DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/core/tpl/actions_timesheet.tpl
  * View
  */
 
+// Gestion des congés et des jours feriés
+$all_holiday_validate = 1;
+$multiple_holiday = 0;
+$isavailable = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, Holiday::STATUS_APPROVED2, array(4));
+$holidayWithoutCanceled = $holiday->verifDateHolidayForTimestampBetweenDate($usertoprocess->id, $firstdaytoshow, $lastdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
+for ($idw = 0; $idw < $nb_jour; $idw++) {
+	$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0*
+	$dayinloopfromfirstdaytoshowgmt = dol_time_plus_duree($firstdaytoshowgmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
+
+	// $isavailable[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, Holiday::STATUS_APPROVED2, array(4));
+	// $holidayWithoutCanceled[$dayinloopfromfirstdaytoshow] = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $dayinloopfromfirstdaytoshow, array(Holiday::STATUS_DRAFT, Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1), array(4));	
+
+	$holidayTypeNeedHour = 1;
+	for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['code']); $i++) {
+		if(!$holiday->holidayTypeNeedHour($isavailable[$dayinloopfromfirstdaytoshow]['code'][$i])) {
+			$holidayTypeNeedHour = 0;
+		}
+	}
+
+	if (!$isavailable[$dayinloopfromfirstdaytoshow]['morning'] && !$isavailable[$dayinloopfromfirstdaytoshow]['afternoon'] && !$holidayTypeNeedHour) {
+		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';
+	} elseif(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim'){
+		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayallday';
+	} elseif (!$isavailable[$dayinloopfromfirstdaytoshow]['morning']) {
+		$css[$dayinloopfromfirstdaytoshow] .= ' onholidaymorning';
+	} elseif (!$isavailable[$dayinloopfromfirstdaytoshow]['afternoon']) {
+		$css[$dayinloopfromfirstdaytoshow] .= ' onholidayafternoon';
+	} 
+
+	if(!$multiple_holiday && sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid']) > 1) {
+		$multiple_holiday = 1;
+	}
+
+	if (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['morning'] && !$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['afternoon']) {
+		for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut']); $i++) {
+			$css_holiday[$dayinloopfromfirstdaytoshow][$i] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'][$i].'allday';
+		}
+	} elseif (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['morning']) {
+		for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut']); $i++) {
+			$css_holiday[$dayinloopfromfirstdaytoshow][$i] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'][$i].'morning';
+		}
+	} elseif (!$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['afternoon']) {
+		for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut']); $i++) {
+			$css_holiday[$dayinloopfromfirstdaytoshow][$i] .= ' conges'.$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statut'][$i].'afternoon';
+		}	
+	}
+
+	for($i = 0; $i < sizeof($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statutfdt']); $i++) {
+		if($all_holiday_validate && $holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['statutfdt'][$i] == 1) {
+			$all_holiday_validate = 0;
+		}
+	}
+
+	if (dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Sam' || dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {	// This is a day is not inside the setup of working days, so we use a week-end css.
+		$css[$dayinloopfromfirstdaytoshow] .= ' weekend';
+	}
+
+	if($dayinloopfromfirstdaytoshow < $first_day_month || $dayinloopfromfirstdaytoshow > $last_day_month){
+		$css[$dayinloopfromfirstdaytoshow] .= ' before';
+	}
+
+	$test = num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt + 86400, $mysoc->country_code, 0, 0, 0, 0);
+	if ($test) {
+		$isavailable[$dayinloopfromfirstdaytoshow] = array('morning'=>false, 'afternoon'=>false, 'morning_reason'=>'public_holiday', 'afternoon_reason'=>'public_holiday');
+		$css[$dayinloopfromfirstdaytoshow] .= ' public_holiday'; 
+	}
+}
+// var_dump($holidayWithoutCanceled);
+// var_dump($isavailable);
+
 $form = new Form($db);
 $formfile = new FormFile($db);
 $formproject = new FormProjets($db);
@@ -813,7 +965,7 @@ if (($id || $ref) && $action == 'edit') {
 
 // Part to show record
 if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
-	llxHeader('', $title, $help_url, '', '', '', array('/core/js/timesheet.js', '/custom/feuilledetemps/core/js/timesheet.js' , '/custom/feuilledetemps/core/js/parameters.php' , '	includes/node_modules/html2canvas/dist/html2canvas.min.js'), '', '', 'classforhorizontalscrolloftabs feuilledetemps');
+	llxHeader('', $title, $help_url, '', '', '', array('includes/node_modules/html2canvas/dist/html2canvas.min.js'), '', '', 'classforhorizontalscrolloftabs feuilledetemps'.($conf->global->FDT_DISPLAY_COLUMN ? ' displaycolumn' : ''));
 	//print '<body onresize="redimenssion()">';
 
 	$res = $object->fetch_optionals();
@@ -827,25 +979,37 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Delete'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 1);
 	}
 
-	if ($massaction == 'validate1' && $userIsResp && $resp_pas_valide) {
+	if ($action == 'validate1' && $userIsResp && $conf->global->FDT_USER_APPROVER) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate1', '', 0, 1);
 	}
-	if ($massaction == 'validate2'  && $userIsRespProjet) {
+	if ($action == 'validate1' && $userIsResp && $resp_pas_valide && !$conf->global->FDT_USER_APPROVER) {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate1', '', 0, 1);
+	}
+	if ($action == 'validate2'  && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate2', '', 0, 1);
 	}
-	if ($massaction == 'verification'  && $permissionToVerification) {
+	if ($action2 == 'verification'  && $permissionToVerification) {
 		$question = 'Voulez vous valider la feuille de temps ?';
-		$question .= (!GETPOST('all_holiday_validate', 'int') ? '<br><span style="color: #be0000; font-size: initial;"><strong>⚠ Certains congés ne sont pas validés</strong></span>' : '');
+		if($conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) $question .= (!GETPOST('all_holiday_validate', 'int') ? '<br><span style="color: #be0000; font-size: initial;"><strong>⚠ Certains congés ne sont pas validés</strong></span>' : '');
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), $question, 'confirm_verification', '', 0, 1);
 	}
 
 	if ($action == 'sendMail'  && $permissionToVerification) {
 		$values = array($usertoprocess->id => $usertoprocess->firstname.' '.$usertoprocess->lastname);
-		foreach($object->listApprover1[2] as $id => $user_static) {
-			$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+		if($conf->global->FDT_USER_APPROVER) {
+			foreach(explode(',', $usertoprocess->array_options['options_approbateurfdt']) as $id) {
+				$user_static = new User($db);
+				$user_static->fetch($id);
+				$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+			}
 		}
-		foreach($object->listApprover2[2] as $id => $user_static) {
-			$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+		else {
+			foreach($object->listApprover1[2] as $id => $user_static) {
+				$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+			}
+			foreach($object->listApprover2[2] as $id => $user_static) {
+				$values[$id] = $user_static->firstname.' '.$user_static->lastname;
+			}
 		}
 		$formquestion = array();
 		$formquestion[] = array('type'=>'multiselect', 'name'=>'sendMailTo', 'label' => 'Destinataire', 'morecss' => 'ml20 minwidth200', 'default' => '', 'values' => $values);
@@ -853,7 +1017,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $object->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('sendMail'), '', 'confirm_sendMail', $formquestion, 0, 0, 500, 1000);
 	}
 
-	if ($massaction == 'refus'  && (($userIsResp && $resp_pas_valide) || $userIsRespProjet || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
+	if ($action == 'refus' && !$conf->global->FDT_USER_APPROVER && (($userIsResp && $resp_pas_valide) || $userIsRespProjet || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Refuser'), '', 'confirm_setdraft', array(array('label'=>'Raison du refus', 'type'=>'text', 'name'=>'raison_refus')), 0, 1);
+	}
+	elseif ($action == 'refus' && $conf->global->FDT_USER_APPROVER && (($userIsResp && $object->status == $object::STATUS_APPROBATION1) || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Refuser'), '', 'confirm_setdraft', array(array('label'=>'Raison du refus', 'type'=>'text', 'name'=>'raison_refus')), 0, 1);
 	}
 
@@ -885,18 +1052,20 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// ------------------------------------------------------------
 	$linkback = '<a href="'.dol_buildpath('/feuilledetemps/feuilledetemps_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 	
-	$morehtmlref = '<span class="info_fdt inline-block">';
-	if($userInDeplacement) {
-		$morehtmlref .= 'D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
-		$morehtmlref .= '<br><br>';
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$morehtmlref = '<span class="info_fdt inline-block">';
+		if($userInDeplacement) {
+			$morehtmlref .= 'D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
+			$morehtmlref .= '<br><br>';
+		}
+		if($userInGrandDeplacement) {
+			$morehtmlref .= 'GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
+			$morehtmlref .= '<br><br>';
+		}	
+		$morehtmlref .= 'Les heures de route ne doivent pas être pointées';
+		$morehtmlref .= '</span>';
 	}
-	if($userInGrandDeplacement) {
-		$morehtmlref .= 'GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
-		$morehtmlref .= '<br><br>';
-	}	
-	$morehtmlref .= 'Les heures de route ne doivent pas être pointées';
-	$morehtmlref .= '</span>';
-	
+
 	$buttonAction = '';
 	// Buttons for actions
 	if ($action != 'presend' && $action != 'editline') {
@@ -904,23 +1073,39 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$parameters = array();
 
 		if($modifier || $permissionToVerification) {
-			$buttonAction .= '<input onclick="disableNullInput()" type="submit" class="button button-save button-save-fdt" name="save" form="feuilleDeTempsForm" value="'.dol_escape_htmltag($langs->trans("Save")).'" style="height: 100%;">';
+			$buttonAction .= '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="button button-save button-save-fdt" name="save" form="feuilleDeTempsForm" value="'.dol_escape_htmltag($langs->trans("Save")).'" style="height: 100%;">';
 		}
 
 		// Validate
-		if ($object->status == $object::STATUS_APPROBATION1) {
-			$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=validate1&token='.newToken(), '', $userIsResp && $resp_pas_valide);
-			$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=refus&token='.newToken(), '', $userIsResp && $resp_pas_valide);
-		}
-		elseif ($object->status == $object::STATUS_APPROBATION2) {
-			$buttonAction .= dolGetButtonAction('2ème validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=validate2&token='.newToken(), '', $userIsRespProjet);
-			$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=refus&token='.newToken(), '', $userIsRespProjet);
-		}
-		elseif ($object->status == $object::STATUS_VERIFICATION) {
-			if($permissionToVerification) {
-				$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken().'\', \''.$object->ref.'_'.str_replace(array("'", " "), "", $usertoprocess->lastname).'_'.str_replace(array("'", " "), "", $usertoprocess->firstname).'\')" class="butAction classfortooltip" aria-label="Vérification" title="Vérification">Vérification</a>';
+		if($conf->global->FDT_USER_APPROVER) {
+			if ($object->status == $object::STATUS_APPROBATION1) {
+				$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate1&token='.newToken(), '', $userIsResp);
+				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $userIsResp);
 			}
-			$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=refus&token='.newToken(), '', $permissionToVerification);
+		}
+		else {
+			if ($object->status == $object::STATUS_APPROBATION1) {
+				$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate1&token='.newToken(), '', $userIsResp && $resp_pas_valide);
+				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $userIsResp && $resp_pas_valide);
+			}
+			elseif ($object->status == $object::STATUS_APPROBATION2) {
+				$buttonAction .= dolGetButtonAction('2ème validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate2&token='.newToken(), '', $userIsRespProjet);
+				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $userIsRespProjet);
+			}
+		}
+		
+		if ($object->status == $object::STATUS_VERIFICATION) {
+			if($permissionToVerification) {
+				if($conf->global->FDT_SCREEN_VERIFICATION) {
+					$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action2=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken().'\', \''.$object->ref.'_'.str_replace(array("'", " "), "", $usertoprocess->lastname).'_'.str_replace(array("'", " "), "", $usertoprocess->firstname).'\')" class="butAction classfortooltip" aria-label="Vérification" title="Vérification">Vérification</a>';
+				}
+				else {
+					$buttonAction .= '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butAction" name="verification" form="feuilleDeTempsForm" value="Vérification" style="margin-left: 1em;">';
+					$buttonAction .= '<input type="hidden" name="all_holiday_validate" form="feuilleDeTempsForm" value="'.$all_holiday_validate.'">';
+					//$buttonAction .= dolGetButtonAction($langs->trans('Vérification'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&massaction=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken(), '', $permissionToVerification);
+				}
+			}
+			$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $permissionToVerification);
 		}
 
 		
@@ -994,6 +1179,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
 	print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
 	print '<input type="hidden" name="mode" value="'.$mode.'">';
+	print '<input type="hidden" id="fuserid" value="'.$usertoprocess->id.'"/>';
 
 	if($modifier && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
 		print '<input type="hidden" name="action" value="addtime">';
@@ -1013,378 +1199,87 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print '<input type="hidden" name="action" value="updateObservation">';
 	}
 
-	print '<div class="clearboth"></div>';
-
-	// Affichage des primes
-	// if($displayVerification) {
-	// 	print '<table class="tagtable liste">';
-	// 		print '<tr class="liste_titre">';
-	// 			print '<th class="center bold fieldname_prime_astreinte">';
-	// 				print $langs->trans($object->fields['prime_astreinte']['label']);
-	// 			print '</th>';
-	// 			print '<th class="center bold fieldname_prime_exceptionnelle">';
-	// 				print $langs->trans($object->fields['prime_exceptionnelle']['label']);
-	// 			print '</th>';
-	// 			print '<th class="center bold fieldname_prime_objectif">';
-	// 				print $langs->trans($object->fields['prime_objectif']['label']);
-	// 			print '</th>';
-	// 			print '<th class="center bold fieldname_prime_variable">';
-	// 				print $langs->trans($object->fields['prime_variable']['label']);
-	// 			print '</th>';
-	// 			print '<th class="center bold fieldname_prime_amplitude">';
-	// 				print $langs->trans($object->fields['prime_amplitude']['label']);
-	// 			print '</th>';
-	// 		print '</tr>';
-
-	// 		print '<tr class="nostrong">';
-	// 			print '<td class="center valuefield fieldname_prime_astreinte">';
-	// 				print $object->showInputField($object->fields['prime_astreinte'], 'prime_astreinte', $object->prime_astreinte, '', '', '', 0);
-	// 			print '</td>';
-	// 			print '<td class="center valuefield fieldname_prime_exceptionnelle">';
-	// 				print $object->showInputField($object->fields['prime_exceptionnelle'], 'prime_exceptionnelle', $object->prime_exceptionnelle, '', '', '', 0);
-	// 			print '</td>';
-	// 			print '<td class="center valuefield fieldname_prime_objectif">';
-	// 				print $object->showInputField($object->fields['prime_objectif'], 'prime_objectif', $object->prime_objectif, '', '', '', 0);
-	// 			print '</td>';
-	// 			print '<td class="center valuefield fieldname_prime_variable">';
-	// 				print $object->showInputField($object->fields['prime_variable'], 'prime_variable', $object->prime_variable, '', '', '', 0);
-	// 			print '</td>';
-	// 			print '<td class="center valuefield fieldname_prime_amplitude">';
-	// 				print $object->showInputField($object->fields['prime_amplitude'], 'prime_amplitude', $object->prime_amplitude, '', '', '', 0);
-	// 			print '</td>';
-	// 		print '</tr>';
-	// 	print '</table>';
-	// }
-	
-	print '<div class="div-table-responsive">';
-	print '<table class="tagtable liste'.($moreforfilter ? " listwithfilterbefore" : "").'" id="tablelines_fdt">'."\n";
-
-	print '<thead>';
-	print '<tr class="liste_titre card fixed" style="height: 79px !important; top: 0px;">';
-	print '<th class="fixed" colspan="2" style="min-width: 500px;"><button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand"></span></button>';
-	print $usertoprocess->getNomUrl(1);
-	print '</th>';
-
-
-	// Affichage des jours de la semaine
-	for ($idw = 0; $idw < $nb_jour; $idw++) {
-		$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-
-		if(dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-			print '<th style="min-width: 90px; border-left: 1px solid var(--colortopbordertitle1) !important; border-right: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
-		}
-
-		print '<th width="9%" style="min-width: 90px" align="center" class="bold hide'.$idw.'">';
-		print dol_print_date($dayinloopfromfirstdaytoshow, '%a');
-		print '<br>'.dol_print_date($dayinloopfromfirstdaytoshow, 'dayreduceformat').'</th>';
-
-	}
-	print '<th class="total_title fixed" width="9%" style="min-width: 90px"><strong>TOTAL</strong></th>';
-	print '</tr>';
-	
-
-	// Affichage de la ligne avec le total de chaque semaine
-	print '<tr class="liste_titre fixed">';
-	print '<th class="fixed" colspan="'.(2 + $addcolspan).'"></th>';
-
-	$semaine = 1;
-	for ($idw = 0; $idw < $nb_jour; $idw++) {			
-		$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-		$ecart_lundi = ecart_lundi($tmpday);
-		$weekNumber = date("W", $tmpday);
-	
-		if ($idw == 0) {
-			$taille = 7-$ecart_lundi;
-		}
-		elseif (dol_print_date($tmpday, '%a') == 'Lun' && $nb_jour - $idw < 7 && $idw-$ecart_lundi > 23 && dol_print_date($lastdaytoshow, '%a') != 'Dim'){
-			$taille = $nb_jour - $idw;
-		}
-		elseif (dol_print_date($tmpday, '%a') == 'Lun' && $idw != 0) {	
-			$taille = 7;
-			$date = dol_time_plus_duree($tmpday, 7, 'd');
-
-			if($first_day_month == $tmpday){
-				print '<th style="min-width: 90px; border-left: 1px solid var(--colortopbordertitle1); border-bottom: none; border-top: none !important; z-index:1;" width="9%"></th>';
-			}
-			elseif($first_day_month > $tmpday && $first_day_month < $date){
-				$taille++;
-				$idw--;
-			}
-		}
-
-		$premier_jour = $idw;
-		$dernier_jour = $idw+$taille-1;
-
-		print '<th class="liste_total_semaine_'.$semaine.'" align="center" colspan='.$taille.'><strong>Semaine '.$weekNumber.' : <span class="totalSemaine" name="totalSemaine'.$weekNumber.'" id="totalSemaine'.$semaine.'_'.$premier_jour.'_'.$dernier_jour.'">&nbsp</span></strong></th>';
-		$semaine++;
-		$idw += $taille - 1;
-	}
-	print '<th class="total_week fixed"></th>';
-	print "</tr>";
-
-
-	// Affichage de la ligne des congés
-	$holiday = new extendedHoliday($db);
-	$typeleaves = $holiday->getTypesNoCP(-1, -1);
-	$arraytypeleaves = array();
-	foreach ($typeleaves as $key => $val) {
-		$labeltoshow = $val['code'];
-		$arraytypeleaves[$val['rowid']] = $labeltoshow;
-	}	
-		
-	$conges_texte = $holiday->getArrayHoliday($usertoprocess->id, 0, 1);
-	$cpt = 0; 
-
-	print '<tr class="nostrong liste_titre fixed conges">';
-		print '<th colspan="2" '.($multiple_holiday ? 'rowspan="2"' : '').' class="fixed">';
-		if($displayVerification) {
-			print '<input type="checkbox"'.(!$modifier ? 'disabled' : '').' id="selectAllHoliday" onclick="toggleCheckboxesHoliday(this)"> ';
-		}
-		print '<strong>Congés</strong>';
-		print $form->textwithpicto('', $conges_texte);
-		print '</th>';
-		for ($idw = 0; $idw < $nb_jour; $idw++) {
-			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-			$keysuffix = '['.$idw.']';
-
-			if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-				print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
-			}
-
-			if(!empty($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][0])) {
-				$holiday->fetch((int)$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
-				$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-				$droit_rtt = $holiday->holidayTypeDroitRTT();
-				
-				if(!empty($holiday->array_options['options_hour'])) {
-					$durationHoliday = $holiday->array_options['options_hour'];
-				}
-				else {
-					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-					if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-						$duration_hour += 3.5 * 3600;
-					}
-					elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-						$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-					}
-					elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-						$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-					}
-					$durationHoliday = $duration_hour;
-				}
-
-				if($idw + $numberDay > $nb_jour) {
-					$numberDay = $nb_jour - $idw;
-				}
-
-				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
-				
-				if($displayVerification) {
-					print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modifier ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
-				}
-				print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
-				print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modifier  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
-				if($modifier && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
-					print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
-				}
-
-				$idw += $numberDay - 1;
-				$cpt++;
-			}
-			else {
-				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
-			}
-
-			print '</th>';
-		}
-		print '<th class="liste_total center fixed total_holiday"></th>';
-	print '</tr>';
-
-	if($multiple_holiday) {
-		print '<tr class="nostrong liste_titre conges">';
-		for ($idw = 0; $idw < $nb_jour; $idw++) {
-			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-			$keysuffix = '['.$idw.']';
-
-			if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-				print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
-			}
-
-			if(!empty($holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][1])) {
-				$holiday->fetch((int)$holidayWithoutCanceled[$dayinloopfromfirstdaytoshow]['rowid'][1]);
-				$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
-				$droit_rtt = $holiday->holidayTypeDroitRTT();
-				
-				if(!empty($holiday->array_options['options_hour'])) {
-					$durationHoliday = $holiday->array_options['options_hour'];
-				}
-				else {
-					$nbDay = floor(num_open_day($holiday->date_debut_gmt, $holiday->date_fin_gmt, 0, 1, $holiday->halfday));
-					$duration_hour = (dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
-					if((!empty($userField->array_options['options_pasdroitrtt']) || dol_print_date($holiday->date_fin, '%Y-%m-%d') < '2024-07-01') && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-						$duration_hour += 3.5 * 3600;
-					}
-					elseif(in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-						$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
-					}
-					elseif(!in_array($holiday->fk_type, $droit_rtt) && ($holiday->halfday == 1 || $holiday->halfday == -1)) {
-						$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
-					}
-					$durationHoliday = $duration_hour;
-				}
-
-				if($idw + $numberDay > $nb_jour) {
-					$numberDay = $nb_jour - $idw;
-				}
-
-
-				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" colspan="'.($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month && ($dayinloopfromfirstdaytoshow_array[$idw + $numberDay] > $first_day_month || empty($dayinloopfromfirstdaytoshow_array[$idw + $numberDay]))? $numberDay + 1 : $numberDay).'">';
-				
-				if($displayVerification) {
-					print '<input type="checkbox"'.($holiday->array_options['options_statutfdt'] == 3 || !$modifier ? ' disabled' : '').' name="holiday_valide['.$cpt.']" id="holiday_valide['.$cpt.']"'.($holiday->array_options['options_statutfdt'] != 1 ? ' checked' : '0').'> ';
-				}
-				print $holiday->getNomUrlBlank(2)." ".convertSecondToTime($durationHoliday, 'allhourmin');
-				print ' '.$form->selectarray('holiday_type['.$cpt.']', $arraytypeleaves, $holiday->fk_type, 0, 0, 0, 'id="holiday_type['.$cpt.']"'.(!$modifier  ? 'disabled' : ''), 0, 0, $holiday->array_options['options_statutfdt'] == 3, '', 'maxwidth80', true);
-				if($modifier && $action != 'ediths00' && $action != 'ediths25' && $action != 'ediths50') {
-					print '<input type="hidden" name="holiday_id['.$cpt.']"  id="holiday_id['.$cpt.']" value="'.$holiday->id.'">';
-				}
-
-				$idw += $numberDay - 1;
-				$cpt++;
-			}
-			else {
-				print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'">';
-			}
-
-			print '</th>';
-		}
-		print '<th class="liste_total center fixed total_holiday"></th>';
-		print '</tr>';
-	}
-	print '</thead>';
+	print '<div class="clearboth"></div>';	
 
 	// Calculate total for all tasks
-	$listofdistinctprojectid = array(); // List of all distinct projects
-	if (is_array($tasksarraywithoutfilter) && count($tasksarraywithoutfilter)) {
-		foreach ($tasksarraywithoutfilter as $tmptask) {
-			$listofdistinctprojectid[$tmptask->fk_project] = $tmptask->fk_project;
+	if(!$conf->global->FDT_DISPLAY_COLUMN) {
+		$listofdistinctprojectid = array(); // List of all distinct projects
+		if (is_array($tasksarraywithoutfilter) && count($tasksarraywithoutfilter)) {
+			foreach ($tasksarraywithoutfilter as $tmptask) {
+				$listofdistinctprojectid[$tmptask->fk_project] = $tmptask->fk_project;
+			}
+		}
+		$totalforeachday = array();
+		$timeSpentMonth = array();
+		foreach ($listofdistinctprojectid as $tmpprojectid) {
+			$projectstatic->id = $tmpprojectid;
+			$projectstatic->loadTimeSpent_month($firstdaytoshow, 0, $usertoprocess->id); // Load time spent from table projet_task_time for the project into this->weekWorkLoad and this->weekWorkLoadPerTask for all days of a week
+			$timeSpentMonth[$projectstatic->id]['weekWorkLoad'] = $projectstatic->weekWorkLoad;
+			$timeSpentMonth[$projectstatic->id]['weekWorkLoadPerTask'] = $projectstatic->weekWorkLoadPerTask;
+			for ($idw = 0; $idw < $nb_jour; $idw++) {
+				$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
+				$totalforeachday[$tmpday] += $projectstatic->weekWorkLoad[$tmpday];
+			}
 		}
 	}
-	$totalforeachday = array();
-	$timeSpentMonth = array();
-	foreach ($listofdistinctprojectid as $tmpprojectid) {
-		$projectstatic->id = $tmpprojectid;
-		$projectstatic->loadTimeSpent_month($firstdaytoshow, 0, $usertoprocess->id); // Load time spent from table projet_task_time for the project into this->weekWorkLoad and this->weekWorkLoadPerTask for all days of a week
-		$timeSpentMonth[$projectstatic->id]['weekWorkLoad'] = $projectstatic->weekWorkLoad;
-		$timeSpentMonth[$projectstatic->id]['weekWorkLoadPerTask'] = $projectstatic->weekWorkLoadPerTask;
-		for ($idw = 0; $idw < $nb_jour; $idw++) {
-			$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-			$totalforeachday[$tmpday] += $projectstatic->weekWorkLoad[$tmpday];
-		}
+	else {
+		$totalforeachday2 = $projectstatic->getTotalForEachDay($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
 	}
 
 	// By default, we can edit only tasks we are assigned to
 	$restrictviewformytask = ((!isset($conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED)) ? 2 : $conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED);
-	if (count($tasksarray) > 0) {
+	if (count($tasksarray) > 0 || $conf->global->FDT_DISPLAY_COLUMN) {
 		$j = 0;
 		$level = 0;
 
 		// Récupération des temps précédent et suivant qui ne sont pas affichés
-		$temps_prec = $object->getTempsSemainePrecedente($firstdaytoshow, $usertoprocess);
-		$temps_suiv = $object->getTempsSemaineSuivante($lastdaytoshow, $usertoprocess);
-		$temps_prec_hs25 = $object->getHS25SemainePrecedente($firstdaytoshow, $usertoprocess);
-		$temps_suiv_hs25 = $object->getHS25SemaineSuivante($lastdaytoshow, $usertoprocess);
-		$temps_prec_hs50 = $object->getHS50SemainePrecedente($firstdaytoshow, $usertoprocess);
-		$temps_suiv_hs50 = $object->getHS50SemaineSuivante($lastdaytoshow, $usertoprocess);
+		if(!$conf->global->FDT_DISPLAY_FULL_WEEK) {
+			$temps_prec = $object->getTempsSemainePrecedente($firstdaytoshow, $usertoprocess);
+			$temps_suiv = $object->getTempsSemaineSuivante($lastdaytoshow, $usertoprocess);
+			$temps_prec_hs25 = $object->getHS25SemainePrecedente($firstdaytoshow, $usertoprocess);
+			$temps_suiv_hs25 = $object->getHS25SemaineSuivante($lastdaytoshow, $usertoprocess);
+			$temps_prec_hs50 = $object->getHS50SemainePrecedente($firstdaytoshow, $usertoprocess);
+			$temps_suiv_hs50 = $object->getHS50SemaineSuivante($lastdaytoshow, $usertoprocess);
+		}
+		else {
+			$temps_prec = 0;
+			$temps_suiv = 0;
+			$temps_prec_hs25 = 0;
+			$temps_suiv_hs25 = 0;
+			$temps_prec_hs50 = 0;
+			$temps_suiv_hs50 = 0;
+		}
 
 		// Récupération des notes
-		$notes = $task->fetchAllNotes($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
+		$notes = $task->fetchAllNotes($firstdaytoshow, $lastdaytoshow, $usertoprocess->id, ($conf->global->FDT_DISPLAY_COLUMN ? 1 : 0));
 
 		// Récupération des autres temps (compagnonnage/heure de nuit/heure de route/epi respiratoire)
 		$projet_task_time_other = New Projet_task_time_other($db);
-		$otherTime = $projet_task_time_other->getOtherTime($firstdaytoshow, $lastdaytoshow, $usertoprocess->id);
-
+		$otherTaskTime = $projet_task_time_other->getOtherTime($firstdaytoshow, $lastdaytoshow, $usertoprocess->id, ($conf->global->FDT_DISPLAY_COLUMN ? 'column' : ''));
 
 		// Affichage de l'interieur du tableau
-		$totalforvisibletasks = FeuilleDeTempsLinesPerWeek($j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
-															$nb_jour, $modifier, $css, $ecart_jour, $typeDeplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
-															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $month_now, $timeHoliday, $heure_semaine, $heure_semaine_hs, $usertoprocess);
+		if(!$conf->global->FDT_DISPLAY_COLUMN) {
+			$totalforvisibletasks = FeuilleDeTempsLinesPerWeek('card', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
+															$modifier, $css, $css_holiday, $ecart_jour, $ecart_jour_fin, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
+															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
+															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
+															array(), '', $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves);
+		}
+		else {
+			$totalforvisibletasks = FeuilleDeTempsLinesPerWeek_Sigedi('card', $j, $firstdaytoshow, $lastdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, 
+															$modifier, $css, $css_holiday, $ecart_jour, $ecart_jour_fin, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, 
+															$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
+															$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
+															array(), '', $totalforeachday, $holidayWithoutCanceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves);
+		}
+		
 	} else {
-		print '<tr><td colspan="'.(4 + $addcolspan + $nb_jour).'"><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
+		print '<div class="div-table-responsive" style="min-height: 0px">';
+		print '<table class="tagtable liste listwithfilterbefore column">'."\n";	
+		print '<tr><td><span class="opacitymedium">'.$langs->trans("NoAssignedTasks").'</span></td></tr>';
+		print '</table>';
+		print '</div>';
 	}
-
-	// Is there a diff between selected/filtered tasks and all tasks ?
-	$isdiff = 0;
-	if (count($totalforeachday)) {
-		for ($idw = 0; $idw < $nb_jour; $idw++) {
-			$tmpday = $dayinloopfromfirstdaytoshow_array[$idw];
-			$timeonothertasks = ($totalforeachday[$tmpday] - $totalforvisibletasks[$tmpday]);
-			if ($timeonothertasks) {
-				$isdiff = 1;
-				break;
-			}
-		}
-	}
-
-	// There is a diff between total shown on screen and total spent by user, so we add a line with all other cumulated time of user
-	if ($isdiff) {
-		print '<tr class="oddeven othertaskwithtime">';
-		print '<td class="nowrap fixed" colspan="'.(2 + $addcolspan).'">'.$langs->trans("OtherFilteredTasks").'</td>';
-
-		for ($idw = 0; $idw < $nb_jour; $idw++) {
-			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-
-			if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-				print '<td></td>';
-			}
-
-			print '<td class="center hide'.$idw.' '.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-			$timeonothertasks = ($totalforeachday[$dayinloopfromfirstdaytoshow] - $totalforvisibletasks[$dayinloopfromfirstdaytoshow]);
-			if ($timeonothertasks) {
-				print '<span class="timesheetalreadyrecorded" title="texttoreplace"><input type="text" class="center smallpadd time_'.$idw.'" size="2" disabled id="timespent[-1]['.$idw.']" name="task[-1]['.$idw.']" value="';
-				print convertSecondToTime($timeonothertasks, 'allhourmin');
-				print '"></span>';
-			}
-			print '</td>';
-		}
-
-		print ' <td class="liste_total fixed"></td>';
-		print '</tr>';
-	}
-
-	// Affichage du total
-	if ($conf->use_javascript_ajax) {
-		print '<tr class="trforbreak">';
-		print '<td class="fixed" colspan="'.(2 + $addcolspan).'">';
-		print $langs->trans("Total");
-		print '<span class="opacitymediumbycolor">  - '.$langs->trans("ExpectedWorkedHours").': <strong>'.price($usertoprocess->weeklyhours, 1, $langs, 0, 0).'</strong></span>';
-		print '</td>';
-
-
-		for ($idw = 0; $idw < $nb_jour; $idw++) {
-			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-
-			if($idw > 0 && dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y') == dol_print_date($first_day_month, '%d/%m/%Y')){
-				print '<td style="border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;"></td>';
-			}
-
-			$total = (convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') != '0' ? convertSecondToTime($totalforeachday[$dayinloopfromfirstdaytoshow], 'allhourmin') : '00:00');
-			print '<td class="liste_total hide'.$idw.($total != '00:00' ? ' bold' : '').'" align="center"><div class="totalDay'.$idw.'" '.(!empty($style) ? $style : '').'>'.$total.'</div></td>';
-		}
-		print '<td class="liste_total center fixed"><div class="totalDayAll">&nbsp;</div></td>';
-		print '</tr>';
-	}
-
-	if($displayVerification) {
-		FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $usertoprocess, $css, $css_holiday, $ecart_jour, !$modifier, $userInDeplacement, $userInGrandDeplacement, $dayinloopfromfirstdaytoshow_array);
-	}
-	else {
-		FeuilleDeTempsDeplacement($firstdaytoshow, $lastdaytoshow, $nb_jour, $usertoprocess, $css, $ecart_jour, !$modifier, $addcolspan, $dayinloopfromfirstdaytoshow_array, $month_now);
-	}
-	
-	print "</table>";
-	print '</div>';
 
 	// Tableau Full Screen
 	print '<div id="fullscreenContainer" tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-dialog-buttons ui-draggable" aria-describedby="dialog-confirm" aria-labelledby="ui-id-1" style="height: calc(100vh - 62px); width: calc(100vw - 9px); top: 53px; display: none;">';
@@ -1405,12 +1300,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '</form>'."\n\n";
 
 
-	$modeinput = 'hours';
-
 	if ($conf->use_javascript_ajax) {
 		$lastday = dol_time_plus_duree($firstdaytoshow, $nb_jour-1, 'd');
-		$temps_prec = $object->getTempsSemainePrecedente($firstdaytoshow, $usertoprocess);
-		$temps_suiv = $object->getTempsSemaineSuivante($lastdaytoshow, $usertoprocess);
 
 		print "\n<!-- JS CODE TO ENABLE Tooltips on all object with class classfortooltip -->\n";
 		print '<script type="text/javascript">'."\n";
@@ -1438,13 +1329,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			if(dol_print_date($tmpday, '%a') == 'Dim' || dol_print_date($tmpday, '%d/%m/%Y') == dol_print_date($lastdaytoshow, '%d/%m/%Y')) {
 				$weekNumber = date("W", $tmpday);
 				if($weekNumber == date("W", $firstdaytoshow)) {
-					print ' updateTotalWeek('.($temps_prec ? $temps_prec : 0).', 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(\''.$modeinput.'\', '.($temps_prec ? $temps_prec : 0).', 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 				elseif($weekNumber == date("W", $lastdaytoshow)) {
-					print ' updateTotalWeek(0, '.($temps_suiv ? $temps_suiv : 0).', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(\''.$modeinput.'\', 0, '.($temps_suiv ? $temps_suiv : 0).', \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 				else {
-					print ' updateTotalWeek(0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
+					print ' updateTotalWeek(\''.$modeinput.'\', 0, 0, \''.$weekNumber.'\', '.($timeHoliday[(int)$weekNumber] ? $timeHoliday[(int)$weekNumber] : 0).', '.$tmp_heure_semaine.');';
 				}
 			}
 		}

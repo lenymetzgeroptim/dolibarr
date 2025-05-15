@@ -22,15 +22,18 @@ ModuleFeuilleDeTempsName = Feuille de temps
 # Module description 'ModuleFeuilleDeTempsDesc'
 ModuleFeuilleDeTempsDesc = Permet la gestion des feuilles de temps
 ListOfValidate = Liste des %s à valider
-projectExport = Export
+ExportsSilae = Exports Silae
 timesheet_16@feuilledetemps = Feuille de temps
 FeuilleDeTempsExportCompta = Observations pour la compta
 ObservationComptas = Liste des observations pour la compta
 ActionsOnFeuilleDeTemps = Actions sur la feuille de temps
+ExportsOther = Exports Autres
 
 #
 # Admin page
 #
+ExtraFieldsSilae = Attributs supplémentaires pointage
+feuilledetempsSetup = Configuration du module feuille de temps
 FeuilleDeTempsSetup = Paramètres Feuille de temps
 Settings = Settings
 FeuilleDeTempsSetupPage = Page de paramètrage des Feuille de temps
@@ -49,9 +52,53 @@ HOLIDAY_DRAFT_COLOR = Couleur pour les congés en brouillon
 HOLIDAY_APPROBATION1_COLOR = Couleur pour les congés en approbation n°1
 HOLIDAY_APPROBATION2_COLOR = Couleur pour les congés en approbation n°2
 HOLIDAY_VALIDATED_COLOR = Couleur pour les congés validés
+FDT_WEEKEND_COLOR = Couleur des week-ends
+FDT_ANTICIPE_COLOR = Couleur des jours anticipés
+FDT_ANTICIPE_WEEKEND_COLOR = Couleur des week-ends anticipés
+FDT_FERIE_COLOR = Couleur des jours fériés
 JOUR_ANTICIPES = Nombre de jours anticipés
 Couleur = Paramètre des couleurs
 Congés = Paramètre des congés
+AutreParamFDT = Autres paramètres
+FDT_DISPLAY_COLUMN = Affichage des feuilles de temps en format colonne
+FDT_DECIMAL_HOUR_FORMAT = Heures au format décimal
+FDT_USE_HS_CASE = Ajout des cases d'heures sup pour les collaborateurs
+FDT_DISPLAY_FULL_WEEK = Afficher les semaines completes dans les feuilles de temps
+FDT_COLUMN_MAX_TASK_DAY = Si le format colonne est utilisé : Nombre de tâche maximum sur une journée
+FDT_USER_APPROVER = Approbateurs des feuilles de temps définient sur la fiche utilisateur
+FDT_ANTICIPE_BLOCKED = Les jours en dehors du mois courant sont bloqués
+FDT_DAY_FOR_NEXT_FDT = Jour a partir duquel la feuille de temps change de mois
+HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE = Utiliser les HS50-HT qui permettent le dépassement du nombre d'heure max par semaine
+FDT_MANAGE_EMPLOYER = Gestion de l'employeur pour les exports (export uniquement d'un employeur)
+FDT_STATUT_HOLIDAY = Gestion d'un statut des congés sur les feuilles de temps
+FDT_STATUT_HOLIDAY_VALIDATE_VERIF = Si la gestion d'un statut des congés sur les feuilles de temps est activé : validation automatique lors de la vérification
+FDT_GENERATE_TASK_PROJECTCREATION = Générer une tâche automatiquement lors de la création d'un projet
+FDT_STANDARD_WEEK = Pointage d'une semaine type
+FDT_STANDARD_WEEK_WITH_RTT = Avec RTT
+FDT_STANDARD_WEEK_NO_RTT = Sans RTT
+FDT_STANDARD_WEEK_MONDAY_WITH_RTT = Lundi
+FDT_STANDARD_WEEK_TUESDAY_WITH_RTT = Mardi
+FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT = Mercredi
+FDT_STANDARD_WEEK_THURSDAY_WITH_RTT = Jeudi
+FDT_STANDARD_WEEK_FRIDAY_WITH_RTT = Vendredi
+FDT_STANDARD_WEEK_SATURDAY_WITH_RTT = Samedi
+FDT_STANDARD_WEEK_SUNDAY_WITH_RTT = Dimanche
+FDT_STANDARD_WEEK_MONDAY_NO_RTT = Lundi
+FDT_STANDARD_WEEK_TUESDAY_NO_RTT = Mardi
+FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT = Mercredi
+FDT_STANDARD_WEEK_THURSDAY_NO_RTT = Jeudi
+FDT_STANDARD_WEEK_FRIDAY_NO_RTT = Vendredi
+FDT_STANDARD_WEEK_SATURDAY_NO_RTT = Samedi
+FDT_STANDARD_WEEK_SUNDAY_NO_RTT = Dimanche
+FDT_STANDARD_WEEK_FOR_HOLIDAY = Utiliser la semaine type pour la durée des congés en jour
+FDT_SHORTCUT_HOLIDAY = Raccourci pour créer un congés dans le menu feuille de temps
+FDT_SCREEN_VERIFICATION = Screen de la feuille de temps lors de la vérification
+FDT_SENDMAIL_FROM = Expéditeur du mail avec le bouton "Envoyer Mail" sur une feuille de temps
+FDT_VERIF_MODIFWHENHOLIDAY = Seul les personnes responsables de la vérif peuvent faire des modifications sur les journées entières d'absence
+FDT_SHOW_USERADRESS = Afficher l'adresse de l'utilisateur sur les feuilles de temps
+FDT_ORDER_MATRICULE = Les feuilles de temps sont triées par matricule (par ordre alphabétique sinon)
+FDT_EXPORT_REPOS_COMPENSATEUR = Exporter les repos compensateurs sous forme de commentaire
+
 
 #
 # About page
@@ -74,7 +121,8 @@ FeuillesDeTemps = Feuilles de temps
 ERR_HEURE_MAX_JOUR_DEPASSEMENT = Vous ne pouvez pas faire autant d'heures par jour
 ERR_HEURE_MAX_SEMAINE_DEPASSEMENT = Vous ne pouvez pas faire autant d'heures par semaine
 WRN_HEURE_JOUR_DEPASSEMENT = Vous entrez des heures supplémentaires
-WRN_35H_DEPASSEMENT = Vous avez dépassé le nombre d'heures prévu dans la semaine<br>Veuillez entrer vos heures sup en suivant les explications en haut de la page
+WRN_35H_DEPASSEMENT = Vous avez dépassé le nombre d'heures prévu dans la semaine
+WRN_35H_DEPASSEMENT_USE_HS_CASE = Vous avez dépassé le nombre d'heures prévu dans la semaine<br>Veuillez entrer vos heures sup en suivant les explications en haut de la page
 WRN_PUBLIC_HOLIDAY = Vous avez pointé des heures un jour ferié
 
 #
@@ -89,7 +137,30 @@ PrimeExceptionnelle = Prime Exceptionnelle
 PrimeObjectif = Prime Objectif
 PrimeVariable = Prime Variable 
 PrimeAmplitude = Prime Amplitude
-
+IndKM_0_40 = IndKM_0.40€
+IndGD_50 = IndGD_50€
+IndGD_84 = IndGD_84€
+IndGD_37 = IndGD_37€
+H_Nuit_100 = H_Nuit_100%
+PrimePoste_2_8 = PrimePoste_2x8
+PrimePoste_3_8 = PrimePoste_3x8
+H_Dim_75 = H_Dim_75%
+H_Dim_50 = H_Dim_50%
+SiteFDT = Site
+ApprobateurFDT = Approbateur des feuilles de temps
+NoRTT = Pas droit au RTT
+FdtVariableRestreinteAvecDep = Vue restreinte des variables sur la feuille de temps avec les déplacements
+FdtVariableRestreinteSansdep = Vue restreinte des variables sur sa feuille de temps sans les déplacements
+FdtAllVariable = Vue de toutes les variables sur sa feuille de temps
+NoteDeplacement = Note déplacements
+SemaineType = Semaine type 
+SemaineTypeLundi = Lundi
+SemaineTypeMardi = Mardi
+SemaineTypeMercredi = Mercredi
+SemaineTypeJeudi = Jeudi
+SemaineTypeVendredi = Vendredi
+SemaineTypeSamedi = Samedi
+SemaineTypeDimanche = Dimanche
 
 
 #
@@ -101,6 +172,8 @@ ToVerification = En vérification
 FeuilleDeTempsToApprove1 = Feuille de temps en approbation n°1
 FeuilleDeTempsToApprove2 = Feuille de temps en approbation n°2
 FeuilleDeTempsToVerification = Feuille de temps en vérification
+NewHoliday = Nouveau congé
+
 
 #
 # Mail
@@ -139,6 +212,7 @@ FEUILLEDETEMPS_VALIDATE12_NONOPTIMInDolibarr = Approbation n°1 et n°2 de la fe
 FEUILLEDETEMPS_VALIDATE_NONOPTIMInDolibarr = Approbation n°2 de la feuille de temps %s réalisée, feuille de temps validée (Non OPTIM)
 FEUILLEDETEMPS_EXPORTEDInDolibarr = Export de la feuille de temps %s réalisée
 FEUILLEDETEMPS_APPROBATION1ET2InDolibarr = Approbation n°1 et n°2 de la feuille de temps %s réalisée, passage en vérification
+FEUILLEDETEMPS_APPROBATIONInDolibarr = Approbation de la feuille de temps %s réalisée, passage en vérification
 SENDMAILInDolibarr = Contenu du message :<br>%s
 
 #

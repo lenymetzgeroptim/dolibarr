@@ -211,7 +211,7 @@ print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 print '<input type="hidden" name="page" value="'.$page.'">';
 print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
 
-print load_fiche_titre($langs->trans('MenuReportMonth'), '', 'title_hrm');
+print load_fiche_titre($langs->trans('MenuReportMonth'), '', $holidaystatic->picto);
 
 // Selection filter
 print '<div class="tabBar">';
@@ -261,7 +261,7 @@ if (!empty($arrayfields['cp.fk_type']['checked'])) {
 	}
 
 	print '<td class="liste_titre">';
-	print $form->selectarray('search_type', $arraytypeleaves, $search_type, 1, 0, 0, '', 0, 0, 0, '', '', 1);
+	print $form->selectarray('search_type', $arraytypeleaves, $search_type, 1, 0, 0, '', 0, 0, 0, 'ASC', '', 1);
 	print '</td>';
 }
 

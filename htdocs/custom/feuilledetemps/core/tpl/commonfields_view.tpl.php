@@ -36,6 +36,9 @@ if (!is_object($form)) {
 <!-- BEGIN PHP TEMPLATE commonfields_view.tpl.php -->
 <?php
 
+$fk_user = new User($db);
+$fk_user->fetch($object->fk_user);
+
 $object->fields = dol_sort_array($object->fields, 'position');
 
 if($action == 'editvalidator1' || $action == 'editvalidator2') {
@@ -59,13 +62,13 @@ if($action == 'editvalidator1' || $action == 'editvalidator2') {
 print '<div class="fichecenter">';
 print '<div class="fichehalfleft">';
 print '<div class="underbanner clearboth"></div>';
-if($displayVerification) {
+if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 	print '<div class="fichehalfleft">';
 }
 print '<table class="border centpercent tableforfield">'."\n";
 
 foreach ($object->fields as $key => $val) {
-	if (!empty($keyforbreak1) && $key == $keyforbreak1 && $displayVerification) {
+	if (!empty($keyforbreak1) && $key == $keyforbreak1 && $displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 		break; // key used for break on second column
 	}
 
@@ -74,7 +77,8 @@ foreach ($object->fields as $key => $val) {
 	}
 
 	// Discard if extrafield is a hidden field on form
-	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
+	$visible = dol_eval($val['visible'], 1, 1, '2');
+	if ($visible != 1 && $visible != 3 && $visible != 4 && $visible != 5) {
 		continue;
 	}
 
@@ -113,6 +117,13 @@ foreach ($object->fields as $key => $val) {
 	}
 	if($object->status != $object::STATUS_VERIFICATION || ($key != 'prime_astreinte' && $key != 'prime_exceptionnelle' && $key != 'prime_objectif' && $key != 'prime_variable' && $key != 'prime_amplitude')) {
 		print $object->showOutputField($val, $key, $value, '', '', '', 0);
+		if($key == 'fk_user' && $conf->global->FDT_SHOW_USERADRESS) {
+			$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
+			if ($fulladress) {
+				print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
+				print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+			}
+		}
 	}
 	else {
 		print $object->showInputField($val, $key, $value, 'form="feuilleDeTempsForm"', '', '', 0, 1);
@@ -128,31 +139,43 @@ foreach ($object->fields as $key => $val) {
 print '</table>';
 
 // We close div and reopen for second column
-if($displayVerification) {
+if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 	print '</div>';
 	print '<div class="fichehalfright">';
 
 	print '<table class="border centpercent tableforfield">';
 
-	// 1er Approbateurs 
-	print '<tr>';
-	print '<td class="titlefield fieldname_user_validation">1ère Validation</td>';
-	print '<td class="valuefield fieldname_fk_user_validation_1">';
-	$list_validation1 = $object->listApprover1;
-	foreach($list_validation1[2] as $id => $user_static){
-		print $user_static->getNomUrl(1).($list_validation1[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
-	}
-	print '</td></td></tr>';
+	if(!$conf->global->FDT_USER_APPROVER) {
+		// 1er Approbateurs 
+		print '<tr>';
+		print '<td class="titlefield fieldname_user_validation">1ère Validation</td>';
+		print '<td class="valuefield fieldname_fk_user_validation_1">';
+		$list_validation1 = $object->listApprover1;
+		foreach($list_validation1[2] as $id => $user_static){
+			print $user_static->getNomUrl(1).($list_validation1[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
+		}
+		print '</td></td></tr>';
 
-	// 2nd Approbateurs
-	print '<tr>';
-	print '<td class="titlefield fieldname_user_validation">2ème Validation</td>';
-	print '<td class="valuefield fieldname_fk_user_validation_2">';
-	$list_validation2 = $object->listApprover2;
-	foreach($list_validation2[2] as $id => $user_static){
-		print $user_static->getNomUrl(1).($list_validation2[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
+		// 2nd Approbateurs
+		print '<tr>';
+		print '<td class="titlefield fieldname_user_validation">2ème Validation</td>';
+		print '<td class="valuefield fieldname_fk_user_validation_2">';
+		$list_validation2 = $object->listApprover2;
+		foreach($list_validation2[2] as $id => $user_static){
+			print $user_static->getNomUrl(1).($list_validation2[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
+		}
+		print '</td></td></tr>';
 	}
-	print '</td></td></tr>';
+	else {
+		$extrafieldsuser = new extrafields($db);
+		$extrafieldsuser->fetch_name_optionals_label($usertoprocess->table_element);
+		// 1er Approbateurs 
+		print '<tr>';
+		print '<td class="titlefield fieldname_user_validation">Approbateur</td>';
+		print '<td class="valuefield fieldname_fk_user_validation_1">';
+		print $extrafieldsuser->showOutputField('approbateurfdt', $usertoprocess->array_options['options_approbateurfdt'], '', $usertoprocess->table_element);
+		print '</td></td></tr>';
+	}
 
 	if($user->rights->feuilledetemps->feuilledetemps->rapportUtilisateur) {
 		print '<tr>';
@@ -166,7 +189,8 @@ if($displayVerification) {
 }
 
 if($permissionToVerification) {
-	print '<textarea id="observationFDT" name="observationFDT" form="feuilleDeTempsForm" class="textarea_observation">';
+	$style = ($conf->global->FDT_DISPLAY_COLUMN ? 'height: 18px; margin-bottom: 0;' : '');
+	print '<textarea id="observationFDT" name="observationFDT" form="feuilleDeTempsForm" class="textarea_observation" style="'.$style.'">';
 	print $object->observation;
 	print '</textarea>';
 }
@@ -175,7 +199,7 @@ print '</div>';
 
 print '<div class="fichehalfright">';
 print '<div class="underbanner clearboth"></div>';
-if($displayVerification) {
+if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 	print '<div class="fichehalfleft" style="margin-bottom: 2%;">';
 }
 
@@ -183,14 +207,14 @@ print '<table class="border centpercent tableforfield">';
 
 $alreadyoutput = 1;
 foreach ($object->fields as $key => $val) {
-	if ($alreadyoutput && $displayVerification) {
+	if ($alreadyoutput && $displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 		if (!empty($keyforbreak1) && $key == $keyforbreak1) {
 			$alreadyoutput = 0; // key used for break on second column
 		} else {
 			continue;
 		}
 	}
-	elseif ($alreadyoutput && !$displayVerification) {
+	elseif ($alreadyoutput && (!$displayVerification || $conf->global->FDT_DISPLAY_COLUMN)) {
 		if (!empty($keyforbreak) && $key == $keyforbreak) {
 			$alreadyoutput = 0; // key used for break on second column
 		} else {
@@ -198,12 +222,13 @@ foreach ($object->fields as $key => $val) {
 		}
 	}
 
-	if (!empty($keyforbreak2) && $key == $keyforbreak2 && $displayVerification) {
+	if (!empty($keyforbreak2) && $key == $keyforbreak2 && $displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 		break; // key used for break on second column
 	}
 
 	// Discard if extrafield is a hidden field on form
-	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
+	$visible = dol_eval($val['visible'], 1, 1, '2');
+	if ($visible != 1 && $visible != 3 && $visible != 4 && $visible != 5) {
 		continue;
 	}
 
@@ -242,6 +267,13 @@ foreach ($object->fields as $key => $val) {
 	}
 	if($object->status != $object::STATUS_VERIFICATION || ($key != 'prime_astreinte' && $key != 'prime_exceptionnelle' && $key != 'prime_objectif' && $key != 'prime_variable' && $key != 'prime_amplitude')) {
 		print $object->showOutputField($val, $key, $value, '', '', '', 0);
+		if($key == 'fk_user' && $conf->global->FDT_SHOW_USERADRESS) {
+			$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
+			if ($fulladress) {
+				print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
+				print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+			}
+		}
 	}
 	else {
 		print $object->showInputField($val, $key, $value, 'form="feuilleDeTempsForm"', '', '', 0, 1);
@@ -254,76 +286,88 @@ foreach ($object->fields as $key => $val) {
 	print '</tr>';
 }
 
-if(!$displayVerification) {
-	// 1er Approbateurs 
-	print '<tr>';
-	print '<td class="titlefield fieldname_user_validation">';
-	print '1ère Validation';
-	if(!empty($user->rights->feuilledetemps->changeappro) && $action != 'editvalidator1' && ($object->status == FeuilleDeTemps::STATUS_APPROBATION1)) {
-		print '<span style="float: right;"><a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editvalidator1&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a></span>';
-	}
-	print '</td>';
-	print '<td class="valuefield fieldname_fk_user_validation_1">';
-	if ($action == 'editvalidator1' && !empty($user->rights->feuilledetemps->changeappro)) {
-		$value = array();
-		$list_validation1 = $object->listApprover1;
-		foreach($list_validation1[2] as $id => $user_static){
-			$value = array_merge($value, array($id));
+if(!$displayVerification || $conf->global->FDT_DISPLAY_COLUMN) {
+	if(!$conf->global->FDT_USER_APPROVER) {
+		// 1er Approbateurs 
+		print '<tr>';
+		print '<td class="titlefield fieldname_user_validation">';
+		print '1ère Validation';
+		if(!empty($user->rights->feuilledetemps->changeappro) && $action != 'editvalidator1' && ($object->status == FeuilleDeTemps::STATUS_APPROBATION1)) {
+			print '<span style="float: right;"><a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editvalidator1&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a></span>';
 		}
-		$key = 'fk_user_approbation1';
-		$object->fields[$key] = array('type'=>'chkbxlst:user:firstname|lastname:rowid', 'label'=>'UserApprobation1', 'enabled'=>'1', 'position'=>50, 'notnull'=>1, 'visible'=>1);
-		print $object->showInputField($object->fields[$key], $key, $value, '', '', '', 0);
-		unset($object->fields[$key]);
+		print '</td>';
+		print '<td class="valuefield fieldname_fk_user_validation_1">';
+		if ($action == 'editvalidator1' && !empty($user->rights->feuilledetemps->changeappro)) {
+			$value = array();
+			$list_validation1 = $object->listApprover1;
+			foreach($list_validation1[2] as $id => $user_static){
+				$value = array_merge($value, array($id));
+			}
+			$key = 'fk_user_approbation1';
+			$object->fields[$key] = array('type'=>'chkbxlst:user:firstname|lastname:rowid', 'label'=>'UserApprobation1', 'enabled'=>'1', 'position'=>50, 'notnull'=>1, 'visible'=>1);
+			print $object->showInputField($object->fields[$key], $key, $value, '', '', '', 0);
+			unset($object->fields[$key]);
 
-		if ($action == 'editvalidator1') {
-			print '<div style="text-align: center; margin: 5px;">';
-			print '<input type="submit" class="button button-save" name="savevalidator1" value="'.$langs->trans("Save").'">';
-			print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
-			print '</div>';
+			if ($action == 'editvalidator1') {
+				print '<div style="text-align: center; margin: 5px;">';
+				print '<input type="submit" class="button button-save" name="savevalidator1" value="'.$langs->trans("Save").'">';
+				print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
+				print '</div>';
+			}
 		}
+		else {
+			$list_validation1 = $object->listApprover1;
+			foreach($list_validation1[2] as $id => $user_static){
+				print $user_static->getNomUrl(1).($list_validation1[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
+			}
+		}
+		print '</td></td></tr>';
+
+		// 2nd Approbateurs
+		print '<tr>';
+		print '<td class="titlefield fieldname_user_validation">';
+		print '2ème Validation';
+		if(!empty($user->rights->feuilledetemps->changeappro) && $action != 'editvalidator2' && ($object->status == FeuilleDeTemps::STATUS_APPROBATION1 || $object->status == FeuilleDeTemps::STATUS_APPROBATION2)) {
+			print '<span style="float: right;"><a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editvalidator2&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a></span>';
+		}
+		print '</td>';
+		print '<td class="valuefield fieldname_fk_user_validation_2">';
+		if ($action == 'editvalidator2' && !empty($user->rights->feuilledetemps->changeappro)) {
+			$value = array();
+			$list_validation2 = $object->listApprover2;
+			foreach($list_validation2[2] as $id => $user_static){
+				$value = array_merge($value, array($id));
+			}
+			$key = 'fk_user_approbation2';
+			$object->fields[$key] = array('type'=>'chkbxlst:user:firstname|lastname:rowid', 'label'=>'UserApprobation2', 'enabled'=>'1', 'position'=>50, 'notnull'=>1, 'visible'=>1);
+			print $object->showInputField($object->fields[$key], $key, $value, '', '', '', 0);
+			unset($object->fields[$key]);
+
+			if ($action == 'editvalidator2') {
+				print '<div style="text-align: center; margin: 5px;">';
+				print '<input type="submit" class="button button-save" name="savevalidator1" value="'.$langs->trans("Save").'">';
+				print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
+				print '</div>';
+			}
+		}
+		else {
+			$list_validation2 = $object->listApprover2;
+			foreach($list_validation2[2] as $id => $user_static){
+				print $user_static->getNomUrl(1).($list_validation2[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
+			}
+		}
+		print '</td></td></tr>';
 	}
 	else {
-		$list_validation1 = $object->listApprover1;
-		foreach($list_validation1[2] as $id => $user_static){
-			print $user_static->getNomUrl(1).($list_validation1[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
-		}
+		$extrafieldsuser = new extrafields($db);
+		$extrafieldsuser->fetch_name_optionals_label($usertoprocess->table_element);
+		// 1er Approbateurs 
+		print '<tr>';
+		print '<td class="titlefield fieldname_user_validation">Approbateur</td>';
+		print '<td class="valuefield fieldname_fk_user_validation_1">';
+		print $extrafieldsuser->showOutputField('approbateurfdt', $usertoprocess->array_options['options_approbateurfdt'], '', $usertoprocess->table_element);
+		print '</td></td></tr>';
 	}
-	print '</td></td></tr>';
-
-	// 2nd Approbateurs
-	print '<tr>';
-	print '<td class="titlefield fieldname_user_validation">';
-	print '2ème Validation';
-	if(!empty($user->rights->feuilledetemps->changeappro) && $action != 'editvalidator2' && ($object->status == FeuilleDeTemps::STATUS_APPROBATION1 || $object->status == FeuilleDeTemps::STATUS_APPROBATION2)) {
-		print '<span style="float: right;"><a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=editvalidator2&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a></span>';
-	}
-	print '</td>';
-	print '<td class="valuefield fieldname_fk_user_validation_2">';
-	if ($action == 'editvalidator2' && !empty($user->rights->feuilledetemps->changeappro)) {
-		$value = array();
-		$list_validation2 = $object->listApprover2;
-		foreach($list_validation2[2] as $id => $user_static){
-			$value = array_merge($value, array($id));
-		}
-		$key = 'fk_user_approbation2';
-		$object->fields[$key] = array('type'=>'chkbxlst:user:firstname|lastname:rowid', 'label'=>'UserApprobation2', 'enabled'=>'1', 'position'=>50, 'notnull'=>1, 'visible'=>1);
-		print $object->showInputField($object->fields[$key], $key, $value, '', '', '', 0);
-		unset($object->fields[$key]);
-
-		if ($action == 'editvalidator2') {
-			print '<div style="text-align: center; margin: 5px;">';
-			print '<input type="submit" class="button button-save" name="savevalidator1" value="'.$langs->trans("Save").'">';
-			print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
-			print '</div>';
-		}
-	}
-	else {
-		$list_validation2 = $object->listApprover2;
-		foreach($list_validation2[2] as $id => $user_static){
-			print $user_static->getNomUrl(1).($list_validation2[1][$id] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>').'<br>';
-		}
-	}
-	print '</td></td></tr>';
 
 	if($user->rights->feuilledetemps->feuilledetemps->rapportUtilisateur) {
 		print '<tr>';
@@ -334,11 +378,11 @@ if(!$displayVerification) {
 }
 
 print '</table>';
-if($displayVerification) {
+if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 	print '</div>';
 }
 
-if($displayVerification) {
+if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 	print '<div class="fichehalfright">';
 	print '<table class="border centpercent tableforfield">';
 
@@ -353,7 +397,8 @@ if($displayVerification) {
 		}
 
 		// Discard if extrafield is a hidden field on form
-		if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
+		$visible = dol_eval($val['visible'], 1, 1, '2');
+		if ($visible != 1 && $visible != 3 && $visible != 4 && $visible != 5) {
 			continue;
 		}
 
@@ -392,6 +437,13 @@ if($displayVerification) {
 		}
 		if($object->status != $object::STATUS_VERIFICATION || ($key != 'prime_astreinte' && $key != 'prime_exceptionnelle' && $key != 'prime_objectif' && $key != 'prime_variable' && $key != 'prime_amplitude')) {
 			print $object->showOutputField($val, $key, $value, '', '', '', 0);
+			if($key == 'fk_user' && $conf->global->FDT_SHOW_USERADRESS) {
+				$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
+				if ($fulladress) {
+					print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
+					print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+				}
+			}
 		}
 		else {
 			print $object->showInputField($val, $key, $value, 'form="feuilleDeTempsForm"', '', '', 0, 1);
@@ -408,7 +460,7 @@ if($displayVerification) {
 	print '</div>';
 }
 
-if (!empty($object->table_element_line) && $permissionToVerification) {
+if (!empty($object->table_element_line) && $permissionToVerification && $conf->donneesrh->enabled) {
 	// Show object lines
 	$result = $object->getLinesArray();
 

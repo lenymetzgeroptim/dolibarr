@@ -39,6 +39,7 @@ CREATE TABLE llx_feuilledetemps_regul(
 	heure_nuit_100 double, 
 	heure_sup00 double, 
 	heure_sup25 double, 
-	heure_sup50 double
+	heure_sup50 double, 
+	heure_sup50ht double
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

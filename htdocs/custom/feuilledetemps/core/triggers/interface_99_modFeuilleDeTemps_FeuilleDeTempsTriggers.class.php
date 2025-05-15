@@ -124,12 +124,27 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 
 				$to = '';
 
-				$list_validation = $object->listApprover1;
-				foreach($list_validation[2] as $id => $user_static){
-					if(!empty($user_static->email)){
-						$to .= $user_static->email.', ';
+				$user_static = new User($this->db);
+				$user_static->fetch($object->fk_user);
+
+				if($conf->global->FDT_USER_APPROVER) {
+					$list_validation = explode(',', $user_static->array_options['options_approbateurfdt']);
+					foreach($list_validation as $id){
+						$user_static->fetch($id);
+						if(!empty($user_static->email)){
+							$to .= $user_static->email.', ';
+						}
 					}
 				}
+				else {
+					$list_validation = $object->listApprover1;
+					foreach($list_validation[2] as $id => $user_static){
+						if(!empty($user_static->email)){
+							$to .= $user_static->email.', ';
+						}
+					}
+				}
+				
 				$to = rtrim($to, ", ");
 
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
@@ -149,7 +164,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return 1;
 				}
 				else{
-					return -1;
+					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
+					return 0;
 				}
 		
 			
@@ -188,7 +204,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return 1;
 				}
 				else{
-					return -1;
+					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
+					return 0;
 				}
 
 
@@ -219,7 +236,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return 1;
 				}
 				else{
-					return -1;
+					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
+					return 0;
 				}
 				
 			case 'USER_CREATE':
@@ -311,6 +329,49 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					$error = $this->db->error();
 					$this->db->rollback();
 					return -1;
+				}
+				break;
+
+			case 'PROJECT_CREATE' :
+				if($conf->global->FDT_GENERATE_TASK_PROJECTCREATION) {
+					$task = new Task($this->db);
+
+					$task->ref = $object->ref;
+					$task->label = $object->title;
+					$task->fk_project = $object->id;
+					$task->date_start = $object->date_start;
+					$task->date_end = $object->date_end;
+
+					$res = $task->create($user);
+
+					if ($res) {
+						return 1;
+					} else {
+						return -1;
+					}
+				}
+				break;
+
+			case 'PROJECT_MODIFY' :
+				if($conf->global->FDT_GENERATE_TASK_PROJECTCREATION) {
+					$task = new Task($this->db);
+					$res = $task->fetch(0, $object->oldcopy->ref);
+
+					if($res && ($task->ref != $object->ref || $task->label != $object->title || $task->fk_project != $object->id || $task->date_start != $object->date_start || $task->date_end != $object->date_end)) {
+						$task->ref = $object->ref;
+						$task->label = $object->title;
+						$task->fk_project = $object->id;
+						$task->date_start = $object->date_start;
+						$task->date_end = $object->date_end;
+
+						$res = $task->update($user);
+
+						if ($res) {
+							return 1;
+						} else {
+							return -1;
+						}
+					}
 				}
 				break;
 

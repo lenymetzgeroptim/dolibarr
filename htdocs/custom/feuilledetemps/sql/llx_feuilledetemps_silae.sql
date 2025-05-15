@@ -30,6 +30,7 @@ CREATE TABLE llx_feuilledetemps_silae(
 	indemnite_tt boolean, 
 	heure_sup00 double, 
 	heure_sup25 double, 
-	heure_sup50 double
+	heure_sup50 double, 
+	heure_sup50ht double
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

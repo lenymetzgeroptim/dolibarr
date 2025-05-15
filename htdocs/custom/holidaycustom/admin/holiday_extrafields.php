@@ -29,16 +29,18 @@
 require '../../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/holidaycustom/lib/holiday.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/holidaycustom/class/holiday.class.php';
 
 if (!$user->admin) {
 	accessforbidden();
 }
 
 // Load translation files required by the page
-$langs->loadLangs(array('admin', 'errors', 'holiday', 'other'));
+$langs->loadLangs(array('admin', 'errors', 'holiday', 'other', "holidaycustom@holidaycustom"));
 
 $extrafields = new ExtraFields($db);
 $form = new Form($db);
+$holiday = new Holiday($db);
 
 // List of supported format
 $tmptype2label = ExtraFields::$type2label;
@@ -75,7 +77,7 @@ print load_fiche_titre($langs->trans("HolidaySetup"), $linkback, 'title_setup');
 
 $head = holiday_admin_prepare_head();
 
-print dol_get_fiche_head($head, 'attributes', $langs->trans("Holidays"), -1, 'holiday');
+print dol_get_fiche_head($head, 'attributes', $langs->trans("Holidays"), -1, $holiday->picto);
 
 require DOL_DOCUMENT_ROOT.'/core/tpl/admin_extrafields_view.tpl.php';
 
