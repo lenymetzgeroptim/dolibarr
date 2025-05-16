@@ -671,7 +671,7 @@ class ExtendedExportFDT extends Export
 								$obj->code = 'HS-HS50';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
 							}
-							if(!empty($obj->s_heure_sup50ht)) {
+							if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && !empty($obj->s_heure_sup50ht)) {
 								$obj->valeur = $obj->s_heure_sup50ht / 3600;
 								$obj->type = '';
 								$obj->code = 'HS-HS50-HT';
@@ -769,9 +769,37 @@ class ExtendedExportFDT extends Export
 	{
 		global $conf; 
 
+		$user_static = new User($this->db);
+		$user_extrafields = new Extrafields($this->db);
+		if (empty($user_extrafields->attributes[$user_static->table_element]['loaded'])) {
+			$user_extrafields->fetch_name_optionals_label($user_static->table_element);
+		}
+
 		// phpcs:enable
 		// Build the sql request
-		$sql = "SELECT DISTINCT u.rowid, eu.semaine_type_lundi, eu.semaine_type_mardi, eu.semaine_type_mercredi, eu.semaine_type_jeudi, eu.semaine_type_vendredi, eu.semaine_type_samedi, eu.semaine_type_dimanche, ";
+		$sql = "SELECT DISTINCT u.rowid, ";
+		if(isset($user_extrafields->attributes['user']['type']['semaine_type_lundi'])) {
+			$sql = "eu.semaine_type_lundi, ";
+		}
+		if(isset($user_extrafields->attributes['user']['type']['semaine_type_mardi'])) {
+			$sql = "eu.semaine_type_mardi, ";
+		}
+		if(isset($user_extrafields->attributes['user']['type']['semaine_type_mercredi'])) {
+			$sql = "eu.semaine_type_mercredi, ";
+		}
+		if(isset($user_extrafields->attributes['user']['type']['semaine_type_jeudi'])) {
+			$sql = "eu.semaine_type_jeudi, ";
+		}
+		if(isset($user_extrafields->attributes['user']['type']['semaine_type_vendredi'])) {
+			$sql = "eu.semaine_type_vendredi, ";
+		}
+		if(isset($user_extrafields->attributes['user']['type']['semaine_type_samedi'])) {
+			$sql = "eu.semaine_type_samedi, ";
+		}
+		if(isset($user_extrafields->attributes['user']['type']['semaine_type_dimanche'])) {
+			$sql = "eu.semaine_type_dimanche, ";
+		}
+		
 		$i = 0;
 	
 		//print_r($array_selected);
@@ -902,7 +930,9 @@ class ExtendedExportFDT extends Export
 			$sql .= ", SUM(s.heure_sup00) as s_heure_sup00";
 			$sql .= ", SUM(s.heure_sup25) as s_heure_sup25";
 			$sql .= ", SUM(s.heure_sup50) as s_heure_sup50";
-			$sql .= ", SUM(s.heure_sup50ht) as s_heure_sup50ht";
+			if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+				$sql .= ", SUM(s.heure_sup50ht) as s_heure_sup50ht";
+			}
 		}
 
 
@@ -1097,7 +1127,11 @@ class ExtendedExportFDT extends Export
 				$sqlWhere .= " AND ht.code = 'RC'";
 			}
 			elseif($datatoexport == 'heure_sup') {
-				$sqlWhere .= " AND (s.heure_sup00 > 0 OR s.heure_sup00 < 0 OR s.heure_sup25 > 0 OR s.heure_sup25 < 0 OR s.heure_sup50 > 0 OR s.heure_sup50 < 0 OR s.heure_sup50ht > 0 OR s.heure_sup50ht < 0)";
+				$sqlWhere .= " AND (s.heure_sup00 > 0 OR s.heure_sup00 < 0 OR s.heure_sup25 > 0 OR s.heure_sup25 < 0 OR s.heure_sup50 > 0 OR s.heure_sup50 < 0";
+				if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+					$sqlWhere .= " OR s.heure_sup50ht > 0 OR s.heure_sup50ht < 0";
+				}
+				$sqlWhere .= ")";
 			}
 
 			$sql .= $sqlWhere;

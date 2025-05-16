@@ -993,6 +993,9 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 
 	foreach($silae->fields as $key => $value) {
 		if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50', 'heure_sup50ht'))) {
+			if(!$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && $key == 'heure_sup50ht') {
+				continue;
+			}
 			$fields[$key] = array('text' => $value['label'],  'type' => 'duration', 'visible' => ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3));
 			$total_array[$key] = 0;
 		}
@@ -1489,6 +1492,10 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		if($silae_array[$dayinloopfromfirstdaytoshow]->id > 0) $silae = $silae_array[$dayinloopfromfirstdaytoshow];
 		foreach($silae->fields as $key => $value) {
 			if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50', 'heure_sup50ht')) && ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3)) {
+				if(!$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && $key == 'heure_sup50ht') {
+					continue;
+				}
+
 				$moreparam = 'onfocus="this.oldvalue = this.value;"';
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
 				$moreparam .= ' maxlength="5"';
@@ -2218,66 +2225,68 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 	print '</tr>';
 
 	// Heure Sup 50% HT
-	print '<tr class="nostrong">';
-		print '<td colspan="2" class="fixed">';
-			print '<div style="display: flex; align-items: center; justify-content: space-between;">';
-				print '<strong>Heure Sup 50% HT</strong>';
-				print '<span style="display: flex; align-items: center;">';
-					$heure_sup50ht = $regul->heure_sup50ht / 3600;
-					$total_heure_sup50ht += $regul->heure_sup50ht;
-					if(GETPOST('action', 'aZ09') != 'ediths50ht' && !$disabled) {
-						print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=ediths50ht&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a>';
-					}
-					if (GETPOST('action', 'aZ09') == 'ediths50ht' && !$disabled) {
-						print '<input type="text" alt="Ajoutez ici les régulations des heures sup de 50% HT" title="Ajoutez ici les régulations des heures sup de 50% HT" 
-						name="regulHeureSup50HT" id="regulHeureSup50HT" class="smallpad" placeholder="Regul" value="'.($heure_sup50ht ? $heure_sup50ht : '').'" 
-						onkeypress="return regexEvent_TS(this,event,\'timeChar\', 1)" 
-						onblur="ValidateTimeDecimal(this);" 
-						onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');">';
+	if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE){
+		print '<tr class="nostrong">';
+			print '<td colspan="2" class="fixed">';
+				print '<div style="display: flex; align-items: center; justify-content: space-between;">';
+					print '<strong>Heure Sup 50% HT</strong>';
+					print '<span style="display: flex; align-items: center;">';
+						$heure_sup50ht = $regul->heure_sup50ht / 3600;
+						$total_heure_sup50ht += $regul->heure_sup50ht;
+						if(GETPOST('action', 'aZ09') != 'ediths50ht' && !$disabled) {
+							print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=ediths50ht&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a>';
+						}
+						if (GETPOST('action', 'aZ09') == 'ediths50ht' && !$disabled) {
+							print '<input type="text" alt="Ajoutez ici les régulations des heures sup de 50% HT" title="Ajoutez ici les régulations des heures sup de 50% HT" 
+							name="regulHeureSup50HT" id="regulHeureSup50HT" class="smallpad" placeholder="Regul" value="'.($heure_sup50ht ? $heure_sup50ht : '').'" 
+							onkeypress="return regexEvent_TS(this,event,\'timeChar\', 1)" 
+							onblur="ValidateTimeDecimal(this);" 
+							onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');">';
 
-						print '<input type="submit" class="button button-save" name="saveediths50ht" value="'.$langs->trans("Save").'">';
-						print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
-					}
-					else {
-						print '<input disabled type="text" alt="Ajoutez ici les régulations des heures sup de 50% HT" title="Ajoutez ici les régulations des heures sup de 50% HT" 
-						name="regulHeureSup50HT" id="regulHeureSup50HT" class="smallpad" placeholder="Regul" value="'.($heure_sup50ht ? $heure_sup50ht : '').'" 
-						onkeypress="return regexEvent_TS(this,event,\'timeChar\', 1)" 
-						onblur="ValidateTimeDecimal(this);" 
-						onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');">';
-					}
-				print '</span>';
-			print '</div>';
-		print '</td>';
-		for ($idw = 0; $idw < $nb_jour; $idw++) {
-			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-			$keysuffix = '['.$idw.']';
-
-			if($idw > 0 && $idw == $num_first_day){
-				print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
-			}
-
-			$heure_sup50ht = '';
-			if ($arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
-				$heure_sup50ht = $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] / 3600;
-			}
-
-			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
-				$total_heure_sup50ht += $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow];
-			}
-
-			print '<td class="center hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-
-			if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
-				print '<input disabled type="text" style="border: 1px solid grey;" class="center smallpadd heure_sup50ht_'.$idw.'" size="2" id="heure_sup50ht['.$idw.']" 
-				name="heure_sup50ht['.$idw.']" value="'.$heure_sup50ht.'" cols="2"  maxlength="5" 
-				onkeypress="return regexEvent_TS(this,event,\'timeChar\')" 
-				onblur="ValidateTimeDecimal(this);" 
-				onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');"'.($disabled ? ' disabled' : '').'/>';
-			}
+							print '<input type="submit" class="button button-save" name="saveediths50ht" value="'.$langs->trans("Save").'">';
+							print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
+						}
+						else {
+							print '<input disabled type="text" alt="Ajoutez ici les régulations des heures sup de 50% HT" title="Ajoutez ici les régulations des heures sup de 50% HT" 
+							name="regulHeureSup50HT" id="regulHeureSup50HT" class="smallpad" placeholder="Regul" value="'.($heure_sup50ht ? $heure_sup50ht : '').'" 
+							onkeypress="return regexEvent_TS(this,event,\'timeChar\', 1)" 
+							onblur="ValidateTimeDecimal(this);" 
+							onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');">';
+						}
+					print '</span>';
+				print '</div>';
 			print '</td>';
-		}
-		print '<td class="liste_total center fixed"><div class="'.($total_heure_sup50ht != 0 ? 'noNull' : '').'" id="totalHeureSup50HT">'.($total_heure_sup50ht / 3600).' HS50</div></td>';
-	print '</tr>';
+			for ($idw = 0; $idw < $nb_jour; $idw++) {
+				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+				$keysuffix = '['.$idw.']';
+
+				if($idw > 0 && $idw == $num_first_day){
+					print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
+				}
+
+				$heure_sup50ht = '';
+				if ($arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
+					$heure_sup50ht = $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] / 3600;
+				}
+
+				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
+					$total_heure_sup50ht += $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow];
+				}
+
+				print '<td class="center hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+
+				if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
+					print '<input disabled type="text" style="border: 1px solid grey;" class="center smallpadd heure_sup50ht_'.$idw.'" size="2" id="heure_sup50ht['.$idw.']" 
+					name="heure_sup50ht['.$idw.']" value="'.$heure_sup50ht.'" cols="2"  maxlength="5" 
+					onkeypress="return regexEvent_TS(this,event,\'timeChar\')" 
+					onblur="ValidateTimeDecimal(this);" 
+					onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');"'.($disabled ? ' disabled' : '').'/>';
+				}
+				print '</td>';
+			}
+			print '<td class="liste_total center fixed"><div class="'.($total_heure_sup50ht != 0 ? 'noNull' : '').'" id="totalHeureSup50HT">'.($total_heure_sup50ht / 3600).' HS50</div></td>';
+		print '</tr>';
+	}
 
 	// Heure Nuit
 	print '<tr class="nostrong">';

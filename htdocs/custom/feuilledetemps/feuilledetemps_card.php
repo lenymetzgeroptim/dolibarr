@@ -588,7 +588,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'savehs50ht' && $permissionToVerification) {
+	if ($action == 'savehs50ht' && $permissionToVerification && $conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
 		$db->begin();
 
 		$regul = new Regul($db);

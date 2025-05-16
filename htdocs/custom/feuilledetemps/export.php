@@ -333,8 +333,11 @@ elseif($datatoexport == 'total_hour') {
 		"SUM(element_duration)/3600 as total_hour" => "Total Heure",
 		"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => "Total HS 0%",
 		"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => "Total HS 25%",
-		"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "Total HS 50%",
-		"(SUM(COALESCE(s_heure_sup50ht/3600, 0) + COALESCE(r_heure_sup50ht/3600, 0))) as total_hs50ht" => "Total HS 50% HT",
+		"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "Total HS 50%",);
+	if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+		$array_export_fields[0]["(SUM(COALESCE(s_heure_sup50ht/3600, 0) + COALESCE(r_heure_sup50ht/3600, 0))) as total_hs50ht"] = "Total HS 50% HT";
+	}
+	$array_export_fields[0] = array_merge($array_export_fields[0], array(
 		"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => "Total Heure Nuit 50%",
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Total Heure Nuit 75%",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "Total Heure Nuit 100%",
@@ -350,7 +353,7 @@ elseif($datatoexport == 'total_hour') {
 		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
 			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
 			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Total Déplacement (km)",
-	);
+	));
 }
 elseif($datatoexport == 'total_holiday') {
 	$array_export_fields[0] = array(
@@ -640,8 +643,12 @@ elseif($datatoexport == 'total_hour') {
 		"SUM(element_duration)/3600 as total_hour" => "timesheet_16@feuilledetemps",
 		"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => "timesheet_16@feuilledetemps",
 		"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => "timesheet_16@feuilledetemps",
-		"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "timesheet_16@feuilledetemps",
-		"(SUM(COALESCE(s_heure_sup50ht/3600, 0) + COALESCE(r_heure_sup50ht/3600, 0))) as total_hs50ht" => "timesheet_16@feuilledetemps",
+		"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "timesheet_16@feuilledetemps",);
+	if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+		$array_export_entities[0]["(SUM(COALESCE(s_heure_sup50ht/3600, 0) + COALESCE(r_heure_sup50ht/3600, 0))) as total_hs50ht"] = "timesheet_16@feuilledetemps";
+	}
+	$array_export_entities[0] = array_merge($array_export_entities[0], array(
+		"(SUM(COALESCE(s_heure_sup50ht/3600, 0) + COALESCE(r_heure_sup50ht/3600, 0))) as total_hs50ht" => "",
 		"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => "timesheet_16@feuilledetemps",
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "timesheet_16@feuilledetemps",
 		"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "timesheet_16@feuilledetemps",
@@ -657,7 +664,7 @@ elseif($datatoexport == 'total_hour') {
 		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
 			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
 			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"timesheet_16@feuilledetemps",
-	);
+	));
 }
 elseif($datatoexport == 'total_holiday') {
 	$array_export_entities[0] = array(
@@ -944,7 +951,11 @@ elseif($datatoexport == 'total_hour') {
 		"SUM(element_duration)/3600 as total_hour" => "Numeric",
 		"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => "Numeric",
 		"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => "Numeric",
-		"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "Numeric",
+		"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "Numeric",);
+	if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+		$array_export_TypeFields[0]["(SUM(COALESCE(s_heure_sup50ht/3600, 0) + COALESCE(r_heure_sup50ht/3600, 0))) as total_hs50ht"] = "Numeric";
+	}
+	$array_export_TypeFields[0] = array_merge($array_export_entities[0], array(
 		"(SUM(COALESCE(s_heure_sup50ht/3600, 0) + COALESCE(r_heure_sup50ht/3600, 0))) as total_hs50ht" => "Numeric",
 		"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => "Numeric",
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Numeric",
@@ -961,7 +972,7 @@ elseif($datatoexport == 'total_hour') {
 		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
 			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
 			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Numeric",
-	);
+	));
 }
 elseif($datatoexport == 'total_holiday') {
 	$array_export_TypeFields[0] = array(
@@ -1252,7 +1263,11 @@ elseif($datatoexport == 'total_hour') {
 		"SUM(element_duration)/3600 as total_hour" => "llx_element_time",
 		"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => "llx_feuilledetemps_silae",
 		"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => "llx_feuilledetemps_silae",
-		"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "llx_feuilledetemps_silae",
+		"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "llx_feuilledetemps_silae",);
+	if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+		$array_tablename[0]["(SUM(COALESCE(s_heure_sup50ht/3600, 0) + COALESCE(r_heure_sup50ht/3600, 0))) as total_hs50ht"] = "llx_feuilledetemps_silae";
+	}
+	$array_tablename[0] = array_merge($array_export_entities[0], array(
 		"(SUM(COALESCE(s_heure_sup50ht/3600, 0) + COALESCE(r_heure_sup50ht/3600, 0))) as total_hs50ht" => "llx_feuilledetemps_silae",
 		"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => "llx_feuilledetemps_regul",
 		"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "llx_feuilledetemps_regul",
@@ -1269,7 +1284,7 @@ elseif($datatoexport == 'total_hour') {
 		"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
 			COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
 			SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"llx_feuilledetemps_deplacement",
-	);
+	));
 }
 elseif($datatoexport == 'total_holiday') {
 	$array_tablename[0] = array(
