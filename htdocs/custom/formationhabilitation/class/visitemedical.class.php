@@ -738,6 +738,99 @@ class VisiteMedical extends CommonObject
 	}
 
 	/**
+	 * Load list of objects in memory from the database.
+	 *
+	 * @param  string      $sortorder    Sort Order
+	 * @param  string      $sortfield    Sort field
+	 * @param  int         $limit        limit
+	 * @param  int         $offset       Offset
+	 * @param  array       $filter       Filter array. Example array('field'=>'valueforlike', 'customurl'=>...)
+	 * @param  string      $filtermode   Filter mode (AND or OR)
+	 * @return array|int                 int <0 if KO, array of pages if OK
+	 */
+	public function fetchAllWithUser($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND')
+	{
+		global $conf;
+
+		dol_syslog(__METHOD__, LOG_DEBUG);
+
+		$records = array();
+
+		$sql = "SELECT ";
+		$sql .= $this->getFieldList('t');
+		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid = t.fk_user";
+		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
+			$sql .= " WHERE t.entity IN (".getEntity($this->table_element).")";
+		} else {
+			$sql .= " WHERE 1 = 1";
+		}
+		// Manage filter
+		$sqlwhere = array();
+		if (count($filter) > 0) {
+			foreach ($filter as $key => $value) {
+				if($value) {
+					if ($key == 't.rowid') {
+						$sqlwhere[] = $key." = ".((int) $value);
+					} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+						$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
+					} elseif (preg_match('/(_dtstart|_dtend)$/', $key)) {
+						$columnName = preg_replace('/(_dtstart|_dtend)$/', '', $key);
+						if (preg_match('/^(date|timestamp|datetime)/', $this->fields[$columnName]['type'])) {
+							if (preg_match('/_dtstart$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." >= '".$this->db->idate($value)."'";
+							}
+							if (preg_match('/_dtend$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." <= '".$this->db->idate($value)."'";
+							}
+						}
+					} elseif ($key == 'customsql') {
+						$sqlwhere[] = $value;
+					} elseif (strpos($value, '%') === false) {
+						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
+					} else {
+						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
+					}
+				}
+			}
+		}
+		if (count($sqlwhere) > 0) {
+			$sql .= " AND (".implode(" ".$filtermode." ", $sqlwhere).")";
+		}
+
+		if (!empty($sortfield)) {
+			$sql .= $this->db->order($sortfield, $sortorder);
+		}
+		if (!empty($limit)) {
+			$sql .= $this->db->plimit($limit, $offset);
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < ($limit ? min($limit, $num) : $num)) {
+				$obj = $this->db->fetch_object($resql);
+
+				$record = new self($this->db);
+				$record->setVarsFromFetchObj($obj);
+
+				$records[$record->id] = $record;
+
+				$i++;
+			}
+			$this->db->free($resql);
+
+			return $records;
+		} else {
+			$this->errors[] = 'Error '.$this->db->lasterror();
+			dol_syslog(__METHOD__.' '.join(',', $this->errors), LOG_ERR);
+
+			return -1;
+		}
+	}
+
+	/**
 	 * Update object into database
 	 *
 	 * @param  User $user      User that modifies
@@ -1970,10 +2063,11 @@ class VisiteMedical extends CommonObject
 			while ($obj = $this->db->fetch_object($resql)) {
 				foreach(explode(",", $obj->naturevisite) as $naturevisite) {
 					if($obj->status == self::STATUS_APTE) {
-						$res['Apte'][$obj->rowid] = $naturevisite;
+						$res['Apte'][] = $naturevisite;
 					}
 					else {
-						$res['Conditionnelle']['naturevisite'][$obj->rowid] = $naturevisite;
+						$res['Conditionnelle']['rowid'][$naturevisite] = $obj->rowid;
+						$res['Conditionnelle']['naturevisite'][] = $naturevisite;
 						$res['Conditionnelle']['commentaire'][$obj->rowid] = $obj->commentaire;
 					}
 				}

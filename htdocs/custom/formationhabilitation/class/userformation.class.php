@@ -125,7 +125,7 @@ class UserFormation extends CommonObject
 		"date_debut_formation" => array("type"=>"date", "label"=>"DateDebutFormation", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1",),
 		"date_fin_formation" => array("type"=>"date", "label"=>"DateFinFormation", "enabled"=>"1", 'position'=>39, 'notnull'=>1, "visible"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("1" => "Valide", "2" => "A programmer", "3" => "Programmée", "4" => "Reprogrammée", "5" => "Expirée", "8" => "Suspendue", "9" => "Cloturée"), "validate"=>"1",),
-		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>45, 'notnull'=>0, "visible"=>"4",),
+		"cout_pedagogique" => array("type"=>"price", "label"=>"CoutPedagogique", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"1",),
 		"cout_mobilisation" => array("type"=>"price", "label"=>"CoutMobilisation", "enabled"=>"1", 'position'=>46, 'notnull'=>0, "visible"=>"4",),
 		"cout_total" => array("type"=>"price", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>48, 'notnull'=>0, "visible"=>"4",),
 		"date_finvalidite_formation" => array("type"=>"date", "label"=>"DateFinValiditeFormation", "enabled"=>"1", 'position'=>40, 'notnull'=>0, "visible"=>"1",),
@@ -170,8 +170,6 @@ class UserFormation extends CommonObject
 	public $prevupif;
 	public $non_renouvelee;
 	public $ex_status;
-
-	private $type_code = 'AC_USERFORMATION';
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -475,6 +473,99 @@ class UserFormation extends CommonObject
 					} elseif ($key == 'customsql') {
 						$sqlwhere[] = $value;
 					} elseif (strpos($value, '%') === false && str_contains($this->fields[$key]['type'], 'varchar') === false && $this->fields[$key]['type'] != 'price') {
+						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
+					} else {
+						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
+					}
+				}
+			}
+		}
+		if (count($sqlwhere) > 0) {
+			$sql .= " AND (".implode(" ".$filtermode." ", $sqlwhere).")";
+		}
+
+		if (!empty($sortfield)) {
+			$sql .= $this->db->order($sortfield, $sortorder);
+		}
+		if (!empty($limit)) {
+			$sql .= $this->db->plimit($limit, $offset);
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < ($limit ? min($limit, $num) : $num)) {
+				$obj = $this->db->fetch_object($resql);
+
+				$record = new self($this->db);
+				$record->setVarsFromFetchObj($obj);
+
+				$records[$record->id] = $record;
+
+				$i++;
+			}
+			$this->db->free($resql);
+
+			return $records;
+		} else {
+			$this->errors[] = 'Error '.$this->db->lasterror();
+			dol_syslog(__METHOD__.' '.join(',', $this->errors), LOG_ERR);
+
+			return -1;
+		}
+	}
+
+	/**
+	 * Load list of objects in memory from the database.
+	 *
+	 * @param  string      $sortorder    Sort Order
+	 * @param  string      $sortfield    Sort field
+	 * @param  int         $limit        limit
+	 * @param  int         $offset       Offset
+	 * @param  array       $filter       Filter array. Example array('field'=>'valueforlike', 'customurl'=>...)
+	 * @param  string      $filtermode   Filter mode (AND or OR)
+	 * @return array|int                 int <0 if KO, array of pages if OK
+	 */
+	public function fetchAllWithUser($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND')
+	{
+		global $conf;
+
+		dol_syslog(__METHOD__, LOG_DEBUG);
+
+		$records = array();
+
+		$sql = "SELECT ";
+		$sql .= $this->getFieldList('t');
+		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid = t.fk_user";
+		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
+			$sql .= " WHERE t.entity IN (".getEntity($this->table_element).")";
+		} else {
+			$sql .= " WHERE 1 = 1";
+		}
+		// Manage filter
+		$sqlwhere = array();
+		if (count($filter) > 0) {
+			foreach ($filter as $key => $value) {
+				if($value) {
+					if ($key == 't.rowid') {
+						$sqlwhere[] = $key." = ".((int) $value);
+					} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+						$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
+					} elseif (preg_match('/(_dtstart|_dtend)$/', $key)) {
+						$columnName = preg_replace('/(_dtstart|_dtend)$/', '', $key);
+						if (preg_match('/^(date|timestamp|datetime)/', $this->fields[$columnName]['type'])) {
+							if (preg_match('/_dtstart$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." >= '".$this->db->idate($value)."'";
+							}
+							if (preg_match('/_dtend$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." <= '".$this->db->idate($value)."'";
+							}
+						}
+					} elseif ($key == 'customsql') {
+						$sqlwhere[] = $value;
+					} elseif (strpos($value, '%') === false) {
 						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
 					} else {
 						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";

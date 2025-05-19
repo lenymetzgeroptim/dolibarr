@@ -1557,6 +1557,36 @@ class Volet extends CommonObject
 			return -1;
 		}
 	}
+
+	/**
+	 * 	Return le nom de tous les volets actifs
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllVoletLabel()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid, h.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_volet as h";
+		$sql .= " WHERE h.status = 1";
+		$sql .= " ORDER BY h.numero";
+
+		dol_syslog(get_class($this)."::getAllVoletLabel", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

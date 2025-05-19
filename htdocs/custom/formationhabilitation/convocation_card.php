@@ -212,6 +212,10 @@ if (empty($reshook)) {
 				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Medecin")), null, 'errors');
 				$error++;
 			}
+			if(GETPOST("centremedecine", 'int') <= 0) {
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("CentreMedecine")), null, 'errors');
+				$error++;
+			}
 		}
 		elseif (GETPOST("nature", 'int') == '3' || GETPOST("nature", 'int') == '4') {
 			// if(empty(GETPOST("examenrealiser"))) {
@@ -237,7 +241,7 @@ if (empty($reshook)) {
 			$object->fk_societe = '';
 			$object->lieu_formation = '';
 			$object->fk_formation = '';
-			$object->centremedecine = '';
+			//$object->centremedecine = '';
 			$object->examenrealiser = '';
 		}
 		elseif($object->nature == 3) {
@@ -532,7 +536,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		unset($object->fields['fk_societe']);
 		unset($object->fields['fk_formation']);
 		unset($object->fields['lieu_formation']);
-		unset($object->fields['centremedecine']);
+		//unset($object->fields['centremedecine']);
 		unset($object->fields['examenrealiser']);
 	}
 	elseif($object->nature == 3) {
