@@ -1731,6 +1731,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let otId = ' . json_encode($otId) . ';
     let userdata = ' . json_encode($userdata) . ';
     let userjson = ' . $userjson . ';
+    let status = ' . json_encode($object->status) . ';
     let isDataSaved = false;
     let isUniqueListCreated = false;
     console.log(cellData);
@@ -1741,7 +1742,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let jsdataFiltered = users.filter(user => user.source !== "external"); 
 
     jsdata = jsdataFiltered;
-
+    console.log("status", );
     console.log("les autres", jsdataFiltered);
     console.log("soustraitants", jsdatasoustraitants);
 
@@ -1765,7 +1766,57 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
         t.fk_socpeople === value.fk_socpeople
     ))
 );
+console.log("Champs à désactiver (form-input):", document.querySelectorAll(".form-input"));
+console.log("Champs à désactiver (list-title-input):", document.querySelectorAll(".list-title-input"));
+console.log("Champs à désactiver (title-input):", document.querySelectorAll(".title-input"));
+ console.log(status);
+// Désactiver les champs si le statut est égal à 1
+    if (status === 1) {
+        console.log("Statut est égal à 1, désactivation des champs.");
+        setTimeout(() => {
 
+            // Masquer les boutons "Ajouter une carte" et "Ajouter une liste"
+            document.querySelectorAll(".dropdown").forEach(function (dropdown) {
+                dropdown.style.display = "none";
+            });
+
+            // Masquer les croix pour les lignes des listes
+            document.querySelectorAll(".remove-user").forEach(function (removeButton) {
+                removeButton.style.display = "none";
+            });
+
+            // Masquer les boutons "Supprimer" des cartes et des listes
+            document.querySelectorAll(".delete-button, .delete-list-button").forEach(function (deleteButton) {
+                deleteButton.style.display = "none";
+            });
+
+            // Désactiver la sélection utilisateur dans les cartes
+            document.querySelectorAll(".name-dropdown").forEach(function (dropdown) {
+                const selectedUserId = dropdown.value;
+                const selectedUser = dropdown.options[dropdown.selectedIndex]?.text || "Utilisateur non défini";
+
+                // Remplacer le menu déroulant par un texte affichant utilisateur sélectionné
+                const userDisplay = document.createElement("p");
+                userDisplay.textContent = selectedUser;
+                userDisplay.style.textAlign = "center";
+                userDisplay.style.color = "#333";
+
+                dropdown.replaceWith(userDisplay);
+            });
+
+            document.querySelectorAll(".form-input").forEach(function(input) {
+                input.disabled = true;
+            });
+
+            document.querySelectorAll(".list-title-input").forEach(function(input) {
+                input.disabled = true;
+            });
+
+            document.querySelectorAll(".title-input").forEach(function(input) {
+                input.disabled = true;
+            });
+        }, 500); // Attendre 500ms pour sassurer que les champs sont chargés
+    }
 function displayUserList() {
     const existingUniqueList = document.querySelector(".user-list.unique-list");
 
@@ -2069,16 +2120,7 @@ function createUniqueUserList() {
 
     list.appendChild(listBody);
 
-    const deleteListButton = document.createElement("button");
-    deleteListButton.className = "delete-list-button btn btn-danger";
-    deleteListButton.style = "margin-bottom: 25px; display: inline-block;";
-    deleteListButton.textContent = "Supprimer";
 
-    deleteListButton.addEventListener("click", function() {
-        deleteUniqueList(uniqueListId, list); // Passez également `list` à la fonction
-    });
-
-    list.appendChild(deleteListButton);
 
     // Attacher les écouteurs de suppression utilisateur
     attachUserRemoveListeners(list);
