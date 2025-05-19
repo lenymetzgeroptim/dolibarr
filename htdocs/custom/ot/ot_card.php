@@ -237,32 +237,54 @@ try {
             }
 
             // Gestion des rôles principaux (RA, Q3, PCR)
-        if ($type === 'cardprincipale' && in_array($role, ['RA', 'Q3', 'PCR'])) {
-            // Vérifier si une cellule existe déjà pour ce rôle
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND type = '$type' AND title = '$role'";
-            $resql = $db->query($sql);
-            $row = $resql ? $db->fetch_object($resql) : null;
-
-            if (!$row) {
-                // Insérer une nouvelle cellule
-                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule (ot_id, type, title) 
-                        VALUES ($otId, '$type', '$role')";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule : " . $db->lasterror());
+            if ($type === 'cardprincipale' && in_array($role, ['RA', 'Q3', 'PCR'])) {
+                // Vérifier si une cellule existe déjà pour ce rôle
+                $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE ot_id = $otId AND type = '$type' AND title = '$role'";
+                $resql = $db->query($sql);
+                $row = $resql ? $db->fetch_object($resql) : null;
+            
+                if (!$row) {
+                    // Insérer une nouvelle cellule
+                    $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule (ot_id, type, title) 
+                            VALUES ($otId, '$type', '$role')";
+                    if (!$db->query($sql)) {
+                        throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule : " . $db->lasterror());
+                    }
+                    $otCelluleId = $db->last_insert_id(MAIN_DB_PREFIX . 'ot_ot_cellule');
+            
+                    // Insérer dans ot_ot_cellule_donne même si l'utilisateur est null
+                    $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user, role) 
+                            VALUES ($otCelluleId, " . ($userId !== null ? $userId : "NULL") . ", '$role')";
+                    if (!$db->query($sql)) {
+                        throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule_donne : " . $db->lasterror());
+                    }
+                } else {
+                    // Si la cellule existe déjà, mettre à jour l'utilisateur associé
+                    $otCelluleId = $row->rowid;
+            
+                    // Vérifier si une entrée existe déjà dans ot_ot_cellule_donne
+                    $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne WHERE ot_cellule_id = $otCelluleId AND role = '$role'";
+                    $resql = $db->query($sql);
+                    $donneRow = $resql ? $db->fetch_object($resql) : null;
+            
+                    if ($donneRow) {
+                        // Mettre à jour l'utilisateur si une entrée existe déjà
+                        $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot_cellule_donne 
+                                SET fk_user = " . ($userId !== null ? $userId : "NULL") . " 
+                                WHERE rowid = " . $donneRow->rowid;
+                        if (!$db->query($sql)) {
+                            throw new Exception("Erreur lors de la mise à jour de l'utilisateur dans ot_ot_cellule_donne : " . $db->lasterror());
+                        }
+                    } else {
+                        // Insérer une nouvelle entrée dans ot_ot_cellule_donne si elle n'existe pas
+                        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user, role) 
+                                VALUES ($otCelluleId, " . ($userId !== null ? $userId : "NULL") . ", '$role')";
+                        if (!$db->query($sql)) {
+                            throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule_donne : " . $db->lasterror());
+                        }
+                    }
                 }
-                $otCelluleId = $db->last_insert_id(MAIN_DB_PREFIX . 'ot_ot_cellule');
-
-                // Insérer dans ot_ot_cellule_donne
-                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne (ot_cellule_id, fk_user, role) 
-                        VALUES ($otCelluleId, $userId, '$role')";
-                if (!$db->query($sql)) {
-                    throw new Exception("Erreur lors de l'insertion dans ot_ot_cellule_donne : " . $db->lasterror());
-                }
-            } else {
-                // Si la cellule existe déjà, ne rien faire (pas de mise à jour)
-                continue;
             }
-        }
 
             // Gestion des userId pour le type 'card' (ajout ou mise à jour)
             if ($type === 'card' && isset($item['userId'])) {
@@ -1169,13 +1191,13 @@ foreach ($cellData as $cell) {
                 $cell->userId = $user->userId;
                 $cell->firstname = $user->firstname;
                 $cell->lastname = $user->lastname;
-                $cell->phone = $user->phone ?? 'Non défini';
+                $cell->phone = $user->phone ?? '';
             } else {
                 // Si aucun utilisateur n'est trouvé
                 $cell->userId = null;
-                $cell->firstname = 'Non défini';
-                $cell->lastname = 'Non défini';
-                $cell->phone = 'Non défini';
+                $cell->firstname = '';
+                $cell->lastname = '';
+                $cell->phone = '';
             }
         } else {
             echo "Erreur SQL : " . $db->lasterror();
@@ -1714,7 +1736,7 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log(cellData);
     let jsdata = '.$data.'; 
     let users = typeof jsdata === "string" ? JSON.parse(jsdata) : jsdata;
-
+    let selectedContacts = [];
     let jsdatasoustraitants = users.filter(user => user.source === "external" && user.fk_c_type_contact === "1031141");
     let jsdataFiltered = users.filter(user => user.source !== "external"); 
 
@@ -2177,20 +2199,44 @@ function updateCards() {
                 var cardBody = card.querySelector(".card-body");
 
                 if (cardBody) {
-                    if (contact && contact.type === "cardprincipale") {
+                if (contact && contact.type === "cardprincipale") {
+                    // Vérifier si la carte est vide (pas de firstname, lastname ou phone)
+                    if (!contact.firstname && !contact.lastname && !contact.phone) {
+                        let message = "";
+                        switch (role) {
+                            case "ResponsableAffaire":
+                                message = "Pas de Responsable Affaire";
+                                break;
+                            case "ResponsableQ3SE":
+                                message = "Pas de Responsable Q3SE";
+                                break;
+                            case "PCRReferent":
+                                message = "Pas de PCR Référent";
+                                break;
+                            default:
+                                message = "Aucune donnée disponible";
+                        }
+                        cardBody.innerHTML = `
+                            <p><strong>${role}</strong></p>
+                            <p>${message}</p>
+                            <p class="phone"></p>
+                        `;
+                    } else {
                         // Afficher les informations si elles sont présentes
                         cardBody.innerHTML = `
                             <p><strong>${role}</strong></p>
-                            <p>${contact.firstname || "Nom inconnu"} ${contact.lastname || ""}</p>
-                            <p class="phone">Téléphone : ${contact.phone || "N/A"}</p>
-                        `;
-                    } else {
-                        // Si aucune donnée nest disponible, vider la carte
-                        cardBody.innerHTML = `
-                            <p><strong>${role}</strong></p>
-                            <p>Aucune donnée disponible</p>
+                            <p>${contact.firstname || ""} ${contact.lastname || ""}</p>
+                            <p class="phone">Téléphone : ${contact.phone || ""}</p>
                         `;
                     }
+                } else {
+                    // Si aucune donnée n\'est disponible, vider la carte
+                    cardBody.innerHTML = `
+                        <p><strong>${role}</strong></p>
+                        <p>Aucune donnée disponible</p>
+                    `;
+                }
+            
 
                     // Désactiver les champs pour empêcher la modification
                     card.querySelectorAll("input, select, button").forEach(function(field) {
@@ -2250,7 +2296,7 @@ function updateCards() {
 
 
 
-let selectedContacts = [];
+
 
 function createSupplierDropdown() {
     const existingCard = document.querySelector(".cardsoustraitant");
