@@ -975,9 +975,22 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 //------------------------------------------------------------------------------------------------------------------------------------------------------------	
 
 
-$sql = "SELECT  u.lastname, u.firstname, u.rowid
-            FROM ".MAIN_DB_PREFIX."user as u
-            WHERE u.statut = 1";
+$sql = "SELECT u.lastname, u.firstname, u.rowid, 
+        GROUP_CONCAT(DISTINCT fh.ref) as habilitations,
+        cct.type AS contrat
+        FROM ".MAIN_DB_PREFIX."user as u
+        LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as fuh 
+            ON u.rowid = fuh.fk_user
+        LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as fh 
+            ON fuh.fk_habilitation = fh.rowid
+        LEFT JOIN ".MAIN_DB_PREFIX."ot_ot_cellule_donne AS ocd 
+            ON ocd.fk_user = u.rowid
+        LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_positionetcoefficient_extrafields AS drh 
+            ON drh.fk_object = u.rowid
+        LEFT JOIN ".MAIN_DB_PREFIX."c_contrattravail AS cct 
+            ON drh.contratdetravail = cct.rowid
+        WHERE u.statut = 1
+        GROUP BY u.rowid, u.lastname, u.firstname, cct.type";
 
 $resql = $db->query($sql);
 
@@ -1776,6 +1789,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let isDataSaved = false;
     let isUniqueListCreated = false;
     console.log(cellData);
+     console.log(userjson);
     let jsdata = '.$data.'; 
     let users = typeof jsdata === "string" ? JSON.parse(jsdata) : jsdata;
     let selectedContacts = [];
@@ -1992,6 +2006,19 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
             const user = userjson.find(u => u.rowid == userId);
             if (user) {
                 nameDropdown.value = userId;
+                
+                // Afficher les habilitations et le contrat
+                const habilitationInfo = card.querySelector(".habilitation-info");
+                const contratInfo = card.querySelector(".contrat-info");
+                
+                if (habilitationInfo && contratInfo) {
+                    habilitationInfo.textContent = `Habilitations: ${cell.habilitations || user.habilitations || "Non spécifié"}`;
+                    contratInfo.textContent = `Contrat: ${cell.contrat || user.contrat || "Non spécifié"}`;
+                    
+                    // Sauvegarder dans le dataset
+                    card.dataset.habilitations = cell.habilitations || user.habilitations || "";
+                    card.dataset.contrat = cell.contrat || user.contrat || "";
+                }
             } else {
                 console.warn("⚠️ User introuvable avec ID :", userId);
             }
@@ -2594,25 +2621,63 @@ function createEmptyCard(column) {
                     style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
                     ${alluser}
                 </select>
-               
+                <div class="user-details" style="margin-top: 10px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+                    <div class="habilitation-info" style="margin-bottom: 5px; word-wrap: break-word; white-space: normal; text-align: center; padding: 5px; font-size: 0.9em; line-height: 1.4; width: 90%;"></div>
+                    <div class="contrat-info" style="margin-bottom: 5px; word-wrap: break-word; white-space: normal; text-align: center; padding: 5px; font-size: 0.9em; width: 90%;"></div>
+                </div>
                 <input type="hidden" class="card-id" value="${uniqueId}"> 
             </form>
             <button class="delete-button" style="margin-top: 10px;">Supprimer</button>
         </div>
     `;
 
+    // Ajouter lécouteur dévénement pour le changement utilisateur
+    const nameDropdown = card.querySelector(".name-dropdown");
+    nameDropdown.addEventListener("change", function() {
+        const selectedUserId = this.value;
+        const selectedUser = userjson.find(user => user.rowid === selectedUserId);
+        
+        if (selectedUser) {
+            const habilitationInfo = card.querySelector(".habilitation-info");
+            const contratInfo = card.querySelector(".contrat-info");
+            
+            // Formater les habilitations avec des retours à la ligne
+            const habilitations = selectedUser.habilitations || "Non spécifié";
+            const formattedHabilitations = habilitations.split(",").map(h => h.trim()).join(",\n");
+            
+            habilitationInfo.innerHTML = `<strong>Habilitations:</strong><br>${formattedHabilitations}`;
+            contratInfo.innerHTML = `<strong>Contrat:</strong><br>${selectedUser.contrat || "Non spécifié"}`;
+            
+            // Sauvegarder les informations dans le dataset de la carte
+            card.dataset.habilitations = selectedUser.habilitations || "";
+            card.dataset.contrat = selectedUser.contrat || "";
+        }
+    });
+
     card.querySelector(".card-form").addEventListener("submit", function (event) {
         event.preventDefault();
         const selectedUserId = card.querySelector(".name-dropdown").value;
-        const name = selectedUserId ? `${userdata.find(user => user.id == selectedUserId).firstname} ${userdata.find(user => user.id == selectedUserId).lastname}` : "Non spécifié";
+        const selectedUser = userjson.find(user => user.rowid === selectedUserId);
+        const name = selectedUser ? `${selectedUser.firstname} ${selectedUser.lastname}` : "Non spécifié";
+
+        // Formater les habilitations avec des retours à la ligne
+        const habilitations = selectedUser ? (selectedUser.habilitations || "Non spécifié") : "Non spécifié";
+        const formattedHabilitations = habilitations.split(",").map(h => h.trim()).join(",\n");
 
         card.innerHTML = `
             <div class="card-body" style="text-align: center; color: #333;">
                 <input type="text" class="title-input" name="title" value="${card.querySelector(".title-input").value}" required
                     style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
                 <p><strong>${name}</strong></p>
-               
-                <input type="hidden" class="card-id" value="${uniqueId}"> <!-- Hidden input for unique ID -->
+                <div class="user-details" style="margin-top: 10px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+                    <div class="habilitation-info" style="margin-bottom: 5px; word-wrap: break-word; white-space: normal; text-align: center; padding: 5px; font-size: 0.9em; line-height: 1.4; width: 90%;">
+                        <strong>Habilitations:</strong><br>${formattedHabilitations}
+                    </div>
+                    <div class="contrat-info" style="margin-bottom: 5px; word-wrap: break-word; white-space: normal; text-align: center; padding: 5px; font-size: 0.9em; width: 90%;">
+                        <strong>Contrat:</strong><br>${selectedUser ? (selectedUser.contrat || "Non spécifié") : "Non spécifié"}
+                    </div>
+                </div>
+                <input type="hidden" class="card-id" value="${uniqueId}">
             </div>
             <button class="delete-button" style="margin-top: 10px;">Supprimer</button>
         `;
@@ -2934,6 +2999,10 @@ function saveData() {
             let userId = nameDropdown.value || card.dataset.userId || "undefined";
             let cardId = card.querySelector(".card-id").value; 
 
+            // Récupérer les habilitations et le contrat depuis le dataset de la carte
+            let habilitations = card.dataset.habilitations || "";
+            let contrat = card.dataset.contrat || "";
+
             let cardCoordinates = {
                 title: title,
                 userId: userId, 
@@ -2941,7 +3010,9 @@ function saveData() {
                 otid: otId, 
                 id: cardId, 
                 x: x || 0,
-                y: y || 0
+                y: y || 0,
+                habilitations: habilitations,
+                contrat: contrat
             };
 
             cardsData.push(cardCoordinates);
