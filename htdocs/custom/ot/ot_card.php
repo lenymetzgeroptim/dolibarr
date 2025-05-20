@@ -1451,7 +1451,7 @@ print '
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 5px;
             width: 100%;
         }
 
@@ -1460,7 +1460,7 @@ print '
             flex-direction: column;
             align-items: center;
             width: 100%;
-            max-width: 300px;
+            max-width: 350px;
             flex-grow: 1;
         }
 
@@ -1620,13 +1620,7 @@ print '
             padding: 10px;
         }
 
-        /* Ligne de légende */
-        .cardsoustraitant .legend-row {
-            display: table-row;
-            font-weight: bold;
-            text-align: center;
-            
-        }
+
 
         /* Données des contacts */
         .cardsoustraitant .data-row {
@@ -1635,7 +1629,54 @@ print '
             padding: 5px 0;
         }
 
+        input:disabled, select:disabled, textarea:disabled {
+            background-color: white !important; 
+            color: #333 !important;
+            border: none; 
+            cursor: default; 
+            box-shadow: none; 
+        }
 
+    .list-title-input {
+        font-size: 16px; 
+        font-weight: bold; 
+        text-align: center; 
+        color: #333; 
+        margin-top: 8px; 
+    }
+    .card .title-input {
+        font-size: 16px; 
+        font-weight: bold; 
+        text-align: center; 
+        color: #333;
+
+    }
+
+    
+ .cardsoustraitant .legend-row {
+    display: flex; 
+    justify-content: space-between; 
+    text-align: center; 
+    padding: 5px 0;
+    font-weight: bold;
+    width: 100%;
+    box-sizing: border-box; 
+}
+
+.cardsoustraitant .form-input {
+    font-size: 15px; 
+    padding: 5px; 
+    border-radius: 4px; 
+    
+    box-sizing: border-box; 
+}
+
+.cardsoustraitant .data-row > div {
+    flex: 1; 
+    padding: 0 10px; 
+    text-align: center; 
+    box-sizing: border-box;
+}
 
     </style>
 ';
@@ -1766,57 +1807,58 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
         t.fk_socpeople === value.fk_socpeople
     ))
 );
+
+
 console.log("Champs à désactiver (form-input):", document.querySelectorAll(".form-input"));
 console.log("Champs à désactiver (list-title-input):", document.querySelectorAll(".list-title-input"));
 console.log("Champs à désactiver (title-input):", document.querySelectorAll(".title-input"));
  console.log(status);
 // Désactiver les champs si le statut est égal à 1
     if (status === 1) {
-        console.log("Statut est égal à 1, désactivation des champs.");
-        setTimeout(() => {
+    console.log("Statut est égal à 1, désactivation des champs.");
+    setTimeout(() => {
+        // Masquer les boutons "Ajouter une carte" et "Ajouter une liste"
+        document.querySelectorAll(".dropdown").forEach(function (dropdown) {
+            dropdown.style.display = "none";
+        });
 
-            // Masquer les boutons "Ajouter une carte" et "Ajouter une liste"
-            document.querySelectorAll(".dropdown").forEach(function (dropdown) {
-                dropdown.style.display = "none";
-            });
+        // Masquer les croix pour les lignes des listes
+        document.querySelectorAll(".remove-user").forEach(function (removeButton) {
+            removeButton.style.display = "none";
+        });
 
-            // Masquer les croix pour les lignes des listes
-            document.querySelectorAll(".remove-user").forEach(function (removeButton) {
-                removeButton.style.display = "none";
-            });
+        // Masquer les boutons "Supprimer" des cartes et des listes
+        document.querySelectorAll(".delete-button, .delete-list-button").forEach(function (deleteButton) {
+            deleteButton.style.display = "none";
+        });
 
-            // Masquer les boutons "Supprimer" des cartes et des listes
-            document.querySelectorAll(".delete-button, .delete-list-button").forEach(function (deleteButton) {
-                deleteButton.style.display = "none";
-            });
+        // Désactiver la sélection utilisateur dans les cartes
+        document.querySelectorAll(".name-dropdown").forEach(function (dropdown) {
+            const selectedUserId = dropdown.value;
+            const selectedUser = dropdown.options[dropdown.selectedIndex]?.text || "Utilisateur non défini";
 
-            // Désactiver la sélection utilisateur dans les cartes
-            document.querySelectorAll(".name-dropdown").forEach(function (dropdown) {
-                const selectedUserId = dropdown.value;
-                const selectedUser = dropdown.options[dropdown.selectedIndex]?.text || "Utilisateur non défini";
+            // Remplacer le menu déroulant par un texte affichant utilisateur sélectionné
+            const userDisplay = document.createElement("p");
+            userDisplay.textContent = selectedUser;
+            userDisplay.style.textAlign = "center";
+            userDisplay.style.color = "#333";
 
-                // Remplacer le menu déroulant par un texte affichant utilisateur sélectionné
-                const userDisplay = document.createElement("p");
-                userDisplay.textContent = selectedUser;
-                userDisplay.style.textAlign = "center";
-                userDisplay.style.color = "#333";
+            dropdown.replaceWith(userDisplay);
+        });
 
-                dropdown.replaceWith(userDisplay);
-            });
+        // Désactiver les champs des sous-traitants
+        document.querySelectorAll(".cardsoustraitant .form-input").forEach(function (input) {
+            input.disabled = true;
+        });
 
-            document.querySelectorAll(".form-input").forEach(function(input) {
-                input.disabled = true;
-            });
+        // Désactiver les champs des cartes et listes
+        document.querySelectorAll(".form-input, .list-title-input, .title-input").forEach(function (input) {
+            input.disabled = true;
+        });
+    }, 500); 
+}
 
-            document.querySelectorAll(".list-title-input").forEach(function(input) {
-                input.disabled = true;
-            });
 
-            document.querySelectorAll(".title-input").forEach(function(input) {
-                input.disabled = true;
-            });
-        }, 500); // Attendre 500ms pour sassurer que les champs sont chargés
-    }
 function displayUserList() {
     const existingUniqueList = document.querySelector(".user-list.unique-list");
 
@@ -1903,6 +1945,7 @@ function displayUserList() {
     }
 }
 
+
 // Appeler la fonction pour afficher la liste lors du chargement de la page
 displayUserList();
 
@@ -1965,7 +2008,7 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
     }
 }
 
- else if (cell.type === "list") {
+else if (cell.type === "list") {
     if (!addedListTitles.has(cell.title)) {
         const list = createUserList(column);
         const titleInput = list.querySelector(".list-title-input");
@@ -1980,14 +2023,40 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
             if (user) {
                 const li = document.createElement("li");
                 li.setAttribute("data-user-id", userId);
+                li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
 
                 // Utiliser le même affichage que dans createUserList
                 li.innerHTML = `
-                    ${user.firstname} ${user.lastname} | ${user.fonction || "Non définie"} | 
-                    ${user.habilitation || "Aucune habilitation"} | ${user.contrat || "Non défini"}
-                    <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
+                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.lastname} ${user.firstname}">
+                        <strong>${user.lastname}</strong><br>${user.firstname}
+                    </div>
+                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.fonction || "Non définie"}">
+                        ${user.fonction || "Non définie"}
+                    </div>
+                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.contrat || "Non défini"}">
+                        ${user.contrat || "Non défini"}
+                    </div>
+                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.habilitation || "Aucune habilitation"}">
+                        ${user.habilitation || "Aucune habilitation"}
+                    </div>
+                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
+                        ${user.phone || "Non défini"}
+                    </div>
                 `;
+
+                // Ajouter le bouton de suppression
+                const removeSpan = document.createElement("span");
+                removeSpan.textContent = "×";
+                removeSpan.style = "color:red; cursor:pointer;";
+                removeSpan.className = "remove-user";
+                li.appendChild(removeSpan);
+
                 ulElement.appendChild(li);
+
+                // Ajouter une ligne vide entre les utilisateurs
+                const emptyRow = document.createElement("li");
+                emptyRow.style = "height: 10px;"; // Hauteur de la ligne vide
+                ulElement.appendChild(emptyRow);
             } else {
                 console.warn(`Utilisateur avec ID ${userId} introuvable dans uniqueJsData.`);
             }
@@ -2051,10 +2120,14 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
 
 function createUniqueUserList() {
     const list = document.createElement("div");
-    list.className = "user-list card unique-list"; 
+    list.className = "user-list card unique-list";
+
+    
+    const lineBreak = document.createElement("br");
+    list.appendChild(lineBreak);
 
     // Ajouter un ID unique
-    const uniqueListId = `unique_${Date.now()}`; 
+    const uniqueListId = `unique_${Date.now()}`;
     list.setAttribute("data-list-id", uniqueListId);
 
     // Créer un conteneur pour le titre avec le trait rouge
@@ -2069,7 +2142,7 @@ function createUniqueUserList() {
     listTitleInput.required = true;
     listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
 
-    titleContainer.appendChild(listTitleInput); // Ajout du titre dans son conteneur
+    titleContainer.appendChild(listTitleInput); 
 
     // Créer une légende pour décrire les informations
     const legend = document.createElement("div");
@@ -2113,7 +2186,7 @@ function createUniqueUserList() {
 
     const listBody = document.createElement("div");
     listBody.className = "list-body";
-    listBody.style = "text-align: left; color: #333; padding-left: 20px; padding-right: 20px;"; // Ajouter des espaces à gauche et à droite
+    listBody.style = "text-align: left; color: #333; padding-left: 20px; padding-right: 20px; margin-bottom: 20px;"; // Ajouter des espaces à gauche et à droite
     listBody.appendChild(titleContainer);  // Ajouter le titre avec le trait rouge
     listBody.appendChild(legend);  // Ajouter la légende en haut de la liste
     listBody.appendChild(ulElement);
@@ -2261,7 +2334,8 @@ function updateCards() {
                         cardBody.innerHTML = `
                             <p><strong>${role}</strong></p>
                             <p>${message}</p>
-                            <p class="phone"></p>
+                            <p class="phone"> </p>
+                            <p style="visibility: hidden;">Ligne vide</p> <!-- Ligne vide pour uniformiser la hauteur -->
                         `;
                     } else {
                         // Afficher les informations si elles sont présentes
@@ -2269,6 +2343,7 @@ function updateCards() {
                             <p><strong>${role}</strong></p>
                             <p>${contact.firstname || ""} ${contact.lastname || ""}</p>
                             <p class="phone">Téléphone : ${contact.phone || ""}</p>
+                            
                         `;
                     }
                 } else {
@@ -2360,12 +2435,14 @@ function createSupplierDropdown() {
     tableContainer.className = "table-container";
     cardContainer.appendChild(tableContainer);
 
+    
+
     // Ajouter une légende pour le tableau
     const legendRow = document.createElement("div");
     legendRow.className = "legend-row";
     legendRow.style.cssText = "display: flex; text-align: center; padding: 5px 0; font-weight: bold;";
 
-    const legendFields = ["Nom Prénom", "Entreprise", "Fonction", "Contrat", "Habilitations", ""];
+    const legendFields = ["Nom Prénom", "Entreprise", "Fonction", "Contrat", "Habilitations"];
     legendFields.forEach(field => {
         const fieldCell = document.createElement("div");
         fieldCell.style.flex = "1";
@@ -2559,42 +2636,114 @@ function createUserList(column) {
     const listId = `${column}${yPosition}`;
 
     const list = document.createElement("div");
-    list.className = "user-list card";
+list.className = "user-list card";
 
-    const ulElement = document.createElement("ul");
+// Ajouter un saut de ligne avant le titre
+const lineBreak = document.createElement("br");
+list.appendChild(lineBreak);
 
-    // Itérer sur les utilisateurs dans uniqueJsData
-    uniqueJsData.forEach(user => {
-        // Récupérer les informations spécifiques de lutilisateur dans uniqueJsData
-        const { firstname, lastname, fonction, habilitation, contrat } = user;
+// Ajouter un ID unique
+list.setAttribute("data-list-id", listId);
 
-        // Créer élément <li> pour chaque utilisateur
-        const li = document.createElement("li");
-        li.setAttribute("data-user-id", user.fk_socpeople);
+// Créer un conteneur pour le titre avec le trait rouge
+const titleContainer = document.createElement("div");
+titleContainer.style = "text-align: center; padding-bottom: 10px; margin-bottom: 10px; color: #333; font-weight: bold;";
 
-        // Afficher les informations dansélément <li>
-        li.innerHTML = `
-            ${firstname} ${lastname} | ${fonction} | ${habilitation} | ${contrat}
-            <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>
-        `;
-        ulElement.appendChild(li);
-       
-    });
+const listTitleInput = document.createElement("input");
+listTitleInput.type = "text";
+listTitleInput.className = "list-title-input";
+listTitleInput.name = "listTitle";
+listTitleInput.placeholder = "Titre de la liste";
+listTitleInput.required = true;
+listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
 
-    list.innerHTML = `
-        <div class="list-body" style="text-align: center; color: #333;">
-            <input type="text" class="list-title-input" name="listTitle" placeholder="Titre de la liste" required
-                style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
-            <ul>${ulElement.innerHTML}</ul>
-        </div>
-        <button class="delete-list-button btn btn-danger" style="margin-bottom: 25px; display: inline-block;">Supprimer</button>
+titleContainer.appendChild(listTitleInput); 
+
+    // Créer une légende pour décrire les informations
+    const legend = document.createElement("div");
+    legend.className = "list-legend";
+    legend.style = "display: flex; justify-content: space-between; padding: 10px; font-weight: bold; color: #333; margin-bottom: 10px; text-align: center;";
+    legend.innerHTML = `
+        <div style="flex: 1; text-align: center;">Nom</div>
+        <div style="flex: 1; text-align: center;">Fonction</div>
+        <div style="flex: 1; text-align: center;">Contrat</div>
+        <div style="flex: 1; text-align: center;">Habil</div>
+        <div style="flex: 1; text-align: center;">Tél</div>
     `;
 
-    attachUserRemoveListeners(list); // Appel à la fonction pour attacher les écouteurs
-    list.setAttribute("data-list-id", listId); // Assigner ID unique
+    const ulElement = document.createElement("ul");
+    ulElement.style = "list-style: none; padding: 0; margin: 0;";
+
+    // Remplir les utilisateurs de la liste depuis uniqueJsData
+    uniqueJsData.forEach(user => {
+        const li = document.createElement("li");
+        li.setAttribute("data-user-id", user.fk_socpeople);
+        li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
+
+        // Créer une ligne avec les informations de utilisateur
+        li.innerHTML = `
+            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.lastname} ${user.firstname}">
+                <strong>${user.lastname}</strong><br>${user.firstname}
+            </div>
+            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.fonction || "Non définie"}">
+                ${user.fonction || "Non définie"}
+            </div>
+            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.contrat || "Non défini"}">
+                ${user.contrat || "Non défini"}
+            </div>
+            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.habilitation || "Aucune habilitation"}">
+                ${user.habilitation || "Aucune habilitation"}
+            </div>
+            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
+                ${user.phone || "Non défini"}
+            </div>
+        `;
+
+        // Ajouter le bouton de suppression
+        const removeSpan = document.createElement("span");
+        removeSpan.textContent = "×";
+        removeSpan.style = "color:red; cursor:pointer;";
+        removeSpan.className = "remove-user";
+        li.appendChild(removeSpan);
+
+        ulElement.appendChild(li);
+
+        // Ajouter une ligne vide entre les utilisateurs
+        const emptyRow = document.createElement("li");
+        emptyRow.style = "height: 10px;"; // Hauteur de la ligne vide
+        ulElement.appendChild(emptyRow);
+    });
+
+    const listBody = document.createElement("div");
+    listBody.className = "list-body";
+    listBody.style = "text-align: left; color: #333; padding-left: 20px; padding-right: 20px;";
+    listBody.appendChild(titleContainer); // Ajouter le titre avec le trait rouge
+    listBody.appendChild(legend); // Ajouter la légende en haut de la liste
+    listBody.appendChild(ulElement);
+
+    list.appendChild(listBody);
+
+    const lineBreakAfter = document.createElement("br");
+    list.appendChild(lineBreakAfter);
+
+
+    // Attacher les écouteurs de suppression utilisateur
+    attachUserRemoveListeners(list);
+
+    // Ajouter un bouton de suppression pour la liste
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Supprimer";
+    deleteButton.className = "delete-list-button btn btn-danger";
+    deleteButton.style = "margin: 10px auto; display: block;"; // Centrer le bouton horizontalement
+    deleteButton.addEventListener("click", () => {
+    list.remove();
+    saveData(); // Sauvegarder les modifications après suppression
+});
+
+    list.appendChild(deleteButton);
+
     return list;
 }
-
 
 
 
