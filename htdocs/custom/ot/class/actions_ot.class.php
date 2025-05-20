@@ -143,6 +143,16 @@ class ActionsOT
         $newIndice = $maxIndice + 1; 
         $otRef = $lastFiveChars . ' OT ' . $newIndice;
 
+        // Mettre à jour le statut de l'OT précédent
+        if ($maxIndice > 0) {
+            $sql = "UPDATE ".MAIN_DB_PREFIX."ot_ot SET status = 2 WHERE fk_project = ".intval($projectId)." AND indice = ".intval($maxIndice);
+            $resql = $db->query($sql);
+            if (!$resql) {
+                setEventMessage("Erreur lors de la mise à jour du statut de l'OT précédent : " . $db->lasterror(), 'errors');
+                return;
+            }
+        }
+
         // Insérer le nouvel enregistrement dans la table ot_ot
         $sql = "INSERT INTO ".MAIN_DB_PREFIX."ot_ot 
         (fk_project, fk_user_creat, date_creation, indice, ref, status, date_applica_ot, fk_user_modif, last_main_doc, import_key, model_pdf, tms) 
