@@ -1823,13 +1823,11 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
 );
 
 
-console.log("Champs à désactiver (form-input):", document.querySelectorAll(".form-input"));
-console.log("Champs à désactiver (list-title-input):", document.querySelectorAll(".list-title-input"));
-console.log("Champs à désactiver (title-input):", document.querySelectorAll(".title-input"));
+
  console.log(status);
 // Désactiver les champs si le statut est égal à 1
-    if (status === 1) {
-    console.log("Statut est égal à 1, désactivation des champs.");
+    if (status === 1 || status === 2) {
+    
     setTimeout(() => {
         // Masquer les boutons "Ajouter une carte" et "Ajouter une liste"
         document.querySelectorAll(".dropdown").forEach(function (dropdown) {
