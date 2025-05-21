@@ -151,6 +151,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, $appel_actif = 0, $nb_appel = 0){
 	global $conf, $db, $user, $langs, $action;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
+	global $last_day_month;
 
 	$holiday = new extendedHoliday($db);
 
@@ -512,8 +513,8 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 
 					// Colonne avec les cases à cocher
 					print '<div id="div_otherhour">';
-					print '<input type="checkbox" '.($has_heure_nuit ? 'checked ' : '').'id="heure_nuit_chkb_'.$lines[$i]->id.'" name="heure_nuit_chkb"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="heure_nuit_chkb_'.$lines[$i]->id.'"> dont Heures de nuit (21h/6h)</label></span>';
-					print '<input type="checkbox" '.($has_port_epi ? 'checked ' : '').'id="port_epi_chkb_'.$lines[$i]->id.'" name="port_epi_chkb"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="port_epi_chkb_'.$lines[$i]->id.'"> dont Port EPI respiratoire</label></span>';
+					print '<input type="checkbox" '.($has_heure_nuit ? 'checked ' : '').'id="heure_nuit_chkb_'.$lines[$i]->id.'" name="heure_nuit_chkb"'.($disabledtask || !$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="heure_nuit_chkb_'.$lines[$i]->id.'"> dont Heures de nuit (21h/6h)</label></span>';
+					print '<input type="checkbox" '.($has_port_epi ? 'checked ' : '').'id="port_epi_chkb_'.$lines[$i]->id.'" name="port_epi_chkb"'.($disabledtask || !$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="port_epi_chkb_'.$lines[$i]->id.'"> dont Port EPI respiratoire</label></span>';
 					print '</div></td>';
 
 					for ($k = 0; $k < $level; $k++) {
@@ -613,7 +614,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 
 						// Est-ce qu'on désactive l'input ou non ?
 						$disabled = 0;
-						if(!$modify || $disabledtask || ($user_conges && !$modifier_jour_conges && empty($alreadyspent))) {
+						if(!$modify || $disabledtask || ($user_conges && !$modifier_jour_conges && empty($alreadyspent)) || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow < $first_day_month || $dayinloopfromfirstdaytoshow > $last_day_month))) {
 							$disabled = 1;
 						}
 
@@ -1242,7 +1243,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		// Contrat
 		$contrat = (float)$standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
 		print '<td class="center fixedcolumn4'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-		print '<span class="" id="contrat_'.$idw.'">'.number_format($contrat / 3600, 2, '.', '').'</span>';
+		print '<span class="" id="contrat_'.$idw.'">'.($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($contrat / 3600, 2, '.', '') : convertSecondToTime($contrat, 'allhourmin')).'</span>';
 		print '</td>';
 
 
@@ -1283,7 +1284,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		$alttitle = $langs->trans("AddHereTimeSpentForDay", $tmparray['day'], $tmparray['mon']);
 		for($cpt = 0; $cpt < $conf->global->FDT_COLUMN_MAX_TASK_DAY; $cpt++) {
 			$timespent = $timespent_month[$dayinloopfromfirstdaytoshow][$cpt];
-			$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
+			$alreadyspent = (!empty($timespent->timespent_duration) ? ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : convertSecondToTime($timespent->timespent_duration, 'allhourmin')) : '');
 			$prefilling_time = ''; 
 			
 			// Est-ce qu'on désactive l'input ou non ?
@@ -1311,7 +1312,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 					$prefilling_time = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
 				}
 				$class_timespent .= ' prefilling_time';
-				$prefilling_time = (!empty($prefilling_time) ? number_format($prefilling_time / 3600, 2, '.', '') : '');
+				$prefilling_time = (!empty($prefilling_time) ? ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($prefilling_time / 3600, 2, '.', '') : convertSecondToTime($prefilling_time, 'allhourmin')) : '');
 			} 
 
 			if($cpt == 0) $tableCellTimespent = '<td class="center fixedcolumn5 valignmiddle hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
@@ -1371,7 +1372,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			
 			// Heures Nuit
 			$heure_nuit_nf = $otherTaskTime['heure_nuit'][$dayinloopfromfirstdaytoshow][$timespent->timespent_id];
-			$heure_nuit = ($heure_nuit_nf > 0 ? number_format($heure_nuit_nf / 3600, 2, '.', '') : '');
+			$heure_nuit = ($heure_nuit_nf > 0 ? ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($heure_nuit_nf / 3600, 2, '.', '') : convertSecondToTime($heure_nuit_nf, 'allhourmin')) : '');
 			$totalforday += (int)$heure_nuit_nf;
 
 			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
@@ -1417,7 +1418,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$timeonothertasks = ($totalforeachday[$dayinloopfromfirstdaytoshow] - $totalforday);
 				if ($timeonothertasks > 0) {
 					$tableCellTimespent .= '<div class="timesheetalreadyrecorded" title="Heures pointées sur d\'autres tâches"><input type="text" class="center smallpadd time_'.$idw.'" size="2" disabled id="timeadded['.$idw.']['.($cpt + 1).']" name="task['.$idw.']['.($cpt + 1).']" value="';
-					$tableCellTimespent .=  number_format($timeonothertasks / 3600, 2, '.', '');
+					$tableCellTimespent .=  ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($timeonothertasks / 3600, 2, '.', '') : convertSecondToTime($timeonothertasks, 'allhourmin'));
 					$tableCellTimespent .=  '"></div>';
 
 					$totalforday += (int)$timeonothertasks;
@@ -1473,7 +1474,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$diff_class .= "diffnegative";
 		}
 		print '<td class="center fixedcolumn8'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-		print '<span class="'.$diff_class.'" id="diff_'.$idw.'">'.($diff > 0 ? '+' : '').number_format($diff / 3600, 2, '.', '').'</span>';
+		print '<span class="'.$diff_class.'" id="diff_'.$idw.'">'.($diff > 0 ? '+' : '').($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($diff / 3600, 2, '.', '') : convertSecondToTime($diff, 'allhourmin')).'</span>';
 		print '</td>';
 
 

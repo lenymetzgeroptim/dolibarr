@@ -1031,10 +1031,12 @@ function redimenssion(explication) {
     // }
 
     if (explication == 'close') {
-        $('form[name=addtime]')[0].style.height = 'calc(100vh - 210px)';
+        heightbefore = $("div.tmenudiv")[0].offsetHeight + 150;
+        $('form[name=addtime]')[0].style.height = 'calc(100vh - '+heightbefore+'px)';
     }
     else {
-        $('form[name=addtime]')[0].style.height = 'calc(100vh - 400px)';
+        heightbefore = $("div.tmenudiv")[0].offsetHeight + $("div.toggled-off")[0].offsetHeight + 100;
+        $('form[name=addtime]')[0].style.height = 'calc(100vh - '+heightbefore+'px)';
     }
 
     // cac = document.querySelectorAll(".fixed_cac");
@@ -1231,7 +1233,7 @@ function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_sem
             $.jnotify(WRN_35H_DEPASSEMENT, 'warning', false);
         }
 
-        if(USE_HS_CASE && mode_input != 'hours_decimal') {
+        if(USE_HS_CASE) {
             if (hours > heure_semaine_hs) {
                 ajouterCaseHS(debut, fin, idw, jour_ecart, 'hours', nb_jour, temps, heure_semaine_hs);
             }

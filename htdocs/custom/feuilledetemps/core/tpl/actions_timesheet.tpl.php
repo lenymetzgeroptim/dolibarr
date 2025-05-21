@@ -15,7 +15,7 @@ if (empty($conf) || !is_object($conf)) {
 }
 
 // Dans le cas ou on clique sur "ENREGISTRER"
-if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $action2 != 'verification') {
+if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields') {
 	// Création de la feuille de temps au 1er enregistrement
 	if($object->id == 0) {
 		$object->ref = "FDT_".str_pad($usertoprocess->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date($last_day_month, '%m%Y');
@@ -720,7 +720,7 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	}
 	
 }
-elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields' && $action2 != 'verification') {
+elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfilteraction') != 'listafterchangingselectedfields') {
 	// Création de la feuille de temps au 1er enregistrement
 	if($object->id == 0) {
 		$object->ref = "FDT_".str_pad($usertoprocess->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date($lastdaytoshow, '%m%Y');
@@ -1685,9 +1685,9 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 	}
 	
 }
-elseif ($conf->global->FDT_STATUT_HOLIDAY && $conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF && $action == 'addtime' && $action2 == 'verification') {
+elseif ($conf->global->FDT_STATUT_HOLIDAY && $conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF && $action == 'verification') {
 	$holiday = new extendedHoliday($db);
-	
+
 	$holiday_type = $_POST['holiday_type'];
 	$holiday_id = $_POST['holiday_id'];
 	// $holiday_valide = $_POST['holiday_valide'];

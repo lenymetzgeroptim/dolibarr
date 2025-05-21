@@ -126,7 +126,7 @@ $modeinput = ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? 'hours_decimal' : 'hours'
 $socid = 0;
 
 if(!empty($_POST["verification"])) {
-	$action2 = "verification";
+	$action = "verification";
 }
 
 // Initialize technical objects
@@ -356,9 +356,9 @@ else {
 
 // Semaine type
 $standard_week_hour = array();
-if($usertoprocess->array_options['options_semaine_type_lundi'] || $usertoprocess->array_options['options_semaine_type_mardi'] || $usertoprocess->array_options['options_semaine_type_mercredi'] || 
+if($conf->global->FDT_USE_STANDARD_WEEK && ($usertoprocess->array_options['options_semaine_type_lundi'] || $usertoprocess->array_options['options_semaine_type_mardi'] || $usertoprocess->array_options['options_semaine_type_mercredi'] || 
 $usertoprocess->array_options['options_semaine_type_jeudi'] || $usertoprocess->array_options['options_semaine_type_vendredi'] || $usertoprocess->array_options['options_semaine_type_samedi'] || 
-$usertoprocess->array_options['options_semaine_type_dimanche']) {
+$usertoprocess->array_options['options_semaine_type_dimanche'])) {
 	$standard_week_hour['Lundi'] = $usertoprocess->array_options['options_semaine_type_lundi'] * 3600;
 	$standard_week_hour['Mardi'] = $usertoprocess->array_options['options_semaine_type_mardi'] * 3600;
 	$standard_week_hour['Mercredi'] = $usertoprocess->array_options['options_semaine_type_mercredi'] * 3600;
@@ -965,9 +965,8 @@ if (($id || $ref) && $action == 'edit') {
 
 // Part to show record
 if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
-	$array_js = array('includes/node_modules/html2canvas/dist/html2canvas.min.js', '/core/js/timesheet.js', '/custom/feuilledetemps/js/feuilledetemps.js.php', '/custom/feuilledetemps/js/parameters.php');
+	$array_js = array('includes/node_modules/html2canvas/dist/html2canvas.min.js');
 	llxHeader('', $title, $help_url, '', '', '', $array_js, '', '', 'classforhorizontalscrolloftabs feuilledetemps'.($conf->global->FDT_DISPLAY_COLUMN ? ' displaycolumn' : ''));
-	//print '<body onresize="redimenssion()">';
 
 	$res = $object->fetch_optionals();
 
@@ -989,7 +988,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	if ($action == 'validate2'  && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate2', '', 0, 1);
 	}
-	if ($action2 == 'verification'  && $permissionToVerification) {
+	if ($action == 'verification'  && $permissionToVerification) {
 		$question = 'Voulez vous valider la feuille de temps ?';
 		if($conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) $question .= (!GETPOST('all_holiday_validate', 'int') ? '<br><span style="color: #be0000; font-size: initial;"><strong>⚠ Certains congés ne sont pas validés</strong></span>' : '');
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), $question, 'confirm_verification', '', 0, 1);
@@ -1098,7 +1097,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		if ($object->status == $object::STATUS_VERIFICATION) {
 			if($permissionToVerification) {
 				if($conf->global->FDT_SCREEN_VERIFICATION) {
-					$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action2=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken().'\', \''.$object->ref.'_'.str_replace(array("'", " "), "", $usertoprocess->lastname).'_'.str_replace(array("'", " "), "", $usertoprocess->firstname).'\')" class="butAction classfortooltip" aria-label="Vérification" title="Vérification">Vérification</a>';
+					$buttonAction .= '<a onclick="screenFDT(\''.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action=verification&all_holiday_validate='.$all_holiday_validate.'&token='.newToken().'\', \''.$object->ref.'_'.str_replace(array("'", " "), "", $usertoprocess->lastname).'_'.str_replace(array("'", " "), "", $usertoprocess->firstname).'\')" class="butAction classfortooltip" aria-label="Vérification" title="Vérification">Vérification</a>';
 				}
 				else {
 					$buttonAction .= '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butAction" name="verification" form="feuilleDeTempsForm" value="Vérification" style="margin-left: 1em;">';
@@ -1283,14 +1282,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 
 	// Tableau Full Screen
-	print '<div id="fullscreenContainer" tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-dialog-buttons ui-draggable" aria-describedby="dialog-confirm" aria-labelledby="ui-id-1" style="height: calc(100vh - 62px); width: calc(100vw - 9px); top: 53px; display: none;">';
+	print '<div id="fullscreenContainer" tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-dialog-buttons ui-draggable" aria-describedby="dialog-confirm" aria-labelledby="ui-id-1" style="display: none;">';
 	print '<div class="ui-dialog-titlebar ui-corner-all ui-widget-header ui-helper-clearfix ui-draggable-handle">';
 	print '<span id="ui-id-1" class="ui-dialog-title">Feuille de temps</span>';
 	print '<button type="button" id="closeFullScreen" class="ui-button ui-corner-all ui-widget ui-button-icon-only ui-dialog-titlebar-close" title="Close">';
 	print '<span class="ui-button-icon ui-icon ui-icon-closethick"></span>';
 	print '<span class="ui-button-icon-space"></span>Close</button></div>';
 
-	print '<div id="dialog-confirm" style="width: auto; min-height: 0px; max-height: none; padding: unset; height: calc(-95px + 100vh); width: calc(-9px + 100vw);" class="ui-dialog-content ui-widget-content">';
+	print '<div id="dialog-confirm" style="" class="ui-dialog-content ui-widget-content">';
 	print '<div id="tableau"></div>';
 	print '</div></div>';
 
@@ -1342,7 +1341,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 		print ' updateAllTotalLoad_TS(\''.$modeinput.'\','.$nb_jour.', '.$ecart_jour.');';
 		print "\n});\n";
-		//print " redimenssion();";
 		print '</script>';
 	}
 	

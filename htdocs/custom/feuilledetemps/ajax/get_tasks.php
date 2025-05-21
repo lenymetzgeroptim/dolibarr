@@ -96,19 +96,25 @@ top_httphead('application/json');
 
 $search = $db->escape($search);
 
-$projectstatic = new Project($db);
-$projectsListId = $projectstatic->getProjectsAuthorizedForUser($fuser, 0, 1);
+// $projectstatic = new Project($db);
+//  $projectsListId = $projectstatic->getProjectsAuthorizedForUser($fuser, 0, 1);
 
-$sql = "SELECT t.rowid as tid, t.ref as tref, t.label as tlabel, t.progress,";
-$sql .= " p.rowid as pid, p.ref, p.title, p.fk_soc, p.fk_statut, p.public, p.usage_task,";
-$sql .= " s.nom as name";
-$sql .= " FROM ".MAIN_DB_PREFIX."projet as p";
-$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = p.fk_soc,";
-$sql .= " ".MAIN_DB_PREFIX."projet_task as t";
+$sql = "SELECT DISTINCT t.rowid as tid, t.ref as tref, t.label as tlabel, t.progress,";
+$sql .= " p.rowid as pid, p.ref, p.title, p.fk_soc, p.fk_statut, p.public, p.usage_task";
+$sql .= " FROM ".MAIN_DB_PREFIX."projet_task as t";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON t.fk_projet = p.rowid";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec ON ec.element_id = t.rowid";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc ON ec.fk_c_type_contact = tc.rowid";
 $sql .= " WHERE p.entity IN (" . getEntity('project') . ")";
-$sql .= " AND t.fk_projet = p.rowid";
-if ($projectsListId) {
-	$sql .= " AND p.rowid IN (" . $db->sanitize($projectsListId) . ")";
+// if ($projectsListId) {
+// 	$sql .= " AND p.rowid IN (" . $db->sanitize($projectsListId) . ")";
+// }
+$sql .= " AND tc.element = 'project_task'";
+$sql .= " AND ( p.public = 1";
+$sql .= " OR (tc.code IN ('TASKCONTRIBUTOR') AND ec.fk_socpeople = ".((int) $user->id).")";
+$sql .= " )";
+if (empty($task_id)) {
+	$sql .= " AND p.fk_statut = 1";
 }
 if (!empty($task_id)) {
     $sql .= " AND t.rowid = ".(int)$task_id;
@@ -118,7 +124,7 @@ elseif (!empty($search)) {
 }
 $sql .= " ORDER BY p.ref, t.ref ASC";
 
-error_log("search_usertoprocessid : " . print_r($search_usertoprocessid, true));
+error_log("sql : " . print_r($sql, true));
 
 $resql = $db->query($sql);
 $tasks = [];

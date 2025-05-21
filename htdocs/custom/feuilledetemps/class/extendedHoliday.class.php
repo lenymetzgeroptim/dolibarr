@@ -662,7 +662,7 @@ class extendedHoliday extends Holiday
 		if(!empty($this->array_options['options_hour'])) {
 			if($numberDay > 1) {
 				$duration_hour = 0;
-				if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+				if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 					$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
 					for($i = 0; $i < $nbDay; $i++) {
 						$tmpday = dol_time_plus_duree($this->date_debut, $i, 'd');
@@ -688,7 +688,7 @@ class extendedHoliday extends Holiday
 			return $this->array_options['options_hour'];
 		}
 		else {
-			if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+			if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 				$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
 				$duration_hour = 0;
 

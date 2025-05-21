@@ -125,7 +125,7 @@ class ExtendedExportFDT extends Export
 
 				$userstatic->fetchAll('', 't.lastname', 0, 0, $filter);
 				foreach($userstatic->users as $id => $user_obj) {
-					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+					if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 						if($conf->donneesrh->enabled && empty($heure_semaine[$id])) {
 							$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
 							$userField = new UserField($db);
@@ -174,7 +174,7 @@ class ExtendedExportFDT extends Export
 						}
 					}	
 					
-					if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_obj->array_options['options_fk_employeur'] == 157)){
+					if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($user_obj->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 						$timeHoliday = $object->timeHolidayWeek($user_obj, $standard_week_hour, $date_debut, $date_fin);
 						$timeSpentWeek = $object->timeDoneByWeek($user_obj, $date_debut, $date_fin);
 						$societe = new Societe($this->db);
@@ -304,7 +304,7 @@ class ExtendedExportFDT extends Export
 						$date_depart =  $user_obj->dateemploymentend;
 					}
 
-					if((!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_obj->array_options['options_fk_employeur'] == 157)) && (empty($date_depart) || $date_depart >= $date_debut)) {
+					if((empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($user_obj->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))) && (empty($date_depart) || $date_depart >= $date_debut)) {
 						$societe = new Societe($this->db);
 
 						$obj->eu_matricule = $user_obj->array_options['options_matricule'];
@@ -544,7 +544,7 @@ class ExtendedExportFDT extends Export
 								$date_debut = dol_mktime(-1, -1, -1, substr($obj->h_date_debut, 3, 2), substr($obj->h_date_debut, 0, 2), substr($obj->h_date_debut, 6, 4));
 								$nb_jour = num_between_day($date_debut, dol_mktime(-1, -1, -1, substr($obj->h_date_fin, 3, 2), substr($obj->h_date_fin, 0, 2), substr($obj->h_date_fin, 6, 4)) + 3600, 1); 
 								
-								if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+								if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 									if($conf->donneesrh->enabled && empty($heure_semaine[$obj->rowid])) {
 										$userstatic = new User($db);
 										$userstatic->fetch($obj->rowid);
@@ -595,7 +595,7 @@ class ExtendedExportFDT extends Export
 									}
 								}		
 
-								if($nb_jour > 1 || ($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && $obj->hef_hour / 3600 >= $standard_week_hour[dol_print_date($date_debut, '%A')] / 3600)) {
+								if($nb_jour > 1 || ($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && $obj->hef_hour / 3600 >= $standard_week_hour[dol_print_date($date_debut, '%A')] / 3600)) {
 									$obj->valeur = '';
 									$obj->type = 'J';
 								}
@@ -1043,7 +1043,7 @@ class ExtendedExportFDT extends Export
 
 		$sql .= " WHERE 1 = 1 AND u.statut = 1";
 		if($conf->global->FDT_MANAGE_EMPLOYER) {
-			$sql .= " AND eu.fk_employeur = 157";
+			$sql .= " AND eu.fk_employeur IN (".$this->db->sanitize($this->db->escape($conf->global->FDT_MANAGE_EMPLOYER)).")";
 		}
 		if($datatoexport == 'analytique_pourcentage'){
 			$sql .= " AND tt.elementtype = 'task'";

@@ -60,11 +60,11 @@ JOUR_ANTICIPES = Nombre de jours anticipés
 Couleur = Paramètre des couleurs
 Congés = Paramètre des congés
 AutreParamFDT = Autres paramètres
-FDT_DISPLAY_COLUMN = Affichage des feuilles de temps en format colonne
+FDT_DISPLAY_COLUMN = Affichage des feuilles de temps en colonne
 FDT_DECIMAL_HOUR_FORMAT = Heures au format décimal
-FDT_USE_HS_CASE = Ajout des cases d'heures sup pour les collaborateurs
+FDT_USE_HS_CASE = Si l'affichage en ligne est utilisé : Ajout des cases d'heures sup pour les collaborateurs
 FDT_DISPLAY_FULL_WEEK = Afficher les semaines completes dans les feuilles de temps
-FDT_COLUMN_MAX_TASK_DAY = Si le format colonne est utilisé : Nombre de tâche maximum sur une journée
+FDT_COLUMN_MAX_TASK_DAY = Si l'affichage en colonne est utilisé : Nombre de tâche maximum sur une journée
 FDT_USER_APPROVER = Approbateurs des feuilles de temps définient sur la fiche utilisateur
 FDT_ANTICIPE_BLOCKED = Les jours en dehors du mois courant sont bloqués
 FDT_DAY_FOR_NEXT_FDT = Jour a partir duquel la feuille de temps change de mois
@@ -73,7 +73,7 @@ FDT_MANAGE_EMPLOYER = Gestion de l'employeur pour les exports (export uniquement
 FDT_STATUT_HOLIDAY = Gestion d'un statut des congés sur les feuilles de temps
 FDT_STATUT_HOLIDAY_VALIDATE_VERIF = Si la gestion d'un statut des congés sur les feuilles de temps est activé : validation automatique lors de la vérification
 FDT_GENERATE_TASK_PROJECTCREATION = Générer une tâche automatiquement lors de la création d'un projet
-FDT_STANDARD_WEEK = Pointage d'une semaine type
+FDT_STANDARD_WEEK = Semaine type
 FDT_STANDARD_WEEK_WITH_RTT = Avec RTT
 FDT_STANDARD_WEEK_NO_RTT = Sans RTT
 FDT_STANDARD_WEEK_MONDAY_WITH_RTT = Lundi
@@ -98,6 +98,10 @@ FDT_VERIF_MODIFWHENHOLIDAY = Seul les personnes responsables de la vérif peuven
 FDT_SHOW_USERADRESS = Afficher l'adresse de l'utilisateur sur les feuilles de temps
 FDT_ORDER_MATRICULE = Les feuilles de temps sont triées par matricule (par ordre alphabétique sinon)
 FDT_EXPORT_REPOS_COMPENSATEUR = Exporter les repos compensateurs sous forme de commentaire
+ParamDisplayFDT = Affichage des feuilles de temps
+FDT_USE_STANDARD_WEEK = Activer la semaine type
+ExportFDT = Export des feuilles de temps
+FDT_OPERATION_TEXT = Texte explicatif des feuilles de temps
 
 
 #

@@ -1292,7 +1292,7 @@ class FeuilleDeTemps extends CommonObject
 			
 			//$langs->load("feuilledetemps@feuilledetemps");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_fdt->array_options['options_fk_employeur'] == 157)){
+			if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($user_fdt->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 				$this->labelStatus[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {
@@ -1304,7 +1304,7 @@ class FeuilleDeTemps extends CommonObject
 			$this->labelStatus[self::STATUS_EXPORTED] = $langs->trans('Exportée');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->trans('Disabled');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_fdt->array_options['options_fk_employeur'] == 157)){
+			if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($user_fdt->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 				$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {
@@ -2173,7 +2173,7 @@ class FeuilleDeTemps extends CommonObject
 				$test = num_public_holiday($tmpdaygmt, $tmpdaygmt + 86400, $mysoc->country_code, 0, 0, 0, 0);
 
 				if($test) { // Jour feriés
-					if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+					if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 					}
 					elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
@@ -2187,7 +2187,7 @@ class FeuilleDeTemps extends CommonObject
 					for($i = 0; $i < sizeof($isavailablefordayanduser['rowid']); $i++) {
 						if($isavailablefordayanduser['hour'][$i] > 0){ // Congés en heure
 							if($isavailablefordayanduser['nb_jour'][$i] > 1) {
-								if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+								if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 									$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 								}
 								else {
@@ -2197,7 +2197,7 @@ class FeuilleDeTemps extends CommonObject
 								$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][$i] / 3600) : ($isavailablefordayanduser['hour'][$i] / 3600));
 							}
 						}
-						elseif($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+						elseif($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 						}
 						elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
@@ -2215,7 +2215,7 @@ class FeuilleDeTemps extends CommonObject
 				}
 				elseif(($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) && $isavailablefordayanduser['hour'][0] > 0){ // Congés en heure
 					if($isavailablefordayanduser['nb_jour'][0] > 1) {
-						if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+						if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 						}
 						else {
@@ -2227,7 +2227,7 @@ class FeuilleDeTemps extends CommonObject
 					}
 				}
 				elseif($isavailablefordayanduser['morning'] == false && $isavailablefordayanduser['afternoon'] == false) { // Congés journées entières
-					if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+					if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 					}
 					elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
@@ -2238,7 +2238,7 @@ class FeuilleDeTemps extends CommonObject
 					}
 				}
 				elseif($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) { // Congés demi journées
-					if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+					if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 					}
 					elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {

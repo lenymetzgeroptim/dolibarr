@@ -92,7 +92,7 @@ class modFeuilleDeTemps extends DolibarrModules
 			// Set this to 1 if module has its own login method file (core/login)
 			'login' => 0,
 			// Set this to 1 if module has its own substitution function file (core/substitutions)
-			'substitutions' => 0,
+			'substitutions' => 1,
 			// Set this to 1 if module has its own menus handler directory (core/menus)
 			'menus' => 0,
 			// Set this to 1 if module overwrite template dir (core/tpl)
@@ -114,6 +114,7 @@ class modFeuilleDeTemps extends DolibarrModules
 			'js' => array(
 				'/feuilledetemps/js/feuilledetemps.js.php',
 				'/feuilledetemps/js/parameters.php',
+				'/core/js/timesheet.js',
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
