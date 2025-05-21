@@ -379,13 +379,13 @@ if (empty($reshook)) {
 				$action = 'create';
 			}
 
-			if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 8)) {
-				setEventMessages($langs->trans("ErrorNbHourHoliday"), null, 'errors');
-				$error++;
-				$action = 'create';
-			}
+			// if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || (!empty($conf->global->HOLIDAY_INHOUR_MAX_HOUR) && GETPOSTINT('hourhour') > (int)$conf->global->HOLIDAY_INHOUR_MAX_HOUR))) {
+			// 	setEventMessages($langs->trans("ErrorNbHourHoliday"), null, 'errors');
+			// 	$error++;
+			// 	$action = 'create';
+			// }
 
-			if($needHour && !empty($duration_hour) && (GETPOSTINT('hourmin') != 0 && GETPOSTINT('hourmin') != 30)) {
+			if($needHour && !empty($duration_hour) && (GETPOSTINT('hourmin') != 0 && GETPOSTINT('hourmin') != 15 && GETPOSTINT('hourmin') != 30 && GETPOSTINT('hourmin') != 45)) {
 				setEventMessages($langs->trans("ErrorNbMinHoliday"), null, 'errors');
 				$error++;
 				$action = 'create';
@@ -956,12 +956,12 @@ if (empty($reshook)) {
 					exit;
 				}
 
-				if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || GETPOSTINT('hourhour') > 8)) {
-					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorNbHourHoliday');
-					exit;
-				}
+				// if($needHour && !empty($duration_hour) && (GETPOSTINT('hourhour') < 0 || (!empty($conf->global->HOLIDAY_INHOUR_MAX_HOUR) && GETPOSTINT('hourhour') > (int)$conf->global->HOLIDAY_INHOUR_MAX_HOUR))) {
+				// 	header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorNbHourHoliday');
+				// 	exit;
+				// }
 	
-				if($needHour && !empty($duration_hour) && (GETPOSTINT('hourmin') != 0 && GETPOSTINT('hourmin') != 30)) {
+				if($needHour && !empty($duration_hour) && (GETPOSTINT('hourmin') != 0 && GETPOSTINT('hourmin') != 15 && GETPOSTINT('hourmin') != 30 && GETPOSTINT('hourmin') != 45)) {
 					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&error=ErrorNbMinHoliday');
 					exit;
 				}
@@ -2653,7 +2653,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 					$errors[] = $langs->trans('ErrorHalfdayHoliday');
 					break;
 				case 'ErrorNbHourHoliday':
-					$errors[] = $langs->trans('ErrorNbHourHoliday');
+					$errors[] = $langs->trans('ErrorNbHourHoliday', (int)$conf->global->HOLIDAY_INHOUR_MAX_HOUR);
 					break;
 				case 'ErrorNbMinHoliday':
 					$errors[] = $langs->trans('ErrorNbMinHoliday');
@@ -2938,7 +2938,7 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 						$errors[] = $langs->trans('ErrorWeekHoliday');
 						break;
 					case 'ErrorNbHourHoliday':
-						$errors[] = $langs->trans('ErrorNbHourHoliday');
+						$errors[] = $langs->trans('ErrorNbHourHoliday', (int)$conf->global->HOLIDAY_INHOUR_MAX_HOUR);
 						break;
 					case 'ErrorNbMinHoliday':
 						$errors[] = $langs->trans('ErrorNbMinHoliday');

@@ -91,10 +91,10 @@ if (($id > 0) || $ref) {
 	if (!empty($user->rights->holidaycustom->read) && in_array($object->fk_user, $childids)) {
 		$canread = 1;
 	}
-	if(in_array($user->id, $object->listApprover1[0]) || in_array($user->id, $object->listApprover2[0]) && !$conf->global->HOLIDAY_FDT_APPROVER) {
+	if(!$conf->global->HOLIDAY_FDT_APPROVER && in_array($user->id, $object->listApprover1[0]) || in_array($user->id, $object->listApprover2[0])) {
 		$canread = 1;
 	}
-	if(in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt'])) && $conf->global->HOLIDAY_FDT_APPROVER) {
+	if($conf->global->HOLIDAY_FDT_APPROVER && in_array($user->id, explode(',', $user_static->array_options['options_approbateurfdt']))) {
 		$canread = 1;
 	}
 	if (!$canread) {

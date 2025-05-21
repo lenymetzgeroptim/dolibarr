@@ -44,7 +44,7 @@ class ExtendedFormHoliday extends Form
 	public function select_duration($prefix, $iSecond = '', $disabled = 0, $typehour = 'select', $minunderhours = 0, $nooutput = 0)
 	{
 		// phpcs:enable
-		global $langs;
+		global $langs, $conf;
 
 		$retstring = '<span class="nowraponall">';
 
@@ -59,9 +59,10 @@ class ExtendedFormHoliday extends Form
 			$minSelected = convertSecondToTime($iSecond, 'min');
 		}
 
+		$max_hour = (!empty($conf->global->HOLIDAY_INHOUR_MAX_HOUR) ? (int)$conf->global->HOLIDAY_INHOUR_MAX_HOUR : 7);
 		if ($typehour == 'select') {
 			$retstring .= '<select class="flat" id="select_' . $prefix . 'hour" name="' . $prefix . 'hour"' . ($disabled ? ' disabled' : '') . '>';
-			for ($hour = 0; $hour <= 8; $hour++) {    // For a duration, we allow 24 hours
+			for ($hour = 0; $hour <= $max_hour; $hour++) {    // For a duration, we allow 24 hours
 				$retstring .= '<option value="' . $hour . '"';
 				if (is_numeric($hourSelected) && $hourSelected == $hour) {
 					$retstring .= " selected";
