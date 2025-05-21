@@ -147,7 +147,7 @@ if($object->id > 0) {
 if (empty($conf->holidaycustom->enabled)) accessforbidden();
 //$result = restrictedArea($user, 'holidaycustom', $object->id, 'holiday', '', '', 'rowid', $object->statut);
 
-if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 	$usertoprocess = new User($db);
 	if($object->fk_user > 0) {
 		$usertoprocess->fetch($object->fk_user);
@@ -491,7 +491,7 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 				elseif($needHour && ($date_debut != $date_fin || ($date_debut == $date_fin && $conf->global->HOIDAY_AUTO_HOUR_WHOLE_DAY && $halfday == 0))) {
-					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+					if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 0) + 1;
 						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
@@ -518,7 +518,7 @@ if (empty($reshook)) {
 				if($conf->global->FDT_STATUT_HOLIDAY) {
 					$form = new Form($db);
 					$userstatic->fetch($object->fk_user);
-					if($object->fk_type == 4 || ($userstatic->array_options['options_employeur'] != 1 && $conf->global->FDT_MANAGE_EMPLOYER)) {
+					if($object->fk_type == 4 || (!empty($conf->global->FDT_MANAGE_EMPLOYER) && !in_array($userstatic->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER)))) {
 						$object->array_options['options_statutfdt'] = 4;
 					}
 					elseif(in_array(array_search('Exclusion FDT', $form->select_all_categories(Categorie::TYPE_USER, null, null, null, null, 1)), $userstatic->getCategoriesCommon(Categorie::TYPE_USER))) {
@@ -1080,7 +1080,7 @@ if (empty($reshook)) {
 					$object->array_options['options_hour'] = $duration_hour;
 				}
 				elseif($needHour && ($date_debut != $date_fin || ($date_debut == $date_fin && $conf->global->HOIDAY_AUTO_HOUR_WHOLE_DAY && $halfday == 0))) {
-					if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+					if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 						$nbDay = num_between_day($date_debut_gmt, $date_fin_gmt, 0) + 1;
 						$duration_hour = 0;
 						for($i = 0; $i < $nbDay; $i++) {
