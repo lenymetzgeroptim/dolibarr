@@ -1824,7 +1824,6 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
 
 
 
- console.log(status);
 // Désactiver les champs si le statut est égal à 1
     if (status === 1 || status === 2) {
     
@@ -2163,9 +2162,35 @@ function createUniqueUserList() {
     listTitleInput.type = "text";
     listTitleInput.className = "list-title-input";
     listTitleInput.name = "listTitle";
-    listTitleInput.placeholder = "Titre de la liste";
+    listTitleInput.placeholder = ""; // On enlève le placeholder par défaut
     listTitleInput.required = true;
     listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
+console.log("Status de la carte :", status);
+    // Fonction pour gérer laffichage du placeholder
+    function updatePlaceholder() {
+    console.log("Status de la carte :", status);
+        const card = list.closest(".card");
+        const cardStatus = card ? parseInt(card.getAttribute("data-status")) : 0;
+        console.log("Status de la carte :", cardStatus);
+        
+        if (listTitleInput.value === "" && cardStatus === 0) {
+            listTitleInput.placeholder = "Titre de la liste";
+        } else {
+            listTitleInput.placeholder = "";
+        }
+    }
+
+    // Ajouter les écouteurs dévénements
+    listTitleInput.addEventListener("focus", updatePlaceholder);
+    listTitleInput.addEventListener("blur", updatePlaceholder);
+    listTitleInput.addEventListener("input", updatePlaceholder);
+
+    // Observer les changements dattribut data-status sur la carte
+    const observer = new MutationObserver(updatePlaceholder);
+    const card = list.closest(".card");
+    if (card) {
+        observer.observe(card, { attributes: true, attributeFilter: ["data-status"] });
+    }
 
     titleContainer.appendChild(listTitleInput); 
 
@@ -2609,11 +2634,12 @@ function createEmptyCard(column) {
 
     const card = document.createElement("div");
     card.className = "card";
+    card.setAttribute("data-status", "0"); // Ajouter le statut initial
 
     card.innerHTML = `
         <div class="card-body" style="text-align: center; color: #333;">
             <form class="card-form" style="display: flex; flex-direction: column; align-items: center;">
-                <input type="text" class="title-input" name="title" placeholder="Titre de la carte" required
+                <input type="text" class="title-input" name="title" placeholder="" required
                     style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
                 <select class="name-dropdown" name="name" required
                     style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
@@ -2628,6 +2654,28 @@ function createEmptyCard(column) {
             <button class="delete-button" style="margin-top: 10px;">Supprimer</button>
         </div>
     `;
+
+    // Fonction pour gérer laffichage du placeholder
+    function updatePlaceholder() {
+        const titleInput = card.querySelector(".title-input");
+        const cardStatus = parseInt(card.getAttribute("data-status"));
+        
+        if (titleInput.value === "" && cardStatus === 0) {
+            titleInput.placeholder = "Titre de la carte";
+        } else {
+            titleInput.placeholder = "";
+        }
+    }
+
+    // Ajouter les écouteurs dévénements
+    const titleInput = card.querySelector(".title-input");
+    titleInput.addEventListener("focus", updatePlaceholder);
+    titleInput.addEventListener("blur", updatePlaceholder);
+    titleInput.addEventListener("input", updatePlaceholder);
+
+    // Observer les changements dattribut data-status sur la carte
+    const observer = new MutationObserver(updatePlaceholder);
+    observer.observe(card, { attributes: true, attributeFilter: ["data-status"] });
 
     // Ajouter lécouteur dévénement pour le changement utilisateur
     const nameDropdown = card.querySelector(".name-dropdown");
@@ -2699,28 +2747,49 @@ function createUserList(column) {
     const listId = `${column}${yPosition}`;
 
     const list = document.createElement("div");
-list.className = "user-list card";
+    list.className = "user-list card";
+    list.setAttribute("data-status", "0"); // Ajouter le statut initial
 
-// Ajouter un saut de ligne avant le titre
-const lineBreak = document.createElement("br");
-list.appendChild(lineBreak);
+    // Ajouter un saut de ligne avant le titre
+    const lineBreak = document.createElement("br");
+    list.appendChild(lineBreak);
 
-// Ajouter un ID unique
-list.setAttribute("data-list-id", listId);
+    // Ajouter un ID unique
+    list.setAttribute("data-list-id", listId);
 
-// Créer un conteneur pour le titre avec le trait rouge
-const titleContainer = document.createElement("div");
-titleContainer.style = "text-align: center; padding-bottom: 10px; margin-bottom: 10px; color: #333; font-weight: bold;";
+    // Créer un conteneur pour le titre avec le trait rouge
+    const titleContainer = document.createElement("div");
+    titleContainer.style = "text-align: center; padding-bottom: 10px; margin-bottom: 10px; color: #333; font-weight: bold;";
 
-const listTitleInput = document.createElement("input");
-listTitleInput.type = "text";
-listTitleInput.className = "list-title-input";
-listTitleInput.name = "listTitle";
-listTitleInput.placeholder = "Titre de la liste";
-listTitleInput.required = true;
-listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
+    const listTitleInput = document.createElement("input");
+    listTitleInput.type = "text";
+    listTitleInput.className = "list-title-input";
+    listTitleInput.name = "listTitle";
+    listTitleInput.placeholder = ""; // On enlève le placeholder par défaut
+    listTitleInput.required = true;
+    listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
 
-titleContainer.appendChild(listTitleInput); 
+    // Fonction pour gérer laffichage du placeholder
+    function updatePlaceholder() {
+        const listStatus = parseInt(list.getAttribute("data-status"));
+        
+        if (listTitleInput.value === "" && listStatus === 0) {
+            listTitleInput.placeholder = "Titre de la liste";
+        } else {
+            listTitleInput.placeholder = "";
+        }
+    }
+
+    // Ajouter les écouteurs dévénements
+    listTitleInput.addEventListener("focus", updatePlaceholder);
+    listTitleInput.addEventListener("blur", updatePlaceholder);
+    listTitleInput.addEventListener("input", updatePlaceholder);
+
+    // Observer les changements dattribut data-status sur la liste
+    const observer = new MutationObserver(updatePlaceholder);
+    observer.observe(list, { attributes: true, attributeFilter: ["data-status"] });
+
+    titleContainer.appendChild(listTitleInput);
 
     // Créer une légende pour décrire les informations
     const legend = document.createElement("div");
