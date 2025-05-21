@@ -938,9 +938,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			
 
 			// Clone
-			if ($permissiontoadd) {
+			/*if ($permissiontoadd) {
 				print dolGetButtonAction('', $langs->trans('ToClone'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.(!empty($object->socid)?'&socid='.$object->socid:'').'&action=clone&token='.newToken(), '', $permissiontoadd);
-			}
+			}*/
 
 			/*
 			if ($permissiontoadd) {
@@ -2051,22 +2051,45 @@ else if (cell.type === "list") {
 
                 // Utiliser le même affichage que dans createUserList
                 li.innerHTML = `
-                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.lastname} ${user.firstname}">
-                        <strong>${user.lastname}</strong><br>${user.firstname}
+                    <div style="flex: 1; text-align: center; white-space: normal;" title="${user.lastname} ${user.firstname}">
+                        ${user.lastname}<br>${user.firstname}
                     </div>
-                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.fonction || "Non définie"}">
+                    <div style="flex: 1; text-align: center; white-space: normal;" title="${user.fonction || "Non définie"}">
                         ${user.fonction || "Non définie"}
                     </div>
-                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.contrat || "Non défini"}">
+                    <div style="flex: 1; text-align: center; white-space: normal;" title="${user.contrat || "Non défini"}">
                         ${user.contrat || "Non défini"}
                     </div>
-                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.habilitation || "Aucune habilitation"}">
+                    <div style="flex: 1; text-align: center; white-space: normal;" title="${user.habilitation || "Aucune habilitation"}">
                         ${user.habilitation || "Aucune habilitation"}
                     </div>
                     <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
                         ${user.phone || "Non défini"}
                     </div>
                 `;
+
+                // Ajouter une fonction pour gérer le style en fonction du statut
+                function updateListItemsStyle() {
+                    const listStatus = parseInt(list.getAttribute("data-status"));
+                    const items = list.querySelectorAll("li > div");
+                    
+                    items.forEach((item, index) => {
+                        // Ne pas modifier le style du nom et du téléphone
+                        if (index !== 0 && index !== 4) {
+                            if (listStatus === 1 || listStatus === 2) {
+                                item.style.textAlign = "center";
+                                item.style.whiteSpace = "normal";
+                            }
+                        }
+                    });
+                }
+
+                // Observer les changements dattribut data-status sur la liste
+                const observer = new MutationObserver(updateListItemsStyle);
+                observer.observe(list, { attributes: true, attributeFilter: ["data-status"] });
+
+                // Appliquer le style initial
+                updateListItemsStyle();
 
                 // Ajouter le bouton de suppression
                 const removeSpan = document.createElement("span");
@@ -2166,17 +2189,19 @@ function createUniqueUserList() {
     listTitleInput.required = true;
     listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
 console.log("Status de la carte :", status);
-    // Fonction pour gérer laffichage du placeholder
+    // Fonction pour gérer laffichage du placeholder et le style
     function updatePlaceholder() {
-    console.log("Status de la carte :", status);
         const card = list.closest(".card");
         const cardStatus = card ? parseInt(card.getAttribute("data-status")) : 0;
-        console.log("Status de la carte :", cardStatus);
         
         if (listTitleInput.value === "" && cardStatus === 0) {
             listTitleInput.placeholder = "Titre de la liste";
+            listTitleInput.style.textAlign = "center";
         } else {
             listTitleInput.placeholder = "";
+            if (cardStatus === 1 || cardStatus === 2) {
+                listTitleInput.style.textAlign = "center";
+            }
         }
     }
 
@@ -2474,7 +2499,7 @@ function createSupplierDropdown() {
     cardContainer.className = "cardsoustraitant";
 
     const cardTitle = document.createElement("h3");
-    cardTitle.textContent = "Sous traitants";
+   cardTitle.textContent = "Sous traitants";
     cardTitle.className = "card-header-soustraitant";
     cardContainer.appendChild(cardTitle);
 
@@ -2484,8 +2509,6 @@ function createSupplierDropdown() {
     const tableContainer = document.createElement("div");
     tableContainer.className = "table-container";
     cardContainer.appendChild(tableContainer);
-
-    
 
     // Ajouter une légende pour le tableau
     const legendRow = document.createElement("div");
@@ -2502,12 +2525,46 @@ function createSupplierDropdown() {
 
     tableContainer.appendChild(legendRow);
 
+    // Fonction pour mettre à jour le style des champs en fonction du status
+    function updateFieldsStyle() {
+        const status = parseInt(cardContainer.getAttribute("data-status") || "0");
+        const inputs = tableContainer.querySelectorAll(".form-input");
+        inputs.forEach(input => {
+            if (status === 1 || status === 2) {
+                input.style.textAlign = "center";
+                input.style.whiteSpace = "normal";
+                input.style.width = "100%";
+                input.style.padding = "0 5px";
+                input.style.boxSizing = "border-box";
+                input.disabled = true; // Désactiver les champs quand le status est 1 ou 2
+            } else {
+                input.style.textAlign = "left";
+                input.style.whiteSpace = "nowrap";
+                input.style.overflow = "hidden";
+                input.style.textOverflow = "ellipsis";
+                input.style.width = "100%";
+                input.style.padding = "0 5px";
+                input.style.boxSizing = "border-box";
+                input.disabled = false; // Réactiver les champs quand le status est 0
+            }
+        });
+    }
+
+    // Observer les changements dattribut data-status
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === "attributes" && mutation.attributeName === "data-status") {
+                updateFieldsStyle();
+            }
+        });
+    });
+    observer.observe(cardContainer, { attributes: true, attributeFilter: ["data-status"] });
+
     // Vérifier si les données de `cellData` contiennent des sous-traitants
     const subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
    
     if ((!subcontractorData || !subcontractorData.subcontractors || subcontractorData.subcontractors.length === 0) 
     && jsdatasoustraitants && Array.isArray(jsdatasoustraitants) && jsdatasoustraitants.length > 0) {
-    console.log("test");
         // Afficher les sous-traitants de `jsdatasoustraitants` une seule fois
         jsdatasoustraitants.forEach(contact => {
             const dataRow = document.createElement("div");
@@ -2585,6 +2642,9 @@ function createSupplierDropdown() {
             });
         });
     }
+
+    // Appliquer le style initial
+    updateFieldsStyle();
 
     // Ajouter un écouteur pour sauvegarder les modifications
     document.querySelector(".table-container").addEventListener("blur", function (e) {
@@ -2775,8 +2835,12 @@ function createUserList(column) {
         
         if (listTitleInput.value === "" && listStatus === 0) {
             listTitleInput.placeholder = "Titre de la liste";
+            listTitleInput.style.textAlign = "center";
         } else {
             listTitleInput.placeholder = "";
+            if (listStatus === 1 || listStatus === 2) {
+                listTitleInput.style.textAlign = "center";
+            }
         }
     }
 
@@ -2814,22 +2878,50 @@ function createUserList(column) {
 
         // Créer une ligne avec les informations de utilisateur
         li.innerHTML = `
-            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.lastname} ${user.firstname}">
-                <strong>${user.lastname}</strong><br>${user.firstname}
+            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.lastname} ${user.firstname}">
+                ${user.lastname}<br>${user.firstname}
             </div>
-            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.fonction || "Non définie"}">
+            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.fonction || "Non définie"}">
                 ${user.fonction || "Non définie"}
             </div>
-            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.contrat || "Non défini"}">
+            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.contrat || "Non défini"}">
                 ${user.contrat || "Non défini"}
             </div>
-            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.habilitation || "Aucune habilitation"}">
+            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.habilitation || "Aucune habilitation"}">
                 ${user.habilitation || "Aucune habilitation"}
             </div>
             <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
                 ${user.phone || "Non défini"}
             </div>
         `;
+
+        // Ajouter une fonction pour gérer le style en fonction du statut
+        function updateListItemsStyle() {
+            const listStatus = parseInt(list.getAttribute("data-status"));
+            const items = list.querySelectorAll("li > div");
+            
+            items.forEach((item, index) => {
+                // Ne pas modifier le style du nom et du téléphone
+                if (index !== 0 && index !== 4) {
+                    if (listStatus === 1 || listStatus === 2) {
+                        item.style.textAlign = "center";
+                        item.style.whiteSpace = "normal";
+                    } else {
+                        item.style.textAlign = "left";
+                        item.style.whiteSpace = "nowrap";
+                        item.style.overflow = "hidden";
+                        item.style.textOverflow = "ellipsis";
+                    }
+                }
+            });
+        }
+
+        // Observer les changements dattribut data-status sur la liste
+        const observer = new MutationObserver(updateListItemsStyle);
+        observer.observe(list, { attributes: true, attributeFilter: ["data-status"] });
+
+        // Appliquer le style initial
+        updateListItemsStyle();
 
         // Ajouter le bouton de suppression
         const removeSpan = document.createElement("span");
