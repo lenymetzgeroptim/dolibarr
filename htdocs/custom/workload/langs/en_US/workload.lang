@@ -1,0 +1,54 @@
+# Copyright (C) 2024 FADEL Soufiane <s.fadel@optim-industries.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleWorkloadName'
+ModuleWorkloadName = Plan de charge
+# Module description 'ModuleWorkloadDesc'
+ModuleWorkloadDesc = Ce Plan de Charge dynamique offre une vue d'ensemble complète de l'affectation des ressources aux projets, commandes, devis et absences, tout en permettant un filtrage flexible et rapide selon différents critères. Il assure une gestion optimisée des ressources en anticipant les problèmes potentiels, notamment les conflits d'affectation, et en offrant une interface intuitive pour une planification sans effort.
+
+#
+# Admin page
+#
+WorkloadSetup = Workload setup
+Settings = Settings
+WorkloadSetupPage = Workload setup page
+WORKLOAD_MYPARAM1 = My param 1
+WORKLOAD_MYPARAM1Tooltip = My param 1 tooltip
+WORKLOAD_MYPARAM2=My param 2
+WORKLOAD_MYPARAM2Tooltip=My param 2 tooltip
+
+
+#
+# About page
+#
+About = About
+WorkloadAbout = About Workload
+WorkloadAboutPage = Workload about page
+
+#
+# Sample page
+#
+WorkloadArea = Home Workload
+MyPageName = My page name
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
