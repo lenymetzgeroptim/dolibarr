@@ -38,6 +38,8 @@ if (!is_object($form)) {
 
 $fk_user = new User($db);
 $fk_user->fetch($object->fk_user);
+$userextrafields = new extrafields($db);
+$userextrafields->fetch_name_optionals_label($fk_user->table_element);
 
 $object->fields = dol_sort_array($object->fields, 'position');
 
@@ -118,10 +120,20 @@ foreach ($object->fields as $key => $val) {
 	if($object->status != $object::STATUS_VERIFICATION || ($key != 'prime_astreinte' && $key != 'prime_exceptionnelle' && $key != 'prime_objectif' && $key != 'prime_variable' && $key != 'prime_amplitude')) {
 		print $object->showOutputField($val, $key, $value, '', '', '', 0);
 		if($key == 'fk_user' && $conf->global->FDT_SHOW_USERADRESS) {
+			if($fk_user->array_options['options_matricule']) {
+				print " ".img_picto($langs->trans("Matricule"), 'fontawesome_id-card-alt_fas_#aaa');
+				print ' <span style="font-style: italic;color: #757575;">'.$fk_user->array_options['options_matricule']."</span>";
+			}
+
 			$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
 			if ($fulladress) {
 				print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
 				print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+			}
+
+			if($fk_user->array_options['options_optiongd']) {
+				print " ".img_picto($langs->trans("OptionGD"), 'fontawesome_car_fas_#aaa');
+				print ' <span style="font-style: italic;color: #757575;">'.$userextrafields->showOutputField('optiongd', $fk_user->array_options['options_optiongd'], '', $fk_user->table_element)."</span>";
 			}
 		}
 	}
@@ -167,13 +179,11 @@ if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 		print '</td></td></tr>';
 	}
 	else {
-		$extrafieldsuser = new extrafields($db);
-		$extrafieldsuser->fetch_name_optionals_label($usertoprocess->table_element);
 		// 1er Approbateurs 
 		print '<tr>';
 		print '<td class="titlefield fieldname_user_validation">Approbateur</td>';
 		print '<td class="valuefield fieldname_fk_user_validation_1">';
-		print $extrafieldsuser->showOutputField('approbateurfdt', $usertoprocess->array_options['options_approbateurfdt'], '', $usertoprocess->table_element);
+		print $userextrafields->showOutputField('approbateurfdt', $fk_user->array_options['options_approbateurfdt'], '', $fk_user->table_element);
 		print '</td></td></tr>';
 	}
 
@@ -268,10 +278,20 @@ foreach ($object->fields as $key => $val) {
 	if($object->status != $object::STATUS_VERIFICATION || ($key != 'prime_astreinte' && $key != 'prime_exceptionnelle' && $key != 'prime_objectif' && $key != 'prime_variable' && $key != 'prime_amplitude')) {
 		print $object->showOutputField($val, $key, $value, '', '', '', 0);
 		if($key == 'fk_user' && $conf->global->FDT_SHOW_USERADRESS) {
+			if($fk_user->array_options['options_matricule']) {
+				print " ".img_picto($langs->trans("Matricule"), 'fontawesome_id-card-alt_fas_#aaa');
+				print ' <span style="font-style: italic;color: #757575;">'.$fk_user->array_options['options_matricule']."</span>";
+			}
+
 			$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
 			if ($fulladress) {
 				print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
 				print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+			}
+
+			if($fk_user->array_options['options_optiongd']) {
+				print " ".img_picto($langs->trans("OptionGD"), 'fontawesome_car_fas_#aaa');
+				print ' <span style="font-style: italic;color: #757575;">'.$userextrafields->showOutputField('optiongd', $fk_user->array_options['options_optiongd'], '', $fk_user->table_element)."</span>";
 			}
 		}
 	}
@@ -359,13 +379,11 @@ if(!$displayVerification || $conf->global->FDT_DISPLAY_COLUMN) {
 		print '</td></td></tr>';
 	}
 	else {
-		$extrafieldsuser = new extrafields($db);
-		$extrafieldsuser->fetch_name_optionals_label($usertoprocess->table_element);
 		// 1er Approbateurs 
 		print '<tr>';
 		print '<td class="titlefield fieldname_user_validation">Approbateur</td>';
 		print '<td class="valuefield fieldname_fk_user_validation_1">';
-		print $extrafieldsuser->showOutputField('approbateurfdt', $usertoprocess->array_options['options_approbateurfdt'], '', $usertoprocess->table_element);
+		print $userextrafields->showOutputField('approbateurfdt', $fk_user->array_options['options_approbateurfdt'], '', $fk_user->table_element);
 		print '</td></td></tr>';
 	}
 
@@ -438,10 +456,20 @@ if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 		if($object->status != $object::STATUS_VERIFICATION || ($key != 'prime_astreinte' && $key != 'prime_exceptionnelle' && $key != 'prime_objectif' && $key != 'prime_variable' && $key != 'prime_amplitude')) {
 			print $object->showOutputField($val, $key, $value, '', '', '', 0);
 			if($key == 'fk_user' && $conf->global->FDT_SHOW_USERADRESS) {
+				if($fk_user->array_options['options_matricule']) {
+					print " ".img_picto($langs->trans("Matricule"), 'fontawesome_id-card-alt_fas_#aaa');
+					print ' <span style="font-style: italic;color: #757575;">'.$fk_user->array_options['options_matricule']."</span>";
+				}
+
 				$fulladress = $fk_user->getFullAddress(1, ', ', getDolGlobalInt('MAIN_SHOW_REGION_IN_STATE_SELECT'));
 				if ($fulladress) {
 					print " ".img_picto($langs->trans("Address"), 'map-marker-alt');
 					print ' <span style="font-style: italic;color: #757575;">'.dol_print_address($fulladress, 'address_'.$fk_user->id, $fk_user->element, $fk_user->id, 1, ', ')."</span>";
+				}
+
+				if($fk_user->array_options['options_optiongd']) {
+					print " ".img_picto($langs->trans("OptionGD"), 'fontawesome_car_fas_#aaa');
+					print ' <span style="font-style: italic;color: #757575;">'.$userextrafields->showOutputField('optiongd', $fk_user->array_options['options_optiongd'], '', $fk_user->table_element)."</span>";
 				}
 			}
 		}

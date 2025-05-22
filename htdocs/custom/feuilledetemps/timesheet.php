@@ -607,10 +607,13 @@ $moreforfilter .= '</div>';
 if (!empty($moreforfilter)) {
 	print '<div id="filtre" class="liste_titre liste_titre_bydiv centpercent">';
 	print $moreforfilter;
-	if($conf->global->FDT_SHOW_USERADRESS) {
-		$fk_user = new User($db);
-		$fk_user->fetch($usertoprocess->id);
 
+	$fk_user = new User($db);
+	$fk_user->fetch($usertoprocess->id);
+	$userextrafields = new Extrafields($db);
+	$userextrafields->fetch_name_optionals_label($fk_user->table_element);
+
+	if($conf->global->FDT_SHOW_USERADRESS) {
 		print '<div class="divsearchfield">';
 
 		if($fk_user->array_options['options_matricule']) {
@@ -640,6 +643,11 @@ if (!empty($moreforfilter)) {
 		print ' GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
 		print '</span>';
 	}	
+
+	if(!$userInDeplacement && !$userInGrandDeplacement && $fk_user->array_options['options_optiongd']) {
+			print " ".img_picto($langs->trans("OptionGD"), 'fontawesome_car_fas_#aaa');
+			print ' <span style="font-style: italic;color: #757575;">'.$userextrafields->showOutputField('optiongd', $fk_user->array_options['options_optiongd'], '', $fk_user->table_element)."</span>";
+	}
 	
 	print '<div class="divsearchfield nowrap" style="float: right;">';
 	if(!$conf->global->FDT_DISPLAY_COLUMN) print_liste_field_titre($selectedfields, $_SERVER["PHP_SELF"], "", '', '', '', $sortfield, $sortorder, 'center maxwidthsearch ');

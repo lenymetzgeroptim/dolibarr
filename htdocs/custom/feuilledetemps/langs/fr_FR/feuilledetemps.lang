@@ -165,6 +165,7 @@ SemaineTypeJeudi = Jeudi
 SemaineTypeVendredi = Vendredi
 SemaineTypeSamedi = Samedi
 SemaineTypeDimanche = Dimanche
+OptionGD = Option GD
 
 
 #
