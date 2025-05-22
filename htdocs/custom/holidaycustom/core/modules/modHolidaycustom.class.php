@@ -437,7 +437,7 @@ class modHolidaycustom extends DolibarrModules
 				'mainmenu'=>'hrm',
 				'leftmenu'=>'holiday_create',
 				'url'=>'/holidaycustom/card.php?action=create',
-				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 				'position'=>$r,
 				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
 				'perms'=> '$user->rights->holidaycustom->write',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
@@ -452,7 +452,7 @@ class modHolidaycustom extends DolibarrModules
 				'mainmenu'=>'hrm',
 				'leftmenu'=>'holiday_list',
 				'url'=>'/holidaycustom/list.php',
-				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 				'position'=>$r,
 				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
 				'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
@@ -512,7 +512,7 @@ class modHolidaycustom extends DolibarrModules
 				'mainmenu'=>'hrm',
 				'leftmenu'=>'holiday_import',
 				'url'=>'/holidaycustom/import.php',
-				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 				'position'=>$r,
 				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
 				'perms'=> '$user->rights->holidaycustom->import',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
