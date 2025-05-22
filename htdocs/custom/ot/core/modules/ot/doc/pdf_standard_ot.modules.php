@@ -405,19 +405,11 @@ class pdf_standard_ot extends ModelePDFOt
 					throw new Exception("L'ID OT est invalide.");
 				}
 
-				// Charger les données principales pour l'OT
-				$sql = "SELECT rowid, ref, indice, fk_project, date_creation FROM " . MAIN_DB_PREFIX . "ot_ot WHERE rowid = $otId";
-				$resql = $db->query($sql);
-				if ($resql && $db->num_rows($resql) > 0) {
-					$otData = $db->fetch_object($resql);
-				} else {
-					throw new Exception("Aucune donnée trouvée pour l'OT avec l'ID $otId.");
-				}
-
 				// Charger les cellules associées à cet OT
 				$sql = "SELECT oc.rowid, oc.id_cellule, oc.x, oc.y, oc.type, oc.title 
 						FROM " . MAIN_DB_PREFIX . "ot_ot_cellule AS oc
-						WHERE oc.ot_id = $otId";
+						WHERE oc.ot_id = $otId
+						AND oc.type != 'cardprincipale'";
 				$resql = $db->query($sql);
 				if (!$resql) {
 					dol_syslog("Erreur SQL : " . $db->lasterror(), LOG_ERR);
@@ -443,97 +435,68 @@ class pdf_standard_ot extends ModelePDFOt
 				// Laisser un petit espace pour les prochains contenus
 				$current_y += 10; 
 
-				// Charger les rôles et leurs données
-				$sqlRoles = "
-				SELECT 
-					u.firstname, 
-					u.lastname, 
-					u.office_phone, 
-					ctc.libelle AS role_label
-				FROM 
-					".MAIN_DB_PREFIX."element_contact AS sp
-				JOIN 
-					".MAIN_DB_PREFIX."user AS u ON sp.fk_socpeople = u.rowid
-				JOIN 
-					".MAIN_DB_PREFIX."c_type_contact AS ctc ON sp.fk_c_type_contact = ctc.rowid
-				WHERE 
-					sp.element_id = $object->fk_project
-					AND sp.statut = 4
-					AND sp.fk_c_type_contact IN ('160', '1032000', '1032001')
-				";
-				$resqlRoles = $db->query($sqlRoles);
+				// Récupération des cartes principales (RA, Q3, PCR)
+				$sql_cards = "SELECT c.rowid, c.title, c.type 
+							FROM " . MAIN_DB_PREFIX . "ot_ot_cellule c 
+							WHERE c.ot_id = " . $object->id . " 
+							AND c.type = 'cardprincipale' 
+							ORDER BY FIELD(c.title, 'RA', 'Q3', 'PCR')";
+				$resql_cards = $db->query($sql_cards);
 
-				$rolesData = [];
-				while ($row = $db->fetch_object($resqlRoles)) {
-				$rolesData[] = [
-					'firstname' => $row->firstname,
-					'lastname' => $row->lastname,
-					'phone' => $row->office_phone,
-					'role' => $row->role_label
-				];
-				}
+				if ($resql_cards) {
+					// Paramètres pour l'affichage des cartes principales
+					$card_width = 50;
+					$card_height = 25;
+					$card_margin = 10;
+					$cards_per_row = 3;
+					$current_x = $this->marge_gauche;
 
-				// Titre de la section
-				$pdf->SetFont('', 'B', 12);
-				$pdf->SetTextColor(0, 0, 0);
-				$current_y += 10;
+					// Calcul de la position X pour centrer les cartes
+					$total_width = ($card_width * $cards_per_row) + ($card_margin * ($cards_per_row - 1));
+					$start_x = ($this->page_largeur - $total_width) / 2;
 
-				// Répartition des rôles en trois colonnes
-				$columns = 3;
-				$col_counter = 0;
-				$current_x = $this->marge_gauche + 10;
-				$card_width = 50;
-				$card_height = 25;
-				$card_margin = 10;
+					while ($card = $db->fetch_object($resql_cards)) {
+						// Récupération des données utilisateur pour cette carte
+						$sql_user = "SELECT u.firstname, u.lastname, u.office_phone, cd.role 
+									FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne cd 
+									JOIN " . MAIN_DB_PREFIX . "user u ON cd.fk_user = u.rowid 
+									WHERE cd.ot_cellule_id = " . $card->rowid;
+						$resql_user = $db->query($sql_user);
+						$user_data = $db->fetch_object($resql_user);
 
-				// Décalage horizontal vers la gauche (petit ajustement global)
-				$shift_left = 1; // Ajustez cette valeur pour augmenter ou réduire le décalage
-				
-				// Parcours des rôles pour les afficher dans les colonnes
-				foreach ($rolesData as $role) {
-					if ($col_counter >= $columns) {
-						$col_counter = 0;
-						$current_y += $card_height + $card_margin; // Passe à la ligne suivante
-						$current_x = $this->marge_gauche; // Reviens au début de la ligne
+						if ($user_data) {
+							// Dessiner la carte
+							$pdf->SetDrawColor(0, 0, 0);
+							$pdf->Rect($start_x, $current_y, $card_width, $card_height);
+
+							// Afficher le titre (RA, Q3, PCR)
+							$pdf->SetFont('', 'B', 10);
+							$title_width = $pdf->GetStringWidth($card->title);
+							$title_x = $start_x + ($card_width - $title_width) / 2;
+							$pdf->Text($title_x, $current_y + 5, $card->title);
+
+							// Afficher le nom et prénom
+							$pdf->SetFont('', '', 9);
+							$name = $user_data->firstname . ' ' . $user_data->lastname;
+							$name_width = $pdf->GetStringWidth($name);
+							$name_x = $start_x + ($card_width - $name_width) / 2;
+							$pdf->Text($name_x, $current_y + 12, $name);
+
+							// Afficher le numéro de téléphone
+							if (!empty($user_data->office_phone)) {
+								$phone_width = $pdf->GetStringWidth($user_data->office_phone);
+								$phone_x = $start_x + ($card_width - $phone_width) / 2;
+								$pdf->Text($phone_x, $current_y + 19, $user_data->office_phone);
+							}
+
+							// Passer à la position suivante
+							$start_x += $card_width + $card_margin;
+						}
 					}
 
-					// Dessiner le contour de la carte
-					$pdf->SetDrawColor(0, 0, 0);
-					$pdf->Rect($current_x, $current_y, $card_width, $card_height);
-
-					// Ajustement de centrage horizontal avec décalage vers la gauche
-					$center_x = $current_x + $card_width / 2 - $shift_left; // Centrage ajusté vers la gauche
-
-					// Afficher le titre du rôle
-					$pdf->SetFont('', 'B', 9);
-					$role_title_width = $pdf->GetStringWidth($role['role']);
-					$role_title_x = $center_x - $role_title_width / 2; // Centrage ajusté
-					$role_title_y = $current_y + 5; // Position verticale
-					$pdf->Text($role_title_x, $role_title_y, $role['role']);
-
-					// Afficher le nom de l'utilisateur
-					$pdf->SetFont('', 'B', 10);
-					$name = $role['firstname'] . ' ' . $role['lastname'];
-					$name_width = $pdf->GetStringWidth($name);
-					$name_x = $center_x - $name_width / 2; // Centrage ajusté
-					$name_y = $current_y + 12; // Position verticale
-					$pdf->Text($name_x, $name_y, $name);
-
-					// Afficher le numéro de téléphone (s'il existe)
-					if (!empty($role['phone'])) {
-						$phone_width = $pdf->GetStringWidth($role['phone']);
-						$phone_x = $center_x - $phone_width / 2; // Centrage ajusté
-						$phone_y = $current_y + 19; // Position verticale
-						$pdf->Text($phone_x, $phone_y, $role['phone']);
-					}
-
-					// Passer à la colonne suivante
-					$current_x += $card_width + $card_margin;
-					$col_counter++;
+					// Ajouter un espace après les cartes principales
+					$current_y += $card_height + 20;
 				}
-
-				// Ajouter un espace vertical après les cartes des responsables
-				$current_y += $card_height +   $card_margin;
 
 				// Initialisation des tableaux pour les cartes dans la grille et en dessous de la grille
 				$cardsData = [];
