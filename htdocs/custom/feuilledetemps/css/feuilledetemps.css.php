@@ -164,13 +164,13 @@ div.mainmenu.feuilledetemps {
 	flex-direction: column;
 }
 
-#mainbody.feuilledetemps:not(.displaycolumn) #id-right div.fiche form:not(.notoptoleftroright) {
+#mainbody.timesheet:not(.displaycolumn) #id-right div.fiche form:not(.notoptoleftroright) {
 	height: calc(100vh - 400px);
 	display: flex;
 	flex-direction: column;
 }
 
-#mainbody.feuilledetemps.displaycolumn #id-right div.fiche form:not(.notoptoleftroright) {
+#mainbody.timesheet.displaycolumn #id-right div.fiche form:not(.notoptoleftroright) {
 	height: calc(100vh - 200px);
 	display: flex;
 	flex-direction: column;
@@ -619,6 +619,21 @@ tr > th:last-child.fixed {
 
 /* Gestion du tableau en full screen */
 
+.feuilledetemps #fullscreenContainer {
+	height: calc(100vh - 62px); 
+	width: fit-content; 
+	top: 53px; 
+	margin: auto; 
+	justify-self: anchor-center;
+}
+
+.feuilledetemps #fullscreenContainer #dialog-confirm {
+	min-height: 0px; 
+	max-height: none;
+	padding: unset; 
+	height: calc(-95px + 100vh); 
+	max-width: calc(-9px + 100vw);
+}
 
 .feuilledetemps #fullscreenContainer #tableau #tablelines_fdt {
 	max-height: calc(-101px + 100vh) !important;
@@ -886,4 +901,13 @@ select[name^="type_deplacement"].deplacement_holiday, select[name^="moyen_transp
 
 td.affairecolumn span.select2-container {
     width: 100% !important;
+}
+
+:root {
+	--fdtcolorbefore: <?php print $conf->global->FDT_ANTICIPE_WEEKEND_COLOR ?>;
+	--fdtcolorferie:<?php print $conf->global->FDT_FERIE_COLOR ?>;
+	--fdtcolorholidaydraft: <?php print $conf->global->HOLIDAY_DRAFT_COLOR ?>;
+	--fdtcolorholidayvalidate: <?php print $conf->global->HOLIDAY_APPROBATION1_COLOR ?>;
+	--fdtcolorholidayapprove1: <?php print $conf->global->HOLIDAY_APPROBATION2_COLOR ?>;
+	--fdtcolorholidayapprove2: <?php print $conf->global->HOLIDAY_VALIDATED_COLOR ?>;
 }

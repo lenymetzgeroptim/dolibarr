@@ -390,7 +390,6 @@ else {
 	}
 }
 
-
 if(/*!$user->admin &&*/ !$user->rights->feuilledetemps->feuilledetemps->readall && $user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 	$user_hierarchy = $user->getAllChildIds(1);
 	$sql .= " AND (t.fk_user IN (".implode(', ', $user_hierarchy).")";

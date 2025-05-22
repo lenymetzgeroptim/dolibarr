@@ -56,6 +56,7 @@ global $langs, $user;
 require_once DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php";
 require_once '../lib/feuilledetemps.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedHoliday.class.php';
+require_once DOL_DOCUMENT_ROOT."/custom/holidaycustom/lib/holiday.lib.php";
 
 // Translations
 $langs->loadLangs(array("feuilledetemps@feuilledetemps", "admin"));
@@ -180,47 +181,74 @@ $item->setAsColor();
 $item->defaultFieldValue = '#f4eede';
 
 
-// Titre FDT
-$formSetup->newItem('AutreParamFDT')->setAsTitle();
 
-// JOUR_ANTICIPES
-$item = $formSetup->newItem('JOUR_ANTICIPES')->setAsString();
+// Titre ParamDisplayFDT
+$formSetup->newItem('ParamDisplayFDT')->setAsTitle();
+
+// FDT_OPERATION_TEXT
+$item = $formSetup->newItem('FDT_OPERATION_TEXT')->setAsHtml();
 
 // FDT_DISPLAY_COLUMN
 $item = $formSetup->newItem('FDT_DISPLAY_COLUMN')->setAsYesNo();
 
-// FDT_DECIMAL_HOUR_FORMAT
-$item = $formSetup->newItem('FDT_DECIMAL_HOUR_FORMAT')->setAsYesNo();
+if($conf->global->FDT_DISPLAY_COLUMN) {
+	// FDT_COLUMN_MAX_TASK_DAY
+	$item = $formSetup->newItem('FDT_COLUMN_MAX_TASK_DAY')->setAsString();
+}
+else {
+	// FDT_USE_HS_CASE
+	$item = $formSetup->newItem('FDT_USE_HS_CASE')->setAsYesNo();
+}
 
-// FDT_USE_HS_CASE
-$item = $formSetup->newItem('FDT_USE_HS_CASE')->setAsYesNo();
+// JOUR_ANTICIPES
+$item = $formSetup->newItem('JOUR_ANTICIPES')->setAsString();
 
 // FDT_DISPLAY_FULL_WEEK
 $item = $formSetup->newItem('FDT_DISPLAY_FULL_WEEK')->setAsYesNo();
 
-// FDT_COLUMN_MAX_TASK_DAY
-$item = $formSetup->newItem('FDT_COLUMN_MAX_TASK_DAY')->setAsString();
-
-// FDT_USER_APPROVER
-$item = $formSetup->newItem('FDT_USER_APPROVER')->setAsYesNo();
+// FDT_DECIMAL_HOUR_FORMAT
+$item = $formSetup->newItem('FDT_DECIMAL_HOUR_FORMAT')->setAsYesNo();
 
 // FDT_ANTICIPE_BLOCKED
 $item = $formSetup->newItem('FDT_ANTICIPE_BLOCKED')->setAsYesNo();
 
-// FDT_DAY_FOR_NEXT_FDT
-$item = $formSetup->newItem('FDT_DAY_FOR_NEXT_FDT')->setAsString();
+// FDT_SHOW_USERADRESS
+$item = $formSetup->newItem('FDT_SHOW_USERADRESS')->setAsYesNo();
+
+
+
+// Titre ExportFDT
+$formSetup->newItem('ExportFDT')->setAsTitle();
 
 // FDT_MANAGE_EMPLOYER
-$item = $formSetup->newItem('FDT_MANAGE_EMPLOYER')->setAsYesNo();
+$item = $formSetup->newItem('FDT_MANAGE_EMPLOYER');
+$arraytypeleaves[0] = '';
+$arraytypeleaves = getLabelList('societe', 'nom');
+$item->setAsMultiSelect($arraytypeleaves);
+
+
+
+// FDT_EXPORT_REPOS_COMPENSATEUR
+$item = $formSetup->newItem('FDT_EXPORT_REPOS_COMPENSATEUR')->setAsYesNo();
+
+
+
+// Titre FDT
+$formSetup->newItem('AutreParamFDT')->setAsTitle();
+
+// FDT_USER_APPROVER
+$item = $formSetup->newItem('FDT_USER_APPROVER')->setAsYesNo();
+
+// FDT_DAY_FOR_NEXT_FDT
+$item = $formSetup->newItem('FDT_DAY_FOR_NEXT_FDT')->setAsString();
 
 // FDT_STATUT_HOLIDAY
 $item = $formSetup->newItem('FDT_STATUT_HOLIDAY')->setAsYesNo();
 
-// FDT_STATUT_HOLIDAY_VALIDATE_VERIF
-$item = $formSetup->newItem('FDT_STATUT_HOLIDAY_VALIDATE_VERIF')->setAsYesNo();
-
-// FDT_SHORTCUT_HOLIDAY
-// $item = $formSetup->newItem('FDT_SHORTCUT_HOLIDAY')->setAsYesNo();
+if($conf->global->FDT_STATUT_HOLIDAY) {
+	// FDT_STATUT_HOLIDAY_VALIDATE_VERIF
+	$item = $formSetup->newItem('FDT_STATUT_HOLIDAY_VALIDATE_VERIF')->setAsYesNo();
+}
 
 // FDT_GENERATE_TASK_PROJECTCREATION
 $item = $formSetup->newItem('FDT_GENERATE_TASK_PROJECTCREATION')->setAsYesNo();
@@ -234,67 +262,69 @@ $item = $formSetup->newItem('FDT_SENDMAIL_FROM')->setAsString();
 // FDT_VERIF_MODIFWHENHOLIDAY
 $item = $formSetup->newItem('FDT_VERIF_MODIFWHENHOLIDAY')->setAsYesNo();
 
-// FDT_SHOW_USERADRESS
-$item = $formSetup->newItem('FDT_SHOW_USERADRESS')->setAsYesNo();
-
 // FDT_ORDER_MATRICULE
 $item = $formSetup->newItem('FDT_ORDER_MATRICULE')->setAsYesNo();
+
 
 
 // Titre FDT_STANDARD_WEEK
 $formSetup->newItem('FDT_STANDARD_WEEK')->setAsTitle();
 
-// FDT_STANDARD_WEEK_FOR_HOLIDAY
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_FOR_HOLIDAY')->setAsYesNo();
+// FDT_USE_STANDARD_WEEK
+$item = $formSetup->newItem('FDT_USE_STANDARD_WEEK')->setAsYesNo();
 
-// Titre FDT_STANDARD_WEEK_WITH_RTT
-$formSetup->newItem('FDT_STANDARD_WEEK_WITH_RTT')->setAsTitle();
+if($conf->global->FDT_USE_STANDARD_WEEK) {
+	// FDT_STANDARD_WEEK_FOR_HOLIDAY
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_FOR_HOLIDAY')->setAsYesNo();
 
-// FDT_STANDARD_WEEK_MONDAY_WITH_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_MONDAY_WITH_RTT')->setAsString();
+	// Titre FDT_STANDARD_WEEK_WITH_RTT
+	$formSetup->newItem('FDT_STANDARD_WEEK_WITH_RTT')->setAsTitle();
 
-// FDT_STANDARD_WEEK_TUESDAY_WITH_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_TUESDAY_WITH_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_MONDAY_WITH_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_MONDAY_WITH_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_TUESDAY_WITH_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_TUESDAY_WITH_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_THURSDAY_WITH_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_THURSDAY_WITH_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_WEDNESDAY_WITH_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_FRIDAY_WITH_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_FRIDAY_WITH_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_THURSDAY_WITH_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_THURSDAY_WITH_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_SATURDAY_WITH_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_SATURDAY_WITH_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_FRIDAY_WITH_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_FRIDAY_WITH_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_SUNDAY_WITH_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_SUNDAY_WITH_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_SATURDAY_WITH_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_SATURDAY_WITH_RTT')->setAsString();
 
-// Titre FDT_STANDARD_WEEK_NO_RTT
-$formSetup->newItem('FDT_STANDARD_WEEK_NO_RTT')->setAsTitle();
+	// FDT_STANDARD_WEEK_SUNDAY_WITH_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_SUNDAY_WITH_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_MONDAY_NO_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_MONDAY_NO_RTT')->setAsString();
+	// Titre FDT_STANDARD_WEEK_NO_RTT
+	$formSetup->newItem('FDT_STANDARD_WEEK_NO_RTT')->setAsTitle();
 
-// FDT_STANDARD_WEEK_TUESDAY_NO_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_TUESDAY_NO_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_MONDAY_NO_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_MONDAY_NO_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_TUESDAY_NO_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_TUESDAY_NO_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_THURSDAY_NO_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_THURSDAY_NO_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_WEDNESDAY_NO_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_FRIDAY_NO_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_FRIDAY_NO_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_THURSDAY_NO_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_THURSDAY_NO_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_SATURDAY_NO_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_SATURDAY_NO_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_FRIDAY_NO_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_FRIDAY_NO_RTT')->setAsString();
 
-// FDT_STANDARD_WEEK_SUNDAY_NO_RTT
-$item = $formSetup->newItem('FDT_STANDARD_WEEK_SUNDAY_NO_RTT')->setAsString();
+	// FDT_STANDARD_WEEK_SATURDAY_NO_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_SATURDAY_NO_RTT')->setAsString();
 
+	// FDT_STANDARD_WEEK_SUNDAY_NO_RTT
+	$item = $formSetup->newItem('FDT_STANDARD_WEEK_SUNDAY_NO_RTT')->setAsString();
+}
 
 $setupnotempty += count($formSetup->items);
 

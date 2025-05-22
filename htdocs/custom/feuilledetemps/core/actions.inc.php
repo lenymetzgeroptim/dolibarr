@@ -46,7 +46,7 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 	$regulHeureSup50 = ($regul->heure_sup50 != 0 ? (double)$regul->heure_sup50 : 0);
 	$regulHeureSup50HT = ($regul->heure_sup50ht != 0 ? (double)$regul->heure_sup50ht : 0);
 
-	if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $usertoprocess->array_options['options_fk_employeur'] == 157)){
+			if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($usertoprocess->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 		$object->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATIONInDolibarr", $object->ref);
 		$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATIONInDolibarr", $object->ref);
 
@@ -71,7 +71,9 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 				$heure_sup00_before = $silae_tmpday->heure_sup00;
 				$heure_sup25_before = $silae_tmpday->heure_sup25;
 				$heure_sup50_before = $silae_tmpday->heure_sup50;
-				$heure_sup50ht_before = $silae_tmpday->heure_sup50ht;
+				if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+					$heure_sup50ht_before = $silae_tmpday->heure_sup50ht;
+				}
 				$silae_tmpday->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
 
 				// Agenda Heure Sup 0%
@@ -99,7 +101,7 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 				}
 
 				// Agenda Heure Sup 50% HT
-				if($heure_sup50ht_before != $silae_tmpday->heure_sup50ht) {
+				if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && $heure_sup50ht_before != $silae_tmpday->heure_sup50ht) {
 					$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50ht / 3600);
 					$old_value = formatValueForAgenda('double', $heure_sup50ht_before / 3600);
 	
@@ -110,7 +112,9 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 					$regulHeureSup00 += ((double)$silae_tmpday->heure_sup00 - (double)$heure_sup00_before);
 					$regulHeureSup25 += ((double)$silae_tmpday->heure_sup25 - (double)$heure_sup25_before);
 					$regulHeureSup50 += ((double)$silae_tmpday->heure_sup50 - (double)$heure_sup50_before);
-					$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
+					if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+						$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
+					}
 				}
 			}
 
@@ -144,7 +148,7 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 			$regul = new Regul($db);
 			$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 
-			if($regulHeureSup00 != $regul->heure_sup00 || $regulHeureSup25 != $regul->heure_sup25 || $regulHeureSup50 != $regul->heure_sup50 || $regulHeureSup50ht != $regul->heure_sup50ht) {
+			if($regulHeureSup00 != $regul->heure_sup00 || $regulHeureSup25 != $regul->heure_sup25 || $regulHeureSup50 != $regul->heure_sup50 || ($regulHeureSup50ht != $regul->heure_sup50ht && $conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE)) {
 				// Agenda Heure Sup 0%
 				if($regulHeureSup00 != $regul->heure_sup00) {
 					$new_value = formatValueForAgenda('double', $regulHeureSup00 / 3600);
@@ -170,7 +174,7 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 				}
 
 				// Agenda Heure Sup 50% HT
-				if($regulHeureSup50HT != $regul->heure_sup50ht) {
+				if($regulHeureSup50HT != $regul->heure_sup50ht && $conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
 					$new_value = formatValueForAgenda('double', $regulHeureSup50HT / 3600);
 					$old_value = formatValueForAgenda('double', $regul->heure_sup50ht / 3600);
 
@@ -181,7 +185,9 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 					$regul->heure_sup00 = $regulHeureSup00;
 					$regul->heure_sup25 = $regulHeureSup25;
 					$regul->heure_sup50 = $regulHeureSup50;
-					$regul->heure_sup50ht = $regulHeureSup50HT;
+					if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+						$regul->heure_sup50ht = $regulHeureSup50HT;
+					}
 
 					$result = $regul->update($user);
 				}
@@ -191,7 +197,9 @@ if ($action == 'confirm_validate1' && $confirm == 'yes' && $conf->global->FDT_US
 					$regul->heure_sup00 = $regulHeureSup00;
 					$regul->heure_sup25 = $regulHeureSup25;
 					$regul->heure_sup50 = $regulHeureSup50;
-					$regul->heure_sup50ht = $regulHeureSup50HT;
+					if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+						$regul->heure_sup50ht = $regulHeureSup50HT;
+					}
 
 					$result = $regul->create($user);
 				}
@@ -244,7 +252,7 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 			$object->updateTaskValidation($user->id, 1, 1, 2);
 		}
 		
-		if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $usertoprocess->array_options['options_fk_employeur'] == 157)){
+		if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($usertoprocess->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 			$object->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATION1ET2InDolibarr", $object->ref);
 			$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_APPROBATION1ET2InDolibarr", $object->ref);
 
@@ -272,7 +280,9 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 					$heure_sup00_before = $silae_tmpday->heure_sup00;
 					$heure_sup25_before = $silae_tmpday->heure_sup25;
 					$heure_sup50_before = $silae_tmpday->heure_sup50;
-					$heure_sup50ht_before = $silae_tmpday->heure_sup50ht;
+					if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+						$heure_sup50ht_before = $silae_tmpday->heure_sup50ht;
+					}
 					$silae_tmpday->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
 					
 					if($heure_sup00_before != $silae_tmpday->heure_sup00) {
@@ -299,7 +309,7 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 					}
 
 					// Agenda Heure Sup 50% HT
-					if($heure_sup50ht_before != $silae_tmpday->heure_sup50ht) {
+					if($heure_sup50ht_before != $silae_tmpday->heure_sup50ht && $conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
 						$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50ht / 3600);
 						$old_value = formatValueForAgenda('double', $heure_sup50ht_before / 3600);
 		
@@ -310,7 +320,9 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 						$regulHeureSup00 += ((double)$silae_tmpday->heure_sup00 - (double)$heure_sup00_before);
 						$regulHeureSup25 += ((double)$silae_tmpday->heure_sup25 - (double)$heure_sup25_before);
 						$regulHeureSup50 += ((double)$silae_tmpday->heure_sup50 - (double)$heure_sup50_before);
-						$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
+						if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+							$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
+						}
 					}
 				}
 
@@ -365,7 +377,7 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 					}
 
 					// Agenda Heure Sup 50% HT
-					if($regulHeureSup50HT != $regul->heure_sup50ht) {
+					if($regulHeureSup50HT != $regul->heure_sup50ht && $conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
 						$new_value = formatValueForAgenda('double', $regulHeureSup50HT / 3600);
 						$old_value = formatValueForAgenda('double', $regul->heure_sup50ht / 3600);
 
@@ -376,7 +388,9 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 						$regul->heure_sup00 = $regulHeureSup00;
 						$regul->heure_sup25 = $regulHeureSup25;
 						$regul->heure_sup50 = $regulHeureSup50;
-						$regul->heure_sup50ht = $regulHeureSup50HT;
+						if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+							$regul->heure_sup50ht = $regulHeureSup50HT;
+						}
 
 						$result = $regul->update($user);
 					}
@@ -386,7 +400,9 @@ elseif ($action == 'confirm_validate1' && $confirm == 'yes' && !$conf->global->F
 						$regul->heure_sup00 = $regulHeureSup00;
 						$regul->heure_sup25 = $regulHeureSup25;
 						$regul->heure_sup50 = $regulHeureSup50;
-						$regul->heure_sup50ht = $regulHeureSup50HT;
+						if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+							$regul->heure_sup50ht = $regulHeureSup50HT;
+						}
 
 						$result = $regul->create($user);
 					}
@@ -432,7 +448,7 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 
 	$list_valideur = $object->listApprover2;
 	if(!in_array(0, $list_valideur[1])) {
-		if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $usertoprocess->array_options['options_fk_employeur'] == 157)){
+		if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($usertoprocess->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 			$object->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_VERIFICATIONInDolibarr", $object->ref);
 			$object->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_VERIFICATIONInDolibarr", $object->ref);
 
@@ -460,7 +476,9 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 					$heure_sup00_before = $silae_tmpday->heure_sup00;
 					$heure_sup25_before = $silae_tmpday->heure_sup25;
 					$heure_sup50_before = $silae_tmpday->heure_sup50;
-					$heure_sup50ht_before = $silae_tmpday->heure_sup50ht;
+					if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+						$heure_sup50ht_before = $silae_tmpday->heure_sup50ht;
+					}
 					$silae_tmpday->calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow);
 
 					if($heure_sup00_before != $silae_tmpday->heure_sup00) {
@@ -487,7 +505,7 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 					}
 
 					// Agenda Heure Sup 50% HT
-					if($heure_sup50ht_before != $silae_tmpday->heure_sup50ht) {
+					if($heure_sup50ht_before != $silae_tmpday->heure_sup50ht && $conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
 						$new_value = formatValueForAgenda('double', $silae_tmpday->heure_sup50ht / 3600);
 						$old_value = formatValueForAgenda('double', $heure_sup50ht_before / 3600);
 		
@@ -498,7 +516,9 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 						$regulHeureSup00 += ((double)$silae_tmpday->heure_sup00 - (double)$heure_sup00_before);
 						$regulHeureSup25 += ((double)$silae_tmpday->heure_sup25 - (double)$heure_sup25_before);
 						$regulHeureSup50 += ((double)$silae_tmpday->heure_sup50 - (double)$heure_sup50_before);
-						$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
+						if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+							$regulHeureSup50HT += ((double)$silae_tmpday->heure_sup50ht - (double)$heure_sup50ht_before);
+						}
 					}
 				}
 
@@ -527,7 +547,7 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 				$regul = new Regul($db);
 				$resregul = $regul->fetchWithoutId($first_day_month, $usertoprocess->id, 1);
 
-				if($regulHeureSup00 != $regul->heure_sup00 || $regulHeureSup25 != $regul->heure_sup25 || $regulHeureSup50 != $regul->heure_sup50 || $regulHeureSup50HT != $regul->heure_sup50ht) {
+				if($regulHeureSup00 != $regul->heure_sup00 || $regulHeureSup25 != $regul->heure_sup25 || $regulHeureSup50 != $regul->heure_sup50 || ($regulHeureSup50HT != $regul->heure_sup50ht && $conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE)) {
 					// Agenda Heure Sup 0%
 					if($regulHeureSup00 != $regul->heure_sup00) {
 						$new_value = formatValueForAgenda('double', $regulHeureSup00 / 3600);
@@ -553,7 +573,7 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 					}
 
 					// Agenda Heure Sup 50% HT
-					if($regulHeureSup50HT != $regul->heure_sup50ht) {
+					if($regulHeureSup50HT != $regul->heure_sup50ht && $conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
 						$new_value = formatValueForAgenda('double', $regulHeureSup50HT / 3600);
 						$old_value = formatValueForAgenda('double', $regul->heure_sup50ht / 3600);
 
@@ -564,7 +584,9 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 						$regul->heure_sup00 = $regulHeureSup00;
 						$regul->heure_sup25 = $regulHeureSup25;
 						$regul->heure_sup50 = $regulHeureSup50;
-						$regul->heure_sup50ht = $regulHeureSup50HT;
+						if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+							$regul->heure_sup50ht = $regulHeureSup50HT;
+						}
 
 						$result = $regul->update($user);
 					}
@@ -574,7 +596,9 @@ if ($action == 'confirm_validate2' && !$conf->global->FDT_USER_APPROVER && $conf
 						$regul->heure_sup00 = $regulHeureSup00;
 						$regul->heure_sup25 = $regulHeureSup25;
 						$regul->heure_sup50 = $regulHeureSup50;
-						$regul->heure_sup50ht = $regulHeureSup50HT;
+						if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE) {
+							$regul->heure_sup50ht = $regulHeureSup50HT;
+						}
 
 						$result = $regul->create($user);
 					}

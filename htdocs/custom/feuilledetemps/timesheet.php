@@ -175,7 +175,7 @@ else {
 	$object->date_fin = $lastdaytoshow;
 }
 
-if(!$user->admin && $conf->global->FDT_USER_APPROVER && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) ){
+if(!$user->admin && $conf->global->FDT_USER_APPROVER && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) && ($user->id != $usertoprocess->id || !$user->rights->feuilledetemps->feuilledetemps->read)){
 	$can_modify_fdt = 0;
 }
 
@@ -266,9 +266,9 @@ else {
 
 // Semaine type
 $standard_week_hour = array();
-if($usertoprocess->array_options['options_semaine_type_lundi'] || $usertoprocess->array_options['options_semaine_type_mardi'] || $usertoprocess->array_options['options_semaine_type_mercredi'] || 
+if($conf->global->FDT_USE_STANDARD_WEEK && ($usertoprocess->array_options['options_semaine_type_lundi'] || $usertoprocess->array_options['options_semaine_type_mardi'] || $usertoprocess->array_options['options_semaine_type_mercredi'] || 
 $usertoprocess->array_options['options_semaine_type_jeudi'] || $usertoprocess->array_options['options_semaine_type_vendredi'] || $usertoprocess->array_options['options_semaine_type_samedi'] || 
-$usertoprocess->array_options['options_semaine_type_dimanche']) {
+$usertoprocess->array_options['options_semaine_type_dimanche'])) {
 	$standard_week_hour['Lundi'] = $usertoprocess->array_options['options_semaine_type_lundi'] * 3600;
 	$standard_week_hour['Mardi'] = $usertoprocess->array_options['options_semaine_type_mardi'] * 3600;
 	$standard_week_hour['Mercredi'] = $usertoprocess->array_options['options_semaine_type_mercredi'] * 3600;
@@ -478,7 +478,7 @@ if ($morewherefilter) {	// Get all task without any filter, so we can show total
 $projectsrole = $taskstatic->getUserRolesForProjectsOrTasks($usertoprocess, 0, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
 $tasksrole = $taskstatic->getUserRolesForProjectsOrTasks(0, $usertoprocess, ($project->id ? $project->id : 0), 0, $onlyopenedproject);
 
-// $array_js = array('/core/js/timesheet.js', '/custom/feuilledetemps/core/js/timesheet.js', '/custom/feuilledetemps/core/js/parameters.php');
+// $array_js = array('/core/js/timesheet.js', '/custom/feuilledetemps/js/feuilledetemps.js.php', '/custom/feuilledetemps/js/parameters.php');
 llxHeader("", $title, "", '', '', '', $array_js, '', '', 'classforhorizontalscrolloftabs feuilledetemps timesheet'.($conf->global->FDT_DISPLAY_COLUMN ? ' displaycolumn' : ''));
 //print '<body onresize="redimenssion()">';
 
@@ -501,30 +501,20 @@ print '<i class="fa fa-angle-up fa-fw open-intro" style="display: none;"></i> ';
 print 'Fonctionnement';
 print '</div>';
 print '<div id="fonctionnement">';
-print '<span class="hideonsmartphone opacitymedium">';
-if(!$conf->global->FDT_DISPLAY_COLUMN) {
-	print 'Cette vue est restreinte aux projets ou tâches pour lesquels vous êtes un contact affecté.. Seuls les projets ouverts sont visibles (les projets à l\'état brouillon ou fermé ne sont pas visibles).<br>';
-	print 'Seules les tâches qui vous sont assignées sont visibles.<br>';
-	print '<strong>Temps de travail :</strong> Veuillez renseigner vos horaires pour chaque jour du mois (max : 10h par jour et 48h par semaine).<br>';
-	print '<strong>Heure sup :</strong> Si vous entrez + de '.$heure_semaine_hs.'h, 2 nouvelles cases apparaissent. Dans la case <span class="txt_hs25">bleue</span>, entrez les heures entre '.$heure_semaine_hs.'h et '.$conf->global->HEURE_SUP1.'h. Dans la case <span class="txt_hs50">orange</span>, entrez les heures entre '.$conf->global->HEURE_SUP1.'h et '.$conf->global->HEURE_MAX_SEMAINE.'h.<br>';
-	print '<strong>Autres :</strong> Vous pouvez également renseigner les autres types d\'heures en cochant la case correspondante sur la tache. (max : temps de travail du jour concerné).<br>';
-}
-print '<strong>Code couleur : ';
-print '</span>';
-print '<span class="txt_before">Jours anticipés</span> - <span class="txt_ferie">Jours fériés</span>';
-if(!$conf->global->FDT_DISPLAY_COLUMN) print ' - <span class="txt_conges_brouillon">Absence en brouillon</span> - <span class="txt_conges_valide">Absence en Approbation n°1</span> - <span class="txt_conges_approuve1">Absence en Approbation n°2</span> - <span class="txt_conges_approuve2">Absence approuvée</span>';
-print '</strong>';
-if(!$conf->global->FDT_DISPLAY_COLUMN) {
-	print '<span class="hideonsmartphone opacitymedium info_fdt">';
-	if($userInDeplacement) {
-		print '<br>D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
+if (getDolGlobalString('FDT_OPERATION_TEXT')) {
+	/* $conf->global->FDT_OPERATION_TEXT = preg_replace('/<br(\s[\sa-zA-Z_="]*)?\/?>/i', '<br>', $conf->global->FDT_OPERATION_TEXT);*/
+	if (getDolGlobalString('FDT_OPERATION_TEXT')) {
+		$substitutionarray = getCommonSubstitutionArray($langs);
+		complete_substitutions_array($substitutionarray, $langs);
+		$texttoshow = make_substitutions(getDolGlobalString('FDT_OPERATION_TEXT'), $substitutionarray, $langs);
+
+		print "\n<!-- Start of welcome text -->\n";
+		print '<table width="100%" class="notopnoleftnoright"><tr><td>';
+		print dol_htmlentitiesbr($texttoshow);
+		print '</td></tr></table>';
+		print "\n<!-- End of welcome text -->\n";
 	}
-	if($userInGrandDeplacement) {
-		print '<br>GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
-	}	
-	print '<br>Les heures de route ne doivent pas être pointées';
 }
-print '</span><br><br>';
 print '</div></div>';
 
 $nav = '<a class="inline-block valignmiddle" href="?year='.$prev_year."&month=".$prev_month.$paramwithoutdate.'">'.img_previous($langs->trans("Previous"))."</a>\n";
@@ -636,6 +626,21 @@ if (!empty($moreforfilter)) {
 
 		print '</div>';
 	}
+
+	if($userInDeplacement || $userInGrandDeplacement) {
+		print " ".img_picto($langs->trans("Deplacement"), 'fontawesome_car_fas_#aaa');
+	}
+	if($userInDeplacement) {
+		print ' <span style="font-style: italic;color: #757575;">';
+		print ' D1 = '.$userField_deplacement->array_options['options_d_1'].', D2 = '.$userField_deplacement->array_options['options_d_2'].' D3 = '.$userField_deplacement->array_options['options_d_3'].' D4 = '.$userField_deplacement->array_options['options_d_4'];
+		print '</span>';
+	}
+	if($userInGrandDeplacement) {
+		print ' <span style="font-style: italic;color: #757575;">';
+		print ' GD1 = '.$userField_deplacement->array_options['options_gd1'].', GD2 = '.$userField_deplacement->array_options['options_gd2'].', GD3 = '.$userField_deplacement->array_options['options_gd3'].', GD4 = '.$userField_deplacement->array_options['options_gd4'];
+		print '</span>';
+	}	
+	
 	print '<div class="divsearchfield nowrap" style="float: right;">';
 	if(!$conf->global->FDT_DISPLAY_COLUMN) print_liste_field_titre($selectedfields, $_SERVER["PHP_SELF"], "", '', '', '', $sortfield, $sortorder, 'center maxwidthsearch ');
 	print '<button type="button" title="Plein écran" id="fullScreen" name="fullScreen" class="nobordertransp button_search_x"><span class="fa fa-expand" style="font-size: 1.7em;"></span></button>';
@@ -749,14 +754,14 @@ if (count($tasksarray) > 0 || $conf->global->FDT_DISPLAY_COLUMN) {
 
 
 // Tableau Full Screen
-print '<div id="fullscreenContainer" tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-dialog-buttons ui-draggable" aria-describedby="dialog-confirm" aria-labelledby="ui-id-1" style="height: calc(100vh - 62px); width: calc(100vw - 9px); top: 53px; display: none;">';
+print '<div id="fullscreenContainer" tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-dialog-buttons ui-draggable" aria-describedby="dialog-confirm" aria-labelledby="ui-id-1" style="display: none;">';
 print '<div class="ui-dialog-titlebar ui-corner-all ui-widget-header ui-helper-clearfix ui-draggable-handle">';
 print '<span id="ui-id-1" class="ui-dialog-title">Feuille de temps</span>';
 print '<button type="button" id="closeFullScreen" class="ui-button ui-corner-all ui-widget ui-button-icon-only ui-dialog-titlebar-close" title="Close">';
 print '<span class="ui-button-icon ui-icon ui-icon-closethick"></span>';
 print '<span class="ui-button-icon-space"></span>Close</button></div>';
 
-print '<div id="dialog-confirm" style="width: auto; min-height: 0px; max-height: none; padding: unset; height: calc(-95px + 100vh); width: calc(-9px + 100vw);" class="ui-dialog-content ui-widget-content">';
+print '<div id="dialog-confirm" class="ui-dialog-content ui-widget-content">';
 print '<div id="tableau"></div>';
 print '</div></div>';
 
@@ -796,7 +801,7 @@ if ($conf->use_javascript_ajax) {
 		print " displayFav();";
 	}
 
-	//print " redimenssion();";
+	print " redimenssion('open');";
 	print " $('.close-intro').click(function() {
 				$('#fonctionnement').slideUp();
 				$('.open-intro').show();

@@ -1292,7 +1292,7 @@ class FeuilleDeTemps extends CommonObject
 			
 			//$langs->load("feuilledetemps@feuilledetemps");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_fdt->array_options['options_fk_employeur'] == 157)){
+			if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($user_fdt->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 				$this->labelStatus[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {
@@ -1304,7 +1304,7 @@ class FeuilleDeTemps extends CommonObject
 			$this->labelStatus[self::STATUS_EXPORTED] = $langs->trans('Exportée');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->trans('Disabled');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if(!$conf->global->FDT_MANAGE_EMPLOYER || ($conf->global->FDT_MANAGE_EMPLOYER && $user_fdt->array_options['options_fk_employeur'] == 157)){
+			if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($user_fdt->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 				$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {
@@ -2173,7 +2173,7 @@ class FeuilleDeTemps extends CommonObject
 				$test = num_public_holiday($tmpdaygmt, $tmpdaygmt + 86400, $mysoc->country_code, 0, 0, 0, 0);
 
 				if($test) { // Jour feriés
-					if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+					if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 					}
 					elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
@@ -2187,7 +2187,7 @@ class FeuilleDeTemps extends CommonObject
 					for($i = 0; $i < sizeof($isavailablefordayanduser['rowid']); $i++) {
 						if($isavailablefordayanduser['hour'][$i] > 0){ // Congés en heure
 							if($isavailablefordayanduser['nb_jour'][$i] > 1) {
-								if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+								if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 									$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 								}
 								else {
@@ -2197,7 +2197,7 @@ class FeuilleDeTemps extends CommonObject
 								$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][$i] / 3600) : ($isavailablefordayanduser['hour'][$i] / 3600));
 							}
 						}
-						elseif($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+						elseif($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 						}
 						elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
@@ -2215,7 +2215,7 @@ class FeuilleDeTemps extends CommonObject
 				}
 				elseif(($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) && $isavailablefordayanduser['hour'][0] > 0){ // Congés en heure
 					if($isavailablefordayanduser['nb_jour'][0] > 1) {
-						if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+						if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 						}
 						else {
@@ -2227,7 +2227,7 @@ class FeuilleDeTemps extends CommonObject
 					}
 				}
 				elseif($isavailablefordayanduser['morning'] == false && $isavailablefordayanduser['afternoon'] == false) { // Congés journées entières
-					if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+					if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 					}
 					elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
@@ -2238,7 +2238,7 @@ class FeuilleDeTemps extends CommonObject
 					}
 				}
 				elseif($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) { // Congés demi journées
-					if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+					if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
 					}
 					elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
@@ -3771,7 +3771,7 @@ class FeuilleDeTemps extends CommonObject
 		return 1;
 	}
 
-	public function load_previous_next_ref_byusername($user_id, $date_debut)
+	public function load_previous_next_ref_byusername($user_id, $date_debut, $etablissement = null)
 	{
 		global $user; 
 
@@ -3790,7 +3790,11 @@ class FeuilleDeTemps extends CommonObject
 				LEAD(f.rowid) OVER (PARTITION BY f.date_debut, f.date_fin ORDER BY u.lastname, u.firstname) AS next_feuilledetemps
 			FROM llx_feuilledetemps_feuilledetemps f
 			JOIN llx_user u ON f.fk_user = u.rowid
-		)
+			JOIN llx_user_extrafields ue ON ue.fk_object = u.rowid";
+		if($etablissement !== null) {
+			$sql .= " WHERE ue.etablissement = $etablissement";
+		}
+		$sql .= ")
 		SELECT 
 			f_current.*,
 			f_prev.ref AS prev_feuilledetemps_ref,
@@ -3824,6 +3828,64 @@ class FeuilleDeTemps extends CommonObject
 			return -1;
 		}
   	}
+
+	  public function load_previous_next_ref_bymatricule($user_id, $date_debut, $etablissement = null)
+	  {
+		  global $user; 
+  
+		  $arrayres = array();
+	  
+		  $sql = 
+		  "WITH OrderedUsers AS (
+			  SELECT 
+				  f.rowid AS feuilledetemps_id,
+				  f.fk_user,
+				  f.date_debut,
+				  f.date_fin,
+				  u.lastname,
+				  u.firstname,
+				  LAG(f.rowid) OVER (PARTITION BY f.date_debut, f.date_fin ORDER BY ue.matricule) AS prev_feuilledetemps,
+				  LEAD(f.rowid) OVER (PARTITION BY f.date_debut, f.date_fin ORDER BY ue.matricule) AS next_feuilledetemps
+			  FROM llx_feuilledetemps_feuilledetemps f
+			  JOIN llx_user u ON f.fk_user = u.rowid
+			  JOIN llx_user_extrafields ue ON ue.fk_object = u.rowid";
+		  if($etablissement !== null) {
+			  $sql .= " WHERE ue.etablissement = $etablissement";
+		  }
+		  $sql .= ")
+		  SELECT 
+			  f_current.*,
+			  f_prev.ref AS prev_feuilledetemps_ref,
+			  f_next.ref AS next_feuilledetemps_ref
+		  FROM OrderedUsers f_current
+		  LEFT JOIN llx_feuilledetemps_feuilledetemps f_prev 
+			  ON f_current.prev_feuilledetemps = f_prev.rowid
+		  LEFT JOIN llx_feuilledetemps_feuilledetemps f_next 
+			  ON f_current.next_feuilledetemps = f_next.rowid
+		  WHERE f_current.fk_user = $user_id AND f_current.date_debut = '".$this->db->idate($date_debut)."'";
+		  
+  
+		  dol_syslog(get_class($this)."::load_previous_next_ref_byusername", LOG_DEBUG);
+		  $resql = $this->db->query($sql);
+		  if ($resql) {
+			  $num = $this->db->num_rows($resql);
+			  if($num > 0){
+				  $obj = $this->db->fetch_object($resql);
+				  $this->db->free($resql);
+				  $this->ref_previous = $obj->prev_feuilledetemps_ref;
+				  $this->ref_next = $obj->next_feuilledetemps_ref;
+				  return 1;
+			  }
+			  else {
+				  $this->db->free($resql);
+				  return 0;
+			  }
+		  } else {
+			  dol_print_error($this->db);
+			  $this->error = "Error ".$this->db->lasterror();
+			  return -1;
+		  }
+		}
 
 	/**
 	 *     Show a confirmation HTML form or AJAX popup.
@@ -4412,7 +4474,7 @@ class FeuilleDeTempsLine extends CommonObjectLine
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 0;
+	public $isextrafieldmanaged = 1;
 
 	/**
 	 * Constructor

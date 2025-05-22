@@ -17,11 +17,25 @@
  */
 
 /**
- *	\file       custom/formationhabilitation/habilitation_ganttchart.inc.php
+ *	\file       custom/formationhabilitation/formationhabilitation_ganttchart.inc.php
  *	\ingroup    formationhabilitation
- *	\brief      Gantt diagram for Habilitations
+ *	\brief      Gantt diagram for formationhabilitation
  */
 
+$onglet = (GETPOST('onglet', 'aZ') ? GETPOST('onglet', 'aZ') : '');
+
+if(empty($onglet) && ($user->rights->formationhabilitation->userformation->read || $user->rights->formationhabilitation->userformation->readall)) {
+	$onglet = 'formation';
+}
+elseif(empty($onglet) && ($user->rights->formationhabilitation->userhabilitation_autorisation->read || $user->rights->formationhabilitation->userhabilitation_autorisation->readall)) {
+	$onglet = 'habilitation';
+}
+elseif(empty($onglet) && ($user->rights->formationhabilitation->uservolet->read || $user->rights->formationhabilitation->uservolet->readall)) {
+	$onglet = 'volet';
+}
+elseif(empty($onglet) && ($user->rights->formationhabilitation->visitemedical->read || $user->rights->formationhabilitation->visitemedical->readall)) {
+	$onglet = 'visitemedical';
+}
 ?>
 
 <div id="principal_content" style="margin-left: 0;">
@@ -110,11 +124,11 @@ if (g.getDivId() != null)
 	g.setUseSort(0);
 	g.setOptions({
 		vAdditionalHeaders: { // Add data columns to your table
-			date_debut_habilitation: {
-				title: 'Début habilitation'
+			date_debut: {
+				title: 'Début'
 			},
-			date_fin_habilitation: {
-				title: 'Fin habilitation'
+			date_fin: {
+				title: 'Fin'
 			}
   		},
 	});
@@ -187,7 +201,7 @@ else
  */
 function constructGanttLine($tarr, $line, $line_dependencies, $level = 0, $project_id = null)
 {
-	global $langs;
+	global $langs, $onglet;
 	global $dateformatinput2;
 
 	$start_date = $line["line_start_date"];
@@ -226,7 +240,21 @@ function constructGanttLine($tarr, $line, $line_dependencies, $level = 0, $proje
 		//$link=DOL_URL_ROOT.'/projet/lines.php?withproject=1&id='.abs($line["line_id"]);
 		$link = '';
 	} else {
-		$link = DOL_URL_ROOT.'/custom/formationhabilitation/habilitation.php?id='.$line["line_fk_habilitation_id"];
+		// if($onglet == 'formation') {
+		// 	$link = DOL_URL_ROOT.'/custom/formationhabilitation/habilitation.php?id='.$line["line_fk_habilitation_id"];
+		// }
+		// elseif($onglet == 'habilitation') {
+		// 	$link = DOL_URL_ROOT.'/custom/formationhabilitation/habilitation.php?id='.$line["line_fk_habilitation_id"];
+		// }
+		// elseif($onglet == 'autorisation') {
+		// 	$link = DOL_URL_ROOT.'/custom/formationhabilitation/habilitation.php?id='.$line["line_fk_habilitation_id"];
+		// }
+		// elseif($onglet == 'volet') {
+		// 	$link = DOL_URL_ROOT.'/custom/formationhabilitation/habilitation.php?id='.$line["line_fk_habilitation_id"];
+		// }
+		// elseif($onglet == 'visitemedical') {
+		// 	$link = DOL_URL_ROOT.'/custom/formationhabilitation/habilitation.php?id='.$line["line_fk_habilitation_id"];
+		// }
 	}
 
 	// Name

@@ -322,6 +322,7 @@ class extendedHoliday extends Holiday
 					$date_fin_gmt = $this->db->jdate($obj->date_end, 1);
 
 					$nb_jour =  num_between_day($this->db->jdate($obj->date_start), $this->db->jdate($obj->date_end)+3600, 1); 
+					$num_open_day = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
 					for($idw = 0; $idw < $nb_jour; $idw++) {
 						$dayinloop = dol_time_plus_duree($this->db->jdate($obj->date_start), $idw, 'd');
 
@@ -336,7 +337,7 @@ class extendedHoliday extends Holiday
 						}
 						$droitrtt_array[$dayinloop][] = $obj->droit_rtt;
 						$in_hour_array[$dayinloop][] = $obj->in_hour;
-						$nb_jour_array[$dayinloop][] = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
+						$nb_jour_array[$dayinloop][] = $num_open_day;
 					}
 					$i++;
 				}
@@ -661,7 +662,7 @@ class extendedHoliday extends Holiday
 		if(!empty($this->array_options['options_hour'])) {
 			if($numberDay > 1) {
 				$duration_hour = 0;
-				if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+				if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 					$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
 					for($i = 0; $i < $nbDay; $i++) {
 						$tmpday = dol_time_plus_duree($this->date_debut, $i, 'd');
@@ -687,7 +688,7 @@ class extendedHoliday extends Holiday
 			return $this->array_options['options_hour'];
 		}
 		else {
-			if($conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+			if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
 				$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
 				$duration_hour = 0;
 

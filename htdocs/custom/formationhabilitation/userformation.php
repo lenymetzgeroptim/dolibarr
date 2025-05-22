@@ -277,6 +277,7 @@ if ($action == 'programmer_formation') {
                         array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
                         array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation),
                         array('label'=>$langs->trans('LieuFormation') ,'type'=>'text', 'name'=>'lieu_formation_programmer', 'value'=>''),
+                        array('label'=>$langs->trans('CoutPedagogique') ,'type'=>'text', 'name'=>'cout_pedagogique_programmer', 'value'=>''),
                         array('label'=>$langs->trans('InterneExterne') ,'type'=>'select', 'name'=>'interne_externe_programmer', 'values'=>$objectline->fields['interne_externe']['arrayofkeyval'], 'select_show_empty'=>0, 'default'=>1),
                         array('label'=>$langs->trans('Organisme') ,'type'=>'link', 'code'=>'fk_societe', 'name'=>'fk_societe_programmer', 'options'=>$objectline->fields['fk_societe']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module),
                         array('label'=>$langs->trans('Formateur') ,'type'=>'link', 'code'=>'formateur', 'name'=>'formateur_programmer', 'options'=>$objectline->fields['formateur']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module, 'hidden'=>1)

@@ -148,9 +148,10 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $num_last_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
+									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, $appel_actif = 0, $nb_appel = 0){
 	global $conf, $db, $user, $langs, $action;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification;
+	global $last_day_month;
 
 	$holiday = new extendedHoliday($db);
 
@@ -512,8 +513,8 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 
 					// Colonne avec les cases à cocher
 					print '<div id="div_otherhour">';
-					print '<input type="checkbox" '.($has_heure_nuit ? 'checked ' : '').'id="heure_nuit_chkb_'.$lines[$i]->id.'" name="heure_nuit_chkb"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="heure_nuit_chkb_'.$lines[$i]->id.'"> dont Heures de nuit (21h/6h)</label></span>';
-					print '<input type="checkbox" '.($has_port_epi ? 'checked ' : '').'id="port_epi_chkb_'.$lines[$i]->id.'" name="port_epi_chkb"'.($disabledtask || !$modify ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="port_epi_chkb_'.$lines[$i]->id.'"> dont Port EPI respiratoire</label></span>';
+					print '<input type="checkbox" '.($has_heure_nuit ? 'checked ' : '').'id="heure_nuit_chkb_'.$lines[$i]->id.'" name="heure_nuit_chkb"'.($disabledtask || !$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="heure_nuit_chkb_'.$lines[$i]->id.'"> dont Heures de nuit (21h/6h)</label></span>';
+					print '<input type="checkbox" '.($has_port_epi ? 'checked ' : '').'id="port_epi_chkb_'.$lines[$i]->id.'" name="port_epi_chkb"'.($disabledtask || !$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? ' disabled' : '').' onchange="CheckboxHeureChange(this, '.$lines[$i]->id.', '.$nb_jour.', '.$inc.', '.$num_first_day.')"><label for="port_epi_chkb_'.$lines[$i]->id.'"> dont Port EPI respiratoire</label></span>';
 					print '</div></td>';
 
 					for ($k = 0; $k < $level; $k++) {
@@ -613,7 +614,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 
 						// Est-ce qu'on désactive l'input ou non ?
 						$disabled = 0;
-						if(!$modify || $disabledtask || ($user_conges && !$modifier_jour_conges && empty($alreadyspent))) {
+						if(!$modify || $disabledtask || ($user_conges && !$modifier_jour_conges && empty($alreadyspent)) || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow < $first_day_month || $dayinloopfromfirstdaytoshow > $last_day_month))) {
 							$disabled = 1;
 						}
 
@@ -804,9 +805,11 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 			$nb_appel++;
 			if ($lines[$i]->id > 0) {				
 				$ret = FeuilleDeTempsLinesPerWeek($mode, $inc, $firstdaytoshow, $lastdaytoshow, $fuser, $lines[$i]->id, ($parent == 0 ? $lineswithoutlevel0 : $lines), $level, $projectsrole, $tasksrole, $mine, $restricteditformytask, $isavailable, $oldprojectforbreak, $arrayfields, $extrafields, 
-				$modify, $css, $css_holiday, $num_first_day, $type_deplacement, $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges, $temps_prec, $temps_suiv, 
-				$temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, $favoris, $param,
-				$totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $appel_actif, $nb_appel);
+				$modify, $css, $css_holiday, $num_first_day, $num_last_day, $type_deplacement, $dayinloopfromfirstdaytoshow_array, 
+				$modifier_jour_conges, $temps_prec, $temps_suiv, 
+				$temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, $notes, $otherTime, $timeSpentMonth, $timeSpentWeek, 
+				$timeHoliday, $heure_semaine, $heure_semaine_hs, $favoris, $param,
+				$totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $arraytypeleaves, $appel_actif, $nb_appel);
 				foreach ($ret as $key => $val) {
 					$totalforvisibletasks[$key] += $val;
 				}
@@ -937,15 +940,13 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
  * @param   double[] 	$totalforeachday					Total des heures par jour pour la différence avec les tâches affichées
  * @param   array	 	$holiday_without_canceled			Tableau avec les congés non annulés de l'utilisateur
  * @param   int	 		$multiple_holiday					Est-ce qu'il faut 2 lignes pour les congés ?
- * @param   int 	 	$appel_actif						Numéro d'appel récursif pour gérer le footer du tableau
- * @param   int 	 	$nb_appel							Nombre d'appel récursif pour gérer le header du tableau
  * @return  array				Array with time spent for $fuser for each day of week on tasks in $lines and substasks
  */
 function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastdaytoshow, $fuser, $parent, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null, 
 									$modify = 1, $css = '', $css_holiday, $num_first_day = 0, $num_last_day = 0, $type_deplacement = 'none', $dayinloopfromfirstdaytoshow_array, $modifier_jour_conges,  
 									$temps_prec, $temps_suiv, $temps_prec_hs25, $temps_suiv_hs25, $temps_prec_hs50, $temps_suiv_hs50, 
 									$notes, $otherTaskTime, $timeSpentMonth, $timeSpentWeek, $timeHoliday, $heure_semaine, $heure_semaine_hs, 
-									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves, &$appel_actif = 0, &$nb_appel = 0){
+									$favoris = -1, $param = '', $totalforeachday, $holiday_without_canceled, $multiple_holiday, $heure_max_jour, $heure_max_semaine, $standard_week_hour, $arraytypeleaves){
 	global $conf, $db, $user, $langs;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic, $object, $displayVerification, $objectoffield;
 	global $first_day_month, $last_day_month;
@@ -993,6 +994,9 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 
 	foreach($silae->fields as $key => $value) {
 		if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50', 'heure_sup50ht'))) {
+			if(!$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && $key == 'heure_sup50ht') {
+				continue;
+			}
 			$fields[$key] = array('text' => $value['label'],  'type' => 'duration', 'visible' => ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3));
 			$total_array[$key] = 0;
 		}
@@ -1239,7 +1243,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		// Contrat
 		$contrat = (float)$standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
 		print '<td class="center fixedcolumn4'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-		print '<span class="" id="contrat_'.$idw.'">'.number_format($contrat / 3600, 2, '.', '').'</span>';
+		print '<span class="" id="contrat_'.$idw.'">'.($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($contrat / 3600, 2, '.', '') : convertSecondToTime($contrat, 'allhourmin')).'</span>';
 		print '</td>';
 
 
@@ -1280,7 +1284,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		$alttitle = $langs->trans("AddHereTimeSpentForDay", $tmparray['day'], $tmparray['mon']);
 		for($cpt = 0; $cpt < $conf->global->FDT_COLUMN_MAX_TASK_DAY; $cpt++) {
 			$timespent = $timespent_month[$dayinloopfromfirstdaytoshow][$cpt];
-			$alreadyspent = (!empty($timespent->timespent_duration) ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : '');
+			$alreadyspent = (!empty($timespent->timespent_duration) ? ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($timespent->timespent_duration / 3600, 2, '.', '') : convertSecondToTime($timespent->timespent_duration, 'allhourmin')) : '');
 			$prefilling_time = ''; 
 			
 			// Est-ce qu'on désactive l'input ou non ?
@@ -1308,7 +1312,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 					$prefilling_time = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
 				}
 				$class_timespent .= ' prefilling_time';
-				$prefilling_time = (!empty($prefilling_time) ? number_format($prefilling_time / 3600, 2, '.', '') : '');
+				$prefilling_time = (!empty($prefilling_time) ? ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($prefilling_time / 3600, 2, '.', '') : convertSecondToTime($prefilling_time, 'allhourmin')) : '');
 			} 
 
 			if($cpt == 0) $tableCellTimespent = '<td class="center fixedcolumn5 valignmiddle hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
@@ -1368,7 +1372,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			
 			// Heures Nuit
 			$heure_nuit_nf = $otherTaskTime['heure_nuit'][$dayinloopfromfirstdaytoshow][$timespent->timespent_id];
-			$heure_nuit = ($heure_nuit_nf > 0 ? number_format($heure_nuit_nf / 3600, 2, '.', '') : '');
+			$heure_nuit = ($heure_nuit_nf > 0 ? ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($heure_nuit_nf / 3600, 2, '.', '') : convertSecondToTime($heure_nuit_nf, 'allhourmin')) : '');
 			$totalforday += (int)$heure_nuit_nf;
 
 			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
@@ -1403,7 +1407,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 
 			// Affaires
-			$tableCellAffaire .= '<select data-selected="'.$timespent->fk_task.'" class="select-task valignmiddle flat width150" id="fk_task_'.$idw.'_'.$cpt.'" name="fk_task['.$idw.']['.$cpt.']" onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"></select>';
+			$tableCellAffaire .= '<select '.($disabled ? ' disabled' : '').' data-selected="'.$timespent->fk_task.'" class="select-task valignmiddle flat width150" id="fk_task_'.$idw.'_'.$cpt.'" name="fk_task['.$idw.']['.$cpt.']" onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"></select>';
 			//$tableCellAffaire .= $formproject->selectTasksCustom(-1, $timespent->fk_task, 'fk_task['.$idw.']['.$cpt.']', 0, 0, 1, 1, 0, $disabled, 'width150', $projectsListId, 'projectstatut', $fuser, 'fk_task_'.$idw.'_'.$cpt, ($idw == 0 && $cpt == 0 ? 1 : 0), $task_load, 'onchange="deletePrefillingClass(this, \''.$fuser->array_options['options_sitedefaut'].'\');"');
 			$tableCellAffaire .= '</div>';
 
@@ -1414,7 +1418,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$timeonothertasks = ($totalforeachday[$dayinloopfromfirstdaytoshow] - $totalforday);
 				if ($timeonothertasks > 0) {
 					$tableCellTimespent .= '<div class="timesheetalreadyrecorded" title="Heures pointées sur d\'autres tâches"><input type="text" class="center smallpadd time_'.$idw.'" size="2" disabled id="timeadded['.$idw.']['.($cpt + 1).']" name="task['.$idw.']['.($cpt + 1).']" value="';
-					$tableCellTimespent .=  number_format($timeonothertasks / 3600, 2, '.', '');
+					$tableCellTimespent .=  ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($timeonothertasks / 3600, 2, '.', '') : convertSecondToTime($timeonothertasks, 'allhourmin'));
 					$tableCellTimespent .=  '"></div>';
 
 					$totalforday += (int)$timeonothertasks;
@@ -1470,7 +1474,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$diff_class .= "diffnegative";
 		}
 		print '<td class="center fixedcolumn8'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-		print '<span class="'.$diff_class.'" id="diff_'.$idw.'">'.($diff > 0 ? '+' : '').number_format($diff / 3600, 2, '.', '').'</span>';
+		print '<span class="'.$diff_class.'" id="diff_'.$idw.'">'.($diff > 0 ? '+' : '').($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($diff / 3600, 2, '.', '') : convertSecondToTime($diff, 'allhourmin')).'</span>';
 		print '</td>';
 
 
@@ -1489,6 +1493,10 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		if($silae_array[$dayinloopfromfirstdaytoshow]->id > 0) $silae = $silae_array[$dayinloopfromfirstdaytoshow];
 		foreach($silae->fields as $key => $value) {
 			if(in_array($key, array('heure_sup00', 'heure_sup25', 'heure_sup50', 'heure_sup50ht')) && ($user->hasRight('feuilledetemps','feuilledetemps','modify_verification') && $object->status != 0 && $object->status != 2 && $object->status != 3)) {
+				if(!$conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && $key == 'heure_sup50ht') {
+					continue;
+				}
+
 				$moreparam = 'onfocus="this.oldvalue = this.value;"';
 				$moreparam .= ' onkeypress="return regexEvent_TS(this,event,\'timeChar\');"';
 				$moreparam .= ' maxlength="5"';
@@ -2218,66 +2226,68 @@ function FeuilleDeTempsVerification($firstdaytoshow, $lastdaytoshow, $nb_jour, $
 	print '</tr>';
 
 	// Heure Sup 50% HT
-	print '<tr class="nostrong">';
-		print '<td colspan="2" class="fixed">';
-			print '<div style="display: flex; align-items: center; justify-content: space-between;">';
-				print '<strong>Heure Sup 50% HT</strong>';
-				print '<span style="display: flex; align-items: center;">';
-					$heure_sup50ht = $regul->heure_sup50ht / 3600;
-					$total_heure_sup50ht += $regul->heure_sup50ht;
-					if(GETPOST('action', 'aZ09') != 'ediths50ht' && !$disabled) {
-						print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=ediths50ht&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a>';
-					}
-					if (GETPOST('action', 'aZ09') == 'ediths50ht' && !$disabled) {
-						print '<input type="text" alt="Ajoutez ici les régulations des heures sup de 50% HT" title="Ajoutez ici les régulations des heures sup de 50% HT" 
-						name="regulHeureSup50HT" id="regulHeureSup50HT" class="smallpad" placeholder="Regul" value="'.($heure_sup50ht ? $heure_sup50ht : '').'" 
-						onkeypress="return regexEvent_TS(this,event,\'timeChar\', 1)" 
-						onblur="ValidateTimeDecimal(this);" 
-						onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');">';
+	if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE){
+		print '<tr class="nostrong">';
+			print '<td colspan="2" class="fixed">';
+				print '<div style="display: flex; align-items: center; justify-content: space-between;">';
+					print '<strong>Heure Sup 50% HT</strong>';
+					print '<span style="display: flex; align-items: center;">';
+						$heure_sup50ht = $regul->heure_sup50ht / 3600;
+						$total_heure_sup50ht += $regul->heure_sup50ht;
+						if(GETPOST('action', 'aZ09') != 'ediths50ht' && !$disabled) {
+							print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=ediths50ht&token='.newToken().'">'.img_edit($langs->trans("Edit")).'</a>';
+						}
+						if (GETPOST('action', 'aZ09') == 'ediths50ht' && !$disabled) {
+							print '<input type="text" alt="Ajoutez ici les régulations des heures sup de 50% HT" title="Ajoutez ici les régulations des heures sup de 50% HT" 
+							name="regulHeureSup50HT" id="regulHeureSup50HT" class="smallpad" placeholder="Regul" value="'.($heure_sup50ht ? $heure_sup50ht : '').'" 
+							onkeypress="return regexEvent_TS(this,event,\'timeChar\', 1)" 
+							onblur="ValidateTimeDecimal(this);" 
+							onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');">';
 
-						print '<input type="submit" class="button button-save" name="saveediths50ht" value="'.$langs->trans("Save").'">';
-						print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
-					}
-					else {
-						print '<input disabled type="text" alt="Ajoutez ici les régulations des heures sup de 50% HT" title="Ajoutez ici les régulations des heures sup de 50% HT" 
-						name="regulHeureSup50HT" id="regulHeureSup50HT" class="smallpad" placeholder="Regul" value="'.($heure_sup50ht ? $heure_sup50ht : '').'" 
-						onkeypress="return regexEvent_TS(this,event,\'timeChar\', 1)" 
-						onblur="ValidateTimeDecimal(this);" 
-						onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');">';
-					}
-				print '</span>';
-			print '</div>';
-		print '</td>';
-		for ($idw = 0; $idw < $nb_jour; $idw++) {
-			$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
-			$keysuffix = '['.$idw.']';
-
-			if($idw > 0 && $idw == $num_first_day){
-				print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
-			}
-
-			$heure_sup50ht = '';
-			if ($arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
-				$heure_sup50ht = $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] / 3600;
-			}
-
-			if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
-				$total_heure_sup50ht += $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow];
-			}
-
-			print '<td class="center hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-
-			if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
-				print '<input disabled type="text" style="border: 1px solid grey;" class="center smallpadd heure_sup50ht_'.$idw.'" size="2" id="heure_sup50ht['.$idw.']" 
-				name="heure_sup50ht['.$idw.']" value="'.$heure_sup50ht.'" cols="2"  maxlength="5" 
-				onkeypress="return regexEvent_TS(this,event,\'timeChar\')" 
-				onblur="ValidateTimeDecimal(this);" 
-				onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');"'.($disabled ? ' disabled' : '').'/>';
-			}
+							print '<input type="submit" class="button button-save" name="saveediths50ht" value="'.$langs->trans("Save").'">';
+							print '<input type="submit" class="button button-cancel" name="cancel" value="'.$langs->trans("Cancel").'">';
+						}
+						else {
+							print '<input disabled type="text" alt="Ajoutez ici les régulations des heures sup de 50% HT" title="Ajoutez ici les régulations des heures sup de 50% HT" 
+							name="regulHeureSup50HT" id="regulHeureSup50HT" class="smallpad" placeholder="Regul" value="'.($heure_sup50ht ? $heure_sup50ht : '').'" 
+							onkeypress="return regexEvent_TS(this,event,\'timeChar\', 1)" 
+							onblur="ValidateTimeDecimal(this);" 
+							onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');">';
+						}
+					print '</span>';
+				print '</div>';
 			print '</td>';
-		}
-		print '<td class="liste_total center fixed"><div class="'.($total_heure_sup50ht != 0 ? 'noNull' : '').'" id="totalHeureSup50HT">'.($total_heure_sup50ht / 3600).' HS50</div></td>';
-	print '</tr>';
+			for ($idw = 0; $idw < $nb_jour; $idw++) {
+				$dayinloopfromfirstdaytoshow = $dayinloopfromfirstdaytoshow_array[$idw]; // $firstdaytoshow is a date with hours = 0
+				$keysuffix = '['.$idw.']';
+
+				if($idw > 0 && $idw == $num_first_day){
+					print '<td style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></td>';
+				}
+
+				$heure_sup50ht = '';
+				if ($arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
+					$heure_sup50ht = $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] / 3600;
+				}
+
+				if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day)) && $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow] > 0) {
+					$total_heure_sup50ht += $arraySilae['heure_sup50ht'][$dayinloopfromfirstdaytoshow];
+				}
+
+				print '<td class="center hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+
+				if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim') {
+					print '<input disabled type="text" style="border: 1px solid grey;" class="center smallpadd heure_sup50ht_'.$idw.'" size="2" id="heure_sup50ht['.$idw.']" 
+					name="heure_sup50ht['.$idw.']" value="'.$heure_sup50ht.'" cols="2"  maxlength="5" 
+					onkeypress="return regexEvent_TS(this,event,\'timeChar\')" 
+					onblur="ValidateTimeDecimal(this);" 
+					onchange="updateTotal_HeureSup50HT('.$nb_jour.', '.$num_first_day.');"'.($disabled ? ' disabled' : '').'/>';
+				}
+				print '</td>';
+			}
+			print '<td class="liste_total center fixed"><div class="'.($total_heure_sup50ht != 0 ? 'noNull' : '').'" id="totalHeureSup50HT">'.($total_heure_sup50ht / 3600).' HS50</div></td>';
+		print '</tr>';
+	}
 
 	// Heure Nuit
 	print '<tr class="nostrong">';
@@ -2728,7 +2738,7 @@ function dol_banner_tab_custom($object, $paramid, $morehtml = '', $shownav = 1, 
 }
 
 function showrefnav_custom($object, $paramid, $morehtml = '', $shownav = 1, $fieldid = 'rowid', $fieldref = 'ref', $morehtmlref = '', $moreparam = '', $nodbprefix = 0, $morehtmlleft = '', $morehtmlstatus = '', $morehtmlright = '', $buttonAction = '') {
-	global $conf, $langs, $hookmanager, $extralanguages;
+	global $conf, $langs, $hookmanager, $extralanguages, $db;
 
 	$ret = '';
 	if (empty($fieldid)) {
@@ -2829,6 +2839,34 @@ function showrefnav_custom($object, $paramid, $morehtml = '', $shownav = 1, $fie
 		$ret .= img_object('', 'fontawesome_user_fas_#2f508b');
 		$ret .= '<li class="pagination">' . $next_refByUser . '</li>';
 		$ret .= '</ul></div>';
+	}
+
+	$user_static = new User($db);
+	$user_static->fetch($object->fk_user);
+	$user_extrafields = new Extrafields($db);
+	if (empty($user_extrafields->attributes[$user_static->table_element]['loaded'])) {
+		$user_extrafields->fetch_name_optionals_label($user_static->table_element);
+	}
+	if(isset($user_extrafields->attributes['user']['type']['etablissement'])) {
+		//$filter = 'and SUBSTR(te.ref, 1, 9) < "'.substr($object->ref, 0, 9).'" AND CHAR_LENGTH(te.ref) = 16 AND te.date_debut = "'.$object->db->idate($object->date_debut).'"';
+		$filter = " WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(te.ref, '_', 2), '_', -1) < ".explode('_', $object->ref)[1]." AND SUBSTRING_INDEX(te.ref, '_', -1) = '".explode('_', $object->ref)[2]."' AND CHAR_LENGTH(te.ref) = 16";
+		//$filter2 = 'and SUBSTR(te.ref, 1, 9) > "'.substr($object->ref, 0, 9).'" AND CHAR_LENGTH(te.ref) = 16 AND te.date_debut = "'.$object->db->idate($object->date_debut).'"';
+		$filter2 = " WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(te.ref, '_', 2), '_', -1) > ".explode('_', $object->ref)[1]." AND SUBSTRING_INDEX(te.ref, '_', -1) = '".explode('_', $object->ref)[2]."' AND CHAR_LENGTH(te.ref) = 16";
+		if($conf->global->FDT_ORDER_MATRICULE) {
+			$object->load_previous_next_ref_bymatricule($object->fk_user, $object->date_debut, $user_static->array_options['options_etablissement']);
+		}
+		else {
+			$object->load_previous_next_ref_byusername($object->fk_user, $object->date_debut, $user_static->array_options['options_etablissement']);
+		}
+		$previous_refByUser = $object->ref_previous ? '<a accesskey="p" title="' . $stringforfirstkey . ' p" class="classfortooltip" href="' . $navurl . '?' . $paramid . '=' . urlencode($object->ref_previous) . $moreparam . '"><i class="fa fa-chevron-left"></i></a>' : '<span class="inactive"><i class="fa fa-chevron-left opacitymedium"></i></span>';
+		$next_refByUser = $object->ref_next ? '<a accesskey="n" title="' . $stringforfirstkey . ' n" class="classfortooltip" href="' . $navurl . '?' . $paramid . '=' . urlencode($object->ref_next) . $moreparam . '"><i class="fa fa-chevron-right"></i></a>' : '<span class="inactive"><i class="fa fa-chevron-right opacitymedium"></i></span>';
+		if ($previous_ref || $next_ref || $morehtml) {
+			$ret .= '<div class="pagination paginationref"><ul class="right">';
+			$ret .= '<li class="pagination">' . $previous_refByUser . '</li>';
+			$ret .= img_object('', 'fontawesome_fa-house-user_fas_#2f508b');
+			$ret .= '<li class="pagination">' . $next_refByUser . '</li>';
+			$ret .= '</ul></div>';
+		}
 	}
 
 	if ($previous_ref || $next_ref || $morehtml) {

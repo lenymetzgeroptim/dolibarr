@@ -228,4 +228,34 @@ class ExtendedUser3 extends User {
             }
         }
     }
+
+    /**
+	 * 	Return le nom/prénom de tous les utilisateurs actifs
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllUserName()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT u.rowid, u.firstname, u.lastname";
+		$sql .= " FROM ".MAIN_DB_PREFIX."user as u";
+		$sql .= " WHERE u.statut = 1";
+		$sql .= " ORDER BY u.lastname";
+
+		dol_syslog(get_class($this)."::getAllUserName", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->lastname." ".$obj->firstname;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }

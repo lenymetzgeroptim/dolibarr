@@ -1260,7 +1260,7 @@ class RegulLine extends CommonObjectLine
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 0;
+	public $isextrafieldmanaged = 1;
 
 	/**
 	 * Constructor

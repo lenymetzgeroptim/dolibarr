@@ -840,7 +840,7 @@ class UserHabilitation extends CommonObject
 
 		if ($this->status != self::STATUS_HABILITABLE) {
 			$this->errors[] = $langs->trans('ImpossibleToValidateWithThisStatut', $this->ref);
-			return 0;
+			return -1;
 		}
 
 		$now = dol_now();

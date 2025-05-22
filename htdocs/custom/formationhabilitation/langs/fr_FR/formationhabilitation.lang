@@ -250,6 +250,7 @@ ConfirmGenerateAutohabilitation = Etes vous sûrs de vouloir générer les habil
 ConfirmGenerateAutoautorisation = Etes vous sûrs de vouloir générer les autorisation(s) sélectionnée(s) ?
 RefuseUserVolet = Refuser le volet
 ConfirmRefuseUserVolet = Êtes-vous sûr de vouloir refuser le volet ? Il sera renvoyer au 1er approbateur
+NoVoletCreatedBecauseEquivalent = Le volet %s n'a pas été créé car le même volet existe déja
 
 
 #
@@ -262,6 +263,7 @@ ErrorPrerequisFormationAptitude = Le collaborateur ne possède pas les prérequi
 ErrorUserHasSameUserHabilitation = Le collaborateur possède déja l'habilitation %s avec les mêmes dates
 ErrorUserHasSameUserAutorisation = Le collaborateur possède déja l'autorisation %s avec les mêmes dates
 ErrorFormationUnsatisfate = Impossible de valider la formation car le résultat est non satisfaisant
+ErrorNumberLines = Il n'est pas possible d'afficher autant de lignes. Veuillez faire un filtre plus restrictif.
 
 #
 # Email
@@ -373,3 +375,8 @@ Refuse = Refuser
 NotificationRespAntenne = Notifier le responsable d'antenne de la creation d'habilitations/autorisation
 GenerationVoletFormation = Génération du volet de formation
 GenerationAndCloseVoletFormation = Génération(s) et clôture(s) des volets de formation
+NoFormation = Aucune formation
+NoHabilitation = Aucune habilitation
+NoAutorisation = Aucune autorisation
+NoVolet = Aucun volet
+NoVisiteMedicale = Aucune visite médicale
