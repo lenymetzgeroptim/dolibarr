@@ -104,12 +104,11 @@ $sql .= " p.rowid as pid, p.ref, p.title, p.fk_soc, p.fk_statut, p.public, p.usa
 $sql .= " FROM ".MAIN_DB_PREFIX."projet_task as t";
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON t.fk_projet = p.rowid";
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec ON ec.element_id = t.rowid";
-$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc ON ec.fk_c_type_contact = tc.rowid";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc ON ec.fk_c_type_contact = tc.rowid AND tc.element = 'project_task'";
 $sql .= " WHERE p.entity IN (" . getEntity('project') . ")";
 // if ($projectsListId) {
 // 	$sql .= " AND p.rowid IN (" . $db->sanitize($projectsListId) . ")";
 // }
-$sql .= " AND tc.element = 'project_task'";
 $sql .= " AND ( p.public = 1";
 $sql .= " OR (tc.code IN ('TASKCONTRIBUTOR') AND ec.fk_socpeople = ".((int) $user->id).")";
 $sql .= " )";
