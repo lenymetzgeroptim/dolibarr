@@ -577,18 +577,18 @@ class pdf_standard_ot extends ModelePDFOt
 
 				// AFFICHAGE DES CARTES NORMALES
 				if (!empty($cardsData)) {
-					// Paramètres pour la grille
-					$grid_columns = 3;
+				// Paramètres pour la grille
+				$grid_columns = 3;
 					$base_card_width = 50;
 					$card_height = 35;
-					$card_margin = 10; 
-					$card_user_margin = 5;
-					$shift_left = 1;
-					
+				$card_margin = 10; 
+				$card_user_margin = 5;
+				$shift_left = 1;
+				
 					// Calculer les dimensions de la grille
 					$max_x = 0;
-					$max_y = 0;
-					foreach ($cardsData as $card) {
+				$max_y = 0; 
+				foreach ($cardsData as $card) { 
 						if ($card['x'] > $max_x) $max_x = $card['x'];
 						if ($card['y'] > $max_y) $max_y = $card['y'];
 					}
@@ -628,8 +628,16 @@ class pdf_standard_ot extends ModelePDFOt
 							$list_card_width = ($remaining_width - ($card_margin * (count($list_cards) - 1))) / count($list_cards);
 						}
 						
+						// Calculer la position X pour centrer les cartes
+						$total_cards_width = 0;
+						foreach ($cardsOnY as $card) {
+							$card_width = ($card['type'] === 'list') ? $list_card_width : $normal_card_width;
+							$total_cards_width += $card_width;
+						}
+						$total_cards_width += $card_margin * (count($cardsOnY) - 1);
+						
 						// Position initiale pour cette ligne
-						$current_x = $this->marge_gauche;
+						$current_x = $this->marge_gauche + ($line_width - $total_cards_width) / 2;
 						
 						// Afficher chaque carte de la ligne
 						foreach ($cardsOnY as $card) {
@@ -639,7 +647,7 @@ class pdf_standard_ot extends ModelePDFOt
 							// Calculer la hauteur nécessaire pour le contenu
 							$content_height = 15; // Hauteur pour le titre
 							
-							if (!empty($card['userNames'])) {
+						if (!empty($card['userNames'])) {
 								if ($card['type'] === 'list') {
 									// Pour les listes, calculer la hauteur nécessaire pour chaque utilisateur
 									foreach ($card['userNames'] as $userInfo) {
@@ -701,45 +709,167 @@ class pdf_standard_ot extends ModelePDFOt
 										$content_height += ($max_lines * 4) + 2; // 4 pixels par ligne + 2 pixels d'espacement
 									}
 								} else {
-									// Pour les cartes normales
+									// AFFICHAGE STANDARD POUR LES CARTES
+									$y_offset = $current_y + 12; // Augmenter l'espace initial de 8 à 12
+									$pdf->SetFont('', '', 8);
+									
+									// Calculer la hauteur nécessaire pour le contenu
+									$content_height = 15; // Hauteur pour le titre
+									
 									foreach ($card['userNames'] as $userInfo) {
-										$content_height += 4; // Hauteur pour le nom
-										
+										// Séparer les informations
 										$info_parts = explode(' - ', $userInfo);
+										$name = $info_parts[0];
+										$contrat = '';
+										$habilitations = '';
+										
 										foreach ($info_parts as $part) {
-											if (strpos($part, 'Contrat:') === 0 || strpos($part, 'Habilitations:') === 0) {
-												$content_height += 4; // Hauteur pour chaque ligne supplémentaire
+											if (strpos($part, 'Contrat:') === 0) {
+												$contrat = substr($part, 9);
+											} elseif (strpos($part, 'Habilitations:') === 0) {
+												$habilitations = substr($part, 14);
 											}
 										}
 										
-										$content_height += 2; // Espacement entre les utilisateurs
+										// Calculer la hauteur pour les habilitations
+										$hab_lines = 1; // Au moins une ligne
+										if (!empty($habilitations)) {
+											$max_width = $card_width - 30;
+											$words = explode('-', $habilitations);
+											$current_line = '';
+											$hab_lines = 0;
+											
+											foreach ($words as $word) {
+												$word = trim($word);
+												$test_line = $current_line . ($current_line ? '-' : '') . $word;
+												
+												if ($pdf->GetStringWidth($test_line) < $max_width) {
+													$current_line = $test_line;
+												} else {
+													if ($current_line) {
+														$hab_lines++;
+													}
+													$current_line = $word;
+												}
+											}
+											if ($current_line) {
+												$hab_lines++;
+											}
+										}
+										
+										// Ajouter la hauteur nécessaire pour cet utilisateur
+										$content_height += 5; // Espace pour le nom
+										$content_height += ($hab_lines * 4); // 4 pixels par ligne d'habilitation
+										if (!empty($contrat)) {
+											$content_height += 5; // Espace pour le contrat
+										}
+										$content_height += 3; // Espacement entre les utilisateurs
+									}
+									
+									// Ajouter une marge en bas de la carte
+									$content_height += 2;
+									
+									// Vérifier si la carte dépasse la page
+									if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
+										$pdf->AddPage();
+										$current_y = $tab_top ?? 20;
+									}
+									
+									// Dessiner la carte avec la hauteur calculée
+					$pdf->SetDrawColor(0, 0, 0);
+									$pdf->Rect($current_x, $current_y, $card_width, $content_height);
+									
+									// Réinitialiser la position Y pour le contenu
+									$y_offset = $current_y + 12; // Augmenter l'espace initial de 8 à 12
+									
+									// Afficher le titre
+					$pdf->SetFont('', 'B', 10);
+					$pdf->SetTextColor(0, 0, 0);
+					$title_width = $pdf->GetStringWidth($card['title']);
+									$center_title_x = $current_x + ($card_width - $title_width) / 2 - $shift_left;
+									$pdf->Text($center_title_x, $current_y + 5, $card['title']);
+									
+									// Afficher le contenu
+									$pdf->SetFont('', '', 8);
+									
+									foreach ($card['userNames'] as $userInfo) {
+										// Séparer les informations
+										$info_parts = explode(' - ', $userInfo);
+										$name = $info_parts[0];
+										$contrat = '';
+										$habilitations = '';
+										
+										foreach ($info_parts as $part) {
+											if (strpos($part, 'Contrat:') === 0) {
+												$contrat = substr($part, 9);
+											} elseif (strpos($part, 'Habilitations:') === 0) {
+												$habilitations = substr($part, 14);
+											}
+										}
+										
+										// Affichage avec labels et gestion des retours à la ligne
+										$pdf->SetFont('', '', 6);
+										$pdf->Text($current_x + 2, $y_offset, 'Nom/Prénom :');
+										$pdf->SetFont('', '', 8);
+										$pdf->Text($current_x + 20, $y_offset, $name);
+										$y_offset += 5; // Espace entre nom et habilitation
+										
+										if (!empty($habilitations)) {
+											$pdf->SetFont('', '', 6);
+											$pdf->Text($current_x + 2, $y_offset, 'Habilitation :');
+											$pdf->SetFont('', '', 8);
+											
+											// Gestion des retours à la ligne pour les habilitations
+											$max_width = $card_width - 30;
+											$words = explode('-', $habilitations);
+											$current_line = '';
+											
+											foreach ($words as $word) {
+												$word = trim($word);
+												$test_line = $current_line . ($current_line ? '-' : '') . $word;
+												
+												if ($pdf->GetStringWidth($test_line) < $max_width) {
+													$current_line = $test_line;
+												} else {
+													if ($current_line) {
+														$pdf->Text($current_x + 20, $y_offset, $current_line);
+														$y_offset += 4; // Espacement normal pour les retours à la ligne des habilitations
+													}
+													$current_line = $word;
+												}
+											}
+											
+											if ($current_line) {
+												$pdf->Text($current_x + 20, $y_offset, $current_line);
+												$y_offset += 5; // Espace entre habilitation et contrat
+											}
+										}
+										
+										if (!empty($contrat)) {
+											$pdf->SetFont('', '', 6);
+											$pdf->Text($current_x + 2, $y_offset, 'Contrat :');
+											$pdf->SetFont('', 'B', 8); // Mettre en gras les données de contrat
+											$pdf->Text($current_x + 20, $y_offset, $contrat);
+											$y_offset += 5; // Espace après le contrat
+										}
+										
+										$y_offset += 2; // Espace entre les utilisateurs
 									}
 								}
 							}
 							
 							// Ajouter une marge en bas de la carte
-							$content_height += 5;
-							
+							$content_height += 2; // Réduire la marge en bas de la carte de 5 à 2
+				
 							// Vérifier si la carte dépasse la page en Y
 							if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
 								$pdf->AddPage();
 								$current_y = $tab_top ?? 20;
 							}
-							
-							// Dessiner la carte
-							$pdf->SetDrawColor(0, 0, 0);
-							$pdf->Rect($current_x, $current_y, $card_width, $content_height);
-							
-							// Afficher le contenu de la carte
-							$pdf->SetFont('', 'B', 10);
-							$pdf->SetTextColor(0, 0, 0);
-							$title_width = $pdf->GetStringWidth($card['title']);
-							$center_title_x = $current_x + ($card_width - $title_width) / 2 - $shift_left;
-							$pdf->Text($center_title_x, $current_y + 5, $card['title']);
-							
+				
 							// Affichage des utilisateurs
-							if (!empty($card['userNames'])) {
-								$y_offset = $current_y + 10;
+					if (!empty($card['userNames'])) {
+								$y_offset = $current_y + 12;
 								$pdf->SetFont('', '', 8);
 								
 								if ($card['type'] === 'list') {
@@ -862,63 +992,7 @@ class pdf_standard_ot extends ModelePDFOt
 										// Mettre à jour la position Y pour la prochaine entrée
 										$y_offset += ($max_lines * 4) + 2;
 									}
-								} else {
-									// AFFICHAGE STANDARD POUR LES CARTES
-									foreach ($card['userNames'] as $userInfo) {
-										// Séparer les informations
-										$info_parts = explode(' - ', $userInfo);
-										$name = $info_parts[0];
-										$contrat = '';
-										$habilitations = '';
-										
-										foreach ($info_parts as $part) {
-											if (strpos($part, 'Contrat:') === 0) {
-												$contrat = substr($part, 9);
-											} elseif (strpos($part, 'Habilitations:') === 0) {
-												$habilitations = substr($part, 14);
-											}
-										}
-										
-										// Afficher le nom et prénom
-										$pdf->Text($current_x + 2, $y_offset, $name);
-										$y_offset += 4;
-										
-										// Afficher le contrat s'il existe
-										if (!empty($contrat)) {
-											$pdf->Text($current_x + 2, $y_offset, 'Contrat: ' . $contrat);
-											$y_offset += 4;
-										}
-										
-										// Afficher les habilitations avec retour à la ligne si nécessaire
-										if (!empty($habilitations)) {
-											$max_width = $card_width - 4;
-											$words = explode('-', $habilitations);
-											$current_line = '';
-											
-											foreach ($words as $word) {
-												$word = trim($word);
-												$test_line = $current_line . ($current_line ? '-' : '') . $word;
-												
-												if ($pdf->GetStringWidth($test_line) < $max_width) {
-													$current_line = $test_line;
-												} else {
-													if ($current_line) {
-														$pdf->Text($current_x + 2, $y_offset, $current_line);
-														$y_offset += 4;
-													}
-													$current_line = $word;
-												}
-											}
-											
-											if ($current_line) {
-												$pdf->Text($current_x + 2, $y_offset, $current_line);
-												$y_offset += 4;
-											}
-										}
-										
-										$y_offset += 2;
-									}
-								}
+								} 
 							}
 							
 							// Passer à la position suivante
