@@ -87,11 +87,13 @@ $tmpgroup = new UserGroup($db);
 $usersEmail = array();
 $usersName = array();
 
+global $mysoc;
+
 foreach($usergroups as $usergroup) {
 	if($usergroup) { 
 		$tmpgroup->fetch($usergroup);
 
-		$gusers = $tmpgroup->listUsersForGroup();	
+		$gusers = $tmpgroup->listUsersForGroup('u.statut=1');	
 		foreach($gusers as $key => $guser) {
 			array_push($usersEmail, $guser->firstname.','.$guser->email);
 		}
@@ -112,6 +114,13 @@ foreach($emails as $key => $value) {
 	$senders[$key] = $name[0]; 
 }
 
+foreach ($senders as $s) {
+    $key = strtolower(trim($s['email']));
+    if (!in_array($key, $already_seen)) {
+        $unique_senders[] = $s;
+        $already_seen[] = $key;
+    }
+}
 //user name for user who adds documents
 $editor = $user->firstname.' '.$user->lastname;
 
@@ -193,22 +202,73 @@ if (GETPOST("sendit", 'alphanohtml') && !empty($conf->global->MAIN_UPLOAD_DOC)) 
 				}
 			
 			$link = '<a href="'.$urlwithroot.'/custom/ecmcustom/index.php?uploadform=1"> ici.</a>';
-			$logo = $urlwithroot.'/viewimage.php?modulepart=mycompany&file=logos%2Fthumbs%2FLogoOptim_FdBlancCroppe_25%25_small.jpg';
+			// $logo = $urlwithroot.'/viewimage.php?modulepart=mycompany&file=logos%2Fthumbs%2FLogoOptim_FdBlancCroppe_25%25_small.jpg';
+			$logo = $urlwithouturlroot.DOL_URL_ROOT . '/viewimage.php?modulepart=mycompany&file=' . urlencode($mysoc->logo_small);
 			//email headers
 			$subject = '[OPTIM Industries] Notification automatique (nouveaux documents dans '.$foldername.')';
 			$trackid = 'mem'.$section;
-			$replyto = 'no-reply@optim-industries.fr';
+			$replyto = 'erp@optim-industries.fr';
 			//email message to send with dynamic names 
 			if($allowsendingmail === 1) {
-			foreach($senders as $email => $name) {
-					$sendto = $email;
+				$batchLimit = 50; // Nombre d'envois par exécution
+				$count = 0;
+				foreach ($senders as $email => $name) {
+					// Nettoyage & validation
+					$email = filter_var(trim($email), FILTER_VALIDATE_EMAIL);
+					if (!$email) {
+						error_log("Email invalide : $email");
+						continue;
+					}
+
 					$msgishtml = '<br><br>Bonjour '.$name.', <br><br>Des nouveaux fichiers (ajoutés par '.$editor.') sont disponibles dans le répertoire « '.$foldername.' » <br><ul><li>'.implode("<br><li>", array_unique(array_filter($lastfiles))).'</li></ul>';
 					$msgishtml .= '<br>Pour les consulter sur l\'erp, veuillez cliquer '.$link.'<br>';
 					$msgishtml .= '<br>Cordialement,<br><br><br><div><img src="'.$logo.'"></div>';
-					$message = $msgishtml;
-					$mailfile = new CMailFile($subject,$sendto,$replyto,$message,$arr_file, $arr_mime, $arr_name,$cc,$ccc,$deliveryreceipt,$msgishtml,$errors_to,$css,$trackid,$moreinheader,$sendcontext);
-					$mailfile->sendfile(); 
+					$message = $msgishtml; 
+
+					try {
+						$mailfile = new CMailFile(
+							$subject,
+							$email,           
+							$replyto,
+							$message,
+							$arr_file,
+							$arr_mime,
+							$arr_name,
+							$cc,
+							$ccc,
+							$deliveryreceipt,
+							$msgishtml,
+							$errors_to,
+							$css,
+							$trackid,
+							$moreinheader,
+							$sendcontext
+						);
+						
+						$mailfile->sendfile();
+						$count++;
+
+						if ($count >= $batchLimit) {
+							break; 
+						}
+					} catch (Exception $e) {
+						error_log("Erreur lors de l'envoi à $email : " . $e->getMessage());
+					}
+					
+				$logfile = DOL_DATA_ROOT . '/email_ged_notification_log.txt';
+				
+				$log_entry = date('Y-m-d H:i:s') .
+					" | EMAIL: " . trim($email) .
+					" | NOM: " . dol_escape_htmltag(trim($name)) .
+					" | DOSSIER: " . dol_escape_htmltag(trim($foldername)) .
+					" | FICHIERS: " . implode(', ', array_unique(array_filter($lastfiles))) .
+					" \n";
+					$current_log = file_exists($logfile) ? file_get_contents($logfile) : '';
+					if (strpos($current_log, $log_entry) === false) {
+						file_put_contents($logfile, $log_entry, FILE_APPEND | LOCK_EX);
+					}
 				}
+
 			}
 		}
 	}
