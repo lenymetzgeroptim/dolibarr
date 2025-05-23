@@ -223,7 +223,91 @@ class pdf_standard_ot extends ModelePDFOt
 					$pdf->SetCompression(false);
 				}
 
+				// Ajout de l'en-tête
+				$pdf->AddPage();
+				$pagenb++;
 
+				// Position initiale pour l'en-tête
+				$header_y = 10;
+				$header_height = 30;
+
+				// Logo à gauche
+				if (!empty($conf->global->MAIN_LOGO)) {
+					$logo = $conf->mycompany->dir_output.'/logos/'.$conf->global->MAIN_LOGO;
+					if (is_readable($logo)) {
+						$height = 20;
+						$pdf->Image($logo, $this->marge_gauche, $header_y, 0, $height);
+					}
+				}
+
+				// Informations centrales
+				$pdf->SetFont('', '', 10);
+				$center_x = $this->page_largeur / 2;
+				
+				// Récupérer les informations du projet et de la société
+				$sql_project = "SELECT p.title, s.nom as site_name
+					FROM " . MAIN_DB_PREFIX . "projet p
+					LEFT JOIN " . MAIN_DB_PREFIX . "societe s ON p.fk_soc = s.rowid
+					WHERE p.rowid = " . $object->fk_project;
+				
+				// Debug: Afficher la requête SQL
+				dol_syslog("SQL Project: " . $sql_project);
+				
+				$resql_project = $db->query($sql_project);
+				if (!$resql_project) {
+					dol_syslog("Erreur SQL Project: " . $db->lasterror());
+					$site = "Site non trouvé";
+					$project_label = "Projet non trouvé";
+				} else {
+					$project_info = $db->fetch_object($resql_project);
+					if (!$project_info) {
+						dol_syslog("Aucun projet trouvé pour fk_project = " . $object->fk_project);
+						$site = "Site non trouvé";
+						$project_label = "Projet non trouvé";
+					} else {
+						$site = $project_info->site_name ? $project_info->site_name : "Site non défini";
+						$project_label = $project_info->title ? $project_info->title : "Projet non défini";
+					}
+				}
+				
+				// Site d'intervention
+				$pdf->SetFont('', 'B', 10);
+				$site_width = $pdf->GetStringWidth($site);
+				$pdf->Text($center_x - ($site_width / 2), $header_y + 5, $site);
+
+				// Libellé du projet
+				$pdf->SetFont('', '', 10);
+				$project_width = $pdf->GetStringWidth($project_label);
+				$pdf->Text($center_x - ($project_width / 2), $header_y + 12, $project_label);
+
+				// "Organigramme d'affaire"
+				$pdf->SetFont('', 'B', 10);
+				$title = "Organigramme d'affaire";
+				$title_width = $pdf->GetStringWidth($title);
+				$pdf->Text($center_x - ($title_width / 2), $header_y + 19, $title);
+
+				// Informations à droite
+				$pdf->SetFont('', '', 10);
+				$right_x = $this->page_largeur - $this->marge_droite - 40;
+				
+				// Référence OT
+				$pdf->Text($right_x, $header_y + 5, "Réf. OT : " . $object->ref);
+				
+				// Indice
+				$pdf->Text($right_x, $header_y + 12, "Indice : " . $object->indice);
+				
+				// Numéro d'affaire
+				$pdf->Text($right_x, $header_y + 19, "N° Affaire : " . $object->project_ref);
+
+				// Numéro de page
+				$pdf->Text($right_x, $header_y + 26, "Page " . $pagenb . " / " . $pdf->getAliasNbPages());
+
+				// Ligne noire horizontale
+				$pdf->SetDrawColor(0, 0, 0);
+				$pdf->Line($this->marge_gauche, $header_y + 35, $this->page_largeur - $this->marge_droite, $header_y + 35);
+
+				// Ajuster la position Y pour le contenu suivant
+				$current_y = $header_y + 40;
 
 				// Set certificate
 				$cert = empty($user->conf->CERTIFICATE_CRT) ? '' : $user->conf->CERTIFICATE_CRT;
@@ -1313,29 +1397,16 @@ class pdf_standard_ot extends ModelePDFOt
 				$current_y += 2; // Petit espace après la liste unique
 
 				// Récupérer les sous-traitants
-				$sql_sous_traitants = "SELECT u.firstname, u.lastname, u.office_phone, 
+				$sql_sous_traitants = "SELECT 
+					u.firstname, u.lastname,
 					s.nom as entreprise,
-					cd.role as fonction,
-					cct.type as contrat,
-					GROUP_CONCAT(fh.ref SEPARATOR '-') as habilitations
-					FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne cd 
-					JOIN " . MAIN_DB_PREFIX . "user u ON cd.fk_user = u.rowid 
-					LEFT JOIN " . MAIN_DB_PREFIX . "societe s ON u.fk_soc = s.rowid
-					LEFT JOIN " . MAIN_DB_PREFIX . "donneesrh_positionetcoefficient_extrafields drh 
-						ON drh.fk_object = u.rowid
-					LEFT JOIN " . MAIN_DB_PREFIX . "c_contrattravail cct 
-						ON drh.contratdetravail = cct.rowid
-					LEFT JOIN " . MAIN_DB_PREFIX . "formationhabilitation_userhabilitation fuh 
-						ON fuh.fk_user = u.rowid
-					LEFT JOIN " . MAIN_DB_PREFIX . "formationhabilitation_habilitation fh 
-						ON fuh.fk_habilitation = fh.rowid
-					WHERE cd.ot_cellule_id IN (
-						SELECT rowid FROM " . MAIN_DB_PREFIX . "ot_ot_cellule 
-						WHERE ot_id = " . $object->id . " 
-						AND type = 'card'
-						AND title LIKE '%Sous-traitant%'
-					)
-					GROUP BY u.rowid";
+					st.fonction,
+					st.contrat,
+					st.habilitation
+					FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants st
+					JOIN " . MAIN_DB_PREFIX . "user u ON st.fk_socpeople = u.rowid
+					JOIN " . MAIN_DB_PREFIX . "societe s ON st.fk_societe = s.rowid
+					WHERE st.ot_id = " . $object->id;
 
 				$resql_sous_traitants = $db->query($sql_sous_traitants);
 				if ($resql_sous_traitants && $db->num_rows($resql_sous_traitants) > 0) {
@@ -1414,7 +1485,7 @@ class pdf_standard_ot extends ModelePDFOt
 						$current_x += $col_widths['contrat'];
 
 						// Habilitations
-						$pdf->Text($current_x, $y_offset, $sous_traitant->habilitations);
+						$pdf->Text($current_x, $y_offset, $sous_traitant->habilitation);
 
 						// Ligne de séparation entre les sous-traitants
 						$y_offset += 7;
