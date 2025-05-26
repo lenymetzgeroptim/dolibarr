@@ -190,25 +190,23 @@ class pdf_standard_ot extends ModelePDFOt
 				// Create pdf instance
 				$pdf = pdf_getInstanceCustomOt($this->format);
 				$default_font_size = pdf_getPDFFontSize($outputlangs); // Must be after pdf_getInstance
-				$pdf->SetAutoPageBreak(1, 0);
+
+				// Configuration du PDF
+				if (class_exists('TCPDF')) {
+					$pdf->setPrintHeader(false); // Désactiver le header automatique
+					$pdf->setPrintFooter(false);
+					$pdf->SetMargins(10, 10, 10); // Réduire la marge supérieure
+					$pdf->SetAutoPageBreak(TRUE, 15);
+				}
+
+				// Passer les objets nécessaires à l'instance PDF
+				$pdf->ot_object = $object;
+				$pdf->ot_outputlangs = $outputlangs;
+				$pdf->ot_parent = $this;
 
 				$heightforinfotot = 50; // Height reserved to output the info and total part and payment part
 				$heightforfreetext = getDolGlobalInt('MAIN_PDF_FREETEXT_HEIGHT', 5); // Height reserved to output the free text on last page
 				$heightforfooter = $this->marge_basse + (getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS') ? 12 : 22); // Height reserved to output the footer (value include bottom margin)
-
-				if (class_exists('TCPDF')) {
-					$pdf->setPrintHeader(true);
-					$pdf->setPrintFooter(false);
-					$pdf->SetMargins(10, 35, 10); 
-					$pdf->SetAutoPageBreak(TRUE, 15);
-				}
-				$pdf->SetFont(pdf_getPDFFont($outputlangs));
-
-				// Set path to the background PDF File
-				if (getDolGlobalString('MAIN_ADD_PDF_BACKGROUND')) {
-					$pagecount = $pdf->setSourceFile($conf->mycompany->multidir_output[$object->entity].'/'.getDolGlobalString('MAIN_ADD_PDF_BACKGROUND'));
-					$tplidx = $pdf->importPage(1);
-				}
 
 				$pdf->Open();
 				$pagenb = 0;
@@ -340,7 +338,7 @@ class pdf_standard_ot extends ModelePDFOt
 						$i = $pageposbeforenote;
 						while ($i < $pageposafternote) {
 							$pdf->setPage($i);
-
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 
 							$pdf->SetDrawColor(128, 128, 128);
 							// Draw note frame
@@ -1004,7 +1002,8 @@ class pdf_standard_ot extends ModelePDFOt
 									// Vérifier si la carte dépasse la page
 									if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
 										$pdf->AddPage();
-										$current_y = $tab_top ?? 20;
+										$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+										$pdf->SetY($current_y);
 									}
 									
 									// Dessiner la carte avec la hauteur calculée
@@ -1096,7 +1095,8 @@ class pdf_standard_ot extends ModelePDFOt
 							// Vérifier si la carte dépasse la page en Y
 							if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
 								$pdf->AddPage();
-								$current_y = $tab_top ?? 20;
+								$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+								$pdf->SetY($current_y);
 							}
 				
 							// Passer à la position suivante
@@ -1127,7 +1127,8 @@ class pdf_standard_ot extends ModelePDFOt
 						// Vérifier si le tableau dépasse la page
 						if ($current_y + 50 > $this->page_hauteur - $this->marge_basse) {
 							$pdf->AddPage();
-							$current_y = $tab_top ?? 20;
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+							$pdf->SetY($current_y);
 						}
 						
 						// Calculer la position X pour centrer la carte
@@ -1339,7 +1340,8 @@ class pdf_standard_ot extends ModelePDFOt
 					// Vérifier si le tableau dépasse la page
 					if ($current_y + 50 > $this->page_hauteur - $this->marge_basse) {
 						$pdf->AddPage();
-						$current_y = $tab_top ?? 20;
+						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+						$pdf->SetY($current_y);
 					}
 
 					// Afficher le titre
@@ -1506,7 +1508,7 @@ class pdf_standard_ot extends ModelePDFOt
 		// Informations centrales
 		$pdf->SetFont('', '', 10);
 		$center_x = $this->page_largeur / 2;
-		
+
 		// Récupérer les informations du projet et de la société
 		$sql_project = "SELECT p.title, s.nom as site_name
 			FROM " . MAIN_DB_PREFIX . "projet p
