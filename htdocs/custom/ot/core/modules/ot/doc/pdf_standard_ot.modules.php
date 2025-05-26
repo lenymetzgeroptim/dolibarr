@@ -226,88 +226,7 @@ class pdf_standard_ot extends ModelePDFOt
 				// Ajout de l'en-tête
 				$pdf->AddPage();
 				$pagenb++;
-
-				// Position initiale pour l'en-tête
-				$header_y = 10;
-				$header_height = 30;
-
-				// Logo à gauche
-				if (!empty($conf->global->MAIN_LOGO)) {
-					$logo = $conf->mycompany->dir_output.'/logos/'.$conf->global->MAIN_LOGO;
-					if (is_readable($logo)) {
-						$height = 20;
-						$pdf->Image($logo, $this->marge_gauche, $header_y, 0, $height);
-					}
-				}
-
-				// Informations centrales
-				$pdf->SetFont('', '', 10);
-				$center_x = $this->page_largeur / 2;
-				
-				// Récupérer les informations du projet et de la société
-				$sql_project = "SELECT p.title, s.nom as site_name
-					FROM " . MAIN_DB_PREFIX . "projet p
-					LEFT JOIN " . MAIN_DB_PREFIX . "societe s ON p.fk_soc = s.rowid
-					WHERE p.rowid = " . $object->fk_project;
-				
-				// Debug: Afficher la requête SQL
-				dol_syslog("SQL Project: " . $sql_project);
-				
-				$resql_project = $db->query($sql_project);
-				if (!$resql_project) {
-					dol_syslog("Erreur SQL Project: " . $db->lasterror());
-					$site = "Site non trouvé";
-					$project_label = "Projet non trouvé";
-				} else {
-					$project_info = $db->fetch_object($resql_project);
-					if (!$project_info) {
-						dol_syslog("Aucun projet trouvé pour fk_project = " . $object->fk_project);
-						$site = "Site non trouvé";
-						$project_label = "Projet non trouvé";
-					} else {
-						$site = $project_info->site_name ? $project_info->site_name : "Site non défini";
-						$project_label = $project_info->title ? $project_info->title : "Projet non défini";
-					}
-				}
-				
-				// Site d'intervention
-				$pdf->SetFont('', 'B', 10);
-				$site_width = $pdf->GetStringWidth($site);
-				$pdf->Text($center_x - ($site_width / 2), $header_y + 5, $site);
-
-				// Libellé du projet
-				$pdf->SetFont('', '', 10);
-				$project_width = $pdf->GetStringWidth($project_label);
-				$pdf->Text($center_x - ($project_width / 2), $header_y + 12, $project_label);
-
-				// "Organigramme d'affaire"
-				$pdf->SetFont('', 'B', 10);
-				$title = "Organigramme d'affaire";
-				$title_width = $pdf->GetStringWidth($title);
-				$pdf->Text($center_x - ($title_width / 2), $header_y + 19, $title);
-
-				// Informations à droite
-				$pdf->SetFont('', '', 10);
-				$right_x = $this->page_largeur - $this->marge_droite - 40;
-				
-				// Référence OT
-				$pdf->Text($right_x, $header_y + 5, "Réf. OT : " . $object->ref);
-				
-				// Indice
-				$pdf->Text($right_x, $header_y + 12, "Indice : " . $object->indice);
-				
-				// Numéro d'affaire
-				$pdf->Text($right_x, $header_y + 19, "N° Affaire : " . $object->project_ref);
-
-				// Numéro de page
-				$pdf->Text($right_x, $header_y + 26, "Page " . $pagenb . " / " . $pdf->getAliasNbPages());
-
-				// Ligne noire horizontale
-				$pdf->SetDrawColor(0, 0, 0);
-				$pdf->Line($this->marge_gauche, $header_y + 35, $this->page_largeur - $this->marge_droite, $header_y + 35);
-
-				// Ajuster la position Y pour le contenu suivant
-				$current_y = $header_y + 40;
+				$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 
 				// Set certificate
 				$cert = empty($user->conf->CERTIFICATE_CRT) ? '' : $user->conf->CERTIFICATE_CRT;
@@ -328,12 +247,12 @@ class pdf_standard_ot extends ModelePDFOt
 
 				$pdf->SetMargins($this->marge_gauche, 20, $this->marge_droite);
 
-				// New page
-				$pdf->AddPage();
-				if (!empty($tplidx)) {
-					$pdf->useTemplate($tplidx);
-				}
-				$pagenb++;
+				// Supprimer l'ajout de page supplémentaire ici
+				// $pdf->AddPage();
+				// if (!empty($tplidx)) {
+				//     $pdf->useTemplate($tplidx);
+				// }
+				// $pagenb++;
 
 				//$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
 				$pdf->SetFont('', '', $default_font_size - 1);
@@ -385,11 +304,9 @@ class pdf_standard_ot extends ModelePDFOt
 						while ($pagenb < $pageposafternote) {
 							$pdf->AddPage();
 							$pagenb++;
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 							if (!empty($tplidx)) {
 								$pdf->useTemplate($tplidx);
-							}
-							if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-								//$this->_pagehead($pdf, $object, 0, $outputlangs);
 							}
 							// $this->_pagefoot($pdf,$object,$outputlangs,1);
 							$pdf->setTopMargin($tab_top_newpage);
@@ -411,6 +328,7 @@ class pdf_standard_ot extends ModelePDFOt
 							$pagenb++;
 							$pageposafternote++;
 							$pdf->setPage($pageposafternote);
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 							$pdf->setTopMargin($tab_top_newpage);
 							// The only function to edit the bottom margin of current page to set it.
 							$pdf->setPageOrientation('', 1, $heightforfooter + $heightforfreetext);
@@ -446,9 +364,7 @@ class pdf_standard_ot extends ModelePDFOt
 						if (!empty($tplidx)) {
 							$pdf->useTemplate($tplidx);
 						}
-						if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-							//$this->_pagehead($pdf, $object, 0, $outputlangs);
-						}
+						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 						$height_note = $posyafter - $tab_top_newpage;
 						$pdf->Rect($this->marge_gauche, $tab_top_newpage - 1, $tab_width, $height_note + 1);
 					} else // No pagebreak
@@ -465,11 +381,9 @@ class pdf_standard_ot extends ModelePDFOt
 							$pagenb++;
 							$pageposafternote++;
 							$pdf->setPage($pageposafternote);
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 							if (!empty($tplidx)) {
 								$pdf->useTemplate($tplidx);
-							}
-							if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-								//$this->_pagehead($pdf, $object, 0, $outputlangs);
 							}
 
 							$posyafter = $tab_top_newpage;
@@ -1563,6 +1477,98 @@ class pdf_standard_ot extends ModelePDFOt
 	}
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.PublicUnderscore
+	/**
+	 *   	Show header of page. Need this->emetteur object
+	 *
+	 *   	@param	TCPDF		$pdf     			PDF
+	 * 		@param	Object		$object				Object to show
+	 *      @param	Translate	$outputlangs		Object lang for output
+	 *      @param	int			$hidefreetext		1=Hide free text
+	 *      @return	int								Return height of bottom margin including footer text
+	 */
+	protected function _pagehead(&$pdf, $object, $outputlangs, $hidefreetext = 0)
+	{
+		global $conf, $langs, $db;
+
+		// Position initiale pour l'en-tête
+		$header_y = 10;
+		$header_height = 30;
+
+		// Logo à gauche
+		if (!empty($conf->global->MAIN_LOGO)) {
+			$logo = $conf->mycompany->dir_output.'/logos/'.$conf->global->MAIN_LOGO;
+			if (is_readable($logo)) {
+				$height = 20;
+				$pdf->Image($logo, $this->marge_gauche, $header_y, 0, $height);
+			}
+		}
+
+		// Informations centrales
+		$pdf->SetFont('', '', 10);
+		$center_x = $this->page_largeur / 2;
+		
+		// Récupérer les informations du projet et de la société
+		$sql_project = "SELECT p.title, s.nom as site_name
+			FROM " . MAIN_DB_PREFIX . "projet p
+			LEFT JOIN " . MAIN_DB_PREFIX . "societe s ON p.fk_soc = s.rowid
+			WHERE p.rowid = " . $object->fk_project;
+		
+		$resql_project = $db->query($sql_project);
+		if (!$resql_project) {
+			dol_syslog("Erreur SQL Project: " . $db->lasterror());
+			$site = "Site non trouvé";
+			$project_label = "Projet non trouvé";
+		} else {
+			$project_info = $db->fetch_object($resql_project);
+			if (!$project_info) {
+				dol_syslog("Aucun projet trouvé pour fk_project = " . $object->fk_project);
+				$site = "Site non trouvé";
+				$project_label = "Projet non trouvé";
+			} else {
+				$site = $project_info->site_name ? $project_info->site_name : "Site non défini";
+				$project_label = $project_info->title ? $project_info->title : "Projet non défini";
+			}
+		}
+		
+		// Site d'intervention
+		$pdf->SetFont('', 'B', 10);
+		$site_width = $pdf->GetStringWidth($site);
+		$pdf->Text($center_x - ($site_width / 2), $header_y + 5, $site);
+
+		// Libellé du projet
+		$pdf->SetFont('', '', 10);
+		$project_width = $pdf->GetStringWidth($project_label);
+		$pdf->Text($center_x - ($project_width / 2), $header_y + 12, $project_label);
+
+		// "Organigramme d'affaire"
+		$pdf->SetFont('', 'B', 10);
+		$title = "Organigramme d'affaire";
+		$title_width = $pdf->GetStringWidth($title);
+		$pdf->Text($center_x - ($title_width / 2), $header_y + 19, $title);
+
+		// Informations à droite
+		$pdf->SetFont('', '', 10);
+		$right_x = $this->page_largeur - $this->marge_droite - 40;
+		
+		// Référence OT
+		$pdf->Text($right_x, $header_y + 5, "Réf. OT : " . $object->ref);
+		
+		// Indice
+		$pdf->Text($right_x, $header_y + 12, "Indice : " . $object->indice);
+		
+		// Numéro d'affaire
+		$pdf->Text($right_x, $header_y + 19, "N° Affaire : " . $object->project_ref);
+
+		// Numéro de page
+		$pdf->Text($right_x, $header_y + 26, "Page " . $pdf->getPage() . " / " . $pdf->getAliasNbPages());
+
+		// Ligne noire horizontale
+		$pdf->SetDrawColor(0, 0, 0);
+		$pdf->Line($this->marge_gauche, $header_y + 35, $this->page_largeur - $this->marge_droite, $header_y + 35);
+
+		return $header_y + 40; // Retourne la position Y après l'en-tête
+	}
+
 	/**
 	 *   	Show footer of page. Need this->emetteur object
 	 *
