@@ -1013,8 +1013,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 		$formquestion = array();
 		$formquestion[] = array('type'=>'multiselect', 'name'=>'sendMailTo', 'label' => 'Destinataire', 'morecss' => 'ml20 minwidth200', 'default' => '', 'values' => $values);
-		$formquestion[] = array('label'=>'Message à l\'emetteur de le feuille de temps', 'type'=>'html', 'name'=>'sendMailContent');
-		$formconfirm = $object->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('sendMail'), '', 'confirm_sendMail', $formquestion, 0, 0, 500, 1000);
+		$formquestion[] = array('label'=>'Message à l\'emetteur de le feuille de temps', 'type'=>'html', 'name'=>'sendMailContent', 'value'=>'Bonjour,<br><br>Cordialement');
+		$formconfirm = $object->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('sendMail'), '', 'confirm_sendMail', $formquestion, 1, 0, 500, 1000);
 	}
 
 	if ($action == 'refus' && !$conf->global->FDT_USER_APPROVER && (($userIsResp && $resp_pas_valide) || $userIsRespProjet || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {

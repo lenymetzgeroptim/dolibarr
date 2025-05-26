@@ -820,14 +820,17 @@ if ($action == 'confirm_sendMail' && $confirm == 'yes' && $permissionToVerificat
 	$sendTo = GETPOST('sendMailTo');
 
 	$to = '';
+	$users_name = '';
 	foreach($sendTo as $key => $id) {
 		$user_static->fetch($id);
 		if(!empty($user_static->email)) {
 			$to .= $user_static->email;
 			$to .= ', ';
+			$users_name .= $user_static->lastname." ".$user_static->firstname.', ';
 		}
 	}
 	$to = rtrim($to, ", ");
+	$users_name = rtrim($users_name, ", ");
 
 	global $dolibarr_main_url_root;
 	$subject = 'Remarque sur pointage';
@@ -844,7 +847,7 @@ if ($action == 'confirm_sendMail' && $confirm == 'yes' && $permissionToVerificat
     
 	if ($result > 0) {
 		$object->actiontypecode = 'AC_EMAIL';
-		$object->actionmsg2 = "Mail Feuille de temps envoyé à $user_static->lastname $user_static->firstname";
+		$object->actionmsg2 = "Mail Feuille de temps envoyé à $users_name";
 		$object->actionmsg = $langs->transnoentities("SENDMAILInDolibarr", $message);
 		$object->call_trigger(strtoupper(get_class($object)).'_SENDMAIL', $user);
 		setEventMessages('Mail envoyé', null, 'mesgs');

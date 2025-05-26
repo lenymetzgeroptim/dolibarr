@@ -3660,7 +3660,7 @@ function formatValueForAgenda($type, $value, $object = null, $field_name = '') {
 			$res = ($value > 0 ? number_format($value / 3600, 2, '.', '') : '0.00');
 		}
 		else {
-			$res = ($value > 0 ? convertSecondToTime($value) : '00:00');
+			$res = ($value > 0 ? convertSecondToTime($value, 'allhourmin') : '00:00');
 		}
 	} elseif ($type == 'price') {
 		$res = price($value, 0, '', 1, 2, -1, 'auto'); 

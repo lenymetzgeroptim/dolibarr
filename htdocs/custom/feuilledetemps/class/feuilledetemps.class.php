@@ -4070,7 +4070,7 @@ class FeuilleDeTemps extends CommonObject
 						$more .= '<br>';
 					} elseif (preg_match('/^html/', $input['type'])) {
 							require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-							$doleditor = new DolEditor($input['name'], $value, '', 200, 'dolibarr_notes', 'In', false, false, isModEnabled('fckeditor') && $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_5, '90%');
+							$doleditor = new DolEditor($input['name'], $input['value'], '', 200, 'dolibarr_notes', 'In', false, false, isModEnabled('fckeditor') && $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_5, '90%');
 							$more .= '<br>'.$doleditor->Create(1, '', true, '', '', $moreparam, $morecss);
 					}
 					else {
