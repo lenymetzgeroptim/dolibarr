@@ -903,6 +903,12 @@ td.affairecolumn span.select2-container {
     width: 100% !important;
 }
 
+.input-error {
+    border: 2px solid #e74c3c !important;
+    background-color: #fdecea !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
 :root {
 	--fdtcolorbefore: <?php print $conf->global->FDT_ANTICIPE_WEEKEND_COLOR ?>;
 	--fdtcolorferie:<?php print $conf->global->FDT_FERIE_COLOR ?>;

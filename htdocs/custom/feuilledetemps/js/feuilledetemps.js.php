@@ -897,83 +897,87 @@ function updateTotal_TS(object, days, mode, num_task, num_first_day = 0, holiday
     }
 }
 
-// -TODO : Améliorer la fonction
 function updateTotalWeek($mode, temps_prec = 0, temps_suiv = 0, weekNumber, timeHoliday, heure_semaine) {
-    var modal = document.getElementsByName("totalSemaine" + weekNumber)[0];
-    split = modal.id.split('_');
-    premier_jour = split[1]
-    dernier_jour = split[2];
-    totalhour = 0;
-    totalmin = 0;
-    total_hour_week = 0;
+    const modal = document.getElementsByName("totalSemaine" + weekNumber)[0];
+    const [_, premierJour, dernierJour] = modal.id.split('_');
 
+    let totalMinutes = 0;
+    let totalHours = 0;
+    let totalHourWeek = 0;
+
+    // Prise en compte des heures précédentes ou suivantes
     if (temps_prec) {
-        totalmin = temps_prec;
-        total_hour_week = temps_prec / 60;
-    }
-    else if (temps_suiv) {
-        totalmin = temps_suiv;
-        total_hour_week = temps_suiv / 60;
+        totalMinutes = temps_prec;
+        totalHourWeek = temps_prec / 60;
+    } else if (temps_suiv) {
+        totalMinutes = temps_suiv;
+        totalHourWeek = temps_suiv / 60;
     }
 
-    for (var i = parseInt(premier_jour); i <= parseInt(dernier_jour); i++) {
-        if($mode == 'hours_decimal') {
-            total_hour_week += parseFloat(jQuery('.totalDay' + i).text());
-        }
-        else {
-            var taskTime = new Date(0);
-            result = parseTime(jQuery('.totalDay' + i).text(), taskTime);
+    // Accumulation des temps pour chaque jour de la semaine
+    for (let i = parseInt(premierJour); i <= parseInt(dernierJour); i++) {
+        const value = jQuery('.totalDay' + i).text().trim();
+
+        if ($mode === 'hours_decimal') {
+            totalHourWeek += parseFloat(value || '0');
+        } else {
+            const taskTime = new Date(0);
+            const result = parseTime(value, taskTime); // valeur entre 0 et 1 ?
             if (result >= 0) {
-                totalhour = totalhour + taskTime.getHours() + result * 24;
-                totalmin = totalmin + taskTime.getMinutes();
+                totalHours += taskTime.getHours() + result * 24;
+                totalMinutes += taskTime.getMinutes();
             }
         }
     }
-    if($mode == 'hours_decimal') {
-        diff = total_hour_week - parseFloat((heure_semaine - timeHoliday));
-    }
-    else {
-        morehours = Math.floor(totalmin / 60);
-        totalmin = totalmin % 60;
-        diff = ((morehours + totalhour) * 60 + totalmin) - parseInt((heure_semaine - timeHoliday) * 60);
+
+    // Calcul de l'écart avec l'objectif de la semaine
+    let diff;
+    if ($mode === 'hours_decimal') {
+        diff = totalHourWeek - parseFloat(heure_semaine - timeHoliday);
+    } else {
+        const extraHours = Math.floor(totalMinutes / 60);
+        totalMinutes = totalMinutes % 60;
+        diff = ((extraHours + totalHours) * 60 + totalMinutes) - parseInt((heure_semaine - timeHoliday) * 60);
     }
 
-
-    // Gestion des couleurs
-    var color = "";
+    // Choix de la couleur en fonction du dépassement
+    let color = "";
     if (diff < 0) {
         color = "red";
-    }
-    else if (diff > 0) {
-        color = "#3d85c6";
-    }
-
-    if($mode == 'hours_decimal') {
-        total_hour_week = total_hour_week.toFixed(2)
-        diff = diff.toFixed(2)
-        if (diff < 0) {
-            jQuery('#' + modal.id).text(pad(total_hour_week) + " (" + diff + "h)");
-        }
-        else if (diff > 0) {
-            jQuery('#' + modal.id).text(pad(total_hour_week) + " (+" + diff + "h)");
-        }
-        else {
-            jQuery('#' + modal.id).text(pad(total_hour_week));
-        }
-    }
-    else {
-        if (diff < 0) {
-            jQuery('#' + modal.id).text(pad(morehours + totalhour) + ':' + pad(totalmin) + " (" + (diff / 60) + "h ➔ -" + time_convert(Math.abs(diff)) + ")");
-        }
-        else if (diff > 0) {
-            jQuery('#' + modal.id).text(pad(morehours + totalhour) + ':' + pad(totalmin) + " (+" + (diff / 60) + "h ➔ +" + time_convert(Math.abs(diff)) + ")");
-        }
-        else {
-            jQuery('#' + modal.id).text(pad(morehours + totalhour) + ':' + pad(totalmin));
-        }
+    } else if (diff > 0) {
+        color = "#3d85c6"; // bleu
     }
 
-    jQuery('#' + modal.id).parent().css('color', color);
+    // Affichage du total hebdomadaire + écart
+    const container = jQuery('#' + modal.id);
+    const parent = container.parent();
+
+    if ($mode === 'hours_decimal') {
+        const formattedTotal = totalHourWeek.toFixed(2);
+        const formattedDiff = Math.abs(diff).toFixed(2);
+        if (diff < 0) {
+            container.text(`${pad(formattedTotal)} (-${formattedDiff}h)`);
+        } else if (diff > 0) {
+            container.text(`${pad(formattedTotal)} (+${formattedDiff}h)`);
+        } else {
+            container.text(pad(formattedTotal));
+        }
+    } else {
+        const totalHourFinal = totalHours + Math.floor(totalMinutes / 60);
+        const totalMinFinal = totalMinutes % 60;
+        const timeText = `${pad(totalHourFinal)}:${pad(totalMinFinal)}`;
+        const convertedDiff = time_convert(Math.abs(diff));
+
+        if (diff < 0) {
+            container.text(`${timeText} (${(diff / 60).toFixed(2)}h ➔ -${convertedDiff})`);
+        } else if (diff > 0) {
+            container.text(`${timeText} (+${(diff / 60).toFixed(2)}h ➔ +${convertedDiff})`);
+        } else {
+            container.text(timeText);
+        }
+    }
+
+    parent.css('color', color);
 }
 
 //function to open note
@@ -2286,6 +2290,45 @@ function time_convert(num) {
     return hours + ":" + minutes;
 }
 
+function isFilled(value) {
+    return value !== null && value !== '' && value !== '0' && value !== '0.00' && value !== '0:00' && value !== '00:00';
+}
+
+function hasValidationErrors() {
+    const errors = [];
+
+    const timeaddedInputs = document.querySelectorAll('[id^="timeadded["]');
+
+    timeaddedInputs.forEach(input => {
+        const id = input.id;
+        const match = id.match(/^timeadded\[(\d+)\]\[(\d+)\]$/);
+        if (!match) return;
+
+        const i = match[1];
+        const j = match[2];
+
+        const timeadded = document.getElementById(`timeadded[${i}][${j}]`)?.value || '';
+        const timeNuit = document.getElementById(`time_heure_nuit[${i}][${j}]`)?.value || '';
+        const fkTask = document.getElementById(`fk_task_${i}_${j}`)?.value || '';
+        const siteInput = document.getElementById(`site[${i}][${j}]`);
+        const site = siteInput?.value || '';
+
+        if ((isFilled(timeadded) || isFilled(timeNuit)) && isFilled(fkTask) && !isFilled(site)) {        
+            errors.push(`Ligne [${i}][${j}] : le champ "site" est requis si des heures sont saisies.`);
+            if (siteInput) siteInput.classList.add('input-error');
+        }
+    });
+
+    if (errors.length > 0) {
+        //alert("Erreur de validation :\n" + errors.join('\n'));
+        alert("Erreur de validation :\n" + "Si des heures sont pointées, il est obligatoire de renseigner la colonne 'Site'");
+        return true;
+    }
+
+    return false;
+}
+
+
 $(document).ready(function () {
     const selectedTasks = {};
     const fuserid = $('#fuserid').val();
@@ -2374,6 +2417,38 @@ $(document).ready(function () {
                     // Simuler la saisie du texte du label pour activer la recherche
                     $select.data('select2').dropdown.$search.val(selectedText).trigger('input');
                 }
+            }
+        });
+    });
+
+    // Soumission globale du formulaire
+    const form = document.forms['addtime'];
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            if (hasValidationErrors()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+
+    // Intercepter le click des boutons pour bloquer leur onclick si erreur
+    const buttons = document.querySelectorAll('input[name="save"], input[name="transmettre"]');
+    buttons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            if (hasValidationErrors()) {
+                e.stopImmediatePropagation(); // bloque les autres onclick
+                e.preventDefault(); // empêche la soumission
+                return false;
+            }
+        }, true);
+    });
+
+    // Suppression de l'erreur sur l'input site lorsqu'on saisie 
+    document.querySelectorAll('[id^="site["]').forEach(siteInput => {
+        siteInput.addEventListener('input', function () {
+            if (this.classList.contains('input-error') && this.value.trim() !== '') {
+                this.classList.remove('input-error');
             }
         });
     });
