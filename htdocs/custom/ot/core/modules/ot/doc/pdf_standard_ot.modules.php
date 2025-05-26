@@ -418,18 +418,42 @@ class pdf_standard_ot extends ModelePDFOt
 				// Formatter la date en "jour/mois/année"
 				$formattedDateAppli = $dateAppli->format('d/m/Y');
 
-				// Affichage de la date d'applicabilité en haut, juste sous le header
-				$pdf->SetFont('', 'B', 10);
-				$pdf->SetTextColor(0, 0, 0);
-
-				// Position verticale juste après le header (exemple : 15 pixels sous le haut)
+				// Position verticale juste après le header
 				$current_y = 40; 
-				$pdf->Text($this->marge_gauche, $current_y, "Date d'applicabilité de l'OT : ");
+
+				// Récupération des références client des commandes
+				$sql_commandes = "SELECT ref_client 
+								FROM " . MAIN_DB_PREFIX . "commande 
+								WHERE fk_projet = " . $object->fk_project . " 
+								AND fk_statut = 1";
+				$resql_commandes = $db->query($sql_commandes);
+				$refs_commandes = array();
+				if ($resql_commandes) {
+					while ($obj = $db->fetch_object($resql_commandes)) {
+						if (!empty($obj->ref_client)) {
+							$refs_commandes[] = $obj->ref_client;
+						}
+					}
+				}
+				$refs_commandes_str = !empty($refs_commandes) ? implode(" & ", $refs_commandes) : "";
+
+				// Affichage des commandes concernées
+				$current_y += 10; // Augmenté de 5 à 10 pour plus d'espace après le header
 				$pdf->SetFont('', '', 10);
+				$pdf->SetTextColor(0, 0, 0);
+				$pdf->Text($this->marge_gauche, $current_y, "Commande concernée : ");
+				$pdf->SetFont('', 'B', 10);
+				$pdf->Text($this->marge_gauche + 48, $current_y, $refs_commandes_str);
+
+				// Affichage de la date d'applicabilité
+				$current_y += 7; // Réduit de 5 à 7 pour un espacement plus petit entre les champs
+				$pdf->SetFont('', '', 10);
+				$pdf->Text($this->marge_gauche, $current_y, "Date d'applicabilité de l'OT : ");
+				$pdf->SetFont('', 'B', 10);
 				$pdf->Text($this->marge_gauche + 48, $current_y, $formattedDateAppli);
 
-				// Laisser un petit espace pour les prochains contenus
-				$current_y += 10; 
+				// Laisser un espace plus important avant les cartes principales
+				$current_y += 15; // Augmenté de 5 à 15 pour éviter la fusion avec les cartes
 
 				// Récupération des cartes principales (RA, Q3, PCR)
 				$sql_cards = "SELECT c.rowid, c.title, c.type 
@@ -439,6 +463,7 @@ class pdf_standard_ot extends ModelePDFOt
 							ORDER BY FIELD(c.title, 'RA', 'Q3', 'PCR')";
 				$resql_cards = $db->query($sql_cards);
 
+				// AFFICHAGE DES CARTES PRINCIPALES
 				if ($resql_cards) {
 					// Paramètres pour l'affichage des cartes principales
 				$card_width = 50;
@@ -461,12 +486,19 @@ class pdf_standard_ot extends ModelePDFOt
 						$user_data = $db->fetch_object($resql_user);
 
 						if ($user_data) {
-							// Dessiner la carte
-					$pdf->SetDrawColor(0, 0, 0);
-							$pdf->Rect($start_x, $current_y, $card_width, $card_height);
+							// Dessiner uniquement les contours latéraux et inférieur
+							$pdf->SetDrawColor(0, 0, 0);
+							
+							// Ligne du bas
+							$pdf->Line($start_x, $current_y + $card_height, $start_x + $card_width, $current_y + $card_height);
+							
+							// Lignes latérales (qui s'arrêtent au niveau du nom/prénom)
+							$side_line_start_y = $current_y + 12; // Commence après le titre
+							$pdf->Line($start_x, $side_line_start_y, $start_x, $current_y + $card_height); // Ligne gauche
+							$pdf->Line($start_x + $card_width, $side_line_start_y, $start_x + $card_width, $current_y + $card_height); // Ligne droite
 
 							// Afficher le titre (RA, Q3, PCR)
-					$pdf->SetFont('', 'B', 10);
+							$pdf->SetFont('', 'B', 10);
 							$title = '';
 							switch ($card->title) {
 								case 'RA':
@@ -488,7 +520,7 @@ class pdf_standard_ot extends ModelePDFOt
 							// Afficher le nom et prénom
 							$pdf->SetFont('', '', 9);
 							$name = $user_data->firstname . ' ' . $user_data->lastname;
-					$name_width = $pdf->GetStringWidth($name);
+							$name_width = $pdf->GetStringWidth($name);
 							$name_x = $start_x + ($card_width - $name_width) / 2;
 							$pdf->Text($name_x, $current_y + 12, $name);
 
@@ -505,7 +537,7 @@ class pdf_standard_ot extends ModelePDFOt
 					}
 
 					// Ajouter un espace après les cartes principales
-					$current_y += $card_height + 2; // Réduit à 2 pixels
+					$current_y += $card_height; // Suppression de l'espace supplémentaire
 				}
 
 				// Initialisation des tableaux pour les cartes dans la grille et en dessous de la grille
@@ -587,18 +619,25 @@ class pdf_standard_ot extends ModelePDFOt
 
 				// AFFICHAGE DES CARTES NORMALES
 				if (!empty($cardsData)) {
-				// Paramètres pour la grille
-				$grid_columns = 3;
+					// Vérifier si on a assez d'espace pour afficher au moins une carte
+					$min_space_needed = 50; // Hauteur minimale nécessaire pour une carte
+					if ($current_y + $min_space_needed > $this->page_hauteur - $this->marge_basse) {
+						$pdf->AddPage();
+						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+					}
+
+					// Paramètres pour la grille
+					$grid_columns = 3;
 					$base_card_width = 50;
 					$card_height = 35;
-				$card_margin = 10; 
-				$card_user_margin = 5;
-				$shift_left = 1;
-				
+					$card_margin = 10; 
+					$card_user_margin = 5;
+					$shift_left = 1;
+					
 					// Calculer les dimensions de la grille
 					$max_x = 0;
-				$max_y = 0; 
-				foreach ($cardsData as $card) { 
+					$max_y = 0; 
+					foreach ($cardsData as $card) { 
 						if ($card['x'] > $max_x) $max_x = $card['x'];
 						if ($card['y'] > $max_y) $max_y = $card['y'];
 					}
@@ -606,11 +645,17 @@ class pdf_standard_ot extends ModelePDFOt
 					// Calculer la largeur totale disponible
 					$available_width = $this->page_largeur - $this->marge_gauche - $this->marge_droite;
 					
-					// Position initiale - Réduire l'espacement initial
-					$current_y = 70; // Réduit de 80 à 70
+					// Position initiale
+					$current_y = $current_y; // Utiliser la position Y actuelle
 					
 					// Parcourir chaque ligne (y)
 					for ($y = 0; $y <= $max_y; $y++) {
+						// Vérifier l'espace disponible pour cette ligne
+						if ($current_y + $card_height > $this->page_hauteur - $this->marge_basse) {
+							$pdf->AddPage();
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+						}
+
 						// Récupérer toutes les cartes de cette ligne
 						$cardsOnY = array_filter($cardsData, function($card) use ($y) {
 							return $card['y'] == $y;
@@ -651,13 +696,28 @@ class pdf_standard_ot extends ModelePDFOt
 						
 						// Afficher chaque carte de la ligne
 						foreach ($cardsOnY as $card) {
+							// Vérifier l'espace disponible pour cette carte
+							if ($current_y + $card_height > $this->page_hauteur - $this->marge_basse) {
+								$pdf->AddPage();
+								$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+								$current_x = $this->marge_gauche + ($line_width - $total_cards_width) / 2;
+							}
+
 							// Déterminer la largeur de la carte
 							$card_width = ($card['type'] === 'list') ? $list_card_width : $normal_card_width;
 							
 							// Calculer la hauteur nécessaire pour le contenu
 							$content_height = 15; // Hauteur pour le titre
 							
-						if (!empty($card['userNames'])) {
+							if (!empty($card['userNames'])) {
+								// Vérifier l'espace disponible pour le contenu
+								if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
+									$pdf->AddPage();
+									$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+									$current_x = $this->marge_gauche + ($line_width - $total_cards_width) / 2;
+								}
+
+								// ... reste du code pour l'affichage des cartes ...
 								if ($card['type'] === 'list') {
 									// AFFICHAGE EN TABLEAU POUR LES LISTES
 									// Définir les colonnes du tableau pour un utilisateur (la moitié de la largeur)
@@ -759,7 +819,11 @@ class pdf_standard_ot extends ModelePDFOt
 									
 									// Dessiner le contour de la carte
 						$pdf->SetDrawColor(0, 0, 0);
-									$pdf->Rect($current_x, $current_y, $card_width, $content_height);
+						$pdf->SetDrawColor(0, 0, 0);
+							// Lignes verticales uniquement (pas de haut, pas de bas)
+							$side_line_start_y = $current_y + 12; // Commence après le titre
+							$pdf->Line($current_x, $side_line_start_y, $current_x, $current_y + $content_height); // gauche
+							$pdf->Line($current_x + $card_width, $side_line_start_y, $current_x + $card_width, $current_y + $content_height); // droite
 				
 									// Afficher le titre de la liste
 									$pdf->SetFont('', 'B', 9); // Réduit de 10 à 9
@@ -1006,10 +1070,15 @@ class pdf_standard_ot extends ModelePDFOt
 										$pdf->SetY($current_y);
 									}
 									
-									// Dessiner la carte avec la hauteur calculée
-					$pdf->SetDrawColor(0, 0, 0);
-									$pdf->Rect($current_x, $current_y, $card_width, $content_height);
-									
+									// Dessiner les lignes de la carte au lieu du rectangle
+									$pdf->SetDrawColor(0, 0, 0);
+									// Ligne du bas
+									$pdf->Line($current_x, $current_y + $content_height, $current_x + $card_width, $current_y + $content_height);
+									// Lignes latérales (qui s'arrêtent au niveau du nom/prénom)
+									$side_line_start_y = $current_y + 12; // Commence après le titre
+									$pdf->Line($current_x, $side_line_start_y, $current_x, $current_y + $content_height); // Ligne gauche
+									$pdf->Line($current_x + $card_width, $side_line_start_y, $current_x + $card_width, $current_y + $content_height); // Ligne droite
+
 									// Réinitialiser la position Y pour le contenu
 									$y_offset = $current_y + 12; // Augmenter l'espace initial de 8 à 12
 									
@@ -1104,13 +1173,13 @@ class pdf_standard_ot extends ModelePDFOt
 						}
 						
 						// Passer à la ligne suivante
-						$current_y += $content_height + $card_margin;
+						$current_y += $content_height + 2; // Réduit de 5 à 2
 					}
 				}
 
 				// AFFICHAGE DES LISTES
 				if (!empty($listeUniqueCards)) {
-					$current_y += 2; // Réduire l'espace avant les listes uniques de 5 à 2 pixels
+					$current_y += 0; // Suppression de l'espace supplémentaire
 
 					foreach ($listeUniqueCards as $card) {
 						// Calculer la largeur de la carte (largeur maximale)
@@ -1302,14 +1371,15 @@ class pdf_standard_ot extends ModelePDFOt
 						
 						// Dessiner le contour de la carte
 						$pdf->SetDrawColor(0, 0, 0);
-						$pdf->Rect($card_x, $current_y, $card_width, $y_offset - $current_y + 2);
+						$pdf->Line($card_x, $current_y + 12, $card_x, $y_offset + 2); // Ligne gauche
+						$pdf->Line($card_x + $card_width, $current_y + 12, $card_x + $card_width, $y_offset + 2); // Ligne droite
 						
-						$current_y = $y_offset + 5; // Réduire l'espace après la liste de 10 à 5 pixels
+						$current_y = $y_offset + 2; // Réduit de 5 à 2
 					}
 				}
 
 				// AFFICHAGE DES SOUS-TRAITANTS
-				$current_y += 2; // Petit espace après la liste unique
+				$current_y += 0; // Suppression de l'espace supplémentaire
 
 				// Récupérer les sous-traitants
 				$sql_sous_traitants = "SELECT 
@@ -1411,10 +1481,123 @@ class pdf_standard_ot extends ModelePDFOt
 
 					// Dessiner le contour de la carte
 					$pdf->SetDrawColor(0, 0, 0);
-					$pdf->Rect($this->marge_gauche, $current_y, $card_width, $y_offset - $current_y + 2);
+					// Ligne du bas uniquement
+$pdf->SetDrawColor(0, 0, 0);
+$pdf->Line($this->marge_gauche, $y_offset + 2, $this->marge_gauche + $card_width, $y_offset + 2); // Ligne du bas
+$pdf->Line($this->marge_gauche, $current_y + 12, $this->marge_gauche, $y_offset + 2); // Ligne gauche
+$pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauche + $card_width, $y_offset + 2); // Ligne droite
 
-					$current_y = $y_offset + 5;
+					$current_y = $y_offset + 2; // Réduit de 5 à 2
 				}
+
+				// Calculer la hauteur totale nécessaire pour les signatures
+				$signature_height = 35;
+				$signature_spacing = 5;
+				$signature_margin = 5;
+
+				// Calculer la position Y pour les signatures (en bas de page)
+				$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - $signature_margin - 15; // Ajout de -15 pour remonter les signatures
+
+				// Vérifier si on a assez d'espace pour les signatures sur la page actuelle
+				if ($current_y + $signature_height > $signature_y) {
+					// Si pas assez d'espace, on ajoute une nouvelle page
+					$pdf->AddPage();
+					$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+					$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - $signature_margin - 15; // Même ajustement ici
+				}
+
+				// ZONES DE SIGNATURE
+				$signature_width = ($this->page_largeur - $this->marge_gauche - $this->marge_droite - 20) / 2; // Largeur de chaque zone
+				$signature_margin = 20; // Marge entre les zones
+
+				// Zone Rédaction
+				$redaction_x = $this->marge_gauche;
+				$redaction_y = $signature_y;
+
+				// Titre Rédaction (centré au-dessus de la ligne)
+				$pdf->SetFont('', '', 10);
+				$title_width = $pdf->GetStringWidth("Rédaction");
+				$pdf->Text($redaction_x + ($signature_width - $title_width) / 2, $redaction_y - 8, "Rédaction");
+				
+				// Ajouter (*) à côté du titre Rédaction
+				$pdf->SetFont('', '', 6);
+				$pdf->SetTextColor(128, 128, 128); // Gris
+				$pdf->Text($redaction_x + ($signature_width - $title_width) / 2 + $title_width + 2, $redaction_y - 8, "(*)");
+				$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
+
+				// Récupérer les informations de création de l'OT
+				$sql_creator = "SELECT u.firstname, u.lastname, o.date_creation 
+								FROM " . MAIN_DB_PREFIX . "ot_ot o 
+								JOIN " . MAIN_DB_PREFIX . "user u ON o.fk_user_creat = u.rowid 
+								WHERE o.rowid = " . $object->id;
+				$resql_creator = $db->query($sql_creator);
+				$creator_info = $db->fetch_object($resql_creator);
+
+				// Formater le nom du créateur (première lettre du prénom + nom)
+				$creator_name = "";
+				$creation_date = "";
+				if ($creator_info) {
+					$firstname = $creator_info->firstname;
+					$lastname = $creator_info->lastname;
+					$creator_name = substr($firstname, 0, 1) . "." . $lastname;
+					
+					// Formater la date de création
+					$date_creation = new DateTime($creator_info->date_creation);
+					$creation_date = $date_creation->format('d/m/Y');
+				}
+
+				// Dessiner le contour de la zone Rédaction
+				$pdf->SetDrawColor(0, 0, 0);
+				$pdf->Line($redaction_x, $redaction_y, $redaction_x + $signature_width, $redaction_y); // Ligne du haut
+				$pdf->Line($redaction_x, $redaction_y + $signature_height, $redaction_x + $signature_width, $redaction_y + $signature_height); // Ligne du bas
+
+				// Lignes pour les informations
+				$pdf->SetFont('', '', 9);
+				$pdf->Text($redaction_x + 5, $redaction_y + 8, "Nom :");
+				$pdf->SetFont('', 'B', 9);
+				$pdf->Text($redaction_x + 25, $redaction_y + 8, $creator_name);
+				$pdf->SetFont('', '', 9);
+				$pdf->Text($redaction_x + 5, $redaction_y + 15, "Date :");
+				$pdf->SetFont('', 'B', 9);
+				$pdf->Text($redaction_x + 25, $redaction_y + 15, $creation_date);
+				$pdf->SetFont('', '', 9);
+				$pdf->Text($redaction_x + 5, $redaction_y + 22, "Visa :");
+
+				// Zone Validation RD
+				$validation_x = $redaction_x + $signature_width + $signature_margin;
+				$validation_y = $signature_y;
+
+				// Titre Validation RD (centré au-dessus de la ligne)
+				$pdf->SetFont('', '', 10);
+				$title_width = $pdf->GetStringWidth("Validation RD");
+				$pdf->Text($validation_x + ($signature_width - $title_width) / 2, $validation_y - 8, "Validation RD");
+
+				// Texte en gris et petite taille
+				$pdf->SetFont('', '', 6);
+				$pdf->SetTextColor(128, 128, 128); // Gris
+				$note_text = "(si travaux en ZC et personnel intérimaire ou CDD)";
+				$note_width = $pdf->GetStringWidth($note_text);
+				$pdf->Text($validation_x + ($signature_width - $note_width) / 2, $validation_y - 4, $note_text);
+				$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
+
+				// Dessiner le contour de la zone Validation RD
+				$pdf->SetDrawColor(0, 0, 0);
+				$pdf->Line($validation_x, $validation_y, $validation_x + $signature_width, $validation_y); // Ligne du haut
+				$pdf->Line($validation_x, $validation_y + $signature_height, $validation_x + $signature_width, $validation_y + $signature_height); // Ligne du bas
+
+				// Lignes pour les informations
+				$pdf->SetFont('', '', 9);
+				$pdf->Text($validation_x + 5, $validation_y + 8, "Nom :");
+				$pdf->Text($validation_x + 5, $validation_y + 15, "Date :");
+				$pdf->Text($validation_x + 5, $validation_y + 22, "Visa :");
+
+				// Ajouter la note en bas
+				$pdf->SetFont('', '', 6);
+				$pdf->SetTextColor(128, 128, 128); // Gris
+				$note_bottom = "(*) Vérifier la bonne transmission de la FOD aux nouveaux intervenants si risque radiologique sur l'affaire";
+				$note_bottom_width = $pdf->GetStringWidth($note_bottom);
+				$pdf->Text($redaction_x + ($signature_width * 2 + $signature_margin - $note_bottom_width) / 2, $validation_y + $signature_height + 5, $note_bottom);
+				$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1510,7 +1693,7 @@ class pdf_standard_ot extends ModelePDFOt
 		$center_x = $this->page_largeur / 2;
 
 		// Récupérer les informations du projet et de la société
-		$sql_project = "SELECT p.title, s.nom as site_name
+		$sql_project = "SELECT p.title, p.ref as project_ref, s.nom as site_name
 			FROM " . MAIN_DB_PREFIX . "projet p
 			LEFT JOIN " . MAIN_DB_PREFIX . "societe s ON p.fk_soc = s.rowid
 			WHERE p.rowid = " . $object->fk_project;
@@ -1520,15 +1703,18 @@ class pdf_standard_ot extends ModelePDFOt
 			dol_syslog("Erreur SQL Project: " . $db->lasterror());
 			$site = "Site non trouvé";
 			$project_label = "Projet non trouvé";
+			$project_ref = "";
 		} else {
 			$project_info = $db->fetch_object($resql_project);
 			if (!$project_info) {
 				dol_syslog("Aucun projet trouvé pour fk_project = " . $object->fk_project);
 				$site = "Site non trouvé";
 				$project_label = "Projet non trouvé";
+				$project_ref = "";
 			} else {
 				$site = $project_info->site_name ? $project_info->site_name : "Site non défini";
 				$project_label = $project_info->title ? $project_info->title : "Projet non défini";
+				$project_ref = $project_info->project_ref ? $project_info->project_ref : "";
 			}
 		}
 		
@@ -1553,16 +1739,27 @@ class pdf_standard_ot extends ModelePDFOt
 		$right_x = $this->page_largeur - $this->marge_droite - 40;
 		
 		// Référence OT
-		$pdf->Text($right_x, $header_y + 5, "Réf. OT : " . $object->ref);
+		$pdf->Text($right_x, $header_y + 5, "Réf. OT : ");
+		$pdf->SetFont('', 'B', 10);
+		$pdf->Text($right_x + 20, $header_y + 5, $object->ref);
 		
 		// Indice
-		$pdf->Text($right_x, $header_y + 12, "Indice : " . $object->indice);
+		$pdf->SetFont('', '', 10);
+		$pdf->Text($right_x, $header_y + 12, "Indice : ");
+		$pdf->SetFont('', 'B', 10);
+		$pdf->Text($right_x + 20, $header_y + 12, $object->indice);
 		
 		// Numéro d'affaire
-		$pdf->Text($right_x, $header_y + 19, "N° Affaire : " . $object->project_ref);
+		$pdf->SetFont('', '', 10);
+		$pdf->Text($right_x, $header_y + 19, "Affaire : ");
+		$pdf->SetFont('', 'B', 10);
+		$pdf->Text($right_x + 20, $header_y + 19, $project_ref);
 
 		// Numéro de page
-		$pdf->Text($right_x, $header_y + 26, "Page " . $pdf->getPage() . " / " . $pdf->getAliasNbPages());
+		$pdf->SetFont('', '', 10);
+		$pdf->Text($right_x, $header_y + 26, "Page : ");
+		$pdf->SetFont('', 'B', 10);
+		$pdf->Text($right_x + 20, $header_y + 26, $pdf->getPage() . " / " . $pdf->getAliasNbPages());
 
 		// Ligne noire horizontale
 		$pdf->SetDrawColor(0, 0, 0);
