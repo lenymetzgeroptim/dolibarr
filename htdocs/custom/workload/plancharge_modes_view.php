@@ -94,7 +94,7 @@ if (!empty($conf->use_javascript_ajax)) {
         '/custom/workload/js/workload.main.js',
         '/custom/workload/js/filters/filterManager.js',
         '/custom/workload/js/utils/tabNavigation.js',
-        '/custom/workload/js/init/eventBus.js',
+        '/custom/workload/js/utils/eventBus.js',
         '/custom/workload/js/init/setup.js',
         '/custom/workload/js/filters/filterListeners.js',
         
