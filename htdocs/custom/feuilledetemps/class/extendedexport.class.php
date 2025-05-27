@@ -779,25 +779,25 @@ class ExtendedExportFDT extends Export
 		// Build the sql request
 		$sql = "SELECT DISTINCT u.rowid, ";
 		if(isset($user_extrafields->attributes['user']['type']['semaine_type_lundi'])) {
-			$sql = "eu.semaine_type_lundi, ";
+			$sql .= "eu.semaine_type_lundi, ";
 		}
 		if(isset($user_extrafields->attributes['user']['type']['semaine_type_mardi'])) {
-			$sql = "eu.semaine_type_mardi, ";
+			$sql .= "eu.semaine_type_mardi, ";
 		}
 		if(isset($user_extrafields->attributes['user']['type']['semaine_type_mercredi'])) {
-			$sql = "eu.semaine_type_mercredi, ";
+			$sql .= "eu.semaine_type_mercredi, ";
 		}
 		if(isset($user_extrafields->attributes['user']['type']['semaine_type_jeudi'])) {
-			$sql = "eu.semaine_type_jeudi, ";
+			$sql .= "eu.semaine_type_jeudi, ";
 		}
 		if(isset($user_extrafields->attributes['user']['type']['semaine_type_vendredi'])) {
-			$sql = "eu.semaine_type_vendredi, ";
+			$sql .= "eu.semaine_type_vendredi, ";
 		}
 		if(isset($user_extrafields->attributes['user']['type']['semaine_type_samedi'])) {
-			$sql = "eu.semaine_type_samedi, ";
+			$sql .= "eu.semaine_type_samedi, ";
 		}
 		if(isset($user_extrafields->attributes['user']['type']['semaine_type_dimanche'])) {
-			$sql = "eu.semaine_type_dimanche, ";
+			$sql .= "eu.semaine_type_dimanche, ";
 		}
 		
 		$i = 0;
