@@ -95,7 +95,7 @@ foreach($objectline->fields as $key => $val){
 			}
 		}
 		elseif($key == 'ref'){
-			if($objectline->element == 'userformation') {
+			if($objectline->element == 'userformation' || $objectline->element == 'convocation' || $objectline->element == 'visitemedical') {
 				print $line->getNomUrl(0, '', 1);
 			}
 			else {
@@ -130,7 +130,7 @@ foreach($objectline->fields as $key => $val){
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_datefinautorisation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
 
-		if($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') {
+		if(($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') && ($this->element == 'userformation' || $this->element == 'userhabilitation' || $this->element == 'userautorisation' || $this->element == 'uservolet')) {
 			$date_finvalidite - null;
 			if($this->element == 'uservolet') {
 				$volet = new Volet($this->db);

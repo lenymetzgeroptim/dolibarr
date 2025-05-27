@@ -106,6 +106,16 @@ elseif($objectline->element == 'uservolet'){
     $objectparentclass = 'Volet';
     $objectlabel = 'UserVolet';
 }
+elseif($objectline->element == 'convocation'){
+    $objectclass = 'Convocation';
+    $objectparentclass = 'Convocation';
+    $objectlabel = 'Convocation';
+}
+elseif($objectline->element == 'visitemedical'){
+    $objectclass = 'VisiteMedical';
+    $objectparentclass = 'VisiteMedical';
+    $objectlabel = 'VisiteMedical';
+}
 $uploaddir = $conf->formationhabilitation->dir_output;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/actions_massactions.inc.php';
 
@@ -373,6 +383,16 @@ elseif($objectline->element == 'uservolet'){
     $modelmail = "UserVolet";
     $objecttmp = new UserVolet($db);
 }
+elseif($objectline->element == 'convocation'){
+    $topicmail = "SendConvocationRef";
+    $modelmail = "Convocation";
+    $objecttmp = new Convocation($db);
+}
+elseif($objectline->element == 'visitemedical'){
+    $topicmail = "SendVisiteMedicalRef";
+    $modelmail = "VisiteMedical";
+    $objecttmp = new VisiteMedical($db);
+}
 $trackid = 'xxxx'.$object->id;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/massactions_pre.tpl.php';
 
@@ -393,7 +413,7 @@ else {
 
 print '<table id="tablelinesaddline" class="noborder noshadow" width="100%" style="margin: unset;">';
 // Form to add new line
-if ($permissiontoaddline && $action != 'selectlines' && $object->status == 1) {
+if ($permissiontoaddline && $action != 'selectlines' && $object->status == 1 && $objectline->element != 'convocation' && $objectline->element != 'visitemedical') {
     if ($action != 'editline') {
         // Add products/services form
         $parameters = array();
