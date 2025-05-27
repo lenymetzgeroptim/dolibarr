@@ -96,7 +96,7 @@ foreach($objectline->fields as $key => $val){
 		}
 		elseif($key == 'ref'){
 			if($objectline->element == 'userformation' || $objectline->element == 'convocation' || $objectline->element == 'visitemedical') {
-				print $line->getNomUrl(0, '', 1);
+				print $line->getNomUrl(0, '', 1, '', 1);
 			}
 			else {
 				print $line->getNomUrl(0, 'nolink', 1);

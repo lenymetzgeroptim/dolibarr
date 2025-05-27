@@ -431,7 +431,7 @@ if ($action == 'create') {
 }
 $help_url = '';
 
-llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-card');
+llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-card classforhorizontalscrolloftabs');
 
 // Example : Adding jquery code
 // print '<script type="text/javascript">
@@ -623,6 +623,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// Object card
 	// ------------------------------------------------------------
 	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/uservolet_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	$linkback .= '<a href="'.dol_buildpath('/formationhabilitation/userformation.php', 1).'?id='.$object->fk_user.'&onglet=volet&restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToUserList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*
@@ -947,7 +948,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', 0, 0, 0, 1);
 	
 
-		print '<div class="">';
+		print '<div class="div-table-responsive-no-min">';
 		//if (!empty($object->lines) || ($object->status == $object::STATUS_VALIDATION0 && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 		//}
@@ -1028,7 +1029,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', 0, 0, 0, 1);
 	
 
-		print '<div class="">';
+		print '<div class="div-table-responsive-no-min">';
 		//if (!empty($object->lines) || ($object->status == $object::STATUS_VALIDATION0 && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 		//}

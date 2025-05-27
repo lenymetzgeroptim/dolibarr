@@ -430,6 +430,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// Object card
 	// ------------------------------------------------------------
 	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/visitemedical_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	$linkback .= '<a href="'.dol_buildpath('/formationhabilitation/userformation.php', 1).'?id='.$object->fk_user.'&onglet=visitemedical&restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToUserList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*
