@@ -537,7 +537,8 @@ class pdf_standard_ot extends ModelePDFOt
 							if (!empty($user_data->office_phone)) {
 								$phone_width = $pdf->GetStringWidth($user_data->office_phone);
 								$phone_x = $start_x + ($card_width - $phone_width) / 2;
-								$pdf->Text($phone_x, $current_y + 19, $user_data->office_phone);
+								$pdf->Text($phone_x - 5, $current_y + 19, "Tel:"); // Utilisation de "T:" comme symbole téléphone
+								$pdf->Text($phone_x + 2, $current_y + 19, $user_data->office_phone);
 							}
 
 							// Passer à la position suivante
@@ -859,13 +860,24 @@ class pdf_standard_ot extends ModelePDFOt
 									$pdf->Text($habilitation_x, $legend_y, $habilitation_title);
 									$current_x_legend += $col_widths['habilitation'];
 									
-									$pdf->Text($current_x_legend, $legend_y, 'Fonction');
+									// Fonction avec légende (1)
+									$fonction_x = $current_x_legend;
+									$pdf->Text($fonction_x, $legend_y, 'Fonction');
+									$pdf->SetTextColor(128, 128, 128); // Gris
+									$pdf->Text($fonction_x + $pdf->GetStringWidth('Fonction') + 1, $legend_y, '(1)');
+									$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
 									$current_x_legend += $col_widths['fonction'];
-									$pdf->Text($current_x_legend, $legend_y, 'Contrat');
-
-									if ($is_alone) {
-										// Afficher les titres des colonnes pour le deuxième utilisateur
-										$current_x_legend += $col_widths['contrat'];
+									
+									// Contrat avec légende (2)
+									$contrat_x = $current_x_legend;
+									$pdf->Text($contrat_x, $legend_y, 'Contrat');
+									$pdf->SetTextColor(128, 128, 128); // Gris
+									$pdf->Text($contrat_x + $pdf->GetStringWidth('Contrat') + 1, $legend_y, '(2)');
+									$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
+									$current_x_legend += $col_widths['contrat'];
+									
+									// Si c'est une liste double, ajouter les titres pour le deuxième utilisateur
+									if ($is_alone && count($cardsOnY) === 1) {
 										$pdf->Text($current_x_legend, $legend_y, 'Nom');
 										$current_x_legend += $col_widths['nom'];
 										
@@ -874,9 +886,21 @@ class pdf_standard_ot extends ModelePDFOt
 										$pdf->Text($habilitation_x, $legend_y, $habilitation_title);
 										$current_x_legend += $col_widths['habilitation'];
 										
-										$pdf->Text($current_x_legend, $legend_y, 'Fonction');
+										// Fonction avec légende (1) pour le deuxième utilisateur
+										$fonction_x = $current_x_legend;
+										$pdf->Text($fonction_x, $legend_y, 'Fonction');
+										$pdf->SetTextColor(128, 128, 128); // Gris
+										$pdf->Text($fonction_x + $pdf->GetStringWidth('Fonction') + 1, $legend_y, '(1)');
+										$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
 										$current_x_legend += $col_widths['fonction'];
-										$pdf->Text($current_x_legend, $legend_y, 'Contrat');
+										
+										// Contrat avec légende (2) pour le deuxième utilisateur
+										$contrat_x = $current_x_legend;
+										$pdf->Text($contrat_x, $legend_y, 'Contrat');
+										$pdf->SetTextColor(128, 128, 128); // Gris
+										$pdf->Text($contrat_x + $pdf->GetStringWidth('Contrat') + 1, $legend_y, '(2)');
+										$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
+										$current_x_legend += $col_widths['contrat'];
 									}
 
 									// Ligne de séparation sous la légende
@@ -906,7 +930,7 @@ class pdf_standard_ot extends ModelePDFOt
 											$name_parts = explode(' ', $info_parts[0]);
 											$lastname = $name_parts[count($name_parts) - 1];
 											$firstname = $name_parts[0];
-											$name = $lastname . ' ' . substr($firstname, 0, 1) . '.';
+											$name = $lastname . '.' . substr($firstname, 0, 1); // Changé de ' ' à '.'
 											
 											$fonction = '';
 											$contrat = '';
@@ -1125,8 +1149,35 @@ class pdf_standard_ot extends ModelePDFOt
 										$pdf->SetFont('', '', 6);
 										$pdf->Text($current_x + 2, $y_offset, 'Nom/Prénom :');
 										$pdf->SetFont('', '', 8);
-										$pdf->Text($current_x + 20, $y_offset, $name);
-										$y_offset += 5; // Espace entre nom et habilitation
+										
+										// Gestion des retours à la ligne pour le nom
+										$max_width = $card_width - 25; // Largeur maximale pour le nom
+										$name_parts = explode(' ', $name);
+										$current_line = '';
+										$name_lines = array();
+										
+										foreach ($name_parts as $part) {
+											$test_line = $current_line . ($current_line ? ' ' : '') . $part;
+											if ($pdf->GetStringWidth($test_line) < $max_width) {
+												$current_line = $test_line;
+											} else {
+												if ($current_line) {
+													$name_lines[] = $current_line;
+												}
+												$current_line = $part;
+											}
+										}
+										if ($current_line) {
+											$name_lines[] = $current_line;
+										}
+										
+										// Afficher le nom sur plusieurs lignes si nécessaire
+										foreach ($name_lines as $line) {
+											$pdf->Text($current_x + 20, $y_offset, $line);
+											$y_offset += 4;
+										}
+										
+										$y_offset += 1; // Espace entre nom et habilitation
 										
 										if (!empty($habilitations)) {
 											$pdf->SetFont('', '', 6);
@@ -1282,7 +1333,7 @@ class pdf_standard_ot extends ModelePDFOt
 								$name_parts = explode(' ', $info_parts[0]);
 								$lastname = $name_parts[count($name_parts) - 1];
 								$firstname = $name_parts[0];
-								$name = $lastname . ' ' . substr($firstname, 0, 1) . '.';
+								$name = $lastname . '.' . substr($firstname, 0, 1); // Changé de ' ' à '.'
 								
 								$fonction = '';
 								$contrat = '';
@@ -1395,7 +1446,7 @@ class pdf_standard_ot extends ModelePDFOt
 				}
 
 				// AFFICHAGE DES SOUS-TRAITANTS
-				$current_y += 0; // Suppression de l'espace supplémentaire
+				$current_y += 8; // Réduction de l'espace entre les tableaux (de 15 à 8)
 
 				// Récupérer les sous-traitants
 				$sql_sous_traitants = "SELECT 
@@ -1411,18 +1462,6 @@ class pdf_standard_ot extends ModelePDFOt
 
 				$resql_sous_traitants = $db->query($sql_sous_traitants);
 				if ($resql_sous_traitants && $db->num_rows($resql_sous_traitants) > 0) {
-					// Calculer la largeur de la carte (largeur maximale)
-					$card_width = $this->page_largeur - $this->marge_gauche - $this->marge_droite;
-					
-					// Définir les colonnes du tableau
-					$col_widths = array(
-						'nom' => $card_width * 0.20,
-						'entreprise' => $card_width * 0.20,
-						'fonction' => $card_width * 0.20,
-						'contrat' => $card_width * 0.15,
-						'habilitation' => $card_width * 0.25
-					);
-
 					// Vérifier si le tableau dépasse la page
 					if ($current_y + 50 > $this->page_hauteur - $this->marge_basse) {
 						$pdf->AddPage();
@@ -1430,6 +1469,9 @@ class pdf_standard_ot extends ModelePDFOt
 						$this->_pagefoot($pdf, $object, $outputlangs);
 						$pdf->SetY($current_y);
 					}
+
+					// Réduire la largeur du tableau des sous-traitants pour laisser de la place aux légendes
+					$card_width = ($this->page_largeur - $this->marge_gauche - $this->marge_droite) * 0.6; // 60% de la largeur disponible
 
 					// Afficher le titre
 					$pdf->SetFont('', 'B', 9);
@@ -1442,21 +1484,46 @@ class pdf_standard_ot extends ModelePDFOt
 					$legend_y = $title_y + 10;
 					$current_x_legend = $this->marge_gauche + 2;
 
+					// Définir les colonnes du tableau
+					$col_widths = array(
+						'nom' => $card_width * 0.15,
+						'entreprise' => $card_width * 0.20,
+						'habilitation' => $card_width * 0.25,
+						'fonction' => $card_width * 0.20,
+						'contrat' => $card_width * 0.20
+					);
+
 					// Afficher les titres des colonnes
 					$pdf->SetFont('', '', 5);
 					$pdf->Text($current_x_legend, $legend_y, 'Nom/Prénom');
 					$current_x_legend += $col_widths['nom'];
 
+					// Ajouter un espace avant Entreprise
+					$current_x_legend += 3; // Ajout d'un espace de 3 unités
 					$pdf->Text($current_x_legend, $legend_y, 'Entreprise');
 					$current_x_legend += $col_widths['entreprise'];
 
+					// Ajouter un espace supplémentaire avant Habilitations
+					$current_x_legend += 5; // Ajout d'un espace de 5 unités
+					$pdf->Text($current_x_legend, $legend_y, 'Habilitations');
+					$current_x_legend += $col_widths['habilitation'];
+
+					// Fonction avec légende (1)
 					$pdf->Text($current_x_legend, $legend_y, 'Fonction');
+					$pdf->SetFont('', '', 5);
+					$pdf->SetTextColor(128, 128, 128); // Gris
+					$pdf->Text($current_x_legend + $pdf->GetStringWidth('Fonction') + 1, $legend_y, '(1)');
+					$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
 					$current_x_legend += $col_widths['fonction'];
 
+					// Contrat avec légende (2)
+					$pdf->SetFont('', '', 5);
 					$pdf->Text($current_x_legend, $legend_y, 'Contrat');
+					$pdf->SetFont('', '', 5);
+					$pdf->SetTextColor(128, 128, 128); // Gris
+					$pdf->Text($current_x_legend + $pdf->GetStringWidth('Contrat') + 1, $legend_y, '(2)');
+					$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
 					$current_x_legend += $col_widths['contrat'];
-
-					$pdf->Text($current_x_legend, $legend_y, 'Habilitations');
 
 					// Ligne de séparation sous la légende
 					$pdf->SetDrawColor(200, 200, 200);
@@ -1470,14 +1537,25 @@ class pdf_standard_ot extends ModelePDFOt
 					while ($sous_traitant = $db->fetch_object($resql_sous_traitants)) {
 						$current_x = $this->marge_gauche + 2;
 
-						// Nom/Prénom
-						$name = $sous_traitant->lastname . ' ' . $sous_traitant->firstname;
+						// Nom/Prénom (format modifié)
+						$name_parts = explode(' ', $sous_traitant->lastname . ' ' . $sous_traitant->firstname);
+						$lastname = $name_parts[0];
+						$firstname = $name_parts[1];
+						$name = $lastname . '.' . substr($firstname, 0, 1); // Changé de ' ' à '.'
 						$pdf->Text($current_x, $y_offset, $name);
 						$current_x += $col_widths['nom'];
 
+						// Ajouter un espace avant Entreprise
+						$current_x += 3;
 						// Entreprise
 						$pdf->Text($current_x, $y_offset, $sous_traitant->entreprise);
 						$current_x += $col_widths['entreprise'];
+
+						// Ajouter un espace supplémentaire avant Habilitations
+						$current_x += 8;
+						// Habilitations
+						$pdf->Text($current_x, $y_offset, $sous_traitant->habilitation);
+						$current_x += $col_widths['habilitation'];
 
 						// Fonction
 						$pdf->Text($current_x, $y_offset, $sous_traitant->fonction);
@@ -1487,9 +1565,6 @@ class pdf_standard_ot extends ModelePDFOt
 						$pdf->Text($current_x, $y_offset, $sous_traitant->contrat);
 						$current_x += $col_widths['contrat'];
 
-						// Habilitations
-						$pdf->Text($current_x, $y_offset, $sous_traitant->habilitation);
-
 						// Ligne de séparation entre les sous-traitants
 						$y_offset += 7;
 						$pdf->SetDrawColor(200, 200, 200);
@@ -1498,17 +1573,62 @@ class pdf_standard_ot extends ModelePDFOt
 
 					// Dessiner le contour de la carte
 					$pdf->SetDrawColor(0, 0, 0);
-					// Ligne du bas uniquement
-$pdf->SetDrawColor(0, 0, 0);
-$pdf->Line($this->marge_gauche, $y_offset + 2, $this->marge_gauche + $card_width, $y_offset + 2); // Ligne du bas
-$pdf->Line($this->marge_gauche, $current_y + 12, $this->marge_gauche, $y_offset + 2); // Ligne gauche
-$pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauche + $card_width, $y_offset + 2); // Ligne droite
+					$pdf->Line($this->marge_gauche, $y_offset + 2, $this->marge_gauche + $card_width, $y_offset + 2); // Ligne du bas
+					$pdf->Line($this->marge_gauche, $current_y + 12, $this->marge_gauche, $y_offset + 2); // Ligne gauche
+					$pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauche + $card_width, $y_offset + 2); // Ligne droite
 
-					$current_y = $y_offset + 2; // Réduit de 5 à 2
+					// Afficher les légendes à côté du tableau
+					$legend_x = $this->marge_gauche + $card_width + 5; // Position X des légendes
+					$legend_y = $current_y + 2; // Position Y des légendes
+					$pdf->SetFont('', '', 6);
+					$pdf->SetTextColor(128, 128, 128); // Gris
+
+					// Calculer la largeur disponible pour les légendes (40% de la largeur totale)
+					$legend_width = ($this->page_largeur - $legend_x - $this->marge_droite) * 0.4;
+
+					// Légende (1)
+					$legend1 = "(1) RA = Responsable d'Affaire – RS = Responsable de Site – RSI = Responsable de Suivi d'Intervention – RE = Responsable d'Équipes – RI = Responsable d'Intervention – CdT = Chargé de Travaux – CT = Contrôleur Technique – V = Vérificateur - INT = Intervenant – RSR/PTC = Responsable du Suivi Radiologique / Personne Techniquement Compétente PI = Primo-Intervenant – TPI = Tuteur Primo-Intervenant (Si Primo-Intervenant) CO = Personnel en Compagnonnage – SST = Sauveteur Secouriste du Travail";
+					
+					// Formater le texte de la légende 1
+					$legend1_lines = array(
+						"(1) RA = Responsable d'Affaire – RS = Responsable de Site –",
+						"RSI = Responsable de Suivi d'Intervention –",
+						"RE = Responsable d'Équipes – RI = Responsable d'Intervention –",
+						"CdT = Chargé de Travaux – CT = Contrôleur Technique –",
+						"V = Vérificateur - INT = Intervenant –",
+						"RSR/PTC = Responsable du Suivi Radiologique / Personne",
+						"Techniquement Compétente",
+						"PI = Primo-Intervenant – TPI = Tuteur Primo-Intervenant",
+						"(Si Primo-Intervenant)",
+						"CO = Personnel en Compagnonnage – SST = Sauveteur Secouriste du Travail"
+					);
+
+					// Afficher chaque ligne de la légende 1
+					foreach ($legend1_lines as $line) {
+						$pdf->Text($legend_x, $legend_y, $line);
+						$legend_y += 3;
+					}
+
+					// Légende (2)
+					$legend_y += 2; // Ajouter un espace entre les légendes
+					$legend2_lines = array(
+						"(2) CDI = Contrat à Durée Indéterminée – CDD = Contrat à Durée Déterminée",
+						"ETT = Intérimaire"
+					);
+
+					// Afficher chaque ligne de la légende 2
+					foreach ($legend2_lines as $line) {
+						$pdf->Text($legend_x, $legend_y, $line);
+						$legend_y += 3;
+					}
+
+					$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
+
+					$current_y = $y_offset + 2;
 				}
 
 				// Calculer la hauteur totale nécessaire pour les signatures
-				$signature_height = 35;
+				$signature_height = 25; // Ajusté pour avoir un espacement double en bas
 				$signature_spacing = 5;
 				$signature_margin = 5;
 
@@ -1571,19 +1691,19 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 
 				// Lignes pour les informations
 				$pdf->SetFont('', '', 9);
-				$pdf->Text($redaction_x + 5, $redaction_y + 8, "Nom :");
+				$pdf->Text($redaction_x + 5, $redaction_y + 3, "Nom :");
 				$pdf->SetFont('', 'B', 9);
-				$pdf->Text($redaction_x + 25, $redaction_y + 8, $creator_name);
+				$pdf->Text($redaction_x + 25, $redaction_y + 3, $creator_name);
 				$pdf->SetFont('', '', 9);
-				$pdf->Text($redaction_x + 5, $redaction_y + 15, "Date :");
+				$pdf->Text($redaction_x + 5, $redaction_y + 8, "Date :");
 				$pdf->SetFont('', 'B', 9);
-				$pdf->Text($redaction_x + 25, $redaction_y + 15, $creation_date);
+				$pdf->Text($redaction_x + 25, $redaction_y + 8, $creation_date);
 				$pdf->SetFont('', '', 9);
-				$pdf->Text($redaction_x + 5, $redaction_y + 22, "Visa :");
+				$pdf->Text($redaction_x + 5, $redaction_y + 13, "Visa :");
 
 				// Zone Validation RD
 				$validation_x = $redaction_x + $signature_width + $signature_margin;
-				$validation_y = $signature_y;
+				$validation_y = $redaction_y;
 
 				// Titre Validation RD (centré au-dessus de la ligne)
 				$pdf->SetFont('', '', 10);
@@ -1605,9 +1725,9 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 
 				// Lignes pour les informations
 				$pdf->SetFont('', '', 9);
-				$pdf->Text($validation_x + 5, $validation_y + 8, "Nom :");
-				$pdf->Text($validation_x + 5, $validation_y + 15, "Date :");
-				$pdf->Text($validation_x + 5, $validation_y + 22, "Visa :");
+				$pdf->Text($validation_x + 5, $validation_y + 3, "Nom :");
+				$pdf->Text($validation_x + 5, $validation_y + 8, "Date :");
+				$pdf->Text($validation_x + 5, $validation_y + 13, "Visa :");
 
 				// Ajouter la note en bas
 				$pdf->SetFont('', '', 6);
@@ -1714,10 +1834,10 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 				}
 				if (is_readable($logo)) {
 					$height = pdf_getHeightForLogo($logo);
-					$height = $height * 0.4; // Réduire la hauteur de 60%
-					// Positionner le logo à gauche avec un léger décalage vers la droite
-					$logo_x = $this->marge_gauche + 15; // Ajout de 15mm de décalage
-					$pdf->Image($logo, $logo_x, $header_y + 12, 0, $height); // width=0 (auto) et aligné avec la deuxième ligne
+					$height = $height * 0.7; // 70% de la taille originale
+					// Positionner le logo à gauche avec un léger décalage
+					$logo_x = $this->marge_gauche + 10; // Réduit de 15 à 10 pour décaler vers la gauche
+					$pdf->Image($logo, $logo_x, $header_y + 8, 0, $height); // Réduit de 12 à 8 pour remonter le logo
 				} else {
 					$pdf->SetTextColor(200, 0, 0);
 					$pdf->SetFont('', 'B', $default_font_size - 2);
