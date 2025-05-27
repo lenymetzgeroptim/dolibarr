@@ -1247,20 +1247,61 @@ class pdf_standard_ot extends ModelePDFOt
 				if (!empty($listeUniqueCards)) {
 					$current_y += 0; // Suppression de l'espace supplémentaire
 
+					// Compter le nombre total d'utilisateurs dans toutes les listes uniques
+					$total_users = 0;
+					foreach ($listeUniqueCards as $card) {
+						$total_users += count($card['userNames']);
+					}
+
+					// Ajuster les espacements en fonction du nombre d'utilisateurs
+					$is_compact_mode = ($total_users < 6);
+					
+					// Réduire les espacements si on est en mode compact
+					if ($is_compact_mode) {
+						$signature_height = 15; // Réduit de 20 à 15
+						$signature_spacing = 2; // Réduit de 3 à 2
+						$signature_margin = 2; // Réduit de 3 à 2
+						$min_space_needed = $signature_height + $signature_spacing + $signature_margin + 5; // Réduit de 10 à 5
+						
+						// Ajuster les espacements verticaux
+						$title_y_offset = 2; // Réduit de 3 à 2
+						$legend_y_offset = 5; // Réduit de 7 à 5
+						$line_spacing = 2; // Réduit de 3 à 2
+					} else {
+						$signature_height = 25;
+						$signature_spacing = 5;
+						$signature_margin = 5;
+						$min_space_needed = $signature_height + $signature_spacing + $signature_margin + 15;
+						
+						// Espacements normaux
+						$title_y_offset = 5;
+						$legend_y_offset = 10;
+						$line_spacing = 3;
+					}
+
 					foreach ($listeUniqueCards as $card) {
 						// Calculer la largeur de la carte (largeur maximale)
 						$card_width = $this->page_largeur - $this->marge_gauche - $this->marge_droite;
 						
-						// Définir les colonnes du tableau pour un utilisateur (la moitié de la largeur)
-						$col_widths = array(
-							'nom' => ($card_width * 0.25) / 2,
-							'habilitation' => ($card_width * 0.35) / 2,
-							'fonction' => ($card_width * 0.25) / 2,
-							'contrat' => ($card_width * 0.15) / 2
-						);
+						// Ajuster les largeurs des colonnes en mode compact
+						if ($is_compact_mode) {
+							$col_widths = array(
+								'nom' => ($card_width * 0.20) / 2, // Réduit de 0.25 à 0.20
+								'habilitation' => ($card_width * 0.40) / 2, // Augmenté de 0.35 à 0.40
+								'fonction' => ($card_width * 0.25) / 2,
+								'contrat' => ($card_width * 0.15) / 2
+							);
+						} else {
+							$col_widths = array(
+								'nom' => ($card_width * 0.25) / 2,
+								'habilitation' => ($card_width * 0.35) / 2,
+								'fonction' => ($card_width * 0.25) / 2,
+								'contrat' => ($card_width * 0.15) / 2
+							);
+						}
 						
 						// Vérifier si le tableau dépasse la page
-						if ($current_y + 50 > $this->page_hauteur - $this->marge_basse) {
+						if ($current_y + 40 > $this->page_hauteur - $this->marge_basse) { // Réduit de 50 à 40
 							$pdf->AddPage();
 							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 							$this->_pagefoot($pdf, $object, $outputlangs);
@@ -1271,17 +1312,17 @@ class pdf_standard_ot extends ModelePDFOt
 						$card_x = $this->marge_gauche;
 						
 						// Afficher le titre de la liste avec plus d'espace
-						$pdf->SetFont('', 'B', 9);
+						$pdf->SetFont('', 'B', $is_compact_mode ? 8 : 9); // Réduit la taille en mode compact
 						$title_width = $pdf->GetStringWidth($card['title']);
-						$title_y = $current_y + 5; // Réduire l'espace au-dessus du titre
-						$pdf->Text($card_x + ($card_width - $title_width) / 2, $title_y, $card['title']); // Centrer le titre
+						$title_y = $current_y + $title_y_offset;
+						$pdf->Text($card_x + ($card_width - $title_width) / 2, $title_y, $card['title']);
 						
 						// Afficher la légende
-						$legend_y = $title_y + 10;
+						$legend_y = $title_y + $legend_y_offset;
 						$current_x_legend = $card_x + 2;
 						
 						// Afficher les titres des colonnes
-						$pdf->SetFont('', '', 5);
+						$pdf->SetFont('', '', $is_compact_mode ? 4 : 5); // Réduit la taille en mode compact
 						$pdf->Text($current_x_legend, $legend_y, 'Nom');
 						$current_x_legend += $col_widths['nom'];
 						
@@ -1315,11 +1356,11 @@ class pdf_standard_ot extends ModelePDFOt
 						// Dessiner deux segments de ligne avec un espace au milieu
 						$mid_x = $card_x + ($card_width / 2);
 						$gap = 10; // Largeur de l'espace
-						$pdf->Line($card_x + 2, $legend_y + 4, $mid_x - ($gap/2), $legend_y + 4);
-						$pdf->Line($mid_x + ($gap/2), $legend_y + 4, $card_x + $card_width - 2, $legend_y + 4);
+						$pdf->Line($card_x + 2, $legend_y + ($is_compact_mode ? 3 : 4), $mid_x - ($gap/2), $legend_y + ($is_compact_mode ? 3 : 4));
+						$pdf->Line($mid_x + ($gap/2), $legend_y + ($is_compact_mode ? 3 : 4), $card_x + $card_width - 2, $legend_y + ($is_compact_mode ? 3 : 4));
 						
 						// Passer à la ligne suivante pour les données
-						$y_offset = $legend_y + 7;
+						$y_offset = $legend_y + ($is_compact_mode ? 5 : 7); // Réduire l'espace en mode compact
 						$pdf->SetFont('', '', 7);
 						
 						// Afficher les utilisateurs par paires
@@ -1404,14 +1445,14 @@ class pdf_standard_ot extends ModelePDFOt
 								$temp_y = $y_offset;
 								foreach ($hab_lines as $line) {
 									$pdf->Text($current_x_user, $temp_y, $line);
-									$temp_y += 3;
+									$temp_y += ($is_compact_mode ? 2 : 3); // Réduire l'espacement des lignes en mode compact
 								}
 								
 								// Afficher les fonctions sur plusieurs lignes si nécessaire
 								$temp_y = $y_offset;
 								foreach ($fonc_lines as $line) {
 									$pdf->Text($current_x_user + $col_widths['habilitation'], $temp_y, $line);
-									$temp_y += 3;
+									$temp_y += ($is_compact_mode ? 2 : 3); // Réduire l'espacement des lignes en mode compact
 								}
 								
 								$current_x_user += $col_widths['habilitation'] + $col_widths['fonction'] + $col_widths['contrat'];
@@ -1430,7 +1471,7 @@ class pdf_standard_ot extends ModelePDFOt
 								$pdf->SetDrawColor(200, 200, 200);
 								// Dessiner deux segments de ligne avec un espace au milieu
 								$mid_x = $card_x + ($card_width / 2);
-								$gap = 10; // Largeur de l'espace
+								$gap = $is_compact_mode ? 5 : 10; // Réduit l'espace en mode compact
 								$pdf->Line($card_x + 2, $y_offset - 1, $mid_x - ($gap/2), $y_offset - 1);
 								$pdf->Line($mid_x + ($gap/2), $y_offset - 1, $card_x + $card_width - 2, $y_offset - 1);
 							}
@@ -1441,7 +1482,7 @@ class pdf_standard_ot extends ModelePDFOt
 						$pdf->Line($card_x, $current_y + 12, $card_x, $y_offset + 2); // Ligne gauche
 						$pdf->Line($card_x + $card_width, $current_y + 12, $card_x + $card_width, $y_offset + 2); // Ligne droite
 						
-						$current_y = $y_offset + 2; // Réduit de 5 à 2
+						$current_y = $y_offset + 2; // Réduit l'espace après la carte
 					}
 				}
 
@@ -1627,22 +1668,30 @@ class pdf_standard_ot extends ModelePDFOt
 					$current_y = $y_offset + 2;
 				}
 
-				// Calculer la hauteur totale nécessaire pour les signatures
-				$signature_height = 25; // Ajusté pour avoir un espacement double en bas
+				// Calculer l'espace disponible pour les signatures
+				$signature_height = 25; // Hauteur nécessaire pour les signatures
 				$signature_spacing = 5;
 				$signature_margin = 5;
+				$min_space_needed = $signature_height + $signature_spacing + $signature_margin + 15; // Espace minimum nécessaire
 
-				// Calculer la position Y pour les signatures (en bas de page)
-				$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - $signature_margin - 15; // Ajout de -15 pour remonter les signatures
+				// Calculer l'espace disponible sur la page actuelle
+				$available_space = $this->page_hauteur - $this->marge_basse - $current_y;
 
-				// Vérifier si on a assez d'espace pour les signatures sur la page actuelle
-				if ($current_y + $signature_height > $signature_y) {
-					// Si pas assez d'espace, on ajoute une nouvelle page
+				// Vérifier si on peut afficher les signatures sur la page actuelle
+				$can_display_signatures = false;
+				if ($available_space >= $min_space_needed) {
+					$can_display_signatures = true;
+				}
+
+				// Si on ne peut pas afficher les signatures sur la page actuelle, ajouter une nouvelle page
+				if (!$can_display_signatures) {
 					$pdf->AddPage();
 					$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 					$this->_pagefoot($pdf, $object, $outputlangs);
-					$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - $signature_margin - 15; // Même ajustement ici
 				}
+
+				// Calculer la position Y pour les signatures
+				$signature_y = $current_y + 10; // Ajouter un petit espace après le contenu précédent
 
 				// ZONES DE SIGNATURE
 				$signature_width = ($this->page_largeur - $this->marge_gauche - $this->marge_droite - 20) / 2; // Largeur de chaque zone
