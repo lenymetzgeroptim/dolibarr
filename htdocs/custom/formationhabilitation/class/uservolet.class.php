@@ -1199,8 +1199,8 @@ class UserVolet extends CommonObject
 			// 	$sql .= ", fk_user_valid_intervenant = ".((int) $user->id);
 			// 	$sql .= ", fk_action_valid_intervenant = ".((int) $ret);
 			// }
-			if(in_array($user->id, $arrayUserDirection) && (($this->status = self::STATUS_VALIDATION0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == $user_group->id) || ($this->status = self::STATUS_VALIDATION1 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == $user_group->id) || 
-			($this->status = self::STATUS_VALIDATION2 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == $user_group->id) || ($this->status = self::STATUS_VALIDATION3 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == $user_group->id))) {
+			if(in_array($user->id, $arrayUserDirection) && (($this->status == self::STATUS_VALIDATION0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == $user_group->id) || ($this->status == self::STATUS_VALIDATION1 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == $user_group->id) || 
+			($this->status == self::STATUS_VALIDATION2 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == $user_group->id) || ($this->status == self::STATUS_VALIDATION3 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == $user_group->id))) {
 				$sql .= ", date_valid_employeur = '".$this->db->idate($now)."'";
 				$sql .= ", fk_user_valid_employeur = ".((int) $user->id);
 				$sql .= ", fk_action_valid_employeur = ".((int) $ret);
@@ -1402,8 +1402,8 @@ class UserVolet extends CommonObject
 			if (!empty($this->fields['fk_user_valid'])) {
 				$sql .= ", fk_user_valid = ".((int) $user->id);
 			}
-			if(in_array($user->id, $arrayUserDirection) && (($this->status = self::STATUS_VALIDATION0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == $user_group->id) || ($this->status = self::STATUS_VALIDATION1 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == $user_group->id) || 
-			($this->status = self::STATUS_VALIDATION2 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == $user_group->id) || ($this->status = self::STATUS_VALIDATION3 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == $user_group->id))) {
+			if(in_array($user->id, $arrayUserDirection) && (($this->status == self::STATUS_VALIDATION0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == $user_group->id) || ($this->status == self::STATUS_VALIDATION1 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == $user_group->id) || 
+			($this->status == self::STATUS_VALIDATION2 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == $user_group->id) || ($this->status == self::STATUS_VALIDATION3 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == $user_group->id))) {
 				$sql .= ", date_valid_employeur = '".$this->db->idate($now)."'";
 				$sql .= ", fk_user_valid_employeur = ".((int) $user->id);
 				$sql .= ", fk_action_valid_employeur = ".((int) $ret);
@@ -1610,8 +1610,8 @@ class UserVolet extends CommonObject
 			// 	$sql .= ", fk_user_valid_intervenant = ".((int) $user->id);
 			// 	$sql .= ", fk_action_valid_intervenant = ".((int) $ret);
 			// }
-			if(in_array($user->id, $arrayUserDirection) && (($this->status = self::STATUS_VALIDATION0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == $user_group->id) || ($this->status = self::STATUS_VALIDATION1 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == $user_group->id) || 
-			($this->status = self::STATUS_VALIDATION2 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == $user_group->id) || ($this->status = self::STATUS_VALIDATION3 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == $user_group->id))) {
+			if(in_array($user->id, $arrayUserDirection) && (($this->status == self::STATUS_VALIDATION0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == $user_group->id) || ($this->status == self::STATUS_VALIDATION1 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == $user_group->id) || 
+			($this->status == self::STATUS_VALIDATION2 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == $user_group->id) || ($this->status == self::STATUS_VALIDATION3 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == $user_group->id))) {
 				$sql .= ", date_valid_employeur = '".$this->db->idate($now)."'";
 				$sql .= ", fk_user_valid_employeur = ".((int) $user->id);
 				$sql .= ", fk_action_valid_employeur = ".((int) $ret);
@@ -1826,8 +1826,8 @@ class UserVolet extends CommonObject
 			// 	$sql .= ", fk_user_valid_intervenant = ".((int) $user->id);
 			// 	$sql .= ", fk_action_valid_intervenant = ".((int) $ret);
 			// }
-			if(in_array($user->id, $arrayUserDirection) && (($this->status = self::STATUS_VALIDATION0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == $user_group->id) || ($this->status = self::STATUS_VALIDATION1 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == $user_group->id) || 
-			($this->status = self::STATUS_VALIDATION2 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == $user_group->id) || ($this->status = self::STATUS_VALIDATION3 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == $user_group->id))) {
+			if(in_array($user->id, $arrayUserDirection) && (($this->status == self::STATUS_VALIDATION0 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 == $user_group->id) || ($this->status == self::STATUS_VALIDATION1 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET2 == $user_group->id) || 
+			($this->status == self::STATUS_VALIDATION2 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET3 == $user_group->id) || ($this->status == self::STATUS_VALIDATION3 && $conf->global->FORMTIONHABILITATION_APPROBATEURVOLET4 == $user_group->id))) {
 				$sql .= ", date_valid_employeur = '".$this->db->idate($now)."'";
 				$sql .= ", fk_user_valid_employeur = ".((int) $user->id);
 				$sql .= ", fk_action_valid_employeur = ".((int) $ret);
