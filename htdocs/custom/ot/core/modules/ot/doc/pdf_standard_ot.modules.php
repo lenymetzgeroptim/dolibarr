@@ -197,6 +197,12 @@ class pdf_standard_ot extends ModelePDFOt
 					$pdf->setPrintFooter(false);
 					$pdf->SetMargins(10, 10, 10); // Réduire la marge supérieure
 					$pdf->SetAutoPageBreak(TRUE, 15);
+					
+					// Définir les polices par défaut
+					$pdf->SetFont('helvetica', '', $default_font_size);
+					$pdf->SetFont('helvetica', 'B', $default_font_size);
+					$pdf->SetFont('helvetica', 'I', $default_font_size);
+					$pdf->SetFont('helvetica', 'BI', $default_font_size);
 				}
 
 				// Passer les objets nécessaires à l'instance PDF
@@ -225,6 +231,7 @@ class pdf_standard_ot extends ModelePDFOt
 				$pdf->AddPage();
 				$pagenb++;
 				$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+				$this->_pagefoot($pdf, $object, $outputlangs);
 
 				// Set certificate
 				$cert = empty($user->conf->CERTIFICATE_CRT) ? '' : $user->conf->CERTIFICATE_CRT;
@@ -303,6 +310,7 @@ class pdf_standard_ot extends ModelePDFOt
 							$pdf->AddPage();
 							$pagenb++;
 							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+							$this->_pagefoot($pdf, $object, $outputlangs);
 							if (!empty($tplidx)) {
 								$pdf->useTemplate($tplidx);
 							}
@@ -327,6 +335,7 @@ class pdf_standard_ot extends ModelePDFOt
 							$pageposafternote++;
 							$pdf->setPage($pageposafternote);
 							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+							$this->_pagefoot($pdf, $object, $outputlangs);
 							$pdf->setTopMargin($tab_top_newpage);
 							// The only function to edit the bottom margin of current page to set it.
 							$pdf->setPageOrientation('', 1, $heightforfooter + $heightforfreetext);
@@ -380,11 +389,11 @@ class pdf_standard_ot extends ModelePDFOt
 							$pageposafternote++;
 							$pdf->setPage($pageposafternote);
 							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-							if (!empty($tplidx)) {
-								$pdf->useTemplate($tplidx);
-							}
-
-							$posyafter = $tab_top_newpage;
+							$this->_pagefoot($pdf, $object, $outputlangs);
+							$pdf->setTopMargin($tab_top_newpage);
+							// The only function to edit the bottom margin of current page to set it.
+							$pdf->setPageOrientation('', 1, $heightforfooter + $heightforfreetext);
+							//$posyafter = $tab_top_newpage;
 						}
 					}
 
@@ -624,6 +633,7 @@ class pdf_standard_ot extends ModelePDFOt
 					if ($current_y + $min_space_needed > $this->page_hauteur - $this->marge_basse) {
 						$pdf->AddPage();
 						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+						$this->_pagefoot($pdf, $object, $outputlangs);
 					}
 
 					// Paramètres pour la grille
@@ -654,6 +664,7 @@ class pdf_standard_ot extends ModelePDFOt
 						if ($current_y + $card_height > $this->page_hauteur - $this->marge_basse) {
 							$pdf->AddPage();
 							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+							$this->_pagefoot($pdf, $object, $outputlangs);
 						}
 
 						// Récupérer toutes les cartes de cette ligne
@@ -701,6 +712,7 @@ class pdf_standard_ot extends ModelePDFOt
 								$pdf->AddPage();
 								$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 								$current_x = $this->marge_gauche + ($line_width - $total_cards_width) / 2;
+								$this->_pagefoot($pdf, $object, $outputlangs);
 							}
 
 							// Déterminer la largeur de la carte
@@ -715,6 +727,7 @@ class pdf_standard_ot extends ModelePDFOt
 									$pdf->AddPage();
 									$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 									$current_x = $this->marge_gauche + ($line_width - $total_cards_width) / 2;
+									$this->_pagefoot($pdf, $object, $outputlangs);
 								}
 
 								// ... reste du code pour l'affichage des cartes ...
@@ -1067,6 +1080,7 @@ class pdf_standard_ot extends ModelePDFOt
 									if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
 										$pdf->AddPage();
 										$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+										$this->_pagefoot($pdf, $object, $outputlangs);
 										$pdf->SetY($current_y);
 									}
 									
@@ -1165,6 +1179,7 @@ class pdf_standard_ot extends ModelePDFOt
 							if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
 								$pdf->AddPage();
 								$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+								$this->_pagefoot($pdf, $object, $outputlangs);
 								$pdf->SetY($current_y);
 							}
 				
@@ -1197,6 +1212,7 @@ class pdf_standard_ot extends ModelePDFOt
 						if ($current_y + 50 > $this->page_hauteur - $this->marge_basse) {
 							$pdf->AddPage();
 							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+							$this->_pagefoot($pdf, $object, $outputlangs);
 							$pdf->SetY($current_y);
 						}
 						
@@ -1411,6 +1427,7 @@ class pdf_standard_ot extends ModelePDFOt
 					if ($current_y + 50 > $this->page_hauteur - $this->marge_basse) {
 						$pdf->AddPage();
 						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+						$this->_pagefoot($pdf, $object, $outputlangs);
 						$pdf->SetY($current_y);
 					}
 
@@ -1503,6 +1520,7 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 					// Si pas assez d'espace, on ajoute une nouvelle page
 					$pdf->AddPage();
 					$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+					$this->_pagefoot($pdf, $object, $outputlangs);
 					$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - $signature_margin - 15; // Même ajustement ici
 				}
 
@@ -1616,6 +1634,9 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 				$pageposbeforeprintlines = $pdf->getPage();
 				$pagenb = $pageposbeforeprintlines;
 
+				// Ajouter le footer sur la dernière page avant de fermer le PDF
+				$this->_pagefoot($pdf, $object, $outputlangs, 0, true);
+
 				$pdf->Close();
 
 				$pdf->Output($file, 'F');
@@ -1710,7 +1731,7 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 		}
 
 		// Informations centrales
-		$pdf->SetFont('', '', 8); // Réduit de 10 à 8
+		$pdf->SetFont('helvetica', '', 8); // Réduit de 10 à 8
 		$center_x = $this->page_largeur / 2;
 
 		// Récupérer les informations du projet et de la société
@@ -1740,46 +1761,46 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 		}
 		
 		// Site d'intervention
-		$pdf->SetFont('', 'B', 8); // Réduit de 10 à 8
+		$pdf->SetFont('helvetica', 'B', 8); // Réduit de 10 à 8
 		$site_width = $pdf->GetStringWidth($site);
 		$pdf->Text($center_x - ($site_width / 2), $header_y + 5, $site);
 
 		// Libellé du projet
-		$pdf->SetFont('', '', 8); // Réduit de 10 à 8
+		$pdf->SetFont('helvetica', '', 8); // Réduit de 10 à 8
 		$project_width = $pdf->GetStringWidth($project_label);
 		$pdf->Text($center_x - ($project_width / 2), $header_y + 12, $project_label);
 
 		// "Organigramme d'affaire"
-		$pdf->SetFont('', 'B', 8); // Réduit de 10 à 8
+		$pdf->SetFont('helvetica', 'B', 8); // Réduit de 10 à 8
 		$title = "Organigramme d'affaire";
 		$title_width = $pdf->GetStringWidth($title);
 		$pdf->Text($center_x - ($title_width / 2), $header_y + 19, $title);
 
 		// Informations à droite
-		$pdf->SetFont('', '', 7); // Réduit de 10 à 7
+		$pdf->SetFont('helvetica', '', 7); // Réduit de 10 à 7
 		$right_x = $this->page_largeur - $this->marge_droite - 40;
 		
 		// Référence OT
 		$pdf->Text($right_x, $header_y + 5, "Réf. OT : ");
-		$pdf->SetFont('', 'B', 7); // Réduit de 10 à 7
+		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 10 à 7
 		$pdf->Text($right_x + 20, $header_y + 5, $object->ref);
 		
 		// Indice
-		$pdf->SetFont('', '', 7); // Réduit de 10 à 7
+		$pdf->SetFont('helvetica', '', 7); // Réduit de 10 à 7
 		$pdf->Text($right_x, $header_y + 10, "Indice : "); // Réduit de 12 à 10
-		$pdf->SetFont('', 'B', 7); // Réduit de 10 à 7
+		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 10 à 7
 		$pdf->Text($right_x + 20, $header_y + 10, $object->indice); // Réduit de 12 à 10
 		
 		// Numéro d'affaire
-		$pdf->SetFont('', '', 7); // Réduit de 10 à 7
+		$pdf->SetFont('helvetica', '', 7); // Réduit de 10 à 7
 		$pdf->Text($right_x, $header_y + 15, "Affaire : "); // Réduit de 19 à 15
-		$pdf->SetFont('', 'B', 7); // Réduit de 10 à 7
+		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 10 à 7
 		$pdf->Text($right_x + 20, $header_y + 15, $project_ref); // Réduit de 19 à 15
 
 		// Numéro de page
-		$pdf->SetFont('', '', 7); // Réduit de 10 à 7
+		$pdf->SetFont('helvetica', '', 7); // Réduit de 10 à 7
 		$pdf->Text($right_x, $header_y + 20, "Page : "); // Réduit de 26 à 20
-		$pdf->SetFont('', 'B', 7); // Réduit de 10 à 7
+		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 10 à 7
 		$pdf->Text($right_x + 20, $header_y + 20, $pdf->getPage() . " / " . $pdf->getAliasNbPages()); // Réduit de 26 à 20
 
 		// Ligne noire horizontale
@@ -1798,11 +1819,32 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 	 *      @param	int			$hidefreetext		1=Hide free text
 	 *      @return	int								Return height of bottom margin including footer text
 	 */
-	protected function _pagefoot(&$pdf, $object, $outputlangs, $hidefreetext = 0)
+	protected function _pagefoot(&$pdf, $object, $outputlangs, $hidefreetext = 0, $is_last_page = false)
 	{
 		global $conf;
-		$showdetails = !getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS') ? 0 : getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS');
-		return pdf_pagefoot($pdf, $outputlangs, 'INVOICE_FREE_TEXT', $this->emetteur, $this->marge_basse, $this->marge_gauche, $this->page_hauteur, $object, $showdetails, $hidefreetext);
+
+		// Position du footer (en bas de page)
+		$footer_y = $this->page_hauteur - $this->marge_basse;
+
+		// Sauvegarder la position Y actuelle
+		$current_y = $pdf->GetY();
+
+		// Vérifier si on a assez d'espace pour le footer
+		if ($current_y > $footer_y - 15) {
+			$pdf->AddPage();
+			$footer_y = $this->page_hauteur - $this->marge_basse;
+		}
+
+		// Ne pas afficher le footer sur la dernière page
+		if ($is_last_page) {
+			return $footer_y;
+		}
+
+		// Ligne fine grise
+		$pdf->SetDrawColor(200, 200, 200); // Gris clair
+		$pdf->Line($this->marge_gauche, $footer_y - 10, $this->page_largeur - $this->marge_droite, $footer_y - 10);
+
+		return $footer_y;
 	}
 
 	/**
