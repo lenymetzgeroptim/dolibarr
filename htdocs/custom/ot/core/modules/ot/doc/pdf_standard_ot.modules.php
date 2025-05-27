@@ -1680,16 +1680,37 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 		$header_height = 30;
 
 		// Logo à gauche
-		if (!empty($conf->global->MAIN_LOGO)) {
-			$logo = $conf->mycompany->dir_output.'/logos/'.$conf->global->MAIN_LOGO;
-			if (is_readable($logo)) {
-				$height = 20;
-				$pdf->Image($logo, $this->marge_gauche, $header_y, 0, $height);
+		if (!getDolGlobalInt('PDF_DISABLE_MYCOMPANY_LOGO')) {
+			if ($this->emetteur->logo) {
+				$logodir = $conf->mycompany->dir_output;
+				if (!empty($conf->mycompany->multidir_output[$object->entity])) {
+					$logodir = $conf->mycompany->multidir_output[$object->entity];
+				}
+				if (!getDolGlobalInt('MAIN_PDF_USE_LARGE_LOGO')) {
+					$logo = $logodir.'/logos/thumbs/'.$this->emetteur->logo_small;
+				} else {
+					$logo = $logodir.'/logos/'.$this->emetteur->logo;
+				}
+				if (is_readable($logo)) {
+					$height = pdf_getHeightForLogo($logo);
+					$height = $height * 0.4; // Réduire la hauteur de 60%
+					// Positionner le logo à gauche avec un léger décalage vers la droite
+					$logo_x = $this->marge_gauche + 15; // Ajout de 15mm de décalage
+					$pdf->Image($logo, $logo_x, $header_y + 12, 0, $height); // width=0 (auto) et aligné avec la deuxième ligne
+				} else {
+					$pdf->SetTextColor(200, 0, 0);
+					$pdf->SetFont('', 'B', $default_font_size - 2);
+					$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorLogoFileNotFound", $logo), 0, 'L');
+					$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorGoToGlobalSetup"), 0, 'L');
+				}
+			} else {
+				$text = $this->emetteur->name;
+				$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($text), 0, $ltrdirection);
 			}
 		}
 
 		// Informations centrales
-		$pdf->SetFont('', '', 10);
+		$pdf->SetFont('', '', 8); // Réduit de 10 à 8
 		$center_x = $this->page_largeur / 2;
 
 		// Récupérer les informations du projet et de la société
@@ -1719,53 +1740,53 @@ $pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauc
 		}
 		
 		// Site d'intervention
-		$pdf->SetFont('', 'B', 10);
+		$pdf->SetFont('', 'B', 8); // Réduit de 10 à 8
 		$site_width = $pdf->GetStringWidth($site);
 		$pdf->Text($center_x - ($site_width / 2), $header_y + 5, $site);
 
 		// Libellé du projet
-		$pdf->SetFont('', '', 10);
+		$pdf->SetFont('', '', 8); // Réduit de 10 à 8
 		$project_width = $pdf->GetStringWidth($project_label);
 		$pdf->Text($center_x - ($project_width / 2), $header_y + 12, $project_label);
 
 		// "Organigramme d'affaire"
-		$pdf->SetFont('', 'B', 10);
+		$pdf->SetFont('', 'B', 8); // Réduit de 10 à 8
 		$title = "Organigramme d'affaire";
 		$title_width = $pdf->GetStringWidth($title);
 		$pdf->Text($center_x - ($title_width / 2), $header_y + 19, $title);
 
 		// Informations à droite
-		$pdf->SetFont('', '', 10);
+		$pdf->SetFont('', '', 7); // Réduit de 10 à 7
 		$right_x = $this->page_largeur - $this->marge_droite - 40;
 		
 		// Référence OT
 		$pdf->Text($right_x, $header_y + 5, "Réf. OT : ");
-		$pdf->SetFont('', 'B', 10);
+		$pdf->SetFont('', 'B', 7); // Réduit de 10 à 7
 		$pdf->Text($right_x + 20, $header_y + 5, $object->ref);
 		
 		// Indice
-		$pdf->SetFont('', '', 10);
-		$pdf->Text($right_x, $header_y + 12, "Indice : ");
-		$pdf->SetFont('', 'B', 10);
-		$pdf->Text($right_x + 20, $header_y + 12, $object->indice);
+		$pdf->SetFont('', '', 7); // Réduit de 10 à 7
+		$pdf->Text($right_x, $header_y + 10, "Indice : "); // Réduit de 12 à 10
+		$pdf->SetFont('', 'B', 7); // Réduit de 10 à 7
+		$pdf->Text($right_x + 20, $header_y + 10, $object->indice); // Réduit de 12 à 10
 		
 		// Numéro d'affaire
-		$pdf->SetFont('', '', 10);
-		$pdf->Text($right_x, $header_y + 19, "Affaire : ");
-		$pdf->SetFont('', 'B', 10);
-		$pdf->Text($right_x + 20, $header_y + 19, $project_ref);
+		$pdf->SetFont('', '', 7); // Réduit de 10 à 7
+		$pdf->Text($right_x, $header_y + 15, "Affaire : "); // Réduit de 19 à 15
+		$pdf->SetFont('', 'B', 7); // Réduit de 10 à 7
+		$pdf->Text($right_x + 20, $header_y + 15, $project_ref); // Réduit de 19 à 15
 
 		// Numéro de page
-		$pdf->SetFont('', '', 10);
-		$pdf->Text($right_x, $header_y + 26, "Page : ");
-		$pdf->SetFont('', 'B', 10);
-		$pdf->Text($right_x + 20, $header_y + 26, $pdf->getPage() . " / " . $pdf->getAliasNbPages());
+		$pdf->SetFont('', '', 7); // Réduit de 10 à 7
+		$pdf->Text($right_x, $header_y + 20, "Page : "); // Réduit de 26 à 20
+		$pdf->SetFont('', 'B', 7); // Réduit de 10 à 7
+		$pdf->Text($right_x + 20, $header_y + 20, $pdf->getPage() . " / " . $pdf->getAliasNbPages()); // Réduit de 26 à 20
 
 		// Ligne noire horizontale
 		$pdf->SetDrawColor(0, 0, 0);
-		$pdf->Line($this->marge_gauche, $header_y + 35, $this->page_largeur - $this->marge_droite, $header_y + 35);
+		$pdf->Line($this->marge_gauche, $header_y + 30, $this->page_largeur - $this->marge_droite, $header_y + 30); // Réduit de 35 à 30
 
-		return $header_y + 40; // Retourne la position Y après l'en-tête
+		return $header_y + 35; // Retourne la position Y après l'en-tête
 	}
 
 	/**
