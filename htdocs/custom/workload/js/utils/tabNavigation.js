@@ -1,4 +1,3 @@
-
 /* Javascript library of module Workload */
 document.addEventListener('DOMContentLoaded', function () {
     // Variables pour stocker les états seulement une fois
@@ -309,9 +308,3 @@ function displayEventMessage(text, type) {
         }
     }, 3000);
 }
-
-
-
-
-
-

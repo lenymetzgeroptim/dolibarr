@@ -87,16 +87,23 @@ if (!empty($conf->use_javascript_ajax)) {
 	$arrayofjs = array(
 		'/includes/jsgantt/jsgantt.js',
 		'/projet/jsgantt_language.js.php?lang='.$langs->defaultlang,
-		'/custom/workload/js/nav_resources.js',
-		// '/custom/workload/js/setupGanttUIFeatures.js',
+        '/custom/workload/js/data/dataStore.js',
+        '/custom/workload/js/utils/domUtil.js',
+        '/custom/workload/js/workload.config.js',
+        '/custom/workload/js/data/dataFetcher.js',
+        '/custom/workload/js/workload.main.js',
+        '/custom/workload/js/filters/filterManager.js',
+        '/custom/workload/js/utils/tabNavigation.js',
+        '/custom/workload/js/init/eventBus.js',
+        '/custom/workload/js/init/setup.js',
+        '/custom/workload/js/filters/filterListeners.js',
+        
 		// '/custom/workload/js/ganttFilterUtils.js',
 		// '/custom/workload/js/fetch_gantt_data.js'
 	);
-
-	foreach ($arrayofjs as $js) {
-		print '<script type="text/javascript" src="'.$js.'" defer></script>';
-	}
 }
+
+
 
 
 
@@ -139,19 +146,20 @@ include_once DOL_DOCUMENT_ROOT.'/custom/workload/views/gantts_navigation.php';
 // Code Js
 include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/fetch_resources_data.js.php';
 
-include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/gantts_resources_abs.js.php';
-include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/gantts_resources_coldev.js.php';
-include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/gantts_resources_colproj.js.php';
-include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/gantts_resources_projcode.js.php';
-include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/gantts_resources_codecol.js.php';
-// include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/gantts_resources_projabs.js.php';
+include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/ressources/gantts_resources_abs.js.php';
+include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/ressources/gantts_resources_projabs.js.php';
+include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/ressources/gantts_resources_coldev.js.php';
+include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/ressources/gantts_resources_colproj.js.php';
+include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/ressources/gantts_resources_projcode.js.php';
+include_once DOL_DOCUMENT_ROOT.'/custom/workload/js/ressources/gantts_resources_codecol.js.php';
+
 
 
 
 	
 
 
-
+session_write_close();
 // End of page
 llxFooter();
 $db->close();

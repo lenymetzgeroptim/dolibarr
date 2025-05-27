@@ -84,7 +84,6 @@ $mode = GETPOST('mode', 'aZ09');
 
 // Security check
 // restrictedArea($user, 'workload', 0, 'charge');
-$permissiontoread = $user->hasRight('workload', 'box_graph_plan_charge', 'afficher');
 
 // Security check (enable the most restrictive one)
 if ($user->socid > 0) accessforbidden();
@@ -95,7 +94,7 @@ if ($user->socid > 0) accessforbidden();
 if (!isModEnabled("workload")) {
 	accessforbidden('Module workload not enabled');
 }
-if (!$permissiontoread) accessforbidden();
+// if (!$permissiontoread) accessforbidden();
 
 
 /*
@@ -343,6 +342,8 @@ $arrayData = [
     'resAbs' => $ressourcesAbs,
 ];
 
-echo json_encode($arrayData);
+
+print json_encode($arrayData);
+
 $db->close();
 
