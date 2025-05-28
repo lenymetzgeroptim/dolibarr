@@ -1669,18 +1669,18 @@ class pdf_standard_ot extends ModelePDFOt
 				}
 
 				// Calculer l'espace disponible pour les signatures
-				$signature_height = 25; // Hauteur nécessaire pour les signatures
-				$signature_spacing = 5;
-				$signature_margin = 5;
-				$min_space_needed = $signature_height + $signature_spacing + $signature_margin + 15; // Espace minimum nécessaire
+				$signature_height = 20; // Hauteur nécessaire pour les signatures
+				$signature_spacing = 3; // Réduit l'espacement
+				$signature_margin = 3; // Réduit la marge
+				$min_space_needed = $signature_height + $signature_spacing + $signature_margin + 10; // Espace minimum nécessaire réduit
 
 				// Calculer l'espace disponible sur la page actuelle
 				$available_space = $this->page_hauteur - $this->marge_basse - $current_y;
 
 				// Vérifier si on peut afficher les signatures sur la page actuelle
-				$can_display_signatures = false;
-				if ($available_space >= $min_space_needed) {
-					$can_display_signatures = true;
+				$can_display_signatures = true; // Par défaut, on essaie d'afficher sur la page actuelle
+				if ($available_space < $min_space_needed) {
+					$can_display_signatures = false;
 				}
 
 				// Si on ne peut pas afficher les signatures sur la page actuelle, ajouter une nouvelle page
