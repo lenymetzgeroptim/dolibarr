@@ -117,7 +117,7 @@ class modOT extends DolibarrModules
 			'hooks' => array(
 				  'data' => array(
 				      'projectcontactcard',
-					  
+					  'globalcard'
 				  ),
 				  'entity' => '0',
 			),
