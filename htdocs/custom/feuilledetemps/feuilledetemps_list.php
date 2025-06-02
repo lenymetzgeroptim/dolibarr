@@ -317,7 +317,7 @@ if (isset($extrafields->attributes[$object->table_element]['label']) && is_array
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX.$object->table_element."_extrafields as ef on (t.rowid = ef.fk_object)";
 }
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue on t.fk_user = ue.fk_object";	
-if(!$conf->global->FDT_USER_APPROVER) {
+if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv on (tv.fk_feuilledetemps = t.rowid)";
 	if($search['fk_user_validation_1'] > 0){
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv1 on (tv1.fk_feuilledetemps = t.rowid";
@@ -371,12 +371,12 @@ foreach ($search as $key => $val) {
 if (!empty($arrayfields['ue.etablissement']['checked']) && $search['ue.etablissement']) {
 	$sql .= natural_search('ue.etablissement', $search['ue.etablissement'], 2);
 } 
-// if($conf->global->FDT_USER_APPROVER) {
+// if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 // 	if($search['fk_user_validation_1'] > 0){
 // 		$sql .= " AND tv1.fk_feuilledetemps IS NOT NULL";
 // 	}
 // }
-if($conf->global->FDT_USER_APPROVER) {
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	if($search['fk_user_validation_1'] > 0){
 		$sql .= " AND FIND_IN_SET(".$search['fk_user_validation_1'].", ue.approbateurfdt) > 0";
 	}
@@ -393,7 +393,7 @@ else {
 if(/*!$user->admin &&*/ !$user->rights->feuilledetemps->feuilledetemps->readall && $user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 	$user_hierarchy = $user->getAllChildIds(1);
 	$sql .= " AND (t.fk_user IN (".implode(', ', $user_hierarchy).")";
-	if($conf->global->FDT_USER_APPROVER) {
+	if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		$sql .= " OR FIND_IN_SET($user->id, ue.approbateurfdt) > 0 OR FIND_IN_SET($user->id, ue.observateurfdt) > 0";
 	}
 	else {
@@ -402,7 +402,7 @@ if(/*!$user->admin &&*/ !$user->rights->feuilledetemps->feuilledetemps->readall 
 	$sql .= " OR t.fk_user = ".$user->id.')';
 }
 else if(/*!$user->admin && */!$user->rights->feuilledetemps->feuilledetemps->readall && !$user->rights->feuilledetemps->feuilledetemps->readHierarchy){
-	if($conf->global->FDT_USER_APPROVER) {
+	if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		$sql .= " AND (FIND_IN_SET($user->id, ue.approbateurfdt) > 0 OR FIND_IN_SET($user->id, ue.observateurfdt) > 0";
 	}
 	else {
@@ -642,7 +642,7 @@ foreach ($object->fields as $key => $val) {
 			print $extrafieldsuser->showInputField("etablissement", $search['ue.etablissement'], '', '', 'search_ue_', '', 0, 'user', 1);
 			print '</td>';
 		}
-		if($conf->global->FDT_USER_APPROVER) {
+		if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 			print '<td class="liste_titre">';
 			print $form->select_dolusers((isset($search[$key.'_validation_1']) ? $search[$key.'_validation_1'] : ''), "search_".$key."_validation_1", 1, "", 0, $include, '', 0, 0, 0, $morefilter, 0, '', 'maxwidth150');
 			//print $object->showInputField($val, $key, (isset($search[$key.'_validation_1']) ? $search[$key.'_validation_1'] : ''), '', '_validation_1', 'search_', 'maxwidth125', 1);
@@ -697,7 +697,7 @@ foreach ($object->fields as $key => $val) {
 		if (!empty($arrayfields['ue.etablissement']['checked'])) {
 			print_liste_field_titre($arrayfields['ue.etablissement']['label'], $_SERVER["PHP_SELF"], "ue.etablissement", "", $param, "", $sortfield, $sortorder);
 		}
-		if($conf->global->FDT_USER_APPROVER) {
+		if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 			print '<th class="wrapcolumntitle liste_titre" title="1ère validation">1ère validation</th>';
 		}
 		else {
@@ -742,7 +742,7 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 	// Store properties in $object
 	$object->setVarsFromFetchObj($obj);
 
-	if(!$conf->global->FDT_USER_APPROVER) {
+	if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		$object->listApprover1 = $object->listApprover('', 1);
 		$object->listApprover2 = $object->listApprover('', 2);
 	}
@@ -813,7 +813,7 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 				print $extrafieldsuser->showOutputField("etablissement", $tab_user[$object->$key]->array_options['options_etablissement'], '',  $user_static->table_element);
 				print '</td>';
 			}
-			if($conf->global->FDT_USER_APPROVER) {
+			if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 				// 1er Approbateurs
 				print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
 				print $extrafieldsuser->showOutputField('approbateurfdt', $tab_user[$object->$key]->array_options['options_approbateurfdt'], '', $user_static->table_element);

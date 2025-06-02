@@ -361,7 +361,7 @@ class FeuilleDeTemps extends CommonObject
 
 		$result = $this->fetchCommon($id, $ref);
 		
-		if ($result && !$conf->global->FDT_USER_APPROVER) {
+		if ($result && $conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 			$this->listApprover1 = $this->listApprover('', 1);
 			$this->listApprover2 = $this->listApprover('', 2);
 		}
@@ -462,7 +462,7 @@ class FeuilleDeTemps extends CommonObject
 				$record = new self($this->db);
 				$record->setVarsFromFetchObj($obj);
 
-				if(!$conf->global->FDT_USER_APPROVER) {
+				if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 					$record->listApprover1 = $record->listApprover('', 1);
 					$record->listApprover2 = $record->listApprover('', 2);
 				}
@@ -491,7 +491,7 @@ class FeuilleDeTemps extends CommonObject
 	 */
 	public function update(User $user, $notrigger = true)
 	{
-		global $langs;
+		global $langs, $conf;
 
 		$this->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_MODIFYInDolibarr", $this->ref);
 		$this->actionmsg = '';
@@ -524,7 +524,7 @@ class FeuilleDeTemps extends CommonObject
 				$this->actionmsg .= "<strong>".$langs->transnoentities($val['label']).'</strong>: '.$old_value.' ➔ '.$value.'<br/>';
 			}
 
-			if(!$conf->global->FDT_USER_APPROVER) {
+			if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 				// 1ere étape : Supprimer les 1er et 2nd validateur nécéssaire
 				$modification_1e_validation = '';
 				$modification_2e_validation = '';
@@ -1043,7 +1043,7 @@ class FeuilleDeTemps extends CommonObject
 		$this->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_REFUSInDolibarr", $this->ref);
 		$this->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_REFUSDetailInDolibarr", GETPOST('raison_refus'));
 
-		if(!$conf->global->FDT_USER_APPROVER) {
+		if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 			$list_validation1 = $this->listApprover1;
 			foreach($list_validation1[2] as $id => $user_static){
 				$result = $this->updateTaskValidation($id, 1, 0, 1);
@@ -1140,7 +1140,7 @@ class FeuilleDeTemps extends CommonObject
 			$label .= '<br><b>'.$langs->trans('Utilisateur').':</b> '.$user_static->firstname.' '.$user_static->lastname;
 		
 
-			if(!$conf->global->FDT_USER_APPROVER) {
+			if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 				$list_validation1 = $this->listApprover1;
 				$i = 0;
 				foreach($list_validation1[2] as $id => $user_static){
@@ -1298,8 +1298,14 @@ class FeuilleDeTemps extends CommonObject
 			else {
 				$this->labelStatus[self::STATUS_VALIDATED] = $langs->trans('Validée');
 			}
-			$this->labelStatus[self::STATUS_APPROBATION1] = $langs->trans('En attente de la 1ère approbation par la responsable hiérarchique');
-			$this->labelStatus[self::STATUS_APPROBATION2] = $langs->trans('En attente de la 2nd approbation par la responsable de projet');
+			if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+				$this->labelStatus[self::STATUS_APPROBATION1] = $langs->trans('En attente de la 1ère approbation par le responsable');
+				$this->labelStatus[self::STATUS_APPROBATION2] = $langs->trans('En attente de la 2nd approbation par une personne possédant le droit');
+			}
+			else {
+				$this->labelStatus[self::STATUS_APPROBATION1] = $langs->trans('En attente de la 1ère approbation par la responsable hiérarchique');
+				$this->labelStatus[self::STATUS_APPROBATION2] = $langs->trans('En attente de la 2nd approbation par la responsable de projet');
+			}
 			$this->labelStatus[self::STATUS_VERIFICATION] = $langs->trans('En vérification');
 			$this->labelStatus[self::STATUS_EXPORTED] = $langs->trans('Exportée');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->trans('Disabled');
@@ -3473,7 +3479,7 @@ class FeuilleDeTemps extends CommonObject
 
 		$now = dol_now();
 
-		if($conf->global->FDT_USER_APPROVER) {
+		if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 			$sql = "SELECT DISTINCT f.rowid";
 			$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps as f";
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue ON f.fk_user = ue.fk_object";

@@ -413,6 +413,14 @@ class modFeuilleDeTemps extends DolibarrModules
 		$this->rights[$r][4] = 'changeappro'; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$this->rights[$r][5] = ''; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
+
+		if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+			$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
+			$this->rights[$r][1] = 'Réaliser l\'approbation n°2 des feuilles de temps'; // Permission label
+			$this->rights[$r][4] = 'feuilledetemps'; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
+			$this->rights[$r][5] = 'approve2'; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
+			$r++;
+		}
 		
 		/* END MODULEBUILDER PERMISSIONS */
 

@@ -165,7 +165,7 @@ $usertoprocess->fetch($object->fk_user);
 $objectoffield = clone $usertoprocess;
 
 // Check for right
-if($conf->global->FDT_USER_APPROVER) {
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	if(in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt']))){
 		$userIsResp = 1;
 	}
@@ -205,11 +205,15 @@ if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 
 $permissionToVerification = $user->rights->feuilledetemps->feuilledetemps->modify_verification;
 $permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || in_array($user->id, explode(',', $usertoprocess->array_options['options_observateurfdt'])) || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read);
-if($conf->global->FDT_USER_APPROVER) {
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	$permissiontoadd = $userIsResp || $user->admin || $permissionToVerification; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+	$permissiontovalidate1 = $userIsResp;
+	$permissiontovalidate2 = $user->rights->feuilledetemps->feuilledetemps->approve2;
 }
 else {
 	$permissiontoadd = $userIsResp || $userIsRespProjet || $user->admin || (empty($list_resp_task[0]) && empty($list_resp_projet[0]) && $user->id == $object->fk_user || $permissionToVerification); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+	$permissiontovalidate1 = $userIsResp && $resp_pas_valide;
+	$permissiontovalidate2 = $userIsRespProjet;
 }
 $permissiontodelete = $user->rights->feuilledetemps->feuilledetemps->delete;
 $permissionnote = $permissiontoadd; // Used by the include of actions_setnotes.inc.php
@@ -235,19 +239,15 @@ elseif(($object->status == FeuilleDeTemps::STATUS_DRAFT) && $permissionToVerific
 	$modifier = 1;
 	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
-elseif($object->status == FeuilleDeTemps::STATUS_DRAFT && $conf->global->FDT_USER_APPROVER && $userIsResp) {
+elseif($object->status == FeuilleDeTemps::STATUS_DRAFT && !$conf->global->FDT_RESP_TASKPROJECT_APPROVER && $userIsResp) {
 	$modifier = 1;
 	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
-elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && $conf->global->FDT_USER_APPROVER && $userIsResp) {
+elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && $permissiontovalidate1) {
 	$modifier = 1;
 	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
-elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION1 && !$conf->global->FDT_USER_APPROVER && $userIsResp && $resp_pas_valide) {
-	$modifier = 1;
-	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
-}
-elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION2 && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
+elseif($object->status == FeuilleDeTemps::STATUS_APPROBATION2 && $permissiontovalidate2) {
 	$modifier = 1;
 	if($conf->global->FDT_VERIF_MODIFWHENHOLIDAY) $modifier_jour_conges = 0;
 }
@@ -634,7 +634,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'savevalidator1' && !empty($user->rights->feuilledetemps->changeappro) && !$conf->global->FDT_USER_APPROVER) {
+	if ($action == 'savevalidator1' && !empty($user->rights->feuilledetemps->changeappro) && $conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		$db->begin();
 
 		$object->oldcopy = dol_clone($object);
@@ -730,7 +730,7 @@ if (empty($reshook)) {
 		}
 	}
 
-	if ($action == 'savevalidator2' && !empty($user->rights->feuilledetemps->changeappro) && !$conf->global->FDT_USER_APPROVER) {
+	if ($action == 'savevalidator2' && !empty($user->rights->feuilledetemps->changeappro) && $conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		$db->begin();
 
 		$object->oldcopy = dol_clone($object);
@@ -979,13 +979,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Delete'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 1);
 	}
 
-	if ($action == 'validate1' && $userIsResp && $conf->global->FDT_USER_APPROVER) {
+	if ($action == 'validate1' && $permissiontovalidate1) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate1', '', 0, 1);
 	}
-	if ($action == 'validate1' && $userIsResp && $resp_pas_valide && !$conf->global->FDT_USER_APPROVER) {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate1', '', 0, 1);
-	}
-	if ($action == 'validate2'  && $userIsRespProjet && !$conf->global->FDT_USER_APPROVER) {
+	if ($action == 'validate2'  && $permissiontovalidate2) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Valider'), 'Voulez vous valider la feuille de temps ?', 'confirm_validate2', '', 0, 1);
 	}
 	if ($action == 'verification'  && $permissionToVerification) {
@@ -996,7 +993,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	if ($action == 'sendMail'  && $permissionToVerification) {
 		$values = array($usertoprocess->id => $usertoprocess->firstname.' '.$usertoprocess->lastname);
-		if($conf->global->FDT_USER_APPROVER) {
+		if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 			foreach(explode(',', $usertoprocess->array_options['options_approbateurfdt']) as $id) {
 				$user_static = new User($db);
 				$user_static->fetch($id);
@@ -1017,10 +1014,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $object->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('sendMail'), '', 'confirm_sendMail', $formquestion, 1, 0, 500, 1000);
 	}
 
-	if ($action == 'refus' && !$conf->global->FDT_USER_APPROVER && (($userIsResp && $resp_pas_valide) || $userIsRespProjet || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Refuser'), '', 'confirm_setdraft', array(array('label'=>'Raison du refus', 'type'=>'text', 'name'=>'raison_refus')), 0, 1);
-	}
-	elseif ($action == 'refus' && $conf->global->FDT_USER_APPROVER && (($userIsResp && $object->status == $object::STATUS_APPROBATION1) || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
+	if ($action == 'refus' && !$conf->global->FDT_RESP_TASKPROJECT_APPROVER && (($permissiontovalidate1 && $object->status == $object::STATUS_APPROBATION1) || ($permissiontovalidate2 && $object->status == $object::STATUS_APPROBATION2) || ($object->status == $object::STATUS_VERIFICATION && $permissionToVerification))) {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Refuser'), '', 'confirm_setdraft', array(array('label'=>'Raison du refus', 'type'=>'text', 'name'=>'raison_refus')), 0, 1);
 	}
 
@@ -1077,21 +1071,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 
 		// Validate
-		if($conf->global->FDT_USER_APPROVER) {
-			if ($object->status == $object::STATUS_APPROBATION1) {
-				$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate1&token='.newToken(), '', $userIsResp);
-				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $userIsResp);
-			}
+		if ((!$conf->global->FDT_RESP_TASKPROJECT_APPROVER && ($object->status == $object::STATUS_DRAFT || $object->status == $object::STATUS_APPROBATION1)) || $object->status == $object::STATUS_APPROBATION2) {
+			$buttonAction .= dolGetButtonAction('2ème validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate2&token='.newToken(), '', $permissiontovalidate2);
+			$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $permissiontovalidate2);
+
 		}
-		else {
-			if ($object->status == $object::STATUS_APPROBATION1) {
-				$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate1&token='.newToken(), '', $userIsResp && $resp_pas_valide);
-				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $userIsResp && $resp_pas_valide);
-			}
-			elseif ($object->status == $object::STATUS_APPROBATION2) {
-				$buttonAction .= dolGetButtonAction('2ème validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate2&token='.newToken(), '', $userIsRespProjet);
-				$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $userIsRespProjet);
-			}
+		elseif ($object->status == $object::STATUS_APPROBATION1) {
+			$buttonAction .= dolGetButtonAction('1ère validation', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate1&token='.newToken(), '', $permissiontovalidate1);
+			$buttonAction .= dolGetButtonAction($langs->trans('Refus'), '', 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=refus&token='.newToken(), '', $permissiontovalidate1);
 		}
 		
 		if ($object->status == $object::STATUS_VERIFICATION) {

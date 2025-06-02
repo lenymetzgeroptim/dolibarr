@@ -318,7 +318,7 @@ class ActionsFeuilledetemps
 				$this->results['feuilledetemps_approve1'] = $result;
 			}
 
-			if(!$conf->global->FDT_USER_APPROVER) {
+			if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 				$result = $board->load_board_approve2($user);
 				if($result->nbtodo > 0) {
 					$this->results['feuilledetemps_approve2'] = $result;

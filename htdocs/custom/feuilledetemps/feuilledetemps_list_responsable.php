@@ -294,7 +294,7 @@ $sql .= " FROM ".MAIN_DB_PREFIX.$object->table_element." as t";
 if (isset($extrafields->attributes[$object->table_element]['label']) && is_array($extrafields->attributes[$object->table_element]['label']) && count($extrafields->attributes[$object->table_element]['label'])) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX.$object->table_element."_extrafields as ef on (t.rowid = ef.fk_object)";
 }
-if($conf->global->FDT_USER_APPROVER) {
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue on (t.fk_user = ue.fk_object)";
 }
 else {
@@ -340,7 +340,7 @@ foreach ($search as $key => $val) {
 	}
 }
 
-if($conf->global->FDT_USER_APPROVER) {
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	$sql .= " AND FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
 	$sql .= " AND (t.status = ".FeuilleDeTemps::STATUS_APPROBATION1;
 }
@@ -680,7 +680,7 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 	// Store properties in $object
 	$object->setVarsFromFetchObj($obj);
 
-	if(!$conf->global->FDT_USER_APPROVER) {
+	if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		$object->listApprover1 = $object->listApprover('', 1);
 		$object->listApprover2 = $object->listApprover('', 2);
 	}
@@ -746,7 +746,7 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 		}
 
 		if($key == 'fk_user'){
-			if($conf->global->FDT_USER_APPROVER) {
+			if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 				// 1er Approbateurs
 				print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
 				print $extrafieldsuser->showOutputField('approbateurfdt', $tab_user[$object->$key]->array_options['options_approbateurfdt'], '', $user_static->table_element);

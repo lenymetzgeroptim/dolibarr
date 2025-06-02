@@ -153,10 +153,11 @@ $ecart_jour_fin = num_between_day($firstdaytoshow, $last_day_month + 3600);
 // Chargement de la feuille de temps et Vérification de la possibilité de modifier la FDT
 $object_id = $object->ExisteDeja($month_fdt, $usertoprocess);
 $can_modify_fdt = 1;
+$permissiontotransmit = 1;
 if($object_id > 0) {
 	$object->fetch($object_id);
 
-	if(!$conf->global->FDT_USER_APPROVER) {
+	if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		$list_resp_task = $object->listApprover1;
 		if(in_array(1, $list_resp_task[1])){
 			$resp_task_valide = 1;
@@ -175,8 +176,9 @@ else {
 	$object->date_fin = $lastdaytoshow;
 }
 
-if(!$user->admin && $conf->global->FDT_USER_APPROVER && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) && ($user->id != $usertoprocess->id || !$user->rights->feuilledetemps->feuilledetemps->read)){
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER && !$user->admin && !in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) && $user->id != $usertoprocess->id){
 	$can_modify_fdt = 0;
+	$permissiontotransmit = 0;
 }
 
 $nb_jour = num_between_day($firstdaytoshow, $lastdaytoshow - 3600) + 1; // Nombre de jour total à affiché
@@ -545,7 +547,7 @@ $moreforfilter .= '<div class="inline-block hideonsmartphone"></div>';
 $projectListResp = $project->getProjectsAuthorizedForUser($user, 1, 1, 0, " AND ec.fk_c_type_contact = 160");
 $userList = $projectstatic->getUserForProjectLeader($projectListResp);
 if(!$user->rights->feuilledetemps->feuilledetemps->readall) {
-	if(!$conf->global->FDT_USER_APPROVER) {
+	if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		$includeonly = array_merge($userList, $user->getAllChildIds(1));
 		if (empty($user->rights->user->user->lire)) {
 			$includeonly = array($user->id);
@@ -780,12 +782,13 @@ print '<div class="center" style="margin-top: 14px;">';
 // Affichage du bouton "ENREGISTRER"
 if($can_modify_fdt){
 	print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butAction" name="save" value="'.dol_escape_htmltag($langs->trans("Save")).'" style="margin-right: 0px;height: 40px;accent-color: ;">';
-
-	// Affichage du bouton "TRANSMETRE"
-	if($object->id == 0 || ($object->id > 0 && $object->status == FeuilleDeTemps::STATUS_DRAFT)){
-		print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butActionDelete" name="transmettre" value="Transmettre" style="margin-right: 0px;height: 40px;accent-color: ;">';
-	}
 }
+
+// Affichage du bouton "TRANSMETRE"
+if($permissiontotransmit && ($object->id == 0 || ($object->id > 0 && $object->status == FeuilleDeTemps::STATUS_DRAFT))){
+	print '<input onclick="disableNullInput('.$conf->global->FDT_DISPLAY_COLUMN.')" type="submit" class="butActionDelete" name="transmettre" value="Transmettre" style="margin-right: 0px;height: 40px;accent-color: ;">';
+}
+
 
 print '</div>';
 print '</form>'."\n\n";

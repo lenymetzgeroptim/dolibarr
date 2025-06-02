@@ -103,7 +103,7 @@ if ($id > 0 || !empty($ref)) {
 	$upload_dir = $conf->feuilledetemps->multidir_output[$object->entity]."/".$object->id;
 }
 
-if($conf->global->FDT_USER_APPROVER) {
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	if(in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt']))){
 		$userIsResp = 1;
 	}
@@ -135,7 +135,7 @@ if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 }
 
 $permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read) || in_array($user->id, explode(',', $usertoprocess->array_options['options_observateurfdt']));
-if($conf->global->FDT_USER_APPROVER) {
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	$permissiontoadd = $userIsResp || $user->admin; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 }
 else {

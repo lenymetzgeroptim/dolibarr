@@ -236,8 +236,8 @@ $item = $formSetup->newItem('FDT_EXPORT_REPOS_COMPENSATEUR')->setAsYesNo();
 // Titre FDT
 $formSetup->newItem('AutreParamFDT')->setAsTitle();
 
-// FDT_USER_APPROVER
-$item = $formSetup->newItem('FDT_USER_APPROVER')->setAsYesNo();
+// FDT_RESP_TASKPROJECT_APPROVER
+$item = $formSetup->newItem('FDT_RESP_TASKPROJECT_APPROVER')->setAsYesNo();
 
 // FDT_DAY_FOR_NEXT_FDT
 $item = $formSetup->newItem('FDT_DAY_FOR_NEXT_FDT')->setAsString();

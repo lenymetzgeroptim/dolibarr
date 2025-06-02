@@ -157,7 +157,7 @@ if($displayVerification && !$conf->global->FDT_DISPLAY_COLUMN) {
 
 	print '<table class="border centpercent tableforfield">';
 
-	if(!$conf->global->FDT_USER_APPROVER) {
+	if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		// 1er Approbateurs 
 		print '<tr>';
 		print '<td class="titlefield fieldname_user_validation">1ère Validation</td>';
@@ -307,7 +307,7 @@ foreach ($object->fields as $key => $val) {
 }
 
 if(!$displayVerification || $conf->global->FDT_DISPLAY_COLUMN) {
-	if(!$conf->global->FDT_USER_APPROVER) {
+	if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 		// 1er Approbateurs 
 		print '<tr>';
 		print '<td class="titlefield fieldname_user_validation">';

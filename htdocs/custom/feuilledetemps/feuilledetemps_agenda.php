@@ -139,7 +139,7 @@ if ($id > 0 || !empty($ref)) {
 	$upload_dir = $conf->feuilledetemps->multidir_output[$object->entity]."/".$object->id;
 }
 
-if($conf->global->FDT_USER_APPROVER) {
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	if(in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt'])) || in_array($user->id, explode(',', $usertoprocess->array_options['options_observateurfdt']))){
 		$userIsResp = 1;
 	}

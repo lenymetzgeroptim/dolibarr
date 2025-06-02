@@ -126,7 +126,7 @@ if ($id > 0 || !empty($ref)) {
 	$upload_dir = $conf->feuilledetemps->multidir_output[$object->entity ? $object->entity : $conf->entity]."/feuilledetemps/".get_exdir(0, 0, 0, 1, $object);
 }
 
-if($conf->global->FDT_USER_APPROVER) {
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	if(in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt']))){
 		$userIsResp = 1;
 	}

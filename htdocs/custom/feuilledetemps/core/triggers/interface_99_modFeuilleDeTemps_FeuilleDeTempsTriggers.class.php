@@ -127,7 +127,7 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				$user_static = new User($this->db);
 				$user_static->fetch($object->fk_user);
 
-				if($conf->global->FDT_USER_APPROVER) {
+				if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 					$list_validation = explode(',', $user_static->array_options['options_approbateurfdt']);
 					foreach($list_validation as $id){
 						$user_static->fetch($id);
