@@ -16,7 +16,6 @@
 
 -- BEGIN MODULEBUILDER INDEXES
 ALTER TABLE llx_feuilledetemps_projet_task_time_other ADD INDEX idx_feuilledetemps_projet_task_time_other_rowid (rowid);
-ALTER TABLE llx_feuilledetemps_projet_task_time_other ADD CONSTRAINT llx_feuilledetemps_projet_task_time_other_fk_user_creat FOREIGN KEY (fk_user_creat) REFERENCES llx_user(rowid);
 -- END MODULEBUILDER INDEXES
 
 --ALTER TABLE llx_feuilledetemps_projet_task_time_other ADD UNIQUE INDEX uk_feuilledetemps_projet_task_time_other_fieldxy(fieldx, fieldy);

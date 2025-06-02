@@ -124,12 +124,27 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 
 				$to = '';
 
-				$list_validation = $object->listApprover1;
-				foreach($list_validation[2] as $id => $user_static){
-					if(!empty($user_static->email)){
-						$to .= $user_static->email.', ';
+				$user_static = new User($this->db);
+				$user_static->fetch($object->fk_user);
+
+				if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+					$list_validation = explode(',', $user_static->array_options['options_approbateurfdt']);
+					foreach($list_validation as $id){
+						$user_static->fetch($id);
+						if(!empty($user_static->email)){
+							$to .= $user_static->email.', ';
+						}
 					}
 				}
+				else {
+					$list_validation = $object->listApprover1;
+					foreach($list_validation[2] as $id => $user_static){
+						if(!empty($user_static->email)){
+							$to .= $user_static->email.', ';
+						}
+					}
+				}
+				
 				$to = rtrim($to, ", ");
 
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
@@ -149,7 +164,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return 1;
 				}
 				else{
-					return -1;
+					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
+					return 0;
 				}
 		
 			
@@ -161,12 +177,7 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				$from = 'erp@optim-industries.fr';
 
 				$to = '';
-				if($object->status == FeuilleDeTemps::STATUS_APPROBATION1) {
-					$list_validation = $object->listApprover2;
-				}
-				else {
-					$list_validation = $object->listApprover1;
-				}
+				$list_validation = $object->listApprover2;
 				foreach($list_validation[2] as $id => $user_static){
 					if(!empty($user_static->email)){
 						$to .= $user_static->email.', ';
@@ -181,8 +192,9 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation2", $link);
 				}
 				else {
-					$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation1", $link);
+					$msg = $langs->transnoentitiesnoconv("EMailTextFDTApprobation", $link);
 				}
+
 				$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
 				if (!empty($to)){
 					$res = $mail->sendfile();
@@ -192,7 +204,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return 1;
 				}
 				else{
-					return -1;
+					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
+					return 0;
 				}
 
 
@@ -223,7 +236,8 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return 1;
 				}
 				else{
-					return -1;
+					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
+					return 0;
 				}
 				
 			case 'USER_CREATE':
@@ -250,16 +264,19 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 			case 'USER_ENABLEDISABLE':
 				if($object->status == 0) {
 					$fdt = new FeuilleDeTemps($this->db);
+					$object_id = $fdt->ExisteDeja(dol_print_date(dol_now(), '%m%Y'), $object->id);
 
-					$this->db->begin();
+					if($object_id == 0) {
+						$this->db->begin();
 
-					$fdt->date_debut = dol_get_first_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
-					$fdt->date_fin = dol_get_last_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
-					$fdt->ref = "FDT_".str_pad($object->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date(dol_now(), '%m%Y');
-					$fdt->fk_user = $object->id;
-					$fdt->status = 0;
+						$fdt->date_debut = dol_get_first_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
+						$fdt->date_fin = dol_get_last_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
+						$fdt->ref = "FDT_".str_pad($object->array_options['options_matricule'], 5, '0', STR_PAD_LEFT).'_'.dol_print_date(dol_now(), '%m%Y');
+						$fdt->fk_user = $object->id;
+						$fdt->status = 0;
 
-					$res = $fdt->create($user, 0);
+						$res = $fdt->create($user, 0);
+					}
 				}
 
 				if($res){
@@ -270,9 +287,152 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 					return -1;
 				}
 
+			case 'TASK_TIMESPENT_CREATE':
+				$error = 0;
+				// select user if alternant and update alternant for each timespent line creation 
+				$sql = "INSERT INTO ".MAIN_DB_PREFIX."element_time_extrafields (fk_object, alternant)";
+				$sql .= " SELECT '.$object->timespent_id.', ue.isalternant";
+				$sql .= " FROM ".MAIN_DB_PREFIX."user_extrafields as ue";
+				$sql .= ' WHERE  ue.fk_object = '.$object->timespent_fk_user.'';
+				$res = $this->db->query($sql);
+				if ($res) {
+						if (!$error) {
+							$this->db->commit();
+							return 1;
+						} else {
+							$this->db->rollback();
+							return -3;
+						}
+					
+				} else {
+					$error = $this->db->error();
+					$this->db->rollback();
+					return -1;
+				}
+				break;
+				
+			case 'TASK_TIMESPENT_DELETE' :
+				$error = 0;
+				//Delete timespent line fk_object from element_time_extrafields
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX."element_time_extrafields WHERE fk_object = ".((int) $object->timespent_id);
+				$res = $this->db->query($sql);
+				if ($res) {
+						if (!$error) {
+							$this->db->commit();
+							return 1;
+						} else {
+							$this->db->rollback();
+							return -3;
+						}
+					
+				} else {
+					$error = $this->db->error();
+					$this->db->rollback();
+					return -1;
+				}
+				break;
+
+			case 'PROJECT_CREATE' :
+				if($conf->global->FDT_GENERATE_TASK_PROJECTCREATION) {
+					$task = new Task($this->db);
+
+					$task->ref = $object->ref;
+					$task->label = $object->title;
+					$task->fk_project = $object->id;
+					$task->date_start = $object->date_start;
+					$task->date_end = $object->date_end;
+
+					$res = $task->create($user);
+
+					if ($res) {
+						return 1;
+					} else {
+						return -1;
+					}
+				}
+				break;
+
+			case 'PROJECT_MODIFY' :
+				if($conf->global->FDT_GENERATE_TASK_PROJECTCREATION) {
+					$task = new Task($this->db);
+					$res = $task->fetch(0, $object->oldcopy->ref);
+
+					if($res && ($task->ref != $object->ref || $task->label != $object->title || $task->fk_project != $object->id || $task->date_start != $object->date_start || $task->date_end != $object->date_end)) {
+						$task->ref = $object->ref;
+						$task->label = $object->title;
+						$task->fk_project = $object->id;
+						$task->date_start = $object->date_start;
+						$task->date_end = $object->date_end;
+
+						$res = $task->update($user);
+
+						if ($res) {
+							return 1;
+						} else {
+							return -1;
+						}
+					}
+				}
+				break;
+
 			default:
 				dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
 				break;
+
+
+				//Lancer une seule fois
+				// case 'USER_MODIFY' :
+				// 	// select user if alternant and update alternant for each timespent line creation 
+				// 	$sql = "INSERT INTO ".MAIN_DB_PREFIX."element_time_extrafields (fk_object, alternant)";
+				// 	$sql .= " SELECT e.rowid, ue.isalternant";
+				// 	$sql .= " FROM ".MAIN_DB_PREFIX."user_extrafields as ue";
+				// 	// $sql .= " LEFT JOIN".MAIN_DB_PREFIX."user as u on u.rowid = ue.fk_object";
+				// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_time as e on ue.fk_object = e.fk_user";
+				// 	$sql .= " WHERE  e.datec > '2024-01-01'";
+				// 	$sql .= ' AND ue.fk_object = '.$object->id.'';
+				// 	$res = $this->db->query($sql);
+			
+				// 	if ($res) {
+				// 			if (!$error) {
+				// 				$this->db->commit();
+				// 				return 1;
+				// 			} else {
+				// 				$this->db->rollback();
+				// 				return -3;
+				// 			}
+						
+				// 	} else {
+				// 		$error = $this->db->error();
+				// 		$this->db->rollback();
+				// 		return -1;
+				// 	}
+				// break; 
+				// case 'USER_CREATE' :
+				// 	// select user if alternant and update alternant for each timespent line creation 
+				// 	$sql = "INSERT INTO ".MAIN_DB_PREFIX."element_time_extrafields (fk_object, alternant)";
+				// 	$sql .= " SELECT e.rowid, ue.isalternant";
+				// 	$sql .= " FROM ".MAIN_DB_PREFIX."user_extrafields as ue";
+				// 	// $sql .= " LEFT JOIN".MAIN_DB_PREFIX."user as u on u.rowid = ue.fk_object";
+				// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_time as e on ue.fk_object = e.fk_user";
+				// 	$sql .= " WHERE  e.datec > '2024-01-01'";
+				// 	$sql .= ' AND ue.fk_object = '.$object->id.'';
+				// 	$res = $this->db->query($sql);
+	
+				// 	if ($res) {
+				// 			if (!$error) {
+				// 				$this->db->commit();
+				// 				return 1;
+				// 			} else {
+				// 				$this->db->rollback();
+				// 				return -3;
+				// 			}
+						
+				// 	} else {
+				// 		$error = $this->db->error();
+				// 		$this->db->rollback();
+				// 		return -1;
+				// 	}
+				// break; 
 		}
 
 		return 0;

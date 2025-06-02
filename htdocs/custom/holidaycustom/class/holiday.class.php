@@ -27,6 +27,7 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/holidaycustom/class/extendedhtml.form.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/includes/phpoffice/phpspreadsheet/src/autoloader.php';
@@ -36,7 +37,7 @@ require_once DOL_DOCUMENT_ROOT.'/includes/Psr/autoloader.php';
  *	Class of the module paid holiday. Developed by Teclib ( http://www.teclib.com/ )
  */
 class Holiday extends CommonObject
-{
+{	
 	/**
 	 * @var string ID to identify managed object
 	 */
@@ -69,7 +70,7 @@ class Holiday extends CommonObject
 	 * @var string String with name of icon for myobject. Must be the part after the 'object_' into object_myobject.png
 	 */
 	public $picto = 'holiday';
-
+	
 	/**
 	 * @deprecated
 	 * @see $id
@@ -99,6 +100,8 @@ class Holiday extends CommonObject
 	 * @var int 	ID of user that must approve. TODO: there is no date for validation (date_valid is used for approval), add one.
 	 */
 	public $fk_validator;
+	public $listApprover1 = array();
+	public $listApprover2 = array();
 
 	/**
 	 * @var int 	Date of approval. TODO: Add a field for approval date and use date_valid instead for validation.
@@ -147,6 +150,8 @@ class Holiday extends CommonObject
 	public $optValue = '';
 	public $optRowid = '';
 
+	public $import = '';
+
 	/**
 	 * Draft status
 	 */
@@ -181,7 +186,14 @@ class Holiday extends CommonObject
 	 */
 	public function __construct($db)
 	{
+		global $conf; 
+
 		$this->db = $db;
+
+		/**
+		 * @var string String with name of icon for myobject. Must be the part after the 'object_' into object_myobject.png
+		 */
+		$this->picto = ($conf->global->HOLIDAY_PICTO ? $conf->global->HOLIDAY_PICTO : 'holiday');
 	}
 
 
@@ -327,7 +339,12 @@ class Holiday extends CommonObject
 		$sql .= " '".$this->db->idate($this->date_debut)."',";
 		$sql .= " '".$this->db->idate($this->date_fin)."',";
 		$sql .= " ".((int) $this->halfday).",";
-		$sql .= " '1',";
+		if($this->statut > 0) {
+			$sql .= " '$this->statut',";
+		}
+		else {
+			$sql .= " '1',";
+		}
 		//$sql .= " ".((int) $user_validation_1->id).",";
 		$sql .= " '0',";
 		$sql .= " ".((int) $this->fk_type).",";
@@ -396,11 +413,12 @@ class Holiday extends CommonObject
 	 *
 	 *  @param	int		$id         Id object
 	 *  @param	string	$ref        Ref object
+	 *  @param	int		$fetch_user			If = 1 fetch User object
 	 *  @return int         		<0 if KO, 0 if not found, >0 if OK
 	 */
-	public function fetch($id, $ref = '')
+	public function fetch($id, $ref = '', $fetch_user = 1)
 	{
-		global $langs;
+		global $langs, $conf;
 
 		$sql = "SELECT";
 		$sql .= " cp.rowid,";
@@ -471,9 +489,9 @@ class Holiday extends CommonObject
 			}
 			$this->db->free($resql);
 
-			if ($result) {
-				$this->listApprover1 = $this->listApprover('', 1);
-				$this->listApprover2 = $this->listApprover('', 2);
+			if ($result && !$conf->global->HOLIDAY_FDT_APPROVER) {
+				$this->listApprover1 = $this->listApprover('', 1, $fetch_user);
+				$this->listApprover2 = $this->listApprover('', 2, $fetch_user);
 			}
 
 			return $result;
@@ -1386,9 +1404,9 @@ class Holiday extends CommonObject
 	 * 	@return boolean					False = New range overlap an existing holiday, True = no overlapping (is never on holiday during checked period).
 	 *  @see verifDateHolidayForTimestamp()
 	 */
-	public function verifDateHolidayCP($fk_user, $dateStart, $dateEnd, $halfday = 0)
+	public function verifDateHolidayCP($fk_user, $dateStart, $dateEnd, $halfday = 0, $filter = '')
 	{
-		$this->fetchByUser($fk_user, '', '');
+		$this->fetchByUser($fk_user, '', $filter);
 
 		foreach ($this->holiday as $infos_CP) {
 			if ($infos_CP['statut'] == 4) {
@@ -2826,11 +2844,9 @@ class Holiday extends CommonObject
 
 	public function showOptionals_custom($extrafields, $mode = 'view', $params = null, $keysuffix = '', $keyprefix = '', $onetrtd = 0, $display_type = 'card', $fk_validator2 = 0)
 	{
-		global $db, $conf, $langs, $action, $form, $hookmanager, $user;
+		global $db, $conf, $langs, $action, $hookmanager, $user;
 
-		if (!is_object($form)) {
-			$form = new Form($db);
-		}
+		$form = new ExtendedFormHoliday($db);
 
 		$out = '';
 
@@ -3064,7 +3080,9 @@ class Holiday extends CommonObject
 								break;
 							case "create":
 								if ($key == 'hour'){
-									$out .= $form->select_duration('hour', $value, 0, 'text', 0, 1);
+									$duration_hour = (GETPOSTINT('hourhour') ? GETPOSTINT('hourhour') : 0) * 60 * 60;
+									$duration_hour += (GETPOSTINT('hourmin') ? GETPOSTINT('hourmin') : 0) * 60;	
+									$out .= $form->select_duration('hour', $duration_hour, 0, 'select', 0, 1);
 								}
 								elseif($key != 'client_informe'){
 									$out .= $extrafields->showInputField($key, $value, '', $keysuffix, '', 0, $this->id, $this->table_element);
@@ -3094,7 +3112,8 @@ class Holiday extends CommonObject
 									$out .= $extrafields->showInputField($key, $value, 'onchange="afficherNomClient('.$nom.')"', $keysuffix, '', 0, $this->id, $this->table_element);
 								}
 								elseif ($key == 'hour'){
-									$out .= $form->select_duration('hour', $value, 0, 'text', 0, 1);
+									$duration_hour = $this->array_options['options_'.$key];
+									$out .= $form->select_duration('hour', $duration_hour, 0, 'select', 0, 1);
 								}
 								else {
 									$out .= $extrafields->showInputField($key, $value, '', $keysuffix, '', 0, $this->id, $this->table_element);
@@ -3132,14 +3151,14 @@ class Holiday extends CommonObject
 	 *
 	 *  @return		int     resultat
 	 */
-	public function import_conges(){
+	public function import_conges($file){
         global $conf, $langs, $user;
 
         $error = 0;
 
         $reader = PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
         $reader->setReadDataOnly(TRUE);
-        $spreadsheet = $reader->load(DOL_DOCUMENT_ROOT."/congés.xlsx");
+        $spreadsheet = $reader->load($file);
         $worksheet = $spreadsheet->getActiveSheet();
         $now = dol_now();
 		$this->db->begin();
@@ -3178,680 +3197,624 @@ class Holiday extends CommonObject
                     $solde_RTT = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(12, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(12, $i)->getValue() : $acquis_RTT - $pris_RTT);
 					$solde_total = $solde_N1 + $solde_N + $solde_Frac + $solde_Anc + $solde_RTT; // Récupération du nombre de congés
 
-                    // Gestion de nombre total de CP
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_ACP['rowid'];
-                    $resql = $this->db->query($sql);
+					$sql = 'SELECT u.fk_object, uu.firstname, uu.lastname FROM llx_user_extrafields as u LEFT JOIN llx_user as uu ON uu.rowid = u.fk_object WHERE u.matricule = '.$matricule;
+					$resql = $this->db->query($sql);
+					$obj_user = $this->db->fetch_object($resql);
 
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $solde_total){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$solde_total;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_ACP['rowid'];
-                        }
-                    }
-					elseif($solde_total != 0) {
-						$sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
+					if(empty($obj_user->fk_object)) {
+						$this->output .= '<span style="color: red;">L\'utilisateur avec le matricule '.$matricule.' n\'a pas été trouvé</span><br>';
+					}
+					else {
+						// Gestion de nombre total de CP
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_ACP['rowid'];
 						$resql = $this->db->query($sql);
-						$obj = $this->db->fetch_object($resql);
 
-						if(!empty($obj->fk_object)){
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $solde_total){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$solde_total;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_ACP['rowid'];
+							}
+						}
+						elseif($solde_total >= 0) {
 							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-							$sql .= $obj->fk_object.",";
+							$sql .= $obj_user->fk_object.",";
 							$sql .= " ".$typeleaves_ACP['rowid'].",";
 							$sql .= ' '.$solde_total.')';
 						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
 						else {
-							setEventMessages("L'utilisateur avec le matricule ".$matricule." n'a pas été trouvé", null, 'errors');
-						}
-					}
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-
-
-
-
-                    // Gestion des CP Acquis N-1
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_CP_N1_ACQUIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $acquis_N1){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$acquis_N1;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_CP_N1_ACQUIS['rowid'];
-                        }
-                    }
-                    elseif($acquis_N1 != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_CP_N1_ACQUIS['rowid'].",";
-                            $sql .= ' '.$acquis_N1.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-                    // Gestion des CP Pris N-1
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_CP_N1_PRIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $pris_N1){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$pris_N1;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_CP_N1_PRIS['rowid'];
-                        }
-                    }
-                    elseif($pris_N1 != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_CP_N1_PRIS['rowid'].",";
-                            $sql .= ' '.$pris_N1.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-
-
-
-
-                    // Gestion des CP Acquis N
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_CP_N_ACQUIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $acquis_N){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$acquis_N;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_CP_N_ACQUIS['rowid'];
-                        }
-                    }
-                    elseif($acquis_N1 != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_CP_N_ACQUIS['rowid'].",";
-                            $sql .= ' '.$acquis_N.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-                    // Gestion des CP Pris N-1
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_CP_N_PRIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $pris_N){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$pris_N;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_CP_N_PRIS['rowid'];
-                        }
-                    }
-                    elseif($pris_N != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_CP_N_PRIS['rowid'].",";
-                            $sql .= ' '.$pris_N.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-
-
-
-
-                    // Gestion des CP Frac Acquis 
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_CP_FRAC_ACQUIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $acquis_Frac){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$acquis_Frac;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_CP_FRAC_ACQUIS['rowid'];
-                        }
-                    }
-                    elseif($acquis_Frac != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_CP_FRAC_ACQUIS['rowid'].",";
-                            $sql .= ' '.$acquis_Frac.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-                    // Gestion des CP Frac Pris
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_CP_FRAC_PRIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $pris_Frac){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$pris_Frac;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_CP_FRAC_PRIS['rowid'];
-                        }
-                    }
-                    elseif($pris_Frac != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_CP_FRAC_PRIS['rowid'].",";
-                            $sql .= ' '.$pris_Frac.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-
-
-
-
-                    // Gestion des CP Anc Acquis 
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_ACQUIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $acquis_Anc){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$acquis_Anc;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_ACQUIS['rowid'];
-                        }
-                    }
-                    elseif($acquis_Anc != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_CP_ANC_ACQUIS['rowid'].",";
-                            $sql .= ' '.$acquis_Anc.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-                    // Gestion des CP Frac Pris
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_PRIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $pris_Anc){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$pris_Anc;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_PRIS['rowid'];
-                        }
-                    }
-                    elseif($pris_Anc != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_CP_ANC_PRIS['rowid'].",";
-                            $sql .= ' '.$pris_Anc.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-
-
-
-					// Gestion des RTT Acquis 
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_RTT_ACQUIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $acquis_RTT){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$acquis_RTT;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_RTT_ACQUIS['rowid'];
-                        }
-                    }
-                    elseif($acquis_RTT != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_RTT_ACQUIS['rowid'].",";
-                            $sql .= ' '.$acquis_RTT.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-                    // Gestion des RTT Pris
-                    $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
-                    $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                    $sql .= ' ON u.fk_object = h.fk_user';
-                    $sql .= ' WHERE u.matricule = '.$matricule;
-                    $sql .= ' AND h.fk_type = '.$typeleaves_RTT_PRIS['rowid'];
-                    $resql = $this->db->query($sql);
-
-                    if($this->db->num_rows($resql) > 0){
-                        $obj = $this->db->fetch_object($resql);
-                        if($obj->nb_holiday != $pris_RTT){
-                            $sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
-                            $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
-                            $sql .= ' ON u.fk_object = h.fk_user';
-                            $sql .= ' SET h.nb_holiday = '.$pris_RTT;
-                            $sql .= ' WHERE u.matricule = '.$matricule;
-                            $sql .= ' AND h.fk_type = '.$typeleaves_RTT_PRIS['rowid'];
-                        }
-                    }
-                    elseif($pris_RTT != 0) {
-                        $sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-                        $resql = $this->db->query($sql);
-                        $obj = $this->db->fetch_object($resql);
-
-                        if(!empty($obj->fk_object)){
-                            $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
-                            $sql .= $obj->fk_object.",";
-                            $sql .= " ".$typeleaves_RTT_PRIS['rowid'].",";
-                            $sql .= ' '.$pris_RTT.')';
-                        }
-                    }
-
-                    $resql = $this->db->query($sql);
-                    if (!$resql) {
-                        dol_print_error($this->db);
-                        $this->error = $this->db->lasterror();
-                        $error++;
-                    }
-
-
-                    
-                
-					$user_id = 0;
-					$sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
-					$resql = $this->db->query($sql);
-					if($this->db->num_rows($resql) > 0){
-						$obj = $this->db->fetch_object($resql);
-						$user_id = $obj->fk_object;
-					}
-
-					// Vérification des congés futur
-					/*if($user_id > 0) {
-						$label = "Prise en compte des congés futur lors de l'import";
-						$this->holiday = array();
-						$this->fetchByUser($user_id, '', " AND cp.date_debut > '".dol_print_date(dol_now(), "%Y-%m-%d")."' AND cp.statut = 3 && cp.fk_type = 1");
-						$nbopenedday = 0;
-						foreach($this->holiday as $key => $conges){
-							$nbopenedday += num_open_day($conges['date_debut_gmt'], $conges['date_fin_gmt'], 0, 1, $conges['halfday']);
+							$this->output .= '<span style="color: green;">Import réalisé avec succés pour '.$obj_user->firstname." ".$obj_user->lastname." (".$matricule.')</sapn><br>';
 						}
 
-						$nbopenedday_restant = $nbopenedday;
-			
 
-						if($nbopenedday_restant){
-							$newSolde = $solde_total - $nbopenedday_restant;
 
-							// The modification is added to the LOG
-							$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_ACP['rowid']);
-							if ($result < 0) {
-								$error++;
-								setEventMessages(null, $this->errors, 'errors');
-							}
 
-							// Update balance
-							$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_ACP['rowid']);
-							if ($result < 0) {
-								$error++;
-								setEventMessages(null, $this->errors, 'errors');
+
+
+						// Gestion des CP Acquis N-1
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_CP_N1_ACQUIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $acquis_N1){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$acquis_N1;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_CP_N1_ACQUIS['rowid'];
 							}
 						}
+						elseif($acquis_N1 != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_CP_N1_ACQUIS['rowid'].",";
+							$sql .= ' '.$acquis_N1.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+
+						// Gestion des CP Pris N-1
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_CP_N1_PRIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $pris_N1){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$pris_N1;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_CP_N1_PRIS['rowid'];
+							}
+						}
+						elseif($pris_N1 != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_CP_N1_PRIS['rowid'].",";
+							$sql .= ' '.$pris_N1.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
 
 
-						$nb_FRAC_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_FRAC_ACQUIS['rowid']);
-						$nb_FRAC_ACQUIS = ($nb_FRAC_ACQUIS ? price2num($nb_FRAC_ACQUIS) : 0);
-						$nb_FRAC_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_FRAC_PRIS['rowid']);
-						$nb_FRAC_PRIS = ($nb_FRAC_PRIS ? price2num($nb_FRAC_PRIS) : 0);
-						$nb_FRAC_SOLDE = $nb_FRAC_ACQUIS-$nb_FRAC_PRIS;
-						if($nb_FRAC_SOLDE > 0 && $nbopenedday_restant > 0){
-							if($nb_FRAC_SOLDE >= $nbopenedday_restant){
-								$newSolde = $nb_FRAC_PRIS + $nbopenedday_restant;
-								$nbopenedday_restant = 0;
-			
+
+
+
+						// Gestion des CP Acquis N
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_CP_N_ACQUIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $acquis_N){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$acquis_N;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_CP_N_ACQUIS['rowid'];
+							}
+						}
+						elseif($acquis_N != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_CP_N_ACQUIS['rowid'].",";
+							$sql .= ' '.$acquis_N.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+
+						// Gestion des CP Pris N-1
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_CP_N_PRIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $pris_N){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$pris_N;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_CP_N_PRIS['rowid'];
+							}
+						}
+						elseif($pris_N != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_CP_N_PRIS['rowid'].",";
+							$sql .= ' '.$pris_N.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+
+
+
+
+
+						// Gestion des CP Frac Acquis 
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_CP_FRAC_ACQUIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $acquis_Frac){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$acquis_Frac;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_CP_FRAC_ACQUIS['rowid'];
+							}
+						}
+						elseif($acquis_Frac != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_CP_FRAC_ACQUIS['rowid'].",";
+							$sql .= ' '.$acquis_Frac.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+
+						// Gestion des CP Frac Pris
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_CP_FRAC_PRIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $pris_Frac){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$pris_Frac;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_CP_FRAC_PRIS['rowid'];
+							}
+						}
+						elseif($pris_Frac != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_CP_FRAC_PRIS['rowid'].",";
+							$sql .= ' '.$pris_Frac.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+
+
+
+
+
+						// Gestion des CP Anc Acquis 
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_ACQUIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $acquis_Anc){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$acquis_Anc;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_ACQUIS['rowid'];
+							}
+						}
+						elseif($acquis_Anc != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_CP_ANC_ACQUIS['rowid'].",";
+							$sql .= ' '.$acquis_Anc.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+
+						// Gestion des CP Frac Pris
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_PRIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $pris_Anc){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$pris_Anc;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_PRIS['rowid'];
+							}
+						}
+						elseif($pris_Anc != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_CP_ANC_PRIS['rowid'].",";
+							$sql .= ' '.$pris_Anc.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+
+
+
+
+						// Gestion des RTT Acquis 
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_RTT_ACQUIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $acquis_RTT){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$acquis_RTT;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_RTT_ACQUIS['rowid'];
+							}
+						}
+						elseif($acquis_RTT != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_RTT_ACQUIS['rowid'].",";
+							$sql .= ' '.$acquis_RTT.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+
+						// Gestion des RTT Pris
+						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						$sql .= ' ON u.fk_object = h.fk_user';
+						$sql .= ' WHERE u.matricule = '.$matricule;
+						$sql .= ' AND h.fk_type = '.$typeleaves_RTT_PRIS['rowid'];
+						$resql = $this->db->query($sql);
+
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							if($obj->nb_holiday != $pris_RTT){
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+								$sql .= ' ON u.fk_object = h.fk_user';
+								$sql .= ' SET h.nb_holiday = '.$pris_RTT;
+								$sql .= ' WHERE u.matricule = '.$matricule;
+								$sql .= ' AND h.fk_type = '.$typeleaves_RTT_PRIS['rowid'];
+							}
+						}
+						elseif($pris_RTT != 0) {
+							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+							$sql .= $obj_user->fk_object.",";
+							$sql .= " ".$typeleaves_RTT_PRIS['rowid'].",";
+							$sql .= ' '.$pris_RTT.')';
+						}
+
+						$resql = $this->db->query($sql);
+						if (!$resql) {
+							dol_print_error($this->db);
+							$this->error = $this->db->lasterror();
+							$error++;
+						}
+
+
+
+
+						$user_id = 0;
+						$sql = 'SELECT u.fk_object FROM llx_user_extrafields as u WHERE u.matricule = '.$matricule;
+						$resql = $this->db->query($sql);
+						if($this->db->num_rows($resql) > 0){
+							$obj = $this->db->fetch_object($resql);
+							$user_id = $obj_user->fk_object;
+						}
+
+						// Vérification des congés futur
+						/*if($user_id > 0) {
+							$label = "Prise en compte des congés futur lors de l'import";
+							$this->holiday = array();
+							$this->fetchByUser($user_id, '', " AND cp.date_debut > '".dol_print_date(dol_now(), "%Y-%m-%d")."' AND cp.statut = 3 && cp.fk_type = 1");
+							$nbopenedday = 0;
+							foreach($this->holiday as $key => $conges){
+								$nbopenedday += num_open_day($conges['date_debut_gmt'], $conges['date_fin_gmt'], 0, 1, $conges['halfday']);
+							}
+
+							$nbopenedday_restant = $nbopenedday;
+
+
+							if($nbopenedday_restant){
+								$newSolde = $solde_total - $nbopenedday_restant;
+
 								// The modification is added to the LOG
-								$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_FRAC_PRIS['rowid']);
+								$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_ACP['rowid']);
 								if ($result < 0) {
 									$error++;
 									setEventMessages(null, $this->errors, 'errors');
 								}
-			
+
 								// Update balance
-								$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_FRAC_PRIS['rowid']);
+								$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_ACP['rowid']);
 								if ($result < 0) {
 									$error++;
 									setEventMessages(null, $this->errors, 'errors');
 								}
 							}
-							else {
-								$newSolde = $nb_FRAC_ACQUIS;
-								$nbopenedday_restant -= $nb_FRAC_SOLDE;
-			
-								// The modification is added to the LOG
-								$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_FRAC_PRIS['rowid']);
-								if ($result < 0) {
-									$error++;
-									setEventMessages(null, $this->errors, 'errors');
-								}
-			
-								// Update balance
-								$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_FRAC_PRIS['rowid']);
-								if ($result < 0) {
-									$error++;
-									setEventMessages(null, $this->errors, 'errors');
-								}
-							}
-						}
-			
-						if($nbopenedday_restant > 0){
-							$nb_ANC_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_ANC_ACQUIS['rowid']);
-							$nb_ANC_ACQUIS = ($nb_ANC_ACQUIS ? price2num($nb_ANC_ACQUIS) : 0);
-							$nb_ANC_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_ANC_PRIS['rowid']);
-							$nb_ANC_PRIS = ($nb_ANC_PRIS ? price2num($nb_ANC_PRIS) : 0);
-							$nb_ANC_SOLDE = $nb_ANC_ACQUIS-$nb_ANC_PRIS;
-							if($nb_ANC_SOLDE > 0){
-								if($nb_ANC_SOLDE >= $nbopenedday_restant){
-									$newSolde = $nb_ANC_PRIS + $nbopenedday_restant;
+
+
+							$nb_FRAC_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_FRAC_ACQUIS['rowid']);
+							$nb_FRAC_ACQUIS = ($nb_FRAC_ACQUIS ? price2num($nb_FRAC_ACQUIS) : 0);
+							$nb_FRAC_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_FRAC_PRIS['rowid']);
+							$nb_FRAC_PRIS = ($nb_FRAC_PRIS ? price2num($nb_FRAC_PRIS) : 0);
+							$nb_FRAC_SOLDE = $nb_FRAC_ACQUIS-$nb_FRAC_PRIS;
+							if($nb_FRAC_SOLDE > 0 && $nbopenedday_restant > 0){
+								if($nb_FRAC_SOLDE >= $nbopenedday_restant){
+									$newSolde = $nb_FRAC_PRIS + $nbopenedday_restant;
 									$nbopenedday_restant = 0;
-			
+
 									// The modification is added to the LOG
-									$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_ANC_PRIS['rowid']);
+									$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_FRAC_PRIS['rowid']);
 									if ($result < 0) {
 										$error++;
 										setEventMessages(null, $this->errors, 'errors');
 									}
-			
+
 									// Update balance
-									$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_ANC_PRIS['rowid']);
+									$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_FRAC_PRIS['rowid']);
 									if ($result < 0) {
 										$error++;
 										setEventMessages(null, $this->errors, 'errors');
 									}
 								}
 								else {
-									$newSolde = $nb_ANC_ACQUIS;
-									$nbopenedday_restant -= $nb_ANC_SOLDE;
-			
+									$newSolde = $nb_FRAC_ACQUIS;
+									$nbopenedday_restant -= $nb_FRAC_SOLDE;
+
 									// The modification is added to the LOG
-									$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_ANC_PRIS['rowid']);
+									$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_FRAC_PRIS['rowid']);
 									if ($result < 0) {
 										$error++;
 										setEventMessages(null, $this->errors, 'errors');
 									}
-			
+
 									// Update balance
-									$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_ANC_PRIS['rowid']);
+									$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_FRAC_PRIS['rowid']);
 									if ($result < 0) {
 										$error++;
 										setEventMessages(null, $this->errors, 'errors');
 									}
 								}
 							}
-						}
-			
-						if($nbopenedday_restant > 0){
-							$nb_N1_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_N1_ACQUIS['rowid']);
-							$nb_N1_ACQUIS = ($nb_N1_ACQUIS ? price2num($nb_N1_ACQUIS) : 0);
-							$nb_N1_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_N1_PRIS['rowid']);
-							$nb_N1_PRIS = ($nb_N1_PRIS ? price2num($nb_N1_PRIS) : 0);
-							$nb_N1_SOLDE = $nb_N1_ACQUIS-$nb_N1_PRIS;
-							if($nb_N1_SOLDE > 0){
-								if($nb_N1_SOLDE >= $nbopenedday_restant){
-									$newSolde = $nb_N1_PRIS + $nbopenedday_restant;
+
+							if($nbopenedday_restant > 0){
+								$nb_ANC_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_ANC_ACQUIS['rowid']);
+								$nb_ANC_ACQUIS = ($nb_ANC_ACQUIS ? price2num($nb_ANC_ACQUIS) : 0);
+								$nb_ANC_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_ANC_PRIS['rowid']);
+								$nb_ANC_PRIS = ($nb_ANC_PRIS ? price2num($nb_ANC_PRIS) : 0);
+								$nb_ANC_SOLDE = $nb_ANC_ACQUIS-$nb_ANC_PRIS;
+								if($nb_ANC_SOLDE > 0){
+									if($nb_ANC_SOLDE >= $nbopenedday_restant){
+										$newSolde = $nb_ANC_PRIS + $nbopenedday_restant;
+										$nbopenedday_restant = 0;
+
+										// The modification is added to the LOG
+										$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_ANC_PRIS['rowid']);
+										if ($result < 0) {
+											$error++;
+											setEventMessages(null, $this->errors, 'errors');
+										}
+
+										// Update balance
+										$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_ANC_PRIS['rowid']);
+										if ($result < 0) {
+											$error++;
+											setEventMessages(null, $this->errors, 'errors');
+										}
+									}
+									else {
+										$newSolde = $nb_ANC_ACQUIS;
+										$nbopenedday_restant -= $nb_ANC_SOLDE;
+
+										// The modification is added to the LOG
+										$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_ANC_PRIS['rowid']);
+										if ($result < 0) {
+											$error++;
+											setEventMessages(null, $this->errors, 'errors');
+										}
+
+										// Update balance
+										$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_ANC_PRIS['rowid']);
+										if ($result < 0) {
+											$error++;
+											setEventMessages(null, $this->errors, 'errors');
+										}
+									}
+								}
+							}
+
+							if($nbopenedday_restant > 0){
+								$nb_N1_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_N1_ACQUIS['rowid']);
+								$nb_N1_ACQUIS = ($nb_N1_ACQUIS ? price2num($nb_N1_ACQUIS) : 0);
+								$nb_N1_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_N1_PRIS['rowid']);
+								$nb_N1_PRIS = ($nb_N1_PRIS ? price2num($nb_N1_PRIS) : 0);
+								$nb_N1_SOLDE = $nb_N1_ACQUIS-$nb_N1_PRIS;
+								if($nb_N1_SOLDE > 0){
+									if($nb_N1_SOLDE >= $nbopenedday_restant){
+										$newSolde = $nb_N1_PRIS + $nbopenedday_restant;
+										$nbopenedday_restant = 0;
+
+										// The modification is added to the LOG
+										$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_N1_PRIS['rowid']);
+										if ($result < 0) {
+											$error++;
+											setEventMessages(null, $this->errors, 'errors');
+										}
+
+										// Update balance
+										$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_N1_PRIS['rowid']);
+										if ($result < 0) {
+											$error++;
+											setEventMessages(null, $this->errors, 'errors');
+										}
+									}
+									else {
+										$newSolde = $nb_N1_ACQUIS;
+										$nbopenedday_restant -= $nb_N1_SOLDE;
+
+										// The modification is added to the LOG
+										$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_N1_PRIS['rowid']);
+										if ($result < 0) {
+											$error++;
+											setEventMessages(null, $this->errors, 'errors');
+										}
+
+										// Update balance
+										$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_N1_PRIS['rowid']);
+										if ($result < 0) {
+											$error++;
+											setEventMessages(null, $this->errors, 'errors');
+										}
+									}
+								}
+							}
+
+							if($nbopenedday_restant > 0){
+								$nb_N_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_N_ACQUIS['rowid']);
+								$nb_N_ACQUIS = ($nb_N_ACQUIS ? price2num($nb_N_ACQUIS) : 0);
+								$nb_N_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_N_PRIS['rowid']);
+								$nb_N_PRIS = ($nb_N_PRIS ? price2num($nb_N_PRIS) : 0);
+								$nb_N_SOLDE = $nb_N_ACQUIS-$nb_N_PRIS;
+								if($nb_N_SOLDE >= $nbopenedday_restant){
+									$newSolde = $nb_N_PRIS + $nbopenedday_restant;
 									$nbopenedday_restant = 0;
-			
+
 									// The modification is added to the LOG
-									$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_N1_PRIS['rowid']);
+									$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_N_PRIS['rowid']);
 									if ($result < 0) {
 										$error++;
 										setEventMessages(null, $this->errors, 'errors');
 									}
-			
+
 									// Update balance
-									$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_N1_PRIS['rowid']);
+									$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_N_PRIS['rowid']);
 									if ($result < 0) {
 										$error++;
 										setEventMessages(null, $this->errors, 'errors');
 									}
 								}
 								else {
-									$newSolde = $nb_N1_ACQUIS;
-									$nbopenedday_restant -= $nb_N1_SOLDE;
-			
+									$newSolde = $nb_N_PRIS + $nbopenedday_restant;
+									$nbopenedday_restant = 0;
+
 									// The modification is added to the LOG
-									$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_N1_PRIS['rowid']);
+									$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_N_PRIS['rowid']);
 									if ($result < 0) {
 										$error++;
 										setEventMessages(null, $this->errors, 'errors');
 									}
-			
+
 									// Update balance
-									$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_N1_PRIS['rowid']);
+									$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_N_PRIS['rowid']);
 									if ($result < 0) {
 										$error++;
 										setEventMessages(null, $this->errors, 'errors');
 									}
 								}
 							}
-						}
-			
-						if($nbopenedday_restant > 0){
-							$nb_N_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_N_ACQUIS['rowid']);
-							$nb_N_ACQUIS = ($nb_N_ACQUIS ? price2num($nb_N_ACQUIS) : 0);
-							$nb_N_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_N_PRIS['rowid']);
-							$nb_N_PRIS = ($nb_N_PRIS ? price2num($nb_N_PRIS) : 0);
-							$nb_N_SOLDE = $nb_N_ACQUIS-$nb_N_PRIS;
-							if($nb_N_SOLDE >= $nbopenedday_restant){
-								$newSolde = $nb_N_PRIS + $nbopenedday_restant;
-								$nbopenedday_restant = 0;
-			
-								// The modification is added to the LOG
-								$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_N_PRIS['rowid']);
-								if ($result < 0) {
-									$error++;
-									setEventMessages(null, $this->errors, 'errors');
-								}
-			
-								// Update balance
-								$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_N_PRIS['rowid']);
-								if ($result < 0) {
-									$error++;
-									setEventMessages(null, $this->errors, 'errors');
-								}
-							}
-							else {
-								$newSolde = $nb_N_PRIS + $nbopenedday_restant;
-								$nbopenedday_restant = 0;
-			
-								// The modification is added to the LOG
-								$result = $this->addLogCP($user->id, $user_id, $label, $newSolde, $typeleaves_CP_N_PRIS['rowid']);
-								if ($result < 0) {
-									$error++;
-									setEventMessages(null, $this->errors, 'errors');
-								}
-			
-								// Update balance
-								$result = $this->updateSoldeCP($user_id, $newSolde, $typeleaves_CP_N_PRIS['rowid']);
-								if ($result < 0) {
-									$error++;
-									setEventMessages(null, $this->errors, 'errors');
-								}
-							}
-						}
-					}*/
+						}*/
+					}
 				}
             }
             $i++;
@@ -4046,6 +4009,99 @@ class Holiday extends CommonObject
 			$obj = $this->db->fetch_object($resql);
 			$this->db->free($resql);
 			return $obj->in_hour;
+		} else {
+			dol_print_error($this->db);
+			$this->error = $this->db->error();
+			return -1;
+		}
+	}
+
+	/**
+	 *      Does the type of holiday can be halfday?
+	 *
+	 *      @return     int         <0 if KO, 0 if no, 1 if yes
+	 */
+	public function holidayTypeCanHalfday($type)
+	{
+		global $user;
+
+		if(empty($type)) {
+			return -1;
+		}
+
+		$sql = "SELECT h.halfday";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
+		if(is_numeric($type)) {
+			$sql .= " WHERE h.rowid = ".$type;
+		}
+		else {
+			$sql .= " WHERE h.code = '".$type."'";
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$obj = $this->db->fetch_object($resql);
+			$this->db->free($resql);
+			return $obj->halfday;
+		} else {
+			dol_print_error($this->db);
+			$this->error = $this->db->error();
+			return -1;
+		}
+	}
+
+	/**
+	 *      List of holiday in hour
+	 *
+	 *      @return     array         <0 if KO, array of type if no
+	 */
+	public function holidayTypesInHour()
+	{
+		global $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
+		$sql .= " WHERE h.in_hour = 1";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			dol_print_error($this->db);
+			$this->error = $this->db->error();
+			return -1;
+		}
+	}
+
+	
+	/**
+	 *      List of holiday that can be taken as half-days
+	 *
+	 *      @return     array         <0 if KO, array of type if no
+	 */
+	public function holidayTypesHalfday()
+	{
+		global $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
+		$sql .= " WHERE h.halfday = 1";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
+			}
+
+			$this->db->free($resql);
+			return $res;
 		} else {
 			dol_print_error($this->db);
 			$this->error = $this->db->error();
@@ -4286,9 +4342,10 @@ class Holiday extends CommonObject
 	 *
 	 * 	@param	string	$excludefilter		Filter to exclude. Do not use here a string coming from user input.
 	 *  @param	int		$validation_number	Validation Number
+	 *  @param	int		$fetch_user			If = 1 fetch User object
 	 * 	@return	mixed						Array of users or -1 on error
 	 */
-	public function listApprover($excludefilter = '', $validation_number)
+	public function listApprover($excludefilter = '', $validation_number, $fetch_user = 1)
 	{
 		global $conf, $user;
 		$ret = array();
@@ -4338,11 +4395,14 @@ class Holiday extends CommonObject
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$newuser = new User($this->db);
-				$newuser->fetch($obj->rowid);
 				$ret[0][$obj->rowid] = $obj->rowid;
 				$ret[1][$obj->rowid] = $obj->validation;
-				$ret[2][$obj->rowid] = $newuser;
+
+				if($fetch_user) {
+					$newuser = new User($this->db);
+					$newuser->fetch($obj->rowid);
+					$ret[2][$obj->rowid] = clone $newuser;
+				}
 			}
 
 			$this->db->free($resql);
@@ -4431,7 +4491,7 @@ class Holiday extends CommonObject
 		}
 
 		if(!$only_solde) {
-			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', 'holiday', 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP_SOLDE > 0 ? ' amountpaymentcomplete' : ($nb_ACP_SOLDE < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP_SOLDE, 5).'</span>', $balancetoshow).'</div>';
+			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', $this->picto, 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP_SOLDE > 0 ? ' amountpaymentcomplete' : ($nb_ACP_SOLDE < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP_SOLDE, 5).'</span>', $balancetoshow).'</div>';
 			if($detail) {
 				$ret .= '<div class="valignmiddle div-balanceofleave center">';
 				$ret .= 'Dont <span class="balanceofleave valignmiddle amountpaymentcomplete">'.$nb_conges_brouillon.'</span> en brouillon, ';
@@ -4478,7 +4538,7 @@ class Holiday extends CommonObject
 			$ret .= '</table><br>';
 		}
 		else {
-			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', 'holiday', 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP > 0 ? ' amountpaymentcomplete' : ($nb_ACP < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP, 5).'</span>', $balancetoshow).'</div>';
+			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', $this->picto, 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP > 0 ? ' amountpaymentcomplete' : ($nb_ACP < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP, 5).'</span>', $balancetoshow).'</div>';
 			$ret .= '<div class="valignmiddle div-balanceofleave center">';
 			$ret .= 'Dont <span class="balanceofleave valignmiddle amountpaymentcomplete">'.$nb_conges_brouillon.'</span> en brouillon, ';
 			$ret .= '<span class="balanceofleave valignmiddle amountpaymentcomplete">'.$nb_conges_attente_approbation.'</span> en attente d\'approbation, ';

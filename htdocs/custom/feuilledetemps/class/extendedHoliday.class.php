@@ -167,7 +167,6 @@ class extendedHoliday extends Holiday
 
 		$isavailablemorning = true;
 		$isavailableafternoon = true;
-        $statut = '';
 		$rowid_array = array();
 		$statut_array = array();
 		$code_array = array();
@@ -178,7 +177,10 @@ class extendedHoliday extends Holiday
 		$nb_jour_array = array();
 
 		// Check into leave requests
-		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, he.statutfdt, ht.in_hour";
+		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, ht.in_hour";
+		if($conf->global->FDT_STATUT_HOLIDAY) {
+			$sql .= ", he.statutfdt";
+		}
 		$sql .= " FROM ".MAIN_DB_PREFIX."holiday as cp";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = cp.fk_type";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as he ON he.fk_object = cp.rowid";
@@ -213,7 +215,9 @@ class extendedHoliday extends Holiday
 					$statut_array[] = $obj->statut;
 					$code_array[] = $obj->code;
 					$hour_array[] = $obj->hour;
-					$statutfdt_array[] = $obj->statutfdt;
+					if($conf->global->FDT_STATUT_HOLIDAY) {
+						$statutfdt_array[] = $obj->statutfdt;
+					}
 					$droitrtt_array[] = $obj->droit_rtt;
 					$in_hour_array[] = $obj->in_hour;
 					$nb_jour_array[] = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
@@ -259,6 +263,140 @@ class extendedHoliday extends Holiday
 		return $result;
 	}
 
+	 /**
+	 *	Check that a user is not on holiday for a particular timestamp. Can check approved leave requests and not into public holidays of company.
+	 *
+	 * 	@param 	int			$fk_user				Id user
+	 *  @param	integer	    $timestamp				Time stamp date for a day (YYYY-MM-DD) without hours  (= 12:00AM in english and not 12:00PM that is 12:00)
+	 *  @param	string		$status					Filter on holiday status. '-1' = no filter.
+	 *  @param	array		$excluded_types			Array of excluded types of holiday
+	 * 	@return array								array('morning'=> ,'afternoon'=> ), Boolean is true if user is available for day timestamp.
+	 *  @see verifDateHolidayCP()
+	 */
+	public function verifDateHolidayForTimestampBetweenDate($fk_user, $firstday, $lastday, $status = '-1', $excluded_types = array())
+	{
+		global $langs, $conf;
+
+		$isavailablemorning = true;
+		$isavailableafternoon = array();
+		$rowid_array = array();
+		$statut_array = array();
+		$code_array = array();
+		$hour_array = array();
+		$statutfdt_array = array();
+		$droitrtt_array = array();
+		$in_hour_array = array();
+		$nb_jour_array = array();
+
+		// Check into leave requests
+		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, ht.in_hour";
+		if($conf->global->FDT_STATUT_HOLIDAY) {
+			$sql .= ", he.statutfdt";
+		}
+		$sql .= " FROM ".MAIN_DB_PREFIX."holiday as cp";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = cp.fk_type";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as he ON he.fk_object = cp.rowid";
+		$sql .= " WHERE cp.entity IN (".getEntity('holiday').")";
+		$sql .= " AND cp.fk_user = ".(int) $fk_user;
+		$sql .= " AND cp.date_debut <= '".$this->db->idate($lastday)."' AND cp.date_fin >= '".$this->db->idate($firstday)."'";
+		if ($status != '-1' && gettype($status) != "array") {
+			$sql .= " AND cp.statut IN (".$this->db->sanitize($status).")";
+		}
+		elseif ($status != '-1') {
+			$sql .= " AND cp.statut IN (".$this->db->sanitize(implode(',', $status)).")";
+		}
+		if(!empty($excluded_types)) {
+			$sql .= " AND cp.fk_type NOT IN (".$this->db->sanitize(implode(',', $excluded_types)).")";
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num_rows = $this->db->num_rows($resql); // Note, we can have 2 records if on is morning and the other one is afternoon
+			if ($num_rows > 0) {
+				$arrayofrecord = array();
+				$i = 0;
+				while ($i < $num_rows) {
+					$obj = $this->db->fetch_object($resql);
+
+					$date_debut_gmt = $this->db->jdate($obj->date_start, 1);
+					$date_fin_gmt = $this->db->jdate($obj->date_end, 1);
+
+					$nb_jour =  num_between_day($this->db->jdate($obj->date_start), $this->db->jdate($obj->date_end)+3600, 1); 
+					$num_open_day = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
+					for($idw = 0; $idw < $nb_jour; $idw++) {
+						$dayinloop = dol_time_plus_duree($this->db->jdate($obj->date_start), $idw, 'd');
+
+						// Note: $obj->halfday is  0:Full days, 2:Sart afternoon end morning, -1:Start afternoon, 1:End morning
+						$arrayofrecord[$dayinloop][$obj->rowid] = array('date_start'=>$this->db->jdate($obj->date_start), 'date_end'=>$this->db->jdate($obj->date_end), 'halfday'=>$obj->halfday);
+						$rowid_array[$dayinloop][] = $obj->rowid;
+						$statut_array[$dayinloop][] = $obj->statut;
+						$code_array[$dayinloop][] = $obj->code;
+						$hour_array[$dayinloop][] = $obj->hour;
+						if($conf->global->FDT_STATUT_HOLIDAY) {
+							$statutfdt_array[$dayinloop][] = $obj->statutfdt;
+						}
+						$droitrtt_array[$dayinloop][] = $obj->droit_rtt;
+						$in_hour_array[$dayinloop][] = $obj->in_hour;
+						$nb_jour_array[$dayinloop][] = $num_open_day;
+					}
+					$i++;
+				}
+			}
+		} else {
+			dol_print_error($this->db);
+		}
+
+		$nb_jour =  num_between_day($firstday, $lastday+3600, 1); 
+		for($idw = 0; $idw < $nb_jour; $idw++) {
+			$dayinloop = dol_time_plus_duree($firstday, $idw, 'd');
+
+			// We found a record, user is on holiday by default, so is not available is true.
+			$isavailablemorning = true;
+			foreach ($arrayofrecord[$dayinloop] as $record) {
+				if ($dayinloop == $record['date_start'] && $record['halfday'] == 2) {
+					continue;
+				}
+				if ($dayinloop == $record['date_start'] && $record['halfday'] == -1) {
+					continue;
+				}
+				$isavailablemorning = false;
+				break;
+			}
+			$isavailableafternoon = true;
+			foreach ($arrayofrecord[$dayinloop] as $record) {
+				if ($dayinloop == $record['date_end'] && $record['halfday'] == 2) {
+					continue;
+				}
+				if ($dayinloop == $record['date_end'] && $record['halfday'] == 1) {
+					continue;
+				}
+				$isavailableafternoon = false;
+				break;
+			}
+
+			$result[$dayinloop] = array(
+										'morning' => $isavailablemorning, 
+										'afternoon' => $isavailableafternoon, 
+										'statut' => (!empty($statut_array[$dayinloop]) ? $statut_array[$dayinloop] : array()), 
+										'code' => (!empty($code_array[$dayinloop]) ? $code_array[$dayinloop] : array()), 
+										'rowid' => (!empty($rowid_array[$dayinloop]) ? $rowid_array[$dayinloop] : array()), 
+										'hour' => (!empty($hour_array[$dayinloop]) ? $hour_array[$dayinloop] : array()), 
+										'statutfdt' => (!empty($statutfdt_array[$dayinloop]) ? $statutfdt_array[$dayinloop] : array()),
+										'droit_rtt' => (!empty($droitrtt_array[$dayinloop]) ? $droitrtt_array[$dayinloop] : array()), 
+										'in_hour' => (!empty($in_hour_array[$dayinloop]) ? $in_hour_array[$dayinloop] : array()), 
+										'nb_jour' => (!empty($nb_jour_array[$dayinloop]) ? $nb_jour_array[$dayinloop] : array())
+									);
+			if (!$isavailablemorning) {
+				$result[$dayinloop]['morning_reason'] = 'leave_request';
+			}
+			if (!$isavailableafternoon) {
+				$result[$dayinloop]['afternoon_reason'] = 'leave_request';
+			}
+		}
+
+		return $result;
+	}
+
 	/**
 	 *	Check that a user is not on holiday for a particular timestamp. Can check approved leave requests and not into public holidays of company.
 	 *
@@ -284,9 +422,13 @@ class extendedHoliday extends Holiday
 		$droitrtt_array = array();
 		$in_hour_array = array();
 		$user_id_array = array();
+		$nb_jour_array = array();
 
 		// Check into leave requests
-		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, he.statutfdt, ht.in_hour, cp.fk_user";
+		$sql = "SELECT cp.rowid, cp.date_debut as date_start, cp.date_fin as date_end, cp.halfday, cp.statut, ht.code, ht.droit_rtt, he.hour, ht.in_hour, cp.fk_user";
+		if($conf->global->FDT_STATUT_HOLIDAY) {
+			$sql .= ", he.statutfdt";
+		}
 		$sql .= " FROM ".MAIN_DB_PREFIX."holiday as cp";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = cp.fk_type";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as he ON he.fk_object = cp.rowid";
@@ -311,16 +453,26 @@ class extendedHoliday extends Holiday
 				while ($i < $num_rows) {
 					$obj = $this->db->fetch_object($resql);
 
+					$date_debut_gmt = $this->db->jdate($obj->date_start, 1);
+					$date_fin_gmt = $this->db->jdate($obj->date_end, 1);
+
 					// Note: $obj->halfday is  0:Full days, 2:Sart afternoon end morning, -1:Start afternoon, 1:End morning
 					$arrayofrecord[$obj->fk_user][$obj->rowid] = array('date_start'=>$this->db->jdate($obj->date_start), 'date_end'=>$this->db->jdate($obj->date_end), 'halfday'=>$obj->halfday, 'fk_user'=>$obj->fk_user);
 					$rowid_array[$obj->fk_user][] = $obj->rowid;
 					$statut_array[$obj->fk_user][] = $obj->statut;
 					$code_array[$obj->fk_user][] = $obj->code;
 					$hour_array[$obj->fk_user][] = $obj->hour;
-					$statutfdt_array[$obj->fk_user][] = $obj->statutfdt;
+					if($conf->global->FDT_STATUT_HOLIDAY) {
+						$statutfdt_array[$obj->fk_user][] = $obj->statutfdt;
+					}
 					$droitrtt_array[$obj->fk_user][] = $obj->droit_rtt;
 					$in_hour_array[$obj->fk_user][] = $obj->in_hour;
-					$user_id_array[] = $obj->fk_user;
+					if(!in_array($obj->fk_user, $user_id_array)) {
+						$user_id_array[] = $obj->fk_user;
+					}
+					if($obj->hour > 0) {
+						$nb_jour_array[$obj->fk_user][$obj->rowid] = num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $obj->halfday);
+					}
 
 					$i++;
 				}
@@ -358,7 +510,7 @@ class extendedHoliday extends Holiday
 			dol_print_error($this->db);
 		}
 
-		$result = array('morning'=>$isavailablemorning, 'afternoon'=>$isavailableafternoon, 'statut'=>$statut_array, 'code'=>$code_array, 'rowid'=>$rowid_array, 'hour'=>$hour_array, 'statutfdt'=>$statutfdt_array, 'droit_rtt'=>$droitrtt_array, 'in_hour'=>$in_hour_array, 'user_id'=>$user_id_array);
+		$result = array('morning'=>$isavailablemorning, 'afternoon'=>$isavailableafternoon, 'statut'=>$statut_array, 'code'=>$code_array, 'rowid'=>$rowid_array, 'hour'=>$hour_array, 'statutfdt'=>$statutfdt_array, 'droit_rtt'=>$droitrtt_array, 'in_hour'=>$in_hour_array, 'user_id'=>$user_id_array, 'nb_jour'=>$nb_jour_array);
 
 		return $result;
 	}
@@ -374,7 +526,7 @@ class extendedHoliday extends Holiday
 	{
 		global $mysoc;
 
-		$sql = "SELECT rowid, code, label, affect, delay, newbymonth";
+		$sql = "SELECT rowid, code, label, affect, delay, newbymonth, in_hour";
 		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types";
 		$sql .= " WHERE (fk_country IS NULL OR fk_country = ".((int) $mysoc->country_id).')';
 		if ($active >= 0) {
@@ -390,7 +542,7 @@ class extendedHoliday extends Holiday
 			$num = $this->db->num_rows($result);
 			if ($num) {
 				while ($obj = $this->db->fetch_object($result)) {
-					$types[$obj->rowid] = array('rowid'=> $obj->rowid, 'code'=> $obj->code, 'label'=>$obj->label, 'affect'=>$obj->affect, 'delay'=>$obj->delay, 'newbymonth'=>$obj->newbymonth);
+					$types[$obj->rowid] = array('rowid'=> $obj->rowid, 'code'=> $obj->code, 'label'=>$obj->label, 'affect'=>$obj->affect, 'delay'=>$obj->delay, 'newbymonth'=>$obj->newbymonth, 'in_hour'=>$obj->in_hour);
 				}
 
 				return $types;
@@ -486,5 +638,96 @@ class extendedHoliday extends Holiday
 			$this->db->commit();
 			return 1;
 		}	
+	}
+
+	public function getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $usertoprocess = null, $numberDay = 0, &$timeHolidayByDay = array()) {
+		global $conf; 
+
+		$droit_rtt = $this->holidayTypeDroitRTT();
+
+		if(empty($usertoprocess)) {
+			$usertoprocess = new User($this->db);
+			$usertoprocess->fetch($this->fk_user);
+		}
+
+		if($conf->donneesrh->enabled) {
+			$extrafields = new ExtraFields($this->db);
+			$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient_extrafields');
+			$userField = new UserField($this->db);
+			$userField->id = $this->fk_user;
+			$userField->table_element = 'donneesrh_Positionetcoefficient_extrafields';
+			$userField->fetch_optionals();
+		}
+
+		if(!empty($this->array_options['options_hour'])) {
+			if($numberDay > 1) {
+				$duration_hour = 0;
+				if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+					$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
+					for($i = 0; $i < $nbDay; $i++) {
+						$tmpday = dol_time_plus_duree($this->date_debut, $i, 'd');
+						$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+
+						if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
+							continue;
+						}
+
+						if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
+					}
+				}
+				else {
+					$nbDay = floor(num_open_day($this->date_debut_gmt, $this->date_fin_gmt, 0, 1, $this->halfday));
+					$duration_hour = $nbDay * 7 * 3600;
+					if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $duration_hour;
+				}
+			}
+			else {
+				if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$dayinloopfromfirstdaytoshow] += $this->array_options['options_hour'];
+			}
+
+			return $this->array_options['options_hour'];
+		}
+		else {
+			if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+				$nbDay = floor(num_between_day($this->date_debut_gmt, $this->date_fin_gmt, 0) + 1);
+				$duration_hour = 0;
+
+				for($i = 0; $i < $nbDay; $i++) {
+					$tmpday = dol_time_plus_duree($this->date_debut, $i, 'd');
+					$tmpdaygmt = dol_mktime(0, 0, 0, dol_print_date($tmpday, '%m'), dol_print_date($tmpday, '%d'), dol_print_date($tmpday, '%Y'), 'gmt');
+
+					if(num_public_holiday($tmpdaygmt, $tmpdaygmt, '', 1) != 0) {
+						continue;
+					}
+
+					if((($this->halfday == 1 || $this->halfday == 2) && $i == $nbDay - 1) || (($this->halfday == -1 || $this->halfday == 2) && $i == 0)) { // gestion des demi journées
+						$duration_hour += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
+						if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += 0.5 * $standard_week_hour[dol_print_date($tmpday, '%A')];
+					}
+					else {
+						$duration_hour += $standard_week_hour[dol_print_date($tmpday, '%A')];
+						if($this->statut != Holiday::STATUS_DRAFT) $timeHolidayByDay[$tmpday] += $standard_week_hour[dol_print_date($tmpday, '%A')];
+					}
+				}
+			}
+			else {
+				$nbDay = floor(num_open_day($this->date_debut_gmt, $this->date_fin_gmt, 0, 1, $this->halfday));
+				$duration_hour = (dol_print_date($this->date_fin, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt']) ? $nbDay * 7 * 3600 : $nbDay * $conf->global->HEURE_JOUR * 3600);
+			
+				if($this->halfday == 1 || $this->halfday == -1) { // gestion des demi journées
+					if((($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($usertoprocess->array_options['options_pasdroitrtt']) || dol_print_date($this->date_fin, '%Y-%m-%d') < '2024-07-01')) {
+						$duration_hour += 3.5 * 3600;
+					}
+					elseif(in_array($this->fk_type, $droit_rtt)) {
+						$duration_hour += ($conf->global->HEURE_JOUR / 2) * 3600;
+					}
+					elseif(!in_array($this->fk_type, $droit_rtt)) {
+						$duration_hour += $conf->global->HEURE_DEMIJOUR_NORTT * 3600;
+					}
+				}
+			}
+
+			return $duration_hour;
+		}
 	}
 }

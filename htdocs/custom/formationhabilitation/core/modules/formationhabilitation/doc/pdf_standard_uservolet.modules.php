@@ -241,8 +241,13 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			$volet->fetch($object->fk_volet);
 			$dir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
 			$file = $dir."/".$user_static->lastname."_".$volet->nommage."_".dol_print_date($now, "%Y%m%d").".pdf";
-			// Appeler la fonction pour obtenir un chemin de fichier unique
-			if($object->status >= $object::STATUS_VALIDATED) {
+			if ($object->status < $object::STATUS_VALIDATED && file_exists($dir)) { // Supprimer les anciens PDF du même utilisateur et volet si le statut est < VALIDATED
+				$pattern = $dir . '/' . $user_static->lastname . '_' . $volet->nommage . '_*.pdf';
+				foreach (glob($pattern) as $oldFile) {
+					unlink($oldFile); // Supprime l'ancien fichier
+				}
+			}
+			elseif($object->status >= $object::STATUS_VALIDATED) { // Appeler la fonction pour obtenir un chemin de fichier unique
 				$file = $this->getUniqueFilename($file);
 			}
 			if (!file_exists($dir)) {

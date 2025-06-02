@@ -18,9 +18,13 @@
 #
 
 # Module label 'ModuleHolidaycustomName'
-ModuleHolidaycustomName = Demandes de congés (Custom)
+ModuleHolidaycustomName = Demandes de congé (Custom)
 # Module description 'ModuleHolidaycustomDesc'
 ModuleHolidaycustomDesc = Déclaration et suivi des congés des employés
+MenuNewCP = Nouveau congé
+MenuListCP = Liste des congés
+MenuImportCP = Import des congés
+
 
 #
 # Admin page
@@ -32,6 +36,21 @@ ORGANISATION_CONGES = Description de l'organisation des congés
 HolidayBalanceMonthlyUpdateCustom=Mise à jour mensuelle du solde des congés
 HOLIDAY_FRAC_ANC_DATESTART = Date de début de prise des congés fractionné / ancienneté
 HOLIDAY_FRAC_ANC_DATEEND = Date de fin de prise des congés fractionné / ancienneté
+HOLIDAY_FDT_APPROVER = Les approbateurs des congés sont les approbateurs feuilles de temps sur la fiche utilisateur
+HOLIDAY_VALIDATE_ONLY_RTT = Seulement les RTT nécessite une approbation
+HOLIDAY_VALIDATE_TYPE = Types de congé qui nécessitent une approbation
+HOLIDAY_ONLY_CURRENT_MONTH = Rendre impossible la création d'un congé avant le mois en cours
+SetupCustom = Configuration Custom
+HolidaySetupPage = Configuration du module demandes de congé
+HOLIDAY_MENU_IN_FDT = Accès aux absences via le module feuille de temps
+HOLIDAY_HIDE_BALANCE = Masquer le solde des congés
+HOLIDAY_INHOUR_MAX_HOUR = Nombre d'heures max d'un congé en heure
+HOLIDAY_MAIL_TO = Destinataire des mails concernant les congés à réguler
+HOIDAY_DECIMAL_HOUR_FORMAT = Heures au format décimal
+HOLIDAY_PICTO = Icône du module
+HOIDAY_AUTO_HOUR_WHOLE_DAY = Saisie automatique des heures pour une absence d'une journée complète
+HOLIDAY_FDT_LINK = Afficher un lien vers la feuille de temps sur les absences
+
 
 #
 # About page
@@ -44,7 +63,7 @@ HolidaycustomAboutPage = Holidaycustom about page
 #
 # Sample page
 #
-MyPageName = My page name
+CPImport = Import des congés
 
 
 #
@@ -64,17 +83,17 @@ Approved1CP = En approbation (n°2)
 #
 # Mail
 #
-AttentionHoliday2semaines = ⚠ ATTENTION : Congés d'une durée minimale de 2 semaines dans moins de 2 mois
-AttentionHoliday2semainesAutomatique = ⚠ ATTENTION : Congés d'une durée minimale de 2 semaines dans moins de 2 mois qui n'est toujours pas validé
-AttentionHoliday5jours = ⚠ ATTENTION : Congés d'une durée minimale de jours dans moins de 30 jours
-EMailTextCongesRegulerModify2 = Bonjour,<br><br>Une demande de congés a été modifiée pour %s du %s au %s alors qu'elle a été validé lors de la vérification de sa feuille de temps : %s
-EMailTextCongesRegulerModify3 = Bonjour,<br><br>Une demande de congés a été modifiée pour %s du %s au %s alors qu'elle a été exporté lors de la vérification de sa feuille de temps : %s
-EMailTextCongesRegulerDelete2 = Bonjour,<br><br>Une demande de congés a été supprimée pour %s du %s au %s alors qu'elle a été validé lors de la vérification de sa feuille de temps : %s
-EMailTextCongesRegulerDelete3 = Bonjour,<br><br>Une demande de congés a été supprimée pour %s du %s au %s alors qu'elle a été exporté lors de la vérification de sa feuille de temps : %s
-EMailTextCongesRegulerRefuse2 = Bonjour,<br><br>Une demande de congés a été refusée pour %s du %s au %s alors qu'elle a été validé lors de la vérification de sa feuille de temps : %s
-EMailTextCongesRegulerRefuse3 = Bonjour,<br><br>Une demande de congés a été refusée pour %s du %s au %s alors qu'elle a été exporté lors de la vérification de sa feuille de temps : %s
-EMailTextCongesRegulerCancel2 = Bonjour,<br><br>Une demande de congés a été annulée pour %s du %s au %s alors qu'elle a été validé lors de la vérification de sa feuille de temps : %s
-EMailTextCongesRegulerCancel3 = Bonjour,<br><br>Une demande de congés a été annulée pour %s du %s au %s alors qu'elle a été exporté lors de la vérification de sa feuille de temps : %s
+AttentionHoliday2semaines = ⚠ ATTENTION : Congé d'une durée minimale de 2 semaines dans moins de 2 mois
+AttentionHoliday2semainesAutomatique = ⚠ ATTENTION : Congé d'une durée minimale de 2 semaines dans moins de 2 mois qui n'est toujours pas validé
+AttentionHoliday5jours = ⚠ ATTENTION : Congé d'une durée minimale de jours dans moins de 30 jours
+EMailTextCongesRegulerModify2 = Bonjour,<br><br>Une demande de congé a été modifiée pour %s du %s au %s alors qu'elle a été validé lors de la vérification de sa feuille de temps : %s
+EMailTextCongesRegulerModify3 = Bonjour,<br><br>Une demande de congé a été modifiée pour %s du %s au %s alors qu'elle a été exporté lors de la vérification de sa feuille de temps : %s
+EMailTextCongesRegulerDelete2 = Bonjour,<br><br>Une demande de congé a été supprimée pour %s du %s au %s alors qu'elle a été validé lors de la vérification de sa feuille de temps : %s
+EMailTextCongesRegulerDelete3 = Bonjour,<br><br>Une demande de congé a été supprimée pour %s du %s au %s alors qu'elle a été exporté lors de la vérification de sa feuille de temps : %s
+EMailTextCongesRegulerRefuse2 = Bonjour,<br><br>Une demande de congé a été refusée pour %s du %s au %s alors qu'elle a été validé lors de la vérification de sa feuille de temps : %s
+EMailTextCongesRegulerRefuse3 = Bonjour,<br><br>Une demande de congé a été refusée pour %s du %s au %s alors qu'elle a été exporté lors de la vérification de sa feuille de temps : %s
+EMailTextCongesRegulerCancel2 = Bonjour,<br><br>Une demande de congé a été annulée pour %s du %s au %s alors qu'elle a été validé lors de la vérification de sa feuille de temps : %s
+EMailTextCongesRegulerCancel3 = Bonjour,<br><br>Une demande de congé a été annulée pour %s du %s au %s alors qu'elle a été exporté lors de la vérification de sa feuille de temps : %s
 
 
 #
@@ -93,6 +112,10 @@ ErrorNomClient = Le nom du client est obligatoire
 ErrorApprobateur = Il faut au moins 1 approbateur
 ErrorWeekHoliday = Ce type de congé doit être posé sur une seule semaine
 ErrorHalfdayHoliday = Ce type de congé ne peut pas comporter de demi-journée si sa durée est > à 1 jour
+ErrorNbHourHoliday = Le nombre d'heures doit être compris entre 0 et %sh
+ErrorNbMinHoliday = Le nombre de minutes doit être de 0 ou de 30 min
+ErrorMaxHourHoliday = Le nombre d'heure ne peut pas excéder %sh
+ErrorDateBeforeMonth = Impossible d'ajouter un congé sur un mois antérieur
 
 
 #
@@ -104,3 +127,5 @@ Code_silae = Code Silae
 In_hour = En heure
 Heure = Nombre d'heures
 Droit_rtt = Droit RTT
+FDTMonth = Feuille de temps du mois
+Halfday = Demi-journée

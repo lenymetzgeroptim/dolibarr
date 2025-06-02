@@ -96,25 +96,34 @@ $hookmanager->initHooks(array('feuilledetempsnote', 'globalcard')); // Note that
 $extrafields->fetch_name_optionals_label($object->table_element);
 
 // Load object
+$usertoprocess = new User($db);
+$usertoprocess->fetch($object->fk_user);
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once  // Must be include, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
 if ($id > 0 || !empty($ref)) {
 	$upload_dir = $conf->feuilledetemps->multidir_output[$object->entity]."/".$object->id;
 }
 
-$list_resp_task = $object->listApprover1;
-if(in_array($user->id, $list_resp_task[0])){
-	$userIsResp = 1;
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+	if(in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt']))){
+		$userIsResp = 1;
+	}
 }
 else {
-	$userIsResp = 0;
-}
-
-$list_resp_projet = $object->listApprover2;
-if(in_array($user->id, $list_resp_projet[0])){
-	$userIsRespProjet = 1;
-}
-else {
-	$userIsRespProjet = 0;
+	$list_resp_task = $object->listApprover1;
+	if(in_array($user->id, $list_resp_task[0])){
+		$userIsResp = 1;
+	}
+	else {
+		$userIsResp = 0;
+	}
+	
+	$list_resp_projet = $object->listApprover2;
+	if(in_array($user->id, $list_resp_projet[0])){
+		$userIsRespProjet = 1;
+	}
+	else {
+		$userIsRespProjet = 0;
+	}
 }
 
 $userIsInHierarchy = 0;
@@ -125,8 +134,13 @@ if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 	}
 }
 
-$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read || $userIsInHierarchy || $user->admin || ($userIsResp || $userIsRespProjet || $user->id == $object->fk_user) ;
-$permissiontoadd = $userIsResp || $userIsRespProjet || $user->admin || (empty($list_resp_task[0]) && empty($list_resp_projet[0]) && $user->id == $object->fk_user); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read) || in_array($user->id, explode(',', $usertoprocess->array_options['options_observateurfdt']));
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+	$permissiontoadd = $userIsResp || $user->admin; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+}
+else {
+	$permissiontoadd = $userIsResp || $userIsRespProjet || $user->admin || (empty($list_resp_task[0]) && empty($list_resp_projet[0]) && $user->id == $object->fk_user); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+}
 $permissionnote = $permissiontoadd;
 
 // Security check (enable the most restrictive one)

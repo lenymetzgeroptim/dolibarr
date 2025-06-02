@@ -412,7 +412,7 @@ class modFOD extends DolibarrModules
 		$r = 0;
 		// Add here entries to declare new menus
 		/* BEGIN MODULEBUILDER TOPMENU */
-		$this->menu[$r++] = array(
+		/*$this->menu[$r++] = array(
 			'fk_menu'=>'', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'top', // This is a Top menu entry
 			'titre'=>'ModuleFODName',
@@ -426,7 +426,7 @@ class modFOD extends DolibarrModules
 			'perms'=>'', 
 			'target'=>'',
 			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
-		);
+		);*/
 		/* END MODULEBUILDER TOPMENU */
 		
 		/* BEGIN MODULEBUILDER LEFTMENU FOD */
@@ -447,6 +447,21 @@ class modFOD extends DolibarrModules
 		);
 		
 		
+		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=q3serp',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'type'=>'left',                          // This is a Top menu entry
+			'titre'=>'Fod',
+			//'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
+			'mainmenu'=>'fod',
+			'leftmenu'=>'fod',
+			'url'=>'/fod/fodindex.php',
+			'langs'=>'fod@fod',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+			'position'=>1000+$r,
+			'enabled'=>'$conf->fod->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+			'perms'=>'',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+			'target'=>'',
+			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+		);
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=fod',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',                          // This is a Top menu entry
@@ -612,6 +627,7 @@ class modFOD extends DolibarrModules
 			't.dose' => 'Numeric', 't.description' => 'Text', 
 			"t_niv_contamination" => 'Text', 
 			"t_portique" => 'Text'
+			
 		);
 		$this->export_entities_array[$r] = array(
 			't.rowid' => 'fod_16@fod', 't.date' => 'fod_16@fod', 'f.ref' => 'fod_16@fod', 'u.firstname' => 'user', 'u.lastname' => 'user', 

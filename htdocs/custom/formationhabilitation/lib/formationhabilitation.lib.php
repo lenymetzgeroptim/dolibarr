@@ -307,6 +307,16 @@ function formationhabilitationUserPrepareHead($object)
 	$head[$h][2] = 'volet';
 	$h++;
 
+	$head[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=convocation';
+	$head[$h][1] = $langs->trans("Convocations");
+	$head[$h][2] = 'convocation';
+	$h++;
+
+	$head[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=visitemedical';
+	$head[$h][1] = $langs->trans("VisiteMedicals");
+	$head[$h][2] = 'visitemedical';
+	$h++;
+
 	$head[$h][0] = dol_buildpath("/formationhabilitation/user_messaging.php", 1).'?id='.$object->id;
 	$head[$h][1] = $langs->trans("Agenda");
 	$head[$h][2] = 'agenda';

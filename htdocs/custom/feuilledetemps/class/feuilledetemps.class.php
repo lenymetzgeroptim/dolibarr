@@ -34,7 +34,8 @@ require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/deplacement.class.p
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/silae.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedUser.class.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
+if($conf->donneesrh->enabled) require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedexport.class.php';
 
 /**
  * Class for FeuilleDeTemps
@@ -113,24 +114,24 @@ class FeuilleDeTemps extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
-		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
-		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>20, 'notnull'=>0, 'visible'=>1, 'index'=>1, 'searchall'=>1, 'comment'=>"Reference of object"),
-		'note_public' => array('type'=>'html', 'label'=>'NotePublic', 'enabled'=>'1', 'position'=>61, 'notnull'=>0, 'visible'=>0,),
-		'note_private' => array('type'=>'html', 'label'=>'NotePrivate', 'enabled'=>'1', 'position'=>62, 'notnull'=>0, 'visible'=>0,),
-		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
-		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
-		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php:0', 'label'=>'UserAuthor', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid',),
-		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php:0', 'label'=>'UserModif', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2,),
-		'status' => array('type'=>'smallint', 'label'=>'Status', 'enabled'=>'1', 'position'=>1000, 'notnull'=>1, 'visible'=>1, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Brouillon', '1'=>'Valid&eacute;', '2'=>'1&egrave;re approbation en attente', '3'=>'2&egrave;me approbation en attente', '4'=>'En V&eacuterification', '5'=>'Export&eacute', '9'=>'Annul&eacute;'),),
-		'date_debut' => array('type'=>'date', 'label'=>'DateDebut', 'enabled'=>'1', 'position'=>100, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
-		'date_fin' => array('type'=>'date', 'label'=>'DateFin', 'enabled'=>'1', 'position'=>101, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
-		'fk_user' => array('type'=>'integer:User:user/class/user.class.php:0:(t.statut:=:1)', 'label'=>'Utilisateur', 'enabled'=>'1', 'position'=>110, 'notnull'=>1, 'visible'=>1, 'index'=>1,),
-		'observation' => array('type'=>'text', 'label'=>'Observation', 'enabled'=>'1', 'position'=>210, 'notnull'=>0, 'visible'=>4,),
-		'prime_astreinte' => array('type'=>'price', 'label'=>'PrimeAstreinte', 'enabled'=>'1', 'position'=>150, 'notnull'=>0, 'visible'=>1,),
-		'prime_exceptionnelle' => array('type'=>'price', 'label'=>'PrimeExceptionnelle', 'enabled'=>'1', 'position'=>151, 'notnull'=>0, 'visible'=>1,),
-		'prime_objectif' => array('type'=>'price', 'label'=>'PrimeObjectif', 'enabled'=>'1', 'position'=>152, 'notnull'=>0, 'visible'=>1,),
-		'prime_variable' => array('type'=>'price', 'label'=>'PrimeVariable', 'enabled'=>'1', 'position'=>153, 'notnull'=>0, 'visible'=>1,),
-		'prime_amplitude' => array('type'=>'price', 'label'=>'PrimeAmplitude', 'enabled'=>'1', 'position'=>154, 'notnull'=>0, 'visible'=>1,),
+		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"1", "index"=>"1", "searchall"=>"1", "comment"=>"Reference of object"),
+		"note_public" => array("type"=>"html", "label"=>"NotePublic", "enabled"=>"1", 'position'=>61, 'notnull'=>0, "visible"=>"0",),
+		"note_private" => array("type"=>"html", "label"=>"NotePrivate", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"0",),
+		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
+		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
+		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php:0", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0",),
+		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php:0", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
+		"status" => array("type"=>"smallint", "label"=>"Status", "enabled"=>"1", 'position'=>1000, 'notnull'=>1, "visible"=>"1", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "2" => "1&egrave;re approbation en attente", "3" => "2&egrave;me approbation en attente", "4" => "En V&eacuterification", "5" => "Export&eacute", "9" => "Annul&eacute;"),),
+		"date_debut" => array("type"=>"date", "label"=>"DateDebut", "enabled"=>"1", 'position'=>100, 'notnull'=>1, "visible"=>"1", "index"=>"1",),
+		"date_fin" => array("type"=>"date", "label"=>"DateFin", "enabled"=>"1", 'position'=>101, 'notnull'=>1, "visible"=>"1", "index"=>"1",),
+		"fk_user" => array("type"=>"integer:User:user/class/user.class.php:0:(t.statut:=:1)", "label"=>"Utilisateur", "enabled"=>"1", 'position'=>110, 'notnull'=>1, "visible"=>"1", "index"=>"1",),
+		"observation" => array("type"=>"text", "label"=>"Observation", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>"5",),
+		"prime_astreinte" => array("type"=>"price", "label"=>"PrimeAstreinte", "enabled"=>"1", 'position'=>150, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
+		"prime_exceptionnelle" => array("type"=>"price", "label"=>"PrimeExceptionnelle", "enabled"=>"1", 'position'=>151, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
+		"prime_objectif" => array("type"=>"price", "label"=>"PrimeObjectif", "enabled"=>"1", 'position'=>152, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
+		"prime_variable" => array("type"=>"price", "label"=>"PrimeVariable", "enabled"=>"1", 'position'=>153, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
+		"prime_amplitude" => array("type"=>"price", "label"=>"PrimeAmplitude", "enabled"=>"1", 'position'=>154, 'notnull'=>0, "visible"=>'($conf->global->FDT_DISPLAY_COLUMN ? 0 : 1)',),
 	);
 	public $rowid;
 	public $ref;
@@ -206,12 +207,6 @@ class FeuilleDeTemps extends CommonObject
 		if (empty($conf->multicompany->enabled) && isset($this->fields['entity'])) {
 			$this->fields['entity']['enabled'] = 0;
 		}
-
-		// Example to show how to set values of fields definition dynamically
-		/*if ($user->rights->feuilledetemps->feuilledetemps->read) {
-			$this->fields['myfield']['visible'] = 1;
-			$this->fields['myfield']['noteditable'] = 0;
-		}*/
 
 		// Unset fields that are disabled
 		foreach ($this->fields as $key => $val) {
@@ -362,9 +357,11 @@ class FeuilleDeTemps extends CommonObject
 	 */
 	public function fetch($id, $ref = null)
 	{
+		global $conf; 
+
 		$result = $this->fetchCommon($id, $ref);
 		
-		if ($result) {
+		if ($result && $conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 			$this->listApprover1 = $this->listApprover('', 1);
 			$this->listApprover2 = $this->listApprover('', 2);
 		}
@@ -465,8 +462,10 @@ class FeuilleDeTemps extends CommonObject
 				$record = new self($this->db);
 				$record->setVarsFromFetchObj($obj);
 
-				$record->listApprover1 = $record->listApprover('', 1);
-				$record->listApprover2 = $record->listApprover('', 2);
+				if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+					$record->listApprover1 = $record->listApprover('', 1);
+					$record->listApprover2 = $record->listApprover('', 2);
+				}
 
 				$records[$record->id] = $record;
 
@@ -492,7 +491,7 @@ class FeuilleDeTemps extends CommonObject
 	 */
 	public function update(User $user, $notrigger = true)
 	{
-		global $langs;
+		global $langs, $conf;
 
 		$this->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_MODIFYInDolibarr", $this->ref);
 		$this->actionmsg = '';
@@ -525,45 +524,47 @@ class FeuilleDeTemps extends CommonObject
 				$this->actionmsg .= "<strong>".$langs->transnoentities($val['label']).'</strong>: '.$old_value.' ➔ '.$value.'<br/>';
 			}
 
-			// 1ere étape : Supprimer les 1er et 2nd validateur nécéssaire
-			$modification_1e_validation = '';
-			$modification_2e_validation = '';
-			foreach($this->oldcopy->listApprover1[2] as $id => $user_static){
-				if(!in_array($id, $this->listApprover1[0])){	
-					$prenom = $user_static->firstname;
-					$nom = $user_static->lastname;
-					$modification_1e_validation .= '<li>Suppression de '.$prenom.' '.$nom.'</li>';
+			if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+				// 1ere étape : Supprimer les 1er et 2nd validateur nécéssaire
+				$modification_1e_validation = '';
+				$modification_2e_validation = '';
+				foreach($this->oldcopy->listApprover1[2] as $id => $user_static){
+					if(!in_array($id, $this->listApprover1[0])){	
+						$prenom = $user_static->firstname;
+						$nom = $user_static->lastname;
+						$modification_1e_validation .= '<li>Suppression de '.$prenom.' '.$nom.'</li>';
+					}
 				}
-			}
-			foreach($this->oldcopy->listApprover2[2] as $id => $user_static){
-				if(!in_array($id, $this->listApprover2[0])){	
-					$prenom = $user_static->firstname;
-					$nom = $user_static->lastname;
-					$modification_2e_validation .= '<li>Suppression de '.$prenom.' '.$nom.'</li>';
+				foreach($this->oldcopy->listApprover2[2] as $id => $user_static){
+					if(!in_array($id, $this->listApprover2[0])){	
+						$prenom = $user_static->firstname;
+						$nom = $user_static->lastname;
+						$modification_2e_validation .= '<li>Suppression de '.$prenom.' '.$nom.'</li>';
+					}
 				}
-			}
 
-			// 2e étape : On ajoute les 1er et 2nd validateur nécéssaire
-			foreach($this->listApprover1[2] as $id => $user_static){
-				if(!in_array($id, $this->oldcopy->listApprover1[0])){
-					$prenom = $user_static->firstname;
-					$nom = $user_static->lastname;
-					$modification_1e_validation .= '<li>Ajout de '.$prenom.' '.$nom.'</li>';
+				// 2e étape : On ajoute les 1er et 2nd validateur nécéssaire
+				foreach($this->listApprover1[2] as $id => $user_static){
+					if(!in_array($id, $this->oldcopy->listApprover1[0])){
+						$prenom = $user_static->firstname;
+						$nom = $user_static->lastname;
+						$modification_1e_validation .= '<li>Ajout de '.$prenom.' '.$nom.'</li>';
+					}
 				}
-			}
-			foreach($this->listApprover2[2] as $id => $user_static){
-				if(!in_array($id, $this->oldcopy->listApprover2[0])){
-					$prenom = $user_static->firstname;
-					$nom = $user_static->lastname;
-					$modification_2e_validation .= '<li>Ajout de '.$prenom.' '.$nom.'</li>';
+				foreach($this->listApprover2[2] as $id => $user_static){
+					if(!in_array($id, $this->oldcopy->listApprover2[0])){
+						$prenom = $user_static->firstname;
+						$nom = $user_static->lastname;
+						$modification_2e_validation .= '<li>Ajout de '.$prenom.' '.$nom.'</li>';
+					}
 				}
-			}
 
-			if($modification_1e_validation) {
-				$this->actionmsg .= '<strong>1ère validation</strong>:<ul>'.$modification_1e_validation."</ul><br/>";
-			}
-			if($modification_2e_validation) {
-				$this->actionmsg .= '<strong>2ème validation</strong>:<ul>'.$modification_2e_validation."</ul><br/>";
+				if($modification_1e_validation) {
+					$this->actionmsg .= '<strong>1ère validation</strong>:<ul>'.$modification_1e_validation."</ul><br/>";
+				}
+				if($modification_2e_validation) {
+					$this->actionmsg .= '<strong>2ème validation</strong>:<ul>'.$modification_2e_validation."</ul><br/>";
+				}
 			}
 		}
 
@@ -1032,7 +1033,7 @@ class FeuilleDeTemps extends CommonObject
 	 */
 	public function setDraft($user, $notrigger = 0)
 	{
-		global $langs; 
+		global $langs, $conf; 
 
 		// Protection
 		if ($this->status <= self::STATUS_DRAFT) {
@@ -1042,14 +1043,16 @@ class FeuilleDeTemps extends CommonObject
 		$this->actionmsg2 = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_REFUSInDolibarr", $this->ref);
 		$this->actionmsg = $langs->transnoentitiesnoconv("FEUILLEDETEMPS_REFUSDetailInDolibarr", GETPOST('raison_refus'));
 
-		$list_validation1 = $this->listApprover1;
-		foreach($list_validation1[2] as $id => $user_static){
-			$result = $this->updateTaskValidation($id, 1, 0, 1);
-		}
-
-		$list_validation2 = $this->listApprover2;
-		foreach($list_validation2[2] as $id => $user_static){
-			$result = $this->updateTaskValidation($id, 1, 0, 2);
+		if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+			$list_validation1 = $this->listApprover1;
+			foreach($list_validation1[2] as $id => $user_static){
+				$result = $this->updateTaskValidation($id, 1, 0, 1);
+			}
+	
+			$list_validation2 = $this->listApprover2;
+			foreach($list_validation2[2] as $id => $user_static){
+				$result = $this->updateTaskValidation($id, 1, 0, 2);
+			}
 		}
 
 		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FEUILLEDETEMPS_REFUS');
@@ -1137,32 +1140,34 @@ class FeuilleDeTemps extends CommonObject
 			$label .= '<br><b>'.$langs->trans('Utilisateur').':</b> '.$user_static->firstname.' '.$user_static->lastname;
 		
 
-			$list_validation1 = $this->listApprover1;
-			$i = 0;
-			foreach($list_validation1[2] as $id => $user_static){
-				if($i == 0){
-					$label .= '<br><b>'.$langs->trans('UserValidation1').':</b> ';
-					$label .= $user_static->firstname.' '.$user_static->lastname;
+			if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+				$list_validation1 = $this->listApprover1;
+				$i = 0;
+				foreach($list_validation1[2] as $id => $user_static){
+					if($i == 0){
+						$label .= '<br><b>'.$langs->trans('UserValidation1').':</b> ';
+						$label .= $user_static->firstname.' '.$user_static->lastname;
+					}
+					else {
+						$label .= ', ';
+						$label .= $user_static->firstname.' '.$user_static->lastname;
+					}
+					$i++;
 				}
-				else {
-					$label .= ', ';
-					$label .= $user_static->firstname.' '.$user_static->lastname;
-				}
-				$i++;
-			}
 
-			$list_validation2 = $this->listApprover2;
-			$i = 0;
-			foreach($list_validation2[2] as $id => $user_static){
-				if($i == 0){
-					$label .= '<br><b>'.$langs->trans('UserValidation2').':</b> ';
-					$label .= $user_static->firstname.' '.$user_static->lastname;
+				$list_validation2 = $this->listApprover2;
+				$i = 0;
+				foreach($list_validation2[2] as $id => $user_static){
+					if($i == 0){
+						$label .= '<br><b>'.$langs->trans('UserValidation2').':</b> ';
+						$label .= $user_static->firstname.' '.$user_static->lastname;
+					}
+					else {
+						$label .= ', ';
+						$label .= $user_static->firstname.' '.$user_static->lastname;
+					}
+					$i++;
 				}
-				else {
-					$label .= ', ';
-					$label .= $user_static->firstname.' '.$user_static->lastname;
-				}
-				$i++;
 			}
 		}
 
@@ -1275,6 +1280,8 @@ class FeuilleDeTemps extends CommonObject
 	 */
 	public function LibStatut($status, $mode = 0)
 	{
+		global $conf; 
+		
 		$mode = 5;
 
 		// phpcs:enable
@@ -1285,19 +1292,25 @@ class FeuilleDeTemps extends CommonObject
 			
 			//$langs->load("feuilledetemps@feuilledetemps");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if($user_fdt->array_options['options_employeur'] == 1) {
+			if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($user_fdt->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 				$this->labelStatus[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {
 				$this->labelStatus[self::STATUS_VALIDATED] = $langs->trans('Validée');
 			}
-			$this->labelStatus[self::STATUS_APPROBATION1] = $langs->trans('En attente de la 1ère approbation par la responsable hiérarchique');
-			$this->labelStatus[self::STATUS_APPROBATION2] = $langs->trans('En attente de la 2nd approbation par la responsable de projet');
+			if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+				$this->labelStatus[self::STATUS_APPROBATION1] = $langs->trans('En attente de la 1ère approbation par le responsable');
+				$this->labelStatus[self::STATUS_APPROBATION2] = $langs->trans('En attente de la 2nd approbation par une personne possédant le droit');
+			}
+			else {
+				$this->labelStatus[self::STATUS_APPROBATION1] = $langs->trans('En attente de la 1ère approbation par la responsable hiérarchique');
+				$this->labelStatus[self::STATUS_APPROBATION2] = $langs->trans('En attente de la 2nd approbation par la responsable de projet');
+			}
 			$this->labelStatus[self::STATUS_VERIFICATION] = $langs->trans('En vérification');
 			$this->labelStatus[self::STATUS_EXPORTED] = $langs->trans('Exportée');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->trans('Disabled');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->trans('Draft');
-			if($user_fdt->array_options['options_employeur'] == 1) {
+			if(empty($conf->global->FDT_MANAGE_EMPLOYER) || in_array($user_fdt->array_options['options_fk_employeur'], explode(",", $conf->global->FDT_MANAGE_EMPLOYER))){
 				$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->trans('Vérifiée');
 			}
 			else {
@@ -1547,7 +1560,7 @@ class FeuilleDeTemps extends CommonObject
 			$fdt = new FeuilleDeTemps($this->db);
 			$form = new Form($this->db);
 			$users_array = $user_static->get_full_treeIds('u.statut = 1');
-			$month = dol_print_date(dol_now(), '%m');
+			$month = dol_print_date(dol_now(), '%m%Y');
 			$fdt->date_debut = dol_get_first_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
 			$fdt->date_fin = dol_get_last_day(dol_print_date(dol_now(), '%Y'), dol_print_date(dol_now(), '%m'));
 
@@ -1561,7 +1574,7 @@ class FeuilleDeTemps extends CommonObject
 					$fdt->fk_user = $user_id;
 					$fdt->status = 0;
 
-					$result = $fdt->create($user, 0);
+					$result = $fdt->create($user_static, 0);
 
 					if($result <= 0) {
 						$this->error .= "Impossible de créer la feuille de temps de $user_static->firstname $user_static->lastname";
@@ -1592,8 +1605,8 @@ class FeuilleDeTemps extends CommonObject
 
 		$sql = "SELECT rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps";
-		$sql .= " WHERE DATE_FORMAT(date_debut, '%m') = ".$mois;
-		$sql .= " AND DATE_FORMAT(date_fin, '%m') = ".$mois;
+		$sql .= " WHERE DATE_FORMAT(date_debut, '%m%Y') = ".$mois;
+		$sql .= " AND DATE_FORMAT(date_fin, '%m%Y') = ".$mois;
 		if(gettype($utilisateur) == 'string') {
 			$sql .= " AND fk_user = ".$utilisateur;
 		}
@@ -2119,7 +2132,7 @@ class FeuilleDeTemps extends CommonObject
 	// 	return $result;
 	// }
 
-	function timeHolidayWeek($user_id, $firstdate = '', $lastdate = '') {
+	function timeHolidayWeek($userstatic, $standard_week_hour = array(), $firstdate = '', $lastdate = '') {
 		global $conf, $langs, $mysoc;
 
 		$result = array();
@@ -2141,40 +2154,59 @@ class FeuilleDeTemps extends CommonObject
 			}
 		}
 
+		$statusofholidaytocheck =  array(Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1);
+		$isavailablefordayandusermonth = $holiday->verifDateHolidayForTimestampBetweenDate($userstatic->id, $firstdate, $lastdate, $statusofholidaytocheck, array(4));
 		$nb_jour = num_between_day($firstdate, $lastdate+3600); 
 
 		$firstdaygmt = dol_mktime(0, 0, 0, dol_print_date($firstdate, '%m'), dol_print_date($firstdate, '%d'), dol_print_date($firstdate, '%Y'), 'gmt');
 
 		$extrafields = new ExtraFields($this->db);
-		$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
-		$userField = new UserField($this->db);
-		$userField->id = $user_id;
-		$userField->table_element = 'donneesrh_Positionetcoefficient';
-		$userField->fetch_optionals();
+		if($conf->donneesrh->enabled) {
+			$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+			$userField = new UserField($this->db);
+			$userField->id = $userstatic->id;
+			$userField->table_element = 'donneesrh_Positionetcoefficient';
+			$userField->fetch_optionals();
+		}
 
 		for ($idw = 0; $idw < $nb_jour; $idw++) { 
 			$tmpday = dol_time_plus_duree($firstdate, $idw, 'd');
 			$tmpdaygmt = dol_time_plus_duree($firstdaygmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
 
 			if (dol_print_date($tmpday, '%a') != 'Sam' && dol_print_date($tmpday, '%a') != 'Dim') {
-				$statusofholidaytocheck =  array(Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1);
-				$isavailablefordayanduser = $holiday->verifDateHolidayForTimestamp($user_id, $tmpday, $statusofholidaytocheck, array(4));
+				// $isavailablefordayanduser = $holiday->verifDateHolidayForTimestamp($userstatic->id, $tmpday, $statusofholidaytocheck, array(4));
+				$isavailablefordayanduser = $isavailablefordayandusermonth[$tmpday];
 				$test = num_public_holiday($tmpdaygmt, $tmpdaygmt + 86400, $mysoc->country_code, 0, 0, 0, 0);
 
 				if($test) { // Jour feriés
-					if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
+					if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
+					}
+					elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (1 * 7) : (1 * 7));
 					} 
 					else {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (1 * $conf->global->HEURE_JOUR) : (1 * $conf->global->HEURE_JOUR));
 					}
 				}
-				elseif(sizeof($isavailablefordayanduser['rowid']) > 1) {
+				elseif(sizeof($isavailablefordayanduser['rowid']) > 1) { // Si il y a plusieurs congés
 					for($i = 0; $i < sizeof($isavailablefordayanduser['rowid']); $i++) {
 						if($isavailablefordayanduser['hour'][$i] > 0){ // Congés en heure
-							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][$i] / $isavailablefordayanduser['nb_jour'][$i] / 3600) : ($isavailablefordayanduser['hour'][$i] / $isavailablefordayanduser['nb_jour'][$i] / 3600));
+							if($isavailablefordayanduser['nb_jour'][$i] > 1) {
+								if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+									$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
+								}
+								else {
+									$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600));
+								}							}
+							else {
+								$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][$i] / 3600) : ($isavailablefordayanduser['hour'][$i] / 3600));
+							}
 						}
-						elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
+						elseif($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
+						}
+						elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
 							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * 7) : (0.5 * 7));
 						}
 						else {
@@ -2188,10 +2220,23 @@ class FeuilleDeTemps extends CommonObject
 					}
 				}
 				elseif(($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) && $isavailablefordayanduser['hour'][0] > 0){ // Congés en heure
-					$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600));
+					if($isavailablefordayanduser['nb_jour'][0] > 1) {
+						if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
+							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
+						}
+						else {
+							$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / $isavailablefordayanduser['nb_jour'][0] / 3600));
+						}
+					}
+					else {
+						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($isavailablefordayanduser['hour'][0] / 3600) : ($isavailablefordayanduser['hour'][0] / 3600));
+					}
 				}
 				elseif($isavailablefordayanduser['morning'] == false && $isavailablefordayanduser['afternoon'] == false) { // Congés journées entières
-					if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
+					if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
+					}
+					elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (1 * 7) : (1 * 7));
 					}
 					else {
@@ -2199,7 +2244,10 @@ class FeuilleDeTemps extends CommonObject
 					}
 				}
 				elseif($isavailablefordayanduser['morning'] == false || $isavailablefordayanduser['afternoon'] == false) { // Congés demi journées
-					if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userField->array_options['options_pasdroitrtt'])) {
+					if($conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY && !empty($standard_week_hour)) {
+						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600) : 0.5 * ($standard_week_hour[dol_print_date($tmpday, '%A')] / 3600));
+					}
+					elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
 						$result[(int)date("W", $tmpday)] = ($result[(int)date("W", $tmpday)] > 0 ? $result[(int)date("W", $tmpday)] + (0.5 * 7) : (0.5 * 7));
 					}
 					else {
@@ -2215,8 +2263,15 @@ class FeuilleDeTemps extends CommonObject
 		}
 
 		foreach($result as $week => $time) {
-			if($time > $userField->array_options['options_horairehebdomadaire']) {
-				$result[$week] = $userField->array_options['options_horairehebdomadaire'];
+			if($conf->donneesrh->enabled) {
+				$options_horairehebdomadaire = $userField->array_options['options_horairehebdomadaire'];
+			}
+			else {
+				$options_horairehebdomadaire = $userstatic->array_options['options_horairehebdomadaire'];
+			}
+
+			if($options_horairehebdomadaire > 0 && $time > $options_horairehebdomadaire) {
+				$result[$week] = $options_horairehebdomadaire;
 			}
 		}
 
@@ -2234,72 +2289,117 @@ class FeuilleDeTemps extends CommonObject
 		$firstdaygmt = dol_mktime(0, 0, 0, dol_print_date($firstdate, '%m'), dol_print_date($firstdate, '%d'), dol_print_date($firstdate, '%Y'), 'gmt');
 
 		$extrafields = new ExtraFields($this->db);
-		$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
-		$userField = new UserField($this->db);
-		$userField->table_element = 'donneesrh_Positionetcoefficient';
-		$userField->fetch_optionals();
+		if($conf->donneesrh->enabled) {
+			$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
+			$userField = new UserField($this->db);
+			$userField->table_element = 'donneesrh_Positionetcoefficient';
+			$userField->fetch_optionals();
+		}
+		$userstatic = new User($this->db);
 
 		$userfield_load = array();
 		$userfield_pasdroitrtt = array();
+		$userfield_datedepart = array();
+		$user_load = array();
 
 		for ($idw = 0; $idw < $nb_jour; $idw++) { 
 			$tmpday = dol_time_plus_duree($firstdate, $idw, 'd');
 			$tmpdaygmt = dol_time_plus_duree($firstdaygmt, 24*$idw, 'h'); // $firstdaytoshow is a date with hours = 0
+			$ferie = num_public_holiday($tmpdaygmt, $tmpdaygmt + 86400, $mysoc->country_code, 0, 0, 0, 0);
 
-			if (dol_print_date($tmpday, '%a') != 'Sam' && dol_print_date($tmpday, '%a') != 'Dim') {
+			if (dol_print_date($tmpday, '%a') != 'Sam' && dol_print_date($tmpday, '%a') != 'Dim' && !$ferie) {
 				$statusofholidaytocheck =  array(Holiday::STATUS_VALIDATED, Holiday::STATUS_APPROVED2,  Holiday::STATUS_APPROVED1);
 				$isavailablefordayanduser = $holiday->verifDateHolidayForTimestampForAllUser($tmpday, $statusofholidaytocheck, array(4));
 
 				foreach($isavailablefordayanduser['user_id'] as $user_id) {
 					if(!$userfield_load[$user_id]) {
-						$userField->id = $user_id;
-						$userField->fetch_optionals();
+						$userstatic->fetch($user_id);
 
 						$userfield_load[$user_id] = 1;
-						$userfield_pasdroitrtt[$user_id] = $userField->array_options['options_pasdroitrtt'];
+						if($conf->donneesrh->enabled) {
+							$userField->id = $user_id;
+							$userField->fetch_optionals();
+							$userfield_pasdroitrtt[$user_id] = $userField->array_options['options_pasdroitrtt'];
+							$userfield_datedepart[$user_id] = $userField->array_options['options_datedepart'];
+						}
+						else {
+							$userfield_pasdroitrtt[$user_id] = $userstatic->array_options['options_pasdroitrtt'];
+							$userfield_datedepart[$user_id] = $userstatic->dateemploymentend;
+						}
+					}
+
+					if(!empty($userfield_datedepart[$user_id]) && $userfield_datedepart[$user_id] < $tmpday) {
+						continue;
 					}
 
 					if(sizeof($isavailablefordayanduser['rowid'][$user_id]) > 1) {
 						for($i = 0; $i < sizeof($isavailablefordayanduser['rowid'][$user_id]); $i++) {
-							if($isavailablefordayanduser['hour'][$user_id][$i] > 0){ // Congés en heure
-								$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + ($isavailablefordayanduser['hour'][$user_id][$i] / $isavailablefordayanduser['nb_jour'][$user_id][$i] / 3600) : ($isavailablefordayanduser['hour'][$user_id][$i] / $isavailablefordayanduser['nb_jour'][$user_id][$i] / 3600));
-							}
-							elseif(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userfield_pasdroitrtt[$user_id])) {
-								$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + (0.5 * 7) : (0.5 * 7));
-							}
-							else {
-								if($isavailablefordayanduser['droit_rtt'][$user_id][$i]) {
-									$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
+							if($isavailablefordayanduser['in_hour'][$user_id][$i] == 1){ // Congés en heure
+								if($isavailablefordayanduser['hour'][$user_id][$i] > 0){ 
+									if($isavailablefordayanduser['nb_jour'][$user_id][$isavailablefordayanduser['rowid'][$user_id][$i]] > 1) {
+										$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + ($isavailablefordayanduser['hour'][$user_id][$i] / $isavailablefordayanduser['nb_jour'][$user_id][$isavailablefordayanduser['rowid'][$user_id][$i]] / 3600) : ($isavailablefordayanduser['hour'][$user_id][$i] / $isavailablefordayanduser['nb_jour'][$user_id][$isavailablefordayanduser['rowid'][$user_id][$i]] / 3600));
+									}
+									else {
+										$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + ($isavailablefordayanduser['hour'][$user_id][$i] / 3600) : ($isavailablefordayanduser['hour'][$user_id][$i] / 3600));
+									}
 								}
 								else {
-									$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
+									if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
+										$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + (0.5 * 7) : (0.5 * 7));
+									}
+									else {
+										if($isavailablefordayanduser['droit_rtt'][0]) {
+											$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
+										}
+										else {
+											$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
+										}
+									}
+								}
+							}
+							else {
+								$result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][$i]] + 0.5 : 0.5);
+							}
+						}
+					}
+					elseif(($isavailablefordayanduser['morning'][$user_id] == false || $isavailablefordayanduser['afternoon'][$user_id] == false) && $isavailablefordayanduser['in_hour'][$user_id][0] == 1){ // Congés en heure
+						if($isavailablefordayanduser['hour'][$user_id][0] > 0){ 
+							if($isavailablefordayanduser['nb_jour'][$user_id][$isavailablefordayanduser['rowid'][$user_id][0]] > 1) {
+								$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + ($isavailablefordayanduser['hour'][$user_id][0] / $isavailablefordayanduser['nb_jour'][$user_id][$isavailablefordayanduser['rowid'][$user_id][0]] / 3600) : ($isavailablefordayanduser['hour'][$user_id][0] / $isavailablefordayanduser['nb_jour'][$user_id][$isavailablefordayanduser['rowid'][$user_id][0]] / 3600));
+							}
+							else {
+								$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + ($isavailablefordayanduser['hour'][$user_id][0] / 3600) : ($isavailablefordayanduser['hour'][$user_id][0] / 3600));
+							}
+						}
+						else {
+							if($isavailablefordayanduser['morning'][$user_id] == false && $isavailablefordayanduser['afternoon'][$user_id] == false) {
+								if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
+									$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (1 * 7) : (1 * 7));
+								}
+								else {
+									$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (1 * $conf->global->HEURE_JOUR) : (1 * $conf->global->HEURE_JOUR));
+								}
+							}
+							else {
+								if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || ($conf->donneesrh->enabled && !empty($userField->array_options['options_pasdroitrtt'])) || !empty($userstatic->array_options['options_pasdroitrtt'])) {
+									$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + 3.5 : 3.5);
+								}
+								else {
+									if($isavailablefordayanduser['droit_rtt'][0]) {
+										$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
+									}
+									else {
+										$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
+									}
 								}
 							}
 						}
 					}
-					elseif(($isavailablefordayanduser['morning'][$user_id] == false || $isavailablefordayanduser['afternoon'][$user_id] == false) && $isavailablefordayanduser['hour'][$user_id][0] > 0){ // Congés en heure
-						$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + ($isavailablefordayanduser['hour'][$user_id][0] / $isavailablefordayanduser['nb_jour'][$user_id][0] / 3600) : ($isavailablefordayanduser['hour'][$user_id][0] / $isavailablefordayanduser['nb_jour'][$user_id][0] / 3600));
-					}
 					elseif($isavailablefordayanduser['morning'][$user_id] == false && $isavailablefordayanduser['afternoon'][$user_id] == false) { // Congés journées entières
-						if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userfield_pasdroitrtt[$user_id])) {
-							$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (1 * 7) : (1 * 7));
-						}
-						else {
-							$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (1 * $conf->global->HEURE_JOUR) : (1 * $conf->global->HEURE_JOUR));
-						}
+						$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + 1 : 1);
 					}
 					elseif($isavailablefordayanduser['morning'][$user_id] == false || $isavailablefordayanduser['afternoon'][$user_id] == false) { // Congés demi journées
-						if(dol_print_date($tmpday, '%Y-%m-%d') < '2024-07-01' || !empty($userfield_pasdroitrtt[$user_id])) {
-							$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (0.5 * 7) : (0.5 * 7));
-						}
-						else {
-							if($isavailablefordayanduser['droit_rtt'][$user_id][0]) {
-								$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + (0.5 * $conf->global->HEURE_JOUR) : (0.5 * $conf->global->HEURE_JOUR));
-							}
-							else {
-								$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + ($conf->global->HEURE_DEMIJOUR_NORTT) : ($conf->global->HEURE_DEMIJOUR_NORTT));
-							}
-						}
+						$result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] = ($result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] > 0 ? $result[$user_id][$isavailablefordayanduser['code'][$user_id][0]] + 0.5 : 0.5);
 					}
 				}
 			}
@@ -2312,7 +2412,7 @@ class FeuilleDeTemps extends CommonObject
 	 * Heures faites et à faire durant chaque semaine de la feuille de temps
 	 * @return array()
 	 */
-	function timeDoneByWeek($user_id, $firstdate = '', $lastdate = ''){
+	function timeDoneByWeek($usertoprocess, $firstdate = '', $lastdate = ''){
 		global $conf; 
 
 		$result = array();
@@ -2331,20 +2431,35 @@ class FeuilleDeTemps extends CommonObject
 			}
 		}
 		
-		$sql = "SELECT DATE_FORMAT(element_date, '%u') as week_number, SUM(element_duration)/3600 as temps";
-		$sql .= " FROM ".MAIN_DB_PREFIX."element_time";
-		$sql .= " WHERE element_date >= '".$this->db->idate($firstdate)."'";
-		$sql .= " AND element_date < '".$this->db->idate($lastdate)."'";
-		$sql .= " AND fk_user = ".$user_id;
-		$sql .= " AND elementtype = 'task'";
-		$sql .= " GROUP BY DATE_FORMAT(element_date, '%u')";
+		if($conf->global->FDT_DISPLAY_COLUMN) {
+			$sql = "SELECT DATE_FORMAT(element_date, '%u') as week_number, (SUM(element_duration)/3600) as temps, SUM(o.heure_nuit)/3600 as temps_nuit, element_date";
+			$sql .= " FROM ".MAIN_DB_PREFIX."element_time as et";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_projet_task_time_other AS o ON o.fk_projet_task_time = et.rowid";
+			$sql .= " WHERE element_date >= '".$this->db->idate($firstdate)."'";
+			$sql .= " AND element_date < '".$this->db->idate($lastdate)."'";
+			$sql .= " AND fk_user = ".$usertoprocess->id;
+			$sql .= " AND elementtype = 'task'";
+			$sql .= " GROUP BY DATE_FORMAT(element_date, '%u')";
+		}
+		else {
+			$sql = "SELECT DATE_FORMAT(element_date, '%u') as week_number, SUM(element_duration)/3600 as temps, element_date";
+			$sql .= " FROM ".MAIN_DB_PREFIX."element_time";
+			$sql .= " WHERE element_date >= '".$this->db->idate($firstdate)."'";
+			$sql .= " AND element_date < '".$this->db->idate($lastdate)."'";
+			$sql .= " AND fk_user = ".$usertoprocess->id;
+			$sql .= " AND elementtype = 'task'";
+			$sql .= " GROUP BY DATE_FORMAT(element_date, '%u')";
+		}
 
 		dol_syslog(get_class($this)."::timeDoneByWeek()", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
 			while($obj = $this->db->fetch_object($resql)) {
-				$result[$obj->week_number] = $obj->temps;
+				$result[(int)date('W', $this->db->jdate($obj->element_date))] += $obj->temps;
+				if($obj->temps_nuit > 0) {
+					$result[(int)date('W', $this->db->jdate($obj->element_date))] += $obj->temps_nuit;
+				}
 			}
 			$this->db->free($resql);
 		} else {
@@ -3088,6 +3203,122 @@ class FeuilleDeTemps extends CommonObject
 		return 0;
 	}
 
+	/**
+	 *  Envoie un mail avec l'export des temps et des déplacements chaque mois
+	 *
+	 * 	@param	string  $to 	Destinataire du mail
+	 *  @return	int     		resultat
+	 */
+	public function MailFDT_MonthlyExport($to)
+	{
+		global $conf, $user, $dolibarr_main_url_root, $langs, $dirname, $filename;
+		
+		$res = 1;
+		
+		$now = dol_now();
+		$array_now = dol_getdate($now);
+		$day_now = $array_now["mday"];
+		
+		$objexport = new ExtendedExportFDT($this->db);
+
+		$array_selected = [
+			"eu.matricule" => 1,
+			"u.firstname" => 2,
+			"u.lastname" => 3,
+			"eu.antenne" => 4,
+			"element_date" => 5,
+			"SUM(element_duration)/3600 as total_hour" => 6,
+			"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => 7,
+			"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => 8,
+			"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => 9,
+			"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => 10,
+			"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => 11,
+			"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => 12,
+			"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => 13,
+			"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+				COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+				SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>14,
+		];
+	
+		$array_filtervalue = [
+			'element_date' => dol_print_date(dol_time_plus_duree($now, -1, 'd'), '%Y%m'),
+		];
+	
+		$array_export_fields[0] = [
+			"eu.matricule" => "Matricule",
+			"u.firstname" => "Prénom",
+			"u.lastname" => "Nom",
+			"eu.antenne" => "Antenne",
+			"element_date" => "Date",
+			"SUM(element_duration)/3600 as total_hour" => "Total Heure",
+			"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => "Total HS 0%",
+			"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => "Total HS 25%",
+			"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "Total HS 50%",
+			"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => "Total Heure Nuit 50%",
+			"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Total Heure Nuit 75%",
+			"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "Total Heure Nuit 100%",
+			"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "Total Heure Route",
+			"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+				COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+				SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Total Déplacement (km)",
+		];
+	
+		$array_export_TypeFields[0] = [
+			"eu.matricule" => "Numeric",
+			"u.firstname" => "Text",
+			"u.lastname" => "Text",
+			"eu.antenne" => "Text",
+			"element_date" => "Date",
+			"SUM(element_duration)/3600 as total_hour" => "Numeric",
+			"(SUM(COALESCE(s_heure_sup00/3600, 0) + COALESCE(r_heure_sup00/3600, 0))) as total_hs00" => "Numeric",
+			"(SUM(COALESCE(s_heure_sup25/3600, 0) + COALESCE(r_heure_sup25/3600, 0))) as total_hs25" => "Numeric",
+			"(SUM(COALESCE(s_heure_sup50/3600, 0) + COALESCE(r_heure_sup50/3600, 0))) as total_hs50" => "Numeric",
+			"(SUM(r_heure_nuit_50)/3600) as total_heurenuit_50" => "Numeric",
+			"(SUM(r_heure_nuit_75)/3600) as total_heurenuit_75" => "Numeric",
+			"(SUM(r_heure_nuit_100)/3600) as total_heurenuit_100" => "Numeric",
+			"(SUM(COALESCE(s_heure_route/3600, 0) + COALESCE(r_heure_route/3600, 0))) as total_heureroute" => "Numeric",
+			"COALESCE(SUM(CASE deplacement WHEN 1 THEN 1 ELSE 0 END) * dd.distanced1, 0) + COALESCE(SUM(CASE deplacement WHEN 2 THEN 1 ELSE 0 END) * dd.distanced2, 0) +
+				COALESCE(SUM(CASE deplacement WHEN 3 THEN 1 ELSE 0 END) * dd.distanced3, 0) + COALESCE(SUM(CASE deplacement WHEN 4 THEN 1 ELSE 0 END) * dd.distanced4, 0) +
+				SUM(COALESCE(s_kilometres, 0) + COALESCE(r_kilometres, 0)) as total_deplacement"=>"Numeric",
+		];
+
+		$array_export_special[0] = '';
+
+		dol_syslog(get_class($this)."::MailFDT_MonthlyExport", LOG_DEBUG);
+
+		if($day_now == 1) {
+			// Build export file
+			$result = $objexport->build_file_bis($user, 'excel2007', 'total_hour', $array_selected, $array_filtervalue, '', $array_export_fields, $array_export_TypeFields, $array_export_special);
+
+			if ($result) {
+				$subject = '[OPTIM Industries] Export Feuille de temps';
+				$from = 'erp@optim-industries.fr';
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/feuilledetemps/timesheet.php">'.'ici'.'</a>';
+				$msg = $langs->transnoentitiesnoconv("EMailTextFDTMonthlyExport", $link);
+				$filename_list = array($dirname."/".$filename);
+				$mimetype_list  = array('.xlsx');
+				$mimefilename_list  = array($filename);
+
+				$mail = new CMailFile($subject, $to, $from, $msg, $filename_list, $mimetype_list, $mimefilename_list, '', '', 0, 1);
+
+				if(!empty($to)) {
+					$res = $mail->sendfile();
+				}
+					
+				if($res) return 0;
+				else return -1;
+			} 
+			else {
+				$this->error = $this->db->lasterror();
+				return -1;
+			}
+		}
+
+		return 0;
+	}
+
 
 	/**
 	 *  Obtenir le total des heures à partir d'un utilisateur et d'une date
@@ -3248,10 +3479,19 @@ class FeuilleDeTemps extends CommonObject
 
 		$now = dol_now();
 
-		$sql = "SELECT v.fk_feuilledetemps";
-		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_task_validation as v";
-		$sql .= " WHERE v.fk_user_validation = ".$user->id;
-		$sql .= " AND v.validation = 0 AND v.validation_number = 1";
+		if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+			$sql = "SELECT DISTINCT f.rowid";
+			$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps as f";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue ON f.fk_user = ue.fk_object";
+			$sql .= " WHERE FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
+			$sql .= " AND f.status = ".self::STATUS_APPROBATION1;
+		}
+		else {
+			$sql = "SELECT DISTINCT v.fk_feuilledetemps";
+			$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_task_validation as v";
+			$sql .= " WHERE v.fk_user_validation = ".$user->id;
+			$sql .= " AND v.validation = 0 AND v.validation_number = 1";
+		}
 
 		$resql = $this->db->query($sql);
 		if ($resql) {
@@ -3259,7 +3499,7 @@ class FeuilleDeTemps extends CommonObject
 			//$response->warning_delay = $conf->holiday->approve->warning_delay / 60 / 60 / 24;
 			$response->label = $langs->trans("FeuilleDeTempsToApprove1");
 			$response->labelShort = $langs->trans("ToApprove1");
-			$response->url = DOL_URL_ROOT.'/custom/feuilledetemps/feuilledetemps_list.php?mainmenu=feuilledetemps&search_fk_user_validation_1='.$user->id;
+			$response->url = DOL_URL_ROOT.'/custom/feuilledetemps/feuilledetemps_list.php?mainmenu=feuilledetemps&search_status=2&search_fk_user_validation_1='.$user->id;
 
 			while ($obj = $this->db->fetch_object($resql)) {
 				$response->nbtodo++;
@@ -3289,7 +3529,7 @@ class FeuilleDeTemps extends CommonObject
 
 		$now = dol_now();
 
-		$sql = "SELECT v.fk_feuilledetemps";
+		$sql = "SELECT DISTINCT v.fk_feuilledetemps";
 		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_task_validation as v";
 		$sql .= " WHERE v.fk_user_validation = ".$user->id;
 		$sql .= " AND v.validation = 0 AND v.validation_number = 2";
@@ -3300,7 +3540,7 @@ class FeuilleDeTemps extends CommonObject
 			//$response->warning_delay = $conf->holiday->approve->warning_delay / 60 / 60 / 24;
 			$response->label = $langs->trans("FeuilleDeTempsToApprove2");
 			$response->labelShort = $langs->trans("ToApprove2");
-			$response->url = DOL_URL_ROOT.'/custom/feuilledetemps/feuilledetemps_list.php?mainmenu=feuilledetemps&search_fk_user_validation_2='.$user->id;
+			$response->url = DOL_URL_ROOT.'/custom/feuilledetemps/feuilledetemps_list.php?mainmenu=feuilledetemps&search_status=3&search_fk_user_validation_2='.$user->id;
 
 			while ($obj = $this->db->fetch_object($resql)) {
 				$response->nbtodo++;
@@ -3330,7 +3570,7 @@ class FeuilleDeTemps extends CommonObject
 
 		$now = dol_now();
 
-		$sql = "SELECT f.rowid";
+		$sql = "SELECT DISTINCT f.rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps as f";
 		$sql .= " WHERE f.status = ".self::STATUS_VERIFICATION;
 
@@ -3537,6 +3777,122 @@ class FeuilleDeTemps extends CommonObject
 		return 1;
 	}
 
+	public function load_previous_next_ref_byusername($user_id, $date_debut, $etablissement = null)
+	{
+		global $user; 
+
+		$arrayres = array();
+	
+		$sql = 
+		"WITH OrderedUsers AS (
+			SELECT 
+				f.rowid AS feuilledetemps_id,
+				f.fk_user,
+				f.date_debut,
+				f.date_fin,
+				u.lastname,
+				u.firstname,
+				LAG(f.rowid) OVER (PARTITION BY f.date_debut, f.date_fin ORDER BY u.lastname, u.firstname) AS prev_feuilledetemps,
+				LEAD(f.rowid) OVER (PARTITION BY f.date_debut, f.date_fin ORDER BY u.lastname, u.firstname) AS next_feuilledetemps
+			FROM llx_feuilledetemps_feuilledetemps f
+			JOIN llx_user u ON f.fk_user = u.rowid
+			JOIN llx_user_extrafields ue ON ue.fk_object = u.rowid";
+		if($etablissement !== null) {
+			$sql .= " WHERE ue.etablissement = $etablissement";
+		}
+		$sql .= ")
+		SELECT 
+			f_current.*,
+			f_prev.ref AS prev_feuilledetemps_ref,
+			f_next.ref AS next_feuilledetemps_ref
+		FROM OrderedUsers f_current
+		LEFT JOIN llx_feuilledetemps_feuilledetemps f_prev 
+			ON f_current.prev_feuilledetemps = f_prev.rowid
+		LEFT JOIN llx_feuilledetemps_feuilledetemps f_next 
+			ON f_current.next_feuilledetemps = f_next.rowid
+		WHERE f_current.fk_user = $user_id AND f_current.date_debut = '".$this->db->idate($date_debut)."'";
+		
+
+		dol_syslog(get_class($this)."::load_previous_next_ref_byusername", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			if($num > 0){
+				$obj = $this->db->fetch_object($resql);
+				$this->db->free($resql);
+				$this->ref_previous = $obj->prev_feuilledetemps_ref;
+				$this->ref_next = $obj->next_feuilledetemps_ref;
+				return 1;
+			}
+			else {
+				$this->db->free($resql);
+				return 0;
+			}
+		} else {
+			dol_print_error($this->db);
+			$this->error = "Error ".$this->db->lasterror();
+			return -1;
+		}
+  	}
+
+	  public function load_previous_next_ref_bymatricule($user_id, $date_debut, $etablissement = null)
+	  {
+		  global $user; 
+  
+		  $arrayres = array();
+	  
+		  $sql = 
+		  "WITH OrderedUsers AS (
+			  SELECT 
+				  f.rowid AS feuilledetemps_id,
+				  f.fk_user,
+				  f.date_debut,
+				  f.date_fin,
+				  u.lastname,
+				  u.firstname,
+				  LAG(f.rowid) OVER (PARTITION BY f.date_debut, f.date_fin ORDER BY ue.matricule) AS prev_feuilledetemps,
+				  LEAD(f.rowid) OVER (PARTITION BY f.date_debut, f.date_fin ORDER BY ue.matricule) AS next_feuilledetemps
+			  FROM llx_feuilledetemps_feuilledetemps f
+			  JOIN llx_user u ON f.fk_user = u.rowid
+			  JOIN llx_user_extrafields ue ON ue.fk_object = u.rowid";
+		  if($etablissement !== null) {
+			  $sql .= " WHERE ue.etablissement = $etablissement";
+		  }
+		  $sql .= ")
+		  SELECT 
+			  f_current.*,
+			  f_prev.ref AS prev_feuilledetemps_ref,
+			  f_next.ref AS next_feuilledetemps_ref
+		  FROM OrderedUsers f_current
+		  LEFT JOIN llx_feuilledetemps_feuilledetemps f_prev 
+			  ON f_current.prev_feuilledetemps = f_prev.rowid
+		  LEFT JOIN llx_feuilledetemps_feuilledetemps f_next 
+			  ON f_current.next_feuilledetemps = f_next.rowid
+		  WHERE f_current.fk_user = $user_id AND f_current.date_debut = '".$this->db->idate($date_debut)."'";
+		  
+  
+		  dol_syslog(get_class($this)."::load_previous_next_ref_byusername", LOG_DEBUG);
+		  $resql = $this->db->query($sql);
+		  if ($resql) {
+			  $num = $this->db->num_rows($resql);
+			  if($num > 0){
+				  $obj = $this->db->fetch_object($resql);
+				  $this->db->free($resql);
+				  $this->ref_previous = $obj->prev_feuilledetemps_ref;
+				  $this->ref_next = $obj->next_feuilledetemps_ref;
+				  return 1;
+			  }
+			  else {
+				  $this->db->free($resql);
+				  return 0;
+			  }
+		  } else {
+			  dol_print_error($this->db);
+			  $this->error = "Error ".$this->db->lasterror();
+			  return -1;
+		  }
+		}
+
 	/**
 	 *     Show a confirmation HTML form or AJAX popup.
 	 *     Easiest way to use this is with useajax=1.
@@ -3720,7 +4076,7 @@ class FeuilleDeTemps extends CommonObject
 						$more .= '<br>';
 					} elseif (preg_match('/^html/', $input['type'])) {
 							require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-							$doleditor = new DolEditor($input['name'], $value, '', 200, 'dolibarr_notes', 'In', false, false, isModEnabled('fckeditor') && $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_5, '90%');
+							$doleditor = new DolEditor($input['name'], $input['value'], '', 200, 'dolibarr_notes', 'In', false, false, isModEnabled('fckeditor') && $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_5, '90%');
 							$more .= '<br>'.$doleditor->Create(1, '', true, '', '', $moreparam, $morecss);
 					}
 					else {
@@ -4007,6 +4363,106 @@ class FeuilleDeTemps extends CommonObject
 		return $arrayres;
 	}
 
+	public function getUserImApprover()
+  	{
+		global $user; 
+
+		$arrayres = array();
+	
+		$sql = "SELECT DISTINCT";
+		$sql .= " u.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."user as u";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue ON u.rowid = ue.fk_object";
+		$sql .= " WHERE FIND_IN_SET($user->id, ue.approbateurfdt) > 0";
+
+		dol_syslog(get_class($this)."::getUserImApprover", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				$arrayres[] = $obj->rowid;
+
+				$i++;
+			}
+		
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
+			$this->error = "Error ".$this->db->lasterror();
+			return -1;
+		}
+	
+		return $arrayres;
+	}
+
+	public function getUserImObserver()
+  	{
+		global $user; 
+
+		$arrayres = array();
+	
+		$sql = "SELECT DISTINCT";
+		$sql .= " u.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."user as u";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue ON u.rowid = ue.fk_object";
+		$sql .= " WHERE FIND_IN_SET($user->id, ue.observateurfdt) > 0";
+
+		dol_syslog(get_class($this)."::getUserImObserver", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				$arrayres[] = $obj->rowid;
+
+				$i++;
+			}
+		
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
+			$this->error = "Error ".$this->db->lasterror();
+			return -1;
+		}
+	
+		return $arrayres;
+	}
+
+	public function fetchWithUserAndDate($user_id, $date_debut)
+	{
+		global $user; 
+
+		$arrayres = array();
+	
+		$sql = "SELECT ";
+		$sql .= " f.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_feuilledetemps as f";
+		$sql .= " WHERE f.fk_user = $user_id";
+		$sql .= " AND DATE_FORMAT(f.date_debut, '%m') = ".dol_print_date($date_debut, 'm');
+
+		dol_syslog(get_class($this)."::fetchWithUserAndDate", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			if($num > 0){
+				$obj = $this->db->fetch_object($resql);
+				$this->db->free($resql);
+				return $obj;
+			}
+			else {
+				$this->db->free($resql);
+				return 0;
+			}
+		} else {
+			dol_print_error($this->db);
+			$this->error = "Error ".$this->db->lasterror();
+			return -1;
+		}
+  	}
+
 }
 
 
@@ -4024,7 +4480,7 @@ class FeuilleDeTempsLine extends CommonObjectLine
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 0;
+	public $isextrafieldmanaged = 1;
 
 	/**
 	 * Constructor

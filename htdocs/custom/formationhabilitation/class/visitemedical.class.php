@@ -662,41 +662,27 @@ class VisiteMedical extends CommonObject
 		$sqlwhere = array();
 		if (count($filter) > 0) {
 			foreach ($filter as $key => $value) {
-				$columnName = preg_replace('/^t\./', '', $key);
-				if ($key === 'customsql') {
-					// Never use 'customsql' with a value from user input since it is injected as is. The value must be hard coded.
-					$sqlwhere[] = $value;
-					continue;
-				} elseif (isset($this->fields[$columnName])) {
-					$type = $this->fields[$columnName]['type'];
-					if (preg_match('/^integer/', $type)) {
-						if (is_int($value)) {
-							// single value
-							$sqlwhere[] = $key . " = " . intval($value);
-						} elseif (is_array($value)) {
-							if (empty($value)) {
-								continue;
+				if($value) {
+					if ($key == 't.rowid') {
+						$sqlwhere[] = $key." = ".((int) $value);
+					} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+						$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
+					} elseif (preg_match('/(_dtstart|_dtend)$/', $key)) {
+						$columnName = preg_replace('/(_dtstart|_dtend)$/', '', $key);
+						if (preg_match('/^(date|timestamp|datetime)/', $this->fields[$columnName]['type'])) {
+							if (preg_match('/_dtstart$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." >= '".$this->db->idate($value)."'";
 							}
-							$sqlwhere[] = $key . ' IN (' . $this->db->sanitize(implode(',', array_map('intval', $value))) . ')';
+							if (preg_match('/_dtend$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." <= '".$this->db->idate($value)."'";
+							}
 						}
-						continue;
-					} elseif (in_array($type, array('date', 'datetime', 'timestamp'))) {
-						$sqlwhere[] = $key . " = '" . $this->db->idate($value) . "'";
-						continue;
-					}
-				}
-
-				// when the $key doesn't fall into the previously handled categories, we do as if the column were a varchar/text
-				if (is_array($value) && count($value)) {
-					$value = implode(',', array_map(function ($v) {
-						return "'" . $this->db->sanitize($this->db->escape($v)) . "'";
-					}, $value));
-					$sqlwhere[] = $key . ' IN (' . $this->db->sanitize($value, true) . ')';
-				} elseif (is_scalar($value)) {
-					if (strpos($value, '%') === false) {
-						$sqlwhere[] = $key . " = '" . $this->db->sanitize($this->db->escape($value)) . "'";
+					} elseif ($key == 'customsql') {
+						$sqlwhere[] = $value;
+					} elseif (strpos($value, '%') === false && str_contains($this->fields[$key]['type'], 'varchar') === false && $this->fields[$key]['type'] != 'price') {
+						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
 					} else {
-						$sqlwhere[] = $key . " LIKE '%" . $this->db->escape($this->db->escapeforlike($value)) . "%'";
+						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
 					}
 				}
 			}
@@ -1515,6 +1501,19 @@ class VisiteMedical extends CommonObject
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
 	}
 
+	public function getArrayStatut() {
+		global $langs; 
+
+		$labelStatus[self::STATUS_APTE] = $langs->transnoentitiesnoconv('Apte');
+		$labelStatus[self::STATUS_INAPTE] = $langs->transnoentitiesnoconv('Inapte');
+		$labelStatus[self::STATUS_CONDITIONNEL] = $langs->transnoentitiesnoconv('Conditionnel');
+		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
+		$labelStatus[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expirée');
+
+		return $labelStatus;
+	}
+
+
 	/**
 	 *	Load the info information in the object
 	 *
@@ -1591,10 +1590,12 @@ class VisiteMedical extends CommonObject
 	 */
 	public function getLinesArray()
 	{
+		global $sortorder, $sortfield, $search, $limit, $offset, $id;
+
+		$objectline = new VisiteMedical($this->db);
 		$this->lines = array();
 
-		$objectline = new VisiteMedicalLine($this->db);
-		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_visitemedical = '.((int) $this->id)));
+		$result = $objectline->fetchAll($sortorder, $sortfield, $limit + 1, $offset, $search);
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
