@@ -1035,17 +1035,18 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	print '<tbody>';
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$modify_day = (!$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? 0 : 1);
+		$morecss = (dol_print_date($dayinloopfromfirstdaytoshow_array[$idw], '%a') == 'Dim' ? 'sunday' : '');
 
 		// Si c'est un jour anticipé, on ne met pas à jour le total
 		if($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month) {
 			printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
-			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
+			$holiday_without_canceled, $firstdaytoshow, $css, $morecss, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
 			$num_first_day, $num_last_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
 			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $silae_array);
 		}
 		else {
 			$total_array = printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify_day, $modifier_jour_conges,
-			$holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
+			$holiday_without_canceled, $firstdaytoshow, $css, $morecss, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs, 
 			$num_first_day, $num_last_day, $timeHoliday, $timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
 			$heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, $cptholiday, $arraytypeleaves, $task_load, $silae_array);
 		}
@@ -1102,7 +1103,7 @@ function printTotalLine_Sigedi($fields, $total_array) {
 }
 
 function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_array, $nb_jour, $lastdaytoshow, $modify, $modifier_jour_conges, 
-						 $holiday_without_canceled, $firstdaytoshow, $css, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
+						 $holiday_without_canceled, $firstdaytoshow, $css, $morecss, $css_holiday, $multiple_holiday, $isavailable, $notes, $heure_semaine, $heure_semaine_hs,
 						 $num_first_day, $num_last_day, $timeHoliday, &$timeHolidayByDay, $timeSpentWeek, $type_deplacement, $otherTaskTime, $timespent_month, $totalforeachday, 
 						 $heure_max_jour, $heure_max_semaine, $standard_week_hour, $total_array, &$cptholiday, $arraytypeleaves, &$task_load, $silae_array) {
 	global $db, $form, $formother, $conf, $langs, $user, $extrafields, $object, $objectoffield, $action;
@@ -1122,7 +1123,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 	print '<tr>';
 		// Date
-		print '<th align="center" class="bold fixed hide'.$idw.' day daycolumn">';
+		print '<th align="center" class="bold fixed hide'.$idw.' day daycolumn '.$morecss.'">';
 		print dol_print_date($dayinloopfromfirstdaytoshow, '%a');
 		print '<br>'.dol_print_date($dayinloopfromfirstdaytoshow, 'dayreduceformat').'</th>';
 
@@ -1152,7 +1153,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$premier_jour = $idw;
 			$dernier_jour = $idw + $taille - 1;
 
-			print '<td class="totalweekcolumn fixedcolumn2 liste_total_semaine_'.$weekNumber.'" align="center" rowspan='.$taille.'><strong>Semaine '.$weekNumber.' : <span class="totalSemaine" name="totalSemaine'.$weekNumber.'" id="totalSemaine'.$weekNumber.'_'.$premier_jour.'_'.$dernier_jour.'">&nbsp</span></strong></td>';
+			print '<td class="totalweekcolumn fixedcolumn2 liste_total_semaine_'.$weekNumber.(dol_print_date(dol_time_plus_duree($dayinloopfromfirstdaytoshow, $taille - 1, 'd'), '%a') == 'Dim'? ' withsunday' : '').'" align="center" rowspan='.$taille.'><strong>Semaine '.$weekNumber.' : <span class="totalSemaine" name="totalSemaine'.$weekNumber.'" id="totalSemaine'.$weekNumber.'_'.$premier_jour.'_'.$dernier_jour.'">&nbsp</span></strong></td>';
 		}
 
 
@@ -1166,10 +1167,10 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$durationHoliday = $holiday->getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser, $numberDay, $timeHolidayByDay);
 
 			if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
-				print '<td class="center fixedcolumn3 '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
+				print '<td class="center fixedcolumn3 '.$morecss.' '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
 			}
 			else {
-				print '<td class="center fixedcolumn3 '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" rowspan="'.$numberDay.'">';
+				print '<td class="center fixedcolumn3 '.$morecss.' '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? $css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'" rowspan="'.$numberDay.'">';
 			}
 
 			if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
@@ -1194,7 +1195,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			$cptholiday++;
 		}
 		elseif(empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0])) {
-			print '<td class="center fixedcolumn3 '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
+			print '<td class="center fixedcolumn3 '.$morecss.' '.($multiple_holiday ? 'holidaycolumnmultiple1' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
 			print '</td>';
 		}
 		
@@ -1207,10 +1208,10 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$durationHoliday = $holiday->getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $fuser, $numberDay, $timeHolidayByDay);
 
 				if($mode == 'card' && $conf->global->FDT_STATUT_HOLIDAY) {
-					print '<td class="center fixedcolumn3 '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
+					print '<td class="center fixedcolumn3 '.$morecss.' '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').' statut'.$holiday->array_options['options_statutfdt'].'" rowspan="'.$numberDay.'">';
 				}
 				else {
-					print '<td class="center fixedcolumn3 '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" rowspan="'.$numberDay.'">';
+					print '<td class="center fixedcolumn3 '.$morecss.' '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? $css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'" rowspan="'.$numberDay.'">';
 				}
 
 				if($mode == 'card' && $displayVerification && $conf->global->FDT_STATUT_HOLIDAY && !$conf->global->FDT_STATUT_HOLIDAY_VALIDATE_VERIF) {
@@ -1232,7 +1233,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$cptholiday++;
 			}
 			else {
-				print '<td class="center fixedcolumn3 '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'">';
+				print '<td class="center fixedcolumn3 '.$morecss.' '.($multiple_holiday ? 'holidaycolumnmultiple2' : 'holidaycolumn').' hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][1] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][1] : '').'">';
 			}
 	
 			print '</td>';
@@ -1242,7 +1243,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 
 		// Contrat
 		$contrat = (float)$standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')];
-		print '<td class="center fixedcolumn4'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+		print '<td class="center fixedcolumn4 '.$morecss.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 		print '<span class="" id="contrat_'.$idw.'">'.($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($contrat / 3600, 2, '.', '') : convertSecondToTime($contrat, 'allhourmin')).'</span>';
 		print '</td>';
 
@@ -1315,10 +1316,10 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				$prefilling_time = (!empty($prefilling_time) ? ($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($prefilling_time / 3600, 2, '.', '') : convertSecondToTime($prefilling_time, 'allhourmin')) : '');
 			} 
 
-			if($cpt == 0) $tableCellTimespent = '<td class="center fixedcolumn5 valignmiddle hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-			if($cpt == 0) $tableCellHeureNuit = '<td class="center fixedcolumn6 valignmiddle hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-			if($cpt == 0) $tableCellSite = '<td class="center fixedcolumn9'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
-			if($cpt == 0) $tableCellAffaire = '<td class="center affairecolumn fixedcolumn10'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+			if($cpt == 0) $tableCellTimespent = '<td class="center fixedcolumn5 valignmiddle '.$morecss.' hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+			if($cpt == 0) $tableCellHeureNuit = '<td class="center fixedcolumn6 valignmiddle '.$morecss.' hide'.$idw.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+			if($cpt == 0) $tableCellSite = '<td class="center fixedcolumn9 '.$morecss.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+			if($cpt == 0) $tableCellAffaire = '<td class="center affairecolumn fixedcolumn10 '.$morecss.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 			if($cpt == 0) $tableCellNoteModal = '<div class="center">';
 
 			$tableCellTimespent .= '<div class="multipleLineColumn line_'.$idw.'_'.$cpt.$class.$class_timespent.'">';
@@ -1452,7 +1453,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		else {
 			$total = (convertSecondToTime($totalforday, 'allhourmin') != '0' ? convertSecondToTime($totalforday, 'allhourmin') : '00:00');
 		}
-		print '<td class="liste_total fixedcolumn7 center hide'.$idw.($total != '00:00' ? ' bold' : '').($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'" align="center">';
+		print '<td class="liste_total fixedcolumn7 center '.$morecss.' hide'.$idw.($total != '00:00' ? ' bold' : '').($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'" align="center">';
 		print '<div class="totalDay'.$idw.'" '.(!empty($style) ? $style : '').'>'.$total;
 		print '</div></td>';
 		if($idw >= $num_first_day && ($idw <= $num_last_day || empty($num_last_day))) {
@@ -1473,7 +1474,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 		elseif($diff < 0) {
 			$diff_class .= "diffnegative";
 		}
-		print '<td class="center fixedcolumn8'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+		print '<td class="center fixedcolumn8 '.$morecss.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 		print '<span class="'.$diff_class.'" id="diff_'.$idw.'">'.($diff > 0 ? '+' : '').($conf->global->FDT_DECIMAL_HOUR_FORMAT ? number_format($diff / 3600, 2, '.', '') : convertSecondToTime($diff, 'allhourmin')).'</span>';
 		print '</td>';
 
@@ -1504,7 +1505,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 				//$moreparam .= ($disabled ? ' disabled' : '');
 				$moreparam .= ' disabled';
 
-				print '<td class="center'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+				print '<td class="center '.$morecss.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 					if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') == 'Dim' || !empty($silae->$key)) {
 						print $silae->showInputField($value, $key, ($silae->$key / 3600), $moreparam, '['.$idw.']');
 					}
@@ -1522,7 +1523,7 @@ function printLine_Sigedi($mode, $idw, $fuser, $dayinloopfromfirstdaytoshow_arra
 			
 			$type = $extrafields->attributes[$silae->table_element]['type'][$key];
 
-			print '<td class="center'.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
+			print '<td class="center '.$morecss.($css[$dayinloopfromfirstdaytoshow] ? ' '.$css[$dayinloopfromfirstdaytoshow] : '').'">';
 
 			$moreparam = '';
 			if(!$modify || ($user_conges && !$modifier_jour_conges)) {

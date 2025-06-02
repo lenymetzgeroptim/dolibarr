@@ -579,8 +579,12 @@ tr > th:last-child.fixed {
 	vertical-align: bottom
 }
 
-#tablelines_fdt td.totalweekcolumn {
-    border-bottom: 1px solid var(--colortopbordertitle1);
+#tablelines_fdt td.totalweekcolumn.withsunday {
+    border-bottom: 3px solid var(--colorblack);
+}
+
+#tablelines_fdt td.sunday, #tablelines_fdt th.sunday {
+    border-bottom: 3px solid var(--colorblack);
 }
 
 #tablelines_fdt > tbody > tr:nth-last-child(8) > td.totalweekcolumn {
