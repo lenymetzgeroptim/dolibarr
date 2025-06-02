@@ -1,3 +1,5 @@
+// Stockage global (objet/fonctions) pour les données (type singleton)
+// # Namespace global de l'application 
 window.WorkloadConfig = {
   api: {
     dataUrl: '/custom/workload/ajax/workload_data.php',
@@ -7,9 +9,9 @@ window.WorkloadConfig = {
     // modes: ['tabs', 'tabs2', 'tabs3', 'tabs4', 'tabs5', 'tabs6']
 };
 
-// Stockage global (objet/fonctions) pour les données (type singleton)
-// # Namespace global de l'application (pour gérer dataFetch - dans le fichier fetchData et workload.main.js)
+// (pour gérer dataFetch - dans le fichier fetchData et workload.main.js)
 window.Workload = window.Workload || {};
+
 
 Workload.DataStore = {
   ressources: [],
@@ -21,3 +23,8 @@ Workload.DataStore = {
 
 window.availabilityFree = false; // Disponibilité totale
 window.availabilityPartial = false; // Affecté partiel
+
+Workload.Cache = {
+    lastData: null,
+    lastFilterData: null
+};

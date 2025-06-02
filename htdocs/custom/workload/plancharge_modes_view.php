@@ -89,6 +89,7 @@ if (!empty($conf->use_javascript_ajax)) {
 		'/projet/jsgantt_language.js.php?lang='.$langs->defaultlang,
         '/custom/workload/js/data/dataStore.js',
         '/custom/workload/js/utils/domUtil.js',
+		'/custom/workload/js/utils/dataUtils.js',
         '/custom/workload/js/workload.config.js',
         '/custom/workload/js/data/dataFetcher.js',
         '/custom/workload/js/workload.main.js',
@@ -96,8 +97,7 @@ if (!empty($conf->use_javascript_ajax)) {
         '/custom/workload/js/utils/tabNavigation.js',
         '/custom/workload/js/utils/eventBus.js',
         '/custom/workload/js/init/setup.js',
-        '/custom/workload/js/filters/filterListeners.js',
-        
+        '/custom/workload/js/filters/filterListeners.js',   
 		// '/custom/workload/js/ganttFilterUtils.js',
 		// '/custom/workload/js/fetch_gantt_data.js'
 	);
