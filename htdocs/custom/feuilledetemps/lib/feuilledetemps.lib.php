@@ -1035,7 +1035,7 @@ function FeuilleDeTempsLinesPerWeek_Sigedi($mode, &$inc, $firstdaytoshow, $lastd
 	print '<tbody>';
 	for ($idw = 0; $idw < $nb_jour; $idw++) {
 		$modify_day = (!$modify || ($conf->global->FDT_ANTICIPE_BLOCKED && ($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month)) ? 0 : 1);
-		$morecss = (dol_print_date($dayinloopfromfirstdaytoshow_array[$idw], '%a') == 'Dim' ? 'sunday' : '');
+		$morecss = (dol_print_date($dayinloopfromfirstdaytoshow_array[$idw], '%a') == 'Dim' && $dayinloopfromfirstdaytoshow_array[$idw] < dol_time_plus_duree($lastdaytoshow, -1, 'd') ? 'sunday' : '');
 
 		// Si c'est un jour anticipé, on ne met pas à jour le total
 		if($dayinloopfromfirstdaytoshow_array[$idw] < $first_day_month || $dayinloopfromfirstdaytoshow_array[$idw] > $last_day_month) {
