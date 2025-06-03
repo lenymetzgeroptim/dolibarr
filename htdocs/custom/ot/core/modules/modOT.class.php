@@ -96,7 +96,7 @@ class modOT extends DolibarrModules
 			// Set this to 1 if module has its own menus handler directory (core/menus)
 			'menus' => 0,
 			// Set this to 1 if module overwrite template dir (core/tpl)
-			'tpl' => 0,
+			'tpl' => 1,
 			// Set this to 1 if module has its own barcode directory (core/modules/barcode)
 			'barcode' => 0,
 			// Set this to 1 if module has its own models directory (core/modules/xxx)
@@ -115,11 +115,12 @@ class modOT extends DolibarrModules
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
-				  'data' => array(
-				      'projectcontactcard',
-					  'globalcard'
-				  ),
-				  'entity' => '0',
+				'data' => array(
+					'projectcard',
+					'projectcontactcard',
+					'globalcard'
+				),
+				'entity' => '0',
 			),
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,

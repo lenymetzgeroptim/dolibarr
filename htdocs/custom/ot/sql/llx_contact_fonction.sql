@@ -1,9 +1,9 @@
--- ===================================================================
+-- ============================================================================
 -- Copyright (C) 2024 OT
 --
--- This program is free software; you can redistribute it and/or modify
+-- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 3 of the License, or
+-- the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -12,14 +12,18 @@
 -- GNU General Public License for more details.
 --
 -- You should have received a copy of the GNU General Public License
--- along with this program. If not, see <https://www.gnu.org/licenses/>.
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --
--- ===================================================================
+-- ============================================================================
 
-CREATE TABLE IF NOT EXISTS `llx_contact_fonction` (
-  `rowid` int(11) NOT NULL AUTO_INCREMENT,
-  `label` varchar(255) NOT NULL,
-  `description` text,
-  `status` tinyint(4) NOT NULL DEFAULT '1',
-  PRIMARY KEY (`rowid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8; 
+CREATE TABLE llx_contact_fonction (
+    rowid integer AUTO_INCREMENT PRIMARY KEY,
+    label varchar(255) NOT NULL,
+    description text,
+    status integer DEFAULT 1,
+    entity integer DEFAULT 1,
+    date_creation datetime NOT NULL,
+    tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    fk_user_creat integer NOT NULL,
+    fk_user_modif integer
+) ENGINE=innodb; 
