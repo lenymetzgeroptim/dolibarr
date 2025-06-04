@@ -140,21 +140,21 @@ function afficherTableaux() {
     </table>
 
     <div><br /><br />
-    <span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><u>Remontées du mois de '.$conf->global->__MONTH_TEXT__.' </u>: (<a href="http://erp.optim-industries.fr/custom/remonteessse/remontees_sse_list.php">Liste complète</a>)</strong></span></span>
+    <span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><u>Remontées du mois de '.$conf->global->__MONTH_TEXT__.' </u>: (<a href="https://erp.optim-industries.fr/custom/remonteessse/remonteessse_list.php">Liste complète</a>)</strong></span></span>
 
     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse; height:158px; margin-top:10px; width:50%">
         <tbody>
             <tr>
                 <th scope="row" style="background-color:#2f508b; width:25%"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff"><strong>VDR-NORD </strong></span></span></span></th>
-                <td style="background-color:#2f508b; width:75%"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.$conf->global->REMONTEESSSE_VDRNORD.'</span></strong></span></span></td>
+                <td style="background-color:#2f508b; width:75%"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.$conf->global->REMONTEES_SSE_VDRNORD.'</span></strong></span></span></td>
             </tr>
             <tr>
                 <th scope="row" style="background-color:#cccccc"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff"><strong>GRAND-OUEST</strong></span></span></span></th>
-                <td style="background-color:#cccccc"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.$conf->global->REMONTEESSSE_GRANDOUEST.'</span></strong></span></span></td>
+                <td style="background-color:#cccccc"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.$conf->global->REMONTEES_SSE_GRANDOUEST.'</span></strong></span></span></td>
             </tr>
             <tr>
                 <th scope="row" style="background-color:#2f508b"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><span style="color:#ffffff"><strong>SUD-EST</strong></span></span></span></th>
-                <td style="background-color:#2f508b"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.$conf->global->REMONTEESSSE_SUDEST.'</span></strong></span></span></td>
+                <td style="background-color:#2f508b"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px"><strong><span style="color:#ffffff">'.$conf->global->REMONTEES_SSE_SUDEST.'</span></strong></span></span></td>
             </tr>
         </tbody>
     </table>';

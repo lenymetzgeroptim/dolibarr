@@ -72,5 +72,6 @@ ACTIONS_EN_COURSInDolibarr = l'action %s est en cours
 ACTIONS_SOLDEEInDolibarr = l'action %s est soldée
 ACTIONS_ATT_SOLDEEInDolibarr = l'action %s attend d'être soldée
 ACTIONS_CLASSEInDolibarr = l'action %s est classé
+ACTIONS_CLOTUREinDolibarr = l'action %s est cloturé
 
 ActionsOnactions = Actions passé de l'action
