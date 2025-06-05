@@ -1491,14 +1491,16 @@ class pdf_standard_ot extends ModelePDFOt
 
 				// Récupérer les sous-traitants
 				$sql_sous_traitants = "SELECT 
-					u.firstname, u.lastname,
+					COALESCE(u.firstname, sp.firstname) as firstname,
+					COALESCE(u.lastname, sp.lastname) as lastname,
 					s.nom as entreprise,
 					st.fonction,
 					st.contrat,
 					st.habilitation
 					FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants st
-					JOIN " . MAIN_DB_PREFIX . "user u ON st.fk_socpeople = u.rowid
-					JOIN " . MAIN_DB_PREFIX . "societe s ON st.fk_societe = s.rowid
+					LEFT JOIN " . MAIN_DB_PREFIX . "user u ON st.fk_socpeople = u.rowid
+					LEFT JOIN " . MAIN_DB_PREFIX . "socpeople sp ON st.fk_socpeople = sp.rowid
+					LEFT JOIN " . MAIN_DB_PREFIX . "societe s ON st.fk_societe = s.rowid
 					WHERE st.ot_id = " . $object->id;
 
 				$resql_sous_traitants = $db->query($sql_sous_traitants);
@@ -1674,24 +1676,59 @@ class pdf_standard_ot extends ModelePDFOt
 				$signature_margin = 3; // Réduit la marge
 				$min_space_needed = $signature_height + $signature_spacing + $signature_margin + 10; // Espace minimum nécessaire réduit
 
-				// Calculer l'espace disponible sur la page actuelle
-				$available_space = $this->page_hauteur - $this->marge_basse - $current_y;
+				// Forcer la position Y pour les signatures (juste avant le footer)
+				$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - 18;
 
-				// Vérifier si on peut afficher les signatures sur la page actuelle
-				$can_display_signatures = true; // Par défaut, on essaie d'afficher sur la page actuelle
-				if ($available_space < $min_space_needed) {
-					$can_display_signatures = false;
+				// Vérifier si les signatures seraient seules sur une nouvelle page
+				if ($current_y > $signature_y - 10) {
+					// Calculer l'espace nécessaire pour les signatures
+					$space_needed = $signature_height + 20; // Hauteur des signatures + marge
+					
+					// Calculer l'espace disponible sur la page actuelle
+					$available_space = $this->page_hauteur - $this->marge_basse - $current_y;
+					
+					// Réduire les espaces entre les éléments
+					$reduction_factor = 0.7; // Réduire de 30%
+					
+					// Réduire l'espace après le header
+					$current_y = $this->_pagehead($pdf, $object, $outputlangs) + 5; // Réduit de 15 à 5
+					
+					// Réduire l'espace entre "Commande concernée" et "Date d'applicabilité"
+					$current_y += 5; // Réduit de 10 à 5
+					
+					// Réduire l'espace entre les cards
+					$card_spacing = 5; // Réduit de 10 à 5
+					
+					// Réduire l'espace entre les éléments de la liste
+					$list_spacing = 3; // Réduit de 5 à 3
+					
+					// Réduire l'espace entre les sections
+					$section_spacing = 5; // Réduit de 10 à 5
+					
+					// Recalculer la position Y des signatures
+					$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - 18;
+					
+					// Si on a toujours pas assez de place après réduction, forcer un saut de page
+					if ($current_y > $signature_y - 10) {
+						// Vérifier si on a du contenu sur la page actuelle
+						$has_content = ($current_y > $this->_pagehead($pdf, $object, $outputlangs) + 50);
+						
+						if ($has_content) {
+							// Si on a du contenu, on ajoute une nouvelle page
+							$pdf->AddPage();
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+							$this->_pagefoot($pdf, $object, $outputlangs);
+							$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - 18;
+						} else {
+							// Si on n'a pas de contenu, on reste sur la page actuelle
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+							$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - 18;
+						}
+					}
 				}
 
-				// Si on ne peut pas afficher les signatures sur la page actuelle, ajouter une nouvelle page
-				if (!$can_display_signatures) {
-					$pdf->AddPage();
-					$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-					$this->_pagefoot($pdf, $object, $outputlangs);
-				}
-
-				// Calculer la position Y pour les signatures
-				$signature_y = $current_y + 10; // Ajouter un petit espace après le contenu précédent
+				// Positionner le curseur pour les signatures
+				$pdf->SetY($signature_y);
 
 				// ZONES DE SIGNATURE
 				$signature_width = ($this->page_largeur - $this->marge_gauche - $this->marge_droite - 20) / 2; // Largeur de chaque zone
@@ -1786,26 +1823,10 @@ class pdf_standard_ot extends ModelePDFOt
 				$pdf->Text($redaction_x + ($signature_width * 2 + $signature_margin - $note_bottom_width) / 2, $validation_y + $signature_height + 5, $note_bottom);
 				$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
 
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-				// Use new auto column system
-				$this->prepareArrayColumnField($object, $outputlangs, $hidedetails, $hidedesc, $hideref);
-
-				// Table simulation to know the height of the title line
-				$pdf->startTransaction();
-				$this->pdfTabTitles($pdf, $tab_top, $tab_height, $outputlangs, $hidetop);
-				$pdf->rollbackTransaction(true);
-
-				$nexY = $tab_top + $this->tabTitleHeight;
-
-				// Loop on each lines
-				$pageposbeforeprintlines = $pdf->getPage();
-				$pagenb = $pageposbeforeprintlines;
-
-				// Ajouter le footer sur la dernière page avant de fermer le PDF
+				// Ajouter le footer sur la dernière page
 				$this->_pagefoot($pdf, $object, $outputlangs, 0, true);
 
+				// Fermer le document
 				$pdf->Close();
 
 				$pdf->Output($file, 'F');

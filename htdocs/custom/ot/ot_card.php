@@ -1010,36 +1010,73 @@ $userjson = json_encode($arrayresult);
 
 // Fonction pour récupérer les fonctions d'un utilisateur sur un projet
 function getFonctions($userId, $projectId, $db) {
-    $fonction_map = [
-        160 => "RA",
-        1031113 => "RI",
-        161 => "INT",
-        1031119 => "CT",
-        1032001 => "PCRREF",
-        1031139 => "CONS"
-    ];
-
-    $fonctions = [];
-
-    $sql = "SELECT sp.fk_c_type_contact 
-            FROM ".MAIN_DB_PREFIX."element_contact as sp
-            JOIN ".MAIN_DB_PREFIX."c_type_contact as ctc ON sp.fk_c_type_contact = ctc.rowid
-            WHERE sp.fk_socpeople = ".intval($userId)."
-            AND sp.element_id = ".intval($projectId)."
-            AND ctc.element = 'project'
-            AND sp.statut = 4";
-
+    $fonctions = array();
+    
+    // Récupération des fonctions depuis la table element_contact_fonction
+    $sql = "SELECT cf.label, cf.rowid 
+            FROM ".MAIN_DB_PREFIX."element_contact_fonction as ecf 
+            INNER JOIN ".MAIN_DB_PREFIX."contact_fonction as cf ON cf.rowid = ecf.function_id 
+            WHERE ecf.element_id = ".((int) $projectId)." 
+            AND ecf.contact_id = ".((int) $userId)." 
+            AND cf.status = 1";
+    
     $resql = $db->query($sql);
     if ($resql) {
         while ($obj = $db->fetch_object($resql)) {
-            if (isset($fonction_map[$obj->fk_c_type_contact])) {
-                $fonctions[] = $fonction_map[$obj->fk_c_type_contact];
+            // Conversion des fonctions en anagrammes
+            $anagramme = '';
+            switch (strtoupper($obj->label)) {
+                case 'RESPONSABLE D\'AFFAIRE':
+                    $anagramme = 'RA';
+                    break;
+                case 'RESPONSABLE DE SITE':
+                    $anagramme = 'RS';
+                    break;
+                case 'RESPONSABLE DE SUIVI D\'INTERVENTION':
+                    $anagramme = 'RSI';
+                    break;
+                case 'RESPONSABLE D\'ÉQUIPES':
+                    $anagramme = 'RE';
+                    break;
+                case 'RESPONSABLE D\'INTERVENTION':
+                    $anagramme = 'RI';
+                    break;
+                case 'CHARGÉ DE TRAVAUX':
+                    $anagramme = 'CdT';
+                    break;
+                case 'CONTRÔLEUR TECHNIQUE':
+                    $anagramme = 'CT';
+                    break;
+                case 'VÉRIFICATEUR':
+                    $anagramme = 'V';
+                    break;
+                case 'INTERVENANT':
+                    $anagramme = 'INT';
+                    break;
+                case 'RESPONSABLE DU SUIVI RADIOLOGIQUE / PERSONNE TECHNiquement COMPÉTENTE':
+                    $anagramme = 'RSR/PTC';
+                    break;
+                case 'PRIMO-INTERVENANT':
+                    $anagramme = 'PI';
+                    break;
+                case 'TUTEUR PRIMO-INTERVENANT':
+                    $anagramme = 'TPI';
+                    break;
+                case 'PERSONNEL EN COMPAGNONNAGE':
+                    $anagramme = 'CO';
+                    break;
+                case 'SAUVETEUR SECOURISTE DU TRAVAIL':
+                    $anagramme = 'SST';
+                    break;
+                default:
+                    $anagramme = $obj->label;
             }
+            
+            $fonctions[] = $anagramme;
         }
     }
-
-    // Retourner les fonctions sous forme de chaîne séparée par "-"
-    return !empty($fonctions) ? implode("-", $fonctions) : null;
+    
+    return !empty($fonctions) ? implode('-', $fonctions) : null;
 }
 
 // Fonction pour récupérer les habilitations d'un utilisateur
@@ -1097,11 +1134,9 @@ $sql = "
         spc.firstname,
         spc.lastname,
         spc.phone_mobile AS phone,
-        
         ctc.libelle, 
         sp.fk_c_type_contact, 
         sp.fk_socpeople,
-        
         ots.contrat AS contrat,
         ctc.source AS source,
         ots.fonction,  
@@ -1338,16 +1373,37 @@ foreach ($cellData as $cell) {
                 }
                 $seenUserIds[] = $user->userId;
 
-                $userDetails[] = [
-                    'userId' => $user->userId,
-                    'firstname' => $user->firstname,
-                    'lastname' => $user->lastname,
-                    'phone' => $user->phone,
-                    'contrat' => $user->contrat ?? 'Non défini',
-                    'fonction' => getFonctions($user->userId, $object->fk_project, $db) ?? 'Non définie',
-                    'habilitation' => getHabilitations($user->userId, $db) ?? 'Aucune habilitation'
-                ];
+                // Vérifier si l'utilisateur n'est pas Q3SE ou PCR
+                $sql_check = "SELECT ctc.libelle 
+                             FROM ".MAIN_DB_PREFIX."element_contact AS sp 
+                             JOIN ".MAIN_DB_PREFIX."c_type_contact AS ctc 
+                                ON sp.fk_c_type_contact = ctc.rowid 
+                             WHERE sp.fk_socpeople = ".((int) $user->userId)." 
+                             AND sp.element_id = ".((int) $object->fk_project)." 
+                             AND sp.statut = 4 
+                             AND ctc.element = 'project'";
+                $resql_check = $db->query($sql_check);
+                $skip_user = false;
+                if ($resql_check) {
+                    while ($obj = $db->fetch_object($resql_check)) {
+                        if (in_array($obj->libelle, array('ResponsableQ3SE', 'PCRRéférent'))) {
+                            $skip_user = true;
+                            break;
+                        }
+                    }
+                }
                 
+                if (!$skip_user) {
+                    $userDetails[] = [
+                        'userId' => $user->userId,
+                        'firstname' => $user->firstname,
+                        'lastname' => $user->lastname,
+                        'phone' => $user->phone,
+                        'contrat' => $user->contrat ?? 'Non défini',
+                        'fonction' => getFonctions($user->userId, $object->fk_project, $db) ?? 'Non définie',
+                        'habilitation' => getHabilitations($user->userId, $db) ?? 'Aucune habilitation'
+                    ];
+                }
             }
         } else {
             echo "Erreur SQL : " . $db->lasterror();
@@ -1904,19 +1960,22 @@ function displayUserList() {
                             const ulElement = list.querySelector("ul");
                             ulElement.innerHTML = ""; // Vider la liste avant de la remplir
                             cell.userDetails.forEach(user => {
-                                const li = document.createElement("li");
-                                li.setAttribute("data-user-id", user.userId);
-                                li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
+                                console.log("User data:", user); // Pour voir la structure des données
+                                // Vérifier si lutilisateur nest pas Q3SE ou PCR
+                                if (user.type !== "ResponsableQ3SE" && user.type !== "PCRRéférent") {
+                                    const li = document.createElement("li");
+                                    li.setAttribute("data-user-id", user.userId);
+                                    li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
 
-                                li.innerHTML = `
-                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
-                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
-                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
-                                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-                                    <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
-                                    
-                                `;
-                                ulElement.appendChild(li);
+                                    li.innerHTML = `
+                                        <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+                                        <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+                                        <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+                                        <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+                                        <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
+                                    `;
+                                    ulElement.appendChild(li);
+                                }
                             });
                         } else {
                             console.warn(`userDetails est manquant ou nest pas un tableau pour la cellule avec le titre : ${cell.title}`);
@@ -2234,29 +2293,36 @@ console.log("Status de la carte :", status);
     const ulElement = document.createElement("ul");
     ulElement.style = "list-style: none; padding: 0; margin: 0;";
 
+    // Afficher la structure des données
+    console.log("uniqueJsData structure:", uniqueJsData);
+
     // Remplir les utilisateurs de la liste depuis uniqueJsData
     uniqueJsData.forEach(user => {
-        const li = document.createElement("li");
-        li.setAttribute("data-user-id", user.fk_socpeople);
-        li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;"; // Centrer les éléments de utilisateur
+        console.log("User in uniqueJsData:", user); // Afficher chaque utilisateur
+        // Vérifier si lutilisateur nest pas Q3SE ou PCR
+        if (user.libelle !== "ResponsableQ3SE" && user.libelle !== "PCRRéférent") {
+            const li = document.createElement("li");
+            li.setAttribute("data-user-id", user.fk_socpeople);
+            li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;"; // Centrer les éléments de utilisateur
 
-        // Créer une ligne avec les informations de utilisateur, réparties uniformément
-        li.innerHTML = `
-            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
-            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
-            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
-            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-            <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
-        `;
+            // Créer une ligne avec les informations de utilisateur, réparties uniformément
+            li.innerHTML = `
+                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+                <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+                <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
+            `;
 
-        // Ajouter le bouton de suppression
-        const removeSpan = document.createElement("span");
-        removeSpan.textContent = "×";
-        removeSpan.style = "color:red; cursor:pointer;";
-        removeSpan.className = "remove-user";
-        li.appendChild(removeSpan);
+            // Ajouter le bouton de suppression
+            const removeSpan = document.createElement("span");
+            removeSpan.textContent = "×";
+            removeSpan.style = "color:red; cursor:pointer;";
+            removeSpan.className = "remove-user";
+            li.appendChild(removeSpan);
 
-        ulElement.appendChild(li);
+            ulElement.appendChild(li);
+        }
     });
 
     const listBody = document.createElement("div");
@@ -2872,70 +2938,73 @@ function createUserList(column) {
 
     // Remplir les utilisateurs de la liste depuis uniqueJsData
     uniqueJsData.forEach(user => {
-        const li = document.createElement("li");
-        li.setAttribute("data-user-id", user.fk_socpeople);
-        li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
+        // Vérifier si lutilisateur nest pas Q3SE ou PCR
+        if (user.libelle !== "ResponsableQ3SE" && user.libelle !== "PCRRéférent") {
+            const li = document.createElement("li");
+            li.setAttribute("data-user-id", user.fk_socpeople);
+            li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
 
-        // Créer une ligne avec les informations de utilisateur
-        li.innerHTML = `
-            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.lastname} ${user.firstname}">
-                ${user.lastname}<br>${user.firstname}
-            </div>
-            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.fonction || "Non définie"}">
-                ${user.fonction || "Non définie"}
-            </div>
-            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.contrat || "Non défini"}">
-                ${user.contrat || "Non défini"}
-            </div>
-            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.habilitation || "Aucune habilitation"}">
-                ${user.habilitation || "Aucune habilitation"}
-            </div>
-            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
-                ${user.phone || "Non défini"}
-            </div>
-        `;
+            // Créer une ligne avec les informations de lutilisateur
+            li.innerHTML = `
+                <div style="flex: 1; text-align: center; white-space: normal;" title="${user.lastname} ${user.firstname}">
+                    ${user.lastname}<br>${user.firstname}
+                </div>
+                <div style="flex: 1; text-align: center; white-space: normal;" title="${user.fonction || "Non définie"}">
+                    ${user.fonction || "Non définie"}
+                </div>
+                <div style="flex: 1; text-align: center; white-space: normal;" title="${user.contrat || "Non défini"}">
+                    ${user.contrat || "Non défini"}
+                </div>
+                <div style="flex: 1; text-align: center; white-space: normal;" title="${user.habilitation || "Aucune habilitation"}">
+                    ${user.habilitation || "Aucune habilitation"}
+                </div>
+                <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
+                    ${user.phone || "Non défini"}
+                </div>
+            `;
 
-        // Ajouter une fonction pour gérer le style en fonction du statut
-        function updateListItemsStyle() {
-            const listStatus = parseInt(list.getAttribute("data-status"));
-            const items = list.querySelectorAll("li > div");
-            
-            items.forEach((item, index) => {
-                // Ne pas modifier le style du nom et du téléphone
-                if (index !== 0 && index !== 4) {
-                    if (listStatus === 1 || listStatus === 2) {
-                        item.style.textAlign = "center";
-                        item.style.whiteSpace = "normal";
-                    } else {
-                        item.style.textAlign = "left";
-                        item.style.whiteSpace = "nowrap";
-                        item.style.overflow = "hidden";
-                        item.style.textOverflow = "ellipsis";
+            // Ajouter une fonction pour gérer le style en fonction du statut
+            function updateListItemsStyle() {
+                const listStatus = parseInt(list.getAttribute("data-status"));
+                const items = list.querySelectorAll("li > div");
+                
+                items.forEach((item, index) => {
+                    // Ne pas modifier le style du nom et du téléphone
+                    if (index !== 0 && index !== 4) {
+                        if (listStatus === 1 || listStatus === 2) {
+                            item.style.textAlign = "center";
+                            item.style.whiteSpace = "normal";
+                        } else {
+                            item.style.textAlign = "left";
+                            item.style.whiteSpace = "nowrap";
+                            item.style.overflow = "hidden";
+                            item.style.textOverflow = "ellipsis";
+                        }
                     }
-                }
-            });
+                });
+            }
+
+            // Observer les changements dattribut data-status sur la liste
+            const observer = new MutationObserver(updateListItemsStyle);
+            observer.observe(list, { attributes: true, attributeFilter: ["data-status"] });
+
+            // Appliquer le style initial
+            updateListItemsStyle();
+
+            // Ajouter le bouton de suppression
+            const removeSpan = document.createElement("span");
+            removeSpan.textContent = "×";
+            removeSpan.style = "color:red; cursor:pointer;";
+            removeSpan.className = "remove-user";
+            li.appendChild(removeSpan);
+
+            ulElement.appendChild(li);
+
+            // Ajouter une ligne vide entre les utilisateurs
+            const emptyRow = document.createElement("li");
+            emptyRow.style = "height: 10px;"; // Hauteur de la ligne vide
+            ulElement.appendChild(emptyRow);
         }
-
-        // Observer les changements dattribut data-status sur la liste
-        const observer = new MutationObserver(updateListItemsStyle);
-        observer.observe(list, { attributes: true, attributeFilter: ["data-status"] });
-
-        // Appliquer le style initial
-        updateListItemsStyle();
-
-        // Ajouter le bouton de suppression
-        const removeSpan = document.createElement("span");
-        removeSpan.textContent = "×";
-        removeSpan.style = "color:red; cursor:pointer;";
-        removeSpan.className = "remove-user";
-        li.appendChild(removeSpan);
-
-        ulElement.appendChild(li);
-
-        // Ajouter une ligne vide entre les utilisateurs
-        const emptyRow = document.createElement("li");
-        emptyRow.style = "height: 10px;"; // Hauteur de la ligne vide
-        ulElement.appendChild(emptyRow);
     });
 
     const listBody = document.createElement("div");
@@ -2950,7 +3019,6 @@ function createUserList(column) {
     const lineBreakAfter = document.createElement("br");
     list.appendChild(lineBreakAfter);
 
-
     // Attacher les écouteurs de suppression utilisateur
     attachUserRemoveListeners(list);
 
@@ -2960,9 +3028,9 @@ function createUserList(column) {
     deleteButton.className = "delete-list-button btn btn-danger";
     deleteButton.style = "margin: 10px auto; display: block;"; // Centrer le bouton horizontalement
     deleteButton.addEventListener("click", () => {
-    list.remove();
-    saveData(); // Sauvegarder les modifications après suppression
-});
+        list.remove();
+        saveData(); // Sauvegarder les modifications après suppression
+    });
 
     list.appendChild(deleteButton);
 
