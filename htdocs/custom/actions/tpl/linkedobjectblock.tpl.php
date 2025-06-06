@@ -37,7 +37,6 @@ $langs->load("actions");
 
 $linkedObjectBlock = dol_sort_array($linkedObjectBlock, 'date', 'desc', 0, 0, 1);
 
-
 $total = 0;
 $ilink = 0;
 
@@ -50,7 +49,6 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	}
 	echo '<tr class="'.$trclass.'" >';
 	echo '<td class="linkedcol-element" >'.$langs->trans(ucfirst($objectlink->element));
-	
 	if (!empty($showImportButton) && !empty($conf->global->MAIN_ENABLE_IMPORT_LINKED_OBJECT_LINES)) {
 		print '<a class="objectlinked_importbtn" href="'.$objectlink->getNomUrl(0, '', 0, 1).'&amp;action=selectlines" data-element="'.$objectlink->element.'" data-id="'.$objectlink->id.'"  > <i class="fa fa-indent"></i> </a';
 	}
@@ -70,12 +68,7 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	echo '<td class="linkedcol-amount right">';
 	//if ($user->rights->actions->lire) {
 		$total = sizeof($linkedObjectBlock);
-	
-	if($objectlink->element == 'action') {
-		echo $objectlink->reference;
-	}elseif($objectlink->element == 'constat'){
 		echo $objectlink->label;
-	}
 	// }
 	echo '</td>';
 	echo '<td class="linkedcol-statut right">'.$objectlink->getLibStatut(1).'</td>';
@@ -87,7 +80,6 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	echo '</td>';
 	echo "</tr>\n";
 }
-
 if (count($linkedObjectBlock) > 0) {
 	echo '<tr class="liste_total '.(empty($noMoreLinkedObjectBlockAfter) ? 'liste_sub_total' : '').'">';
 	echo '<td>'.$langs->trans("Total").'</td>';

@@ -270,21 +270,19 @@ llxHeader('', $title, $help_url);
 
 // Part to create
 if ($action == 'create') {
-	if (!empty($_GET['originid'])) {		
-		$originid = (int)$_GET['originid']; 	
-		if ($object && property_exists($object, 'id')) {
-			$object->id = $originid; 			  			
-			$res = $object->updateCloture();
-			if ($res > 0) {
-				dol_syslog("Action ID " . $object->id . " clôturée avec succès.");
-			} else {
-				setEventMessages("Erreur lors de la clôture de l'action.", null, 'errors');
-			}
-		} else {
-			dol_syslog('L\'objet n\'est pas bien instancié ou l\'ID est manquant', LOG_ERR);
-		}
-	}
-	
+
+    // Si un ID est passé dans l'URL, on considère qu'il s'agit d'une action existante
+    // qu'il faut clôturer.
+    if (!empty($_GET['id']))
+    {
+        // Met à jour le statut de l'action dont l'ID est passé dans l'URL.
+        $res = $object->updateCloture();
+        if ($res > 0) {
+            dol_syslog("Action ID " . $object->id . " clôturée avec succès.");
+        } else {
+            setEventMessages("Erreur lors de la clôture de l'action.", null, 'errors');
+        }
+    }
 
     
     if (!empty($_GET['origin']) && $_GET['origin'] == 'constat')
@@ -384,7 +382,7 @@ if (($id || $ref) && $action == 'edit') {
 	print '<input type="hidden" name="origin" value="'.$origin.'">';
 	print '<input type="hidden" name="originid" value="'.$originid.'">';
 
- 	if ($backtopage) {
+	if ($backtopage) {
 		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
 	}
 	if ($backtopageforcancel) {
@@ -1040,7 +1038,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		//var_dump($object->table_element);
 		if (empty($reshook)) {
 			// Send
-		
+			if (empty($user->socid)) {
+				print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
+			}
+
 			// Back to draft
 			if($user->rights->actions->action->ServiceQ3SE){
 				if ($object->status == $object::STATUS_VALIDATED) {
@@ -1052,13 +1053,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			/*if (($object->status != $object::STATUS_SOLDEE && !in_array('intervenant', $user->rights->actions->action)) ||($object->status == $object::STATUS_SOLDEE && in_array('intervenant', $user->rights->actions->action)) ) {
 				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
 			}*/
-			    
 
 			if (!($object->status == $object::STATUS_SOLDEE && in_array('intervenant', $user->rights->actions->action)) && $object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
 				print dolGetButtonAction('', $langs->trans('Modifier/Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
 			}
-
-
 				//print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
 		//var_dump($object->module);
 			if($user->rights->actions->action->ServiceQ3SE){
@@ -1073,8 +1071,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 			}
 			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_ATT_SOLDEE) {			
+				if ($object->status == $object::STATUS_ATT_SOLDEE) {
+					
 					print dolGetButtonAction('', $langs->trans('passer au status soldé'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setSolde&confirm=yes&token='.newToken(), '', $permissiontoadd);
+	
 				}
 			}
 			
@@ -1108,8 +1108,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			if($user->rights->actions->action->ServiceQ3SE){
 				if ($object->status == $object::STATUS_SOLDEE ){
 					if($object->eff_act == 9){
-						print dolGetButtonAction('', $langs->trans('Créé une nouvelle action'), 'default', $_SERVER["PHP_SELF"].'?action=create&confirm=yes&origin='.$object->element.'&originid='.$object->id.'&socid='.$object->socid, '', $permissiontoadd);
-						//print '<a class="butAction" href="'.DOL_URL_ROOT.'/custom/actions/action_card.php?action=create&origin='.$object->element.'&originid='.$object->id.'&socid='.$object->socid.'">'.$langs->trans("Créer action").'</a>';		
+						print dolGetButtonAction('', $langs->trans('Créé une nouvelle action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create&confirm=yes&token='.newToken(), '', $permissiontoadd);
+								
 					}
 				}	
 			}
@@ -1122,8 +1122,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					
 				//passé au status classé(annulé)
 				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED) {
-					print "<script>showPopupMessage('Le pilote peux passé son action au status attente validation soldée que si sont avancement est a 100% ', 'error');</script>";	
 					print dolGetButtonAction('', $langs->trans('Annuler cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken(), '', $permissiontoadd);	
+					print "<script>showPopupMessage('Le pilote peut passer son action au status \'attente  soldée\' que si son avancement est à 100% ', 'error');</script>";	
 				}
 
 				if ($object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
@@ -1159,7 +1159,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			*/
 
 			// Delete
-	
+
+			
 		}
 		print '</div>'."\n";
 	}
@@ -1194,10 +1195,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		
 		$linktoelem = $form->showLinkToObjectBlock($object, null, array('action'));
 		$somethingshown = $actionForm->showLinkedObjectBlock($object, $linktoelem);
-
-		
-		exit;
-		
+	
 		// // Show links to link elements
 		// $linktoelem = $form->showLinkToObjectBlock($object, null, array('action'));
 
