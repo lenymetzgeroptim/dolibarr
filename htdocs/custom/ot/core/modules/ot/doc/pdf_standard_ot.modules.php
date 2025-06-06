@@ -1508,12 +1508,14 @@ class pdf_standard_ot extends ModelePDFOt
 
 				$resql_sous_traitants = $db->query($sql_sous_traitants);
 				if ($resql_sous_traitants && $db->num_rows($resql_sous_traitants) > 0) {
-					// Vérifier si le tableau dépasse la page
-					if ($current_y + 50 > $this->page_hauteur - $this->marge_basse) {
+					// Calculer l'espace nécessaire pour les sous-traitants
+					$subcontractors_height = ($db->num_rows($resql_sous_traitants) * 7) + 50; // Hauteur approximative
+					
+					// Vérifier si on a assez d'espace pour les sous-traitants et les signatures
+					if ($current_y + $subcontractors_height + $signature_height > $this->page_hauteur - $this->marge_basse) {
+						// Ajouter une nouvelle page
 						$pdf->AddPage();
 						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-						$this->_pagefoot($pdf, $object, $outputlangs);
-						$pdf->SetY($current_y);
 					}
 
 					// Réduire la largeur du tableau des sous-traitants pour laisser de la place aux légendes
@@ -1581,6 +1583,14 @@ class pdf_standard_ot extends ModelePDFOt
 
 					// Afficher les sous-traitants
 					while ($sous_traitant = $db->fetch_object($resql_sous_traitants)) {
+						// Vérifier si on a assez d'espace pour le sous-traitant suivant
+						if ($y_offset + 7 > $this->page_hauteur - $this->marge_basse - $signature_height) {
+							// Ajouter une nouvelle page
+							$pdf->AddPage();
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+							$y_offset = $current_y + 5;
+						}
+
 						$current_x = $this->marge_gauche + 2;
 
 						// Nom/Prénom (format modifié)
@@ -1624,52 +1634,53 @@ class pdf_standard_ot extends ModelePDFOt
 					$pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauche + $card_width, $y_offset + 2); // Ligne droite
 
 					// Afficher les légendes à côté du tableau
-					$legend_x = $this->marge_gauche + $card_width + 5; // Position X des légendes
-					$legend_y = $current_y + 2; // Position Y des légendes
-					$pdf->SetFont('', '', 6);
-					$pdf->SetTextColor(128, 128, 128); // Gris
+                    $legend_x = $this->marge_gauche + $card_width + 5; // Position X des légendes
+                    $legend_y = $current_y + 2; // Position Y des légendes
+                    $pdf->SetFont('', '', 6);
+                    $pdf->SetTextColor(128, 128, 128); // Gris
 
-					// Calculer la largeur disponible pour les légendes (40% de la largeur totale)
-					$legend_width = ($this->page_largeur - $legend_x - $this->marge_droite) * 0.4;
+                    // Calculer la largeur disponible pour les légendes (40% de la largeur totale)
+                    $legend_width = ($this->page_largeur - $legend_x - $this->marge_droite) * 0.4;
 
-					// Légende (1)
-					$legend1 = "(1) RA = Responsable d'Affaire – RS = Responsable de Site – RSI = Responsable de Suivi d'Intervention – RE = Responsable d'Équipes – RI = Responsable d'Intervention – CdT = Chargé de Travaux – CT = Contrôleur Technique – V = Vérificateur - INT = Intervenant – RSR/PTC = Responsable du Suivi Radiologique / Personne Techniquement Compétente PI = Primo-Intervenant – TPI = Tuteur Primo-Intervenant (Si Primo-Intervenant) CO = Personnel en Compagnonnage – SST = Sauveteur Secouriste du Travail";
+                    // Légende (1)
+                    $legend1 = "(1) RA = Responsable d'Affaire – RS = Responsable de Site – RSI = Responsable de Suivi d'Intervention – RE = Responsable d'Équipes – RI = Responsable d'Intervention – CdT = Chargé de Travaux – CT = Contrôleur Technique – V = Vérificateur - INT = Intervenant – RSR/PTC = Responsable du Suivi Radiologique / Personne Techniquement Compétente PI = Primo-Intervenant – TPI = Tuteur Primo-Intervenant (Si Primo-Intervenant) CO = Personnel en Compagnonnage – SST = Sauveteur Secouriste du Travail";
+                    
+                    // Formater le texte de la légende 1
+                    $legend1_lines = array(
+                        "(1) RA = Responsable d'Affaire – RS = Responsable de Site –",
+                        "RSI = Responsable de Suivi d'Intervention –",
+                        "RE = Responsable d'Équipes – RI = Responsable d'Intervention –",
+                        "CdT = Chargé de Travaux – CT = Contrôleur Technique –",
+                        "V = Vérificateur - INT = Intervenant –",
+                        "RSR/PTC = Responsable du Suivi Radiologique / Personne",
+                        "Techniquement Compétente",
+                        "PI = Primo-Intervenant – TPI = Tuteur Primo-Intervenant",
+                        "(Si Primo-Intervenant)",
+                        "CO = Personnel en Compagnonnage – SST = Sauveteur Secouriste du Travail"
+                    );
+
+                    // Afficher chaque ligne de la légende 1
+                    foreach ($legend1_lines as $line) {
+                        $pdf->Text($legend_x, $legend_y, $line);
+                        $legend_y += 3;
+                    }
+
+                    // Légende (2)
+                    $legend_y += 2; // Ajouter un espace entre les légendes
+                    $legend2_lines = array(
+                        "(2) CDI = Contrat à Durée Indéterminée – CDD = Contrat à Durée Déterminée",
+                        "ETT = Intérimaire"
+                    );
+
+                    // Afficher chaque ligne de la légende 2
+                    foreach ($legend2_lines as $line) {
+                        $pdf->Text($legend_x, $legend_y, $line);
+                        $legend_y += 3;
+                    }
+
+                    $pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
 					
-					// Formater le texte de la légende 1
-					$legend1_lines = array(
-						"(1) RA = Responsable d'Affaire – RS = Responsable de Site –",
-						"RSI = Responsable de Suivi d'Intervention –",
-						"RE = Responsable d'Équipes – RI = Responsable d'Intervention –",
-						"CdT = Chargé de Travaux – CT = Contrôleur Technique –",
-						"V = Vérificateur - INT = Intervenant –",
-						"RSR/PTC = Responsable du Suivi Radiologique / Personne",
-						"Techniquement Compétente",
-						"PI = Primo-Intervenant – TPI = Tuteur Primo-Intervenant",
-						"(Si Primo-Intervenant)",
-						"CO = Personnel en Compagnonnage – SST = Sauveteur Secouriste du Travail"
-					);
-
-					// Afficher chaque ligne de la légende 1
-					foreach ($legend1_lines as $line) {
-						$pdf->Text($legend_x, $legend_y, $line);
-						$legend_y += 3;
-					}
-
-					// Légende (2)
-					$legend_y += 2; // Ajouter un espace entre les légendes
-					$legend2_lines = array(
-						"(2) CDI = Contrat à Durée Indéterminée – CDD = Contrat à Durée Déterminée",
-						"ETT = Intérimaire"
-					);
-
-					// Afficher chaque ligne de la légende 2
-					foreach ($legend2_lines as $line) {
-						$pdf->Text($legend_x, $legend_y, $line);
-						$legend_y += 3;
-					}
-
-					$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
-
+					// Mettre à jour la position Y actuelle
 					$current_y = $y_offset + 2;
 				}
 
@@ -1682,7 +1693,7 @@ class pdf_standard_ot extends ModelePDFOt
 				// Forcer la position Y pour les signatures (juste avant le footer)
 				$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - 18;
 
-				// Vérifier si les signatures seraient seules sur une nouvelle page
+				// Vérifier si les signatures se superposent avec le contenu
 				if ($current_y > $signature_y - 10) {
 					// Calculer l'espace nécessaire pour les signatures
 					$space_needed = $signature_height + 20; // Hauteur des signatures + marge
@@ -1713,20 +1724,36 @@ class pdf_standard_ot extends ModelePDFOt
 					
 					// Si on a toujours pas assez de place après réduction, forcer un saut de page
 					if ($current_y > $signature_y - 10) {
-						// Vérifier si on a du contenu sur la page actuelle
-						$has_content = ($current_y > $this->_pagehead($pdf, $object, $outputlangs) + 50);
+						// Sauvegarder les signatures
+						$signatures = array(
+							'type' => 'signatures',
+							'height' => $signature_height,
+							'content' => $this->page_signatures
+						);
 						
-						if ($has_content) {
-							// Si on a du contenu, on ajoute une nouvelle page
-							$pdf->AddPage();
-							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-							$this->_pagefoot($pdf, $object, $outputlangs);
-							$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - 18;
-						} else {
-							// Si on n'a pas de contenu, on reste sur la page actuelle
-							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-							$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - 18;
+						// Ajouter une nouvelle page
+						$pdf->AddPage();
+						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+						
+						// Réinitialiser le compteur de signatures
+						$this->page_signatures = 0;
+						
+						// Afficher les signatures sur la nouvelle page
+						if ($signatures['type'] === 'signatures') {
+							$pdf->SetFont('', '', $default_font_size - 1);
+							$pdf->SetTextColor(0, 0, 0);
+							
+							$signature_y = $this->page_hauteur - $this->marge_basse - ($signatures['content'] * 30);
+							$pdf->SetY($signature_y);
+							
+							for ($i = 0; $i < $signatures['content']; $i++) {
+								$pdf->SetY($signature_y + ($i * 30));
+								$pdf->Cell(0, 5, 'Signature', 0, 1, 'C');
+							}
 						}
+						
+						// Retourner true pour indiquer qu'un saut de page a été effectué
+						return true;
 					}
 				}
 
