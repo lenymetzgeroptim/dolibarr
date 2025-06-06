@@ -187,15 +187,15 @@ class pdf_standard_ot extends ModelePDFOt
 				// Set nblines with the new facture lines content after hook
 				$nblines = (is_array($object->lines) ? count($object->lines) : 0);
 
-				// Create pdf instance
+				// Créer le PDF
 				$pdf = pdf_getInstanceCustomOt($this->format);
-				$default_font_size = pdf_getPDFFontSize($outputlangs); // Must be after pdf_getInstance
-
+				$default_font_size = pdf_getPDFFontSize($outputlangs);
+				
 				// Configuration du PDF
 				if (class_exists('TCPDF')) {
-					$pdf->setPrintHeader(false); // Désactiver le header automatique
+					$pdf->setPrintHeader(false);
 					$pdf->setPrintFooter(false);
-					$pdf->SetMargins(10, 10, 10); // Réduire la marge supérieure
+					$pdf->SetMargins(10, 10, 10);
 					$pdf->SetAutoPageBreak(TRUE, 15);
 					
 					// Définir les polices par défaut
@@ -204,18 +204,21 @@ class pdf_standard_ot extends ModelePDFOt
 					$pdf->SetFont('helvetica', 'I', $default_font_size);
 					$pdf->SetFont('helvetica', 'BI', $default_font_size);
 				}
-
+				
 				// Passer les objets nécessaires à l'instance PDF
 				$pdf->ot_object = $object;
 				$pdf->ot_outputlangs = $outputlangs;
 				$pdf->ot_parent = $this;
-
+				
+				// Ajout de l'en-tête
+				$pdf->AddPage();
+				$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+				
+				// Contenu
 				$heightforinfotot = 50; // Height reserved to output the info and total part and payment part
 				$heightforfreetext = getDolGlobalInt('MAIN_PDF_FREETEXT_HEIGHT', 5); // Height reserved to output the free text on last page
 				$heightforfooter = $this->marge_basse + (getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS') ? 12 : 22); // Height reserved to output the footer (value include bottom margin)
 
-				$pdf->Open();
-				$pagenb = 0;
 				$pdf->SetDrawColor(128, 128, 128);
 
 				$pdf->SetTitle($outputlangs->convToOutputCharset($object->ref));
@@ -228,8 +231,6 @@ class pdf_standard_ot extends ModelePDFOt
 				}
 
 				// Ajout de l'en-tête
-				$pdf->AddPage();
-				$pagenb++;
 				$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 				$this->_pagefoot($pdf, $object, $outputlangs);
 
@@ -473,11 +474,11 @@ class pdf_standard_ot extends ModelePDFOt
 				$resql_cards = $db->query($sql_cards);
 
 				// AFFICHAGE DES CARTES PRINCIPALES
-				if ($resql_cards) {
+				if ($resql_cards && $db->num_rows($resql_cards) > 0) {
 					// Paramètres pour l'affichage des cartes principales
-				$card_width = 50;
-				$card_height = 25;
-				$card_margin = 10;
+					$card_width = 50;
+					$card_height = 25;
+					$card_margin = 10;
 					$cards_per_row = 3;
 					$current_x = $this->marge_gauche;
 
@@ -487,10 +488,12 @@ class pdf_standard_ot extends ModelePDFOt
 
 					while ($card = $db->fetch_object($resql_cards)) {
 						// Récupération des données utilisateur pour cette carte
-						$sql_user = "SELECT u.firstname, u.lastname, u.office_phone, cd.role 
+						$sql_user = "SELECT DISTINCT u.firstname, u.lastname, u.office_phone, cd.role 
 									FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne cd 
 									JOIN " . MAIN_DB_PREFIX . "user u ON cd.fk_user = u.rowid 
-									WHERE cd.ot_cellule_id = " . $card->rowid;
+									WHERE cd.ot_cellule_id = " . $card->rowid . "
+									ORDER BY cd.rowid DESC
+									LIMIT 1";
 						$resql_user = $db->query($sql_user);
 						$user_data = $db->fetch_object($resql_user);
 
@@ -547,7 +550,7 @@ class pdf_standard_ot extends ModelePDFOt
 					}
 
 					// Ajouter un espace après les cartes principales
-					$current_y += $card_height; // Suppression de l'espace supplémentaire
+					$current_y += $card_height + 10; // Ajout d'un espace supplémentaire
 				}
 
 				// Initialisation des tableaux pour les cartes dans la grille et en dessous de la grille
@@ -1823,12 +1826,13 @@ class pdf_standard_ot extends ModelePDFOt
 				$pdf->Text($redaction_x + ($signature_width * 2 + $signature_margin - $note_bottom_width) / 2, $validation_y + $signature_height + 5, $note_bottom);
 				$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
 
-				// Ajouter le footer sur la dernière page
-				$this->_pagefoot($pdf, $object, $outputlangs, 0, true);
-
-				// Fermer le document
+				// Pied de page
+				$this->_pagefoot($pdf, $object, $outputlangs, true);
+				
+				// Fermer le PDF sans forcer de nouvelle page
 				$pdf->Close();
-
+				
+				// Sauvegarder le fichier
 				$pdf->Output($file, 'F');
 
 				// Add pdfgeneration hook
@@ -2011,30 +2015,44 @@ class pdf_standard_ot extends ModelePDFOt
 	 */
 	protected function _pagefoot(&$pdf, $object, $outputlangs, $hidefreetext = 0, $is_last_page = false)
 	{
-		global $conf;
-
-		// Position du footer (en bas de page)
-		$footer_y = $this->page_hauteur - $this->marge_basse;
-
-		// Sauvegarder la position Y actuelle
-		$current_y = $pdf->GetY();
-
-		// Vérifier si on a assez d'espace pour le footer
-		if ($current_y > $footer_y - 15) {
-			$pdf->AddPage();
-			$footer_y = $this->page_hauteur - $this->marge_basse;
-		}
-
-		// Ne pas afficher le footer sur la dernière page
+		global $conf, $user, $langs;
+		
+		$default_font_size = pdf_getPDFFontSize($outputlangs);
+		
+		// Si on est sur la dernière page
 		if ($is_last_page) {
-			return $footer_y;
+			// Calculer l'espace nécessaire pour les signatures
+			$signature_height = 30;
+			$total_signature_height = $signature_height * $this->page_signatures;
+			
+			// Si l'espace restant est insuffisant
+			if ($this->marge_basse - $total_signature_height < 20) {
+				$pdf->AddPage();
+				$this->page_signatures = 0;
+			}
 		}
-
-		// Ligne fine grise
-		$pdf->SetDrawColor(200, 200, 200); // Gris clair
-		$pdf->Line($this->marge_gauche, $footer_y - 10, $this->page_largeur - $this->marge_droite, $footer_y - 10);
-
-		return $footer_y;
+		
+		// Afficher les signatures
+		if ($this->page_signatures > 0) {
+			$pdf->SetFont('', '', $default_font_size - 1);
+			$pdf->SetTextColor(0, 0, 0);
+			
+			$signature_y = $this->marge_basse - ($this->page_signatures * 30);
+			$pdf->SetY($signature_y);
+			
+			for ($i = 0; $i < $this->page_signatures; $i++) {
+				$pdf->SetY($signature_y + ($i * 30));
+				$pdf->Cell(0, 5, 'Signature', 0, 1, 'C');
+			}
+		}
+		
+		// Si c'est la dernière page et qu'il n'y a plus de signatures
+		if ($is_last_page && $this->page_signatures == 0) {
+			$pdf->SetY($this->marge_basse);
+			// Ne pas appeler lastPage() pour éviter la page blanche
+		}
+		
+		return $pdf;
 	}
 
 	/**
