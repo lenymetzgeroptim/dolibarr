@@ -483,13 +483,7 @@ $arrayofmassactions = array(
 	//'builddoc'=>img_picto('', 'pdf', 'class="pictofixedwidth"').$langs->trans("PDFMerge"),
 	//'presend'=>img_picto('', 'email', 'class="pictofixedwidth"').$langs->trans("SendByMail"),
 );
-if (!empty($permissiontodelete)) {
-	$arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"').$langs->trans("Delete");
-}
-if (GETPOST('nomassaction', 'int') || in_array($massaction, array('presend', 'predelete'))) {
-	$arrayofmassactions = array();
-}
-$massactionbutton = $form->selectMassAction('', $arrayofmassactions);
+$massactionbutton = '';
 
 print '<form method="POST" id="searchFormList" action="'.$_SERVER["PHP_SELF"].'">'."\n";
 if ($optioncss != '') {

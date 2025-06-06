@@ -341,20 +341,7 @@ class modOT extends DolibarrModules
 			'target'=>'',
 			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
 		);
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=ot,fk_leftmenu=ot',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',			                // This is a Left menu entry
-			'titre'=>'Nouvelle OT',
-			'mainmenu'=>'ot',
-			'leftmenu'=>'ot_ot_new',
-			'url'=>'/ot/ot_card.php?action=create',
-			'langs'=>'ot@ot',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>1004+$r,
-			'enabled'=>'isModEnabled("ot")', // Define condition to show or hide menu entry. Use 'isModEnabled("ot")' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-			'perms'=>'$user->hasRight("ot", "ot", "write")',
-			'target'=>'',
-			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
-		);
+		
 		
 		/*LEFTMENU OT*/
 		/*$this->menu[$r++]=array(
