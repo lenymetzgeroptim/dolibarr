@@ -486,9 +486,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	
 	}
 
-
-
-	if ($action == 'setCloture' && $confirm == 'yes'){
+	if ($action == 'confirmsetCloture' && $confirm == 'yes'){
 
 		$subject = '[OPTIM Industries] Notification automatique constat classé';
 	
@@ -1147,6 +1145,49 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 			}
 
+
+
+
+
+			
+			
+			$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setDelete&confirm=yes&token='.newToken();
+			print '<a href="#" onclick="confirmsupprimer(\'' . $url . '\')" class="butAction">' . $langs->trans('Supprimer le constat') . '</a>';
+			
+			?>
+			
+			<script type="text/javascript">
+			function confirmsupprimer(url) {
+				if (confirm("Êtes-vous sûr de vouloir supprimer  ce constat ? Cette action est irréversible.")) {
+					window.location.href = url;
+				}
+			}
+			</script>
+			<?php
+
+
+			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+				error_log("Statut actuel : " . $object->status);
+				error_log("Valeur de STATUS_CLASSE : " . $object::STATUS_CLASSE);
+			
+				// Afficher le bouton seulement si le constat N'EST PAS encore classé
+				if ($object->status != $object::STATUS_CLASSE) { 
+					$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken();
+					print '<a href="#" onclick="confirmClasser(\'' . $url . '\')" class="butAction">' . $langs->trans('Classer le constat') . '</a>';
+				}
+	
+			}
+			?>
+			
+			<script type="text/javascript">
+			function confirmClasser(url) {
+				if (confirm("Êtes-vous sûr de vouloir classer ce constat ? Cette action est irréversible.")) {
+					window.location.href = url;
+				}
+			}
+			</script>
+			<?php
+			
 			if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status == $object::STATUS_EN_COURS) {
 					print "<script>showPopupMessage('Le constat est en cours, veuillez passer au statut Soldé lorsque toutes les actions seront soldées ainsi que les champs en gras complété. ', 'error');</script>";
