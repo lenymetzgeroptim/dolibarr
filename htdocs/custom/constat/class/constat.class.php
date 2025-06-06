@@ -70,6 +70,7 @@ class Constat extends CommonObject
 
 	const STATUS_DRAFT = 0;
 	const STATUS_VALIDATED = 1;
+	const STATUS_PRISE = 3;
 	const STATUS_EN_COURS = 4;
 	const STATUS_SOLDEE = 5;
 	const STATUS_CLOTURE = 7;
@@ -125,30 +126,32 @@ class Constat extends CommonObject
 		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>20, 'notnull'=>1, 'visible'=>4, 'default'=>'(PROV)', 'index'=>1, 'searchall'=>1, 'showoncombobox'=>'1', 'validate'=>'1', 'comment'=>"Reference of object"),
 		'label' => array('type'=>'varchar(255)', 'label'=>'Titre', 'enabled'=>'1', 'position'=>30, 'notnull'=>1, 'visible'=>1, 'default'=>'', 'searchall'=>1, 'css'=>'minwidth300', 'cssview'=>'wordbreak', 'help'=>"Le numéro du constat", 'showoncombobox'=>'2', 'validate'=>'1',),
 		'status' => array('type'=>'integer', 'label'=>'Statut', 'enabled'=>'1', 'position'=>43, 'notnull'=>1, 'visible'=>5, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Brouillon', '1'=>'Validé', '3'=>'Vérifié', '4'=>'En cours', '5'=>'Soldée', '7'=>'Clôturé','8'=>'Classé (sans suite)', '9'=>'Annulé'), 'validate'=>'1',),
-		'typeConstat' => array('type'=>'sellist:constat_type:label:rowid::(active:=:1)', 'label'=>'Type de constat', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>1,),
 		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>502, 'notnull'=>1, 'visible'=>5, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
-		'num_commande' => array('type'=>'integer:Commande:commande/class/commande.class.php:', 'label'=>'Numéro de commande', 'enabled'=>'1', 'position'=>504, 'notnull'=>0, 'visible'=>1,),
 		'fk_project' => array('type'=>'integer:Project:projet/class/project.class.php:', 'label'=>'Projet', 'enabled'=>'1', 'position'=>505, 'notnull'=>0, 'visible'=>1,),
-		'dateEmeteur' => array('type'=>'date', 'label'=>'Date création du constat', 'enabled'=>'1', 'position'=>506, 'notnull'=>1, 'visible'=>1,),
+		'num_commande' => array('type'=>'integer:Commande:commande/class/commande.class.php:', 'label'=>'Numéro de commande', 'enabled'=>'1', 'position'=>504, 'notnull'=>0, 'visible'=>1,),
 		'site' => array('type'=>'integer:Societe:societe/class/societe.class.php::(client:=:1)OR(client:=:3:)', 'label'=>'Site intervention', 'enabled'=>'1', 'position'=>508, 'notnull'=>0, 'visible'=>-1, 'index'=>1,),
+		'dateEmeteur' => array('type'=>'date', 'label'=>'Date création du constat', 'enabled'=>'1', 'position'=>506, 'notnull'=>1, 'visible'=>1,),
 		'sujet' => array('type'=>'sellist:constat_sujet:label:rowid::(active:=:1)', 'label'=>'Typologie', 'enabled'=>'1', 'position'=>510, 'notnull'=>0, 'visible'=>1, 'csslist'=>'150',),
-		'descriptionConstat' => array('type'=>'html', 'label'=>'Description du constat', 'enabled'=>'1', 'position'=>515, 'notnull'=>0, 'visible'=>3, 'cssview'=>'wordbreak', 'help'=>"Description détaillée du constat (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
-		'impactcomm' => array('type'=>'html', 'label'=>'Description impact', 'enabled'=>'1', 'position'=>525, 'notnull'=>0, 'visible'=>3, 'cssview'=>'wordbreak', 'help'=>"Description impact (réels et potentiels)",),
+		'typeConstat' => array('type'=>'sellist:constat_type:label:rowid::(active:=:1)', 'label'=>'Type de constat', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>1,),
 		'actionimmediate' => array('type'=>'boolean', 'label'=>'Action immédiate', 'enabled'=>'1', 'position'=>562, 'notnull'=>0, 'visible'=>1, 'help'=>"Coché si le constat est une action immédiate",),
 		'actionimmediatecom' => array('type'=>'html', 'label'=>'Action immédiate commentaire', 'enabled'=>'1', 'position'=>563, 'notnull'=>0, 'visible'=>3, 'cssview'=>'wordbreak', 'help'=>"Détail action immédiate (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
-		'infoClient' => array('type'=>'boolean', 'label'=>'Information Client Requise', 'enabled'=>'1', 'position'=>568, 'notnull'=>0, 'visible'=>1, 'help'=>"client informé requis ou non",),
-		'commInfoClient' => array('type'=>'html', 'label'=>'Commentaire info client', 'enabled'=>'1', 'position'=>570, 'notnull'=>0, 'visible'=>3,'help'=>"précisez méthode d'information client ",),
 		'analyseCauseRacine' => array('type'=>'html', 'label'=>'Analyse des causes racines', 'enabled'=>'1', 'position'=>576, 'notnull'=>0, 'visible'=>3, 'cssview'=>'wordbreak', 'help'=>"(Arbre des causes, description détaillée, etc).",),
-		'accordClient' => array('type'=>'boolean', 'label'=>'Accord du Client', 'enabled'=>'1', 'position'=>577, 'notnull'=>0, 'visible'=>1, 'help'=>"Accord client requis ou non",),
-		'commAccordClient' => array('type'=>'html', 'label'=>'Commentaire Accord client', 'enabled'=>'1', 'position'=>579, 'notnull'=>0, 'visible'=>3,'help'=>"précisez méthode d'information client ",),
-		'coutTotal' => array('type'=>'int', 'label'=>'Coût Total', 'enabled'=>'1', 'position'=>580, 'notnull'=>0, 'visible'=>1, 'help'=>"Coût total regroupant : Coût traitement horraire ,coût traitement financier et coût pénalité",),
-		'dateCloture' => array('type'=>'date', 'label'=>'Date cloture', 'enabled'=>'1', 'position'=>590, 'notnull'=>0, 'visible'=>1, 'help'=>"Date à remplir quand le constat est soldé",),
-		'recurent' => array('type'=>'boolean', 'label'=>'Recurent', 'enabled'=>'1', 'position'=>600, 'notnull'=>0, 'visible'=>1, 'help'=>"Coché si le constat est récurent",),
-		'controleClient' => array('type'=>'boolean', 'label'=>'Controle du Client', 'enabled'=>'1', 'position'=>810, 'notnull'=>0, 'visible'=>1, 'help'=>"Contrôle client requis ou non",),
-		'commControleClient' => array('type'=>'html', 'label'=>'Commentaire Controle client', 'enabled'=>'1', 'position'=>820, 'notnull'=>0, 'visible'=>3,'help'=>"précisez méthode d'information client ",),
-		'commRespAff' => array('type'=>'html', 'label'=>'Commentaire Responsable Affaire', 'enabled'=>'1', 'position'=>830, 'notnull'=>0, 'visible'=>3,),
-		'commRespQ3' => array('type'=>'html', 'label'=>'Commentaire  Q3SE', 'enabled'=>'1', 'position'=>840, 'notnull'=>0, 'visible'=>3,),
-		'last_main_doc' => array('type'=>'varchar(255)', 'label'=>'LastMainDoc', 'enabled'=>'1', 'position'=>850, 'notnull'=>0, 'visible'=>0,),		
+		'recurent' => array('type'=>'boolean', 'label'=>'Recurent', 'enabled'=>'1', 'position'=>577, 'notnull'=>0, 'visible'=>1, 'help'=>"Coché si le constat est récurent",),
+		'coutTotal' => array('type'=>'int', 'label'=>'Coût Total', 'enabled'=>'1', 'position'=>550, 'notnull'=>0, 'visible'=>1, 'help'=>"Coût total regroupant : Coût traitement horraire ,coût traitement financier et coût pénalité",),
+		'descriptionConstat' => array('type'=>'html', 'label'=>'Description du constat', 'enabled'=>'1', 'position'=>515, 'notnull'=>0, 'visible'=>3, 'cssview'=>'wordbreak', 'help'=>"Description détaillée du constat (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
+		'impactcomm' => array('type'=>'html', 'label'=>'Description impact', 'enabled'=>'1', 'position'=>525, 'notnull'=>0, 'visible'=>3, 'cssview'=>'wordbreak', 'help'=>"Description impact (réels et potentiels)",),
+		'infoClient' => array('type'=>'boolean', 'label'=>'Information Client Requise', 'enabled'=>'1', 'position'=>578, 'notnull'=>0, 'visible'=>1, 'help'=>"client informé requis ou non",),
+		'commInfoClient' => array('type'=>'html', 'label'=>'Commentaire info client', 'enabled'=>'1', 'position'=>579, 'notnull'=>0, 'visible'=>3,'help'=>"précisez méthode d'information client ",),
+		'accordClient' => array('type'=>'boolean', 'label'=>'Accord du Client', 'enabled'=>'1', 'position'=>595, 'notnull'=>0, 'visible'=>1, 'help'=>"Accord client requis ou non",),
+		'commAccordClient' => array('type'=>'html', 'label'=>'Commentaire Accord client', 'enabled'=>'1', 'position'=>600, 'notnull'=>0, 'visible'=>3,'help'=>"précisez méthode d'information client ",),
+		'controleClient' => array('type'=>'boolean', 'label'=>'Controle du Client', 'enabled'=>'1', 'position'=>606, 'notnull'=>0, 'visible'=>1, 'help'=>"Contrôle client requis ou non",),
+		'commControleClient' => array('type'=>'html', 'label'=>'Commentaire Controle client', 'enabled'=>'1', 'position'=>610, 'notnull'=>0, 'visible'=>3,'help'=>"précisez méthode d'information client ",),
+		'commRespAff' => array('type'=>'html', 'label'=>'Commentaire Responsable Affaire', 'enabled'=>'1', 'position'=>612, 'notnull'=>0, 'visible'=>3,),
+		'commRespQ3' => array('type'=>'html', 'label'=>'Commentaire Responsable Q3SE', 'enabled'=>'1', 'position'=>613, 'notnull'=>0, 'visible'=>3,),
+		'commServQ3' => array('type'=>'html', 'label'=>'Commentaire Service Q3SE', 'enabled'=>'1', 'position'=>614, 'notnull'=>0, 'visible'=>3,),
+		'last_main_doc' => array('type'=>'varchar(255)', 'label'=>'LastMainDoc', 'enabled'=>'1', 'position'=>650, 'notnull'=>0, 'visible'=>0,),
+		'date_eche' => array('type'=>'date', 'label'=>'Date échéance', 'enabled'=>'1', 'position'=>500, 'notnull'=>0, 'visible'=>1,),
+		'dateCloture' => array('type'=>'date', 'label'=>'Date cloture', 'enabled'=>'1', 'position'=>561, 'notnull'=>0, 'visible'=>1, 'help'=>"Date à remplir quand le constat est soldé",),
 	);
 	
 	public $rowid;
@@ -177,7 +180,9 @@ class Constat extends CommonObject
 	public $commControleClient;
 	public $commRespAff;
 	public $commRespQ3;
+	public $commServQ3;
 	public $last_main_doc;
+	public $date_eche;
 	public $dateCloture;
 	// END MODULEBUILDER PROPERTIES
 
@@ -308,7 +313,6 @@ class Constat extends CommonObject
 			$this->linked_objects = $this->linkedObjectsIds; // TODO Replace linked_objects with linkedObjectsIds
 		}
 		
-		$this->sendMailValidate();
 		
 		return $resultcreate;
 
@@ -430,6 +434,7 @@ class Constat extends CommonObject
 		$sql .= " co.ref,";
 		$sql .= " co.label,";
 		$sql .= " co.status,";
+		$sql .= " co.date_eche,";
 		$sql .= " co.dateCloture,";
 		$sql .= " co.fk_user_creat,";
 		$sql .= " co.fk_project,";
@@ -453,8 +458,8 @@ class Constat extends CommonObject
 		$sql .= " co.controleClient,";
 		$sql .= " co.commControleClient,";
 		$sql .= " co.commRespAff,";
-		$sql .= " co.commRespQ3";
-		
+		$sql .= " co.commRespQ3,";
+		$sql .= " co.commServQ3";
 		
 		
 		
@@ -784,10 +789,12 @@ class Constat extends CommonObject
 				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$this->id.'">'.$this->ref.'</a>';
 
 				$to = rtrim($to, ", ");
+				$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été validé. Veuillez compléter votre partie. Cordialement, votre système de notification.");
+				$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 				
-				
-				
-				if($this->fk_project == null && $to == null){
+				$res = $cmail->sendfile();
+					
+				if($this->fk_project = null){
 
 					$subject = '[OPTIM Industries] Notification automatique constat sans projet ';
 
@@ -810,20 +817,22 @@ class Constat extends CommonObject
 						$liste_utilisateur = $user_group->listUsersForGroup();
 						foreach($liste_utilisateur as $qualite){
 							if(!empty($qualite->email)){
-								$to .= $qualite->email . ", ";
+								$to .= $qualite->email;
+								
+
 							}
 						}
 
-						// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-						$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-						$resql_creator = $db->query($sql_creator);
-						$creator_name = "";
-						if ($resql_creator) {
-							if ($db->num_rows($resql_creator) > 0) {
-								$creator = $db->fetch_object($resql_creator);
-								$creator_name = $creator->firstname . ' ' . $creator->lastname;
+							// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+							$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+							$resql_creator = $db->query($sql_creator);
+							$creator_name = "";
+							if ($resql_creator) {
+								if ($db->num_rows($resql_creator) > 0) {
+									$creator = $db->fetch_object($resql_creator);
+									$creator_name = $creator->firstname . ' ' . $creator->lastname;
+								}
 							}
-						}
 
 						global $dolibarr_main_url_root;
 						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
@@ -832,17 +841,12 @@ class Constat extends CommonObject
 
 						
 						$to = rtrim($to, ", ");
-						var_dump(" constat sans projet");
-						var_dump($to);
-						exit;
 						$message = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été validé sans projet, Votre système de notification.");
 						//$msg = 'test notif ( a ne pas prendre en compte si reçu )';
 						$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 						
 						// Send mail
 						$res = $cmail->sendfile();
-						var_dump($res);
-						exit;
 						if($res) {
 							setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
 							// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
@@ -851,15 +855,7 @@ class Constat extends CommonObject
 							window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
 							</script>';
 						} 
-				}else{
-				
-				$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été validé. Veuillez compléter votre partie. Cordialement, votre système de notification.");
-				$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-				
-				$res = $cmail->sendfile();
-				}
-				
-				
+				}	
 
 				$ret = $this->fetch($this->id); // Reload to get new records
 
@@ -921,20 +917,33 @@ class Constat extends CommonObject
 
 
 		$to = rtrim($to, ", ");
-		
 		$msg =  "test envoie de mail";
 		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 		
-		$result = $cmail->sendfile();
-		
 		//$isSend = $cmail->sendfile();	
-		if (!$result) {
-			echo "Erreur d'envoi : " . $cmail->error;
-			exit;
+		if ($mail->error) {
+			$res = 0;
 		}
-		
+		// Send mail
+		if ($res) {
+			$res = $cmail->sendfile();
+		}
 	}
 
+	/**
+	 *	Set Status prise en compte
+	 *
+	 *	@param	User	$user			Object user that modify
+	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
+	 *	@return	int						<0 if KO, >0 if OK
+	 */
+	// public function setPrise($user, $notrigger = 0)
+	// 	{
+	// 		if ($this->status <= self::STATUS_PRISE) {
+	// 			return 0;
+	// 		}
+	// 		return $this->setStatusCommon($user, self::STATUS_PRISE, $notrigger, 'CONSTAT_UNVALIDATE');
+	// 	}
 	
 	/**
 	 *	Set Status en cours
@@ -1171,7 +1180,21 @@ public function setClasse($user, $notrigger = 0)
 		}
 
 
-
+		// La due date est déjà un timestamp, donc on peut directement la comparer
+		if (in_array($this->status, [1, 3, 4])) {
+			// Assurer que la date d'échéance existe et est valide
+			if (!empty($this->date_eche)) {
+				// Convertir la date d'échéance (qui est en timestamp) en entier
+				$due_timestamp = (int) $this->date_eche;
+						
+								
+				// Comparer les timestamps
+				if ($due_timestamp < $current_timestamp) {
+					// Si la date d'échéance est dans le passé, afficher l'icône
+					$result .= img_warning($langs->trans("Late"));
+				} 
+			} 
+		} 
 
 		return $result;
 	}
@@ -1245,7 +1268,7 @@ public function setClasse($user, $notrigger = 0)
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Créé');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
-			
+			$this->labelStatus[self::STATUS_PRISE] = $langs->transnoentitiesnoconv('Vérifiée');
 			$this->labelStatus[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatus[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldé');
 			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturé');
@@ -1254,7 +1277,7 @@ public function setClasse($user, $notrigger = 0)
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Créé');
 			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
-			
+			$this->labelStatusShort[self::STATUS_PRISE] = $langs->transnoentitiesnoconv('Vérifiée');
 			$this->labelStatusShort[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatusShort[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldé');
 			$this->labelStatusShort[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturé');
@@ -1486,7 +1509,35 @@ public function setClasse($user, $notrigger = 0)
 		return $error;
 	}
 	
+	
+	public function updatePrise($notrigger = 0)
+	{
+		global $user; 
+		$error = 0;
 
+		$sql = "UPDATE ".MAIN_DB_PREFIX."constat_constat";
+		$sql .= " SET status = ".self::STATUS_PRISE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		$resql = $this->db->query($sql);
+			if (!$resql) {
+				dol_print_error($this->db);
+				$this->error = $this->db->lasterror();
+				$error++;
+			}
+
+
+
+		if (!$error) {
+			$this->status = self::STATUS_PRISE;
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+
+	}
 
 	public function updateEnCours($notrigger = 0)
 	{
@@ -1651,6 +1702,8 @@ public function setClasse($user, $notrigger = 0)
 		
 	}
 
+
+	
 
 	function updateCancel($notrigger = 0)
 	{
@@ -2018,15 +2071,11 @@ function subManager($inManager, $inSubmanager)
 				$to .= $toemeteur;
 				$to .= $torespQ3;
 				$to = rtrim($to, ", ");
-				var_dump("brouillon");
-				var_dump($to);
-				exit;
 				$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name. " est toujours à l'état de brouillon. Veuillez le passer à l'état validé. Cordialement, votre système de notification.");
 				$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$this->object->id);
 				
 				// Send mail
 				$res = $cmail->sendfile();
-				var_dump($res);
 				if($res) {
 					setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
 				} else {
@@ -2147,15 +2196,11 @@ function subManager($inManager, $inSubmanager)
 		$to .= $toemeteur;
 		$to .= $torespQ3;
 		$to = rtrim($to, ", ");
-		var_dump("toute action soldé");
-		var_dump($to);
-		exit;
 		$msg = $langs->transnoentitiesnoconv(" Bonjour, toutes les actions du constat " .$link." créé par ".$creator_name. " sont soldées. Cordialement, votre système de notification.");
 		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$this->object->id);
 		
 		// Send mail
 		$res = $cmail->sendfile();
-		var_dump($res);
 		if($res) {
 			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
 		} else {
@@ -2649,7 +2694,8 @@ public function load_board_actions($user)
         $response->nbtodolate = 0;
 
         while ($obj = $this->db->fetch_object($resql)) {
-			$response->nbtodo++;	
+			$response->nbtodo++;
+			
 		}
 
 		 // Deuxième requête pour récupérer les actions en retard

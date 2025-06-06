@@ -30,7 +30,7 @@ if (empty($conf) || !is_object($conf)) {
 if (!is_object($form)) {
 	$form = new Form($db);
 }
-if ($object->status == $object::STATUS_VALIDATED) {
+if ($object->status == $object::STATUS_PRISE ||$object->status == $object::STATUS_VALIDATED) {
 	$object->fields['typeConstat'] ['notnull'] = 1;
 }
 if ($object->status == $object::STATUS_EN_COURS) {
@@ -79,7 +79,7 @@ foreach ($object->fields as $key => $val) {
 
 /*affichage des noms des champs de la liste lié au role Emeteur */
 
-if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user->id  || $user->rights->constat->constat->ResponsableQ3SE) {
+if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user->id || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE) {
 		$keys = array( 'dateEmeteur','fk_project','site', 'sujet','descriptionConstat', 'impactNonConfo', 'ref', 'label');
 		if(in_array($key, $keys)) {
 			print '<tr class="field_'.$key.'"><td';
@@ -131,7 +131,7 @@ if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user
 
 /*affichage des zone a remplir des champs de la liste lié au role Emeteur */
 
-if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user->id || $user->rights->constat->constat->ResponsableQ3SE) {
+if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user->id || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE) {
         if ($key == 'dateEmeteur') {  
             if (!empty($val['noteditable'])) {
 				print $object->showOutputField($val, $key, $value, '', '', '', 0);
@@ -229,7 +229,7 @@ if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user
 
 /*affichage des noms des champs de la liste lié au role Responsable Affaire */
 
-	if (in_array($object->status, [1,3, 4, 5, 7, 9]) && ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) || $user->rights->constat->constat->ResponsableQ3SE)) {
+	if (in_array($object->status, [1,3, 4, 5, 7, 9]) && ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE)) {
 		$keys = array('num_commande','date_eche','impactcomm','processusconcerne', 'radioprotectionInfo', 'radioprotection', 'surete', 'actionimmediate','actionimmediatecom', 'rubrique', 'typeConstat', 'impactNonFactu', 'impactTemps', 'impactAnalyse', 'impactContractuel', 'impactFinnancier','infoClient','commInfoClient','commRespAff');
 			if(in_array($key, $keys)) {
 				
@@ -280,7 +280,7 @@ if ($user->rights->constat->constat->Emetteur && $object->fk_user_creat == $user
 	}
 
 /*affichage des zone a remplir des champs de la liste lié au role Responsable Affaire */
-if (in_array($object->status, [1,3, 4, 5, 7, 9]) && ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) ||  $user->rights->constat->constat->ResponsableQ3SE)) {
+if (in_array($object->status, [1,3, 4, 5, 7, 9]) && ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE)) {
         if ($key == 'impactFinnancier') {  
             if (!empty($val['noteditable'])) {
 				print $object->showOutputField($val, $key, $value, '', '', '', 0);
@@ -600,7 +600,71 @@ if (in_array($object->status, [1,3, 4, 5, 7, 9]) && ( ($user->rights->constat->c
 			}
 		}
 	}
+/*affichage des noms des champs de la liste lié au role Service Q3SE */
 
+	if (in_array($object->status, [4, 5, 7, 9]) && ($user->rights->constat->constat->ServiceQ3SE  || $user->rights->constat->constat->ResponsableQ3SE)) {
+		$keys = array('commServQ3');
+			if(in_array($key, $keys)) {
+				print '<tr class="field_'.$key.'"><td';
+				print ' class="titlefieldcreate';
+				if (isset($val['notnull']) && $val['notnull'] > 0) {
+					print ' fieldrequired';
+				}
+				if (preg_match('/^(text|html)/', $val['type'])) {
+					print ' tdtop';
+				}
+				print '">'; 
+				
+				if (!empty($val['help'])) {
+					print $form->textwithpicto($langs->trans($val['label']), $langs->trans($val['help']));
+				} else {
+					print $langs->trans($val['label']);
+				}
+			}
+			print '</td>';
+			if(in_array($key, $keys)) { 
+				print '<td class="valuefieldcreate">';
+				if (!empty($val['picto'])) {
+					//print img_picto('', $val['picto'], '', false, 0, 0, '', 'pictofixedwidth');
+				}
+				
+				if (in_array($val['type'], array('int', 'integer'))) {
+					$value = GETPOSTISSET($key) ?GETPOST($key, 'int') : $object->$key;
+				} elseif ($val['type'] == 'double') {
+					$value = GETPOSTISSET($key) ? price2num(GETPOST($key, 'alphanohtml')) : $object->$key;
+				} elseif (preg_match('/^(text|html)/', $val['type'])) {
+					$tmparray = explode(':', $val['type']);
+					if (!empty($tmparray[1])) {
+						$check = $tmparray[1];
+					} else {
+						$check = 'restricthtml';
+					}
+					$value = GETPOSTISSET($key) ? GETPOST($key, $check) : $object->$key;
+				} elseif ($val['type'] == 'price') {
+					$value = GETPOSTISSET($key) ? price2num(GETPOST($key)) : price2num($object->$key);
+				} elseif ($key == 'lang') {
+					$value = GETPOSTISSET($key) ? GETPOST($key, 'aZ09') : $object->lang;
+				}	else {
+					$value = GETPOSTISSET($key) ? GETPOST($key, 'alpha') : $object->$key;
+				}
+			}
+	}
+/*affichage des zone a remplir des champs de la liste lié au role Service Q3SE */
+	
+if (in_array($object->status, [4, 5, 7, 9]) && ($user->rights->constat->constat->ServiceQ3SE  || $user->rights->constat->constat->ResponsableQ3SE)) {
+        if($key == 'commServQ3') {  
+            if (!empty($val['noteditable'])) {
+				print $object->showOutputField($val, $key, $value, '', '', '', 0);
+			} else {
+				if ($key == 'lang') {
+					print img_picto('', 'language', 'class="pictofixedwidth"');
+					print $formadmin->select_language($value, $key, 0, null, 1, 0, 0, 'minwidth300', 2);
+				} else {
+					print $object->showInputField($val, $key == 'p_year' ? '' : $key, $value, '', '', '', 0);
+				}
+			}
+		}
+	}
 
 /*affichage des noms des champs de la liste lié au role Service Q3SE et ResponsableQ3SE*/
 
