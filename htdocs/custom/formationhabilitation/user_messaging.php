@@ -240,7 +240,7 @@ if ($object->id > 0) {
 	$filters = array();
 	$filters['search_agenda_label'] = $search_agenda_label;
 	$filters['search_rowid'] = $search_rowid;
-	$filters['search_extraparams'] = 'cost';
+	//$filters['search_extraparams'] = 'cost';
 
 	// List of actions on element
 	show_actions_messaging_formationhabilitation($conf, $langs, $db, $object, null, 0, $actioncode, '', $filters, $sortfield, $sortorder);

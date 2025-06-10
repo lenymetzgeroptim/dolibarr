@@ -51,7 +51,7 @@ if (!$permissiontoreadline) {
 }
 
 $objectline->fields = dol_sort_array($objectline->fields, 'position');
-$url = dol_buildpath('/formationhabilitation/uservolet_card.php', 1).'?id='.$line->id;
+$url = dol_buildpath('/formationhabilitation/uservolet_card.php', 1).'?id='.$line->id.'&save_lastsearch_values=1';
 
 print '<div class="col">';
 	print '<div class="card">';

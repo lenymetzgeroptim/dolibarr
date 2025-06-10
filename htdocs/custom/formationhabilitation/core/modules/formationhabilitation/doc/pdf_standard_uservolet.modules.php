@@ -38,6 +38,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
 
 
 /**
@@ -240,8 +241,13 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			$volet->fetch($object->fk_volet);
 			$dir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
 			$file = $dir."/".$user_static->lastname."_".$volet->nommage."_".dol_print_date($now, "%Y%m%d").".pdf";
-			// Appeler la fonction pour obtenir un chemin de fichier unique
-			if($object->status >= $object::STATUS_VALIDATED) {
+			if ($object->status < $object::STATUS_VALIDATED && file_exists($dir)) { // Supprimer les anciens PDF du même utilisateur et volet si le statut est < VALIDATED
+				$pattern = $dir . '/' . $user_static->lastname . '_' . $volet->nommage . '_*.pdf';
+				foreach (glob($pattern) as $oldFile) {
+					unlink($oldFile); // Supprime l'ancien fichier
+				}
+			}
+			elseif($object->status >= $object::STATUS_VALIDATED) { // Appeler la fonction pour obtenir un chemin de fichier unique
 				$file = $this->getUniqueFilename($file);
 			}
 			if (!file_exists($dir)) {
@@ -310,6 +316,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 						$pdf->useTemplate($pdf->importPage(1));
 						unlink($voletFile);
 					}
+					$this->writeSignatureVoletElectrique($pdf, $object, $outputlangs, $outputlangsbis);
 				}
 				else {
 					$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite); // Left, Top, Right
@@ -1122,6 +1129,58 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 		}
 		$cachet3 = '<p>Signature intervenant</p>'.$signature;
 		$pdf->writeHTMLCell(30, 35, $x + 55, $y, $cachet3, array('RTB' => array('width' => 0.3, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0))), 0, false, true, "C");
+	}
+
+	/**
+	 *  Show Signature on Volet electrique
+	 *
+	 *  @param	Tcpdf		$pdf     		Object PDF
+	 *  @param  UserVolet		$object     	Object to show
+	 *  @param  Translate	$outputlangs	Object lang for output
+	 *  @param  Translate	$outputlangsbis	Object lang for output bis
+	 *  @return	void
+	 */
+	protected function writeSignatureVoletElectrique(&$pdf, $object, $outputlangs, $outputlangsbis = null)
+	{
+		global $db; 
+		global $dolibarr_main_url_root;
+
+		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+		$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+
+		$user_static = new User($db);
+		$actioncomm = new ActionComm($this->db);
+		$object->fetch($object->id); // Reload for last diff
+
+		if(!empty($object->date_valid_employeur) && !empty($object->fk_user_valid_employeur) && !empty($object->fk_action_valid_employeur)) {
+			$user_static->fetch($object->fk_user_valid_employeur);
+			$actioncomm->fetch($object->fk_action_valid_employeur);
+			$cachet1 = '<p style="font-size: 6.5pt"><strong>Signature informatique réalisée par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_employeur, "%d-%m-%Y")."</strong>";
+			$cachet1 .= ' <a href="'.$urlwithroot.'/comm/action/card.php?id='.$object->fk_action_valid_employeur.'">('.$actioncomm->ref.')</a>';
+			$cachet1 .= "</p>";
+		}
+		if(!empty($cachet1)) {
+			$pdf->writeHTMLCell(33, 35, 73, 103.5, $cachet1, 0, 0, false, true, "C");
+		}
+		else {
+			$pdf->Rect(73, 104, 33, 8, 'F', array(), array(255, 255, 255));
+		}
+
+		$signature = '';
+		if(!empty($object->date_valid_intervenant) && !empty($object->fk_user_valid_intervenant) && !empty($object->fk_action_valid_intervenant)) {
+			$user_static->fetch($object->fk_user_valid_intervenant);
+			$actioncomm->fetch($object->fk_action_valid_intervenant);
+			$signature .= '<p style="font-size: 7pt"><strong>Signature informatique réalisée par '.$user_static->firstname." ".$user_static->lastname." le ".dol_print_date($object->date_valid_intervenant, "%d-%m-%Y")."</strong>";
+			$signature .= ' <a href="'.$urlwithroot.'/comm/action/card.php?id='.$object->fk_action_valid_intervenant.'">('.$actioncomm->ref.')</a>';
+			$signature .= "</p>";
+		}
+		$cachet3 = $signature;
+		if(!empty($cachet3)) {
+			$pdf->writeHTMLCell(31, 35, 31, 99, $cachet3, 0, 0, false, true, "C");
+		}
+		else {
+			$pdf->Rect(31, 99, 31, 13, 'F', array(), array(255, 255, 255));
+		}
 	}
 
 	/**

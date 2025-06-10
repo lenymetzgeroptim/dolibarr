@@ -113,26 +113,35 @@ $hookmanager->initHooks(array('feuilledetempsagenda', 'globalcard')); // Note th
 $extrafields->fetch_name_optionals_label($object->table_element);
 
 // Load object
+$usertoprocess = new User($db);
+$usertoprocess->fetch($object->fk_user);
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once  // Must be include, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
 if ($id > 0 || !empty($ref)) {
 	$upload_dir = $conf->feuilledetemps->multidir_output[$object->entity]."/".$object->id;
 }
 
 // Security check
-$list_resp_task = $object->listApprover1;
-if(in_array($user->id, $list_resp_task[0])){
-	$userIsResp = 1;
+if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+	if(in_array($user->id, explode(',', $usertoprocess->array_options['options_approbateurfdt']))){
+		$userIsResp = 1;
+	}
 }
 else {
-	$userIsResp = 0;
-}
-
-$list_resp_projet = $object->listApprover2;
-if(in_array($user->id, $list_resp_projet[0])){
-	$userIsRespProjet = 1;
-}
-else {
-	$userIsRespProjet = 0;
+	$list_resp_task = $object->listApprover1;
+	if(in_array($user->id, $list_resp_task[0])){
+		$userIsResp = 1;
+	}
+	else {
+		$userIsResp = 0;
+	}
+	
+	$list_resp_projet = $object->listApprover2;
+	if(in_array($user->id, $list_resp_projet[0])){
+		$userIsRespProjet = 1;
+	}
+	else {
+		$userIsRespProjet = 0;
+	}
 }
 
 $userIsInHierarchy = 0;
@@ -143,8 +152,8 @@ if($user->rights->feuilledetemps->feuilledetemps->readHierarchy) {
 	}
 }
 
-$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->read || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || $user->id == $object->fk_user ;
-$permissiontoadd = $user->rights->feuilledetemps->feuilledetemps->read; // Used by the include of actions_addupdatedelete.inc.php
+$permissiontoread = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read) || in_array($user->id, explode(',', $usertoprocess->array_options['options_observateurfdt']));
+$permissiontoadd = $user->rights->feuilledetemps->feuilledetemps->readall || $userIsInHierarchy || $user->admin || $userIsResp || $userIsRespProjet || ($user->id == $object->fk_user && $user->rights->feuilledetemps->feuilledetemps->read); // Used by the include of actions_addupdatedelete.inc.php
 $permissionToVerification = $user->rights->feuilledetemps->feuilledetemps->modify_verification;
 
 // Security check (enable the most restrictive one)

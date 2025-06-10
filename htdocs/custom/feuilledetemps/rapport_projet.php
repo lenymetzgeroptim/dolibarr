@@ -165,6 +165,7 @@ $reportStatic->initBasic($projectIdlist, '', '', $dateStart, $dateEnd, $mode, $i
 if($action == 'getpdf') {
     $pdf = new pdf_rat($db);
     //$outputlangs = $langs;
+   
     if($pdf->writeFile($reportStatic, $langs)>0) {
         header("Location: ".DOL_URL_ROOT."/document.php?modulepart=feuilledetemps&file=reports/".$reportStatic->name.".pdf");
         return;
@@ -178,7 +179,15 @@ if($action == 'getpdf') {
     {
         @ini_set("max_execution_time", $max_execution_time_for_export); // This work only if safe mode is off. also web servers has timeout of 300
     }
+    
+    
     $name=$reportStatic->buildFile($model, false);
+    
+    // if (!$name) {
+    //     dol_syslog("Erreur : le fichier export n'a pas été généré correctement.", LOG_ERR);
+    // } else {
+    //     dol_syslog("Fichier généré : " . $name, LOG_DEBUG);
+    // }
     if(!empty($name)){
         header("Location: ".DOL_URL_ROOT."/document.php?modulepart=export&file=".$name);
         return;
@@ -212,26 +221,26 @@ $projdefault == null ? $projdefault = array($label) : $projdefault = $projdefaul
 
 // var_dump($resArrays);
 
-/*$Form .= "<div id='quicklinks'>";
+/*$formReport .= "<div id='quicklinks'>";
 //This week quick link
-$Form .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".dol_print_date(strtotime("monday this week"), 'dayxcard');
-$Form .= "&dateEnd=".dol_print_date(strtotime("sunday this week"), 'dayxcard')."'>".$langs->trans('thisWeek')."</a>";
+$formReport .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".dol_print_date(strtotime("monday this week"), 'dayxcard');
+$formReport .= "&dateEnd=".dol_print_date(strtotime("sunday this week"), 'dayxcard')."'>".$langs->trans('thisWeek')."</a>";
 //This month quick link
-$Form .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".dol_print_date(strtotime("first day of this month"), 'dayxcard');
-$Form .= "&dateEnd=".dol_print_date(strtotime("last day of this month"), 'dayxcard')."'>".$langs->trans('thisMonth')."</a>";
+$formReport .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".dol_print_date(strtotime("first day of this month"), 'dayxcard');
+$formReport .= "&dateEnd=".dol_print_date(strtotime("last day of this month"), 'dayxcard')."'>".$langs->trans('thisMonth')."</a>";
 //last week quick link
-$Form .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".dol_print_date(strtotime("monday last week"), 'dayxcard');
-$Form .= "&dateEnd=".dol_print_date(strtotime("sunday last week"), 'dayxcard')."'>".$langs->trans('lastWeek')."</a>";
+$formReport .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".dol_print_date(strtotime("monday last week"), 'dayxcard');
+$formReport .= "&dateEnd=".dol_print_date(strtotime("sunday last week"), 'dayxcard')."'>".$langs->trans('lastWeek')."</a>";
 //Last month quick link
-$Form .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".dol_print_date(strtotime("first day of previous month"), 'dayxcard');
-$Form .= "&dateEnd=".dol_print_date(strtotime("last day of previous month"), 'dayxcard')."'>".$langs->trans('lastMonth')."</a>";
+$formReport .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".dol_print_date(strtotime("first day of previous month"), 'dayxcard');
+$formReport .= "&dateEnd=".dol_print_date(strtotime("last day of previous month"), 'dayxcard')."'>".$langs->trans('lastMonth')."</a>";
 //today
 $today = dol_print_date(mktime(), 'dayxcard');
-$Form .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".$today;
-$Form .= "&dateEnd=".$today."'>".$langs->trans('today')."</a> ";
-$Form .= "</div>";*/
+$formReport .= "<a class='tab' href ='?action=reportUser&projectSelected=".$projectSelectedId."&dateStart=".$today;
+$formReport .= "&dateEnd=".$today."'>".$langs->trans('today')."</a> ";
+$formReport .= "</div>";*/
 // <td class="wrapcolumntitle center liste_titre">'.$langs->trans('Mode').'</td>
-$Form .= '<form action="?action=reportproject'.(($optioncss != '')?'&amp;optioncss='.$optioncss:'').'" method = "POST">
+$formReport .= '<form action="?action=reportproject'.(($optioncss != '')?'&amp;optioncss='.$optioncss:'').'" method = "POST">
             <table class="tagtable nobottomiftotal liste">
             <tr class="liste_titre">
             <td width="35%" class="wrapcolumntitle center liste_titre">'.$langs->trans('Project').'</td>
@@ -242,110 +251,114 @@ $Form .= '<form action="?action=reportproject'.(($optioncss != '')?'&amp;optionc
             <td width="10%" class="wrapcolumntitle center liste_titre">'.$langs->trans('exportfriendly').'</td>
       
             </tr></table>';
-        $Form .= '<table class="tagtable nobottomiftotal liste" style="display: flex;justify-content: center;border-top-style: hidden;border-top-color: #FEFEFE;">';
-        $Form .= '<tr class="center">';
+        $formReport .= '<table class="tagtable nobottomiftotal liste" style="display: flex;justify-content: center;border-top-style: hidden;border-top-color: #FEFEFE;">';
+        $formReport .= '<tr class="center">';
         // Select mode
-        $Form.= '<td style="border: none;  border-top-color: #FEFEFE;" class="center"><input type = "radio" name = "mode" value = "UTD" '.($mode == 'UTD'?'checked':'');
-        $Form .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('User').' / '.$langs->trans('Task').' / '.$langs->trans('Date').'</span>';
-        $Form.= '<input type = "radio" name = "mode" value = "UDT" '.($mode == 'UDT'?'checked':'');
-        $Form .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('User').' / '.$langs->trans('Date').' / '.$langs->trans('Task').'</span>';
-        $Form.= '<input type = "radio" name = "mode" value = "DUT" '.($mode == 'DUT'?'checked':'');
-        $Form .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('Date').' / '.$langs->trans('User').' / '.$langs->trans('Task').'</span>';
-        $Form.= '<input type = "radio" name = "mode" value = "TUD" '.($mode == 'TUD'?'checked':'');
-        $Form .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('Task').' / '.$langs->trans('User').' / '.$langs->trans('Date').'</span>';
-        $Form.= '<input type = "radio" name = "mode" value = "TDU" '.($mode == 'TDU'?'checked':'');
-        $Form .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('Task').' / '.$langs->trans('Date').' / '.$langs->trans('User').'</span>';
-        $Form .= '</td></tr></table>';
+        $formReport.= '<td style="border: none;  border-top-color: #FEFEFE;" class="center"><input type = "radio" name = "mode" value = "UTD" '.($mode == 'UTD'?'checked':'');
+        $formReport .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('User').' / '.$langs->trans('Task').' / '.$langs->trans('Date').'</span>';
+        $formReport.= '<input type = "radio" name = "mode" value = "UDT" '.($mode == 'UDT'?'checked':'');
+        $formReport .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('User').' / '.$langs->trans('Date').' / '.$langs->trans('Task').'</span>';
+        $formReport.= '<input type = "radio" name = "mode" value = "DUT" '.($mode == 'DUT'?'checked':'');
+        $formReport .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('Date').' / '.$langs->trans('User').' / '.$langs->trans('Task').'</span>';
+        $formReport.= '<input type = "radio" name = "mode" value = "TUD" '.($mode == 'TUD'?'checked':'');
+        $formReport .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('Task').' / '.$langs->trans('User').' / '.$langs->trans('Date').'</span>';
+        $formReport.= '<input type = "radio" name = "mode" value = "TDU" '.($mode == 'TDU'?'checked':'');
+        $formReport .= '><span style="margin: 0px 50px 50px 0px;"> '.$langs->trans('Task').' / '.$langs->trans('Date').' / '.$langs->trans('User').'</span>';
+        $formReport .= '</td></tr></table>';
         
 //         <td><select name="projectSelected" style="max-width: 500px;">';
 // // // select project
 
 // foreach($projectList as $pjt) {
-//     $Form .= '<option value = "'.$pjt["value"].'" '.(($projectSelectedId == $pjt["value"])?"selected":'').' >'.$pjt["label"].'</option>'."\n";
+//     $formReport .= '<option value = "'.$pjt["value"].'" '.(($projectSelectedId == $pjt["value"])?"selected":'').' >'.$pjt["label"].'</option>'."\n";
 // }
 
-// $Form .= '<option value = "-999" '.(($projectSelectedId == "-999")?"selected":'').' >'.$langs->trans('All').'</option>'."\n";
+// $formReport .= '<option value = "-999" '.(($projectSelectedId == "-999")?"selected":'').' >'.$langs->trans('All').'</option>'."\n";
 
-// $Form .= '</select></td>';
-$Form .= '<table class="tagtable nobottomiftotal liste">';
-$Form .= '<tr class="oddeven center">';
-$Form .= '<td class="center">';
-$Form .=  $form->multiselectarray('arrproj',  $arrproject,  $arrproj, '', '', '', '', '480px tdoverflowmax100', '','', implode($projdefault));
-$Form .= '</td>';  
+// $formReport .= '</select></td>';
+$formReport .= '<table class="tagtable nobottomiftotal liste">';
+$formReport .= '<tr class="oddeven center">';
+$formReport .= '<td class="center">';
+$formReport .=  $form->multiselectarray('arrproj',  $arrproject,  $arrproj, '', '', '', '', '480px tdoverflowmax100', '','', implode($projdefault));
+$formReport .= '</td>';  
   
 //}
 // select start date
-$Form.=   '<td width="15%" class="center">'.$form->select_date($dateStart, 'dateStart', 0, 0, 0, "", 1, 1, 1)."</td>";
+$formReport.=   '<td width="15%" class="center">'.$form->select_date($dateStart, 'dateStart', 0, 0, 0, "", 1, 1, 1)."</td>";
 // select end date
-$Form.=   '<td width="15%" class="center">'.$form->select_date($dateEnd, 'dateEnd', 0, 0, 0, "", 1, 1, 1)."</td>";
-//$Form .= '<td> '.$htmlother->select_month($month, 'month').' - '.$htmlother->selectyear($year, 'year', 0, 10, 3)
+$formReport.=   '<td width="15%" class="center">'.$form->select_date($dateEnd, 'dateEnd', 0, 0, 0, "", 1, 1, 1)."</td>";
+//$formReport .= '<td> '.$htmlother->select_month($month, 'month').' - '.$htmlother->selectyear($year, 'year', 0, 10, 3)
 // Select short
-$Form .= ' <td width="10%"  class="center"><input type = "checkbox" name = "short" value = "1" ';
-$Form .= (($short == 1)?'checked>':'>').'</td>' ;
+$formReport .= ' <td width="10%"  class="center"><input type = "checkbox" name = "short" value = "1" ';
+$formReport .= (($short == 1)?'checked>':'>').'</td>' ;
 // Select invoiceable only
-$Form .= '<td width="10%" class="center" style="min-width: 180px;"><input type = "checkbox" name = "invoicabletaskOnly" value = "1" ';
-$Form .= (($invoicabletaskOnly == 1)?'checked>':'>').'</td>';
+$formReport .= '<td width="10%" class="center" style="min-width: 180px;"><input type = "checkbox" name = "invoicabletaskOnly" value = "1" ';
+$formReport .= (($invoicabletaskOnly == 1)?'checked>':'>').'</td>';
 // Select Export friendly
-$Form .= '<td width="10%" class="center" style="min-width: 110px;"><input type = "checkbox" name = "exportfriendly" value = "1" ';
-$Form .= (($exportfriendly == 1)?'checked>':'>').'</td>';
-$Form .= '</tr></table>';
+$formReport .= '<td width="10%" class="center" style="min-width: 110px;"><input type = "checkbox" name = "exportfriendly" value = "1" ';
+$formReport .= (($exportfriendly == 1)?'checked>':'>').'</td>';
+$formReport .= '</tr></table>';
 
 $model=$conf->global->TIMESHEET_EXPORT_FORMAT;
+
 //if project are selected more than one.
 if(!empty($arrproj) && $arrproj !== '' && sizeof($arrproj) > 1) {
-    $Form .= '<table class="tagtable nobottomiftotal">';
-    $Form .= '<tbody>';
-    $Form .= '<tr class="liste_titre">';
-    $Form .= ' <th class="wrapcolumntitle liste_titre" title="'.$langs->trans('Invoice').'.">';
-    $Form .= '<span class="reposition">'.$langs->trans('Invoice').'.</span>';
-    $Form .= '</th>';
-    $Form .= '<th class="wrapcolumntitle liste_titre" title="'.$langs->trans('TimesheetPDF').'.">';
-    $Form .= '<span class="reposition">'.$langs->trans('TimesheetPDF').'.</span>';
-    $Form .= '</th>';
-    $Form .= ' <th class="wrapcolumntitle liste_titre" title="'.$langs->trans('Export').'.">';
-    $Form .= '<span class="reposition">'.$langs->trans('Export').'.</span>';
-    $Form .= '</th>';
-    $Form .= '</tr>';
+    $formReport .= '<table class="tagtable nobottomiftotal">';
+    $formReport .= '<tbody>';
+    $formReport .= '<tr class="liste_titre">';
+    $formReport .= ' <th class="wrapcolumntitle liste_titre" title="'.$langs->trans('Invoice').'.">';
+    $formReport .= '<span class="reposition">'.$langs->trans('Invoice').'.</span>';
+    $formReport .= '</th>';
+    $formReport .= '<th class="wrapcolumntitle liste_titre" title="'.$langs->trans('TimesheetPDF').'.">';
+    $formReport .= '<span class="reposition">'.$langs->trans('TimesheetPDF').'.</span>';
+    $formReport .= '</th>';
+    $formReport .= ' <th class="wrapcolumntitle liste_titre" title="'.$langs->trans('Export').'.">';
+    $formReport .= '<span class="reposition">'.$langs->trans('Export').'.</span>';
+    $formReport .= '</th>';
+    $formReport .= '</tr>';
 
     foreach($projectlist as $projid => $projref) {
         $projlabel = explode('-', $projref);
         $report = $projlabel[0].'_'.dol_print_date($dateStart, '%d-%m-%Y').'_'.dol_print_date($dateEnd, '%d-%m-%Y');
-        $Form .= '<tr class="oddeven">';
-        $Form .= '<td width="50%" class="nowrap tdoverflowmax150">';
-        if(!empty($querryRes) && ($user->rights->facture->creer || version_compare(DOL_VERSION, "3.7")<=0))$Form .= '<a class = "documentdownload paddingright" href = "TimesheetProjectInvoice.php?step=0&dateStart='.dol_print_date($dateStart, 'dayxcard').'&invoicabletaskOnly='.$invoicabletaskOnly.'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectid='.$projid.'" ><span class="fas fa-project-diagram  em088 infobox-project pictofixedwidth em088" style=""></span>'.$projref.'</a>';
-        $Form .= '</td>';
-        $Form .= '<td width="25%" class="nowraponall">';
-        if(!empty($querryRes))$Form .= '<a class = "documentdownload paddingright" href="?action=getpdf&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projid.'&mode='.$mode.'&invoicabletaskOnly='.$invoicabletaskOnly.'" ><i class="fa fa-file-pdf-o paddingright" title="Fichier: '.$projref.'"></i>'.$projlabel[0].'<i class="fas fa-download" style="color: gray;"></i></a>';
-        //  if(!empty($querryRes))$Form .= '<a class="pictopreview documentpreview" href="/erp/document.php?modulepart=feuilledetemps&amp;attachment=0&amp;file=reports/'.$report.'.pdf&amp;entity=1" mime="application/pdf" target="_blank"><span class="fa fa-search-plus pictofixedwidth" style="color: gray"></span></a>';
-        $Form .= '</td>';
-        $Form .= '<td width="25%">';
-        // $Form .= '<a class="documentdownload paddingright" href="/erp/document.php?modulepart=gpeccustom&amp;file=cvtec%2FCVTEC_232%2FCVTEC_232.pdf&amp;entity=1" title="CVTEC_232.pdf"><i class="fa fa-file-pdf-o paddingright" title="Fichier: CVTEC_232.pdf"></i>CVTEC_232.pdf</a>';<i class="fas fa-file-csv"></i><i class="fa fa-file-pdf-o paddingright" title="Fichier: '.$projref.'">
-        if(!empty($querryRes) && $conf->global->MAIN_MODULE_EXPORT)$Form .= '<a class = "documentdownload paddingright" href="?action=getExport&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projid.'&mode='.$mode.'&model='.$model.'&invoicabletaskOnly='.$invoicabletaskOnly.'" ><i style="color: #055;" class="fas fa-file-csv paddingright" title="Fichier: '.$projref.'"></i>'.$projlabel[0].'<i class="fas fa-download" style="color: gray;"></i></a>';
-        // $Form .= '<a class="pictopreview documentpreview" href="?action=getExport&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projid.'&mode='.$mode.'&model='.$model.'&invoicabletaskOnly='.$invoicabletaskOnly.'" mime="application/pdf" target="_blank"><span class="fa fa-search-plus pictofixedwidth" style="color: gray"></span></a>';
-        $Form .= '</td>';
-        $Form .= '</tr>';
+        $formReport .= '<tr class="oddeven">';
+        $formReport .= '<td width="50%" class="nowrap tdoverflowmax150">';
+        if(!empty($querryRes) && ($user->rights->facture->creer || version_compare(DOL_VERSION, "3.7")<=0))$formReport .= '<a class = "documentdownload paddingright" href = "TimesheetProjectInvoice.php?step=0&dateStart='.dol_print_date($dateStart, 'dayxcard').'&invoicabletaskOnly='.$invoicabletaskOnly.'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectid='.$projid.'" ><span class="fas fa-project-diagram  em088 infobox-project pictofixedwidth em088" style=""></span>'.$projref.'</a>';
+        $formReport .= '</td>';
+        $formReport .= '<td width="25%" class="nowraponall">';
+        if(!empty($querryRes))$formReport .= '<a class = "documentdownload paddingright" href="?action=getpdf&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projid.'&mode='.$mode.'&invoicabletaskOnly='.$invoicabletaskOnly.'" ><i class="fa fa-file-pdf-o paddingright" title="Fichier: '.$projref.'"></i>'.$projlabel[0].'<i class="fas fa-download" style="color: gray;"></i></a>';
+        //  if(!empty($querryRes))$formReport .= '<a class="pictopreview documentpreview" href="/erp/document.php?modulepart=feuilledetemps&amp;attachment=0&amp;file=reports/'.$report.'.pdf&amp;entity=1" mime="application/pdf" target="_blank"><span class="fa fa-search-plus pictofixedwidth" style="color: gray"></span></a>';
+        $formReport .= '</td>';
+        $formReport .= '<td width="25%">';
+        // $formReport .= '<a class="documentdownload paddingright" href="/erp/document.php?modulepart=gpeccustom&amp;file=cvtec%2FCVTEC_232%2FCVTEC_232.pdf&amp;entity=1" title="CVTEC_232.pdf"><i class="fa fa-file-pdf-o paddingright" title="Fichier: CVTEC_232.pdf"></i>CVTEC_232.pdf</a>';<i class="fas fa-file-csv"></i><i class="fa fa-file-pdf-o paddingright" title="Fichier: '.$projref.'">
+        if(!empty($querryRes) && $conf->global->MAIN_MODULE_EXPORT)$formReport .= '<a class = "documentdownload paddingright" href="?action=getExport&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projid.'&mode='.$mode.'&model='.$model.'&invoicabletaskOnly='.$invoicabletaskOnly.'" ><i style="color: #055;" class="fas fa-file-csv paddingright" title="Fichier: '.$projref.'"></i>'.$projlabel[0].'<i class="fas fa-download" style="color: gray;"></i></a>';
+        // $formReport .= '<a class="pictopreview documentpreview" href="?action=getExport&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projid.'&mode='.$mode.'&model='.$model.'&invoicabletaskOnly='.$invoicabletaskOnly.'" mime="application/pdf" target="_blank"><span class="fa fa-search-plus pictofixedwidth" style="color: gray"></span></a>';
+        $formReport .= '</td>';
+        $formReport .= '</tr>';
         }
-        $Form .= '</tbody></table>';
+        $formReport .= '</tbody></table>';
     }
 
 //submit
-$Form .= "<br>";
-$Form .= '<div class="center">';
+$formReport .= "<br>";
+$formReport .= '<div class="center">';
 
-$Form .= '<input class = "butAction" type = "submit" value = "'.$langs->trans('getReport').'">';
+$formReport .= '<input class = "butAction" type = "submit" value = "'.$langs->trans('getReport').'">';
 
 if(empty($arrproj) || $arrproj == '' || sizeof($arrproj) == 1) {
+    
     $projectSelectedId == '' ? $projectSelectedId = implode($arrproj) : $projectSelectedId = $projectSelectedId;
-    if(!empty($querryRes) && ($user->rights->facture->creer || version_compare(DOL_VERSION, "3.7")<=0))$Form .= '<a class = "butAction" href = "TimesheetProjectInvoice.php?step=0&dateStart='.dol_print_date($dateStart, 'dayxcard').'&invoicabletaskOnly='.$invoicabletaskOnly.'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectid='.$projectSelectedId.'" >'.$langs->trans('Invoice').'</a>';
-    if(!empty($querryRes))$Form .= '<a class = "butAction" href="?action=getpdf&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projectSelectedId.'&mode='.$mode.'&invoicabletaskOnly='.$invoicabletaskOnly.'" >'.$langs->trans('TimesheetPDF').'</a>';
-    if(!empty($querryRes) && $conf->global->MAIN_MODULE_EXPORT)$Form .= '<a class = "butAction" href="?action=getExport&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projectSelectedId.'&mode='.$mode.'&model='.$model.'&invoicabletaskOnly='.$invoicabletaskOnly.'" >'.$langs->trans('Export').'</a>';
+    // var_dump($projectSelectedId);
+    if(!empty($querryRes) && ($user->rights->facture->creer || version_compare(DOL_VERSION, "3.7")<=0))$formReport .= '<a class = "butAction" href = "TimesheetProjectInvoice.php?step=0&dateStart='.dol_print_date($dateStart, 'dayxcard').'&invoicabletaskOnly='.$invoicabletaskOnly.'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectid='.$projectSelectedId.'" >'.$langs->trans('Invoice').'</a>';
+    if(!empty($querryRes))$formReport .= '<a class = "butAction" href="?action=getpdf&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projectSelectedId.'&mode='.$mode.'&invoicabletaskOnly='.$invoicabletaskOnly.'" >'.$langs->trans('TimesheetPDF').'</a>';
+
+    $formReport .= '<a class = "butAction" href="?action=getExport&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projectSelectedId.'&mode='.$mode.'&model='.$model.'&invoicabletaskOnly='.$invoicabletaskOnly.'" >'.$langs->trans('Export').'</a>';
 }
-if(!empty($querryRes))$Form .= '<a class = "butAction" href="?action=reportproject&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projectSelectedId.'&mode='.$mode.'&invoicabletaskOnly='.$invoicabletaskOnly.'" >'.$langs->trans('Refresh').'</a>';
-$Form .= '</div><br>';
-$Form .= '</form>';
+if(!empty($querryRes))$formReport .= '<a class = "butAction" href="?action=reportproject&dateStart='.dol_print_date($dateStart, 'dayxcard').'&dateEnd='.dol_print_date($dateEnd, 'dayxcard').'&projectSelected='.$projectSelectedId.'&mode='.$mode.'&invoicabletaskOnly='.$invoicabletaskOnly.'" >'.$langs->trans('Refresh').'</a>';
+$formReport .= '</div><br>';
+$formReport .= '</form>';
 
 
-if(!($optioncss != '' && !empty($_POST['userSelected']))) echo $Form;
+if(!($optioncss != '' && !empty($_POST['userSelected']))) echo $formReport;
 
 if(!empty($querryRes)){
     echo $querryRes;
@@ -377,7 +390,7 @@ foreach($listeall as $key => $val)
     print '<td width="16">'.img_picto_common($key,$objmodelexport->getPictoForKey($key)).' ';
     $text=$objmodelexport->getDriverDescForKey($key);
     $label=$listeall[$key];
-    print $form->textwithpicto($label,$text).'</td>';
+    print $formReport->textwithpicto($label,$text).'</td>';
     print '<td>'.$objmodelexport->getLibLabelForKey($key).'</td>';
     print '<td align="right">'.$objmodelexport->getLibVersionForKey($key).'</td>';
     print '</tr>'."\n";

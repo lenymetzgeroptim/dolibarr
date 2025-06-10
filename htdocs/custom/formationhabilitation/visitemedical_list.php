@@ -190,7 +190,7 @@ $object->fields = dol_sort_array($object->fields, 'position');
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // There is several ways to check permission.
-$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'read');
+$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'readall');
 $permissiontoadd = $user->hasRight('formationhabilitation', 'visitemedical', 'write');
 $permissiontodelete = $user->hasRight('formationhabilitation', 'visitemedical', 'delete');
 

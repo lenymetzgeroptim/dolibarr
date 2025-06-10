@@ -117,6 +117,8 @@ class modFormationHabilitation extends DolibarrModules
 			'hooks' => array(
 				   'data' => array(
 				       'formationagenda',
+					   'habilitationagenda',
+					   'autorisationagenda',
 				   ),
 				   'entity' => '0',
 			),
@@ -195,11 +197,11 @@ class modFormationHabilitation extends DolibarrModules
 				30 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_CREATE', 'chaine', '1', '', 0), // Lors de la création
 				31 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_MODIFY', 'chaine', '1', '', 0), // Lors de la modification
 				32 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_DELETE', 'chaine', '1', '', 0), // Lors de la supression
-				33 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE1', 'chaine', '1', '', 0), // Lors de la validation
-				34 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE2', 'chaine', '1', '', 0), // Lors de la validation
-				35 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE3', 'chaine', '1', '', 0), // Lors de la validation
-				36 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE_WITHOUT_USER', 'chaine', '1', '', 0), // Lors de la validation
-				37 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
+				// 33 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE1', 'chaine', '1', '', 0), // Lors de la validation
+				// 34 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE2', 'chaine', '1', '', 0), // Lors de la validation
+				// 35 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE3', 'chaine', '1', '', 0), // Lors de la validation
+				// 36 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE_WITHOUT_USER', 'chaine', '1', '', 0), // Lors de la validation
+				// 37 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_VALIDATE', 'chaine', '1', '', 0), // Lors de la validation
 				38 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_EXPIRE', 'chaine', '1', '', 0), // Lors de l'expiration
 				39 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_SUSPEND', 'chaine', '1', '', 0), // Lors de la suspension
 				40 => array('MAIN_AGENDA_ACTIONAUTO_USERVOLET_UNSUSPEND', 'chaine', '1', '', 0), // Lors de la non suspensio,
@@ -386,35 +388,40 @@ class modFormationHabilitation extends DolibarrModules
 		$this->rights[$r][4] = 'formation';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
 		$this->rights[$r][1] = 'Lire ses propres Formations assignées';
 		$this->rights[$r][4] = 'userformation';
 		$this->rights[$r][5] = 'read';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
 		$this->rights[$r][1] = 'Lire toutes les Formations (assignées aux collaborateurs)';
 		$this->rights[$r][4] = 'userformation';
 		$this->rights[$r][5] = 'readall';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 7 + 1);
-		$this->rights[$r][1] = 'Créer/Modifier les Formations (assignées aux collaborateurs)';
-		$this->rights[$r][4] = 'userformation';
-		$this->rights[$r][5] = 'write';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 6 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
 		$this->rights[$r][1] = 'Forcer la création des formations (assignées aux collaborateurs)';
 		$this->rights[$r][4] = 'userformation';
 		$this->rights[$r][5] = 'force';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 8 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 6 + 1);
+		$this->rights[$r][1] = 'Créer/Modifier les Formations (assignées aux collaborateurs)';
+		$this->rights[$r][4] = 'userformation';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 7 + 1);
 		$this->rights[$r][1] = 'Supprimer les Formations (assignées aux collaborateurs)';
 		$this->rights[$r][4] = 'userformation';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
-		$this->rights[$r][1] = 'Lire les coûts relatifs aux formations';
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 8 + 1);
+		$this->rights[$r][1] = 'Lire les coûts padagogiques et annexes relatifs aux formations';
 		$this->rights[$r][4] = 'formation';
-		$this->rights[$r][5] = 'readcout';
+		$this->rights[$r][5] = 'readcoutpedagogique';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 9 + 1);
+		$this->rights[$r][1] = 'Lire tous les coûts relatifs aux formations';
+		$this->rights[$r][4] = 'formation';
+		$this->rights[$r][5] = 'readcoutall';
 		$r++;
 
 
@@ -502,10 +509,15 @@ class modFormationHabilitation extends DolibarrModules
 		$r++;
 
 
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 0 + 0);
+		$this->rights[$r][1] = 'Lire ses propres Visites médicales';
+		$this->rights[$r][4] = 'visitemedical';
+		$this->rights[$r][5] = 'read';
+		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Lire les Visites médicales';
 		$this->rights[$r][4] = 'visitemedical';
-		$this->rights[$r][5] = 'read';
+		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (3 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Créer/Modifier les Visites médicales';
@@ -519,10 +531,15 @@ class modFormationHabilitation extends DolibarrModules
 		$r++;
 
 
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 0 + 0);
+		$this->rights[$r][1] = 'Lire ses propres Convocations';
+		$this->rights[$r][4] = 'convocation';
+		$this->rights[$r][5] = 'read';
+		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Lire les Convocations';
 		$this->rights[$r][4] = 'convocation';
-		$this->rights[$r][5] = 'read';
+		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (4 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Créer/Modifier les Convocations';
@@ -761,7 +778,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => 'isModEnabled(\'formationhabilitation\')',
-			 'perms' => '$user->hasRight(\'formationhabilitation\', \'visitemedical\', \'read\')',
+			 'perms' => '$user->hasRight(\'formationhabilitation\', \'visitemedical\', \'readall\')',
 			 'target' => '',
 			 'user' => 2,
 		);
@@ -793,7 +810,7 @@ class modFormationHabilitation extends DolibarrModules
 			 'langs' => 'formationhabilitation@formationhabilitation',
 			 'position' => 1000,
 			 'enabled' => 'isModEnabled(\'formationhabilitation\')',
-			 'perms' => '$user->hasRight(\'formationhabilitation\', \'convocation\', \'read\')',
+			 'perms' => '$user->hasRight(\'formationhabilitation\', \'convocation\', \'readall\')',
 			 'target' => '',
 			 'user' => 2,
 		);

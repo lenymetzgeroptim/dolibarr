@@ -521,6 +521,99 @@ class UserAutorisation extends CommonObject
 	}
 
 	/**
+	 * Load list of objects in memory from the database.
+	 *
+	 * @param  string      $sortorder    Sort Order
+	 * @param  string      $sortfield    Sort field
+	 * @param  int         $limit        limit
+	 * @param  int         $offset       Offset
+	 * @param  array       $filter       Filter array. Example array('field'=>'valueforlike', 'customurl'=>...)
+	 * @param  string      $filtermode   Filter mode (AND or OR)
+	 * @return array|int                 int <0 if KO, array of pages if OK
+	 */
+	public function fetchAllWithUser($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND')
+	{
+		global $conf;
+
+		dol_syslog(__METHOD__, LOG_DEBUG);
+
+		$records = array();
+
+		$sql = "SELECT ";
+		$sql .= $this->getFieldList('t');
+		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid = t.fk_user";
+		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
+			$sql .= " WHERE t.entity IN (".getEntity($this->table_element).")";
+		} else {
+			$sql .= " WHERE 1 = 1";
+		}
+		// Manage filter
+		$sqlwhere = array();
+		if (count($filter) > 0) {
+			foreach ($filter as $key => $value) {
+				if($value) {
+					if ($key == 't.rowid') {
+						$sqlwhere[] = $key." = ".((int) $value);
+					} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+						$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
+					} elseif (preg_match('/(_dtstart|_dtend)$/', $key)) {
+						$columnName = preg_replace('/(_dtstart|_dtend)$/', '', $key);
+						if (preg_match('/^(date|timestamp|datetime)/', $this->fields[$columnName]['type'])) {
+							if (preg_match('/_dtstart$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." >= '".$this->db->idate($value)."'";
+							}
+							if (preg_match('/_dtend$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." <= '".$this->db->idate($value)."'";
+							}
+						}
+					} elseif ($key == 'customsql') {
+						$sqlwhere[] = $value;
+					} elseif (strpos($value, '%') === false) {
+						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
+					} else {
+						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
+					}
+				}
+			}
+		}
+		if (count($sqlwhere) > 0) {
+			$sql .= " AND (".implode(" ".$filtermode." ", $sqlwhere).")";
+		}
+
+		if (!empty($sortfield)) {
+			$sql .= $this->db->order($sortfield, $sortorder);
+		}
+		if (!empty($limit)) {
+			$sql .= $this->db->plimit($limit, $offset);
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < ($limit ? min($limit, $num) : $num)) {
+				$obj = $this->db->fetch_object($resql);
+
+				$record = new self($this->db);
+				$record->setVarsFromFetchObj($obj);
+
+				$records[$record->id] = $record;
+
+				$i++;
+			}
+			$this->db->free($resql);
+
+			return $records;
+		} else {
+			$this->errors[] = 'Error '.$this->db->lasterror();
+			dol_syslog(__METHOD__.' '.join(',', $this->errors), LOG_ERR);
+
+			return -1;
+		}
+	}
+
+	/**
 	 * Load list of autorisation linked to the uservolet
 	 *
 	 * @param  string      $sortorder    Sort Order
@@ -755,7 +848,7 @@ class UserAutorisation extends CommonObject
 
 		if ($this->status != self::STATUS_AUTORISABLE) {
 			$this->errors[] = $langs->trans('ImpossibleToValidateWithThisStatut', $this->ref);
-			return 0;
+			return -1;
 		}
 
 		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('formationhabilitation','write'))
@@ -1994,9 +2087,11 @@ class UserAutorisation extends CommonObject
 					else {
 						$this->output .= "L'autorisation $obj->ref a été passé au statut 'Expirée'<br>";
 
-						$user_static = new User($this->db);
-						$user_static->fetch($obj->fk_user);
-						
+						$fk_user = new User($this->db);
+						$fk_user->fetch($obj->fk_user);
+						$autorisation = new Autorisation($this->db);
+						$autorisation->fetch($obj->fk_autorisation);
+
 						$user_group = new UserGroup($this->db);
 						$user_group->fetch(7);
 						$liste_user = $user_group->listUsersForGroup('u.statut=1');
@@ -2012,15 +2107,15 @@ class UserAutorisation extends CommonObject
 						}
 						rtrim($to, ', ');
 
-						if(!empty($user_static->email)) {
-							$to2 = $user_static->email;
+						if(!empty($fk_user->email)) {
+							$to2 = $fk_user->email;
 						}
 						
 						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=autorisation">ici</a>';
-						$message = $langs->transnoentitiesnoconv("EMailTextAutorisationExpire",  $this->ref, $link);
-						$message2 = $langs->transnoentitiesnoconv("EMailTextAutorisationExpireForUser",  $this->ref, $link);
+						$message = $langs->transnoentitiesnoconv("EMailTextAutorisationExpire", $autorisation->label, $fk_user->firstname." ".$fk_user->lastname, $link);
+						$message2 = $langs->transnoentitiesnoconv("EMailTextAutorisationExpireForUser", $autorisation->label, $link);
 
 						$mail = new CMailFile(
 							$subject,
