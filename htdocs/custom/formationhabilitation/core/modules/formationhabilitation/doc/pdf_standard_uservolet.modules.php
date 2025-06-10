@@ -241,7 +241,7 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 			$volet->fetch($object->fk_volet);
 			$dir = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$objref;
 			$file = $dir."/".$user_static->lastname."_".$volet->nommage."_".dol_print_date($now, "%Y%m%d").".pdf";
-			if ($object->status < $object::STATUS_VALIDATED && file_exists($dir)) { // Supprimer les anciens PDF du même utilisateur et volet si le statut est < VALIDATED
+			if ($object->status < $object::STATUS_VALIDATED && file_exists($dir) && $volet->model != 7) { // Supprimer les anciens PDF du même utilisateur et volet si le statut est < VALIDATED
 				$pattern = $dir . '/' . $user_static->lastname . '_' . $volet->nommage . '_*.pdf';
 				foreach (glob($pattern) as $oldFile) {
 					unlink($oldFile); // Supprime l'ancien fichier
@@ -309,14 +309,19 @@ class pdf_standard_uservolet extends ModelePDFUserVolet
 						return strpos($value, "Volet_Elect") !== false;
 					}));
 					$voletFile = $conf->formationhabilitation->dir_output.'/'.$object->element.'/'.$object->ref.'/'.$dirFiles[$keyFile[0]];
-					if (file_exists($voletFile)) {
+					if ($dirFiles[$keyFile[0]] != null && file_exists($voletFile)) {
 						$pdf->AddPage();
 						$pagenb++;
 						$pagecount = $pdf->setSourceFile($voletFile);
 						$pdf->useTemplate($pdf->importPage(1));
 						unlink($voletFile);
+						$this->writeSignatureVoletElectrique($pdf, $object, $outputlangs, $outputlangsbis);
 					}
-					$this->writeSignatureVoletElectrique($pdf, $object, $outputlangs, $outputlangsbis);
+					else {
+						unlink($file);
+						setEventMessages('Afin de générer le pdf, il faut un fichier contenant \'Volet_Elect\' préalablement joint', '', 'errors');
+						return 0;
+					}
 				}
 				else {
 					$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite); // Left, Top, Right

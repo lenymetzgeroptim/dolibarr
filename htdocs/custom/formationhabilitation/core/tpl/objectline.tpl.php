@@ -273,6 +273,7 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
     $paramformconfirm .= (GETPOST('date_fin_formationyear') ? '&date_fin_formationyear='.urlencode(GETPOST('date_fin_formationyear')) : '');
     $paramformconfirm .= (GETPOST('nombre_heurehour') ? '&nombre_heurehour='.urlencode(GETPOST('nombre_heurehour')) : '');
     $paramformconfirm .= (GETPOST('nombre_heuremin') ? '&nombre_heuremin='.urlencode(GETPOST('nombre_heuremin')) : '');
+    $paramformconfirm .= (GETPOST('cout_pedagogique') ? '&cout_pedagogique='.urlencode(GETPOST('cout_pedagogique')) : '');
     $paramformconfirm .= (GETPOST('cout_annexe') ? '&cout_annexe='.urlencode(GETPOST('cout_annexe')) : '');
     $paramformconfirm .= (GETPOST('interne_externe') ? '&interne_externe='.urlencode(GETPOST('interne_externe')) : '');
     $paramformconfirm .= (GETPOST('fk_societe') ? '&fk_societe='.urlencode(GETPOST('fk_societe')) : '');
