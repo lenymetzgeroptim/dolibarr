@@ -316,6 +316,7 @@ $sql .= " FROM ".MAIN_DB_PREFIX.$object->table_element." as t";
 if (isset($extrafields->attributes[$object->table_element]['label']) && is_array($extrafields->attributes[$object->table_element]['label']) && count($extrafields->attributes[$object->table_element]['label'])) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX.$object->table_element."_extrafields as ef on (t.rowid = ef.fk_object)";
 }
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u on t.fk_user = u.rowid";	
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue on t.fk_user = ue.fk_object";	
 if($conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_task_validation as tv on (tv.fk_feuilledetemps = t.rowid)";
@@ -352,7 +353,7 @@ foreach ($search as $key => $val) {
 			$mode_search = 2;
 		}
 		if ($search[$key] != '') {
-			$sql .= natural_search($key, $search[$key], (($key == 'status') ? 2 : $mode_search));
+			$sql .= natural_search('t.'.$key, $search[$key], (($key == 'status') ? 2 : $mode_search));
 		}
 	} else {
 		if (preg_match('/(_dtstart|_dtend)$/', $key) && $search[$key] != '') {
@@ -442,7 +443,12 @@ $sql .= $hookmanager->resPrint;
 $sql = preg_replace('/,\s*$/', '', $sql);
 */
 
-$sql .= $db->order($sortfield, $sortorder);
+if($sortfield == 't.fk_user') {
+	$sql .= $db->order('u.lastname, u.firstname', $sortorder);
+}
+else {
+	$sql .= $db->order($sortfield, $sortorder);
+}
 
 // Count total nb of records
 $nbtotalofrecords = '';
