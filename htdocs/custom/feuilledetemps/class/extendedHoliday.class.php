@@ -555,6 +555,35 @@ class extendedHoliday extends Holiday
 	}
 
 	/**
+	 *  Return array with solde of ACP for all user
+	 *
+	 *  @return     array	    		Return array 
+	 */
+	public function getSoldeRTT()
+	{
+		$soldes = array();
+
+		$sql = "SELECT hu.fk_user, SUM(CASE WHEN ht.code = 'RTT_ACQUIS' THEN nb_holiday ELSE 0 END) - SUM(CASE WHEN ht.code = 'RTT_PRIS' THEN nb_holiday ELSE 0 END) AS solde_rtt";
+		$sql .= " FROM ".MAIN_DB_PREFIX."holiday_users as hu";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = fk_type";
+		$sql .= " WHERE ht.code IN ('RTT_ACQUIS', 'RTT_PRIS')";
+		$sql .= " GROUP BY hu.fk_user;";
+
+		$result = $this->db->query($sql);
+		if ($result) {
+			while ($obj = $this->db->fetch_object($result)) {
+				$soldes[$obj->fk_user] = (double)$obj->solde_rtt;
+			}
+
+			return $soldes;
+		} else {
+			dol_print_error($this->db);
+		}
+
+		return array();
+	}
+
+	/**
 	 *	Return clicable name (with picto eventually)
 	 *
 	 *	@param	int			$withpicto					0=_No picto, 1=Includes the picto in the linkn, 2=Picto only

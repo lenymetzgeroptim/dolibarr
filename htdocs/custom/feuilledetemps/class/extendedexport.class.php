@@ -22,6 +22,7 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/exports/class/export.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedHoliday.class.php';
 
 /**
  *	Class to manage Dolibarr users
@@ -34,10 +35,15 @@ class ExtendedExportFDT extends Export
 		// phpcs:enable
 		global $conf, $langs, $mysoc, $dirname, $filename, $extrafields;
 
+		$holiday = new extendedHoliday($this->db);
 		$indice = 0;
 		asort($array_selected);
 		$all_holiday = array();
 		$heure_semaine = array();
+		if($datatoexport == 'absences') {
+			$soldeRTTN1 = $holiday->getSoldeRTT();
+			$code_silae_RTTN1 = '9999';
+		}
 
 		dol_syslog(__METHOD__." ".$model.", ".$datatoexport.", ".implode(",", $array_selected));
 
@@ -128,7 +134,7 @@ class ExtendedExportFDT extends Export
 					if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 						if($conf->donneesrh->enabled && empty($heure_semaine[$id])) {
 							$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
-							$userField = new UserField($db);
+							$userField = new UserField($this->db);
 							$userField->id = $id;
 							$userField->table_element = 'donneesrh_Positionetcoefficient';
 							$userField->fetch_optionals();
@@ -269,7 +275,6 @@ class ExtendedExportFDT extends Export
 
 				$userstatic = new User($this->db);
 				$object = new FeuilleDeTemps($this->db);
-				$holiday = new extendedHoliday($this->db);
 				$typesHoliday = $holiday->getTypesNoCP();
 
 				$extrafields = new ExtraFields($this->db);
@@ -507,38 +512,12 @@ class ExtendedExportFDT extends Export
 						}
 						elseif($datatoexport == 'absences') {
 							$all_holiday[] = $obj->id_holiday;
-	
+							$date_debut_tmp = $this->db->jdate($obj->h_date_debut, 1);
+							$date_fin_tmp = $this->db->jdate($obj->h_date_fin, 1);
+							
 							$obj->ht_code_silae = 'AB-'.$obj->ht_code_silae;
 							$obj->h_date_debut = dol_print_date($obj->h_date_debut, '%d/%m/%Y');
 							$obj->h_date_fin = dol_print_date($obj->h_date_fin, '%d/%m/%Y');
-	
-							// $date_debut_res = dol_mktime(-1, -1, -1, substr($obj->h_date_debut, 3, 2), substr($obj->h_date_debut, 0, 2), substr($obj->h_date_debut, 6, 4));
-							// $date_fin_res = dol_mktime(-1, -1, -1, substr($obj->h_date_fin, 3, 2), substr($obj->h_date_fin, 0, 2), substr($obj->h_date_fin, 6, 4));
-							// $date_debut = $array_filterValue["h.date_debut"];
-							// $date_debut_anticipe = dol_time_plus_duree($date_debut, -$conf->global->JOUR_ANTICIPES, 'd');
-							// $date_fin = $array_filterValue["h.date_fin"];
-	
-							// if($obj->hef_reguler == 1) {
-							// 	if($date_debut_res < $date_debut_anticipe) {
-							// 		$obj->h_date_debut = dol_print_date($date_debut_anticipe, "%d/%m/%Y");
-							// 	}
-							// 	if($date_fin_res > $date_fin) {
-							// 		$obj->h_date_fin = dol_print_date($date_fin, "%d/%m/%Y");
-							// 	}
-							// }
-							// else {
-							// 	if($date_debut_res < $date_debut) {
-							// 		$obj->h_date_debut = dol_print_date($date_debut, "%d/%m/%Y");
-							// 	}
-							// 	if($date_fin_res > $date_fin) {
-							// 		$obj->h_date_fin = dol_print_date($date_fin, "%d/%m/%Y");
-							// 	}
-							// }
-	
-							// if($obj->ht_in_hour == 1 && $obj->hef_hour%26280 != 0) {
-							// 	$obj->type = 'H';
-							// 	$obj->valeur = $obj->hef_hour / 3600;
-							// }
 
 							if($obj->ht_in_hour == 1) {
 								$date_debut = dol_mktime(-1, -1, -1, substr($obj->h_date_debut, 3, 2), substr($obj->h_date_debut, 0, 2), substr($obj->h_date_debut, 6, 4));
@@ -546,10 +525,10 @@ class ExtendedExportFDT extends Export
 								
 								if($conf->feuilledetemps->enabled && $conf->global->FDT_USE_STANDARD_WEEK && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
 									if($conf->donneesrh->enabled && empty($heure_semaine[$obj->rowid])) {
-										$userstatic = new User($db);
+										$userstatic = new User($this->db);
 										$userstatic->fetch($obj->rowid);
 										$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
-										$userField = new UserField($db);
+										$userField = new UserField($this->db);
 										$userField->id = $obj->rowid;
 										$userField->table_element = 'donneesrh_Positionetcoefficient';
 										$userField->fetch_optionals();
@@ -607,42 +586,131 @@ class ExtendedExportFDT extends Export
 							else {
 								$obj->type = 'J';
 								$obj->valeur = '';
-							}
-	
-							//if(empty($obj->drh_pasdroitrtt) && empty($obj->ht_droit_rtt)) {
-							// if($obj->ht_in_hour == 1){ // Gestion des congés en heure qui sont sur plusieurs jours
-							// 	for ($idw = 0; $idw < $nb_jour; $idw++) {
-							// 		$dayinloopfromfirstdaytoshow = dol_time_plus_duree($date_debut, $idw, 'd');
-							// 		$dayinloopfromfirstdaytoshowgmt = dol_mktime(0, 0, 0, dol_print_date($dayinloopfromfirstdaytoshow, '%m'), dol_print_date($dayinloopfromfirstdaytoshow, '%d'), dol_print_date($dayinloopfromfirstdaytoshow, '%Y'), 'gmt');
 
-							// 		if(dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Sam' && dol_print_date($dayinloopfromfirstdaytoshow, '%a') != 'Dim' && num_public_holiday($dayinloopfromfirstdaytoshowgmt, $dayinloopfromfirstdaytoshowgmt, '', 1) == 0) {
-							// 			$obj->h_date_debut = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
-							// 			$obj->h_date_fin = dol_print_date($dayinloopfromfirstdaytoshow, '%d/%m/%Y');
-	
-							// 			if($conf->feuilledetemps->enabled && $conf->global->FDT_STANDARD_WEEK_FOR_HOLIDAY) {
-							// 				if($heure > $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] / 3600) {
-							// 					$obj->valeur = $standard_week_hour[dol_print_date($dayinloopfromfirstdaytoshow, '%A')] / 3600;
-							// 				}
-							// 				else {
-							// 					$obj->valeur = $heure;
-							// 				}
-							// 			}
-							// 			else {
-							// 				if($heure > 7) {
-							// 					$obj->valeur = 7;
-							// 				}
-							// 				else {
-							// 					$obj->valeur = $heure;
-							// 				}
-							// 			}
-	
-							// 			$heure -= $obj->valeur;
-	
-							// 			$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-							// 		}
-							// 	}
-							// 	continue;
-							// }
+								if($obj->ht_code == 'RTT' && $soldeRTTN1[$obj->rowid] >= 0.5) {
+									$num_open_day = num_open_day($date_debut_tmp, $date_fin_tmp, 0, 1, $obj->halfday);
+
+									if($num_open_day > $soldeRTTN1[$obj->rowid]) {
+										$code_silae_tmp = $obj->ht_code_silae;
+										$cpt = 0;
+
+										if($obj->h_halfday == '-1' || $obj->h_halfday == '2') {
+											$obj->ht_code_silae = 'AB-'.$code_silae_RTTN1;
+											$obj->h_date_debut = dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%d/%m/%Y');
+											$obj->h_date_fin = dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%d/%m/%Y');
+											$obj->valeur = '0.5';
+											$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+											$soldeRTTN1[$obj->rowid] -= 0.5;
+											$cpt++;
+											while(dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%a') == 'Sam' || dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%a') == 'Dim') {
+												$cpt++;
+											}
+										}
+
+										while($soldeRTTN1[$obj->rowid] >= 1) {
+											$obj->ht_code_silae = 'AB-'.$code_silae_RTTN1;
+											$obj->h_date_debut = dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%d/%m/%Y');
+											$obj->h_date_fin = dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%d/%m/%Y');
+											$obj->valeur = '';
+											$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+
+											$cpt++;
+											while(dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%a') == 'Sam' || dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%a') == 'Dim') {
+												$cpt++;
+											}
+											$soldeRTTN1[$obj->rowid]--;
+											//$num_open_day--;
+										}
+
+										if($soldeRTTN1[$obj->rowid] >= 0.5) {
+											$obj->ht_code_silae = 'AB-'.$code_silae_RTTN1;
+											$obj->valeur = '0.5';
+											$obj->h_date_debut = dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%d/%m/%Y');
+											$obj->h_date_fin = dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%d/%m/%Y');
+											$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+
+											$soldeRTTN1[$obj->rowid] -= 0.5;
+
+											$obj->ht_code_silae = $code_silae_tmp;
+											$obj->valeur = '0.5';
+											$obj->h_date_debut = dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%d/%m/%Y');
+											$obj->h_date_fin = dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%d/%m/%Y');
+											$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+											
+											$cpt++;
+											while(dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%a') == 'Sam' || dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%a') == 'Dim') {
+												$cpt++;
+											}
+										}
+
+										if(dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%Y-%m-%d') > dol_print_date($date_fin_tmp, '%Y-%m-%d')) {
+											continue;
+										}
+
+										$obj->ht_code_silae = $code_silae_tmp;
+										$obj->h_date_debut = dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%d/%m/%Y');
+										$obj->h_date_fin = dol_print_date($date_fin_tmp, '%d/%m/%Y');
+										$obj->valeur = '';
+									}
+									else {
+										$obj->ht_code_silae = 'AB-'.$code_silae_RTTN1;
+										$soldeRTTN1[$obj->rowid] -= $num_open_day;
+									}
+								}
+
+								if($obj->h_halfday == '-1') {
+									$h_date_debut = $obj->h_date_debut;
+									if($obj->h_date_debut != $obj->h_date_fin) {
+										$obj->h_date_debut = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_debut, 3, 2), substr($h_date_debut, 0, 2), substr($h_date_debut, 6, 4)), 1, 'd'), '%d/%m/%Y');
+										$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+									}
+		
+									$obj->h_date_debut = $h_date_debut;
+									$obj->h_date_fin = $h_date_debut;
+									$obj->type = 'J';
+									$obj->valeur = '0.5';
+									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+									continue;
+								}
+								elseif($obj->h_halfday == '1') {
+									$h_date_fin = $obj->h_date_fin;
+									if($obj->h_date_debut != $obj->h_date_fin) {
+										$obj->h_date_fin = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_fin, 3, 2), substr($h_date_fin, 0, 2), substr($h_date_fin, 6, 4)), -1, 'd'), '%d/%m/%Y');
+										$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+									}
+		
+									$obj->h_date_debut = $h_date_fin;
+									$obj->h_date_fin = $h_date_fin;
+									$obj->type = 'J';
+									$obj->valeur = '0.5';
+									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+									continue;
+								}
+								elseif($obj->h_halfday == '2') {
+									$h_date_debut = $obj->h_date_debut;
+									$h_date_fin = $obj->h_date_fin;
+		
+									$obj->h_date_debut = $h_date_debut;
+									$obj->h_date_fin = $h_date_debut;
+									$obj->type = 'J';
+									$obj->valeur = '0.5';
+									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+		
+									if(num_open_day(dol_mktime(-1, -1, -1, substr($h_date_debut, 3, 2), substr($h_date_debut, 0, 2), substr($h_date_debut, 6, 4)), dol_mktime(-1, -1, -1, substr($h_date_fin, 3, 2), substr($h_date_fin, 0, 2), substr($h_date_fin, 6, 4))) > 1) {
+										$obj->h_date_debut = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_debut, 3, 2), substr($h_date_debut, 0, 2), substr($h_date_debut, 6, 4)), 1, 'd'), '%d/%m/%Y');
+										$obj->h_date_fin = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_fin, 3, 2), substr($h_date_fin, 0, 2), substr($h_date_fin, 6, 4)), -1, 'd'), '%d/%m/%Y');
+										$obj->valeur = '';
+										$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+									}
+
+									$obj->h_date_debut = $h_date_fin;
+									$obj->h_date_fin = $h_date_fin;
+									$obj->type = 'J';
+									$obj->valeur = '0.5';
+									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+									continue;
+								}
+							}
 						}
 						elseif($datatoexport == 'repos_compensateur') {	
 							$all_holiday[] = $obj->id_holiday;
@@ -658,84 +726,32 @@ class ExtendedExportFDT extends Export
 								$obj->type = '';
 								$obj->code = 'HS-HS00';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+								continue;
 							}
 							if(!empty($obj->s_heure_sup25)) {
 								$obj->valeur = $obj->s_heure_sup25 / 3600;
 								$obj->type = '';
 								$obj->code = 'HS-HS25';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+								continue;
 							}
 							if(!empty($obj->s_heure_sup50)) {
 								$obj->valeur = $obj->s_heure_sup50 / 3600;
 								$obj->type = '';
 								$obj->code = 'HS-HS50';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+								continue;
 							}
 							if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && !empty($obj->s_heure_sup50ht)) {
 								$obj->valeur = $obj->s_heure_sup50ht / 3600;
 								$obj->type = '';
 								$obj->code = 'HS-HS50-HT';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
+								continue;
 							}
 						}
 	
-						if($datatoexport == 'absences' && $obj->ht_in_hour != 1) {
-							if($obj->h_halfday == '-1') {
-								$h_date_debut = $obj->h_date_debut;
-								if($obj->h_date_debut != $obj->h_date_fin) {
-									$obj->h_date_debut = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_debut, 3, 2), substr($h_date_debut, 0, 2), substr($h_date_debut, 6, 4)), 1, 'd'), '%d/%m/%Y');
-									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-								}
-	
-								$obj->h_date_debut = $h_date_debut;
-								$obj->h_date_fin = $h_date_debut;
-								$obj->type = 'J';
-								$obj->valeur = '0.5';
-								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-							}
-							elseif($obj->h_halfday == '1') {
-								$h_date_fin = $obj->h_date_fin;
-								if($obj->h_date_debut != $obj->h_date_fin) {
-									$obj->h_date_fin = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_fin, 3, 2), substr($h_date_fin, 0, 2), substr($h_date_fin, 6, 4)), -1, 'd'), '%d/%m/%Y');
-									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-								}
-	
-								$obj->h_date_debut = $h_date_fin;
-								$obj->h_date_fin = $h_date_fin;
-								$obj->type = 'J';
-								$obj->valeur = '0.5';
-								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-							}
-							elseif($obj->h_halfday == '2') {
-								$h_date_debut = $obj->h_date_debut;
-								$h_date_fin = $obj->h_date_fin;
-	
-								$obj->h_date_debut = $h_date_debut;
-								$obj->h_date_fin = $h_date_debut;
-								$obj->type = 'J';
-								$obj->valeur = '0.5';
-								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-	
-								if(num_open_day(dol_mktime(-1, -1, -1, substr($h_date_debut, 3, 2), substr($h_date_debut, 0, 2), substr($h_date_debut, 6, 4)), dol_mktime(-1, -1, -1, substr($h_date_fin, 3, 2), substr($h_date_fin, 0, 2), substr($h_date_fin, 6, 4))) > 1) {
-									$obj->h_date_debut = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_debut, 3, 2), substr($h_date_debut, 0, 2), substr($h_date_debut, 6, 4)), 1, 'd'), '%d/%m/%Y');
-									$obj->h_date_fin = dol_print_date(dol_time_plus_duree(dol_mktime(-1, -1, -1, substr($h_date_fin, 3, 2), substr($h_date_fin, 0, 2), substr($h_date_fin, 6, 4)), -1, 'd'), '%d/%m/%Y');
-									$obj->valeur = '';
-									$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-								}
-
-								$obj->h_date_debut = $h_date_fin;
-								$obj->h_date_fin = $h_date_fin;
-								$obj->type = 'J';
-								$obj->valeur = '0.5';
-								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-							}
-							else {
-								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-							}
-						}
-						elseif($datatoexport != 'heure_sup') {
-							$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-						}
+						$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
 					}
 						
 					// Genere en-tete
@@ -745,8 +761,6 @@ class ExtendedExportFDT extends Export
 					$objmodel->close_file();
 	
 					if(($datatoexport == 'absences' || $datatoexport == 'repos_compensateur') && $conf->global->FDT_STATUT_HOLIDAY && GETPOST('action', 'aZ09') != 'buildalldoctest') {
-						require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedHoliday.class.php';
-						$holiday = new extendedHoliday($this->db);
 						$result = $holiday->setStatutExported($all_holiday);
 					}
 	
@@ -1161,6 +1175,9 @@ class ExtendedExportFDT extends Export
 		$sql .= " ORDER BY eu_matricule";
 		if($datatoexport == 'analytique_pourcentage'){
 			$sql .= ", total_task";
+		}
+		elseif($datatoexport == 'absences'){
+			$sql .= ", h_date_debut";
 		}
 
 		// Add the HAVING part.
