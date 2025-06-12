@@ -15,7 +15,7 @@
 
 
 -- BEGIN MODULEBUILDER INDEXES
-CREATE TABLE llx_constat_sujet (
+CREATE TABLE llx_c_constat_sujet (
   rowid             integer AUTO_INCREMENT PRIMARY KEY,
   label             varchar(64)  COLLATE utf8_unicode_ci NOT NULL,
   active            int(11) DEFAULT 1

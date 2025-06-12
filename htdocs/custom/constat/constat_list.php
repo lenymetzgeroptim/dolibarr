@@ -780,6 +780,10 @@ while ($i < $imaxinloop) {
 				}
 				
 				foreach ($object->fields as $key => $val) {
+					if($val['visible'] !== 0) {
+						$val['visible'] = 1;
+					}
+
 					$cssforfield = (empty($val['csslist']) ? (empty($val['css']) ? '' : $val['css']) : $val['csslist']);
 					if (in_array($val['type'], array('date', 'datetime', 'timestamp'))) {
 						$cssforfield .= ($cssforfield ? ' ' : '').'center';

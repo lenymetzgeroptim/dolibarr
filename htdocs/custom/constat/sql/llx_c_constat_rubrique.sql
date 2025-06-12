@@ -15,10 +15,11 @@
 
 
 -- BEGIN MODULEBUILDER INDEXES
-ALTER TABLE llx_constat_constat ADD INDEX idx_constat_constat_rowid (rowid);
-ALTER TABLE llx_constat_constat ADD INDEX idx_constat_constat_ref (ref);
-ALTER TABLE llx_constat_constat ADD INDEX idx_constat_constat_status (status);
-ALTER TABLE llx_constat_constat ADD INDEX idx_constat_constat_site (site);
+CREATE TABLE llx_c_constat_rubrique (
+  rowid             integer AUTO_INCREMENT PRIMARY KEY,
+  label             varchar(64)  COLLATE utf8_unicode_ci NOT NULL,
+  active            int(11) DEFAULT 1
+) ENGINE=innodb;
 -- END MODULEBUILDER INDEXES
 
 --ALTER TABLE llx_constat_constat ADD UNIQUE INDEX uk_constat_constat_fieldxy(fieldx, fieldy);

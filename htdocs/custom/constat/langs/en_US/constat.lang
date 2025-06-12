@@ -78,3 +78,9 @@ CONSTAT_EN_COURSInDolibarr = Le constat %s est en cours
 CONSTAT_SOLDEEInDolibarr = Le constat %s est soldée
 CONSTAT_CLOTUREInDolibarr = Le constat %s réalisée, est cloturé
 CONSTAT_CANCELEDInDolibarr = Le constat %s est annulé
+
+
+#
+# Statuts
+#
+ConstatDraftExplication = L'émetteur doit remplir les champs en gras et valider le constat.

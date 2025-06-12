@@ -123,76 +123,74 @@ class Constat extends CommonObject
 	 */
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"\$object->status>0?1:0", "default"=>"(PROV)", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>'$object->status>0?1:0', "default"=>"(PROV)", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
 		"status" => array("type"=>"integer", "label"=>"Statut", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("{0:Brouillon" => "1:Validé,3:Vérifié,4:En cours,5:Soldée,7:Clôturé,9:Annulé}"), "validate"=>"1",),
 		"label" => array("type"=>"varchar(255)", "label"=>"Titre", "enabled"=>"1", 'position'=>100, 'notnull'=>1, "visible"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "help"=>"Identifier le constat en quelques mots", "validate"=>"1",),
 		"fk_user_creat" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
-		"fk_user" => array("type"=>"integer:User:user\class\user.class.php:0:(statut:=:1)", "label"=>"Emetteur", "enabled"=>"1", 'position'=>101, 'notnull'=>1, "visible"=>"1",),
 		"fk_project" => array("type"=>"chkbxlst:projet:ref|title:rowid", "label"=>"Projet", "enabled"=>"1", 'position'=>102, 'notnull'=>1, "visible"=>"1",),
-		"num_commande" => array("type"=>"chkbxlst:commande:ref:rowid:", "label"=>"Numéro de commande", "enabled"=>"1", 'position'=>200, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
+		"num_commande" => array("type"=>"chkbxlst:commande:ref:rowid:", "label"=>"Numéro de commande", "enabled"=>"1", 'position'=>200, 'notnull'=>0, "visible"=>'$object->status>0?1:0',),
 		"site" => array("type"=>"integer:societe:societe/class/societe.class.php::(client:=:1)or(client:=:3:)", "label"=>"Site intervention", "enabled"=>"1", 'position'=>103, 'notnull'=>1, "visible"=>"1", "index"=>"1",),
-		"dateEmeteur" => array("type"=>"date", "label"=>"Date d'émission", "enabled"=>"1", 'position'=>104, 'notnull'=>1, "visible"=>"1",),
+		"dateEmeteur" => array("type"=>"datetime", "label"=>"Date création du constat", "enabled"=>"1", 'position'=>104, 'notnull'=>1, "visible"=>"1",),
 		"sujet" => array("type"=>"sellist:c_constat_sujet:label:rowid::(active:=:1)", "label"=>"Typologie", "enabled"=>"1", 'position'=>110, 'notnull'=>1, "visible"=>"1", "csslist"=>"150",),
 		"descriptionConstat" => array("type"=>"html", "label"=>"Description du constat", "enabled"=>"1", 'position'=>111, 'notnull'=>1, "visible"=>"1", "cssview"=>"wordbreak", "help"=>"Description détaillée du constat (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
 		"impactcomm" => array("type"=>"html", "label"=>"Description impact", "enabled"=>"1", 'position'=>112, 'notnull'=>0, "visible"=>"1", "cssview"=>"wordbreak", "help"=>"Description impact (réels et potentiels)",),
 		"description" => array("type"=>"html", "label"=>"Commentaire émetteur", "enabled"=>"1", 'position'=>120, 'notnull'=>0, "visible"=>"1",),
-		"typeConstat" => array("type"=>"sellist:c_constat_type:label:rowid::(active:=:1)", "label"=>"Type de constat", "enabled"=>"1", 'position'=>201, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"rubrique" => array("type"=>"chkbxlst:c_constat_rubrique:label:rowid::(active=1)", "label"=>"Rubrique", "enabled"=>"1", 'position'=>202, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"processus" => array("type"=>"chkbxlst:c_constat_processus:label:rowid::(active=1)", "label"=>"Processus", "enabled"=>"1", 'position'=>203, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"actionimmediate" => array("type"=>"boolean", "label"=>"Action immédiate", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Coché si le constat est une action immédiate",),
-		"actionimmediatecom" => array("type"=>"html", "label"=>"Action immédiate commentaire", "enabled"=>"1", 'position'=>211, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "cssview"=>"wordbreak", "help"=>"Détail action immédiate (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
-		"infoClient" => array("type"=>"boolean", "label"=>"Information Client Requise", "enabled"=>"1", 'position'=>220, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"client informé requis ou non",),
-		"commInfoClient" => array("type"=>"html", "label"=>"Commentaire info client", "enabled"=>"1", 'position'=>221, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"précisez méthode d'information client",),
-		"impact" => array("type"=>"chkbxlst:c_constat_impact:label:rowid::(active=1)", "label"=>"Impact", "enabled"=>"1", 'position'=>230, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"commRespAff" => array("type"=>"html", "label"=>"Commentaire Responsable Affaire", "enabled"=>"1", 'position'=>240, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"analyseCauseRacine" => array("type"=>"html", "label"=>"Analyse des causes racines", "enabled"=>"1", 'position'=>300, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "cssview"=>"wordbreak", "help"=>"(Arbre des causes, description détaillée, etc).",),
-		"recurent" => array("type"=>"boolean", "label"=>"Recurent", "enabled"=>"1", 'position'=>310, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Coché si le constat est récurent",),
-		"accordClient" => array("type"=>"boolean", "label"=>"Accord du Client", "enabled"=>"1", 'position'=>320, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Accord client requis ou non",),
-		"commAccordClient" => array("type"=>"html", "label"=>"Commentaire Accord client", "enabled"=>"1", 'position'=>321, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"précisez méthode d'information client",),
-		"controleClient" => array("type"=>"boolean", "label"=>"Controle du Client", "enabled"=>"1", 'position'=>330, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Contrôle client requis ou non",),
-		"commControleClient" => array("type"=>"html", "label"=>"Commentaire Controle client", "enabled"=>"1", 'position'=>331, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"précisez méthode d'information client",),
-		"commRespQ3" => array("type"=>"html", "label"=>"Commentaire Responsable Q3SE", "enabled"=>"1", 'position'=>340, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"commServQ3" => array("type"=>"html", "label"=>"Commentaire Service Q3SE", "enabled"=>"1", 'position'=>341, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"coutTotal" => array("type"=>"int", "label"=>"Coût Total", "enabled"=>"1", 'position'=>550, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Coût total regroupant : Coût traitement horraire ,coût traitement financier et coût pénalité",),
+		"typeConstat" => array("type"=>"sellist:c_constat_type:label:rowid::(active:=:1)", "label"=>"Type de constat", "enabled"=>"1", 'position'=>201, 'notnull'=>0, "visible"=>'$object->status>0?1:0',),
+		"rubrique" => array("type"=>"chkbxlst:c_constat_rubrique:label:rowid::(active=1)", "label"=>"Rubrique", "enabled"=>"1", 'position'=>202, 'notnull'=>0, "visible"=>'$object->status>0?1:0',),
+		"processus" => array("type"=>"chkbxlst:c_constat_processus:label:rowid::(active=1)", "label"=>"Processus", "enabled"=>"1", 'position'=>203, 'notnull'=>0, "visible"=>'$object->status>0?1:0',),
+		"actionimmediate" => array("type"=>"boolean", "label"=>"Action immédiate", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"Coché si le constat est une action immédiate",),
+		"actionimmediatecom" => array("type"=>"html", "label"=>"Action immédiate commentaire", "enabled"=>"1", 'position'=>211, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "cssview"=>"wordbreak", "help"=>"Détail action immédiate (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
+		"infoClient" => array("type"=>"boolean", "label"=>"Information Client Requise", "enabled"=>"1", 'position'=>220, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"client informé requis ou non",),
+		"commInfoClient" => array("type"=>"html", "label"=>"Commentaire info client", "enabled"=>"1", 'position'=>221, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"précisez méthode d'information client",),
+		"impact" => array("type"=>"chkbxlst:c_constat_impact:label:rowid::(active=1)", "label"=>"Impact", "enabled"=>"1", 'position'=>230, 'notnull'=>0, "visible"=>'$object->status>0?1:0',),
+		"commRespAff" => array("type"=>"html", "label"=>"Commentaire Responsable Affaire", "enabled"=>"1", 'position'=>240, 'notnull'=>0, "visible"=>'$object->status>0?1:0',),
+		"analyseCauseRacine" => array("type"=>"html", "label"=>"Analyse des causes racines", "enabled"=>"1", 'position'=>300, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "cssview"=>"wordbreak", "help"=>"(Arbre des causes, description détaillée, etc).",),
+		"recurent" => array("type"=>"boolean", "label"=>"Recurent", "enabled"=>"1", 'position'=>310, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"Coché si le constat est récurent",),
+		"accordClient" => array("type"=>"boolean", "label"=>"Accord du Client", "enabled"=>"1", 'position'=>320, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"Accord client requis ou non",),
+		"commAccordClient" => array("type"=>"html", "label"=>"Commentaire Accord client", "enabled"=>"1", 'position'=>321, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"précisez méthode d'information client",),
+		"controleClient" => array("type"=>"boolean", "label"=>"Controle du Client", "enabled"=>"1", 'position'=>330, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"Contrôle client requis ou non",),
+		"commControleClient" => array("type"=>"html", "label"=>"Commentaire Controle client", "enabled"=>"1", 'position'=>331, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"précisez méthode d'information client",),
+		"commRespQ3" => array("type"=>"html", "label"=>"Commentaire Responsable Q3SE", "enabled"=>"1", 'position'=>340, 'notnull'=>0, "visible"=>'$object->status>0?1:0',),
+		"commServQ3" => array("type"=>"html", "label"=>"Commentaire Service Q3SE", "enabled"=>"1", 'position'=>341, 'notnull'=>0, "visible"=>'$object->status>0?1:0',),
+		"coutTotal" => array("type"=>"int", "label"=>"Coût Total", "enabled"=>"1", 'position'=>550, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"Coût total regroupant : Coût traitement horraire ,coût traitement financier et coût pénalité",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>650, 'notnull'=>0, "visible"=>"0",),
-		"date_eche" => array("type"=>"date", "label"=>"Date échéance", "enabled"=>"1", 'position'=>500, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"dateCloture" => array("type"=>"date", "label"=>"Date cloture", "enabled"=>"1", 'position'=>561, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Date à remplir quand le constat est soldé",),
-	);
+		"date_eche" => array("type"=>"date", "label"=>"Date échéance", "enabled"=>"1", 'position'=>500, 'notnull'=>0, "visible"=>'$object->status>0?1:0',),
+		"dateCloture" => array("type"=>"date", "label"=>"Date cloture", "enabled"=>"1", 'position'=>561, 'notnull'=>0, "visible"=>'$object->status>0?1:0', "help"=>"Date à remplir quand le constat est soldé",),
+		);
 	public $rowid;
 	public $ref;
-	public $status;
 	public $label;
+	public $status;
 	public $fk_user_creat;
 	public $fk_project;
 	public $num_commande;
 	public $site;
 	public $dateEmeteur;
 	public $sujet;
+	public $typeConstat;
+	public $actionimmediate;
+	public $actionimmediatecom;
+	public $analyseCauseRacine;
+	public $recurent;
+	public $coutTotal;
 	public $descriptionConstat;
 	public $impactcomm;
 	public $description;
-	public $typeConstat;
-	public $rubrique;
-	public $processus;
-	public $actionimmediate;
-	public $actionimmediatecom;
 	public $infoClient;
 	public $commInfoClient;
-	public $impact;
-	public $commRespAff;
-	public $analyseCauseRacine;
-	public $recurent;
 	public $accordClient;
 	public $commAccordClient;
 	public $controleClient;
 	public $commControleClient;
+	public $commRespAff;
 	public $commRespQ3;
 	public $commServQ3;
-	public $coutTotal;
 	public $last_main_doc;
 	public $date_eche;
 	public $dateCloture;
-	public $fk_user;
+	public $impact;
+	public $rubrique;
+	public $processus;
 	// END MODULEBUILDER PROPERTIES
 
 

@@ -102,65 +102,65 @@ if($object->fields['actionimmediatecom'] && !$actionChecked) {
 	);
 }
 
-if(empty($object->description)) {
-    unset($object->fields['description']);
+// if(empty($object->description)) {
+//     unset($object->fields['description']);
     
-}else{
-    $object->fields['description'] = array(
-        'type' => 'html',
-        'label' => 'Commentaire émetteur',
-        'enabled' => '1',
-        'position' => 611,
-        'notnull' => 0,
-        'visible' => 1,
-		'cssview' => 'wordbreak',
-    );
-}
+// }else{
+//     $object->fields['description'] = array(
+//         'type' => 'html',
+//         'label' => 'Commentaire émetteur',
+//         'enabled' => '1',
+//         'position' => 611,
+//         'notnull' => 0,
+//         'visible' => 1,
+// 		'cssview' => 'wordbreak',
+//     );
+// }
 
-if(empty($object->commRespAff)) {
-    unset($object->fields['commRespAff']);
+// if(empty($object->commRespAff)) {
+//     unset($object->fields['commRespAff']);
     
-}else{
-    $object->fields['commRespAff'] = array(
-        'type' => 'html',
-        'label' => 'Commentaire Responsable Affaire',
-        'enabled' => '1',
-        'position' => 612,
-        'notnull' => 0,
-        'visible' => 1,
-		'cssview' => 'wordbreak',
-    );
-}
+// }else{
+//     $object->fields['commRespAff'] = array(
+//         'type' => 'html',
+//         'label' => 'Commentaire Responsable Affaire',
+//         'enabled' => '1',
+//         'position' => 612,
+//         'notnull' => 0,
+//         'visible' => 1,
+// 		'cssview' => 'wordbreak',
+//     );
+// }
 
-if(empty($object->commRespQ3)) {
-    unset($object->fields['commRespQ3']);
+// if(empty($object->commRespQ3)) {
+//     unset($object->fields['commRespQ3']);
     
-}else{
-    $object->fields['commRespQ3'] = array(
-        'type' => 'html',
-        'label' => 'Commentaire Responsable Q3SE',
-        'enabled' => '1',
-        'position' => 613,
-        'notnull' => 0,
-        'visible' => 1,
-		'cssview' => 'wordbreak',
-    );
-}
+// }else{
+//     $object->fields['commRespQ3'] = array(
+//         'type' => 'html',
+//         'label' => 'Commentaire Responsable Q3SE',
+//         'enabled' => '1',
+//         'position' => 613,
+//         'notnull' => 0,
+//         'visible' => 1,
+// 		'cssview' => 'wordbreak',
+//     );
+// }
 
-if(empty($object->commServQ3)) {
-    unset($object->fields['commServQ3']);
+// if(empty($object->commServQ3)) {
+//     unset($object->fields['commServQ3']);
     
-}else{
-    $object->fields['commServQ3'] = array(
-        'type' => 'html',
-        'label' => 'Commentaire Service Q3SE',
-        'enabled' => '1',
-        'position' => 614,
-        'notnull' => 0,
-        'visible' => 1,
-		'cssview' => 'wordbreak',
-    );
-}
+// }else{
+//     $object->fields['commServQ3'] = array(
+//         'type' => 'html',
+//         'label' => 'Commentaire Service Q3SE',
+//         'enabled' => '1',
+//         'position' => 614,
+//         'notnull' => 0,
+//         'visible' => 1,
+// 		'cssview' => 'wordbreak',
+//     );
+// }
 
 
 
@@ -187,9 +187,6 @@ if ($key == 'status') {
 		break; // key used for break on second column
 
 	}
-	
-
-	
 
 	$value = $object->$key;
 	

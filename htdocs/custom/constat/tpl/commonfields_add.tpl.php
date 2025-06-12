@@ -28,16 +28,11 @@ if (empty($conf) || !is_object($conf)) {
 	exit;
 }
 
-
-	$object->fields['label'] ['notnull'] = 1;
-	$object->fields['site'] ['notnull'] = 1;
-	$object->fields['sujet'] ['notnull'] = 1;
-
-
 ?>
 <!-- BEGIN PHP TEMPLATE commonfields_add.tpl.php -->
 <?php
 
+$blockOpen = false;
 $object->fields = dol_sort_array($object->fields, 'position');
 
 foreach ($object->fields as $key => $val) {
@@ -46,15 +41,30 @@ foreach ($object->fields as $key => $val) {
 		continue;
 	}
 
-	if ($user->rights->constat->constat->Emetteur){
-		if (($val['position']) !==30 && ($val['position']) !==43 && ($val['position']) !==501 && ($val['position']) !==504  && ($val['position']) !==505 && ($val['position']) !==506 && ($val['position']) !==510 && ($val['position']) !==515  && ($val['position']) !==605  && ($val['position']) !==611 && ($val['position']) !==508)  {
-		continue;
-		}
-	}
+	// if ($user->rights->constat->constat->Emetteur){
+	// 	if (($val['position']) !==30 && ($val['position']) !==43 && ($val['position']) !==501 && ($val['position']) !==504  && ($val['position']) !==505 && ($val['position']) !==506 && ($val['position']) !==510 && ($val['position']) !==515  && ($val['position']) !==605  && ($val['position']) !==611 && ($val['position']) !==508)  {
+	// 	continue;
+	// 	}
+	// }
 
 	if (array_key_exists('enabled', $val) && isset($val['enabled']) && !verifCond($val['enabled'])) {
 		continue; // We don't want this field
 	}
+
+	// Si le champ a separation = 1, on démarre un nouveau bloc dépliant
+    if (!empty($val['separation']) && $val['separation'] == 1) {
+        // Fermer le bloc précédent
+        if ($blockOpen) {
+            print '</table>';
+            print '</details><br>';
+        }
+
+        // Créer un titre pour le nouveau bloc
+        print '<details open>';
+        print '<summary>'.$langs->trans($val['label_separation']).'</summary>';
+		print '<table class="border tableforfieldcreate">'."\n";
+        $blockOpen = true;
+    }
 
 	print '<tr class="field_'.$key.'">';
 	print '<td';
@@ -126,7 +136,11 @@ foreach ($object->fields as $key => $val) {
 	
 	print '</td>';
 	print '</tr>';
-	
+}
+
+if ($blockOpen) {
+	print '</table>';
+	print '</details>';
 }
 
 ?>

@@ -116,3 +116,19 @@ tr.ResponsableAffaire td {
 	color: #2ca581;
 }
 
+.constat details {
+    border: 1px solid #ccc;
+}
+
+.constat details table {
+    margin: 8px;
+	width: calc(100% - 16px);
+}
+
+.constat details summary {
+    cursor: pointer;
+    background: #f0f0f0;
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+	font-weight: bold;
+}

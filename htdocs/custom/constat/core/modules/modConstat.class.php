@@ -83,7 +83,7 @@ class modConstat extends DolibarrModules
 		// If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
 		// If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
 		// To use a supported fa-xxx css style of font awesome, use this->picto='xxx'
-		$this->picto = 'fa-file-invoice_fas_green';
+		$this->picto = 'fa-clipboard-check_fas_#bd6e00';
 
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = array(
@@ -111,7 +111,7 @@ class modConstat extends DolibarrModules
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
-				//   '/constat/js/constat.js.php',
+				'/constat/js/constat.js.php',
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
@@ -213,28 +213,27 @@ class modConstat extends DolibarrModules
 		// 'user'             to add a tab in user view
 
 		// Dictionaries
-		$this->dictionaries = array();
-		//  Example:
 		$this->dictionaries=array(
 			'langs'=>'constat@constat',
 			// List of tables we want to see into dictonnary editor
-			'tabname'=>array( MAIN_DB_PREFIX."constat_sujet",MAIN_DB_PREFIX."constat_type",),
+			'tabname'=>array( MAIN_DB_PREFIX."c_constat_sujet",MAIN_DB_PREFIX."c_constat_type",MAIN_DB_PREFIX."c_constat_impact",MAIN_DB_PREFIX."c_constat_processus",MAIN_DB_PREFIX."c_constat_rubrique",),
 			// Label of tables
-			'tablib'=>array("Constat-sujet","Constat-type"),
+			'tablib'=>array("Constat - Sujet","Constat - Type","Constat - Impact","Constat - Processus","Constat - Rubrique"),
 			// Request to select fields
-			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'constat_sujet as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'constat_type as f'),
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_sujet as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_type as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_impact as f',
+							'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_processus as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_rubrique as f'),
 			// Sort order
-			'tabsqlsort'=>array("label ASC","label ASC"),
+			'tabsqlsort'=>array("label ASC","label ASC","label ASC","label ASC","label ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("label","label"),
+			'tabfield'=>array("label","label","label","label","label"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("label","label"),
+			'tabfieldvalue'=>array("label","label","label","label","label"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("label","label"),
+			'tabfieldinsert'=>array("label","label","label","label","label"),
 			// Name of columns with primary key (try to always name it 'rowid')
-			'tabrowid'=>array("rowid","rowid"),
+			'tabrowid'=>array("rowid","rowid","rowid","rowid","rowid"),
 			// Condition to show each dictionary
-			'tabcond'=>array($conf->constat->enabled,$conf->constat->enabled),
+			'tabcond'=>array($conf->constat->enabled,$conf->constat->enabled,$conf->constat->enabled,$conf->constat->enabled,$conf->constat->enabled),
 		);
 		
 
@@ -302,27 +301,27 @@ class modConstat extends DolibarrModules
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
 		$this->rights[$r][1] = 'Show Emetteur objects of Constat';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'Emetteur';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Delete objects of Constat';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Show Responsable Q3SE objects of Constat';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'ResponsableQ3SE';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
 		$this->rights[$r][1] = 'Show responsable affaire objects of Constat';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'ResponsableAffaire';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 6 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
 		$this->rights[$r][1] = 'show serviceQ3SE objects of Constat';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'ServiceQ3SE';
@@ -410,7 +409,7 @@ class modConstat extends DolibarrModules
             'langs'=>'q3serp@q3serp',
             'position'=>1106,
             'enabled'=>'$conf->constat->enabled',
-            'perms'=>'$user->rights->constat->constat->Emetteur',
+            'perms'=>'1',
             'target'=>'',
             'user'=>2,
         );
@@ -424,7 +423,7 @@ class modConstat extends DolibarrModules
             'langs'=>'q3serp@q3serp',
             'position'=>1107,
             'enabled'=>'$conf->constat->enabled',
-			'perms'=>'$user->rights->constat->constat->Emetteur',
+			'perms'=>'1',
             'target'=>'',
             'user'=>2,
         );
@@ -439,7 +438,7 @@ class modConstat extends DolibarrModules
             'langs'=>'q3serp@q3serp',
             'position'=>1108,
             'enabled'=>'$conf->constat->enabled',
-            'perms'=>'$user->rights->constat->constat->Emetteur',
+            'perms'=>'1',
             'target'=>'',
             'user'=>2
         );

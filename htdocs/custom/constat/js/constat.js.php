@@ -100,50 +100,77 @@ if (empty($dolibarr_nocache)) {
 /* Code JS pour afficher une popup qui disparaît en haut de l'écran */
 
 // Fonction pour afficher la popup
-function showPopup(message) {
-    var popup = document.createElement('div');
-    popup.className = 'popup-message';
-    popup.innerHTML = message;
+// function showPopup(message) {
+//     var popup = document.createElement('div');
+//     popup.className = 'popup-message';
+//     popup.innerHTML = message;
     
-    // Ajouter la popup au corps de la page
-    document.body.appendChild(popup);
+//     // Ajouter la popup au corps de la page
+//     document.body.appendChild(popup);
     
-    // Animer la popup pour la faire apparaître en haut
-    setTimeout(function() {
-        popup.style.top = '0px';
-    }, 100);
+//     // Animer la popup pour la faire apparaître en haut
+//     setTimeout(function() {
+//         popup.style.top = '0px';
+//     }, 100);
 
-    // Après 3 secondes, faire disparaître la popup
-    setTimeout(function() {
-        popup.style.top = '-50px'; // Décalage pour faire disparaître la popup
-        setTimeout(function() {
-            popup.remove(); // Retirer la popup du DOM après l'animation
-        }, 500); // Délai pour que l'animation de disparition soit terminée
-    }, 3000); // La popup disparaît après 3 secondes
-}
+//     // Après 3 secondes, faire disparaître la popup
+//     setTimeout(function() {
+//         popup.style.top = '-50px'; // Décalage pour faire disparaître la popup
+//         setTimeout(function() {
+//             popup.remove(); // Retirer la popup du DOM après l'animation
+//         }, 500); // Délai pour que l'animation de disparition soit terminée
+//     }, 3000); // La popup disparaît après 3 secondes
+// }
 
-// Exemple d'utilisation de la popup
-window.onload = function() {
-    showPopup('Ceci est un message temporaire !');
-};
+// // Exemple d'utilisation de la popup
+// window.onload = function() {
+//     showPopup('Ceci est un message temporaire !');
+// };
 
-// CSS pour la popup (assurez-vous que ce style soit inclus dans ton fichier HTML ou dans une feuille de style)
-var style = document.createElement('style');
-style.innerHTML = `
-    .popup-message {
-        position: fixed;
-        top: -50px; /* Position initiale en dehors de l'écran */
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 16px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        transition: top 0.5s ease-in-out;
-        z-index: 9999;
+// // CSS pour la popup (assurez-vous que ce style soit inclus dans ton fichier HTML ou dans une feuille de style)
+// var style = document.createElement('style');
+// style.innerHTML = `
+//     .popup-message {
+//         position: fixed;
+//         top: -50px; /* Position initiale en dehors de l'écran */
+//         left: 50%;
+//         transform: translateX(-50%);
+//         background-color: #4CAF50;
+//         color: white;
+//         padding: 10px;
+//         border-radius: 5px;
+//         font-size: 16px;
+//         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+//         transition: top 0.5s ease-in-out;
+//         z-index: 9999;
+//     }
+// `;
+// document.head.appendChild(style);
+
+$(document).ready(function () {
+    // Tableau de correspondance ID checkbox -> classe TR à afficher
+    const mapping = {
+        'actionimmediate': 'field_actionimmediatecom',
+        'infoClient': 'field_commInfoClient',
+        'accordClient': 'field_commAccordClient',
+        'controleClient': 'field_commControleClient',
+    };
+
+    // Initialisation + écoute des événements
+    $.each(mapping, function(checkboxId, targetClass) {
+        toggleRow(checkboxId, targetClass);
+        $('#' + checkboxId).on('change', function () {
+            toggleRow(checkboxId, targetClass);
+        });
+    });
+});
+
+function toggleRow(checkboxId, targetClass) {
+    const checkbox = $('#' + checkboxId);
+    const row = $('.' + targetClass);
+    if (checkbox.is(':checked')) {
+        row.show();
+    } else {
+        row.hide();
     }
-`;
-document.head.appendChild(style);
-
+}

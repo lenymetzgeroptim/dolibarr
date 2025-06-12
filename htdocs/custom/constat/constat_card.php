@@ -161,8 +161,21 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
+//condition si le respAFF n'est pas le chef de projet
+$projet = new Project($db);
+$projet->fetch($object->fk_project);
+$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
 
+$pasresponsableaffaire = 0; 
 
+if (!in_array($user->id, $liste_chef_projet)) {
+	$pasresponsableaffaire = 1; 
+}
+
+$estResponsableAffaireOuQ3SEouEme = $user->rights->constat->constat->ResponsableAffaire || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->Emetteur;
+
+// Permet d'avoir les noms complet dans les multiselect
+$conf->global->MAIN_DISABLE_TRUNC = 1;
 
 
 /*
@@ -224,207 +237,7 @@ if (empty($reshook)) {
 	if ($action == 'classin' && $permissiontoadd) {
 		$object->setProject(GETPOST('projectid', 'int'));
 	}
-
-	// Actions to send emails
-	$triggersendname = 'CONSTAT_CONSTAT_SENTBYMAIL';
-	$autocopy = 'MAIN_MAIL_AUTOCOPY_CONSTAT_TO';
-	$trackid = 'constat'.$object->id;
-	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
-}
-
-/*
- * View
- *
- * Put here all code to build page
- */
-
-$form = new Form($db);
-$actionForm = new actionsForm($db);
-$actionForm = new actionsForm($db);
-$formfile = new FormFile($db);
-$formproject = new FormProjets($db);
-
-$title = $langs->trans("Constat");
-$help_url = '';
-llxHeader('', $title, $help_url);
-
-$resp = $object->getAgencesBySoc();
-
-// Part to create
-if ($action == 'create') {
-	if (empty($permissiontoadd)) {
-		accessforbidden('NotEnoughPermissions', 0, 1);
-	}
-
-	print load_fiche_titre($langs->trans("NewObject", $langs->transnoentitiesnoconv("Constat")), '', 'object_'.$object->picto);
-
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.newToken().'">';
-	print '<input type="hidden" name="action" value="add">';
-	if ($backtopage) {
-		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-	}
-	if ($backtopageforcancel) {
-		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
-	}
-
-	print dol_get_fiche_head(array(), '');
-
-	// Set some default values
-	//if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
-
-	print '<table class="border centpercent tableforfieldcreate">'."\n";
-
-	// Common attributes
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_add.tpl.php';
-
-	// Other attributes
-	//include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/extrafields_add.tpl.php';
-
-	print '</table>'."\n";
-
-	print dol_get_fiche_end();
-
-	print $form->buttonsSaveCancel("Create");
-	
-}
-
-// Part to edit record
-if (($id || $ref) && $action == 'edit') {
-	print load_fiche_titre($langs->trans("Constat"), '', 'object_'.$object->picto);
-
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.newToken().'">';
-	print '<input type="hidden" name="action" value="update">';
-	print '<input type="hidden" name="id" value="'.$object->id.'">';
-	if ($backtopage) {
-		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-	}
-	if ($backtopageforcancel) {
-		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
-	}
-
-	print dol_get_fiche_head();
-
-	print '<table class="border centpercent tableforfieldedit">'."\n";
-
-	// Étape 1 : Sauvegarder l'état initial des champs
-	$original_fields = $object->fields;
-
-	// Étape 2 : Masquer les champs pour le premier appel
-	$fields_to_hide_first = [
-		'impactcomm',
-		'coutTotal',
-		'dateCloture',
-		'actionimmediate',
-		'actionimmediatecom',
-		'analyseCauseRacine',
-		'recurent',
-		'infoClient',
-		'commInfoClient',
-		'accordClient',
-		'commAccordClient',
-		'controleClient',
-		'commControleClient',
-		'description',
-		'commRespAff',
-		'commRespQ3',
-		'commServQ3'
-	];
-
-
-
-	foreach ($fields_to_hide_first as $field) {
-		if (isset($object->fields[$field])) {
-			$object->fields[$field]['enabled'] = '0';  // Pour ne pas le gérer
-			$object->fields[$field]['visible'] = 0;   // Pour ne pas l'afficher
-		}
-	}
-
-
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_edit.tpl.php';
-
-	if ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE) {
-	
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/extrafields_edit.tpl.php';
-	}
-	
-	
-	$object->fields = $original_fields;
-
-	
-	$fields_to_hide_second = [
-		'ref',
-		'label',
-		'date_eche',
-		'typeConstat',
-		'fk_project',
-		'num_commande',
-		'site',
-		'sujet',
-		'descriptionConstat'
-	];
-
-	foreach ($fields_to_hide_second as $field) {
-		if (isset($object->fields[$field])) {
-			$object->fields[$field]['enabled'] = '0';  
-			$object->fields[$field]['visible'] = 0;   
-		}
-	}
-
-	
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_edit.tpl.php';
-
-
-	print '</table>';
-
-	print dol_get_fiche_end();
-
-	print $form->buttonsSaveCancel();
-
-	print '</form>';
-
-}
-
-// Part to show record
-if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
-	$head = constatPrepareHead($object);
-
-	print dol_get_fiche_head($head, 'card', $langs->trans("Constat"), -1, $object->picto);
-
-	$formconfirm = '';
-
-	// Confirmation to delete
-	if ($action == 'delete') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('DeleteConstat'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 1);
-	}
-	// Confirmation to delete line
-	if ($action == 'deleteline') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
-	}
-
-	// Clone confirmation
-	if ($action == 'clone') {
-		// Create an array for form
-		$formquestion = array();
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
-	}
-
-
-	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
-	if ($action == 'xxx') {
-		$text = $langs->trans('ConfirmActionConstat', $object->ref);
-
-	
-		$formquestion = array();
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('XXX'), $text, 'confirm_xxx', $formquestion, 0, 1, 220);
-	}
-
-
-
-
-
-	if ($action == 'setPrise' && $confirm == 'yes'){
+		if ($action == 'setPrise' && $confirm == 'yes'){
 	
 		$subject = '[OPTIM Industries] Notification automatique constat vérifié ';
 	
@@ -653,8 +466,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}	
 	}
 	
-
-
 	if ($action == 'setSolde' && $confirm == 'yes'){
 	
 		$subject = '[OPTIM Industries] Notification automatique constat soldé ';
@@ -717,19 +528,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			</script>';
 		} 		
 	
-	}
-
-	//condition si le respAFF n'est pas le chef de projet
-	$projet = new Project($db);
-	$projet->fetch($object->fk_project);
-	$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
-	
-	
-	$pasresponsableaffaire = 0; 
-	
-
-	if (!in_array($user->id, $liste_chef_projet)) {
-		$pasresponsableaffaire = 1; 
 	}
 
 	if( $action == 'setPrise'  && $confirm == 'yes' ){
@@ -817,6 +615,195 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
         }
     }
 
+	// Actions to send emails
+	$triggersendname = 'CONSTAT_CONSTAT_SENTBYMAIL';
+	$autocopy = 'MAIN_MAIL_AUTOCOPY_CONSTAT_TO';
+	$trackid = 'constat'.$object->id;
+	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
+}
+
+/*
+ * View
+ *
+ * Put here all code to build page
+ */
+
+$form = new Form($db);
+$actionForm = new actionsForm($db);
+$actionForm = new actionsForm($db);
+$formfile = new FormFile($db);
+$formproject = new FormProjets($db);
+
+$title = $langs->trans("Constat");
+$help_url = '';
+llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'constat');
+
+$resp = $object->getAgencesBySoc();
+
+// Part to create
+if ($action == 'create') {
+	if (empty($permissiontoadd)) {
+		accessforbidden('NotEnoughPermissions', 0, 1);
+	}
+
+	print load_fiche_titre($langs->trans("NewObject", $langs->transnoentitiesnoconv("Constat")), '', 'object_'.$object->picto);
+
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="add">';
+	if ($backtopage) {
+		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+	}
+	if ($backtopageforcancel) {
+		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
+	}
+
+	print dol_get_fiche_head(array(), '');
+
+	// Set some default values
+	//if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
+
+
+	// Common attributes
+	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_add.tpl.php';
+
+	print '<table class="border centpercent tableforfieldcreate">'."\n";
+
+	// Other attributes
+	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/extrafields_add.tpl.php';
+
+	print '</table>'."\n";
+
+	print dol_get_fiche_end();
+
+	print $form->buttonsSaveCancel("Create");
+	
+}
+
+// Part to edit record
+if (($id || $ref) && $action == 'edit') {
+	print load_fiche_titre($langs->trans("Constat"), '', 'object_'.$object->picto);
+
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="update">';
+	print '<input type="hidden" name="id" value="'.$object->id.'">';
+	if ($backtopage) {
+		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+	}
+	if ($backtopageforcancel) {
+		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
+	}
+
+	print dol_get_fiche_head();
+
+	// Étape 1 : Sauvegarder l'état initial des champs
+	// $original_fields = $object->fields;
+
+	// // Étape 2 : Masquer les champs pour le premier appel
+	// $fields_to_hide_first = [
+	// 	'impactcomm',
+	// 	'coutTotal',
+	// 	'dateCloture',
+	// 	'actionimmediate',
+	// 	'actionimmediatecom',
+	// 	'analyseCauseRacine',
+	// 	'recurent',
+	// 	'infoClient',
+	// 	'commInfoClient',
+	// 	'accordClient',
+	// 	'commAccordClient',
+	// 	'controleClient',
+	// 	'commControleClient',
+	// 	'description',
+	// 	'commRespAff',
+	// 	'commRespQ3',
+	// 	'commServQ3'
+	// ];
+
+	// foreach ($fields_to_hide_first as $field) {
+	// 	if (isset($object->fields[$field])) {
+	// 		$object->fields[$field]['enabled'] = '0';  // Pour ne pas le gérer
+	// 		$object->fields[$field]['visible'] = 0;   // Pour ne pas l'afficher
+	// 	}
+	// }
+
+	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_edit.tpl.php';
+
+	print '<table class="border centpercent tableforfieldedit">'."\n";
+
+	// if ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE) {
+	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/extrafields_edit.tpl.php';
+	// }
+	
+	
+	// $object->fields = $original_fields;
+
+	
+	// $fields_to_hide_second = [
+	// 	'ref',
+	// 	'label',
+	// 	'date_eche',
+	// 	'typeConstat',
+	// 	'fk_project',
+	// 	'num_commande',
+	// 	'site',
+	// 	'sujet',
+	// 	'descriptionConstat'
+	// ];
+
+	// foreach ($fields_to_hide_second as $field) {
+	// 	if (isset($object->fields[$field])) {
+	// 		$object->fields[$field]['enabled'] = '0';  
+	// 		$object->fields[$field]['visible'] = 0;   
+	// 	}
+	// }
+	
+	// include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_edit.tpl.php';
+
+
+	print '</table>';
+
+	print dol_get_fiche_end();
+
+	print $form->buttonsSaveCancel();
+
+	print '</form>';
+}
+
+// Part to show record
+if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
+	$head = constatPrepareHead($object);
+
+	print dol_get_fiche_head($head, 'card', $langs->trans("Constat"), -1, $object->picto);
+
+	$formconfirm = '';
+
+	// Confirmation to delete
+	if ($action == 'delete') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('DeleteConstat'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 1);
+	}
+	// Confirmation to delete line
+	if ($action == 'deleteline') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
+	}
+
+	// Clone confirmation
+	if ($action == 'clone') {
+		// Create an array for form
+		$formquestion = array();
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
+	}
+
+
+	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
+	if ($action == 'xxx') {
+		$text = $langs->trans('ConfirmActionConstat', $object->ref);
+
+	
+		$formquestion = array();
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('XXX'), $text, 'confirm_xxx', $formquestion, 0, 1, 220);
+	}
 
 	// Call Hook formConfirm
 	$parameters = array('formConfirm' => $formconfirm, 'lineid' => $lineid);
@@ -837,39 +824,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	$linkback = '<a href="'.dol_buildpath('/constat/constat_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 	
 	$morehtmlref = '<div class="refidno">';
-	/*
-		// Ref customer
-		$morehtmlref .= $form->editfieldkey("RefCustomer", 'ref_client', $object->ref_client, $object, $usercancreate, 'string', '', 0, 1);
-		$morehtmlref .= $form->editfieldval("RefCustomer", 'ref_client', $object->ref_client, $object, $usercancreate, 'string'.(isset($conf->global->THIRDPARTY_REF_INPUT_SIZE) ? ':'.$conf->global->THIRDPARTY_REF_INPUT_SIZE : ''), '', null, null, '', 1);
-		// Thirdparty
-		$morehtmlref .= '<br>'.$object->thirdparty->getNomUrl(1, 'customer');
-		if (empty($conf->global->MAIN_DISABLE_OTHER_LINK) && $object->thirdparty->id > 0) {
-			$morehtmlref .= ' (<a href="'.DOL_URL_ROOT.'/commande/list.php?socid='.$object->thirdparty->id.'&search_societe='.urlencode($object->thirdparty->name).'">'.$langs->trans("OtherOrders").'</a>)';
-		}
-		// Project
-		if (isModEnabled('project')) {
-			$langs->load("projects");
-			$morehtmlref .= '<br>';
-			if ($permissiontoadd) {
-				$morehtmlref .= img_picto($langs->trans("Project"), 'project', 'class="pictofixedwidth"');
-				if ($action != 'classify') {
-					$morehtmlref .= '<a class="editfielda" href="'.$_SERVER['PHP_SELF'].'?action=classify&token='.newToken().'&id='.$object->id.'">'.img_edit($langs->transnoentitiesnoconv('SetProject')).'</a> ';
-				}
-				$morehtmlref .= $form->form_project($_SERVER['PHP_SELF'].'?id='.$object->id, $object->socid, $object->fk_project, ($action == 'classify' ? 'projectid' : 'none'), 0, 0, 0, 1, '', 'maxwidth300');
-			} else {
-				if (!empty($object->fk_project)) {
-					$proj = new Project($db);
-					$proj->fetch($object->fk_project);
-					$morehtmlref .= $proj->getNomUrl(1);
-					if ($proj->title) {
-						$morehtmlref .= '<span class="opacitymedium"> - '.dol_escape_htmltag($proj->title).'</span>';
-					}
-				}
-			}
-		}
-	*/
+	$morehtmlref .= 'test';
 	$morehtmlref .= '</div>';
-
 
 	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 
@@ -881,12 +837,21 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// Common attributes
 	$keyforbreak='actionimmediate';	// We change column just before this field
+	if(!$object->description) unset($object->fields['description']);
+	if(!$object->commRespAff) unset($object->fields['commRespAff']);
+	if(!$object->commRespQ3) unset($object->fields['commRespQ3']);
+	if(!$object->commServQ3) unset($object->fields['commServQ3']);
+	if($object->accordClient !== true && !$object->commAccordClient) unset($object->fields['commAccordClient']);
 
+	foreach ($object->fields as $key => $val) {
+		$object->fields[$key]['visible'] = dol_eval($val['visible'], 1);
+	}
 
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_view.tpl.php';
+	//include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_view.tpl.php';
+	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_view.tpl.php';
 
 	// Other attributes. Fields from hook formObjectOptions and Extrafields.
-	
+	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_view.tpl.php';
 
 	print '</table>';
 	print '</div>';
@@ -894,13 +859,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	print '<div class="clearboth"></div>';
 	
-
 	print dol_get_fiche_end();
 
 	/*
 	 * Lines
 	 */
-
 	if (!empty($object->table_element_line)) {
 		// Show object lines
 		$result = $object->getLinesArray();
@@ -945,7 +908,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print '</div>';
 
 		print "</form>\n";
-		
+
 	}
 
 
@@ -988,11 +951,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 	</script>";
 
-
-	$estResponsableAffaireOuQ3SEouEme = $user->rights->constat->constat->ResponsableAffaire || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->Emetteur;
-
 	// Buttons for actions
-
 	if ($action != 'presend' && $action != 'editline') {
 		print '<div class="tabsAction">'."\n";
 		$parameters = array();
@@ -1007,7 +966,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
 			}*/
 
-			// Back to draft
+			// Modifier
 			//if ($estResponsableAffaireOuQ3SEouEme && !($pasresponsableaffaire == 1 && !$user->rights->constat->constat->ResponsableQ3SE)) {
 				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_DRAFT ||  $object->status == $object::STATUS_PRISE ||  $object->status == $object::STATUS_SOLDEE ) {
 					print dolGetButtonAction('', $langs->trans('Modifier / Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
@@ -1016,17 +975,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			//SATUTS CREE ( Validé )
 			if ($user->rights->constat->constat->Emetteur || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
 				if ($object->status == $object::STATUS_DRAFT) {
-				print "<script>showPopupMessage('L\émetteur doit remplir les champs en gras pour validé le constat. ', 'error');</script>";
+				print "<script>showPopupMessage('L\'émetteur doit remplir les champs en gras pour valider le constat. ', 'error');</script>";
 					if ($object->label != null && $object->site != null && $object->sujet != null) {
-						if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
+						//if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
 							print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
-						} 
+						//} 
 					}
 				}
 			}
-			
-
-			
 			
 			// Check if "client info" is unchecked (si_info_client == false)
 			if ($object->infoClient == 0) {
@@ -1166,17 +1122,17 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			<?php
 
 
-			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-				error_log("Statut actuel : " . $object->status);
-				error_log("Valeur de STATUS_CLASSE : " . $object::STATUS_CLASSE);
+			// if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+			// 	error_log("Statut actuel : " . $object->status);
+			// 	error_log("Valeur de STATUS_CLASSE : " . $object::STATUS_CLASSE);
 			
-				// Afficher le bouton seulement si le constat N'EST PAS encore classé
-				if ($object->status != $object::STATUS_CLASSE) { 
-					$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken();
-					print '<a href="#" onclick="confirmClasser(\'' . $url . '\')" class="butAction">' . $langs->trans('Classer le constat') . '</a>';
-				}
+			// 	// Afficher le bouton seulement si le constat N'EST PAS encore classé
+			// 	if ($object->status != $object::STATUS_CLASSE) { 
+			// 		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken();
+			// 		print '<a href="#" onclick="confirmClasser(\'' . $url . '\')" class="butAction">' . $langs->trans('Classer le constat') . '</a>';
+			// 	}
 	
-			}
+			// }
 			?>
 			
 			<script type="text/javascript">

@@ -1,4 +1,4 @@
--- Copyright (C) 2024 Faure Louis <l.faure@optim-industries.fr>
+-- Copyright (C) 2023 Faure Louis
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -14,25 +14,41 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-CREATE TABLE llx_constat_impact(
+CREATE TABLE llx_constat_constat(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
-	ref varchar(128) NOT NULL, 
-	label varchar(255), 
-	amount double DEFAULT NULL, 
-	qty real, 
-	fk_soc integer, 
-	fk_project integer, 
-	description text, 
-	note_public text, 
-	note_private text, 
-	date_creation datetime NOT NULL, 
-	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+	ref varchar(128) DEFAULT '(PROV)' NOT NULL, 
+	label varchar(255) NOT NULL, 
+	status integer NOT NULL, 
 	fk_user_creat integer NOT NULL, 
-	fk_user_modif integer, 
+	fk_project varchar(128), 
+	num_commande varchar(128), 
+	site integer NOT NULL, 
+	dateEmeteur datetime NOT NULL, 
+	sujet integer NOT NULL, 
+	typeConstat integer, 
+	actionimmediate boolean, 
+	actionimmediatecom text, 
+	analyseCauseRacine text, 
+	recurent boolean, 
+	coutTotal int, 
+	descriptionConstat text NOT NULL, 
+	impactcomm text, 
+	description text, 
+	infoClient boolean, 
+	commInfoClient text, 
+	accordClient boolean, 
+	commAccordClient text, 
+	controleClient boolean, 
+	commControleClient text, 
+	commRespAff text, 
+	commRespQ3 text, 
+	commServQ3 text, 
 	last_main_doc varchar(255), 
-	import_key varchar(14), 
-	model_pdf varchar(255), 
-	status integer NOT NULL
+	date_eche date, 
+	dateCloture date, 
+	impact varchar(128), 
+	rubrique varchar(128), 
+	processus varchar(128)
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;
