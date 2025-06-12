@@ -37,7 +37,8 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 	$note = (GETPOST('note')  ? GETPOST('note')  : array());
 	$fk_task = (GETPOST('fk_task')  ? GETPOST('fk_task')  : array());
 	$site = (GETPOST('site')  ? GETPOST('site')  : array());
-	
+	$observationFDT = GETPOST('observationFDT');
+
 	// Temps de chaque semaine pour vérifier s'il y a moins de 35h enregistré
 	//$timeDoneByWeekBefore = $timeSpentWeek; 
 	$task = new extendedTask($db);
@@ -653,6 +654,14 @@ if ($conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('formfi
 		}
 	}
 
+	if($observationFDT != $object->observation && $permissionToVerification) {
+		$object->oldcopy = dol_clone($object);
+		$object->actiontypecode = 'AC_FDT_VERIF';
+
+		$object->observation = $observationFDT;
+		$result = $object->update($user);
+	}
+	
 	if (!$error) {
 		// Si le feuille de temps existe et que des modifications ont été réalisé
 		if($object->id > 0 && !empty($modification)){
