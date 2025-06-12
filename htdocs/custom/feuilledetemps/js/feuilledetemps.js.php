@@ -445,7 +445,7 @@ function deletePrefillingClass(objet, sitedefaut) {
                 if (placeholderValue) {
                     input.trigger('focus');  // Simule l'événement onfocus
                     input.val(placeholderValue); 
-                    //input.trigger('blur');  // Simule l'événement onfocus
+                    input.trigger('keyup');  // Simule l'événement onfocus
                 }
             }
 
