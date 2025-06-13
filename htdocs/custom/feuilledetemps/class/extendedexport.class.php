@@ -605,6 +605,13 @@ class ExtendedExportFDT extends Export
 											while(dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%a') == 'Sam' || dol_print_date(dol_time_plus_duree($date_debut_tmp, $cpt, 'd'), '%a') == 'Dim') {
 												$cpt++;
 											}
+
+											if($obj->h_halfday == '-1') {
+												$obj->h_halfday = '0';
+											}
+											elseif($obj->h_halfday == '2') {
+												$obj->h_halfday = '1';
+											}
 										}
 
 										while($soldeRTTN1[$obj->rowid] >= 1) {
