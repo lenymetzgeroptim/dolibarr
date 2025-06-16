@@ -157,20 +157,21 @@ if ($permission) {
 		$formcompany->selectTypeContact($tmpobject, '', 'type', 'internal', 'position', 0, 'minwidth125imp widthcentpercentminusx maxwidth150'); ?></div>
 		<div class="tagtd noborderbottom" style="width: 150px;">
 			<?php
-			// Ajout du champ fonction pour les utilisateurs internes
-			$sql = "SELECT rowid, label FROM ".MAIN_DB_PREFIX."contact_fonction WHERE status = 1 ORDER BY label ASC";
-			$resql = $db->query($sql);
-			if ($resql) {
-				print '<select name="fonction_internal" class="form-control">';
-				print '<option value=""></option>';
-				while ($obj = $db->fetch_object($resql)) {
-					print '<option value="'.$obj->rowid.'">'.$obj->label.'</option>';
+				// Utilisation de Form::selectarray pour générer le dropdown des fonctions avec le style Dolibarr
+				$sql = "SELECT rowid, label FROM ".MAIN_DB_PREFIX."contact_fonction WHERE status = 1 ORDER BY label ASC";
+				$resql = $db->query($sql);
+				$functionOptions = array();
+				if ($resql) {
+					while ($obj = $db->fetch_object($resql)) {
+						$functionOptions[$obj->rowid] = $obj->label;
+					}
 				}
-				print '</select>';
-			}
+				print $form->selectarray('fonction_internal', $functionOptions, '', 1, 0, 0, '', 0, 0, 0, '', 'minwidth100imp widthcentpercentminusxx maxwidth200');
 			?>
 		</div>
-		<div class="tagtd center"><input type="submit" class="button small" value="<?php echo $langs->trans("Add"); ?>"></div>
+		<div class="tagtd center noborderbottom" style="width: 150px; text-align: center; padding-bottom: 15px;">
+			<input type="submit" class="button small" value="<?php echo $langs->trans("Add"); ?>" />
+		</div>
 	</form>
 
 		<?php
@@ -215,17 +216,8 @@ if ($permission) {
 		</div>
 		<div class="tagtd noborderbottom" style="width: 150px;">
 			<?php
-			// Ajout du champ fonction pour les contacts externes
-			$sql = "SELECT rowid, label FROM ".MAIN_DB_PREFIX."contact_fonction WHERE status = 1 ORDER BY label ASC";
-			$resql = $db->query($sql);
-			if ($resql) {
-				print '<select name="fonction_external" class="form-control">';
-				print '<option value=""></option>';
-				while ($obj = $db->fetch_object($resql)) {
-					print '<option value="'.$obj->rowid.'">'.$obj->label.'</option>';
-				}
-				print '</select>';
-			}
+			// Ajout d'un espace blanc pour aligner le bouton "Ajouter" des contacts externes
+			print '<div style="min-width: 150px;"></div>';
 			?>
 		</div>
 		<div class="tagtd center noborderbottom">

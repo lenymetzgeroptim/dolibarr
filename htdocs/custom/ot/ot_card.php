@@ -526,6 +526,40 @@ if (empty($reshook)) {
 	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
 	$trackid = 'ot'.$object->id;
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
+
+	if ($action == 'confirm_archive' && $confirm == 'yes' && $permissiontoadd) {
+		$result = $object->setArchive($user);
+		if ($result > 0) {
+			// Define output language
+			if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+				$outputlangs = $langs;
+				$newlang = '';
+				if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+					$newlang = GETPOST('lang_id', 'aZ09');
+				}
+				if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
+					$newlang = $object->thirdparty->default_lang;
+				}
+				if (!empty($newlang)) {
+					$outputlangs = new Translate("", $conf);
+					$outputlangs->setDefaultLang($newlang);
+				}
+				$model = $object->model_pdf;
+				$ret = $object->generateDocument($model, $outputlangs, 0, 0, 0);
+				if ($ret < 0) {
+					setEventMessages($object->error, $object->errors, 'errors');
+				}
+			}
+		} else {
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
+		header('Location: '.$_SERVER['PHP_SELF'].'?id='.$object->id);
+		exit;
+	}
+
+	if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontoadd) {
+		// ... existing code ...
+	}
 }
 
 
@@ -939,9 +973,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 			}
 
-            			//généré pdf constat
+			// Archive
+			if ($object->status == $object::STATUS_VALIDATED) {
+				print dolGetButtonAction('', $langs->trans('Archiver'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_archive&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			}
+
+			//généré pdf constat
 			
-                print dolGetButtonAction('', $langs->trans('généré PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
+            print dolGetButtonAction('', $langs->trans('généré PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
                 
                 /*//passé au  Status Cancel
                 if ($user->rights->constat->constat->ResponsableQ3SE) {

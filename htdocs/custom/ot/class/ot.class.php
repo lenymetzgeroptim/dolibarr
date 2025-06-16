@@ -129,7 +129,7 @@ class Ot extends CommonObject
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>600, 'notnull'=>0, "visible"=>"0",),
 		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>0, "visible"=>"-2",),
 		"model_pdf" => array("type"=>"varchar(255)", "label"=>"Model pdf", "enabled"=>"1", 'position'=>1010, 'notnull'=>0, "visible"=>"0",),
-		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>0, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Valid&eacute;", "9" => "Annul&eacute;"), "validate"=>"1",),
+		"status" => array("type"=>"integer", "label"=>"Status", "enabled"=>"1", 'position'=>2000, 'notnull'=>0, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Validé", "9" => "Annulé"), "validate"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -700,6 +700,23 @@ class Ot extends CommonObject
 	}
 
 	/**
+	 *	Set archive status
+	 *
+	 *	@param	User	$user			Object user that modify
+	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
+	 *	@return	int						<0 if KO, 0=Nothing done, >0 if OK
+	 */
+	public function setArchive($user, $notrigger = 0)
+	{
+		// Protection
+		if ($this->status != self::STATUS_VALIDATED) {
+			return 0;
+		}
+
+		return $this->setStatusCommon($user, self::STATUS_ARCHIVED, $notrigger, 'OT_MYOBJECT_ARCHIVE');
+	}
+
+	/**
 	 * getTooltipContentArray
 	 *
 	 * @param 	array 	$params 	Params to construct tooltip data
@@ -926,13 +943,13 @@ class Ot extends CommonObject
 			global $langs;
 			//$langs->load("ot@ot");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatus[self::STATUS_ARCHIVED] = $langs->transnoentitiesnoconv('Archiver');
-			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
+			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Validé');
+			$this->labelStatus[self::STATUS_ARCHIVED] = $langs->transnoentitiesnoconv('Archivé');
+			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Annulé');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
-			$this->labelStatus[self::STATUS_ARCHIVED] = $langs->transnoentitiesnoconv('Archiver');
-			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
+			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Validé');
+			$this->labelStatusShort[self::STATUS_ARCHIVED] = $langs->transnoentitiesnoconv('Archivé');
+			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Annulé');
 		}
 		
 		$statusType = 'status'.$status;
