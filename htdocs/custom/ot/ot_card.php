@@ -180,6 +180,19 @@ if (!$permissiontoread) {
 
 $data = json_decode(file_get_contents('php://input'), true);
 
+// Vérifier le statut de l'OT
+$sql = "SELECT status FROM " . MAIN_DB_PREFIX . "ot_ot WHERE rowid = " . intval($data['otid']);
+$resql = $db->query($sql);
+if ($resql && $db->num_rows($resql) > 0) {
+    $obj = $db->fetch_object($resql);
+    if ($obj->status == 1 || $obj->status == 2) {
+        // Si le statut est actif (1) ou terminé (2), on bloque la sauvegarde
+        header('Content-Type: application/json');
+        echo json_encode(array('status' => 'error', 'message' => 'Les modifications ne sont pas autorisées car l\'OT est active ou terminée.'));
+        exit;
+    }
+}
+
 // Commencer une transaction
 $db->begin();
 
@@ -2605,6 +2618,8 @@ function createSupplierDropdown() {
                 input.style.padding = "0 5px";
                 input.style.boxSizing = "border-box";
                 input.disabled = true; // Désactiver les champs quand le status est 1 ou 2
+                input.style.backgroundColor = "#f5f5f5"; // Gris clair pour indiquer que le champ est désactivé
+                input.style.cursor = "not-allowed"; // Curseur "non autorisé"
             } else {
                 input.style.textAlign = "left";
                 input.style.whiteSpace = "nowrap";
@@ -2614,6 +2629,8 @@ function createSupplierDropdown() {
                 input.style.padding = "0 5px";
                 input.style.boxSizing = "border-box";
                 input.disabled = false; // Réactiver les champs quand le status est 0
+                input.style.backgroundColor = ""; // Retour à la couleur par défaut
+                input.style.cursor = "text"; // Curseur normal
             }
         });
     }
@@ -3011,7 +3028,7 @@ function createUserList(column) {
 
     const listBody = document.createElement("div");
     listBody.className = "list-body";
-    listBody.style = "text-align: left; color: #333; padding-left: 20px; padding-right: 20px;";
+    listBody.style = "text-align: left; color: #333; padding-left: 20px; padding-right: 20px; margin-bottom: 20px;"; // Ajouter des espaces à gauche et à droite
     listBody.appendChild(titleContainer); // Ajouter le titre avec le trait rouge
     listBody.appendChild(legend); // Ajouter la légende en haut de la liste
     listBody.appendChild(ulElement);

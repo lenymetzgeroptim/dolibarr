@@ -1609,8 +1609,32 @@ class pdf_standard_ot extends ModelePDFOt
 
 						// Ajouter un espace supplémentaire avant Habilitations
 						$current_x += 8;
-						// Habilitations
-						$pdf->Text($current_x, $y_offset, $sous_traitant->habilitation);
+						// Habilitations (gestion des retours à la ligne)
+						$habilitation_lines = [];
+						$max_width = $col_widths['habilitation'] - 2; // Largeur maximale pour la colonne
+						$words = explode('-', $sous_traitant->habilitation);
+						$current_line = '';
+
+						foreach ($words as $word) {
+							$test_line = $current_line . ($current_line ? '-' : '') . $word;
+							if ($pdf->GetStringWidth($test_line) < $max_width) {
+								$current_line = $test_line;
+							} else {
+								if ($current_line) {
+									$habilitation_lines[] = $current_line;
+								}
+								$current_line = $word;
+							}
+						}
+						if ($current_line) {
+							$habilitation_lines[] = $current_line;
+						}
+
+						$temp_y = $y_offset;
+						foreach ($habilitation_lines as $line) {
+							$pdf->Text($current_x, $temp_y, $line);
+							$temp_y += 4; // Espacement entre les lignes
+						}
 						$current_x += $col_widths['habilitation'];
 
 						// Fonction
@@ -1622,7 +1646,7 @@ class pdf_standard_ot extends ModelePDFOt
 						$current_x += $col_widths['contrat'];
 
 						// Ligne de séparation entre les sous-traitants
-						$y_offset += 7;
+						$y_offset = max($temp_y, $y_offset + 7); // Ajuster la position verticale
 						$pdf->SetDrawColor(200, 200, 200);
 						$pdf->Line($this->marge_gauche + 2, $y_offset - 1, $this->marge_gauche + $card_width - 2, $y_offset - 1);
 					}
