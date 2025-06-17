@@ -171,6 +171,7 @@ class modConstat extends DolibarrModules
 			8 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_SOLDEE', 'chaine', '1', '', 0), 
 			9 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CLOTURE', 'chaine', '1', '', 0), 
 			10 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CANCELED', 'chaine', '1', '', 0),
+			11 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CLASSE', 'chaine', '1', '', 0),
 		);
 
 		// Some keys to add into the overwriting translation tables
@@ -326,6 +327,11 @@ class modConstat extends DolibarrModules
 		$this->rights[$r][1] = 'show serviceQ3SE objects of Constat';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'ServiceQ3SE';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 7 + 1);
+		$this->rights[$r][1] = 'show stat of Constat';
+		$this->rights[$r][4] = 'constat';
+		$this->rights[$r][5] = 'Statistique';
 		$r++;
 		
 		/* END MODULEBUILDER PERMISSIONS */

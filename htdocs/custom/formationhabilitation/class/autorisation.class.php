@@ -1504,6 +1504,36 @@ class Autorisation extends CommonObject
 			return $autorisations_ok;
 		}
 	}
+
+	/**
+	 * 	Return le nom de toutes les autorisations actives
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllAutorisationLabel()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid, h.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_autorisation as h";
+		$sql .= " WHERE h.status = 1";
+		$sql .= " ORDER BY h.label";
+
+		dol_syslog(get_class($this)."::getAllAutorisationLabel", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
 

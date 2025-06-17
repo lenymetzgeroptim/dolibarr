@@ -54,7 +54,14 @@ if (!empty($extrafieldsobjectkey) && !empty($extrafields->attributes[$extrafield
 				print ($title ? ' title="'.dol_escape_htmltag($title).'"' : '');
 				print '>';
 				if($key == 'hour') {
-					print convertSecondToTime($value,'allhourmin');
+					if($value) {
+						if($conf->global->HOIDAY_DECIMAL_HOUR_FORMAT) {
+							print number_format($value / 3600, 2, '.', '');
+						}
+						else {
+							print convertSecondToTime($value,'allhourmin');
+						}
+					}
 				}
 				else {
 					print $valuetoshow;

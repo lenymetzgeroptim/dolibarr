@@ -38,6 +38,7 @@ CREATE TABLE llx_formationhabilitation_uservolet(
 	fk_user_valid_employeur integer, 
 	fk_user_valid_intervenant integer, 
 	fk_action_valid_employeur integer, 
-	fk_action_valid_intervenant integer
+	fk_action_valid_intervenant integer, 
+	ex_status integer
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

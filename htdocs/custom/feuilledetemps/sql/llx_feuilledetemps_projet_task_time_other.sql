@@ -23,6 +23,7 @@ CREATE TABLE llx_feuilledetemps_projet_task_time_other(
 	fk_user_modif integer, 
 	fk_projet_task_time integer NOT NULL, 
 	heure_nuit double, 
-	port_epi double
+	port_epi double, 
+	site varchar(20)
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

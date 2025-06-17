@@ -106,6 +106,16 @@ elseif($objectline->element == 'uservolet'){
     $objectparentclass = 'Volet';
     $objectlabel = 'UserVolet';
 }
+elseif($objectline->element == 'convocation'){
+    $objectclass = 'Convocation';
+    $objectparentclass = 'Convocation';
+    $objectlabel = 'Convocation';
+}
+elseif($objectline->element == 'visitemedical'){
+    $objectclass = 'VisiteMedical';
+    $objectparentclass = 'VisiteMedical';
+    $objectlabel = 'VisiteMedical';
+}
 $uploaddir = $conf->formationhabilitation->dir_output;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/actions_massactions.inc.php';
 
@@ -125,12 +135,12 @@ if($permissiontodeleteline) {
     $arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"').$langs->trans("Delete");
 }
 if ($permissiontoaddline) {
-    if($permissiontovalidateline && $object->element == 'user' && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
-        $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("ValidateAndGenerateUserVolet");
-    }
     if($objectline->element == 'userformation'){
         $arrayofmassactions['preclose'] = img_picto('', 'fontawesome_times', 'class="pictofixedwidth"').$langs->trans("Clôturer");
     }
+}
+if($permissiontovalidateline && $object->element == 'user' && ($objectline->element == 'userhabilitation' || $objectline->element == 'userautorisation')){
+    $arrayofmassactions['prevalidate'] = img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("ValidateAndGenerateUserVolet");
 }
 if (GETPOST('nomassaction', 'int') || in_array($massaction, array('presend', 'predelete', 'prevalidate', 'preclose'))) {
     $arrayofmassactions = array();
@@ -240,6 +250,12 @@ elseif($action == 'edit_coutpedagogique') {
 elseif($action == 'edit_coutmobilisation') {
     print '<input type="hidden" name="action" value="updatecoutmobilisation">';
 }
+elseif($action == 'edit_datefinhabilitation') {
+    print '<input type="hidden" name="action" value="updatedatefinhabilitation">';
+}
+elseif($action == 'edit_datefinautorisation') {
+    print '<input type="hidden" name="action" value="updatedatefinautorisation">';
+}
 else {
     print '<input type="hidden" name="action" value="addline">';
 }
@@ -257,6 +273,7 @@ if ($action == 'addline' && $objectparentline->element == 'formation') {
     $paramformconfirm .= (GETPOST('date_fin_formationyear') ? '&date_fin_formationyear='.urlencode(GETPOST('date_fin_formationyear')) : '');
     $paramformconfirm .= (GETPOST('nombre_heurehour') ? '&nombre_heurehour='.urlencode(GETPOST('nombre_heurehour')) : '');
     $paramformconfirm .= (GETPOST('nombre_heuremin') ? '&nombre_heuremin='.urlencode(GETPOST('nombre_heuremin')) : '');
+    $paramformconfirm .= (GETPOST('cout_pedagogique') ? '&cout_pedagogique='.urlencode(GETPOST('cout_pedagogique')) : '');
     $paramformconfirm .= (GETPOST('cout_annexe') ? '&cout_annexe='.urlencode(GETPOST('cout_annexe')) : '');
     $paramformconfirm .= (GETPOST('interne_externe') ? '&interne_externe='.urlencode(GETPOST('interne_externe')) : '');
     $paramformconfirm .= (GETPOST('fk_societe') ? '&fk_societe='.urlencode(GETPOST('fk_societe')) : '');
@@ -367,6 +384,16 @@ elseif($objectline->element == 'uservolet'){
     $modelmail = "UserVolet";
     $objecttmp = new UserVolet($db);
 }
+elseif($objectline->element == 'convocation'){
+    $topicmail = "SendConvocationRef";
+    $modelmail = "Convocation";
+    $objecttmp = new Convocation($db);
+}
+elseif($objectline->element == 'visitemedical'){
+    $topicmail = "SendVisiteMedicalRef";
+    $modelmail = "VisiteMedical";
+    $objecttmp = new VisiteMedical($db);
+}
 $trackid = 'xxxx'.$object->id;
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/massactions_pre.tpl.php';
 
@@ -387,7 +414,7 @@ else {
 
 print '<table id="tablelinesaddline" class="noborder noshadow" width="100%" style="margin: unset;">';
 // Form to add new line
-if ($permissiontoaddline && $action != 'selectlines' && $object->status == 1) {
+if ($permissiontoaddline && $action != 'selectlines' && $object->status == 1 && $objectline->element != 'convocation' && $objectline->element != 'visitemedical') {
     if ($action != 'editline') {
         // Add products/services form
         $parameters = array();

@@ -301,6 +301,17 @@ if ($action == 'confirm_refuse' && $confirm == 'yes' && $permissiontorefuse) {
 	}
 
 	if(!$error) {
+		if($object->status == $object::STATUS_VALIDATED && $first_status-1 != $object::STATUS_VALIDATED) {
+			$object->date_valid_intervenant = '';
+			$object->fk_user_valid_intervenant = '';
+			$object->fk_action_valid_intervenant = '';
+		}
+		if($object->status >= $object::STATUS_VALIDATION3 && $first_status-1 < $object::STATUS_VALIDATION3) {
+			$object->date_valid_employeur = '';
+			$object->fk_user_valid_employeur = '';
+			$object->fk_action_valid_employeur = '';
+		}
+
 		$object->status = $first_status-1;
 		$object->commentaire .= (!empty($object->commentaire) ? '<br>'.GETPOST('motif_refus', 'alpha') : GETPOST('motif_refus', 'alpha'));
 
@@ -308,6 +319,31 @@ if ($action == 'confirm_refuse' && $confirm == 'yes' && $permissiontorefuse) {
 	}
 	
 	if (!$error && $result > 0) {
+		// Génération du PDF
+		if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+			if (method_exists($object, 'generateDocument')) {
+				$outputlangs = $langs;
+				$newlang = '';
+				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+					$newlang = GETPOST('lang_id', 'aZ09');
+				}
+				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+					$newlang = !empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : "";
+				}
+				if (!empty($newlang)) {
+					$outputlangs = new Translate("", $conf);
+					$outputlangs->setDefaultLang($newlang);
+				}
+
+				$model = '';
+
+				$retgen = $object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+				if ($retgen < 0) {
+					setEventMessages($object->error, $object->errors, 'warnings');
+				}
+			}
+		}
+
 		setEventMessages($langs->trans('RecordValidated'), null, 'mesgs');
 		header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
 		exit;

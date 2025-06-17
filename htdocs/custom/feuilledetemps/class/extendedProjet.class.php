@@ -97,6 +97,52 @@ public function loadTimeSpent_month($datestart, $taskid = 0, $userid = 0)
     }
 }
 
+/**
+ * Get the total of timespent by day
+ *
+ * @param 	int		$datestart		First day 
+ * @param 	int		$dateend		Last day
+ * @param 	int		$userid			Time spent by a particular user
+ * @return 	array|int				<0 if KO, Total for each day if OK
+ */
+public function getTotalForEachDay($datestart, $dateend, $userid = 0)
+{
+    $error = 0;
+    $totalforeachday = array();
+
+    $sql = "SELECT ptt.rowid as taskid, SUM(ptt.element_duration) as total_duration, ptt.element_date, ptt.fk_element";
+    $sql .= " FROM ".MAIN_DB_PREFIX."element_time AS ptt, ".MAIN_DB_PREFIX."projet_task as pt";
+    $sql .= " WHERE ptt.fk_element = pt.rowid";
+    $sql .= " AND ptt.elementtype = 'task'";
+    $sql .= " AND (ptt.element_date >= '".$this->db->idate($datestart)."' ";
+    $sql .= " AND ptt.element_date <= '".$this->db->idate($dateend)."')";
+    if (is_numeric($userid)) {
+        $sql .= " AND ptt.fk_user=".((int) $userid);
+    }
+    $sql .= " GROUP BY ptt.element_date";
+
+    //print $sql;
+    $resql = $this->db->query($sql);
+    if ($resql) {
+        $num = $this->db->num_rows($resql);
+        $i = 0;
+
+        while ($i < $num) {
+            $obj = $this->db->fetch_object($resql);
+            $day = $this->db->jdate($obj->element_date); // task_date is date without hours
+            $totalforeachday[$day] = (int)$obj->total_duration;
+            $i++;
+        }
+
+        $this->db->free($resql);
+        return $totalforeachday;
+    } else {
+        $this->error = "Error ".$this->db->lasterror();
+        dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+        return -1;
+    }
+}
+
 public function getUserForProjectLeader($listProject, $filter = '')
 {
     $users = array();

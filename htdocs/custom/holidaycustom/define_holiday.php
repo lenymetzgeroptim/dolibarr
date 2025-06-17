@@ -214,7 +214,7 @@ print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 print '<input type="hidden" name="page" value="'.$page.'">';
 print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
 
-print load_fiche_titre($langs->trans('MenuConfCP'), '', 'title_hrm.png');
+print load_fiche_titre($langs->trans('MenuConfCP'), '', $holiday->picto);
 
 print '<div class="info">'.$langs->trans('LastUpdateCP').': '."\n";
 $lastUpdate = $holiday->getConfCP('lastUpdate');

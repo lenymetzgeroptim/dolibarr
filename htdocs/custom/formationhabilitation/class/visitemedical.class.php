@@ -662,41 +662,120 @@ class VisiteMedical extends CommonObject
 		$sqlwhere = array();
 		if (count($filter) > 0) {
 			foreach ($filter as $key => $value) {
-				$columnName = preg_replace('/^t\./', '', $key);
-				if ($key === 'customsql') {
-					// Never use 'customsql' with a value from user input since it is injected as is. The value must be hard coded.
-					$sqlwhere[] = $value;
-					continue;
-				} elseif (isset($this->fields[$columnName])) {
-					$type = $this->fields[$columnName]['type'];
-					if (preg_match('/^integer/', $type)) {
-						if (is_int($value)) {
-							// single value
-							$sqlwhere[] = $key . " = " . intval($value);
-						} elseif (is_array($value)) {
-							if (empty($value)) {
-								continue;
+				if($value) {
+					if ($key == 't.rowid') {
+						$sqlwhere[] = $key." = ".((int) $value);
+					} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+						$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
+					} elseif (preg_match('/(_dtstart|_dtend)$/', $key)) {
+						$columnName = preg_replace('/(_dtstart|_dtend)$/', '', $key);
+						if (preg_match('/^(date|timestamp|datetime)/', $this->fields[$columnName]['type'])) {
+							if (preg_match('/_dtstart$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." >= '".$this->db->idate($value)."'";
 							}
-							$sqlwhere[] = $key . ' IN (' . $this->db->sanitize(implode(',', array_map('intval', $value))) . ')';
+							if (preg_match('/_dtend$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." <= '".$this->db->idate($value)."'";
+							}
 						}
-						continue;
-					} elseif (in_array($type, array('date', 'datetime', 'timestamp'))) {
-						$sqlwhere[] = $key . " = '" . $this->db->idate($value) . "'";
-						continue;
+					} elseif ($key == 'customsql') {
+						$sqlwhere[] = $value;
+					} elseif (strpos($value, '%') === false && str_contains($this->fields[$key]['type'], 'varchar') === false && $this->fields[$key]['type'] != 'price') {
+						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
+					} else {
+						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
 					}
 				}
+			}
+		}
+		if (count($sqlwhere) > 0) {
+			$sql .= " AND (".implode(" ".$filtermode." ", $sqlwhere).")";
+		}
 
-				// when the $key doesn't fall into the previously handled categories, we do as if the column were a varchar/text
-				if (is_array($value) && count($value)) {
-					$value = implode(',', array_map(function ($v) {
-						return "'" . $this->db->sanitize($this->db->escape($v)) . "'";
-					}, $value));
-					$sqlwhere[] = $key . ' IN (' . $this->db->sanitize($value, true) . ')';
-				} elseif (is_scalar($value)) {
-					if (strpos($value, '%') === false) {
-						$sqlwhere[] = $key . " = '" . $this->db->sanitize($this->db->escape($value)) . "'";
+		if (!empty($sortfield)) {
+			$sql .= $this->db->order($sortfield, $sortorder);
+		}
+		if (!empty($limit)) {
+			$sql .= $this->db->plimit($limit, $offset);
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < ($limit ? min($limit, $num) : $num)) {
+				$obj = $this->db->fetch_object($resql);
+
+				$record = new self($this->db);
+				$record->setVarsFromFetchObj($obj);
+
+				$records[$record->id] = $record;
+
+				$i++;
+			}
+			$this->db->free($resql);
+
+			return $records;
+		} else {
+			$this->errors[] = 'Error '.$this->db->lasterror();
+			dol_syslog(__METHOD__.' '.join(',', $this->errors), LOG_ERR);
+
+			return -1;
+		}
+	}
+
+	/**
+	 * Load list of objects in memory from the database.
+	 *
+	 * @param  string      $sortorder    Sort Order
+	 * @param  string      $sortfield    Sort field
+	 * @param  int         $limit        limit
+	 * @param  int         $offset       Offset
+	 * @param  array       $filter       Filter array. Example array('field'=>'valueforlike', 'customurl'=>...)
+	 * @param  string      $filtermode   Filter mode (AND or OR)
+	 * @return array|int                 int <0 if KO, array of pages if OK
+	 */
+	public function fetchAllWithUser($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND')
+	{
+		global $conf;
+
+		dol_syslog(__METHOD__, LOG_DEBUG);
+
+		$records = array();
+
+		$sql = "SELECT ";
+		$sql .= $this->getFieldList('t');
+		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid = t.fk_user";
+		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
+			$sql .= " WHERE t.entity IN (".getEntity($this->table_element).")";
+		} else {
+			$sql .= " WHERE 1 = 1";
+		}
+		// Manage filter
+		$sqlwhere = array();
+		if (count($filter) > 0) {
+			foreach ($filter as $key => $value) {
+				if($value) {
+					if ($key == 't.rowid') {
+						$sqlwhere[] = $key." = ".((int) $value);
+					} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
+						$sqlwhere[] = $key." = '".$this->db->idate($value)."'";
+					} elseif (preg_match('/(_dtstart|_dtend)$/', $key)) {
+						$columnName = preg_replace('/(_dtstart|_dtend)$/', '', $key);
+						if (preg_match('/^(date|timestamp|datetime)/', $this->fields[$columnName]['type'])) {
+							if (preg_match('/_dtstart$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." >= '".$this->db->idate($value)."'";
+							}
+							if (preg_match('/_dtend$/', $key)) {
+								$sqlwhere[] = $this->db->escape($columnName)." <= '".$this->db->idate($value)."'";
+							}
+						}
+					} elseif ($key == 'customsql') {
+						$sqlwhere[] = $value;
+					} elseif (strpos($value, '%') === false) {
+						$sqlwhere[] = $key." IN (".$this->db->sanitize($this->db->escape($value)).")";
 					} else {
-						$sqlwhere[] = $key . " LIKE '%" . $this->db->escape($this->db->escapeforlike($value)) . "%'";
+						$sqlwhere[] = $key." LIKE '%".$this->db->escape($value)."%'";
 					}
 				}
 			}
@@ -1422,6 +1501,19 @@ class VisiteMedical extends CommonObject
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
 	}
 
+	public function getArrayStatut() {
+		global $langs; 
+
+		$labelStatus[self::STATUS_APTE] = $langs->transnoentitiesnoconv('Apte');
+		$labelStatus[self::STATUS_INAPTE] = $langs->transnoentitiesnoconv('Inapte');
+		$labelStatus[self::STATUS_CONDITIONNEL] = $langs->transnoentitiesnoconv('Conditionnel');
+		$labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturée');
+		$labelStatus[self::STATUS_EXPIRE] = $langs->transnoentitiesnoconv('Expirée');
+
+		return $labelStatus;
+	}
+
+
 	/**
 	 *	Load the info information in the object
 	 *
@@ -1498,10 +1590,12 @@ class VisiteMedical extends CommonObject
 	 */
 	public function getLinesArray()
 	{
+		global $sortorder, $sortfield, $search, $limit, $offset, $id;
+
+		$objectline = new VisiteMedical($this->db);
 		$this->lines = array();
 
-		$objectline = new VisiteMedicalLine($this->db);
-		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_visitemedical = '.((int) $this->id)));
+		$result = $objectline->fetchAll($sortorder, $sortfield, $limit + 1, $offset, $search);
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
@@ -1670,22 +1764,23 @@ class VisiteMedical extends CommonObject
 					global $dolibarr_main_url_root;
 
 					$societe = New Societe($this->db);
+					$fk_user = new User($this->db);
 					$user_static = new User($this->db);
 					$projectstatic = new Project($this->db);
 
 					// Responsable d'antenne
 					$user_group->fetch(0, "Responsable d'antenne");
 					$arrayUserRespAntenneGroup = $user_group->listUsersForGroup('', 1);
-					$user_static->fetch($obj->fk_user);
-					if($user_static->array_options['options_antenne'] > 0) {
-						$societe->fetch($user_static->array_options['options_antenne']);
+					$fk_user->fetch($obj->fk_user);
+					if($fk_user->array_options['options_antenne'] > 0) {
+						$societe->fetch($fk_user->array_options['options_antenne']);
 						$arrayUserRespAntenne = $societe->getSalesRepresentatives($user, 1);
 						$arrayRespAntenneForMail = array_intersect($arrayUserRespAntenneGroup, $arrayUserRespAntenne);
 					}
 
 					// Responsable des projets
 					$filter = " AND dateo <= '".$this->db->idate($now)."' AND (datee >= '".$this->db->idate($now)."' OR datee IS NULL) AND fk_statut = 1 AND ec.fk_c_type_contact = 161";		
-					$liste_projet = $projectstatic->getProjectsAuthorizedForUser($user_static, 1, 0, 0, $filter); 
+					$liste_projet = $projectstatic->getProjectsAuthorizedForUser($fk_user, 1, 0, 0, $filter); 
 					foreach($liste_projet as $projetid => $ref) {
 						$projectstatic->fetch($projetid);
 						if(!$projectstatic->array_options['options_projetstructurel']) {
@@ -1701,12 +1796,12 @@ class VisiteMedical extends CommonObject
 					$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 					$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
-					if(!empty($user_static->email)) {
-						$to2 = $user_static->email;
+					if(!empty($fk_user->email)) {
+						$to2 = $fk_user->email;
 					}
 					
 					$to = '';
-					if($user_static->array_options['options_antenne'] == 158) {
+					if($fk_user->array_options['options_antenne'] == 158) {
 						$to .= $to_admin_go;
 						$to .= $to_admin;
 					}
@@ -1730,7 +1825,7 @@ class VisiteMedical extends CommonObject
 					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 					$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/visitemedical_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
-					$message = $langs->transnoentitiesnoconv("EMailTextVMExpire", $link);
+					$message = $langs->transnoentitiesnoconv("EMailTextVMExpire", $link, $fk_user->firstname." ".$fk_user->lastname);
 					$message2 = $langs->transnoentitiesnoconv("EMailTextVMExpireForUser", $link);
 
 					$mail = new CMailFile(
@@ -1790,14 +1885,14 @@ class VisiteMedical extends CommonObject
 
 				global $dolibarr_main_url_root;
 
-				$user_static = new User($this->db);
-				$user_static->fetch($obj->fk_user);
+				$fk_user = new User($this->db);
+				$fk_user->fetch($obj->fk_user);
 				
 				$subject = "[OPTIM Industries] Notification automatique ".$langs->transnoentitiesnoconv($this->module);
 				$from = $conf->global->MAIN_MAIL_EMAIL_FROM;
 
 				$to = '';
-				if($user_static->array_options['options_antenne'] == 158) {
+				if($fk_user->array_options['options_antenne'] == 158) {
 					$to .= $to_admin_go;
 					$to .= $to_admin;
 				}
@@ -1809,7 +1904,7 @@ class VisiteMedical extends CommonObject
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 				$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/visitemedical_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
-				$message = $langs->transnoentitiesnoconv("EMailTextVMExpireWarning", $link);
+				$message = $langs->transnoentitiesnoconv("EMailTextVMExpireWarning", $link, $fk_user->firstname." ".$fk_user->lastname);
 
 				$mail = new CMailFile(
 					$subject,
@@ -1957,17 +2052,25 @@ class VisiteMedical extends CommonObject
 	function getAllNatureVisiteForUser($userid) {
 		$res = array();
 
-		$sql = "SELECT DISTINCT vm.naturevisite";
+		$sql = "SELECT DISTINCT vm.rowid, vm.naturevisite, vm.commentaire, vm.status";
 		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_visitemedical as vm";
 		$sql .= " WHERE vm.fk_user = $userid";
 		$sql .= " AND (vm.status = ".self::STATUS_APTE." OR vm.status = ".self::STATUS_CONDITIONNEL.")";
+		//$sql .= " AND (vm.status = ".self::STATUS_APTE.")";
 
 		dol_syslog(get_class($this)."::getAllNatureVisiteForUser", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
 				foreach(explode(",", $obj->naturevisite) as $naturevisite) {
-					$res[] = $naturevisite;
+					if($obj->status == self::STATUS_APTE) {
+						$res['Apte'][] = $naturevisite;
+					}
+					else {
+						$res['Conditionnelle']['rowid'][$naturevisite] = $obj->rowid;
+						$res['Conditionnelle']['naturevisite'][] = $naturevisite;
+						$res['Conditionnelle']['commentaire'][$obj->rowid] = $obj->commentaire;
+					}
 				}
 			}
 

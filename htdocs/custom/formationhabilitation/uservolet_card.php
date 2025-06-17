@@ -166,7 +166,8 @@ $permissiontoread = $user->hasRight('formationhabilitation', 'uservolet', 'reada
 $permissiontoadd = $user->hasRight('formationhabilitation', 'uservolet', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 $permissiontodelete = $user->hasRight('formationhabilitation', 'uservolet', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_VALIDATION0);
 $permissiontoaddline = $user->rights->formationhabilitation->userformation->write;
-$permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
+$permissiontoreadcostpedagogique = $user->rights->formationhabilitation->formation->readcoutpedagogique;
+$permissiontoreadallcost = $user->rights->formationhabilitation->formation->readcoutall;
 $permissiontoreadline = $permissiontoread;
 
 if($conf->global->FORMTIONHABILITATION_APPROBATEURVOLET1 > 0) {
@@ -398,15 +399,17 @@ if (empty($reshook)) {
 unset($arrayfields['t.formateur']);
 unset($objectline->fields['fk_user']);
 unset($arrayfields['t.fk_user']);
-if(!$permissiontoreadcost) {
-    unset($objectline->fields['cout_pedagogique']);
+if(!$permissiontoreadallcost) {
     unset($objectline->fields['cout_mobilisation']);
-    unset($objectline->fields['cout_annexe']);
     unset($objectline->fields['cout_total']);
-    unset($arrayfields['t.cout_pedagogique']);
     unset($arrayfields['t.cout_mobilisation']);
-    unset($arrayfields['t.cout_annexe']);
     unset($arrayfields['t.cout_total']);
+}
+if(!$permissiontoreadcostpedagogique && !$permissiontoreadallcost) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_annexe']);
+    unset($arrayfields['t.cout_pedagogique']);
+    unset($arrayfields['t.cout_annexe']);
 }
 if($object->fk_volet != 7) {
 	unset($object->fields['qualif_pro']);
@@ -428,7 +431,7 @@ if ($action == 'create') {
 }
 $help_url = '';
 
-llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-card');
+llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-formationhabilitation page-card classforhorizontalscrolloftabs');
 
 // Example : Adding jquery code
 // print '<script type="text/javascript">
@@ -620,6 +623,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// Object card
 	// ------------------------------------------------------------
 	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/uservolet_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	$linkback .= '<a href="'.dol_buildpath('/formationhabilitation/userformation.php', 1).'?id='.$object->fk_user.'&onglet=volet&restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToUserList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*
@@ -944,7 +948,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', 0, 0, 0, 1);
 	
 
-		print '<div class="">';
+		print '<div class="div-table-responsive-no-min">';
 		//if (!empty($object->lines) || ($object->status == $object::STATUS_VALIDATION0 && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 		//}
@@ -1025,7 +1029,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, sizeof($objectparentline->lines), $nbtotalofrecords, $objectline->picto, 0, '', '', 0, 0, 0, 1);
 	
 
-		print '<div class="">';
+		print '<div class="div-table-responsive-no-min">';
 		//if (!empty($object->lines) || ($object->status == $object::STATUS_VALIDATION0 && $permissiontoadd && $action != 'selectlines' && $action != 'editline')) {
 			print '<table id="tablelines" class="noborder noshadow" width="100%">';
 		//}

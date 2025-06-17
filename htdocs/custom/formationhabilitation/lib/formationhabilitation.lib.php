@@ -307,6 +307,16 @@ function formationhabilitationUserPrepareHead($object)
 	$head[$h][2] = 'volet';
 	$h++;
 
+	$head[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=convocation';
+	$head[$h][1] = $langs->trans("Convocations");
+	$head[$h][2] = 'convocation';
+	$h++;
+
+	$head[$h][0] = dol_buildpath("/formationhabilitation/userformation.php", 1).'?id='.$object->id.'&onglet=visitemedical';
+	$head[$h][1] = $langs->trans("VisiteMedicals");
+	$head[$h][2] = 'visitemedical';
+	$h++;
+
 	$head[$h][0] = dol_buildpath("/formationhabilitation/user_messaging.php", 1).'?id='.$object->id;
 	$head[$h][1] = $langs->trans("Agenda");
 	$head[$h][2] = 'agenda';
@@ -326,6 +336,71 @@ function formationhabilitationUserPrepareHead($object)
 
 	return $head;
 }
+
+/**
+ * Prepare formation index pages header
+ *
+ * @return array
+ */
+function formationhabilitationIndexPrepareHead($object)
+{
+	global $langs, $conf, $user;
+
+	$langs->load("formationhabilitation@formationhabilitation");
+
+	$h = 0;
+	$head = array();
+
+	if ($user->rights->formationhabilitation->userformation->read || $user->rights->formationhabilitation->userformation->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=formation';
+		$head[$h][1] = $langs->trans("Formations");
+		$head[$h][2] = 'formation';
+		$h++;
+	}
+
+	if ($user->rights->formationhabilitation->userhabilitation_autorisation->read || $user->rights->formationhabilitation->userhabilitation_autorisation->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=habilitation';
+		$head[$h][1] = $langs->trans("Habilitations");
+		$head[$h][2] = 'habilitation';
+		$h++;
+	}
+
+	if ($user->rights->formationhabilitation->userhabilitation_autorisation->read || $user->rights->formationhabilitation->userhabilitation_autorisation->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=autorisation';
+		$head[$h][1] = $langs->trans("Autorisations");
+		$head[$h][2] = 'autorisation';
+		$h++;
+	}
+
+	if ($user->rights->formationhabilitation->uservolet->read || $user->rights->formationhabilitation->uservolet->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=volet';
+		$head[$h][1] = $langs->trans("Volets");
+		$head[$h][2] = 'volet';
+		$h++;
+	}
+
+	if ($user->rights->formationhabilitation->visitemedical->read || $user->rights->formationhabilitation->visitemedical->readall) {
+		$head[$h][0] = dol_buildpath("/formationhabilitation/formationhabilitationindex.php", 1).'?onglet=visitemedical';
+		$head[$h][1] = $langs->trans("Visites médicale");
+		$head[$h][2] = 'visitemedical';
+		$h++;
+	}
+
+	// Show more tabs from modules
+	// Entries must be declared in modules descriptor with line
+	//$this->tabs = array(
+	//	'entity:+tabname:Title:@formationhabilitation:/formationhabilitation/mypage.php?id=__ID__'
+	//); // to add new tab
+	//$this->tabs = array(
+	//	'entity:-tabname:Title:@formationhabilitation:/formationhabilitation/mypage.php?id=__ID__'
+	//); // to remove a tab
+	complete_head_from_modules($conf, $langs, null, $head, $h, 'formationhabilitationindex@formationhabilitation');
+
+	complete_head_from_modules($conf, $langs, null, $head, $h, 'formationhabilitationindex@formationhabilitation', 'remove');
+
+	return $head;
+}
+
 
 /**
  *    	Show html area with actions in messaging format.
@@ -479,8 +554,11 @@ function show_actions_messaging_formationhabilitation($conf, $langs, $db, $filte
 			$sql .= natural_search('a.label', $filters['search_agenda_label']);
 		}
 
-		if(!$user->rights->formationhabilitation->formation->readcout) {
+		if(!$user->rights->formationhabilitation->formation->readcoutpedagogique && !$user->rights->formationhabilitation->formation->readcoutall) {
 			$sql .= " AND a.extraparams IS NULL";
+		}
+		elseif(!$user->rights->formationhabilitation->formation->readcoutall) {
+			$sql .= " AND (a.extraparams IS NULL OR a.extraparams = 'costpedagogique')";
 		}
 	}
 
@@ -1233,8 +1311,11 @@ function show_actions_done_formationhabilitation($conf, $langs, $db, $filterobj,
 			addEventTypeSQL($sql, $actioncode);
 		}
 
-		if(!$user->rights->formationhabilitation->formation->readcout) {
+		if(!$user->rights->formationhabilitation->formation->readcoutpedagogique && !$user->rights->formationhabilitation->formation->readcoutall) {
 			$sql .= " AND a.extraparams IS NULL";
+		}
+		elseif(!$user->rights->formationhabilitation->formation->readcoutall) {
+			$sql .= " AND (a.extraparams IS NULL OR a.extraparams = 'costpedagogique')";
 		}
 
 		addOtherFilterSQL($sql, $donetodo, $now, $filters);

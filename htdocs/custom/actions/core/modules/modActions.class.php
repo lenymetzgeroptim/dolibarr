@@ -172,6 +172,7 @@ class modActions extends DolibarrModules
 			8 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_SOLDEE', 'chaine', '1', '', 0), 
 			9 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_CLOTURE', 'chaine', '1', '', 0), 
 			10 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_CLASSE', 'chaine', '1', '', 0),
+			
 		);
 
 		// Some keys to add into the overwriting translation tables
@@ -305,7 +306,11 @@ class modActions extends DolibarrModules
 		$this->rights[$r][4] = 'action';
 		$this->rights[$r][5] = 'intervenant'; // In php code, permission will be checked by test if ($user->rights->actions->action->intervenant)
 		$r++;
-
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
+		$this->rights[$r][1] = 'Droit des statistique'; // Permission label
+		$this->rights[$r][4] = 'action';
+		$this->rights[$r][5] = 'Statistique'; // In php code, permission will be checked by test if ($user->rights->actions->action->Statistique)
+		$r++;
 
 
 

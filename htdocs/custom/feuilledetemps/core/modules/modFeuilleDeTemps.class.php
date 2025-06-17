@@ -92,7 +92,7 @@ class modFeuilleDeTemps extends DolibarrModules
 			// Set this to 1 if module has its own login method file (core/login)
 			'login' => 0,
 			// Set this to 1 if module has its own substitution function file (core/substitutions)
-			'substitutions' => 0,
+			'substitutions' => 1,
 			// Set this to 1 if module has its own menus handler directory (core/menus)
 			'menus' => 0,
 			// Set this to 1 if module overwrite template dir (core/tpl)
@@ -112,7 +112,9 @@ class modFeuilleDeTemps extends DolibarrModules
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
-				//   '/feuilledetemps/js/feuilledetemps.js.php',
+				'/feuilledetemps/js/feuilledetemps.js.php',
+				'/feuilledetemps/js/parameters.php',
+				'/core/js/timesheet.js',
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
@@ -331,9 +333,14 @@ class modFeuilleDeTemps extends DolibarrModules
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-		$this->rights[$r][1] = 'Lire toutes les feuilles de temps';
+		$this->rights[$r][1] = 'Lire ses propres feuilles de temps';
 		$this->rights[$r][4] = 'feuilledetemps';
 		$this->rights[$r][5] = 'read';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
+		$this->rights[$r][1] = 'Lire toutes les feuilles de temps';
+		$this->rights[$r][4] = 'feuilledetemps';
+		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
 		$this->rights[$r][1] = 'Lire les feuilles de temps de sa sous-hiérarchie';
@@ -406,6 +413,14 @@ class modFeuilleDeTemps extends DolibarrModules
 		$this->rights[$r][4] = 'changeappro'; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$this->rights[$r][5] = ''; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
+
+		if(!$conf->global->FDT_RESP_TASKPROJECT_APPROVER) {
+			$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
+			$this->rights[$r][1] = 'Réaliser l\'approbation n°2 des feuilles de temps'; // Permission label
+			$this->rights[$r][4] = 'feuilledetemps'; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
+			$this->rights[$r][5] = 'approve2'; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
+			$r++;
+		}
 		
 		/* END MODULEBUILDER PERMISSIONS */
 
@@ -535,10 +550,25 @@ class modFeuilleDeTemps extends DolibarrModules
 		$this->menu[$r++]=array(
             'fk_menu'=>'fk_mainmenu=feuilledetemps',
 			'type'=>'left',                                        						// This is a Left menu entry
-			'titre'=>'projectExport',
+			'titre'=>'ExportsSilae',
 			'mainmenu'=>'feuilledetemps',
-			'leftmenu'=>'feuilledetemps_projectExport',
+			'leftmenu'=>'feuilledetemps_exportsSilae',
 			'url'=>'/feuilledetemps/export.php',
+			'langs'=>'feuilledetemps@feuilledetemps',                // Lang file to use(without .lang) by module. File must be in langs/code_CODE/ directory.
+			'position'=>1100+$r,
+			'enabled'=>'$conf->feuilledetemps->enabled', // Define condition to show or hide menu entry. Use '$conf->feuilledetemps->enabled' if entry must be visible if module is enabled. Use '$leftmenu == \'system\'' to show if leftmenu system is selected.
+			'perms'=>'$user->rights->feuilledetemps->feuilledetemps->export',                                        // Use 'perms'=>'$user->rights->feuilledetemps->level1->level2' if you want your menu with a permission rules
+			'target'=>'',
+			'user'=>2,
+		);
+
+		$this->menu[$r++]=array(
+            'fk_menu'=>'fk_mainmenu=feuilledetemps',
+			'type'=>'left',                                        						// This is a Left menu entry
+			'titre'=>'ExportsOther',
+			'mainmenu'=>'feuilledetemps',
+			'leftmenu'=>'feuilledetemps_ExportOther',
+			'url'=>'/feuilledetemps/exports_other.php',
 			'langs'=>'feuilledetemps@feuilledetemps',                // Lang file to use(without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1100+$r,
 			'enabled'=>'$conf->feuilledetemps->enabled', // Define condition to show or hide menu entry. Use '$conf->feuilledetemps->enabled' if entry must be visible if module is enabled. Use '$leftmenu == \'system\'' to show if leftmenu system is selected.

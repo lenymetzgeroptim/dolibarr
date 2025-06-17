@@ -67,6 +67,11 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 	}
 	$nombre_heure = 60 * 60 * GETPOSTINT('nombre_heurehour') + 60 * GETPOSTINT('nombre_heuremin');
 
+	if(GETPOST('cout_pedagogique') == ''){
+		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("CoutPedagogique")), null, 'errors');
+		$error++;
+	}
+
 	if((GETPOST('fk_societe') == -1 || empty(GETPOST('fk_societe'))) && (GETPOST('formateur') == -1 || empty(GETPOST('formateur')))){
 		setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Organisme")), null, 'errors');
 		$error++;
@@ -124,7 +129,7 @@ if((($action == 'confirm_addline' && $confirm == 'yes' && (GETPOST('status') == 
 		$objectline->date_fin_formation = $date_fin;
 		$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree(dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm'), -1, 'd') : '');
 		$objectline->nombre_heure = $nombre_heure;
-		$objectline->cout_pedagogique = $formation_static->cout;
+		$objectline->cout_pedagogique = GETPOST('cout_pedagogique');
 		$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
 		$objectline->cout_annexe = (float)GETPOST('cout_annexe', 'alphanohtml');
 		$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;
@@ -174,6 +179,11 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 		}
 		$nombre_heure = 60 * 60 * GETPOSTINT('nombre_heurehour') + 60 * GETPOSTINT('nombre_heuremin');
 	
+		if(GETPOST('cout_pedagogique') == ''){
+			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("CoutPedagogique")), null, 'errors');
+			$error++;
+		}
+
 		if((GETPOST('fk_societe') == -1 || empty(GETPOST('fk_societe'))) && (GETPOST('formateur') == -1 || empty(GETPOST('formateur')))){
 			setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Organisme")), null, 'errors');
 			$error++;
@@ -193,9 +203,10 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 			$objectline->date_fin_formation = $date_fin;
 			$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree(dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm'), -1, 'd') : '');
 			$objectline->nombre_heure = $nombre_heure;
-			if(empty($objectline->cout_pedagogique)) {
-				$objectline->cout_pedagogique = $formation_static->cout;
-			}
+			// if(empty($objectline->cout_pedagogique)) {
+			// 	$objectline->cout_pedagogique = $formation_static->cout;
+			// }
+			$objectline->cout_pedagogique = GETPOST('cout_pedagogique');
 			if(empty($objectline->cout_mobilisation) || $nombre_heure_before != $nombre_heure) {
 				$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
 			}
@@ -406,7 +417,8 @@ if($action == 'confirm_programmer_formation' && $confirm == 'yes' && $permission
 			$objectline->date_fin_formation = $date_fin;
 			$objectline->date_finvalidite_formation = ($formation_static->periode_recyclage > 0 ? dol_time_plus_duree(dol_time_plus_duree($date_fin, $formation_static->periode_recyclage, 'm'), -1, 'd') : '');
 			$objectline->nombre_heure = $formation_static->nombre_heure;
-			$objectline->cout_pedagogique = $formation_static->cout;
+			//$objectline->cout_pedagogique = $formation_static->cout;
+			$objectline->cout_pedagogique = GETPOST('cout_pedagogique_programmer');
 			$objectline->cout_mobilisation = $user_static->thm * ($objectline->nombre_heure / 3600);
 			// $objectline->cout_annexe = GETPOST('cout_annexe');
 			$objectline->cout_total = $objectline->cout_pedagogique + $objectline->cout_mobilisation + $objectline->cout_annexe;

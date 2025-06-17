@@ -127,7 +127,7 @@ if ($id > 0 || !empty($ref)) {
 
 // Permissions
 // (There are several ways to check permission.)
-$permissiontoread = $user->hasRight('formationhabilitation', 'convocation', 'read');
+$permissiontoread = $user->hasRight('formationhabilitation', 'convocation', 'readall') || ($object->fk_user == $user->id && $user->hasRight('formationhabilitation', 'convocation', 'read'));
 $permissiontoadd  = $user->hasRight('formationhabilitation', 'convocation', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
 
 

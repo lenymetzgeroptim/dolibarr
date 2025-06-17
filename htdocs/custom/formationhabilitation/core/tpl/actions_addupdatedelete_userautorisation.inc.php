@@ -197,3 +197,38 @@ if ($action == 'confirm_generation_auto' && $confirm == 'yes' && $permissiontoad
     }
     $action = '';
 }
+
+if ($action == 'updatedatefinautorisation' && !$cancel && $permissiontoaddline) {
+	$db->begin();
+
+	if($lineid > 0){
+		$objectline->fetch($lineid);
+		$objectline->oldcopy = clone $objectline;
+
+		// if (empty(GETPOST("date_fin_autorisationmonth", 'int')) || empty(GETPOST("date_fin_autorisationday", 'int')) || empty(GETPOST("date_fin_autorisationyear", 'int'))) {
+		// 	setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("DateFinAutorisation")), null, 'errors');
+		// 	$error++;
+		// }
+		$date_finautorisation = dol_mktime(-1, -1, -1, GETPOST("date_fin_autorisationmonth", 'int'), GETPOST("date_fin_autorisationday", 'int'), GETPOST("date_fin_autorisationyear", 'int'));
+
+		if(!$error) {
+			$objectline->date_fin_autorisation = $date_finautorisation; 
+			$objectline->update($user);
+		}
+		
+		if (!$error) {
+			$db->commit();
+			setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+			header('Location: '.$_SERVER["PHP_SELF"].($param ? '?'.$param : ''));
+			exit;
+		} else {
+			$db->rollback();
+			setEventMessages($objectline->error, $objectline->errors, 'warnings');
+			$action = 'edit_datefinautorisation';
+		}
+	}
+	else {
+		$langs->load("errors");
+		setEventMessages($langs->trans('ErrorForbidden'), null, 'errors');
+	}
+}

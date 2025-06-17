@@ -32,7 +32,7 @@ CREATE TABLE llx_formationhabilitation_userformation(
 	date_debut_formation date NOT NULL, 
 	date_fin_formation date NOT NULL, 
 	status integer NOT NULL, 
-	cout_pedagogique double, 
+	cout_pedagogique double NOT NULL, 
 	cout_mobilisation double, 
 	cout_total double, 
 	date_finvalidite_formation date, 

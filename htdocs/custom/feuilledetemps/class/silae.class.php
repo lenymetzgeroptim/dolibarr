@@ -113,21 +113,22 @@ class Silae extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
-		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
-		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
-		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
-		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
-		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'picto'=>'user', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2, 'csslist'=>'tdoverflowmax150',),
-		'date' => array('type'=>'date', 'label'=>'Date', 'enabled'=>'1', 'position'=>30, 'notnull'=>1, 'visible'=>1,),
-		'fk_user' => array('type'=>'integer', 'label'=>'User', 'enabled'=>'1', 'position'=>20, 'notnull'=>1, 'visible'=>0,),
-		'heure_nuit' => array('type'=>'double', 'label'=>'HeureNuit', 'enabled'=>'1', 'position'=>55, 'notnull'=>0, 'visible'=>1,),
-		'heure_route' => array('type'=>'double', 'label'=>'HeureRoute', 'enabled'=>'1', 'position'=>56, 'notnull'=>0, 'visible'=>1,),
-		'kilometres' => array('type'=>'double(6,2)', 'label'=>'IK', 'enabled'=>'1', 'position'=>62, 'notnull'=>0, 'visible'=>1,),
-		'repas' => array('type'=>'integer', 'label'=>'Repas', 'enabled'=>'1', 'position'=>70, 'notnull'=>0, 'visible'=>1, 'arrayofkeyval'=>array('1'=>'R1', '2'=>'R2'),),
-		'indemnite_tt' => array('type'=>'boolean', 'label'=>'IndemniteTT', 'enabled'=>'1', 'position'=>71, 'notnull'=>0, 'visible'=>1,),
-		'heure_sup00' => array('type'=>'double', 'label'=>'HeureSup00', 'enabled'=>'1', 'position'=>51, 'notnull'=>0, 'visible'=>1,),
-		'heure_sup25' => array('type'=>'double', 'label'=>'HeureSup25', 'enabled'=>'1', 'position'=>52, 'notnull'=>0, 'visible'=>1,),
-		'heure_sup50' => array('type'=>'double', 'label'=>'HeureSup50', 'enabled'=>'1', 'position'=>53, 'notnull'=>0, 'visible'=>1,),
+		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
+		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
+		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
+		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "foreignkey"=>"0", "csslist"=>"tdoverflowmax150",),
+		"fk_user_modif" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserModif", "picto"=>"user", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
+		"date" => array("type"=>"date", "label"=>"Date", "enabled"=>"1", 'position'=>30, 'notnull'=>1, "visible"=>"1",),
+		"fk_user" => array("type"=>"integer", "label"=>"User", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"0",),
+		"heure_nuit" => array("type"=>"double", "label"=>"HeureNuit", "enabled"=>"1", 'position'=>55, 'notnull'=>0, "visible"=>"1",),
+		"heure_route" => array("type"=>"double", "label"=>"HeureRoute", "enabled"=>"1", 'position'=>56, 'notnull'=>0, "visible"=>"1",),
+		"kilometres" => array("type"=>"double(6,2)", "label"=>"IK", "enabled"=>"1", 'position'=>62, 'notnull'=>0, "visible"=>"1",),
+		"repas" => array("type"=>"integer", "label"=>"Repas", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "R1", "2" => "R2"),),
+		"indemnite_tt" => array("type"=>"boolean", "label"=>"IndemniteTT", "enabled"=>"1", 'position'=>71, 'notnull'=>0, "visible"=>"1",),
+		"heure_sup00" => array("type"=>"double", "label"=>"HeureSup00", "enabled"=>"1", 'position'=>51, 'notnull'=>0, "visible"=>"1",),
+		"heure_sup25" => array("type"=>"double", "label"=>"HeureSup25", "enabled"=>"1", 'position'=>52, 'notnull'=>0, "visible"=>"1",),
+		"heure_sup50" => array("type"=>"double", "label"=>"HeureSup50", "enabled"=>"1", 'position'=>53, 'notnull'=>0, "visible"=>"1",),
+		"heure_sup50ht" => array("type"=>"double", "label"=>"HeureSup50HT", "enabled"=>"1", 'position'=>54, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $date_creation;
@@ -144,6 +145,7 @@ class Silae extends CommonObject
 	public $heure_sup00;
 	public $heure_sup25;
 	public $heure_sup50;
+	public $heure_sup50ht;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -472,8 +474,35 @@ class Silae extends CommonObject
 	 */
 	public function delete(User $user, $notrigger = false)
 	{
-		return $this->deleteCommon($user, $notrigger);
-		//return $this->deleteCommon($user, $notrigger, 1);
+		//return $this->deleteCommon($user, $notrigger);
+		
+		$error = 0;
+
+		if (!$error && !empty($this->isextrafieldmanaged)) {
+			$result = $this->deleteExtraFields();
+			if ($result < 0) {
+				$error++;
+			}
+		}
+
+		if (!$error) {
+			$sql = 'DELETE FROM '.$this->db->prefix().$this->table_element.' WHERE rowid='.((int) $this->id);
+
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				$error++;
+				$this->errors[] = $this->db->lasterror();
+			}
+		}
+
+		// Commit or rollback
+		if ($error) {
+			$this->db->rollback();
+			return -1;
+		} else {
+			$this->db->commit();
+			return 1;
+		}
 	}
 
 	/**
@@ -1113,7 +1142,7 @@ class Silae extends CommonObject
 			dol_print_error('', 'Error userId parameter is empty');
 		}
   
-        $sql = 'SELECT s.date, s.fk_user, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_nuit, s.heure_route, s.kilometres, s.repas, s.indemnite_tt';
+        $sql = 'SELECT s.date, s.fk_user, s.heure_sup00, s.heure_sup25, s.heure_sup50, s.heure_sup50ht, s.heure_nuit, s.heure_route, s.kilometres, s.repas, s.indemnite_tt';
         $sql .= ' FROM '.MAIN_DB_PREFIX.$this->table_element.' as s';
     	$sql .= " WHERE s.date <= '".$this->db->idate($dateEnd)."'";
 		$sql .= " AND s.date >= '".$this->db->idate($dateStart)."'";
@@ -1136,6 +1165,9 @@ class Silae extends CommonObject
 				}
 				if(!empty($obj->heure_sup50)) {
 					$arraySilae['heure_sup50'][$day] = $obj->heure_sup50;
+				}
+				if(!empty($obj->heure_sup50ht)) {
+					$arraySilae['heure_sup50ht'][$day] = $obj->heure_sup50ht;
 				}
 				if(!empty($obj->heure_nuit)) {
 					$arraySilae['heure_nuit'][$day] = $obj->heure_nuit;
@@ -1187,6 +1219,7 @@ class Silae extends CommonObject
 		$sql .= " d.heure_sup00,";
 		$sql .= " d.heure_sup25,";
 		$sql .= " d.heure_sup50,";
+		$sql .= " d.heure_sup50ht,";
         $sql .= " d.heure_nuit,";
         $sql .= " d.heure_route,";
         $sql .= " d.kilometres,";
@@ -1212,11 +1245,19 @@ class Silae extends CommonObject
 				$this->heure_sup00 = $obj->heure_sup00;
 				$this->heure_sup25 = $obj->heure_sup25;
 				$this->heure_sup50 = $obj->heure_sup50;
+				$this->heure_sup50ht = $obj->heure_sup50ht;
                 $this->heure_nuit = $obj->heure_nuit;
                 $this->heure_route = $obj->heure_route;
                 $this->kilometres = $obj->kilometres;
                 $this->repas = $obj->repas;
                 $this->indemnite_tt = $obj->indemnite_tt;
+
+				$result = $this->fetch_optionals();
+				if ($result < 0) {
+					$this->error = $this->db->lasterror();
+					$this->errors[] = $this->error;
+					return -4;
+				}
 
                 $this->db->free($resql);
                 return 1;
@@ -1233,8 +1274,117 @@ class Silae extends CommonObject
         }
     }
 
+	/**
+    *  Fetch all Silae object between 2 dates
+    *
+    *  @param	int		$datestart 	 
+    *  @param	int		$dateend 
+	*  @param	int		$fk_user 	Id of User
+    *  @return  array|int		            <0 if KO, array of Silae object if OK
+    */
+    public function fetchAllSilaeWithoutId($datestart, $dateend, $fk_user)
+    {
+        global $langs, $extrafields;
+
+		$res_array = array();
+		
+		//$extrafields = new ExtraFields($this->db);
+		if (empty($extrafields->attributes[$this->table_element]['loaded'])) {
+			$extrafields->fetch_name_optionals_label($this->table_element);
+		}
+		$optionsArray = (!empty($extrafields->attributes[$this->table_element]['label']) ? $extrafields->attributes[$this->table_element]['label'] : null);
+
+        $sql = "SELECT";
+        $sql .= " d.rowid,";
+		$sql .= " d.date_creation,";
+		$sql .= " d.tms,";
+        $sql .= " d.fk_user_creat,";
+        $sql .= " d.fk_user_modif,";
+        $sql .= " d.date,";
+        $sql .= " d.fk_user,";
+		$sql .= " d.heure_sup00,";
+		$sql .= " d.heure_sup25,";
+		$sql .= " d.heure_sup50,";
+		$sql .= " d.heure_sup50ht,";
+        $sql .= " d.heure_nuit,";
+        $sql .= " d.heure_route,";
+        $sql .= " d.kilometres,";
+        $sql .= " d.repas,";
+		$sql .= " d.indemnite_tt";
+		foreach ($optionsArray as $name => $label) {
+			if (empty($extrafields->attributes[$this->table_element]['type'][$name]) || $extrafields->attributes[$this->table_element]['type'][$name] != 'separate') {
+				$sql .= ", ed.".$name;
+			}
+		}
+        $sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_silae as d";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_silae_extrafields as ed ON ed.fk_object = d.rowid";
+        $sql .= " WHERE d.date >= '".($this->db->idate($datestart))."'";
+		$sql .= " AND d.date <= '".($this->db->idate($dateend))."'";
+        $sql .= " AND d.fk_user = ".((int) $fk_user);
+
+        dol_syslog(get_class($this)."::fetchAllSilaeWithoutId", LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $i = 0;
+			$num = $this->db->num_rows($resql);
+
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+
+                $this->id = $obj->rowid;
+				$this->date_creation = $this->db->jdate($obj->date_creation);
+                $this->tms = $this->db->jdate($obj->tms);
+                $this->fk_user_creat = $obj->fk_user_creat;
+                $this->fk_user_modif = $obj->fk_user_modif;
+                $this->date = $this->db->jdate($obj->date);
+                $this->fk_user = $obj->fk_user;
+				$this->heure_sup00 = $obj->heure_sup00;
+				$this->heure_sup25 = $obj->heure_sup25;
+				$this->heure_sup50 = $obj->heure_sup50;
+				$this->heure_sup50ht = $obj->heure_sup50ht;
+                $this->heure_nuit = $obj->heure_nuit;
+                $this->heure_route = $obj->heure_route;
+                $this->kilometres = $obj->kilometres;
+                $this->repas = $obj->repas;
+                $this->indemnite_tt = $obj->indemnite_tt;
+
+				// extrafields
+				foreach ($optionsArray as $key => $label) {
+					if (empty($extrafields->attributes[$this->table_element]['type'][$name]) || $extrafields->attributes[$this->table_element]['type'][$name] != 'separate') {
+						// Test fetch_array ! is_int($key) because fetch_array result is a mix table with Key as alpha and Key as int (depend db engine)
+						if ($key != 'rowid' && $key != 'tms' && $key != 'fk_member' && !is_int($key)) {
+							// we can add this attribute to object
+							if (!empty($extrafields->attributes[$this->table_element]) && in_array($extrafields->attributes[$this->table_element]['type'][$key], array('date', 'datetime'))) {
+								//var_dump($extrafields->attributes[$this->table_element]['type'][$key]);
+								$this->array_options["options_".$key] = $this->db->jdate($obj->$key);
+							} else {
+								$this->array_options["options_".$key] = $obj->$key;
+							}
+
+							//var_dump('key '.$key.' '.$obj->$key.' type='.$extrafields->attributes[$this->table_element]['type'][$key].' '.$this->array_options["options_".$key]);
+						}
+						if (!empty($extrafields->attributes[$this->table_element]['type'][$key]) && $extrafields->attributes[$this->table_element]['type'][$key] == 'password') {
+							if (!empty($obj->$key) && preg_match('/^dolcrypt:/', $obj->$key)) {
+								$this->array_options["options_".$key] = dolDecrypt($obj->$key);
+							}
+						}
+					}
+				}
+
+				$res_array[$this->date] = clone $this;
+				$i++;
+            }
+
+			$this->db->free($resql);
+			return $res_array;
+        } else {
+            $this->error = "Error ".$this->db->lasterror();
+            return -1;
+        }
+    }
+
 	public function calculHS($heure_semaine, $heure_semaine_hs, $timeSpentWeek, $timeHoliday, $dayinloopfromfirstdaytoshow) {
-		global $conf; 
+		global $conf, $usertoprocess; 
 
 		if(dol_print_date($dayinloopfromfirstdaytoshow, '%Y-%m-%d') < '2024-06-03' && $heure_semaine == $conf->global->HEURE_SEMAINE) {
 			$heure_semaine = 35;
@@ -1244,6 +1394,11 @@ class Silae extends CommonObject
 			$heure_semaine_hs = 35;
 		}
 
+		if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && !empty($usertoprocess->array_options['options_heuremaxsemaine']) && $usertoprocess->array_options['options_heuremaxsemaine'] > $conf->global->HEURE_MAX_SEMAINE) {
+			$timeSpentWeekMax = ($timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)] > $usertoprocess->array_options['options_heuremaxsemaine'] ? $usertoprocess->array_options['options_heuremaxsemaine'] : $timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)]);
+			$this->heure_sup50ht = ($timeSpentWeekMax - $conf->global->HEURE_MAX_SEMAINE > 0 ? ($timeSpentWeekMax - $conf->global->HEURE_MAX_SEMAINE) * 3600 : '');
+		}
+
 		$timeSpentWeekMax = ($timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)] > $conf->global->HEURE_MAX_SEMAINE ? $conf->global->HEURE_MAX_SEMAINE : $timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)]);
 		$this->heure_sup50 = ($timeSpentWeekMax - $conf->global->HEURE_SUP1 > 0 ? ($timeSpentWeekMax - $conf->global->HEURE_SUP1) * 3600 : '');
 
@@ -1251,7 +1406,7 @@ class Silae extends CommonObject
 		$this->heure_sup25 = ($timeSpentWeekMax - $heure_semaine_hs > 0 ? ($timeSpentWeekMax - $heure_semaine_hs) * 3600 : '');
 
 		$timeSpentWeekMax = ($timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)] > $heure_semaine_hs ? $heure_semaine_hs : $timeSpentWeek[(int)date("W", $dayinloopfromfirstdaytoshow)]);
-		$heuresup00 = $timeSpentWeekMax - ($heure_semaine - $timeHoliday[date("W", $dayinloopfromfirstdaytoshow)]);
+		$heuresup00 = $timeSpentWeekMax - ($heure_semaine - $timeHoliday[(int)date("W", $dayinloopfromfirstdaytoshow)]);
 		$this->heure_sup00 = ($heuresup00 > 0 ? $heuresup00 * 3600 : '');
 	}
 }
@@ -1271,7 +1426,7 @@ class SilaeLine extends CommonObjectLine
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 0;
+	public $isextrafieldmanaged = 1;
 
 	/**
 	 * Constructor

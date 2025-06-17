@@ -33,6 +33,7 @@
  */
 
 $permissiontoreadCout = $user->rights->formationhabilitation->formation->readCout;
+$permissiontoreadCoutMobilisation = $user->rights->formationhabilitation->formation->readcoutmobilisation;
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {

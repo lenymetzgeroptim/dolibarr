@@ -155,7 +155,8 @@ $permissiontodelete = $user->rights->formationhabilitation->formation->delete ||
 $permissiontoreadline = $user->rights->formationhabilitation->userformation->readall;
 $permissiontoaddline = $user->rights->formationhabilitation->userformation->write;
 $permissiontodeleteline = $user->rights->formationhabilitation->userformation->delete;
-$permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
+$permissiontoreadcostpedagogique = $user->rights->formationhabilitation->formation->readcoutpedagogique;
+$permissiontoreadallcost = $user->rights->formationhabilitation->formation->readcoutall;
 $permissiontoforceline = $user->rights->formationhabilitation->userformation->force;
 
 $upload_dir = $conf->formationhabilitation->multidir_output[isset($object->entity) ? $object->entity : 1].'/formation';
@@ -169,6 +170,9 @@ if (empty($conf->formationhabilitation->enabled)) accessforbidden();
 if (!$permissiontoread) accessforbidden();
 
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
+
+// Permet d'avoir les noms complet dans le multiselect des formations 
+$conf->global->MAIN_DISABLE_TRUNC = 1;
 
 /*
  * Actions
@@ -258,15 +262,17 @@ if (empty($reshook)) {
 unset($arrayfields['t.formateur']);
 unset($objectline->fields['fk_formation']);
 unset($arrayfields['t.fk_formation']);
-if(!$permissiontoreadcost) {
-    unset($objectline->fields['cout_pedagogique']);
+if(!$permissiontoreadallcost) {
     unset($objectline->fields['cout_mobilisation']);
-    unset($objectline->fields['cout_annexe']);
     unset($objectline->fields['cout_total']);
-    unset($arrayfields['t.cout_pedagogique']);
     unset($arrayfields['t.cout_mobilisation']);
-    unset($arrayfields['t.cout_annexe']);
     unset($arrayfields['t.cout_total']);
+}
+if(!$permissiontoreadcostpedagogique && !$permissiontoreadallcost) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_annexe']);
+    unset($arrayfields['t.cout_pedagogique']);
+    unset($arrayfields['t.cout_annexe']);
 
 	unset($object->fields['cout']);
 }
@@ -395,7 +401,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 								array('label'=>$langs->trans('Formation') ,'type'=>'hidden', 'name'=>'fk_formation_programmer', 'value'=>$objectline->fk_formation),
 							  	array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
 							  	array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation),
-							  	array('label'=>$langs->trans('InterneExterne') ,'type'=>'select', 'name'=>'interne_externe_programmer', 'values'=>$objectline->fields['interne_externe']['arrayofkeyval'], 'select_show_empty'=>0, 'default'=>1),
+								array('label'=>$langs->trans('CoutPedagogique') ,'type'=>'text', 'name'=>'cout_pedagogique_programmer', 'value'=>''),
+								array('label'=>$langs->trans('InterneExterne') ,'type'=>'select', 'name'=>'interne_externe_programmer', 'values'=>$objectline->fields['interne_externe']['arrayofkeyval'], 'select_show_empty'=>0, 'default'=>1),
 							  	array('label'=>$langs->trans('Organisme') ,'type'=>'link', 'code'=>'fk_societe', 'name'=>'fk_societe_programmer', 'options'=>$objectline->fields['fk_societe']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module),
 								array('label'=>$langs->trans('Formateur') ,'type'=>'link', 'code'=>'formateur', 'name'=>'formateur_programmer', 'options'=>$objectline->fields['formateur']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module, 'hidden'=>1)
 							);

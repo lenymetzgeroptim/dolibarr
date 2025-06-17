@@ -162,9 +162,50 @@ if(empty($object->commServQ3)) {
     );
 }
 
+if(empty($object->analyseCauseRacine)) {
+    unset($object->fields['analyseCauseRacine']);
+    
+}else{
+    $object->fields['analyseCauseRacine'] = array(
+        'type' => 'html',
+        'label' => 'Analyse des causes racines',
+        'enabled' => '1',
+        'position' => 576,
+        'notnull' => 0,
+        'visible' => 1,
+		'cssview' => 'wordbreak',
+    );
+}
 
+if(empty($object->coutTotal)) {
+    unset($object->fields['coutTotal']);
+    
+}else{
+    $object->fields['coutTotal'] = array(
+        'type' => 'html',
+        'label' => 'Coût Total',
+        'enabled' => '1',
+        'position' => 550,
+        'notnull' => 0,
+        'visible' => 1,
+		'cssview' => 'wordbreak',
+    );
+}
 
-
+if(empty($object->dateCloture)) {
+    unset($object->fields['dateCloture']);
+    
+}else{
+    $object->fields['dateCloture'] = array(
+        'type' => 'date',
+        'label' => 'Date cloture',
+        'enabled' => '1',
+        'position' => 561,
+        'notnull' => 0,
+        'visible' => 1,
+		'cssview' => 'wordbreak',
+    );
+}
 
 
 foreach ($object->fields as $key => $val) {
@@ -189,7 +230,6 @@ if ($key == 'status') {
 	}
 	
 
-	
 
 	$value = $object->$key;
 	
