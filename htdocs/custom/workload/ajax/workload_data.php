@@ -189,7 +189,8 @@ foreach ($comArrayProjAbs as &$commItem) {
                 "status" => $absItem->status,
                 "nb_open_day_calculated" => $absItem->nb_open_day_calculated,
                 'conge_label' => $absItem->conge_label,
-                'fk_type' => $absItem->fk_type
+                'fk_type' => $absItem->fk_type,
+                'projet_id' => $commItem->projet_id
             ];
 
             // Stockage des références des absences dans arrayreference
@@ -198,7 +199,7 @@ foreach ($comArrayProjAbs as &$commItem) {
             // idref valeur unique 
             $commItem->idref = $absItem->idref;
             $commItem->str = $commItem->str;
-            // $commItem->domaine = $commItem->domaine;
+            
 
             // Mise à jour des autres champs
             foreach (["status"] as $field) {
