@@ -103,6 +103,35 @@ class InterfaceOTTriggers extends DolibarrTriggers
 				$this->createOTForUserVolet($object->id);
 			}
 		}
+
+		// Detect habilitation status change to 2
+        if ($action == 'FORMATIONHABILITATION_USERHABILITATION_MODIFY') {
+            if ($object->status == 2) { // Check if status changed to 2
+                dol_syslog("Trigger activated for habilitation status change to 2 for user ID: " . $object->fk_user);
+
+                // Fetch all projects where the user is listed as a contact
+                $sql = "SELECT DISTINCT p.rowid 
+                        FROM " . MAIN_DB_PREFIX . "projet AS p
+                        INNER JOIN " . MAIN_DB_PREFIX . "element_contact AS ec 
+                            ON ec.element_id = p.rowid
+                        WHERE ec.fk_socpeople = " . intval($object->fk_user);
+                $resql = $db->query($sql);
+
+                if ($resql) {
+                    $projects = [];
+                    while ($obj = $db->fetch_object($resql)) {
+                        $projects[] = $obj->rowid;
+                    }
+
+                    // Generate a new OT for each project
+                    foreach ($projects as $projectId) {
+                        $this->createOTForProject($projectId, $object->fk_user);
+                    }
+                } else {
+                    dol_syslog("Error fetching projects for user ID: " . $object->fk_user . " - " . $db->lasterror(), LOG_ERR);
+                }
+            }
+        }
 		
 		
 		
@@ -187,12 +216,18 @@ class InterfaceOTTriggers extends DolibarrTriggers
 	}
 	
 
-private function createOTForProject($project)
+private function createOTForProject($projectId, $userId = null)
     {
         global $db, $user;
 
+        $project = new Project($db);
+        if (!$project->fetch($projectId)) {
+            dol_syslog("Erreur lors de la récupération du projet ID: ".$projectId, LOG_ERR);
+            return;
+        }
+
         $projectId = $project->id;
-        $userId = $user->id;
+        $userId = $userId ?: $user->id;
         $dateCreation = date('Y-m-d H:i:s'); 
 
         // Récupérer la référence du projet
