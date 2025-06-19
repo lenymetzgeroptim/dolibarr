@@ -102,7 +102,8 @@ ParamDisplayFDT = Affichage des feuilles de temps
 FDT_USE_STANDARD_WEEK = Activer la semaine type
 ExportFDT = Export des feuilles de temps
 FDT_OPERATION_TEXT = Texte explicatif des feuilles de temps
-
+FDT_EXPORT_RTT_N1_ACQUIS = Quel(s) mois sont visibles les RTT acquis N-1 dans l'export des données variables ?
+FDT_EXPORT_RTT_N1 = Quel(s) mois les RTT n-1 doivent-ils être gérés dans les exports ?
 
 #
 # About page

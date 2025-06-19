@@ -252,6 +252,7 @@ elseif($datatoexport == 'donnees_variables') {
 			"heure_nuit50" => "H_Dim_Nuit_50%",
 			"heure_nuit75" => "H_Dim_Nuit_75%",
 			"heure_nuit100" => "H_Dim_Nuit_100%",
+			"rrt_n1_acquis" => "RTTN-1_Acquis",
 			"fdt.status" => "Statut feuille de temps",
 		);
 	}
@@ -411,6 +412,7 @@ else {
 			"heure_nuit50" => "H_Dim_Nuit_50%",
 			"heure_nuit75" => "H_Dim_Nuit_75%",
 			"heure_nuit100" => "H_Dim_Nuit_100%",
+			"rrt_n1_acquis" => "RTTN-1_Acquis",
 			"fdt.status" => "Statut feuille de temps",
 		);
 	}
@@ -562,6 +564,7 @@ elseif($datatoexport == 'donnees_variables') {
 			"heure_nuit50" => "timesheet_16@feuilledetemps",
 			"heure_nuit75" => "timesheet_16@feuilledetemps",
 			"heure_nuit100" => "timesheet_16@feuilledetemps",
+			"rrt_n1_acquis" => "timesheet_16@feuilledetemps",
 			"fdt.status" => "timesheet_16@feuilledetemps",
 		);
 	}
@@ -721,6 +724,7 @@ else {
 			"heure_nuit50" => "timesheet_16@feuilledetemps",
 			"heure_nuit75" => "timesheet_16@feuilledetemps",
 			"heure_nuit100" => "timesheet_16@feuilledetemps",
+			"rrt_n1_acquis" => "timesheet_16@feuilledetemps",
 			"fdt.status" => "timesheet_16@feuilledetemps",
 		);
 	}
@@ -869,6 +873,7 @@ elseif($datatoexport == 'donnees_variables') {
 			"heure_nuit50" => "Numeric",
 			"heure_nuit75" => "Numeric",
 			"heure_nuit100" => "Numeric",
+			"rrt_n1_acquis" => "Numeric",
 			"fdt.status" => "Status",
 		);
 	}
@@ -1031,6 +1036,7 @@ else {
 			"heure_nuit50" => "Numeric",
 			"heure_nuit75" => "Numeric",
 			"heure_nuit100" => "Numeric",
+			"rrt_n1_acquis" => "Numeric",
 			"fdt.status" => "Status",
 		);
 	}
@@ -1183,6 +1189,7 @@ elseif($datatoexport == 'donnees_variables')  {
 			"heure_nuit50" => "llx_feuilledetemps_silae",
 			"heure_nuit75" => "llx_feuilledetemps_silae",
 			"heure_nuit100" => "llx_feuilledetemps_silae",
+			"rrt_n1_acquis" => "llx_holiday_users",
 			"fdt.status" => "llx_feuilledetemps_feuilledetemps",
 		);
 	}
@@ -1340,6 +1347,7 @@ else {
 			"heure_nuit50" => "llx_feuilledetemps_silae",
 			"heure_nuit75" => "llx_feuilledetemps_silae",
 			"heure_nuit100" => "llx_feuilledetemps_silae",
+			"rrt_n1_acquis" => "llx_holiday_users",
 			"fdt.status" => "llx_feuilledetemps_feuilledetemps",
 		);
 	}
@@ -1666,7 +1674,8 @@ if ($action == 'buildalldoc') {
 			"fdt.prime_amplitude" => 21,
 			"heure_nuit50" => 22,
 			"heure_nuit75" => 23,
-			"heure_nuit100" => 24
+			"heure_nuit100" => 24,
+			"rrt_n1_acquis" => 25
 		);
 	}
 	else {
@@ -1836,7 +1845,8 @@ if ($action == 'buildalldoctest') {
 			"fdt.prime_amplitude" => 21,
 			"heure_nuit50" => 22,
 			"heure_nuit75" => 23,
-			"heure_nuit100" => 24
+			"heure_nuit100" => 24,
+			"rrt_n1_acquis" => 25
 		);
 	}
 	else {
@@ -1888,6 +1898,9 @@ if ($action == 'buildalldoctest') {
 		"h.date_debut" => dol_mktime(-1, -1, -1, GETPOST("exporttestdate_month", 'int'), 1, GETPOST("exporttestdate_year", 'int')),
 		"h.date_fin" => dol_get_last_day(GETPOST("exporttestdate_year", 'int'), GETPOST("exporttestdate_month", 'int')),
 	);
+	if($conf->global->FDT_STATUT_HOLIDAY) {
+		$array_filtervalue[2]["hef.statutfdt"] = '1+2';
+	}
 	$array_filtervalue[3] = array(
 		"s.date" => GETPOST("exporttestdate_year", 'int').str_pad(GETPOST("exporttestdate_month", 'int'), 2, '0', STR_PAD_LEFT),
 	);

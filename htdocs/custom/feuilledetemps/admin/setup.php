@@ -226,11 +226,30 @@ $arraytypeleaves[0] = '';
 $arraytypeleaves = getLabelList('societe', 'nom');
 $item->setAsMultiSelect($arraytypeleaves);
 
-
-
 // FDT_EXPORT_REPOS_COMPENSATEUR
 $item = $formSetup->newItem('FDT_EXPORT_REPOS_COMPENSATEUR')->setAsYesNo();
 
+// FDT_EXPORT_RTT_N1
+$item = $formSetup->newItem('FDT_EXPORT_RTT_N1');
+$arraymonth = array(
+				'01' => 'Janvier',	
+				'02' => 'Février',	
+				'03' => 'Mars',	
+				'04' => 'Avril',	
+				'05' => 'Mai',	
+				'06' => 'Juin',	
+				'07' => 'Juillet',	
+				'08' => 'Août',	
+				'09' => 'Septembre',	
+				'10' => 'Octobre',	
+				'11' => 'Novembre',	
+				'12' => 'Décembre'
+			);
+$item->setAsMultiSelect($arraymonth);
+
+// FDT_EXPORT_RTT_N1_ACQUIS
+$item = $formSetup->newItem('FDT_EXPORT_RTT_N1_ACQUIS');
+$item->setAsSelect($arraymonth);
 
 
 // Titre FDT

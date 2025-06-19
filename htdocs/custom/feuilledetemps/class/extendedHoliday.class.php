@@ -555,19 +555,30 @@ class extendedHoliday extends Holiday
 	}
 
 	/**
-	 *  Return array with solde of ACP for all user
+	 *  Return array with solde of RTT for all user
 	 *
 	 *  @return     array	    		Return array 
 	 */
-	public function getSoldeRTT()
+	public function getSoldeRTT($mois)
 	{
+		global $conf; 
+
 		$soldes = array();
 
-		$sql = "SELECT hu.fk_user, SUM(CASE WHEN ht.code = 'RTT_ACQUIS' THEN nb_holiday ELSE 0 END) - SUM(CASE WHEN ht.code = 'RTT_PRIS' THEN nb_holiday ELSE 0 END) AS solde_rtt";
-		$sql .= " FROM ".MAIN_DB_PREFIX."holiday_users as hu";
-		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = fk_type";
-		$sql .= " WHERE ht.code IN ('RTT_ACQUIS', 'RTT_PRIS')";
-		$sql .= " GROUP BY hu.fk_user;";
+		if($mois == $conf->global->FDT_EXPORT_RTT_N1_ACQUIS) {
+			$sql = "SELECT hu.fk_user, SUM(CASE WHEN ht.code = 'RTT_ACQUIS' THEN nb_holiday ELSE 0 END) - SUM(CASE WHEN ht.code = 'RTT_PRIS' THEN nb_holiday ELSE 0 END) AS solde_rtt";
+			$sql .= " FROM ".MAIN_DB_PREFIX."holiday_users as hu";
+			$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = fk_type";
+			$sql .= " WHERE ht.code IN ('RTT_ACQUIS', 'RTT_PRIS')";
+			$sql .= " GROUP BY hu.fk_user;";
+		}
+		else {
+			$sql = "SELECT hu.fk_user, SUM(CASE WHEN ht.code = 'RTT_N-1_ACQUIS' THEN nb_holiday ELSE 0 END) - SUM(CASE WHEN ht.code = 'RTT_N-1_PRIS' THEN nb_holiday ELSE 0 END) AS solde_rtt";
+			$sql .= " FROM ".MAIN_DB_PREFIX."holiday_users as hu";
+			$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = fk_type";
+			$sql .= " WHERE ht.code IN ('RTT_N-1_ACQUIS', 'RTT_N-1_PRIS')";
+			$sql .= " GROUP BY hu.fk_user;";
+		}
 
 		$result = $this->db->query($sql);
 		if ($result) {
@@ -581,6 +592,58 @@ class extendedHoliday extends Holiday
 		}
 
 		return array();
+	}
+
+		/**
+	 *  Return array with RTT acquis for all user
+	 *
+	 *  @return     array	    		Return array 
+	 */
+	public function getAcquisRTT()
+	{
+		$acquis = array();
+
+		$sql = "SELECT hu.fk_user, nb_holiday";
+		$sql .= " FROM ".MAIN_DB_PREFIX."holiday_users as hu";
+		$sql .= " RIGHT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON ht.rowid = fk_type";
+		$sql .= " WHERE ht.code IN ('RTT_ACQUIS')";
+		$sql .= " GROUP BY hu.fk_user;";
+
+		$result = $this->db->query($sql);
+		if ($result) {
+			while ($obj = $this->db->fetch_object($result)) {
+				$acquis[$obj->fk_user] = (double)$obj->nb_holiday;
+			}
+
+			return $acquis;
+		} else {
+			dol_print_error($this->db);
+		}
+
+		return array();
+	}
+
+	/**
+	 *  Return Silae Code for a type of holiday
+	 *
+	 *  @return     int	    	
+	 */
+	public function getCodeSilae($code)
+	{
+		$sql = "SELECT ht.code_silae";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as ht";
+		$sql .= " WHERE ht.code = '$code'";
+
+		$result = $this->db->query($sql);
+		if ($result) {
+			if($obj = $this->db->fetch_object($result)) {
+				return $obj->code_silae;
+			}
+		} else {
+			dol_print_error($this->db);
+		}
+
+		return -1;
 	}
 
 	/**
@@ -668,8 +731,6 @@ class extendedHoliday extends Holiday
 			return 1;
 		}	
 	}
-<<<<<<< Updated upstream
-=======
 
 	public function getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $usertoprocess = null, $numberDay = 0, &$timeHolidayByDay = array()) {
 		global $conf; 
@@ -761,5 +822,4 @@ class extendedHoliday extends Holiday
 			return $duration_hour;
 		}
 	}
->>>>>>> Stashed changes
 }

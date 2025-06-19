@@ -40,9 +40,12 @@ class ExtendedExportFDT extends Export
 		asort($array_selected);
 		$all_holiday = array();
 		$heure_semaine = array();
-		if($datatoexport == 'absences') {
-			$soldeRTTN1 = $holiday->getSoldeRTT();
-			$code_silae_RTTN1 = '9999';
+		if($datatoexport == 'absences' && in_array(dol_print_date($array_filterValue['h.date_fin'], '%m'), explode(',', $conf->global->FDT_EXPORT_RTT_N1))) {
+			$soldeRTTN1 = $holiday->getSoldeRTT(dol_print_date($array_filterValue['h.date_fin'], '%m'));
+			$code_silae_RTTN1 = $holiday->getCodeSilae('RTT_N-1');
+		}
+		if($datatoexport == 'donnees_variables' && substr($array_filterValue['fdt.date_debut'], 4, 2) == $conf->global->FDT_EXPORT_RTT_N1_ACQUIS) {
+			$acquisRTTN1 = $holiday->getAcquisRTT();
 		}
 
 		dol_syslog(__METHOD__." ".$model.", ".$datatoexport.", ".implode(",", $array_selected));
@@ -505,6 +508,9 @@ class ExtendedExportFDT extends Export
 								$obj->kilometres_rappel = '';
 								$obj->grand_deplacement3 = '';
 							}
+							if(substr($array_filterValue['fdt.date_debut'], 4, 2) == $conf->global->FDT_EXPORT_RTT_N1_ACQUIS) {
+								$obj->rrt_n1_acquis = $acquisRTTN1[$obj->rowid];
+							}
 						}
 						elseif($datatoexport == 'ObservationCompta') {
 							$obj->t_date_start = substr($obj->t_date_start, 0, 7);
@@ -587,7 +593,7 @@ class ExtendedExportFDT extends Export
 								$obj->type = 'J';
 								$obj->valeur = '';
 
-								if($obj->ht_code == 'RTT' && $soldeRTTN1[$obj->rowid] >= 0.5) {
+								if(in_array(dol_print_date($array_filterValue['h.date_fin'], '%m'), explode(',', $conf->global->FDT_EXPORT_RTT_N1)) && $obj->ht_code == 'RTT' && $soldeRTTN1[$obj->rowid] >= 0.5) {
 									$num_open_day = num_open_day($date_debut_tmp, $date_fin_tmp, 0, 1, $obj->halfday);
 
 									if($num_open_day > $soldeRTTN1[$obj->rowid]) {
@@ -832,7 +838,7 @@ class ExtendedExportFDT extends Export
 				continue; // A field that must not appears into SQL
 			}
 
-			if($key == 'code' || $key == 'hdebut' || $key == 'hfin' || $key == 'kilometres_rappel' || $key == 'grand_deplacement3' || $key == 'valeur' || $key == 'typerepos') {
+			if($key == 'rrt_n1_acquis' || $key == 'code' || $key == 'hdebut' || $key == 'hfin' || $key == 'kilometres_rappel' || $key == 'grand_deplacement3' || $key == 'valeur' || $key == 'typerepos') {
 				continue;
 			}
 
