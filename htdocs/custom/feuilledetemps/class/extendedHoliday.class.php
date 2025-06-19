@@ -668,6 +668,8 @@ class extendedHoliday extends Holiday
 			return 1;
 		}	
 	}
+<<<<<<< Updated upstream
+=======
 
 	public function getHourDuration($standard_week_hour, $dayinloopfromfirstdaytoshow, $usertoprocess = null, $numberDay = 0, &$timeHolidayByDay = array()) {
 		global $conf; 
@@ -681,10 +683,10 @@ class extendedHoliday extends Holiday
 
 		if($conf->donneesrh->enabled) {
 			$extrafields = new ExtraFields($this->db);
-			$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient_extrafields');
+			$extrafields->fetch_name_optionals_label('donneesrh_Positionetcoefficient');
 			$userField = new UserField($this->db);
 			$userField->id = $this->fk_user;
-			$userField->table_element = 'donneesrh_Positionetcoefficient_extrafields';
+			$userField->table_element = 'donneesrh_Positionetcoefficient';
 			$userField->fetch_optionals();
 		}
 
@@ -759,4 +761,5 @@ class extendedHoliday extends Holiday
 			return $duration_hour;
 		}
 	}
+>>>>>>> Stashed changes
 }
