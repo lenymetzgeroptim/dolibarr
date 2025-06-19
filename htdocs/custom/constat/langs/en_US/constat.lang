@@ -83,4 +83,44 @@ CONSTAT_CANCELEDInDolibarr = Le constat %s est annulé
 #
 # Statuts
 #
-ConstatDraftExplication = L'émetteur doit remplir les champs en gras et valider le constat.
+ConstatDraftExplication = L'émetteur doit remplir les champs obligatoires et valider le constat.
+ConstatValidatedExplication = Afin de faire évoluer le statut, il faut informer le client (si nécessaire) et le responsable d’affaire doit remplir l'ensemble des champs obligatoires.
+ConstatEncoursExplication = Le constat est en cours, le service Q3SE pourra le clôturer lorsque toutes les actions seront soldées et que les champs obligatoires seront complétés.
+ConstatActionsUnsold = Le constat ne peut pas être clôturé tant qu'il y a des actions en cours
+ConstatFieldsNullMendatory = Les champs suivants doivent être renseignés : %s
+
+
+#
+# Attributs
+#
+Site = Site d'intervention
+DateEmetteur = Date d'émission
+DescritpionConstat = Description détaillée du constat
+DescritpionImpact = Impact de la non-conformité
+CommentaireEmetteur = Commentaire émetteur
+NumCommande = Numéro de commande
+TypeConstat = Type de constat
+ActionsImmediates = Actions immédiates
+ActionsImmediatesDate = Actions immédiates le
+ActionsImmediatesPar = Actions immédiates par
+ActionsImmediatesComm = Actions immédiates description
+InfoClient = Information client
+InfoClientDate = Information client le
+InfoClientPar = Information client par
+InfoClientComm = Information client description
+CommRespAff = Commentaire responsable d'affaires
+AnalyseCausesRacines = Analyse des causes racines
+AccordClient = Accord du client
+AccordClientDate = Accord du client le
+AccordClientPar = Accord du client par
+AccordClientComm = Accord du client description
+ControleClient = Contrôle client
+ControleClientDate = Contrôle client le
+ControleClientPar = Contrôle client par
+ControleClientComm = Contrôle client description
+CommentaireRespQ3SE = Commentaire responsable Q3SE
+CommentaireServQ3SE = Commentaire service Q3SE
+CoutTotal = Coût Total
+ClotureDate = Clôture le
+CloturePar = Clôture par
+DateEcheance = Date échéance

@@ -148,29 +148,35 @@ if (empty($dolibarr_nocache)) {
 // document.head.appendChild(style);
 
 $(document).ready(function () {
-    // Tableau de correspondance ID checkbox -> classe TR à afficher
     const mapping = {
-        'actionimmediate': 'field_actionimmediatecom',
-        'infoClient': 'field_commInfoClient',
-        'accordClient': 'field_commAccordClient',
-        'controleClient': 'field_commControleClient',
+        'actionsimmediates': [/*'field_actionsimmediates_commentaire', */'field_actionsimmediates_date', 'field_actionsimmediates_par'],
+        'infoclient': [/*'field_infoclient_commentaire', */'field_infoclient_date', 'field_infoclient_par'],
+        'accordclient': [/*'field_accordclient_commentaire', */'field_accordclient_date', 'field_accordclient_par'],
+        'controleclient': [/*'field_controleclient_commentaire',*/ 'field_controleclient_date', 'field_controleclient_par'],
     };
 
     // Initialisation + écoute des événements
-    $.each(mapping, function(checkboxId, targetClass) {
-        toggleRow(checkboxId, targetClass);
+    $.each(mapping, function(checkboxId, targetClasses) {
+        toggleRows(checkboxId, targetClasses);
         $('#' + checkboxId).on('change', function () {
-            toggleRow(checkboxId, targetClass);
+            toggleRows(checkboxId, targetClasses);
         });
     });
 });
 
-function toggleRow(checkboxId, targetClass) {
-    const checkbox = $('#' + checkboxId);
-    const row = $('.' + targetClass);
-    if (checkbox.is(':checked')) {
-        row.show();
-    } else {
-        row.hide();
-    }
+function toggleRows(selectId, targetClasses) {
+    const select = $('#' + selectId);
+    const selectedValue = select.val();
+
+    // On affiche uniquement si la valeur est "1"
+    const shouldShow = selectedValue === '1';
+
+    targetClasses.forEach(function(className) {
+        const row = $('.' + className);
+        if (shouldShow) {
+            row.show();
+        } else {
+            row.hide();
+        }
+    });
 }

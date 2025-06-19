@@ -34,6 +34,7 @@ if (empty($conf) || !is_object($conf)) {
 
 $blockOpen = false;
 $object->fields = dol_sort_array($object->fields, 'position');
+$i = 0;
 
 foreach ($object->fields as $key => $val) {
 	// Discard if field is a hidden field on form
@@ -53,11 +54,16 @@ foreach ($object->fields as $key => $val) {
 
 	// Si le champ a separation = 1, on démarre un nouveau bloc dépliant
     if (!empty($val['separation']) && $val['separation'] == 1) {
+		print '</table>';
+
         // Fermer le bloc précédent
         if ($blockOpen) {
-            print '</table>';
-            print '</details><br>';
+            print '</details>';
         }
+
+		if($i > 0) {
+			print '<br>';
+		}
 
         // Créer un titre pour le nouveau bloc
         print '<details open>';
@@ -136,6 +142,8 @@ foreach ($object->fields as $key => $val) {
 	
 	print '</td>';
 	print '</tr>';
+	
+	$i++;
 }
 
 if ($blockOpen) {

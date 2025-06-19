@@ -771,8 +771,8 @@ class pdf_standard_constat extends ModelePDFConstat
 				$fk_user_creat = intval($object->fk_user_creat);
 				$fk_project = intval($object->fk_project);
 				$site_id = intval($object->site);
-				$actionimmediate = intval($object->actionimmediate);
-				$infoclient = intval($object->infoClient);
+				$actionsimmediates = intval($object->actionsimmediates);
+				$infoclient = intval($object->infoclient);
 				$recurent = intval($object->recurent);
 				$commande_id = intval($object->num_commande);
 				$recurent_display = $recurent == 1 ? "Oui" : "Non";
@@ -832,7 +832,7 @@ $statusLabels = [
 
 // Conversion des IDs en noms lisibles
 $sujet_nom = isset($sujetLabels[$object->sujet]) ? $sujetLabels[$object->sujet] : 'Inconnu';
-$type_constat_nom = isset($typeLabels[$object->typeConstat]) ? $typeLabels[$object->typeConstat] : 'Inconnu';
+$type_constat_nom = isset($typeLabels[$object->type_constat]) ? $typeLabels[$object->type_constat] : 'Inconnu';
 $status_nom = isset($statusLabels[$object->status]) ? $statusLabels[$object->status] : 'Inconnu';
 
 // Requête pour récupérer la référence du projet
@@ -963,63 +963,63 @@ $firstnameconstat = htmlspecialchars($user->firstname); // Assure-toi que ces pr
 $lastnameconstat = htmlspecialchars($user->lastname);
 
 // Décoder les entités HTML dans la description
-$impactcomm = html_entity_decode($object->impactcomm, ENT_QUOTES, 'UTF-8');
+$description_impact = html_entity_decode($object->description_impact, ENT_QUOTES, 'UTF-8');
 
 // Remplacer les balises <div> par des nouvelles lignes
-$impactcomm = str_replace(['<div>', '</div>'], "\n", $impactcomm);
+$description_impact = str_replace(['<div>', '</div>'], "\n", $description_impact);
 
 // Traiter les balises <ul> et <li> pour la description
-$impactcomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+$description_impact = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
     // Convertir chaque élément de la liste
     return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $impactcomm);
+}, $description_impact);
 
 // Supprimer toutes les autres balises HTML et retirer les espaces
-$impactcomm = strip_tags($impactcomm);
-$impactcomm = preg_replace("/\n\s*\n+/", "\n", $impactcomm); // Retirer les lignes vides
-$impactcomm_safe = nl2br(htmlspecialchars(trim($impactcomm), ENT_QUOTES, 'UTF-8'));
+$description_impact = strip_tags($description_impact);
+$description_impact = preg_replace("/\n\s*\n+/", "\n", $description_impact); // Retirer les lignes vides
+$description_impact_safe = nl2br(htmlspecialchars(trim($description_impact), ENT_QUOTES, 'UTF-8'));
 
 
 // Décoder les entités HTML dans la description
-$descriptionConstat = html_entity_decode($object->descriptionConstat, ENT_QUOTES, 'UTF-8');
+$description_constat = html_entity_decode($object->description_constat, ENT_QUOTES, 'UTF-8');
 
 // Remplacer les balises <div> par des nouvelles lignes
-$descriptionConstat = str_replace(['<div>', '</div>'], "\n", $descriptionConstat);
+$description_constat = str_replace(['<div>', '</div>'], "\n", $description_constat);
 
 // Traiter les balises <ul> et <li> pour la description
-$descriptionConstat = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+$description_constat = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
     // Convertir chaque élément de la liste
     return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $descriptionConstat);
+}, $description_constat);
 
 // Supprimer toutes les autres balises HTML et retirer les espaces
-$descriptionConstat = strip_tags($descriptionConstat);
-$descriptionConstat = preg_replace("/\n\s*\n+/", "\n", $descriptionConstat); // Retirer les lignes vides
-$descriptionConstat_safe = nl2br(htmlspecialchars(trim($descriptionConstat), ENT_QUOTES, 'UTF-8'));
+$description_constat = strip_tags($description_constat);
+$description_constat = preg_replace("/\n\s*\n+/", "\n", $description_constat); // Retirer les lignes vides
+$description_constat_safe = nl2br(htmlspecialchars(trim($description_constat), ENT_QUOTES, 'UTF-8'));
 
 
 
 // Traitement de l'action immédiate
-$actionimmediatecomm = html_entity_decode($object->actionimmediatecom, ENT_QUOTES, 'UTF-8');
+$actionsimmediates_commentaire = html_entity_decode($object->actionsimmediates_commentaire, ENT_QUOTES, 'UTF-8');
 
 // Remplacer les balises <div> par des nouvelles lignes
-$actionimmediatecomm = str_replace(['<div>', '</div>'], "\n", $actionimmediatecomm);
+$actionsimmediates_commentaire = str_replace(['<div>', '</div>'], "\n", $actionsimmediates_commentaire);
 
 // Traiter les balises <ul> et <li> pour l'action immédiate
-$actionimmediatecomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+$actionsimmediates_commentaire = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
     // Convertir chaque élément de la liste
     return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $actionimmediatecomm);
+}, $actionsimmediates_commentaire);
 
 // Supprimer toutes les autres balises HTML et retirer les espaces
-$actionimmediatecomm = strip_tags($actionimmediatecomm);
-$actionimmediatecomm = preg_replace("/\n\s*\n+/", "\n", $actionimmediatecomm); // Retirer les lignes vides
-$actionimmediatecomm_safe = nl2br(htmlspecialchars(trim($actionimmediatecomm), ENT_QUOTES, 'UTF-8'));
-$actionimmediate_display = $actionimmediate == 1 ? "Oui" : "Non";
+$actionsimmediates_commentaire = strip_tags($actionsimmediates_commentaire);
+$actionsimmediates_commentaire = preg_replace("/\n\s*\n+/", "\n", $actionsimmediates_commentaire); // Retirer les lignes vides
+$actionsimmediates_commentaire_safe = nl2br(htmlspecialchars(trim($actionsimmediates_commentaire), ENT_QUOTES, 'UTF-8'));
+$actionsimmediates_display = $actionsimmediates == 1 ? "Oui" : "Non";
 
 
 // Traitement des informations client
-$infoclientcomm = html_entity_decode($object->commInfoClient, ENT_QUOTES, 'UTF-8');
+$infoclientcomm = html_entity_decode($object->infoclient_commentaire, ENT_QUOTES, 'UTF-8');
 
 // Remplacer les balises <div> par des nouvelles lignes
 $infoclientcomm = str_replace(['<div>', '</div>'], "\n", $infoclientcomm);
@@ -1037,7 +1037,7 @@ $infoclientcomm_safe = nl2br(htmlspecialchars(trim($infoclientcomm), ENT_QUOTES,
 $infoclient_display = $infoclient == 1 ? "Oui" : "Non";
 
 // Décoder les entités HTML dans la description
-$analyseracine = html_entity_decode($object->analyseCauseRacine, ENT_QUOTES, 'UTF-8');
+$analyseracine = html_entity_decode($object->analyse_cause_racine, ENT_QUOTES, 'UTF-8');
 
 // Remplacer les balises <div> par des nouvelles lignes
 $analyseracine = str_replace(['<div>', '</div>'], "\n", $analyseracine);
@@ -1054,10 +1054,10 @@ $analyseracine = preg_replace("/\n\s*\n+/", "\n", $analyseracine); // Retirer le
 $analyseracine_safe = nl2br(htmlspecialchars(trim($analyseracine), ENT_QUOTES, 'UTF-8'));
 
 
-$accordclient = intval($object->accordClient);
+$accordclient = intval($object->accordclient);
 	
 // Traitement des informations client
-$accordClientcomm = html_entity_decode($object->commAccordClient, ENT_QUOTES, 'UTF-8');
+$accordClientcomm = html_entity_decode($object->accordclient_commentaire, ENT_QUOTES, 'UTF-8');
 
 // Remplacer les balises <div> par des nouvelles lignes
 $accordClientcomm = str_replace(['<div>', '</div>'], "\n", $accordClientcomm);
@@ -1075,10 +1075,10 @@ $accordClientcomm_safe = nl2br(htmlspecialchars(trim($accordClientcomm), ENT_QUO
 $accordClient_display = intval($accordclient) === 1 ? "Oui" : "Non";
 
 
-$controleClient = intval($object->controleClient);
+$controleclient = intval($object->controleclient);
 	
 // Traitement des informations client
-$controleClientcomm = html_entity_decode($object->commControleClient, ENT_QUOTES, 'UTF-8');
+$controleClientcomm = html_entity_decode($object->controleclient_commentaire, ENT_QUOTES, 'UTF-8');
 
 // Remplacer les balises <div> par des nouvelles lignes
 $controleClientcomm = str_replace(['<div>', '</div>'], "\n", $controleClientcomm);
@@ -1093,13 +1093,13 @@ $controleClientcomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($mat
 $controleClientcomm = strip_tags($controleClientcomm);
 $controleClientcomm = preg_replace("/\n\s*\n+/", "\n", $controleClientcomm); // Retirer les lignes vides
 $controleClientcomm_safe = nl2br(htmlspecialchars(trim($controleClientcomm), ENT_QUOTES, 'UTF-8'));
-$controleClient_display = intval($controleClient) === 1 ? "Oui" : "Non";
+$controleClient_display = intval($controleclient) === 1 ? "Oui" : "Non";
 
 
-$date = new DateTime($object->dateEmeteur);
+// $date = new DateTime($object->emetteur_date);
     
 // Formater la date dans le format "Y-m-d"
-$formattedDate = $date->format('Y-m-d');
+$formattedDate = dol_print_date($object->emetteur_date, '%Y-%m-%d');
 
 $sql = "SELECT e.fk_target, e.fk_source, a.status";
 $sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
@@ -1173,7 +1173,7 @@ $html .= '
 		 <td><strong>Description détaillée du constat (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi) : </strong></td>
   </tr>
   <tr>
-		 <td>' . $descriptionConstat_safe . '</td>
+		 <td>' . $description_constat_safe . '</td>
   </tr>
  </table>';
 
@@ -1186,7 +1186,7 @@ $html .= '
 	 </tr>
 	 <tr>
 		 <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Description impact</strong></td>
-		 <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $impactcomm_safe . '</td>
+		 <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $description_impact_safe . '</td>
 	 </tr>
 	 <tr>
 		 <td><strong>Type de constat</strong></td>
@@ -1205,20 +1205,20 @@ $html .= '
 
 	 <tr>
 		 <td><strong>Action(s) immédiate(s)</strong></td>
-		 <td style="color: rgb(40, 80, 139);">' . $actionimmediate_display . '</td>
+		 <td style="color: rgb(40, 80, 139);">' . $actionsimmediates_display . '</td>
 	 </tr>
 	 </table>';
 	 
 
-	// Vérification de l'affichage d'actionimmediatecomm
-	if ($actionimmediate == 1 && !empty($actionimmediatecomm_safe)) {
+	// Vérification de l'affichage d'actionsimmediates_commentaire
+	if ($actionsimmediates == 1 && !empty($actionsimmediates_commentaire_safe)) {
 		$html .= '
 		<table border="0" cellpadding="5" cellspacing="0" width="100%">
 			<tr>
 					<td><strong>Détails de l\'action immédiate : </strong></td>
 			</tr>
 			<tr>
-					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $actionimmediatecomm_safe . '</td>
+					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $actionsimmediates_commentaire_safe . '</td>
 			</tr>
  		</table>';
 	}
@@ -1420,7 +1420,7 @@ $html .= '
 			<td style="color: rgb(40, 80, 139);">' . $controleClient_display . '</td>
 		</tr>';
 
-	if (intval($controleClient) === 1 && !empty($controleClientcomm_safe)) {
+	if (intval($controleclient) === 1 && !empty($controleClientcomm_safe)) {
 		// Ligne pour les détails du contrôle client
 		$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
 					<tr>
@@ -1496,14 +1496,14 @@ $html .= '
 
 
 
-	private function renderHtmlFieldsWithHeader($pdf, $descriptionConstat, $actionImmediateComm, $object, $outputlangs, $outputlangsbis, $max_lines = 39, $default_font_size = 12) {
+	private function renderHtmlFieldsWithHeader($pdf, $description_constat, $actionsimmediates_commentaire, $object, $outputlangs, $outputlangsbis, $max_lines = 39, $default_font_size = 12) {
 		// Initialisation des compteurs
 		$cpt = 0;
 		$pagenb = 1;
 	
 		// Convertir les contenus HTML en lignes
-		$linesDescription = explode('<br>', nl2br($descriptionConstat));
-		$linesAction = explode('<br>', nl2br($actionImmediateComm));
+		$linesDescription = explode('<br>', nl2br($description_constat));
+		$linesAction = explode('<br>', nl2br($actionsimmediates_commentaire));
 	
 		// Vérification des contenus avant la fusion
 		//var_dump("Description Const. :", $linesDescription);

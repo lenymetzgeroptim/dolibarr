@@ -32,50 +32,164 @@ if (!is_object($form)) {
 	$form = new Form($db);
 }
 
+
+
 ?>
 <!-- BEGIN PHP TEMPLATE commonfields_view.tpl.php -->
 <?php
 
-$blockOpen = false;
+
+
 $object->fields = dol_sort_array($object->fields, 'position');
 
-foreach ($object->fields as $key => $val) {
-	if (!empty($keyforbreak) && $key == $keyforbreak) {
-		break; // key used for break on second column
-	}
+$controleClientChecked = isset($object->controleclient) && $object->controleclient == true;
+$accordClientChecked = isset($object->accordclient) && $object->accordclient == true;
+$infoClientChecked = isset($object->infoclient) && $object->infoclient == true;
+$actionChecked = isset($object->actionsimmediates) && $object->actionsimmediates == true;
 
-	// Discard if extrafield is a hidden field on form
-	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
+if($object->fields['accordclient_commentaire'] && !$accordClientChecked) {
+	unset($object->fields['accordclient_commentaire']['visible']);
+}else{
+	$object->fields['accordclient_commentaire'] = array(
+		'type' => 'html',
+		'label' => 'Commentaire Accord client',
+		'enabled' => '1',
+		'position' => 600,
+		'notnull' => 0,
+		'visible' => 1,
+		'cssview' => 'wordbreak',
+	);
+}
+if($object->fields['controleclient_commentaire'] && !$controleClientChecked) {
+	unset($object->fields['controleclient_commentaire']['visible']);
+}else{
+	$object->fields['controleclient_commentaire'] = array(
+		'type' => 'html',
+		'label' => 'Commentaire Controle client',
+		'enabled' => '1',
+		'position' => 610,
+		'notnull' => 0,
+		'visible' => 1,
+		'cssview' => 'wordbreak',
+	);
+}
+if($object->fields['infoclient_commentaire'] && !$infoClientChecked) {
+	unset($object->fields['infoclient_commentaire']['visible']);
+}else{
+	$object->fields['infoclient_commentaire'] = array(
+		'type' => 'html',
+		'label' => 'Commentaire Info client',
+		'enabled' => '1',
+		'position' => 578,
+		'notnull' => 0,
+		'visible' => 1,
+		'cssview' => 'wordbreak',
+	);
+}
+
+if($object->fields['actionsimmediates_commentaire'] && !$actionChecked) {
+	unset($object->fields['actionsimmediates_commentaire']['visible']);
+	
+}else{
+	$object->fields['actionsimmediates_commentaire'] = array(
+		'type' => 'html',
+		'label' => 'Action immédiate commentaire',
+		'enabled' => '1',
+		'position' => 562,
+		'notnull' => 0,
+		'visible' => 1,
+		'cssview' => 'wordbreak',
+	);
+}
+
+// if(empty($object->commentaire_emetteur)) {
+//     unset($object->fields['commentaire_emetteur']);
+    
+// }else{
+//     $object->fields['commentaire_emetteur'] = array(
+//         'type' => 'html',
+//         'label' => 'Commentaire émetteur',
+//         'enabled' => '1',
+//         'position' => 611,
+//         'notnull' => 0,
+//         'visible' => 1,
+// 		'cssview' => 'wordbreak',
+//     );
+// }
+
+// if(empty($object->commentaire_resp_aff)) {
+//     unset($object->fields['commentaire_resp_aff']);
+    
+// }else{
+//     $object->fields['commentaire_resp_aff'] = array(
+//         'type' => 'html',
+//         'label' => 'Commentaire Responsable Affaire',
+//         'enabled' => '1',
+//         'position' => 612,
+//         'notnull' => 0,
+//         'visible' => 1,
+// 		'cssview' => 'wordbreak',
+//     );
+// }
+
+// if(empty($object->commentaire_resp_q3se)) {
+//     unset($object->fields['commentaire_resp_q3se']);
+    
+// }else{
+//     $object->fields['commentaire_resp_q3se'] = array(
+//         'type' => 'html',
+//         'label' => 'Commentaire Responsable Q3SE',
+//         'enabled' => '1',
+//         'position' => 613,
+//         'notnull' => 0,
+//         'visible' => 1,
+// 		'cssview' => 'wordbreak',
+//     );
+// }
+
+// if(empty($object->commentaire_serv_q3se)) {
+//     unset($object->fields['commentaire_serv_q3se']);
+    
+// }else{
+//     $object->fields['commentaire_serv_q3se'] = array(
+//         'type' => 'html',
+//         'label' => 'Commentaire Service Q3SE',
+//         'enabled' => '1',
+//         'position' => 614,
+//         'notnull' => 0,
+//         'visible' => 1,
+// 		'cssview' => 'wordbreak',
+//     );
+// }
+
+
+
+
+
+
+foreach ($object->fields as $key => $val) {
+
+	if ($key == 'rowid') {
+		continue;
+	}
+	
+
+if ($key == 'status') {
 		continue;
 	}
 
-	if (array_key_exists('enabled', $val) && isset($val['enabled']) && !verifCond($val['enabled'])) {
-		continue; // We don't want this field
-	}
-	if (in_array($key, array('ref', 'status'))) {
-		continue; // Ref and status are already in dol_banner
-	}
-	
-	// Si le champ a separation = 1, on démarre un nouveau bloc dépliant
-    if (!empty($val['separation']) && $val['separation'] == 1) {
-		print '</table>';
 
-        // Fermer le bloc précédent
-        if ($blockOpen) {
-            print '</details>';
-        }
-
-        // Créer un titre pour le nouveau bloc
-		$last_label_separation = $langs->trans($val['label_separation']);
-		print '<div class="underbanner clearboth"></div>';
-        print '<details open>';
-        print '<summary>'.$langs->trans($val['label_separation']).'</summary>';
-		print '<table class="border tableforfieldview">'."\n";
-        $blockOpen = true;
+	if ($key == 'actionsimmediates') {
+        include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/extrafields_view.tpl.php';
     }
+	
+	if (!empty($keyforbreak) && $key == $keyforbreak) {
+		break; // key used for break on second column
+
+	}
 
 	$value = $object->$key;
-
+	
 	print '<tr class="field_'.$key.'"><td';
 	print ' class="'.(empty($val['tdcss']) ? 'titlefield' : $val['tdcss']).' fieldname_'.$key;
 	//if ($val['notnull'] > 0) print ' fieldrequired';     // No fieldrequired on the view output
@@ -99,7 +213,6 @@ foreach ($object->fields as $key => $val) {
 	} else {
 		print $form->editfieldkey($labeltoshow, $key, $value, $object, 1, $val['type']);
 	}
-
 	print '</td>';
 	print '<td class="valuefield fieldname_'.$key;
 	if ($val['type'] == 'text') {
@@ -109,6 +222,7 @@ foreach ($object->fields as $key => $val) {
 		print ' '.$val['cssview'];
 	}
 	print '">';
+
 	if (empty($val['alwayseditable'])) {
 		if (preg_match('/^(text|html)/', $val['type'])) {
 			print '<div class="longmessagecut">';
@@ -137,28 +251,39 @@ foreach ($object->fields as $key => $val) {
 	print '</tr>';
 }
 
-// print '</table>';
-
-if ($blockOpen) {
-	print '</table>';
-	print '</details>';
-}
-$blockOpen = false;
+print '</table>';
 
 // We close div and reopen for second column
 print '</div>';
 
-
 $rightpart = '';
 $alreadyoutput = 1;
 foreach ($object->fields as $key => $val) {
-	if ($alreadyoutput) {
-		if (!empty($keyforbreak) && $key == $keyforbreak) {
-			$alreadyoutput = 0; // key used for break on second column
-		} else {
-			continue;
-		}
-	}
+
+    if ($alreadyoutput) {
+        if (!empty($keyforbreak) && $key == $keyforbreak) {
+            $alreadyoutput = 0; // key used for break on second column
+        } else {
+            continue;
+        }
+    }
+
+
+	/*$value = $object->$key;
+
+    // Si la valeur est vide, passez à la prochaine itération
+    // Si le type est 'html' et la valeur est vide, passez également à la prochaine itération
+    if (empty($value) || ($val['type'] == 'html' && trim(strip_tags($value)) == '')) {
+        continue;
+    }*/
+
+
+    // Si la valeur est vide et que le type n'est pas 'html', passez à la prochaine itération
+    if (empty($value) && $val['type'] != 'html') {
+        continue;
+    }
+	
+	$value = $object->$key;
 
 	// Discard if extrafield is a hidden field on form
 	if (abs($val['visible']) != 1 && abs($val['visible']) != 3 && abs($val['visible']) != 4 && abs($val['visible']) != 5) {
@@ -171,24 +296,6 @@ foreach ($object->fields as $key => $val) {
 	if (in_array($key, array('ref', 'status'))) {
 		continue; // Ref and status are already in dol_banner
 	}
-
-	// Si le champ a separation = 1, on démarre un nouveau bloc dépliant
-    if ((!empty($val['separation']) && $val['separation'] == 1) || $key == $keyforbreak) {
-        // Fermer le bloc précédent
-        if ($blockOpen) {
-            $rightpart .= '</table>';
-            $rightpart .= '</details>';
-        }
-
-        // Créer un titre pour le nouveau bloc
-		$rightpart .= '<div class="underbanner clearboth"></div>';
-        $rightpart .= '<details open>';
-        $rightpart .= '<summary>'.($val['label_separation'] ? $langs->trans($val['label_separation']) : $last_label_separation).'</summary>';
-		$rightpart .= '<table class="border tableforfieldview">'."\n";
-        $blockOpen = true;
-    }
-
-	$value = $object->$key;
 
 	$rightpart .= '<tr><td';
 	$rightpart .= ' class="'.(empty($val['tdcss']) ? 'titlefield' : $val['tdcss']).'  fieldname_'.$key;
@@ -252,16 +359,13 @@ foreach ($object->fields as $key => $val) {
 
 
 print '<div class="fichehalfright">';
-// print '<div class="underbanner clearboth"></div>';
+print '<div class="underbanner clearboth"></div>';
 
-// print '<table class="border centpercent tableforfield">';
+print '<table class="border centpercent tableforfield">';
 
 print $rightpart;
 
-if ($blockOpen) {
-	print '</table>';
-	print '</details>';
-}
-
 ?>
+
+
 <!-- END PHP TEMPLATE commonfields_view.tpl.php -->
