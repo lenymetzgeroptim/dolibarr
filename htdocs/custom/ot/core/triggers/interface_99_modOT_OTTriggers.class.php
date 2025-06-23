@@ -53,15 +53,10 @@ class InterfaceOTTriggers extends DolibarrTriggers
     {
         global $db;
 
-        
+        dol_syslog("Trigger action: ".$action, LOG_DEBUG);
 
         if ($action == 'USERHABILITATION_VALIDATE') {
-            
-
-            // Validate object properties
             if (isset($object->fk_user)) {
-                
-                // Fetch all projects where the user is listed as a contact and fk_statut = 1 (open), excluding fk_c_type_contact = 155
                 $sql = "SELECT DISTINCT p.rowid 
                         FROM " . MAIN_DB_PREFIX . "projet AS p
                         INNER JOIN " . MAIN_DB_PREFIX . "element_contact AS ec 
@@ -69,7 +64,6 @@ class InterfaceOTTriggers extends DolibarrTriggers
                         WHERE ec.fk_socpeople = " . intval($object->fk_user) . " 
                           AND p.fk_statut = 1 
                           AND ec.fk_c_type_contact != 155";
-               
 
                 $resql = $db->query($sql);
 
@@ -79,22 +73,15 @@ class InterfaceOTTriggers extends DolibarrTriggers
                         $projects[] = $obj->rowid;
                     }
 
-                   
-
-                    // Generate a new OT for each project
                     foreach ($projects as $projectId) {
                         $this->createOTForProject($projectId, $object->fk_user);
                     }
-                } else {
-                   
                 }
-            } 
+            }
         }
 
         if ($action == 'USERHABILITATION_SUSPEND') {
-            // Validate object properties
             if (isset($object->fk_user)) {
-                // Fetch all projects where the user is listed as a contact and fk_statut = 1 (open), excluding fk_c_type_contact = 155
                 $sql = "SELECT DISTINCT p.rowid 
                         FROM " . MAIN_DB_PREFIX . "projet AS p
                         INNER JOIN " . MAIN_DB_PREFIX . "element_contact AS ec 
@@ -111,7 +98,6 @@ class InterfaceOTTriggers extends DolibarrTriggers
                         $projects[] = $obj->rowid;
                     }
 
-                    // Generate a new OT for each project
                     foreach ($projects as $projectId) {
                         $this->createOTForProject($projectId, $object->fk_user);
                     }
@@ -120,9 +106,7 @@ class InterfaceOTTriggers extends DolibarrTriggers
         }
 
         if ($action == 'USERHABILITATION_UNSUSPEND') {
-            // Validate object properties
             if (isset($object->fk_user)) {
-                // Fetch all projects where the user is listed as a contact and fk_statut = 1 (open), excluding fk_c_type_contact = 155
                 $sql = "SELECT DISTINCT p.rowid 
                         FROM " . MAIN_DB_PREFIX . "projet AS p
                         INNER JOIN " . MAIN_DB_PREFIX . "element_contact AS ec 
@@ -139,7 +123,6 @@ class InterfaceOTTriggers extends DolibarrTriggers
                         $projects[] = $obj->rowid;
                     }
 
-                    // Generate a new OT for each project
                     foreach ($projects as $projectId) {
                         $this->createOTForProject($projectId, $object->fk_user);
                     }
@@ -148,9 +131,7 @@ class InterfaceOTTriggers extends DolibarrTriggers
         }
 
         if ($action == 'USERHABILITATION_DELETE') {
-            // Validate object properties
             if (isset($object->fk_user)) {
-                // Fetch all projects where the user is listed as a contact and fk_statut = 1 (open), excluding fk_c_type_contact = 155
                 $sql = "SELECT DISTINCT p.rowid 
                         FROM " . MAIN_DB_PREFIX . "projet AS p
                         INNER JOIN " . MAIN_DB_PREFIX . "element_contact AS ec 
@@ -167,7 +148,6 @@ class InterfaceOTTriggers extends DolibarrTriggers
                         $projects[] = $obj->rowid;
                     }
 
-                    // Generate a new OT for each project
                     foreach ($projects as $projectId) {
                         $this->createOTForProject($projectId, $object->fk_user);
                     }
@@ -176,9 +156,7 @@ class InterfaceOTTriggers extends DolibarrTriggers
         }
 
         if ($action == 'USERHABILITATION_CLOSE') {
-            // Validate object properties
             if (isset($object->fk_user)) {
-                // Fetch all projects where the user is listed as a contact and fk_statut = 1 (open), excluding fk_c_type_contact = 155
                 $sql = "SELECT DISTINCT p.rowid 
                         FROM " . MAIN_DB_PREFIX . "projet AS p
                         INNER JOIN " . MAIN_DB_PREFIX . "element_contact AS ec 
@@ -195,7 +173,31 @@ class InterfaceOTTriggers extends DolibarrTriggers
                         $projects[] = $obj->rowid;
                     }
 
-                    // Generate a new OT for each project
+                    foreach ($projects as $projectId) {
+                        $this->createOTForProject($projectId, $object->fk_user);
+                    }
+                }
+            }
+        }
+
+        if ($action == 'LINEHABILITATION_DELETE') {
+            if (isset($object->fk_user)) {
+                $sql = "SELECT DISTINCT p.rowid 
+                        FROM " . MAIN_DB_PREFIX . "projet AS p
+                        INNER JOIN " . MAIN_DB_PREFIX . "element_contact AS ec 
+                            ON ec.element_id = p.rowid 
+                        WHERE ec.fk_socpeople = " . intval($object->fk_user) . " 
+                          AND p.fk_statut = 1 
+                          AND ec.fk_c_type_contact != 155";
+
+                $resql = $db->query($sql);
+
+                if ($resql) {
+                    $projects = [];
+                    while ($obj = $db->fetch_object($resql)) {
+                        $projects[] = $obj->rowid;
+                    }
+
                     foreach ($projects as $projectId) {
                         $this->createOTForProject($projectId, $object->fk_user);
                     }
@@ -212,7 +214,6 @@ class InterfaceOTTriggers extends DolibarrTriggers
 
         $project = new Project($db);
         if (!$project->fetch($projectId)) {
-           
             return;
         }
 
@@ -220,7 +221,6 @@ class InterfaceOTTriggers extends DolibarrTriggers
 
         // Fetch project reference
         $sql = "SELECT ref FROM " . MAIN_DB_PREFIX . "projet WHERE rowid = " . intval($projectId);
-       
         $resql = $db->query($sql);
         $projectRef = '';
         if ($resql) {
@@ -233,7 +233,6 @@ class InterfaceOTTriggers extends DolibarrTriggers
         // Generate unique OT reference
         $lastFiveChars = substr($projectRef, -5);
         $sql = "SELECT MAX(indice) as max_indice FROM " . MAIN_DB_PREFIX . "ot_ot WHERE fk_project = " . intval($projectId);
-  
         $resql = $db->query($sql);
         $maxIndice = 0;
         if ($resql) {
@@ -248,13 +247,10 @@ class InterfaceOTTriggers extends DolibarrTriggers
             $sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot 
                     SET status = 2  -- Archived status
                     WHERE fk_project = " . intval($projectId) . " AND indice = " . intval($maxIndice);
-            
             $resql = $db->query($sql);
             if (!$resql) {
-                
                 return;
             }
-        
         }
 
         // Create the new OT
@@ -272,14 +268,10 @@ class InterfaceOTTriggers extends DolibarrTriggers
                     0, 
                     NOW()
                 )";
-        
 
         $resql = $db->query($sql);
         if (!$resql) {
-            
             return;
         }
-
-        
     }
 }
