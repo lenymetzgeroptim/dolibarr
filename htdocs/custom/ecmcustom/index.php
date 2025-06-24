@@ -2,6 +2,8 @@
 /* Copyright (C) 2008-2017 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2008-2010 Regis Houssin        <regis.houssin@inodbox.com>
  *
+ * Copyright (C)2025 Soufiane Fadel <s.fadel@optim-industries.fr>
+ * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
@@ -32,7 +34,8 @@ require_once DOL_DOCUMENT_ROOT.'/custom/ecmcustom/class/ecmdirectory.class.php';
 require_once DOL_DOCUMENT_ROOT.'/ecm/class/ecmdirectory.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/ecmcustom/lib/security.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-
+require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/ecmcustom/lib/email.lib.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("ecm", "companies", "other", "users", "orders", "propal", "bills", "contracts"));
@@ -92,6 +95,7 @@ foreach($usergroups as $usergroup) {
 		$tmpgroup->fetch($usergroup);
 
 		$gusers = $tmpgroup->listUsersForGroup();	
+		
 		foreach($gusers as $key => $guser) {
 			array_push($usersEmail, $guser->firstname.','.$guser->email);
 		}
@@ -128,111 +132,139 @@ $allowsendingmail = (GETPOST('emailing', 'int') ? 1 : 0);
 
 // Upload file (code similar but different than actions_linkedfiles.inc.php)
 if (GETPOST("sendit", 'alphanohtml') && !empty($conf->global->MAIN_UPLOAD_DOC)) {
-	// Define relativepath and upload_dir
-	$relativepath = '';
-	if ($ecmdir->id) {
-		$relativepath = $ecmdir->getRelativePath();
-	} else {
-		$relativepath = $section_dir;
-	}
-	$upload_dir = $conf->ecmcustom->dir_output.'/'.$relativepath;
+    // Le chemin de destination
+    $relativepath = $ecmdir->id ? $ecmdir->getRelativePath() : $section_dir;
+    $upload_dir = $conf->ecmcustom->dir_output . '/' . $relativepath;
+	
+    // Préparation des fichiers utilisateurs
+    $userfiles = is_array($_FILES['userfile']['tmp_name']) ? $_FILES['userfile']['tmp_name'] : array($_FILES['userfile']['tmp_name']);
+    $errors = 0;
+	
+    foreach ($userfiles as $key => $userfile) {
+        if (empty($userfile)) {
+            $errors++;
+            $errorCode = $_FILES['userfile']['error'][$key];
+            $msg = ($errorCode == 1 || $errorCode == 2)
+                ? $langs->trans('ErrorFileSizeTooLarge')
+                : $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("File"));
+            setEventMessages($msg, null, 'errors');
+        }
+    }
 
-	if (is_array($_FILES['userfile']['tmp_name'])) {
-		$userfiles = $_FILES['userfile']['tmp_name'];
-	} else {
-		$userfiles = array($_FILES['userfile']['tmp_name']);
-	}
+    if (!$errors) {
+        // Upload les fichiers
+        $generatethumbs = 0;
+        $res = dol_add_file_process($upload_dir, 0, 1, 'userfile', '', null, '', $generatethumbs);
 
-	foreach ($userfiles as $key => $userfile) {
-		if (empty($_FILES['userfile']['tmp_name'][$key])) {
-			$error++;
-			if ($_FILES['userfile']['error'][$key] == 1 || $_FILES['userfile']['error'][$key] == 2) {
-				setEventMessages($langs->trans('ErrorFileSizeTooLarge'), null, 'errors');
-			} else {
-				setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("File")), null, 'errors');
+        // Liste des fichiers uploadés
+        $listofpaths = dol_dir_list($upload_dir, "files", 0); // 0 pour non récursif
+		$foldername = rtrim($section_dir, '/');
+
+		foreach ($listofpaths as $key => $file) {
+			if ($file['name'] != '.' && $file['name'] != '..' && !preg_match('/\.meta$/i', $file['name'])) {
+				if (strpos($file['name'], '_rapport_emails_') !== false) {
+					$rapportFiles[$key] = $file;
+				} else {
+					$normalFiles[$key] = $file;
+				}
 			}
 		}
-	}
 
-	if (!$error) {
-		$generatethumbs = 0;
-		$res = dol_add_file_process($upload_dir, 0, 1, 'userfile', '', null, '', $generatethumbs);
-		if ($res > 0) {
+		$number = count($normalFiles); // nombre réel de fichiers uploadés
+        $ecmdir->changeNbOfFiles($number); // met à jour la base
 		
-			//$result = $ecmdir->changeNbOfFiles('+');
-			//notification sending email if files are uploaded
-			$listofpaths = dol_dir_list($upload_dir, "files", 0, '', '', 'date', (strtolower($sortorder) == 'desc' ?SORT_DESC:SORT_ASC), 0);
-			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-			$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-			
-			$filesname = array();
-			$lastfiles = array();
-			$foldersname = array();
-			$folders = array();
-			$multiplefiles = array();
-				foreach ($listofpaths as $key => $val) {
-					$number += sizeof($listofpaths[$key]['name']);
-					$result = $ecmdir->changeNbOfFiles($number);
-				}
+        // Préparation les liens de téléchargement
+        $urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
+        $urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
 
-			$foldername = substr($section_dir, 0, -1);
-			//remove extensions to include files lists sent in email message with link to files
-			$info = array();
-			$filesname = $_FILES['userfile']['name'];
-			array_unique($filesname);
-			array_filter($filesname);
-				foreach($filesname as $file) {
-					//$folders = explode('/var/www/clients/client0/web6/web/erp/documents/ecmcustom/', $upload_dir.htmlentities($file));
-					$file = htmlentities($file, ENT_NOQUOTES, 'utf-8');
-					$file = preg_replace('#&([A-za-z])(?:acute|cedil|caron|circ|grave|orn|ring|slash|th|tilde|uml);#', '\1', $file);
-					$info = pathinfo($file);
-					foreach($info as $key => $val) { 
-						$lastfiles[] = ''.$info['filename'].' ==> <strong> Télécharger</strong> <a href="'.$urlwithroot.'/document.php?modulepart=ecmcustom&attachment=1&file='.rawurlencode($section_dir).rawurlencode($file).'"> ici.</a>';
-					}	
-					
-				}
+        // $foldername = rtrim($section_dir, '/');
+		
+        $filesname = array_filter(array_unique($_FILES['userfile']['name']));
+        $lastfiles = [];
+
+        foreach ($filesname as $file) {
+            // Nettoyage nom
+            $safeFile = htmlentities($file, ENT_NOQUOTES, 'utf-8');
+            $safeFile = preg_replace('#&([A-za-z])(?:acute|cedil|caron|circ|grave|orn|ring|slash|th|tilde|uml);#', '\1', $safeFile);
+            $info = pathinfo($safeFile);
+            $filename = dol_sanitizeFileName($safeFile);
+
+			$fullpath = DOL_DATA_ROOT . '/ecmcustom/' . $section_dir . $filename;
 			
-			$link = '<a href="'.$urlwithroot.'/custom/ecmcustom/index.php?uploadform=1"> ici.</a>';
-			$logo = $urlwithroot.'/viewimage.php?modulepart=mycompany&file=logos%2Fthumbs%2FLogoOptim_FdBlancCroppe_25%25_small.jpg';
-			//email headers
-			$subject = '[OPTIM Industries] Notification automatique (nouveaux documents dans '.$foldername.')';
-			$trackid = 'mem'.$section;
-			$replyto = 'no-reply@optim-industries.fr';
-			//email message to send with dynamic names 
-			if($allowsendingmail === 1) {
-			foreach($senders as $email => $name) {
-					$sendto = $email;
-					$msgishtml = '<br><br>Bonjour '.$name.', <br><br>Des nouveaux fichiers (ajoutés par '.$editor.') sont disponibles dans le répertoire « '.$foldername.' » <br><ul><li>'.implode("<br><li>", array_unique(array_filter($lastfiles))).'</li></ul>';
-					$msgishtml .= '<br>Pour les consulter sur l\'erp, veuillez cliquer '.$link.'<br>';
-					$msgishtml .= '<br>Cordialement,<br><br><br><div><img src="'.$logo.'"></div>';
-					$message = $msgishtml;
-					$mailfile = new CMailFile($subject,$sendto,$replyto,$message,$arr_file, $arr_mime, $arr_name,$cc,$ccc,$deliveryreceipt,$msgishtml,$errors_to,$css,$trackid,$moreinheader,$sendcontext);
-					$mailfile->sendfile(); 
-				}
-			}
+            // Lien téléchargement
+            $downloadlink = $urlwithroot . '/document.php?modulepart=ecmcustom&attachment=1&file=' . rawurlencode($section_dir . $filename);
+            $lastfiles[] = $info['filename'] . ' ==> <strong>Télécharger</strong> <a href="' . $downloadlink . '"> ici.</a>';
+        }
+
+		var_dump($fullpath);
+		if (file_exists($fullpath)) {
+			var_dump($fullpath);
 		}
-	}
-}
+		// Envoi d'email
+        if ($allowsendingmail === 1 && !empty($conf->global->MAIN_UPLOAD_DOC)) {
+            $emailLogs = send_bulk_emails($senders, $foldername, $filesname, $downloadlink, $lastfiles);
+        }
+		
+		foreach ($filesname as $file) {
+			$safeFile = dol_sanitizeFileName($file);
+			$info = pathinfo($safeFile);
+			$filenameWithExt = $info['basename'];
+			$fullFilePath = $upload_dir . '/' . $safeFile;
 
+			// // Filtrer les logs pour ce fichier
+			$logsForThisFile = array_filter($emailLogs, function ($log) use ($safeFile) {
+				return strpos($log['file'], $safeFile) !== false;
+			});
+			
+			if (empty($logsForThisFile)) continue;
+			// var_dump($info);
+			// Nom du fichier PDF
+			$pdfname = $filenameWithExt . '_rapport_emails_' . date('Ymd_His') . '.pdf';
+			$pdfpath = $upload_dir . '/' . $pdfname;
+
+			$reportData = generateEmailReportPDF($upload_dir, $foldername, $safeFile, $logsForThisFile, $user, $langs, $mysoc, $conf);
+		}
+		
+    }
+}
   
 // Remove file (code similar but different than actions_linkedfiles.inc.php)
 if ($action == 'confirm_deletefile') {
-	if (GETPOST('confirm') == 'yes') {
-		// GETPOST('urlfile','alpha') is full relative URL from ecm root dir. Contains path of all sections.
-		$upload_dir = $conf->ecmcustom->dir_output.($relativepath ? '/'.$relativepath : '');
-		$file = $upload_dir."/".GETPOST('urlfile', 'alpha');
-		$ret = dol_delete_file($file); // This include also the delete from file index in database.
+    if (GETPOST('confirm', 'alpha') == 'yes') {
+        $filesParam = GETPOST('urlfile', 'alpha');
+        $filesToDelete = [];
+
+        if (!empty($filesParam)) {
+            $paths = explode('||', $filesParam);
+            foreach ($paths as $path) {
+                $filesToDelete[] = $conf->ecmcustom->dir_output . '/' . $path;
+            }
+        }
+
+        $baseDir = DOL_DATA_ROOT . '/ecmcustom/'; 
+		$foldername = '';
+		$filenames = [];
+
+		foreach ($filesToDelete as $file) {
+			$relativePath = str_replace($baseDir, '', $file);
+			$foldername = dirname($relativePath);                   
+			$filename = basename($relativePath);                    
+			$filenames[] = $filename;
+			$ret = dol_delete_file($file);
+		}
+			
 		if ($ret) {
 			$urlfiletoshow = GETPOST('urlfile', 'alpha');
 			$urlfiletoshow = preg_replace('/\.noexe$/', '', $urlfiletoshow);
 			setEventMessages($langs->trans("FileWasRemoved", $urlfiletoshow), null, 'mesgs');
 			$result = $ecmdir->changeNbOfFiles('-');
+			delete_unsent_email_files($filenames, $foldername);
 		} else {
 			setEventMessages($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile', 'alpha')), null, 'errors');
 		}
-
 		clearstatcache();
 	}
+		
 	$action = 'file_manager';
 }
 

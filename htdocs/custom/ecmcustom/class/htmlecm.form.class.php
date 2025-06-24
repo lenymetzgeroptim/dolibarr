@@ -192,6 +192,7 @@ class FormEcm extends FormFile
 		if (!empty($reshook)) { // null or '' for bypass
 			return $reshook;
 		} else {
+			
 			if (!is_object($form)) {
 				include_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php'; // The compoent may be included into ajax page that does not include the Form class
 				$form = new Form($this->db);
@@ -262,6 +263,8 @@ class FormEcm extends FormFile
 			print_liste_field_titre('Documents2', $url, "name", "", $param, '', $sortfield, $sortorder, 'left ');
 			print_liste_field_titre('Size', $url, "size", "", $param, '', $sortfield, $sortorder, 'right ');
 			print_liste_field_titre('Date', $url, "date", "", $param, '', $sortfield, $sortorder, 'center ');
+			print_liste_field_titre('');
+			print_liste_field_titre('Rapport email', $url, "attachments", "", $param, '', $sortfield, $sortorder, 'right');
 			if (empty($useinecm) || $useinecm == 4 || $useinecm == 5 || $useinecm == 6) {
 				print_liste_field_titre('', $url, "", "", $param, '', $sortfield, $sortorder, 'center '); // Preview
 			}
@@ -292,7 +295,25 @@ class FormEcm extends FormFile
 			$i = 0;
 			$nboflines = 0;
 			$lastrowid = 0;
-			foreach ($filearray as $key => $file) {      // filearray must be only files here
+			$modulepart = 'ecmcustom';
+			$dir = 'emailsent/';
+			if (!dol_is_dir($dir)) dol_mkdir($dir);
+			global $conf;
+			// Séparation des fichiers
+			foreach ($filearray as $key => $file) {
+				if ($file['name'] != '.' && $file['name'] != '..' && !preg_match('/\.meta$/i', $file['name'])) {
+					if (strpos($file['name'], '_rapport_emails_') !== false) {
+						$rapportFiles[$key] = $file;
+					} else {
+						$normalFiles[$key] = $file;
+					}
+				}
+			}
+
+			// Réinitialisation des compteurs
+			$i = 0;
+			$nboflines = 0;
+			foreach ($normalFiles as $key => $file) {      // filearray must be only files here
 				if ($file['name'] != '.'
 						&& $file['name'] != '..'
 						&& !preg_match('/\.meta$/i', $file['name'])) {
@@ -300,6 +321,18 @@ class FormEcm extends FormFile
 						$lastrowid = $filearray[$key]['rowid'];
 					}
 					$filepath = $relativepath.$file['name'];
+					
+					foreach ($rapportFiles as $rapportFile) {
+						if (strpos($rapportFile['name'], $baseName . '_rapport_emails_') !== false) {
+							if (preg_match('/_rapport_emails_(\d{8}_\d{6})\.pdf$/', $rapportFile['name'], $matches)) {
+								$fileDate = $matches[1];
+								if ($fileDate > $latestRapportDate) {
+										$latestRapportDate = $fileDate;
+										$latestRapportFile = $rapportFile;
+								}
+							}
+						}
+					}
 
 					$editline = 0;
 					$nboflines++;
@@ -390,11 +423,51 @@ class FormEcm extends FormFile
 						} else {
 							print '&nbsp;';
 						}
+						
 						print '</td>';
-					}
+						
+						print '<td class="center" style="width: 140px">';
+							$baseName = $file['name'];
+							// var_dump($baseName);
+							$rapportFound = false;
 
+							$latestRapportFile = null;
+							$latestRapportDate = '00000000_000000';
+
+							foreach ($rapportFiles as $rapportFile) {
+								if (strpos($rapportFile['name'], $baseName . '_rapport_emails_') !== false) {
+									if (preg_match('/_rapport_emails_(\d{8}_\d{6})\.pdf$/', $rapportFile['name'], $matches)) {
+										$fileDate = $matches[1];
+										if ($fileDate > $latestRapportDate) {
+											$latestRapportDate = $fileDate;
+											$latestRapportFile = $rapportFile;
+										}
+									}
+								}
+							}
+
+							// Affichage du rapport le plus récent
+							if ($latestRapportFile) {
+								$previewUrl = DOL_URL_ROOT . '/document.php?modulepart=' . $modulepart . '&attachment=0&file=' . urlencode($relativepath . $latestRapportFile['name']) . '&entity=' . $conf->entity;
+
+								print '<a href="' . $previewUrl . '" download style="display: inline-block; margin-bottom: 4px;" title="Télécharger le rapport d’envoi">';
+								print '<i class="fa fa-file-pdf" style="color: darkred; font-size: 16px;"></i>';
+								print '</a>';
+
+								print '<a class="pictopreview documentpreview" href="' . $previewUrl . '" mime="application/pdf" target="_blank">';
+								print '<span class="fa fa-search-plus pictofixedwidth" style="color: gray"></span>';
+								print '</a>';
+							}
+
+
+							if (!$rapportFound) print '&nbsp;';
+						print '</td>';
+						
+					}
+					print '<td></td>';
 					// Shared or not - Hash of file
 					print '<td class="center">';
+				
 					if ($relativedir && $filearray[$key]['rowid'] > 0) {	// only if we are in a mode where a scan of dir were done and we have id of file in ECM table
 						if ($editline) {
 							print '<label for="idshareenabled'.$key.'">'.$langs->trans("FileSharedViaALink").'</label> ';
@@ -474,7 +547,24 @@ class FormEcm extends FormFile
 							if (!empty($conf->global->MAIN_ECM_DISABLE_JS)) {
 								$useajax = 0;
 							}
-							print '<a href="'.((($useinecm && $useinecm != 6) && $useajax) ? '#' : ($url.'?action=delete&token='.newToken().'&urlfile='.urlencode($filepath).$param)).'" class="reposition deletefilelink" rel="'.$filepath.'">'.img_delete().'</a>';
+						if ($latestRapportFile) {
+								// Construction du lien avec les deux fichiers à supprimer
+								$combinedFiles = $relativepath . $latestRapportFile['name'] . '||' . $filepath;
+
+								$deleteBothUrl = (($useinecm && $useinecm != 6) && $useajax)
+									? '#'
+									: $url . '?action=confirm_deletefile'
+										. '&confirm=yes' 
+										. '&token=' . newToken()
+										. '&urlfile=' . urlencode($combinedFiles)
+										. $param;
+
+								print '<a href="' . $deleteBothUrl . '" class="deletefilelink" rel="' . dol_escape_htmltag($combinedFiles) . '" title="Supprimer le fichier et son rapport">'
+									. img_delete()
+									. '</a>';
+							}else {
+								print '<a href="'.((($useinecm && $useinecm != 6) && $useajax) ? '#' : ($url.'?action=delete&token='.newToken().'&urlfile='.urlencode($filepath).$param)).'" class="reposition deletefilelink" rel="'.$filepath.'">'.img_delete().'</a>';
+							}
 						}
 						print "</td>";
 
@@ -508,6 +598,7 @@ class FormEcm extends FormFile
 					$i++;
 				}
 			}
+			
 			if ($nboffiles == 0) {
 				$colspan = '6';
 				if (empty($disablemove)) {
