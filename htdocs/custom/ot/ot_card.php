@@ -1334,7 +1334,7 @@ if ($resql) {
     }
 }
 
-// Fusionner les sous-traitants provenant du projet avec ceux de la base de données
+// Ajouter les sous-traitants provenant du projet avec ceux de la base de données
 $allSubcontractors = $subcontractorsFromDB;
 
 // Ajouter les sous-traitants provenant du projet qui ne sont pas encore dans la base de données
@@ -2108,6 +2108,7 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
         titleInput.value = cell.title;
 
         const nameDropdown = card.querySelector(".name-dropdown");
+        nameDropdown.innerHTML = userOptions; // Use filtered project users
 
         if (cell.userId) {  
             const userId = cell.userId;  
