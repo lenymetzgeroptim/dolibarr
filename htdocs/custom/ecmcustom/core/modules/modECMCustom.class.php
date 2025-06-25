@@ -121,6 +121,13 @@ class modECMCustom extends DolibarrModules
 		$this->rights[$r][4] = 'delete';
 
 		$r++;
+		$this->rights[$r][0] = 2535;
+		$this->rights[$r][1] = 'Lire les rapports des emails envoyés';
+		$this->rights[$r][2] = 'w';
+		$this->rights[$r][3] = 0;
+		$this->rights[$r][4] = 'read_report_email';
+
+		$r++;
 		$this->rights[$r][0] = 2515;
 		$this->rights[$r][1] = 'Administer directories of documents';
 		$this->rights[$r][2] = 'w';

@@ -264,7 +264,9 @@ class FormEcm extends FormFile
 			print_liste_field_titre('Size', $url, "size", "", $param, '', $sortfield, $sortorder, 'right ');
 			print_liste_field_titre('Date', $url, "date", "", $param, '', $sortfield, $sortorder, 'center ');
 			print_liste_field_titre('');
-			print_liste_field_titre('Rapport email', $url, "attachments", "", $param, '', $sortfield, $sortorder, 'right');
+			if($user->rights->ecmcustom->read_report_email) {
+				print_liste_field_titre('Rapport email', $url, "attachments", "", $param, '', $sortfield, $sortorder, 'right');
+			}
 			if (empty($useinecm) || $useinecm == 4 || $useinecm == 5 || $useinecm == 6) {
 				print_liste_field_titre('', $url, "", "", $param, '', $sortfield, $sortorder, 'center '); // Preview
 			}
@@ -425,7 +427,7 @@ class FormEcm extends FormFile
 						}
 						
 						print '</td>';
-						
+						if($user->rights->ecmcustom->read_report_email) {
 						print '<td class="center" style="width: 140px">';
 							$baseName = $file['name'];
 							// var_dump($baseName);
@@ -459,9 +461,9 @@ class FormEcm extends FormFile
 								print '</a>';
 							}
 
-
 							if (!$rapportFound) print '&nbsp;';
-						print '</td>';
+							print '</td>';	
+						}
 						
 					}
 					print '<td></td>';
@@ -593,6 +595,7 @@ class FormEcm extends FormFile
 							print '<td class="right"></td>';
 						}
 					}
+					
 					print "</tr>\n";
 
 					$i++;
