@@ -59,8 +59,8 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 
 	if($objectlink->element == 'action' && $objectlink->date_creation > 0) {
 		echo '<td class="linkedcol-date">'.dol_print_date($objectlink->date_creation, 'day').'</td>';
-	}elseif($objectlink->element == 'constat' && $objectlink->emetteur_date > 0){
-		echo '<td class="linkedcol-date">'.dol_print_date($objectlink->emetteur_date, 'day').'</td>';
+	}elseif($objectlink->element == 'constat' && $objectlink->dateEmeteur > 0){
+		echo '<td class="linkedcol-date">'.dol_print_date($objectlink->dateEmeteur, 'day').'</td>';
 	}else{
 		echo '<td class="linkedcol-date"></td>';
 	}

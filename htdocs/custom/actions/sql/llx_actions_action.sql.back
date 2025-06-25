@@ -26,7 +26,7 @@ CREATE TABLE llx_actions_action(
 	alert method, 
 	solde method, 
 	origins integer NOT NULL, 
-	label varchar(255), 
+	reference varchar(255), 
 	action_sse integer NOT NULL, 
 	action_rp integer NOT NULL, 
 	action_surete integer NOT NULL, 
