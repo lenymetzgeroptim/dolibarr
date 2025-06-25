@@ -35,7 +35,7 @@
 //if (! defined('NOREQUIREAJAX'))            define('NOREQUIREAJAX', '1');       	  	// Do not load ajax.lib.php library
 //if (! defined("NOLOGIN"))                  define("NOLOGIN", '1');					// If this page is public (can be called outside logged session). This include the NOIPCHECK too.
 //if (! defined('NOIPCHECK'))                define('NOIPCHECK', '1');					// Do not check IP defined into conf $dolibarr_main_restrict_ip
-//if (! defined("MAIN_LANG_DEFAULT"))        define('MAIN_LANG_DEFAULT', 'auto');					// Force lang to a particular value
+//if (! defined("MAIN_LANG_DEFAULT"))        define("MAIN_LANG_DEFAULT", 'auto');					// Force lang to a particular value
 //if (! defined("MAIN_AUTHENTICATION_MODE")) define('MAIN_AUTHENTICATION_MODE', 'aloginmodule');	// Force authentication handler
 //if (! defined("MAIN_SECURITY_FORCECSP"))   define('MAIN_SECURITY_FORCECSP', 'none');	// Disable all Content Security Policies
 //if (! defined('CSRFCHECK_WITH_TOKEN'))     define('CSRFCHECK_WITH_TOKEN', '1');		// Force use of CSRF protection with tokens even for GET
@@ -308,6 +308,28 @@ if ($object->ismultientitymanaged == 1) {
 	$sql .= " WHERE t.entity IN (".getEntity($object->element, (GETPOST('search_current_entity', 'int') ? 0 : 1)).")";
 } else {
 	$sql .= " WHERE 1 = 1";
+}
+
+
+// Modifier la requête SQL pour appliquer les filtres correctement
+ // Filtrer uniquement les OTs validés
+
+// Inclure les conditions basées sur les contacts du projet et le rôle de chef de projet
+if (!$user->rights->ot->ot->showallot){
+	$sql .= " AND (
+		t.fk_project IN (
+			SELECT ec.element_id 
+			FROM " . MAIN_DB_PREFIX . "element_contact AS ec 
+			WHERE ec.fk_socpeople = " . $user->id . "
+			AND t.status = 1
+		) 
+		OR t.fk_project IN (
+			SELECT ec.element_id 
+			FROM " . MAIN_DB_PREFIX . "element_contact AS ec 
+			WHERE ec.fk_socpeople = " . $user->id . "
+			AND ec.fk_c_type_contact = 160
+		) 
+	)";
 }
 foreach ($search as $key => $val) {
 	if (array_key_exists($key, $object->fields)) {

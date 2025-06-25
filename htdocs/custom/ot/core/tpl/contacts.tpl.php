@@ -63,6 +63,36 @@ if ($action == 'addcontact') {
             $db->query($sql);
         }
     }
+
+    // Ajouter un script pour afficher la popup pour créer un OT après l'ajout d'un utilisateur
+    print '<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var popup = document.createElement("div");
+            popup.style.position = "fixed";
+            popup.style.top = "50%";
+            popup.style.left = "50%";
+            popup.style.transform = "translate(-50%, -50%)";
+            popup.style.backgroundColor = "#fff";
+            popup.style.border = "1px solid #ccc";
+            popup.style.padding = "20px";
+            popup.style.zIndex = "1000";
+            popup.innerHTML = `
+                <h3>'.$langs->trans('Créer un OT').'</h3>
+                <p>'.$langs->trans('Voulez-vous créer un OT pour ce projet ?').'</p>
+                <button type="button" id="confirmCreateOT" class="button">'.$langs->trans('Confirmer').'</button>
+                <button type="button" id="cancelCreateOT" class="button">'.$langs->trans('Annuler').'</button>
+            `;
+            document.body.appendChild(popup);
+
+            document.getElementById("confirmCreateOT").addEventListener("click", function() {
+                window.location.href = "'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create_ot_from_button&token='.newToken().'";
+            });
+
+            document.getElementById("cancelCreateOT").addEventListener("click", function() {
+                document.body.removeChild(popup);
+            });
+        });
+    </script>';
 }
 
 if (empty($preselectedtypeofcontact)) {
@@ -336,6 +366,14 @@ $param = 'id='.$object->id.'&mainmenu=home';
  * Show list
  */
 
+// Ajout du bouton pour créer une OT
+if ($permission) {
+    require_once DOL_DOCUMENT_ROOT.'/custom/ot/class/actions_ot.class.php';
+    $actionsOT = new ActionsOT($db);
+    $actionsOT->formContactTpl(array(), $object, $action, $hookmanager);
+}
+
+
 
 print '<form method="POST" id="searchFormList" action="'.$_SERVER["PHP_SELF"].'">';
 print '<input type="hidden" name="token" value="'.newToken().'">';
@@ -411,11 +449,5 @@ print '</div>';
 
 print "</form>";
 
-// Ajout du bouton pour créer une OT
-if ($permission) {
-    require_once DOL_DOCUMENT_ROOT.'/custom/ot/class/actions_ot.class.php';
-    $actionsOT = new ActionsOT($db);
-    $actionsOT->formContactTpl(array(), $object, $action, $hookmanager);
-}
 
 print "<!-- END PHP TEMPLATE CONTACTS -->\n";

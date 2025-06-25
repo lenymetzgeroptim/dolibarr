@@ -74,15 +74,8 @@ class ActionsOT
     {
         global $langs, $user;
 
-
-        // Ajouter un bouton pour créer un OT
-
-            print dolGetButtonAction('', $langs->trans('Créer un OT'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create_ot_from_button&token='.newToken(), '');
-     
-
-        // Gérer l'action de création d'OT via le bouton
+        // Gérer l'action de création d'OT via l'ajout de contact
         if ($action == 'create_ot_from_button') {
-            // Appeler la fonction pour créer l'OT
             $this->createOTForProject($object);
         }
     }

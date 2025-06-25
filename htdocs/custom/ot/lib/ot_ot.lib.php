@@ -46,12 +46,12 @@ function otPrepareHead($object)
 	$head[$h][2] = 'card';
 	$h++;
 
-	if ($showtabofpagecontact) {
+	/*if ($showtabofpagecontact) {
 		$head[$h][0] = dol_buildpath("/ot/ot_contact.php", 1).'?id='.$object->id;
 		$head[$h][1] = $langs->trans("Contacts");
 		$head[$h][2] = 'contact';
 		$h++;
-	}
+	}*/
 
 	if ($showtabofpagenote) {
 		if (isset($object->fields['note_public']) || isset($object->fields['note_private'])) {
@@ -87,12 +87,12 @@ function otPrepareHead($object)
 		$h++;
 	}
 
-	if ($showtabofpageagenda) {
+	/*if ($showtabofpageagenda) {
 		$head[$h][0] = dol_buildpath("/ot/ot_agenda.php", 1).'?id='.$object->id;
 		$head[$h][1] = $langs->trans("Events");
 		$head[$h][2] = 'agenda';
 		$h++;
-	}
+	}*/
 
 	// Show more tabs from modules
 	// Entries must be declared in modules descriptor with line

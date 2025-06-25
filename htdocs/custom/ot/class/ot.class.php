@@ -1249,6 +1249,56 @@ class Ot extends CommonObject
 		
 	}
 
+	/**
+	 * Vérifie si l'utilisateur est dans les contacts du projet de l'OT.
+	 *
+	 * @param int $userId ID de l'utilisateur
+	 * @return bool True si l'utilisateur est dans les contacts, False sinon
+	 */
+	public function isUserInProjectContacts($userId)
+	{
+		global $db;
+
+		$sql = "SELECT COUNT(*) as count 
+				FROM " . MAIN_DB_PREFIX . "element_contact AS ec 
+				WHERE ec.element_id = " . intval($this->fk_project) . " 
+				AND ec.fk_socpeople = " . intval($userId);
+
+		$resql = $db->query($sql);
+		if ($resql) {
+			$obj = $db->fetch_object($resql);
+			return $obj->count > 0;
+		} else {
+			dol_print_error($db);
+			return false;
+		}
+	}
+
+	/**
+	 * Vérifie si l'utilisateur est dans les contacts du projet de l'OT et qu'il est un chef de projet.
+	 *
+	 * @param int $userId ID de l'utilisateur
+	 * @return bool True si l'utilisateur est un chef de projet, False sinon
+	 */
+	public function isUserProjectManager($userId)
+	{
+		global $db;
+
+		$sql = "SELECT COUNT(*) as count 
+				FROM " . MAIN_DB_PREFIX . "element_contact AS ec 
+				WHERE ec.element_id = " . intval($this->fk_project) . " 
+				AND ec.fk_socpeople = " . intval($userId) . " 
+				AND ec.fk_c_type_contact = 160"; // 160 correspond au rôle de chef de projet
+
+		$resql = $db->query($sql);
+		if ($resql) {
+			$obj = $db->fetch_object($resql);
+			return $obj->count > 0;
+		} else {
+			dol_print_error($db);
+			return false;
+		}
+	}
 
 
 

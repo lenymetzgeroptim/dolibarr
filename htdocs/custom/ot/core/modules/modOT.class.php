@@ -285,6 +285,13 @@ class modOT extends DolibarrModules
 		$this->rights[$r][4] = 'ot';
 		$this->rights[$r][5] = 'delete';
 		$r++;
+
+
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
+		$this->rights[$r][1] = 'Affiché tout les ot ';
+		$this->rights[$r][4] = 'ot';
+		$this->rights[$r][5] = 'showallot';
+		$r++;
 		
 		/* END MODULEBUILDER PERMISSIONS */
 

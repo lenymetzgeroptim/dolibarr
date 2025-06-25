@@ -97,6 +97,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/ot/class/ot.class.php';
 
 
 dol_include_once('/ot/class/ot.class.php');
@@ -126,13 +127,14 @@ if (!empty($backtopagejsfields)) {
 
 // Initialize technical objects
 $object = new Ot($db);
+$object->fetch($id);
+
+// Check user permissions based on project contacts
+$isUserInContacts = $object->isUserInProjectContacts($user->id);
+$isUserManager = $object->isUserProjectManager($user->id);
+
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->ot->dir_output.'/temp/massgeneration/'.$user->id;
-$hookmanager->initHooks(array('otcard', 'globalcard'));
-
-// Fetch optionals attributes and labels
-$extrafields->fetch_name_optionals_label($object->table_element);
-
 $search_array_options = $extrafields->getOptionalsFromPost($object->table_element, '', 'search_');
 
 // Initialize array of search criterias
@@ -956,32 +958,41 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}
 			*/
 
-			// Back to draft
-			if ($object->status == $object::STATUS_VALIDATED) {
-				print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
-			}
+            // Back to draft
+            if ($isUserInContacts && $isUserManager) {
+                if ($object->status == $object::STATUS_VALIDATED) {
+                    print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
+                }
+            }   
 
-			print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
+            //Modify
+            if ($isUserInContacts && $isUserManager) {
+			    print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
+            }
 
 			// Validate
-			if ($object->status == $object::STATUS_DRAFT) {
-				if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-					print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				} else {
-					$langs->load("errors");
-					print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
-				}
-			}
+            if ($isUserInContacts && $isUserManager) {
+                if ($object->status == $object::STATUS_DRAFT) {
+                    if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
+                        print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
+                    } else {
+                        $langs->load("errors");
+                        print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
+                    }
+                }
+            }
+            
+            // Archive
+            if ($isUserInContacts && $isUserManager) {     
+                if ($object->status == $object::STATUS_VALIDATED) {
+                    print dolGetButtonAction('', $langs->trans('Archiver'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_archive&confirm=yes&token='.newToken(), '', $permissiontoadd);
+                }
+            }
 
-			// Archive
-			if ($object->status == $object::STATUS_VALIDATED) {
-				print dolGetButtonAction('', $langs->trans('Archiver'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_archive&confirm=yes&token='.newToken(), '', $permissiontoadd);
-			}
-
-			//généré pdf constat
-			
-            print dolGetButtonAction('', $langs->trans('généré PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
-                
+            //généré pdf constat
+            if ($isUserInContacts && $isUserManager) {
+                print dolGetButtonAction('', $langs->trans('généré PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
+            }  
                 /*//passé au  Status Cancel
                 if ($user->rights->constat->constat->ResponsableQ3SE) {
                     if ($object->status == $object::STATUS_EN_COURS) {
