@@ -186,7 +186,7 @@ $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('constat', 'constat', 'read');
 	$permissiontoadd = $user->hasRight('constat', 'constat', 'write');
@@ -344,61 +344,67 @@ foreach ($search as $key => $val) {
     }
 }
 
-$sql .= " AND (
-    (
-        NOT EXISTS (
-            SELECT 1 
-            FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug 
-            WHERE ug.fk_user = " . $user->id . " 
-              AND ug.fk_usergroup = 9
-        )
-        AND (
-            t.fk_project IS NULL 
-            OR t.fk_project IN (
-                SELECT ec.element_id 
-                FROM " . MAIN_DB_PREFIX . "element_contact AS ec 
-                WHERE ec.fk_socpeople = " . $user->id . " 
-                  AND ec.fk_c_type_contact IN (160, 161, 170, 171)
-            )
-            OR t.fk_user_creat = " . $user->id . "
-            OR EXISTS (
-                SELECT 1
-                FROM " . MAIN_DB_PREFIX . "user AS u
-                JOIN " . MAIN_DB_PREFIX . "usergroup_user AS g ON u.rowid = g.fk_user
-                JOIN " . MAIN_DB_PREFIX . "usergroup_rights AS r ON g.fk_usergroup = r.fk_usergroup
-                WHERE r.fk_id IN (50002907, 50002906, 50002905)
-                  AND u.statut = 1
-                  AND u.rowid = " . $user->id . "
-            )
-            OR EXISTS (
-                SELECT 1
-                FROM " . MAIN_DB_PREFIX . "user_rights AS ur
-                WHERE ur.fk_user = " . $user->id . "
-                  AND ur.fk_id IN (50002907, 50002906, 50002905)
-            )
-        )
-    )
-    OR (
-		EXISTS (
-			SELECT 1
-			FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug
-			WHERE ug.fk_user = " . $user->id . "
-			AND ug.fk_usergroup = 9
-		)
-		OR t.fk_user_creat = " . $user->id . "
-		AND t.fk_project IS NOT NULL 
-		AND EXISTS (
-			SELECT 1
-			FROM " . MAIN_DB_PREFIX . "projet_extrafields AS pe
-			WHERE pe.fk_object = t.fk_project
-			AND pe.agenceconcerne IN (
-				SELECT sc.fk_soc
-				FROM " . MAIN_DB_PREFIX . "societe_commerciaux AS sc
-				WHERE sc.fk_user = " . $user->id . "
-			)
-		)
-	)
-)";
+$projet = new Project($db);
+$liste_projet = $projet->getProjectsAuthorizedForUser($user, 1, 1, 0, ' AND ec.fk_c_type_contact = 160');
+if(!$user->hasRight('constat', 'constat', 'readall')) {
+	$sql .= " AND (t.fk_user_creat = $user->id OR t.fk_user = $user->id OR t.fk_project IN ($liste_projet))";
+}
+
+// $sql .= " AND (
+//     (
+//         NOT EXISTS (
+//             SELECT 1 
+//             FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug 
+//             WHERE ug.fk_user = " . $user->id . " 
+//               AND ug.fk_usergroup = 9
+//         )
+//         AND (
+//             t.fk_project IS NULL 
+//             OR t.fk_project IN (
+//                 SELECT ec.element_id 
+//                 FROM " . MAIN_DB_PREFIX . "element_contact AS ec 
+//                 WHERE ec.fk_socpeople = " . $user->id . " 
+//                   AND ec.fk_c_type_contact IN (160, 161, 170, 171)
+//             )
+//             OR t.fk_user_creat = " . $user->id . "
+//             OR EXISTS (
+//                 SELECT 1
+//                 FROM " . MAIN_DB_PREFIX . "user AS u
+//                 JOIN " . MAIN_DB_PREFIX . "usergroup_user AS g ON u.rowid = g.fk_user
+//                 JOIN " . MAIN_DB_PREFIX . "usergroup_rights AS r ON g.fk_usergroup = r.fk_usergroup
+//                 WHERE r.fk_id IN (50002907, 50002906, 50002905)
+//                   AND u.statut = 1
+//                   AND u.rowid = " . $user->id . "
+//             )
+//             OR EXISTS (
+//                 SELECT 1
+//                 FROM " . MAIN_DB_PREFIX . "user_rights AS ur
+//                 WHERE ur.fk_user = " . $user->id . "
+//                   AND ur.fk_id IN (50002907, 50002906, 50002905)
+//             )
+//         )
+//     )
+//     OR (
+// 		EXISTS (
+// 			SELECT 1
+// 			FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug
+// 			WHERE ug.fk_user = " . $user->id . "
+// 			AND ug.fk_usergroup = 9
+// 		)
+// 		OR t.fk_user_creat = " . $user->id . "
+// 		AND t.fk_project IS NOT NULL 
+// 		AND EXISTS (
+// 			SELECT 1
+// 			FROM " . MAIN_DB_PREFIX . "projet_extrafields AS pe
+// 			WHERE pe.fk_object = t.fk_project
+// 			AND pe.agenceconcerne IN (
+// 				SELECT sc.fk_soc
+// 				FROM " . MAIN_DB_PREFIX . "societe_commerciaux AS sc
+// 				WHERE sc.fk_user = " . $user->id . "
+// 			)
+// 		)
+// 	)
+// )";
 
 
 if ($search_all) {

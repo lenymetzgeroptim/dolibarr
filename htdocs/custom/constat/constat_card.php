@@ -161,7 +161,7 @@ if ($object->status == $object::STATUS_EN_COURS) {
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks+
 $enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('constat', 'constat', 'read');
+	$permissiontoread = $user->hasRight('constat', 'constat', 'readall') || ($user->hasRight('constat', 'constat', 'read') && (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) || $is_responsable_affaire || $user->hasRight('constat', 'constat', 'complete_q3se')));
 	$permissiontoadd = $user->hasRight('constat', 'constat', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 	$permissiontodelete = $user->hasRight('constat', 'constat', 'delete') || (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) && isset($object->status) && $object->status == $object::STATUS_DRAFT);
 	$permissionnote = $user->hasRight('constat', 'constat', 'write'); // Used by the include of actions_setnotes.inc.php
@@ -176,8 +176,8 @@ if ($enablepermissioncheck) {
 		$permissiontovalidate = $is_responsable_affaire;
 	}
 	elseif($object->status == $object::STATUS_EN_COURS) {
-		$permissiontoupdate = $user->admin || $user->id == $object->fk_user_creat || $user->id == $object->fk_user; // TODOL : gestion du droit pour Q3SE
-		$permissiontovalidate = $user->admin || $user->id == $object->fk_user_creat || $user->id == $object->fk_user; // TODOL : gestion du droit pour Q3SE
+		$permissiontoupdate = $user->hasRight('constat', 'constat', 'complete_q3se');
+		$permissiontovalidate = $user->hasRight('constat', 'constat', 'complete_q3se');
 	}
 	else {
 		$permissiontoupdate = 0;
@@ -579,7 +579,7 @@ if (empty($reshook)) {
 	// }
 
 	if ($action == 'confirm_setencours' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
-		$result = $object->updateEnCours($user);
+		$result = $object->setEnCours($user);
 
 		if ($result >= 0) {
 			$object->actionmsg = $langs->transnoentitiesnoconv("CONSTAT_EN_COURSInDolibarr", $object->ref);
@@ -603,7 +603,7 @@ if (empty($reshook)) {
 	}
 
 	if ($action == 'confirm_close' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
-		$result = $object->updateCloture($user);
+		$result = $object->close($user);
 
 		if ($result >= 0) {
 			$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_CLOTUREInDolibarr", $object->ref);
@@ -705,7 +705,7 @@ $title = $langs->trans("Constat");
 $help_url = '';
 llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'constat');
 
-$resp = $object->getAgencesBySoc();
+// $resp = $object->getAgencesBySoc();
 
 // Part to create
 if ($action == 'create') {
@@ -733,7 +733,7 @@ if ($action == 'create') {
 	print '<table class="border centpercent tableforfieldcreate">'."\n";
 
 	// Common attributes
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_add.tpl.php';
+	include DOL_DOCUMENT_ROOT.'/custom/constat/core/tpl/commonfields_add.tpl.php';
 
 	// Other attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
@@ -810,7 +810,7 @@ if (($id || $ref) && $action == 'edit') {
 
 	print '<table class="border centpercent tableforfieldedit">'."\n";
 
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_edit.tpl.php';
+	include DOL_DOCUMENT_ROOT.'/custom/constat/core/tpl/commonfields_edit.tpl.php';
 
 	print '<table class="border centpercent tableforfieldedit">'."\n";
 
@@ -841,7 +841,7 @@ if (($id || $ref) && $action == 'edit') {
 	// 	}
 	// }
 	
-	// include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_edit.tpl.php';
+	// include DOL_DOCUMENT_ROOT.'/custom/constat/core/tpl/commonfields_edit.tpl.php';
 
 
 	print '</table>';
@@ -949,7 +949,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	print '<table class="border centpercent tableforfield">'."\n";
 
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_view.tpl.php';
+	include DOL_DOCUMENT_ROOT.'/custom/constat/core/tpl/commonfields_view.tpl.php';
 
 	print '<table class="border centpercent tableforfield">'."\n";
 

@@ -102,11 +102,11 @@ if ($id > 0 || !empty($ref)) {
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->constat->constat->read;
-	$permissiontoadd = $user->rights->constat->constat->write;
-	$permissionnote = $user->rights->constat->constat->write; // Used by the include of actions_setnotes.inc.php
+	$permissiontoread = $user->hasRight('constat', 'constat', 'readall') || ($user->hasRight('constat', 'constat', 'read') && (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) || $is_responsable_affaire || $user->hasRight('constat', 'constat', 'complete_q3se')));
+	$permissiontoadd = $user->hasRight('constat', 'constat', 'write');
+	$permissionnote = $permissiontoadd; // Used by the include of actions_setnotes.inc.php
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;

@@ -48,13 +48,11 @@ function constatPrepareHead($object)
 
 
 
-	if ($user->rights->constat->constat->ResponsableQ3SE) {
-		if ($showtabofpagecontact) {
-			$head[$h][0] = dol_buildpath("/constat/constat_contact.php", 1).'?id='.$object->id;
-			$head[$h][1] = $langs->trans("Contacts");
-			$head[$h][2] = 'contact';
-			$h++;
-		}
+	if ($showtabofpagecontact) {
+		$head[$h][0] = dol_buildpath("/constat/constat_contact.php", 1).'?id='.$object->id;
+		$head[$h][1] = $langs->trans("Contacts");
+		$head[$h][2] = 'contact';
+		$h++;
 	}
 
 	if ($showtabofpagenote) {

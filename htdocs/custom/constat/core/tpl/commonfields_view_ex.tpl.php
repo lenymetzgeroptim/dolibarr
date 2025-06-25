@@ -180,7 +180,7 @@ if ($key == 'status') {
 
 
 	if ($key == 'actionsimmediates') {
-        include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/extrafields_view.tpl.php';
+        include DOL_DOCUMENT_ROOT.'/custom/constat/core/tpl/extrafields_view.tpl.php';
     }
 	
 	if (!empty($keyforbreak) && $key == $keyforbreak) {

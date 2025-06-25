@@ -96,7 +96,7 @@ class modConstat extends DolibarrModules
 			// Set this to 1 if module has its own menus handler directory (core/menus)
 			'menus' => 0,
 			// Set this to 1 if module overwrite template dir (core/tpl)
-			'tpl' => 0,
+			'tpl' => 1,
 			// Set this to 1 if module has its own barcode directory (core/modules/barcode)
 			'barcode' => 0,
 			// Set this to 1 if module has its own models directory (core/modules/xxx)
@@ -118,6 +118,7 @@ class modConstat extends DolibarrModules
 				'data' => array(
 					'restrictedArea',					
 					'index',
+					'constatcard',
 				),
 			 //   'entity' => '0',
 		 	),
@@ -292,40 +293,50 @@ class modConstat extends DolibarrModules
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 1);
-		$this->rights[$r][1] = 'Read objects of Constat';
+		$this->rights[$r][1] = 'Lire ses propres constat';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Create/Update objects of Constat';
+		$this->rights[$r][1] = 'Lire l\'ensemble des constats';
+		$this->rights[$r][4] = 'constat';
+		$this->rights[$r][5] = 'readall';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Créer un constat et compléter la partie émetteur';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Show Emetteur objects of Constat';
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
+		$this->rights[$r][1] = 'Compléter la partie Q3SE';
 		$this->rights[$r][4] = 'constat';
-		$this->rights[$r][5] = 'Emetteur';
+		$this->rights[$r][5] = 'complete_q3se';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Delete objects of Constat';
+		// $this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
+		// $this->rights[$r][1] = 'Show Emetteur objects of Constat';
+		// $this->rights[$r][4] = 'constat';
+		// $this->rights[$r][5] = 'Emetteur';
+		// $r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
+		$this->rights[$r][1] = 'Supprimer les constats';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Show Responsable Q3SE objects of Constat';
-		$this->rights[$r][4] = 'constat';
-		$this->rights[$r][5] = 'ResponsableQ3SE';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
-		$this->rights[$r][1] = 'Show responsable affaire objects of Constat';
-		$this->rights[$r][4] = 'constat';
-		$this->rights[$r][5] = 'ResponsableAffaire';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
-		$this->rights[$r][1] = 'show serviceQ3SE objects of Constat';
-		$this->rights[$r][4] = 'constat';
-		$this->rights[$r][5] = 'ServiceQ3SE';
-		$r++;
+		// $this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
+		// $this->rights[$r][1] = 'Show Responsable Q3SE objects of Constat';
+		// $this->rights[$r][4] = 'constat';
+		// $this->rights[$r][5] = 'ResponsableQ3SE';
+		// $r++;
+		// $this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
+		// $this->rights[$r][1] = 'Show responsable affaire objects of Constat';
+		// $this->rights[$r][4] = 'constat';
+		// $this->rights[$r][5] = 'ResponsableAffaire';
+		// $r++;
+		// $this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
+		// $this->rights[$r][1] = 'show serviceQ3SE objects of Constat';
+		// $this->rights[$r][4] = 'constat';
+		// $this->rights[$r][5] = 'ServiceQ3SE';
+		// $r++;
 		
 		/* END MODULEBUILDER PERMISSIONS */
 
@@ -423,7 +434,7 @@ class modConstat extends DolibarrModules
             'langs'=>'q3serp@q3serp',
             'position'=>1107,
             'enabled'=>'$conf->constat->enabled',
-			'perms'=>'1',
+			'perms'=>'$user->hasRight(\'constat\', \'constat\', \'read\')',
             'target'=>'',
             'user'=>2,
         );
@@ -438,7 +449,7 @@ class modConstat extends DolibarrModules
             'langs'=>'q3serp@q3serp',
             'position'=>1108,
             'enabled'=>'$conf->constat->enabled',
-            'perms'=>'1',
+            'perms'=>'$user->hasRight(\'constat\', \'constat\', \'write\')',
             'target'=>'',
             'user'=>2
         );

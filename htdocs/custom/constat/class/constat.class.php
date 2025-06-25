@@ -318,19 +318,19 @@ class Constat extends CommonObject
 		
 		// Vérifiez si la liste des projets est non vide
 		
-		if (
-			(!$user->rights->constat->constat->ServiceQ3SE && 
-			 !$user->rights->constat->constat->ResponsableQ3SE)
-		) {
+		// if (
+		// 	(!$user->rights->constat->constat->ServiceQ3SE && 
+		// 	 !$user->rights->constat->constat->ResponsableQ3SE)
+		// ) {
 			
-			if (!empty($projects)) {
+		// 	if (!empty($projects)) {
 				
-				$rowids = implode(',', array_keys($projects));
+		// 		$rowids = implode(',', array_keys($projects));
 		
 				
-				$this->fields['fk_project']['type'] = 'integer:Project:projet/class/project.class.php::(t.rowid:IN:'.$rowids.')';
-			}
-		}
+		// 		$this->fields['fk_project']['type'] = 'integer:Project:projet/class/project.class.php::(t.rowid:IN:'.$rowids.')';
+		// 	}
+		// }
 
 		/*global $user, $db;
 		$commande = new Commande($db);
@@ -698,14 +698,6 @@ class Constat extends CommonObject
 			return 0;
 		}
 
-		/*if (! ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->constat->constat->write))
-		 || (!empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->constat->constat->constat_advance->validate))))
-		 {
-		 $this->error='NotEnoughPermissions';
-		 dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
-		 return -1;
-		 }*/
-
 		$now = dol_now();
 
 		$this->db->begin();
@@ -850,7 +842,6 @@ class Constat extends CommonObject
 		}
 
 		if (!$error) {
-			$this->sendMailValidate();
 			$this->db->commit();
 			return 1;
 		} else {
@@ -859,98 +850,59 @@ class Constat extends CommonObject
 		}
 	}
 	
-	/**
-	 * 
-	 * Send mail to Q3SE
-	 */
-	public function sendMailValidate() {
-		include_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
-		include_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-		include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
-		include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
-
-		global $db;
-		$subject = '[OPTIM Industries] Notification automatique nouveau constat ';
-
-		$from = 'erp@optim-industries.fr';
-	
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Resp. Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				$to .= ", ";
-					
-			}
-		}
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-        $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-        $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$this->id.'">'.$this->ref.'</a>';
-
-
-		$to = rtrim($to, ", ");
-		$msg =  "test envoie de mail";
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-		//$isSend = $cmail->sendfile();	
-		if ($mail->error) {
-			$res = 0;
-		}
-		// Send mail
-		if ($res) {
-			$res = $cmail->sendfile();
-		}
-	}
-
-	/**
-	 *	Set Status prise en compte
-	 *
-	 *	@param	User	$user			Object user that modify
-	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
-	 *	@return	int						<0 if KO, >0 if OK
-	 */
-	// public function setPrise($user, $notrigger = 0)
-	// 	{
-	// 		if ($this->status <= self::STATUS_PRISE) {
-	// 			return 0;
-	// 		}
-	// 		return $this->setStatusCommon($user, self::STATUS_PRISE, $notrigger, 'CONSTAT_UNVALIDATE');
-	// 	}
-	
-	/**
-	 *	Set Status en cours
-	 *
-	 *	@param	User	$user			Object user that modify
-	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
-	 *	@return	int						<0 if KO, >0 if OK
-	 */
 	public function setEnCours($user, $notrigger = 0)
-		{
-			
-			if ($this->status <= self::STATUS_EN_COURS) {
-				return 0;
-			}
-			return $this->setStatusCommon($user, self::STATUS_EN_COURS, $notrigger, 'CONSTAT_UNVALIDATE');
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+		
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_EN_COURS) {
+			dol_syslog(get_class($this)."::setEnCours action abandonned: already en cours", LOG_WARNING);
+			return 0;
 		}
 
-	/**
-	 *	Set Status Soldé
-	 *
-	 *	@param	User	$user			Object user that modify
-	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
-	 *	@return	int						<0 if KO, >0 if OK
-	 */
-	// public function setSolde($user, $notrigger = 0)
-	// 	{
-	// 		// Protection
-	// 		if ($this->status <= self::STATUS_SOLDEE) {
-	// 			return 0;
-	// 		}
-	// 		return $this->setStatusCommon($user, self::STATUS_SOLDEE, $notrigger, 'CONSTAT_UNVALIDATE');
-	// 	}
+		$now = dol_now();
+
+		$this->db->begin();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_EN_COURS;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::setEnCours()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('CONSTAT_EN_COURS', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+		
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_EN_COURS;
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}	
+	}
 	
 	/**
 	 *	Set Status Clôturé
@@ -959,16 +911,15 @@ class Constat extends CommonObject
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						<0 if KO, >0 if OK
 	 */
-	public function setCloture($user, $notrigger = 0)
-		{
-			// Protection
-			if ($this->status <= self::STATUS_CLOTURE) {
-				return 0;
-			}
-			return $this->setStatusCommon($user, self::STATUS_CLOTURE, $notrigger, 'CONSTAT_UNVALIDATE');
+	public function close($user, $notrigger = 0)
+	{
+		// Protection
+		if ($this->status == self::STATUS_CLOTURE) {
+			return 0;
 		}
+		return $this->setStatusCommon($user, self::STATUS_CLOTURE, $notrigger, 'CONSTAT_CLOSE');
+	}
 
-	
 	/**
 	 *	Set draft status
 	 *
@@ -1392,48 +1343,48 @@ class Constat extends CommonObject
 	 *  @return     int         				0 if KO, 1 if OK
 	 */
 	public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
-{
-    global $conf, $langs, $user; // Ajout de la variable $user
+	{
+		global $conf, $langs, $user; // Ajout de la variable $user
 
-    $result = 0;
-    $includedocgeneration = 1;
+		$result = 0;
+		$includedocgeneration = 1;
 
-    // Charger les traductions
-    $langs->load("constat@constat");
+		// Charger les traductions
+		$langs->load("constat@constat");
 
-    // Si aucun modèle n'est spécifié, on utilise le modèle par défaut
-    if (!dol_strlen($modele)) {
-        $modele = 'standard_constat';
+		// Si aucun modèle n'est spécifié, on utilise le modèle par défaut
+		if (!dol_strlen($modele)) {
+			$modele = 'standard_constat';
 
-        if (!empty($this->model_pdf)) {
-            $modele = $this->model_pdf;
-        } elseif (!empty($conf->global->CONSTAT_ADDON_PDF)) {
-            $modele = $conf->global->CONSTAT_ADDON_PDF;
-        }
-    }
+			if (!empty($this->model_pdf)) {
+				$modele = $this->model_pdf;
+			} elseif (!empty($conf->global->CONSTAT_ADDON_PDF)) {
+				$modele = $conf->global->CONSTAT_ADDON_PDF;
+			}
+		}
 
-    // Définir le chemin du modèle
-    $modelpath = "core/modules/constat/doc/";
+		// Définir le chemin du modèle
+		$modelpath = "core/modules/constat/doc/";
 
-    // Correction : vérifier que $user est bien un objet de type User avant de générer le document
-    if (!($user instanceof User)) {
-        // Si l'utilisateur n'est pas de type User, on peut le recréer ou lever une exception
-        dol_syslog("Erreur : L'objet \$user n'est pas de type User. Création d'un nouvel objet User.", LOG_ERR);
+		// Correction : vérifier que $user est bien un objet de type User avant de générer le document
+		if (!($user instanceof User)) {
+			// Si l'utilisateur n'est pas de type User, on peut le recréer ou lever une exception
+			dol_syslog("Erreur : L'objet \$user n'est pas de type User. Création d'un nouvel objet User.", LOG_ERR);
 
-        // Par exemple, recréer un nouvel objet utilisateur avec l'ID de l'utilisateur courant
-        require_once DOL_DOCUMENT_ROOT . '/user/class/user.class.php';
-        $newuser = new User($this->db);
-        $newuser->fetch($user->id); // On récupère les informations de l'utilisateur courant
-        $user = $newuser; // Remplacer l'objet $user par le bon objet
-    }
+			// Par exemple, recréer un nouvel objet utilisateur avec l'ID de l'utilisateur courant
+			require_once DOL_DOCUMENT_ROOT . '/user/class/user.class.php';
+			$newuser = new User($this->db);
+			$newuser->fetch($user->id); // On récupère les informations de l'utilisateur courant
+			$user = $newuser; // Remplacer l'objet $user par le bon objet
+		}
 
-    // Générer le document si le modèle est spécifié
-    if ($includedocgeneration && !empty($modele)) {
-        $result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
-    }
+		// Générer le document si le modèle est spécifié
+		if ($includedocgeneration && !empty($modele)) {
+			$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
+		}
 
-    return $result;
-}
+		return $result;
+	}
 
 	/**
 	 * Action executed by scheduler
@@ -1464,428 +1415,136 @@ class Constat extends CommonObject
 
 		return $error;
 	}
-	
-	
-	// public function updatePrise($notrigger = 0)
-	// {
-	// 	global $user; 
-	// 	$error = 0;
 
-	// 	$sql = "UPDATE ".MAIN_DB_PREFIX."constat_constat";
-	// 	$sql .= " SET status = ".self::STATUS_PRISE;
-	// 	$sql .= " WHERE rowid = ".((int) $this->id);
-
-	// 	$resql = $this->db->query($sql);
-	// 		if (!$resql) {
-	// 			dol_print_error($this->db);
-	// 			$this->error = $this->db->lasterror();
-	// 			$error++;
-	// 		}
-
-
-
-	// 	if (!$error) {
-	// 		$this->status = self::STATUS_PRISE;
-	// 		$this->db->commit();
-	// 		return 1;
-	// 	} else {
-	// 		$this->db->rollback();
-	// 		return -1;
-	// 	}
-
-	// }
-
-	public function updateEnCours($notrigger = 0)
-	{
-		global $user; 
-		$error = 0;
-
-		$sql = "UPDATE ".MAIN_DB_PREFIX."constat_constat";
-		$sql .= " SET status = ".self::STATUS_EN_COURS;
-		$sql .= " WHERE rowid = ".((int) $this->id);
-
-		$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
-
-
-
-		if (!$error) {
-			$this->status = self::STATUS_EN_COURS;
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-
-		
-	}
-
-	// public function updateSolde($notrigger = 0)
-	// {
-	// 	global $user; 
-	// 	$error = 0;
-
-	// 	$sql = "UPDATE ".MAIN_DB_PREFIX."constat_constat";
-	// 	$sql .= " SET status = ".self::STATUS_SOLDEE;
-	// 	$sql .= " WHERE rowid = ".((int) $this->id);
-
-	// 	$resql = $this->db->query($sql);
-	// 		if (!$resql) {
-	// 			dol_print_error($this->db);
-	// 			$this->error = $this->db->lasterror();
-	// 			$error++;
-	// 		}
-
-
-	// 	if (!$error) {
-	// 		$this->status = self::STATUS_SOLDEE;
-	// 		$this->db->commit();
-	// 		return 1;
-	// 	} else {
-	// 		$this->db->rollback();
-	// 		return -1;
-	// 	}
-
-	// }
-
-	public function updateCloture($notrigger = 0)
-	{
-		global $user; 
-
-		$error = 0;
-		$sql = "UPDATE ".MAIN_DB_PREFIX."constat_constat";
-		$sql .= " SET status = ".self::STATUS_CLOTURE;
-		$sql .= " WHERE rowid = ".((int) $this->id);
-
-		$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
-
-		
-		if (!$error) {
-			$this->status = self::STATUS_CLOTURE;
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-
-		
-	}
-
-
-	function updateCancel($notrigger = 0)
-	{
-		global $user; 
-		$error = 0;
-
-		$sql = "UPDATE ".MAIN_DB_PREFIX."constat_constat";
-		$sql .= " SET status = ".$this::STATUS_CANCELED;
-		$sql .= " WHERE rowid = ".((int) $this->id);
-
-		$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
-
-
-		if (!$error && !$notrigger) {
-			
-			$this->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_CANCELEDInDolibarr", $this->ref);
-			// Call trigger
-			$result = $this->call_trigger('CONSTAT_CANCELED', $user);
-			if ($result < 0) {
-				$error++;
-			}
-			// End call triggers
-		}
-
-		if (!$error) {
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-
-	}
-
-
-public function getManager()
-{
-	global $db;
-	$sql  = 'SELECT u.rowid, u.lastname, u.firstname,';
-	$sql .= ' u.job, u.fk_user';
-	$sql .= " FROM ".MAIN_DB_PREFIX."user as u";
-	$sql .= " WHERE u.statut = 1";
-   
-	$result = $db->query($sql);
-	if ($result) {
-		$num = $db->num_rows($result);
-		$i = 0;
-		while ($i < $num) {
-			$obj = $db->fetch_object($result);
-			if($obj->fk_user == null) {
-				$data[$obj->rowid]= 'dg';
-			}
-			$res[$obj->rowid] = $obj->fk_user;
-			$i++;
-		}
-   
-		foreach($data as $key => $value) {
-			array_key_exists($key, array_keys($res)) ? $pdg[$key] = $value : null;
-		}
-	   
-		foreach ($res as $key => $val){
-			$employees[$val][] = $key;
-		}
-
-		foreach($employees as $key => $value) {
-			foreach($value as $employee) {
-				// array_key_exists($employee, $employees) ? $submanagers[$employee] = 'submanager' : null;
-				array_key_exists($key, $pdg) ? $managers[$employee] = null : null;
-			}
-		}
-	   
-		foreach($employees as $key => $val) {
-			foreach($val as $value) {
-				array_key_exists($key, $pdg) ? $inPdg[$key][] = $value : null;
-				array_key_exists($key, $managers) ? $inManager[$key][] = $value : null;
-				$key !== '' && array_key_exists($key, $managers) == false && array_key_exists($key, $pdg) == false ? $inSubmanager[$key][] = $value : null;
-			}
-		   
-		}
-
-		$arr = $this->subManager($inManager, $inSubmanager);
-		foreach($arr as $key => $flatten) {
-			$ids[$key] = $this->array_flatten($flatten);
-		}
-   
-		foreach($inPdg as $key => $value) {
-			$ids[$key] = $value;
-		}
-
-		$db->free($result);
-		
-		return $ids;
-	} else {
-		dol_print_error($db);
-	}
- 
-}
-
-
-
-
-/**
- * convert array to one dimension
- */
-function array_flatten($array) {
-	if (!is_array($array)) {
-	  return FALSE;
-	}
-
-	$result = array();
-	foreach ($array as $key => $value) {
-	  if (is_array($value)) {
-	   
-		$result = array_merge($result, $this->array_flatten($value));
-	   
-	  }
-	  else {
-		$result[$key] = $value;
-	  }
-	}
-	return $result;
-  }
-
-/**
- * get suboridnates
- */
-function subManager($inManager, $inSubmanager)
-{
-	foreach(array_filter($inManager) as $key1 => $val1) {
-		foreach($val1 as $value) {
-			foreach(array_filter($inSubmanager) as $key2 => $val2) {
-				$inSubmanager2[$key2] = array_filter($val2);
-			   
-				foreach(array_filter($inSubmanager2) as $key3 => $val3) {
-					$inSubmanager3[$key2] = array_filter($val3);
-					foreach(array_filter($inSubmanager3) as $key4 => $val4) {
-					array_key_exists($value, $inSubmanager) ? $inManager[$key1][$key2] = in_array($key2, $val1) ? array_filter($val2) : null : null;
-					array_key_exists($value, $inSubmanager2) ? $inSubmanager[$key2][$key3] = in_array($key3, $val2) ? array_filter($val3) : null : null;
-					array_key_exists($value, $inSubmanager3) ? $inSubmanager2[$key3][$key4] = in_array($key4, $val3) ? array_filter($val4) : null : null;
-					}
-				}
-			}
-		}
-	}
-	return array_filter($inManager);
-}
- /**
+ 	/**
      * Get agences.
      *
      */
-    public function getAgencesBySoc()
-    {
-        global $conf, $db, $langs, $user;
-        $name = 'OPTIM Industries';
+    // public function getAgencesBySoc()
+    // {
+    //     global $conf, $db, $langs, $user;
+    //     $name = 'OPTIM Industries';
  
-        $sql = "SELECT DISTINCT u.rowid as userid, u.lastname, u.firstname, u.email, u.statut as status, u.entity, s.rowid as agenceid, s.nom as name, s.name_alias";
-        $sql .= " FROM ".MAIN_DB_PREFIX."societe_commerciaux as sc";
-        $sql .= ", ".MAIN_DB_PREFIX."user as u";
-        $sql .= " , ".MAIN_DB_PREFIX."societe as s";
-        $sql .= " WHERE u.entity in (0, 1) AND u.rowid = sc.fk_user";
-        // $sql .= " AND s.rowid = sc.fk_soc";
-        $sql .= " AND s.nom = '".$db->escape($name)."'";
-        // $sql .= " AND u.rowid =".((int) $user->id);
+    //     $sql = "SELECT DISTINCT u.rowid as userid, u.lastname, u.firstname, u.email, u.statut as status, u.entity, s.rowid as agenceid, s.nom as name, s.name_alias";
+    //     $sql .= " FROM ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+    //     $sql .= ", ".MAIN_DB_PREFIX."user as u";
+    //     $sql .= " , ".MAIN_DB_PREFIX."societe as s";
+    //     $sql .= " WHERE u.entity in (0, 1) AND u.rowid = sc.fk_user";
+    //     // $sql .= " AND s.rowid = sc.fk_soc";
+    //     $sql .= " AND s.nom = '".$db->escape($name)."'";
+    //     // $sql .= " AND u.rowid =".((int) $user->id);
    
  
-        dol_syslog(get_class($this)."::getAgencesBySoc", LOG_DEBUG);
-        $resql = $db->query($sql);
+    //     dol_syslog(get_class($this)."::getAgencesBySoc", LOG_DEBUG);
+    //     $resql = $db->query($sql);
  
-        if ($resql) {
-            $num = $db->num_rows($resql);
+    //     if ($resql) {
+    //         $num = $db->num_rows($resql);
            
-            $i = 0;
-            while ($i < $num) {
-                $obj = $db->fetch_object($resql);
+    //         $i = 0;
+    //         while ($i < $num) {
+    //             $obj = $db->fetch_object($resql);
    
-                $agences[$obj->userid] = $obj->agenceid;
+    //             $agences[$obj->userid] = $obj->agenceid;
 				
            
-                $i++;
-            }
+    //             $i++;
+    //         }
  
-            return $agences;
-        } else {
-            $this->error = $db->error();
-            return -1;
-        }
-    }
+    //         return $agences;
+    //     } else {
+    //         $this->error = $db->error();
+    //         return -1;
+    //     }
+    // }
 
-	public function showSeparator($key, $object, $colspan = 2, $display_type = 'card', $mode = '')
-	{
-		global $conf, $langs;
+	// public function showSeparator($key, $object, $colspan = 2, $display_type = 'card', $mode = '')
+	// {
+	// 	global $conf, $langs;
 
-		$tagtype='tr';
-		$tagtype_dyn='td';
+	// 	$tagtype='tr';
+	// 	$tagtype_dyn='td';
 
-		if ($display_type=='line') {
-			$tagtype='div';
-			$tagtype_dyn='span';
-			$colspan=0;
-		}
+	// 	if ($display_type=='line') {
+	// 		$tagtype='div';
+	// 		$tagtype_dyn='span';
+	// 		$colspan=0;
+	// 	}
 
-		$extrafield_param = $table_element['param'][$key];
-		$extrafield_param_list = array();
-		if (!empty($extrafield_param) && is_array($extrafield_param)) {
-			$extrafield_param_list = array_keys($extrafield_param['options']);
-		}
+	// 	$extrafield_param = $table_element['param'][$key];
+	// 	$extrafield_param_list = array();
+	// 	if (!empty($extrafield_param) && is_array($extrafield_param)) {
+	// 		$extrafield_param_list = array_keys($extrafield_param['options']);
+	// 	}
 
-		// Set $extrafield_collapse_display_value (do we have to collapse/expand the group after the separator)
-		$extrafield_collapse_display_value = -1;
-		$expand_display = false;
-		if (is_array($extrafield_param_list) && count($extrafield_param_list) > 0) {
-			$extrafield_collapse_display_value = intval($extrafield_param_list[0]);
-			$expand_display = ((isset($_COOKIE['DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key]) || GETPOST('ignorecollapsesetup', 'int')) ? (empty($_COOKIE['DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key]) ? false : true) : ($extrafield_collapse_display_value == 2 ? false : true));
-		}
-		$disabledcookiewrite = 0;
-		if ($mode == 'create') {
-			// On create mode, force separator group to not be collapsable
-			$extrafield_collapse_display_value = 1;
-			$expand_display = true;	// We force group to be shown expanded
-			$disabledcookiewrite = 1; // We keep status of group unchanged into the cookie
-		}
+	// 	// Set $extrafield_collapse_display_value (do we have to collapse/expand the group after the separator)
+	// 	$extrafield_collapse_display_value = -1;
+	// 	$expand_display = false;
+	// 	if (is_array($extrafield_param_list) && count($extrafield_param_list) > 0) {
+	// 		$extrafield_collapse_display_value = intval($extrafield_param_list[0]);
+	// 		$expand_display = ((isset($_COOKIE['DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key]) || GETPOST('ignorecollapsesetup', 'int')) ? (empty($_COOKIE['DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key]) ? false : true) : ($extrafield_collapse_display_value == 2 ? false : true));
+	// 	}
+	// 	$disabledcookiewrite = 0;
+	// 	if ($mode == 'create') {
+	// 		// On create mode, force separator group to not be collapsable
+	// 		$extrafield_collapse_display_value = 1;
+	// 		$expand_display = true;	// We force group to be shown expanded
+	// 		$disabledcookiewrite = 1; // We keep status of group unchanged into the cookie
+	// 	}
 
-		$out = '<'.$tagtype.' id="trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').'" class="trextrafieldseparator trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').'">';
-		$out .= '<'.$tagtype_dyn.' '.(!empty($colspan)?'colspan="' . $colspan . '"':'').'>';
-		// Some js code will be injected here to manage the collapsing of extrafields
-		// Output the picto
-		$out .= '<span class="'.($extrafield_collapse_display_value ? 'cursorpointer ' : '').($extrafield_collapse_display_value == 0 ? 'fas fa-square opacitymedium' : 'far fa-'.(($expand_display ? 'minus' : 'plus').'-square')).'"></span>';
-		$out .= '&nbsp;';
-		$out .= '<strong>';
-		$out .= $langs->trans($this->attributes[$object->table_element]['label'][$key]);
-		$out .= '</strong>';
-		$out .= '</'.$tagtype_dyn.'>';
-		$out .= '</'.$tagtype.'>';
+	// 	$out = '<'.$tagtype.' id="trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').'" class="trextrafieldseparator trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').'">';
+	// 	$out .= '<'.$tagtype_dyn.' '.(!empty($colspan)?'colspan="' . $colspan . '"':'').'>';
+	// 	// Some js code will be injected here to manage the collapsing of extrafields
+	// 	// Output the picto
+	// 	$out .= '<span class="'.($extrafield_collapse_display_value ? 'cursorpointer ' : '').($extrafield_collapse_display_value == 0 ? 'fas fa-square opacitymedium' : 'far fa-'.(($expand_display ? 'minus' : 'plus').'-square')).'"></span>';
+	// 	$out .= '&nbsp;';
+	// 	$out .= '<strong>';
+	// 	$out .= $langs->trans($this->attributes[$object->table_element]['label'][$key]);
+	// 	$out .= '</strong>';
+	// 	$out .= '</'.$tagtype_dyn.'>';
+	// 	$out .= '</'.$tagtype.'>';
 
-		$collapse_group = $key.(!empty($object->id) ? '_'.$object->id : '');
-		//$extrafields_collapse_num = $this->attributes[$object->table_element]['pos'][$key].(!empty($object->id)?'_'.$object->id:'');
+	// 	$collapse_group = $key.(!empty($object->id) ? '_'.$object->id : '');
+	// 	//$extrafields_collapse_num = $this->attributes[$object->table_element]['pos'][$key].(!empty($object->id)?'_'.$object->id:'');
 
-		if ($extrafield_collapse_display_value == 1 || $extrafield_collapse_display_value == 2) {
-			// Set the collapse_display status to cookie in priority or if ignorecollapsesetup is 1, if cookie and ignorecollapsesetup not defined, use the setup.
-			$this->expand_display[$collapse_group] = $expand_display;
+	// 	if ($extrafield_collapse_display_value == 1 || $extrafield_collapse_display_value == 2) {
+	// 		// Set the collapse_display status to cookie in priority or if ignorecollapsesetup is 1, if cookie and ignorecollapsesetup not defined, use the setup.
+	// 		$this->expand_display[$collapse_group] = $expand_display;
 
-			if (!empty($conf->use_javascript_ajax)) {
-				$out .= '<!-- Add js script to manage the collapse/uncollapse of extrafields separators '.$key.' -->'."\n";
-				$out .= '<script nonce="'.getNonce().'" type="text/javascript">'."\n";
-				$out .= 'jQuery(document).ready(function(){'."\n";
-				if (empty($disabledcookiewrite)) {
-					if ($expand_display === false) {
-						$out .= '   console.log("Inject js for the collapsing of extrafield '.$key.' - hide");'."\n";
-						$out .= '   jQuery(".trextrafields_collapse'.$collapse_group.'").hide();'."\n";
-					} else {
-						$out .= '   console.log("Inject js for collapsing of extrafield '.$key.' - keep visible and set cookie");'."\n";
-						$out .= '   document.cookie = "DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key.'=1; path='.$_SERVER["PHP_SELF"].'"'."\n";
-					}
-				}
-				$out .= '   jQuery("#trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').'").click(function(){'."\n";
-				$out .= '       console.log("We click on collapse/uncollapse to hide/show .trextrafields_collapse'.$collapse_group.'");'."\n";
-				$out .= '       jQuery(".trextrafields_collapse'.$collapse_group.'").toggle(100, function(){'."\n";
-				$out .= '           if (jQuery(".trextrafields_collapse'.$collapse_group.'").is(":hidden")) {'."\n";
-				$out .= '               jQuery("#trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').' '.$tagtype_dyn.' span").addClass("fa-plus-square").removeClass("fa-minus-square");'."\n";
-				$out .= '               document.cookie = "DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key.'=0; path='.$_SERVER["PHP_SELF"].'"'."\n";
-				$out .= '           } else {'."\n";
-				$out .= '               jQuery("#trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').' '.$tagtype_dyn.' span").addClass("fa-minus-square").removeClass("fa-plus-square");'."\n";
-				$out .= '               document.cookie = "DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key.'=1; path='.$_SERVER["PHP_SELF"].'"'."\n";
-				$out .= '           }'."\n";
-				$out .= '       });'."\n";
-				$out .= '   });'."\n";
-				$out .= '});'."\n";
-				$out .= '</script>'."\n";
-			}
-		} else {
-			$this->expand_display[$collapse_group] = 1;
-		}
+	// 		if (!empty($conf->use_javascript_ajax)) {
+	// 			$out .= '<!-- Add js script to manage the collapse/uncollapse of extrafields separators '.$key.' -->'."\n";
+	// 			$out .= '<script nonce="'.getNonce().'" type="text/javascript">'."\n";
+	// 			$out .= 'jQuery(document).ready(function(){'."\n";
+	// 			if (empty($disabledcookiewrite)) {
+	// 				if ($expand_display === false) {
+	// 					$out .= '   console.log("Inject js for the collapsing of extrafield '.$key.' - hide");'."\n";
+	// 					$out .= '   jQuery(".trextrafields_collapse'.$collapse_group.'").hide();'."\n";
+	// 				} else {
+	// 					$out .= '   console.log("Inject js for collapsing of extrafield '.$key.' - keep visible and set cookie");'."\n";
+	// 					$out .= '   document.cookie = "DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key.'=1; path='.$_SERVER["PHP_SELF"].'"'."\n";
+	// 				}
+	// 			}
+	// 			$out .= '   jQuery("#trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').'").click(function(){'."\n";
+	// 			$out .= '       console.log("We click on collapse/uncollapse to hide/show .trextrafields_collapse'.$collapse_group.'");'."\n";
+	// 			$out .= '       jQuery(".trextrafields_collapse'.$collapse_group.'").toggle(100, function(){'."\n";
+	// 			$out .= '           if (jQuery(".trextrafields_collapse'.$collapse_group.'").is(":hidden")) {'."\n";
+	// 			$out .= '               jQuery("#trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').' '.$tagtype_dyn.' span").addClass("fa-plus-square").removeClass("fa-minus-square");'."\n";
+	// 			$out .= '               document.cookie = "DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key.'=0; path='.$_SERVER["PHP_SELF"].'"'."\n";
+	// 			$out .= '           } else {'."\n";
+	// 			$out .= '               jQuery("#trextrafieldseparator'.$key.(!empty($object->id)?'_'.$object->id:'').' '.$tagtype_dyn.' span").addClass("fa-minus-square").removeClass("fa-plus-square");'."\n";
+	// 			$out .= '               document.cookie = "DOLCOLLAPSE_'.$object->table_element.'_extrafields_'.$key.'=1; path='.$_SERVER["PHP_SELF"].'"'."\n";
+	// 			$out .= '           }'."\n";
+	// 			$out .= '       });'."\n";
+	// 			$out .= '   });'."\n";
+	// 			$out .= '});'."\n";
+	// 			$out .= '</script>'."\n";
+	// 		}
+	// 	} else {
+	// 		$this->expand_display[$collapse_group] = 1;
+	// 	}
 
-		return $out;
-	}
-
-	function verifyStateOfElements() {
-		
-		$sql = "SELECT ac.status ";
-		$sql .= "FROM ".MAIN_DB_PREFIX."actions_action as ac ";
-		$sql .= "JOIN ".MAIN_DB_PREFIX."element_element as e ON ac.rowid = e.fk_source AND e.sourcetype = 'actions_action' ";
-		$sql .= "JOIN ".MAIN_DB_PREFIX."constat_constat as co ON e.fk_target = co.rowid AND e.targettype = 'constat' ";
-		$sql .= "WHERE (e.fk_source = ac.rowid AND e.sourcetype = 'actions_action') AND (e.fk_target = co.rowid AND e.targettype = 'constat') AND ac.status = 3 ";
-		$sql .= "ORDER BY e.sourcetype";
-
-		// Execute the query
-		$result = $db->query($sql);
-
-		// Check if all actions have status = 3
-		$allStatusThree = true;
-		while ($row = $db->fetch_object($result)) {
-			if ($row->status != 3) {
-				$allStatusThree = false;
-				break;
-			}
-		}
-
-	}
-
+	// 	return $out;
+	// }
 
 	public function drafttolong(){
 
@@ -1965,8 +1624,6 @@ function subManager($inManager, $inSubmanager)
 			}
 		}	
     }
-
-
 
 	public function getActionsByConstat()
 	{
@@ -2156,242 +1813,241 @@ function subManager($inManager, $inSubmanager)
 	 *	@return int								<0 if KO, >0 if OK
 	 *  @see	add_object_linked(), updateObjectLinked(), deleteObjectLinked()
 	 */
-	public function fetchObjectLinked2($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '', $clause = 'OR', $alsosametype = 1, $orderby = 'sourcetype', $loadalsoobjects = 1)
-	{
-		global $conf, $hookmanager, $action;
+	// public function fetchObjectLinked2($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '', $clause = 'OR', $alsosametype = 1, $orderby = 'sourcetype', $loadalsoobjects = 1)
+	// {
+	// 	global $conf, $hookmanager, $action;
 
-		$this->linkedObjectsIds = array();
-		$this->linkedObjects = array();
+	// 	$this->linkedObjectsIds = array();
+	// 	$this->linkedObjects = array();
 
-		$justsource = false;
-		$justtarget = false;
-		$withtargettype = false;
-		$withsourcetype = false;
+	// 	$justsource = false;
+	// 	$justtarget = false;
+	// 	$withtargettype = false;
+	// 	$withsourcetype = false;
 
-		$parameters = array('sourcetype'=>$sourcetype, 'sourceid'=>$sourceid, 'targettype'=>$targettype, 'targetid'=>$targetid);
-		// Hook for explicitly set the targettype if it must be differtent than $this->element
-		$reshook = $hookmanager->executeHooks('setLinkedObjectSourceTargetType', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
-		if ($reshook > 0) {
-			if (!empty($hookmanager->resArray['sourcetype'])) $sourcetype = $hookmanager->resArray['sourcetype'];
-			if (!empty($hookmanager->resArray['sourceid'])) $sourceid = $hookmanager->resArray['sourceid'];
-			if (!empty($hookmanager->resArray['targettype'])) $targettype = $hookmanager->resArray['targettype'];
-			if (!empty($hookmanager->resArray['targetid'])) $targetid = $hookmanager->resArray['targetid'];
-		}
+	// 	$parameters = array('sourcetype'=>$sourcetype, 'sourceid'=>$sourceid, 'targettype'=>$targettype, 'targetid'=>$targetid);
+	// 	// Hook for explicitly set the targettype if it must be differtent than $this->element
+	// 	$reshook = $hookmanager->executeHooks('setLinkedObjectSourceTargetType', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+	// 	if ($reshook > 0) {
+	// 		if (!empty($hookmanager->resArray['sourcetype'])) $sourcetype = $hookmanager->resArray['sourcetype'];
+	// 		if (!empty($hookmanager->resArray['sourceid'])) $sourceid = $hookmanager->resArray['sourceid'];
+	// 		if (!empty($hookmanager->resArray['targettype'])) $targettype = $hookmanager->resArray['targettype'];
+	// 		if (!empty($hookmanager->resArray['targetid'])) $targetid = $hookmanager->resArray['targetid'];
+	// 	}
 
-		if (!empty($sourceid) && !empty($sourcetype) && empty($targetid)) {
-			$justsource = true; // the source (id and type) is a search criteria
-			if (!empty($targettype)) {
-				$withtargettype = true;
-			}
-		}
-		if (!empty($targetid) && !empty($targettype) && empty($sourceid)) {
-			$justtarget = true; // the target (id and type) is a search criteria
-			if (!empty($sourcetype)) {
-				$withsourcetype = true;
-			}
-		}
+	// 	if (!empty($sourceid) && !empty($sourcetype) && empty($targetid)) {
+	// 		$justsource = true; // the source (id and type) is a search criteria
+	// 		if (!empty($targettype)) {
+	// 			$withtargettype = true;
+	// 		}
+	// 	}
+	// 	if (!empty($targetid) && !empty($targettype) && empty($sourceid)) {
+	// 		$justtarget = true; // the target (id and type) is a search criteria
+	// 		if (!empty($sourcetype)) {
+	// 			$withsourcetype = true;
+	// 		}
+	// 	}
 
-		$sourceid = (!empty($sourceid) ? $sourceid : $this->id);
-		$targetid = (!empty($targetid) ? $targetid : $this->id);
-		$sourcetype = (!empty($sourcetype) ? $sourcetype : $this->element);
-		$targettype = (!empty($targettype) ? $targettype : $this->element);
+	// 	$sourceid = (!empty($sourceid) ? $sourceid : $this->id);
+	// 	$targetid = (!empty($targetid) ? $targetid : $this->id);
+	// 	$sourcetype = (!empty($sourcetype) ? $sourcetype : $this->element);
+	// 	$targettype = (!empty($targettype) ? $targettype : $this->element);
 
-		/*if (empty($sourceid) && empty($targetid))
-		 {
-		 dol_syslog('Bad usage of function. No source nor target id defined (nor as parameter nor as object id)', LOG_ERR);
-		 return -1;
-		 }*/
+	// 	/*if (empty($sourceid) && empty($targetid))
+	// 	 {
+	// 	 dol_syslog('Bad usage of function. No source nor target id defined (nor as parameter nor as object id)', LOG_ERR);
+	// 	 return -1;
+	// 	 }*/
 
-		// Links between objects are stored in table element_element
-		$sql = 'SELECT rowid, fk_source, sourcetype, fk_target, targettype';
-		$sql .= ' FROM '.MAIN_DB_PREFIX.'element_element';
-		$sql .= " WHERE ";
-		// if ($justsource || $justtarget) {
-			// if ($justsource) {
-			// 	$sql .= "fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."'";
-			// 	if ($withtargettype) {
-			// 		$sql .= " AND targettype = '".$this->db->escape($targettype)."'";
-			// 	}
-			// } elseif ($justtarget) {
-				$sql .= "fk_source = ".((int) $targetid)." AND sourcetype = '".$this->db->escape('constat')."'";
-				// if ($withsourcetype) {
-				// 	$sql .= " AND sourcetype = '".$this->db->escape($sourcetype)."'";
-				// }
-		// 	}
-		// } else {
-		// 	$sql .= "(fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."')";
-		// 	$sql .= " ".$clause." (fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape($targettype)."')";
-		// }
-		$sql .= ' ORDER BY '.$orderby;
+	// 	// Links between objects are stored in table element_element
+	// 	$sql = 'SELECT rowid, fk_source, sourcetype, fk_target, targettype';
+	// 	$sql .= ' FROM '.MAIN_DB_PREFIX.'element_element';
+	// 	$sql .= " WHERE ";
+	// 	// if ($justsource || $justtarget) {
+	// 		// if ($justsource) {
+	// 		// 	$sql .= "fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."'";
+	// 		// 	if ($withtargettype) {
+	// 		// 		$sql .= " AND targettype = '".$this->db->escape($targettype)."'";
+	// 		// 	}
+	// 		// } elseif ($justtarget) {
+	// 			$sql .= "fk_source = ".((int) $targetid)." AND sourcetype = '".$this->db->escape('constat')."'";
+	// 			// if ($withsourcetype) {
+	// 			// 	$sql .= " AND sourcetype = '".$this->db->escape($sourcetype)."'";
+	// 			// }
+	// 	// 	}
+	// 	// } else {
+	// 	// 	$sql .= "(fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."')";
+	// 	// 	$sql .= " ".$clause." (fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape($targettype)."')";
+	// 	// }
+	// 	$sql .= ' ORDER BY '.$orderby;
 
-		dol_syslog(get_class($this)."::fetchObjectLink", LOG_DEBUG);
-		$resql = $this->db->query($sql);
-		if ($resql) {
-			$num = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num) {
-				$obj = $this->db->fetch_object($resql);
-				// if ($justsource || $justtarget) {
-				// 	if ($justsource) {
-						// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
-					// } elseif ($justtarget) {
-					// 	$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
-					// }
-				// } else {
-				// 	if ($obj->fk_source == $sourceid && $obj->sourcetype == $sourcetype) {
-			 		// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
-				// 	}
-				// var_dump($obj->targettype);
-				// 	if ($obj->fk_target == $targetid && $obj->targettype == $targettype) {
-				 		$this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
-				// 	}
-				// }
+	// 	dol_syslog(get_class($this)."::fetchObjectLink", LOG_DEBUG);
+	// 	$resql = $this->db->query($sql);
+	// 	if ($resql) {
+	// 		$num = $this->db->num_rows($resql);
+	// 		$i = 0;
+	// 		while ($i < $num) {
+	// 			$obj = $this->db->fetch_object($resql);
+	// 			// if ($justsource || $justtarget) {
+	// 			// 	if ($justsource) {
+	// 					// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
+	// 				// } elseif ($justtarget) {
+	// 				// 	$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
+	// 				// }
+	// 			// } else {
+	// 			// 	if ($obj->fk_source == $sourceid && $obj->sourcetype == $sourcetype) {
+	// 		 		// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
+	// 			// 	}
+	// 			// var_dump($obj->targettype);
+	// 			// 	if ($obj->fk_target == $targetid && $obj->targettype == $targettype) {
+	// 			 		$this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
+	// 			// 	}
+	// 			// }
 		
-				$i++;
-			}
+	// 			$i++;
+	// 		}
 
-			if (!empty($this->linkedObjectsIds)) {
-				$tmparray = $this->linkedObjectsIds;
-				foreach ($tmparray as $objecttype => $objectids) {       // $objecttype is a module name ('facture', 'mymodule', ...) or a module name with a suffix ('project_task', 'mymodule_myobj', ...)
-					// Parse element/subelement (ex: project_task, cabinetmed_consultation, ...)
-					$module = $element = $subelement = $objecttype;
-					$regs = array();
-					if ($objecttype != 'supplier_proposal' && $objecttype != 'order_supplier' && $objecttype != 'invoice_supplier'
-						&& preg_match('/^([^_]+)_([^_]+)/i', $objecttype, $regs)) {
-						$module = $element = $regs[1];
-						$subelement = $regs[2];
-					}
+	// 		if (!empty($this->linkedObjectsIds)) {
+	// 			$tmparray = $this->linkedObjectsIds;
+	// 			foreach ($tmparray as $objecttype => $objectids) {       // $objecttype is a module name ('facture', 'mymodule', ...) or a module name with a suffix ('project_task', 'mymodule_myobj', ...)
+	// 				// Parse element/subelement (ex: project_task, cabinetmed_consultation, ...)
+	// 				$module = $element = $subelement = $objecttype;
+	// 				$regs = array();
+	// 				if ($objecttype != 'supplier_proposal' && $objecttype != 'order_supplier' && $objecttype != 'invoice_supplier'
+	// 					&& preg_match('/^([^_]+)_([^_]+)/i', $objecttype, $regs)) {
+	// 					$module = $element = $regs[1];
+	// 					$subelement = $regs[2];
+	// 				}
 
-					$classpath = $element.'/class';
-					// To work with non standard classpath or module name
-					if ($objecttype == 'facture') {
-						$classpath = 'compta/facture/class';
-					} elseif ($objecttype == 'facturerec') {
-						$classpath = 'compta/facture/class';
-						$module = 'facture';
-					} elseif ($objecttype == 'propal') {
-						$classpath = 'comm/propal/class';
-					} elseif ($objecttype == 'supplier_proposal') {
-						$classpath = 'supplier_proposal/class';
-					} elseif ($objecttype == 'shipping') {
-						$classpath = 'expedition/class';
-						$subelement = 'expedition';
-						$module = 'expedition_bon';
-					} elseif ($objecttype == 'delivery') {
-						$classpath = 'delivery/class';
-						$subelement = 'delivery';
-						$module = 'delivery_note';
-					} elseif ($objecttype == 'invoice_supplier' || $objecttype == 'order_supplier') {
-						$classpath = 'fourn/class';
-						$module = 'fournisseur';
-					} elseif ($objecttype == 'fichinter') {
-						$classpath = 'fichinter/class';
-						$subelement = 'fichinter';
-						$module = 'ficheinter';
-					} elseif ($objecttype == 'subscription') {
-						$classpath = 'adherents/class';
-						$module = 'adherent';
-					} elseif ($objecttype == 'contact') {
-						 $module = 'societe';
-					}elseif ($objecttype == 'constat') {
-						$module = 'custom/constat';
-				   }elseif ($objecttype == 'constat_constat') {
-					$module = 'custom/constat';
-			   	   }elseif ($objecttype == 'actions') {
-						$module = 'custom/actions';
-				   }elseif ($objecttype == 'actions') {
-					$module = 'custom/actions';
-			   	   }
-					// Set classfile
-					$classfile = strtolower($subelement);
-					$classname = ucfirst($subelement);
+	// 				$classpath = $element.'/class';
+	// 				// To work with non standard classpath or module name
+	// 				if ($objecttype == 'facture') {
+	// 					$classpath = 'compta/facture/class';
+	// 				} elseif ($objecttype == 'facturerec') {
+	// 					$classpath = 'compta/facture/class';
+	// 					$module = 'facture';
+	// 				} elseif ($objecttype == 'propal') {
+	// 					$classpath = 'comm/propal/class';
+	// 				} elseif ($objecttype == 'supplier_proposal') {
+	// 					$classpath = 'supplier_proposal/class';
+	// 				} elseif ($objecttype == 'shipping') {
+	// 					$classpath = 'expedition/class';
+	// 					$subelement = 'expedition';
+	// 					$module = 'expedition_bon';
+	// 				} elseif ($objecttype == 'delivery') {
+	// 					$classpath = 'delivery/class';
+	// 					$subelement = 'delivery';
+	// 					$module = 'delivery_note';
+	// 				} elseif ($objecttype == 'invoice_supplier' || $objecttype == 'order_supplier') {
+	// 					$classpath = 'fourn/class';
+	// 					$module = 'fournisseur';
+	// 				} elseif ($objecttype == 'fichinter') {
+	// 					$classpath = 'fichinter/class';
+	// 					$subelement = 'fichinter';
+	// 					$module = 'ficheinter';
+	// 				} elseif ($objecttype == 'subscription') {
+	// 					$classpath = 'adherents/class';
+	// 					$module = 'adherent';
+	// 				} elseif ($objecttype == 'contact') {
+	// 					 $module = 'societe';
+	// 				}elseif ($objecttype == 'constat') {
+	// 					$module = 'custom/constat';
+	// 			   }elseif ($objecttype == 'constat_constat') {
+	// 				$module = 'custom/constat';
+	// 		   	   }elseif ($objecttype == 'actions') {
+	// 					$module = 'custom/actions';
+	// 			   }elseif ($objecttype == 'actions') {
+	// 				$module = 'custom/actions';
+	// 		   	   }
+	// 				// Set classfile
+	// 				$classfile = strtolower($subelement);
+	// 				$classname = ucfirst($subelement);
 
-					if ($objecttype == 'order') {
-						$classfile = 'commande';
-						$classname = 'Commande';
-					} elseif ($objecttype == 'invoice_supplier') {
-						$classfile = 'fournisseur.facture';
-						$classname = 'FactureFournisseur';
-					} elseif ($objecttype == 'order_supplier') {
-						$classfile = 'fournisseur.commande';
-						$classname = 'CommandeFournisseur';
-					} elseif ($objecttype == 'supplier_proposal') {
-						$classfile = 'supplier_proposal';
-						$classname = 'SupplierProposal';
-					} elseif ($objecttype == 'facturerec') {
-						$classfile = 'facture-rec';
-						$classname = 'FactureRec';
-					} elseif ($objecttype == 'subscription') {
-						$classfile = 'subscription';
-						$classname = 'Subscription';
-					} elseif ($objecttype == 'project' || $objecttype == 'projet') {
-						$classpath = 'projet/class';
-						$classfile = 'project';
-						$classname = 'Project';
-					} elseif ($objecttype == 'conferenceorboothattendee') {
-						$classpath = 'eventorganization/class';
-						$classfile = 'conferenceorboothattendee';
-						$classname = 'ConferenceOrBoothAttendee';
-						$module = 'eventorganization';
-					} elseif ($objecttype == 'conferenceorbooth') {
-						$classpath = 'eventorganization/class';
-						$classfile = 'conferenceorbooth';
-						$classname = 'ConferenceOrBooth';
-						$module = 'eventorganization';
-					} elseif ($objecttype == 'mo') {
-						$classpath = 'mrp/class';
-						$classfile = 'mo';
-						$classname = 'Mo';
-						$module = 'mrp';
-					}elseif ($objecttype == 'constat') {
-						$classpath = 'constat/class';
-						$classfile = 'constat';
-						$classname = 'Constat';
-						$module = 'constat';
-					}elseif ($objecttype == 'constat_constat') {
-						$classpath = 'constat/class';
-						$classfile = 'constat';
-						$classname = 'Constat';
-						$module = 'constat';
-					}elseif ($objecttype == 'actions') {
-						$classpath = 'actions/class';
-						$classfile = 'action';
-						$classname = 'Action';
-						$module = 'actions';
-					}elseif ($objecttype == 'actions_action') {
-						$classpath = 'actions/class';
-						$classfile = 'action';
-						$classname = 'Action';
-						$module = 'actions';
-					}
+	// 				if ($objecttype == 'order') {
+	// 					$classfile = 'commande';
+	// 					$classname = 'Commande';
+	// 				} elseif ($objecttype == 'invoice_supplier') {
+	// 					$classfile = 'fournisseur.facture';
+	// 					$classname = 'FactureFournisseur';
+	// 				} elseif ($objecttype == 'order_supplier') {
+	// 					$classfile = 'fournisseur.commande';
+	// 					$classname = 'CommandeFournisseur';
+	// 				} elseif ($objecttype == 'supplier_proposal') {
+	// 					$classfile = 'supplier_proposal';
+	// 					$classname = 'SupplierProposal';
+	// 				} elseif ($objecttype == 'facturerec') {
+	// 					$classfile = 'facture-rec';
+	// 					$classname = 'FactureRec';
+	// 				} elseif ($objecttype == 'subscription') {
+	// 					$classfile = 'subscription';
+	// 					$classname = 'Subscription';
+	// 				} elseif ($objecttype == 'project' || $objecttype == 'projet') {
+	// 					$classpath = 'projet/class';
+	// 					$classfile = 'project';
+	// 					$classname = 'Project';
+	// 				} elseif ($objecttype == 'conferenceorboothattendee') {
+	// 					$classpath = 'eventorganization/class';
+	// 					$classfile = 'conferenceorboothattendee';
+	// 					$classname = 'ConferenceOrBoothAttendee';
+	// 					$module = 'eventorganization';
+	// 				} elseif ($objecttype == 'conferenceorbooth') {
+	// 					$classpath = 'eventorganization/class';
+	// 					$classfile = 'conferenceorbooth';
+	// 					$classname = 'ConferenceOrBooth';
+	// 					$module = 'eventorganization';
+	// 				} elseif ($objecttype == 'mo') {
+	// 					$classpath = 'mrp/class';
+	// 					$classfile = 'mo';
+	// 					$classname = 'Mo';
+	// 					$module = 'mrp';
+	// 				}elseif ($objecttype == 'constat') {
+	// 					$classpath = 'constat/class';
+	// 					$classfile = 'constat';
+	// 					$classname = 'Constat';
+	// 					$module = 'constat';
+	// 				}elseif ($objecttype == 'constat_constat') {
+	// 					$classpath = 'constat/class';
+	// 					$classfile = 'constat';
+	// 					$classname = 'Constat';
+	// 					$module = 'constat';
+	// 				}elseif ($objecttype == 'actions') {
+	// 					$classpath = 'actions/class';
+	// 					$classfile = 'action';
+	// 					$classname = 'Action';
+	// 					$module = 'actions';
+	// 				}elseif ($objecttype == 'actions_action') {
+	// 					$classpath = 'actions/class';
+	// 					$classfile = 'action';
+	// 					$classname = 'Action';
+	// 					$module = 'actions';
+	// 				}
 
-					// Here $module, $classfile and $classname are set, we can use them.
-					if ($conf->$module->enabled && (($element != $this->element) || $alsosametype)) {
-						if ($loadalsoobjects && (is_numeric($loadalsoobjects) || ($loadalsoobjects === $objecttype))) {
-							dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
-							//print '/'.$classpath.'/'.$classfile.'.class.php '.class_exists($classname);
-							if (class_exists($classname)) {
-								foreach ($objectids as $i => $objectid) {	// $i is rowid into llx_element_element
-									$object = new $classname($this->db);
-									$ret = $object->fetch($objectid);
-									if ($ret >= 0) {
-										$this->linkedObjects[$objecttype][$i] = $object;
-									}
-								}
-							}
-						}
-					} else {
-						unset($this->linkedObjectsIds[$objecttype]);
-					}
-				}
-			}
-			return 1;
-		} else {
-			dol_print_error($this->db);
-			return -1;
-		}
-	}
-
+	// 				// Here $module, $classfile and $classname are set, we can use them.
+	// 				if ($conf->$module->enabled && (($element != $this->element) || $alsosametype)) {
+	// 					if ($loadalsoobjects && (is_numeric($loadalsoobjects) || ($loadalsoobjects === $objecttype))) {
+	// 						dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
+	// 						//print '/'.$classpath.'/'.$classfile.'.class.php '.class_exists($classname);
+	// 						if (class_exists($classname)) {
+	// 							foreach ($objectids as $i => $objectid) {	// $i is rowid into llx_element_element
+	// 								$object = new $classname($this->db);
+	// 								$ret = $object->fetch($objectid);
+	// 								if ($ret >= 0) {
+	// 									$this->linkedObjects[$objecttype][$i] = $object;
+	// 								}
+	// 							}
+	// 						}
+	// 					}
+	// 				} else {
+	// 					unset($this->linkedObjectsIds[$objecttype]);
+	// 				}
+	// 			}
+	// 		}
+	// 		return 1;
+	// 	} else {
+	// 		dol_print_error($this->db);
+	// 		return -1;
+	// 	}
+	// }
 
 	public function load_board_constats($user)
 	{
@@ -2488,6 +2144,7 @@ function subManager($inManager, $inSubmanager)
 			return -1;
 		}
 	}
+
 	public function load_board_actions($user)
 	{
 		global $conf, $langs, $db;
@@ -2669,8 +2326,6 @@ function subManager($inManager, $inSubmanager)
 
 		return $actions_unsold;
 	}
-
-
 }
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobjectline.class.php';
 

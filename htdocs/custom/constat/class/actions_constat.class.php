@@ -409,32 +409,196 @@ class ActionsConstat
     }
 
 	public function addOpenElementsDashboardGroup($parameters, &$object, &$action, $hookmanager)
-{
-    global $conf, $user, $langs;
+	{
+		global $conf, $user, $langs;
 
-    $error = 0; // Compteur d'erreurs
-
-
-    if ($conf->constat->enabled) {
-        $this->results['constat'] = array(
-            'groupName' => $langs->trans('Constat et Actions'),
-            'globalStatsKey' => 'constat',
-            'stats' => array('constat', 'actions'),
-            'icon' => 'fa fa-dol-constat', // Ajout de l'icône ici
-        );
-    }
-
-    if (!$error) {
-        return 0;
-    } else {
-        $this->errors[] = 'Error message';
-        return -1;
-    }
-}
+		$error = 0; // Compteur d'erreurs
 
 
+		if ($conf->constat->enabled) {
+			$this->results['constat'] = array(
+				'groupName' => $langs->trans('Constat et Actions'),
+				'globalStatsKey' => 'constat',
+				'stats' => array('constat', 'actions'),
+				'icon' => 'fa fa-dol-constat', // Ajout de l'icône ici
+			);
+		}
+
+		if (!$error) {
+			return 0;
+		} else {
+			$this->errors[] = 'Error message';
+			return -1;
+		}
+	}
 
 
+	/**
+	 * Overloading the showLinkedObjectBlock function : replacing the parent's function with the one below
+	 *
+	 * @param   array           $parameters     Hook metadatas (context, etc...)
+	 * @param   CommonObject    $object         The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
+	 * @param   string          $action         Current action (if set). Generally create or edit or null
+	 * @param   HookManager     $hookmanager    Hook manager propagated to allow calling another hook
+	 * @return  int                             < 0 on error, 0 on success, 1 to replace standard code
+	 */
+	public function showLinkedObjectBlock($parameters, &$object, &$action, $hookmanager)
+	{
+		global $conf, $user, $langs;
 
-	/* Add here any other hooked methods... */
+		$error = 0; // Error counter
+
+		/* print_r($parameters); print_r($object); echo "action: " . $action; */
+		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {	    // do something only for the context 'somecontext1' or 'somecontext2'
+			// Do what you want here...
+			// You can for example call global vars like $fieldstosearchall to overwrite them, or update database depending on $action and $_POST values.
+		}
+
+		print '<!-- showLinkedObjectBlock -->';
+		print load_fiche_titre($langs->trans('RelatedObjects'), $parameters['morehtmlright'], '', 0, 0, 'showlinkedobjectblock');
+
+
+		print '<div class="div-table-responsive-no-min">';
+		print '<table class="noborder allwidth" data-block="showLinkedObject" data-element="' . $object->element . '"  data-elementid="' . $object->id . '"   >';
+
+		print '<tr class="liste_titre">';
+		print '<td>' . $langs->trans("Type") . '</td>';
+		print '<td>' . $langs->trans("Ref") . '</td>';
+		print '<td class="center"></td>';
+		print '<td class="center">' . $langs->trans("Date") . '</td>';
+		print '<td class="right">' . $langs->trans("Label") . '</td>';
+		print '<td class="right">' . $langs->trans("Status") . '</td>';
+		print '<td></td>';
+		print '</tr>';
+
+		$nboftypesoutput = 0;
+
+		foreach ($object->linkedObjects as $objecttype => $objects) {
+			$tplpath = $element = $subelement = $objecttype;
+
+			// to display inport button on tpl
+			$showImportButton = false;
+			if (!empty($parameters['compatibleImportElementsList']) && in_array($element, $parameters['compatibleImportElementsList'])) {
+				$showImportButton = true;
+			}
+
+			$regs = array();
+			if ($objecttype != 'supplier_proposal' && preg_match('/^([^_]+)_([^_]+)/i', $objecttype, $regs)) {
+				$element = $regs[1];
+				$subelement = $regs[2];
+				$tplpath = $element . '/' . $subelement;
+			}
+			$tplname = 'linkedobjectblock';
+
+			// To work with non standard path
+			if ($objecttype == 'facture') {
+				$tplpath = 'compta/' . $element;
+				if (!isModEnabled('facture')) {
+					continue; // Do not show if module disabled
+				}
+			} elseif ($objecttype == 'facturerec') {
+				$tplpath = 'compta/facture';
+				$tplname = 'linkedobjectblockForRec';
+				if (!isModEnabled('facture')) {
+					continue; // Do not show if module disabled
+				}
+			} elseif ($objecttype == 'propal') {
+				$tplpath = 'comm/' . $element;
+				if (!isModEnabled('propal')) {
+					continue; // Do not show if module disabled
+				}
+			} elseif ($objecttype == 'supplier_proposal') {
+				if (!isModEnabled('supplier_proposal')) {
+					continue; // Do not show if module disabled
+				}
+			} elseif ($objecttype == 'shipping' || $objecttype == 'shipment' || $objecttype == 'expedition') {
+				$tplpath = 'expedition';
+				if (!isModEnabled('expedition')) {
+					continue; // Do not show if module disabled
+				}
+			} elseif ($objecttype == 'reception') {
+				$tplpath = 'reception';
+				if (!isModEnabled('reception')) {
+					continue; // Do not show if module disabled
+				}
+			} elseif ($objecttype == 'delivery') {
+				$tplpath = 'delivery';
+				if (!isModEnabled('expedition')) {
+					continue; // Do not show if module disabled
+				}
+			} elseif ($objecttype == 'ficheinter') {
+				$tplpath = 'fichinter';
+				if (!isModEnabled('ficheinter')) {
+					continue; // Do not show if module disabled
+				}
+			} elseif ($objecttype == 'invoice_supplier') {
+				$tplpath = 'fourn/facture';
+			} elseif ($objecttype == 'order_supplier') {
+				$tplpath = 'fourn/commande';
+			} elseif ($objecttype == 'expensereport') {
+				$tplpath = 'expensereport';
+			} elseif ($objecttype == 'subscription') {
+				$tplpath = 'adherents';
+			} elseif ($objecttype == 'conferenceorbooth') {
+				$tplpath = 'eventorganization';
+			} elseif ($objecttype == 'conferenceorboothattendee') {
+				$tplpath = 'eventorganization';
+			} elseif ($objecttype == 'mo') {
+				$tplpath = 'mrp';
+				if (!isModEnabled('mrp')) {
+					continue; // Do not show if module disabled
+				}
+			}
+
+			global $linkedObjectBlock;
+			$linkedObjectBlock = $objects;
+
+			// Output template part (modules that overwrite templates must declare this into descriptor)
+			$dirtpls = array_merge($conf->modules_parts['tpl'], array('/' . $tplpath . '/tpl'));
+			foreach ($dirtpls as $reldir) {
+				if ($nboftypesoutput == ($nbofdifferenttypes - 1)) {    // No more type to show after
+					global $noMoreLinkedObjectBlockAfter;
+					$noMoreLinkedObjectBlockAfter = 1;
+				}
+
+				$res = @include dol_buildpath($reldir . '/' . $tplname . '.tpl.php');
+				if ($res) {
+					$nboftypesoutput++;
+					break;
+				}
+			}
+		}
+
+		if (!$nboftypesoutput) {
+			print '<tr><td class="impair" colspan="7"><span class="opacitymedium">' . $langs->trans("None") . '</span></td></tr>';
+		}
+
+		print '</table>';
+
+		if (!empty($parameters['compatibleImportElementsList'])) {
+			$res = @include dol_buildpath('core/tpl/objectlinked_lineimport.tpl.php');
+		}
+
+		print '</div>';
+
+		return 1;
+	}
+
+
+	/**
+	 * Overloading the setLinkedObjectSourceTargetType function : replacing the parent's function with the one below
+	 *
+	 * @param   array           $parameters     Hook metadatas (context, etc...)
+	 * @param   CommonObject    $object         The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
+	 * @param   string          $action         Current action (if set). Generally create or edit or null
+	 * @param   HookManager     $hookmanager    Hook manager propagated to allow calling another hook
+	 * @return  int                             < 0 on error, 0 on success, 1 to replace standard code
+	 */
+	// public function setLinkedObjectSourceTargetType($parameters, &$object, &$action, $hookmanager)
+	// {
+	// 	$this->results = array('sourcetype' => 'constat_constat', 'targettype' => 'constat_constat');
+	// 	return 1; // or return 1 to replace standard code
+	// }
+
+
 }
