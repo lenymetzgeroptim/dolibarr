@@ -179,8 +179,6 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
-
-
 $data = json_decode(file_get_contents('php://input'), true);
 
 // Vérifier le statut de l'OT
@@ -448,13 +446,13 @@ try {
 
         if (!empty($cellIdsToDelete)) {
             $cellIdsToDeleteString = implode(',', $cellIdsToDelete);
-
+        
             // Supprimer les entrées dans ot_ot_cellule_donne
             $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne WHERE ot_cellule_id IN ($cellIdsToDeleteString)";
             if (!$db->query($sql)) {
                 throw new Exception("Erreur lors de la suppression des userId liés aux cellules supprimées : " . $db->lasterror());
             }
-
+        
             // Supprimer les cellules
             $sql = "DELETE FROM " . MAIN_DB_PREFIX . "ot_ot_cellule WHERE rowid IN ($cellIdsToDeleteString)";
             if (!$db->query($sql)) {
@@ -472,8 +470,6 @@ try {
     error_log($e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }
-
-
 
 /*
  * Actions
@@ -564,8 +560,6 @@ if (empty($reshook)) {
 		// ... existing code ...
 	}
 }
-
-
 
 
 /*
@@ -1478,7 +1472,6 @@ foreach ($cellData as $cell) {
         $cell->userDetails = $userDetails;
     }
 }
-
 
 // Ajouter la liste des sous-traitants au tableau cellData
 $cellData[] = [

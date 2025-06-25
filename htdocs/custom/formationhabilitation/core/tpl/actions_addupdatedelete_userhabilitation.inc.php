@@ -150,6 +150,7 @@ if($action == 'updateline' && !$cancel && $permissiontoaddline){
 
 if ($action == 'confirm_deleteline' && $confirm == 'yes' && $permissiontodeleteline) {
     $resultdelete = $object->deleteLine($user, $lineid);
+
     if ($resultdelete > 0) {
         setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
         // header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(!empty($onglet) ? "&onglet=$onglet" : ''));

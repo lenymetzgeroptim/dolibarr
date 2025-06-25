@@ -31,7 +31,7 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/triggers/dolibarrtriggers.class.php';
-
+require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
 /**
  *  Class of triggers for MyModule module
@@ -205,6 +205,37 @@ class InterfaceOTTriggers extends DolibarrTriggers
             }
         }
 
+        if ($action == 'LINE_DELETE') {
+            if (isset($object->id)) {
+
+                $sql = "SELECT DISTINCT p.rowid 
+                        FROM " . MAIN_DB_PREFIX . "projet AS p
+                        INNER JOIN " . MAIN_DB_PREFIX . "element_contact AS ec 
+                            ON ec.element_id = p.rowid 
+                        WHERE ec.fk_socpeople = " . intval($object->id) . " 
+                          AND p.fk_statut = 1 
+                          AND ec.fk_c_type_contact != 155 ";
+                          
+                       
+
+                $resql = $db->query($sql);
+
+                if ($resql) {
+                    $projects = [];
+                    while ($obj = $db->fetch_object($resql)) {
+                        $projects[] = $obj->rowid;
+                    }
+                   
+
+                    foreach ($projects as $projectId) {
+                        $this->createOTForProject($projectId, $object->id);
+                        
+                    }
+                }
+                
+             
+            }
+        }
         return 1;
     }
 
@@ -212,12 +243,16 @@ class InterfaceOTTriggers extends DolibarrTriggers
     {
         global $db, $user;
 
+        
+
         $project = new Project($db);
         if (!$project->fetch($projectId)) {
+      
             return;
         }
 
         $dateCreation = date('Y-m-d H:i:s');
+        
 
         // Fetch project reference
         $sql = "SELECT ref FROM " . MAIN_DB_PREFIX . "projet WHERE rowid = " . intval($projectId);
@@ -229,6 +264,7 @@ class InterfaceOTTriggers extends DolibarrTriggers
                 $projectRef = $obj->ref;
             }
         }
+        
 
         // Generate unique OT reference
         $lastFiveChars = substr($projectRef, -5);
@@ -241,6 +277,7 @@ class InterfaceOTTriggers extends DolibarrTriggers
                 $maxIndice = $obj->max_indice;
             }
         }
+        
 
         // Archive the last OT
         if ($maxIndice > 0) {
@@ -249,6 +286,7 @@ class InterfaceOTTriggers extends DolibarrTriggers
                     WHERE fk_project = " . intval($projectId) . " AND indice = " . intval($maxIndice);
             $resql = $db->query($sql);
             if (!$resql) {
+                
                 return;
             }
         }
@@ -256,6 +294,7 @@ class InterfaceOTTriggers extends DolibarrTriggers
         // Create the new OT
         $newIndice = $maxIndice + 1;
         $otRef = $lastFiveChars . ' OT ' . $newIndice;
+        
 
         $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot 
                 (fk_project, fk_user_creat, date_creation, indice, ref, status, tms) 
@@ -269,9 +308,14 @@ class InterfaceOTTriggers extends DolibarrTriggers
                     NOW()
                 )";
 
+        
+
         $resql = $db->query($sql);
         if (!$resql) {
+            
             return;
         }
+
+       
     }
 }
