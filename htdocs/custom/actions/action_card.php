@@ -184,10 +184,10 @@ if (empty($reshook)) {
 				$backtopage = $backurlforlist;
 			} else {
 				$backtopage = dol_buildpath('/actions/action_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__').'&origin='.$origin.'&origin_id='.$originid.'';
-				if($id != '' && !empty($origin) && !empty($originid)) {
-					$object->deleteObjectLinked($origin, $originid);
-					$object->add_object_linked($origin, $originid);
-				}
+				// if($id != '' && !empty($origin) && !empty($originid)) {
+				// 	$object->deleteObjectLinked($origin, $originid);
+				// 	$object->add_object_linked($origin, $originid);
+				// }
 			}
 		}
 	}
@@ -200,268 +200,7 @@ if (empty($reshook)) {
 	//ajout de l'intervenant dans le groupe "action pilote" 
 	//if ($user->id )
 
-	
-	$triggermodname = 'ACTIONS_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
-
-	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
-	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
-
-	// Actions when linking object each other
-	include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
-
-	// Actions when printing a doc from card
-	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
-
-	// Action to move up and down lines of object
-	//include DOL_DOCUMENT_ROOT.'/core/actions_lineupdown.inc.php';
-
-	// Action to build doc
-	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
-
-	if ($action == 'set_thirdparty' && $permissiontoadd) {
-		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
-	}
-	if ($action == 'classin' && $permissiontoadd) {
-		$object->setProject(GETPOST('projectid', 'int'));
-	}
-
-	// Actions to send emails
-	$triggersendname = 'ACTIONS_MYOBJECT_SENTBYMAIL';
-	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
-	$trackid = 'action'.$object->id;
-	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
-}
-
-if ($action == 'confirm_delete' && !empty($permissiontodelete)) {
-	$result = $object->deleteObjectLinked($origin, $originid);
-}
-
-/*
- * View
- */
-//var_dump($object->alert);
-$form = new Form($db);
-$actionForm = new actionsForm($db);
-$formfile = new FormFile($db);
-$formproject = new FormProjets($db);
-
-$title = $langs->trans("Action");
-$help_url = '';
-llxHeader('', $title, $help_url);
-
-// Example : Adding jquery code
-// print '<script type="text/javascript">
-// jQuery(document).ready(function() {
-// 	function init_myfunc()
-// 	{
-// 		jQuery("#myid").removeAttr(\'disabled\');
-// 		jQuery("#myid").attr(\'disabled\',\'disabled\');
-// 	}
-// 	init_myfunc();
-// 	jQuery("#mybutton").click(function() {
-// 		init_myfunc();
-// 	});
-// });
-// </script>';
-
-
-
-
-
-// Part to create
-if ($action == 'create') {
-
-    // Si un ID est passé dans l'URL, on considère qu'il s'agit d'une action existante
-    // qu'il faut clôturer.
-    if (!empty($_GET['id']))
-    {
-        // Met à jour le statut de l'action dont l'ID est passé dans l'URL.
-        $res = $object->updateCloture();
-        if ($res > 0) {
-            dol_syslog("Action ID " . $object->id . " clôturée avec succès.");
-        } else {
-            setEventMessages("Erreur lors de la clôture de l'action.", null, 'errors');
-        }
-    }
-
-    
-    if (!empty($_GET['origin']) && $_GET['origin'] == 'constat')
-    {
-         $object->origins = 4;
-         $_POST['origins'] = 4;
-    }
-
-    if (empty($permissiontoadd)) {
-        accessforbidden('NotEnoughPermissions', 0, 1);
-    }
-
-    print load_fiche_titre($langs->trans("Nouvelle Action", $langs->transnoentitiesnoconv("Action")), '', 'object_'.$object->picto);
-
-    print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-    print '<input type="hidden" name="token" value="'.newToken().'">';
-    print '<input type="hidden" name="action" value="add">';
-    print '<input type="hidden" name="origin" value="'.$origin.'">';
-    print '<input type="hidden" name="originid" value="'.$originid.'">';
-    if ($backtopage) {
-        print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-    }
-    if ($backtopageforcancel) {
-        print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
-    }
-    if ($backtopagejsfields) {
-        print '<input type="hidden" name="backtopagejsfields" value="'.$backtopagejsfields.'">';
-    }
-    if ($dol_openinpopup) {
-        print '<input type="hidden" name="dol_openinpopup" value="'.$dol_openinpopup.'">';
-    }
-
-    print dol_get_fiche_head(array(), '');
-
-    // Set some default values
-    // if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
-
-    print '<table class="border centpercent tableforfieldcreate">'."\n";
-    // Reference
-    print '<tr><td class="titlefieldcreate fieldrequired">'.$langs->trans('Ref').'</td><td>'.$langs->trans("Draft").'</td></tr>';
-
-    // Common attributes
-    include DOL_DOCUMENT_ROOT.'/custom/actions/tpl/commonfields_add.tpl.php';
-
-    // Other attributes
-    include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
-
-    if ($element == 'constat') {
-        $element = 'custom/constat';
-        $subelement = 'constat';
-    }
-    dol_include_once('/custom/constat/class/constat.class.php');
-    $srcobject = new Constat($db);
-    $srcobject->fetch($originid);
-    if (!empty($origin) && !empty($originid) && is_object($srcobject)) {
-
-        print "\n<!-- ".$classname." info -->";
-        print "\n";
-
-        print '<input type="hidden" name="origin"         value="'.$srcobject->element.'">';
-        print '<input type="hidden" name="originid"       value="'.$srcobject->id.'">';
-
-        switch ($classname) {
-            case 'Constat':
-                $newclassname = 'Constat';
-                break;
-            default:
-                $newclassname = $classname;
-        }
-
-        print '<tr><td>'.$langs->trans('Constat').'</td><td>'.$srcobject->getNomUrl(1).'</td></tr>';
-    }
-
-    print '</table>'."\n";
-
-    print dol_get_fiche_end();
-
-    // Boutons d'enregistrement
-    print $form->buttonsSaveCancel("CreateDraft");
-
-    print '</form>';
-
-    // dol_set_focus('input[name="ref"]');
-}
-
-
-
-
-// Part to edit record
-if (($id || $ref) && $action == 'edit') {
-	print load_fiche_titre($langs->trans("Action"), '', 'object_'.$object->picto);
-
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.newToken().'">';
-	print '<input type="hidden" name="action" value="update">';
-	print '<input type="hidden" name="id" value="'.$object->id.'">';
-	print '<input type="hidden" name="origin" value="'.$origin.'">';
-	print '<input type="hidden" name="originid" value="'.$originid.'">';
-
-	if ($backtopage) {
-		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-	}
-	if ($backtopageforcancel) {
-		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
-	}
-
-	print dol_get_fiche_head();
-
-	print '<table class="border centpercent tableforfieldedit">'."\n";
-
-	// Common attributes
-	include DOL_DOCUMENT_ROOT.'/custom/actions/tpl/commonfields_edit.tpl.php';
-
-	// Other attributes
-	include DOL_DOCUMENT_ROOT.'/custom/actions/tpl/extrafields_edit.tpl.php';
-	
-	
-	if ($element == 'constat') {
-		$element = 'custom/constat';
-		$subelement = 'constat';
-	}
-	dol_include_once('/custom/constat/class/constat.class.php');
-	$srcobject = new Constat($db);
-	$srcobject->fetch($originid);
-	if (!empty($origin) && !empty($originid) && is_object($srcobject)) {
-
-		print "\n<!-- ".$classname." info -->";
-		print "\n";
-		
-		print '<input type="hidden" name="origin"         value="'.$srcobject->element.'">';
-		print '<input type="hidden" name="originid"       value="'.$srcobject->id.'">';
-
-		switch ($classname) {
-			case 'Constat':
-				$newclassname = 'Constat';
-				break;
-			default:
-				$newclassname = $classname;
-		}
-
-		print '<tr><td>'.$langs->trans('Constat').'</td><td>'.$srcobject->getNomUrl(1).'</td></tr>';
-	}
-	
-	print '</table>';
-
-	print dol_get_fiche_end();
-
-	print $form->buttonsSaveCancel();
-
-	print '</form>';
-
-}
-
-// Part to show record
-if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
-	$head = actionPrepareHead($object);
-
-	print dol_get_fiche_head($head, 'card', $langs->trans("Action"), -1, $object->picto, 0, '', '', 0, '', 1);
-
-	$formconfirm = '';
-
-	// Confirmation to delete
-	if ($action == 'delete') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&origin='.$origin.'&originid='.$originid, $langs->trans('DeleteAction'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 1);
-	}
-	
-	// Confirmation to delete line
-	if ($action == 'deleteline') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
-	}
-
-	// Clone confirmation
-	if ($action == 'clone') {
-		// Create an array for form
-		$formquestion = array();
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
-	}
-
-	// Encours confirmation
+		// Encours confirmation
 	if( $action == 'setEnCours'){
 
 		$object->updateEnCours();
@@ -508,7 +247,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	}
 
-	
 
 	if( $action == 'setClasse'  && $confirm == 'yes' ){
 
@@ -541,7 +279,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 
 	//envoie notification de fin d'une action au service Q3SE et au pilote
-	
 	if ($action == 'setSolde' && $confirm == 'yes') {
 		$subject = '[OPTIM Industries] Notification automatique action soldé ';
 		$from = 'erp@optim-industries.fr';
@@ -611,8 +348,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 
 
-	//envoie notification au pilote si action est de retour au status en cours
-			
+	//envoie notification au pilote si action est de retour au status en cours	
 	if ($action == 'setEnCours' && $confirm == 'oui') {
 		$subject = '[OPTIM Industries] Notification automatique action en cours';
 		$from = 'erp@optim-industries.fr';
@@ -720,8 +456,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
 		}
 	}
-
-	
 	
 	//notification de l'action en attente de validation de solde
 	if ($action == 'setEnCours') {
@@ -773,8 +507,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 	}
 	
-
-
 	// mail pour relance action en cours
 	if ($action == 'setRelance') {
 		$currentDateTime = date('Y-m-d H:i:s');
@@ -826,11 +558,285 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 	}
 	
+	if ($action == 'confirm_delete' && !empty($permissiontodelete)) {
+		$result = $object->deleteObjectLinked($origin, $originid);
+	}
 
+	$triggermodname = 'ACTIONS_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
+
+	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
+	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
+
+	// Actions when linking object each other
+	include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
+
+	// Actions when printing a doc from card
+	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
+
+	// Action to move up and down lines of object
+	//include DOL_DOCUMENT_ROOT.'/core/actions_lineupdown.inc.php';
+
+	// Action to build doc
+	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
+
+	if ($action == 'set_thirdparty' && $permissiontoadd) {
+		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
+	}
+	if ($action == 'classin' && $permissiontoadd) {
+		$object->setProject(GETPOST('projectid', 'int'));
+	}
+
+	// Actions to send emails
+	$triggersendname = 'ACTIONS_MYOBJECT_SENTBYMAIL';
+	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
+	$trackid = 'action'.$object->id;
+	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
+}
+
+/*
+ * View
+ */
+//var_dump($object->alert);
+$form = new Form($db);
+$actionForm = new actionsForm($db);
+$formfile = new FormFile($db);
+$formproject = new FormProjets($db);
+
+$title = $langs->trans("Action");
+$help_url = '';
+llxHeader('', $title, $help_url);
+
+// Example : Adding jquery code
+// print '<script type="text/javascript">
+// jQuery(document).ready(function() {
+// 	function init_myfunc()
+// 	{
+// 		jQuery("#myid").removeAttr(\'disabled\');
+// 		jQuery("#myid").attr(\'disabled\',\'disabled\');
+// 	}
+// 	init_myfunc();
+// 	jQuery("#mybutton").click(function() {
+// 		init_myfunc();
+// 	});
+// });
+// </script>';
+
+
+
+
+
+// Part to create
+if ($action == 'create') {
+
+    // Si un ID est passé dans l'URL, on considère qu'il s'agit d'une action existante
+    // qu'il faut clôturer.
+    // if (!empty($_GET['id']))
+    // {
+    //     // Met à jour le statut de l'action dont l'ID est passé dans l'URL.
+    //     $res = $object->updateCloture();
+    //     if ($res > 0) {
+    //         dol_syslog("Action ID " . $object->id . " clôturée avec succès.");
+    //     } else {
+    //         setEventMessages("Erreur lors de la clôture de l'action.", null, 'errors');
+    //     }
+    // }
+
+    
+    // if (!empty($origin) && $origin == 'constat') {
+    //     $object->origins = 4;
+    //     // $_POST['origins'] = 4;
+    // }
+
+    if (empty($permissiontoadd)) {
+        accessforbidden('NotEnoughPermissions', 0, 1);
+    }
+
+    print load_fiche_titre($langs->trans("Nouvelle Action", $langs->transnoentitiesnoconv("Action")), '', 'object_'.$object->picto);
+
+    print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+    print '<input type="hidden" name="token" value="'.newToken().'">';
+    print '<input type="hidden" name="action" value="add">';
+    print '<input type="hidden" name="origin" value="'.$origin.'">';
+    print '<input type="hidden" name="originid" value="'.$originid.'">';
+    if ($backtopage) {
+        print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+    }
+    if ($backtopageforcancel) {
+        print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
+    }
+    if ($backtopagejsfields) {
+        print '<input type="hidden" name="backtopagejsfields" value="'.$backtopagejsfields.'">';
+    }
+    if ($dol_openinpopup) {
+        print '<input type="hidden" name="dol_openinpopup" value="'.$dol_openinpopup.'">';
+    }
+
+    print dol_get_fiche_head(array(), '');
+
+    // Set some default values
+    // if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
+
+    print '<table class="border centpercent tableforfieldcreate">'."\n";
+
+	if (!empty($origin) && !empty($originid)) {
+        print "\n<!-- ".$classname." info -->";
+        print "\n";
+
+		$element = $subelement = $origin;
+		if ($element == 'constat') {
+			$element = 'custom/constat';
+			$subelement = 'constat';
+			$txt = $langs->trans('Constat');
+			$origins = 4;
+		}
+
+        // switch ($classname) {
+        //     case 'Constat':
+        //         $newclassname = 'Constat';
+        //         break;
+        //     default:
+        //         $newclassname = $classname;
+        // }
+
+		require_once DOL_DOCUMENT_ROOT.'/'.$element.'/class/'.$subelement.'.class.php';
+		$classname = ucfirst($subelement);
+		$objectsrc = new $classname($db);
+		$objectsrc->fetch($originid);
+		$objectsrc->fetch_thirdparty();
+
+		if(is_object($objectsrc)) {			
+			print '<tr class="field_origins">';
+			print '<td class="titlefieldcreate fieldrequired">';
+				print $langs->trans($object->fields['origins']['label']);
+			print '</td>';
+			print '<td class="valuefieldcreate">';
+				print $object->showOutputField($object->fields['origins'], 'origins', $origins, '', '', '', 0);
+			print '</td>';
+			unset($object->fields['origins']);
+
+        	print '<tr><td>'.$txt.'</td><td>'.$objectsrc->getNomUrl(1).'</td></tr>';
+		}
+    }
+
+    // Reference
+    // print '<tr><td class="titlefieldcreate fieldrequired">'.$langs->trans('Ref').'</td><td>'.$langs->trans("Draft").'</td></tr>';
+
+    // Common attributes
+    include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
+
+    // Other attributes
+    include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
+
+    print '</table>'."\n";
+
+    print dol_get_fiche_end();
+
+    // Boutons d'enregistrement
+    print $form->buttonsSaveCancel("CreateDraft");
+
+    print '</form>';
+
+    // dol_set_focus('input[name="ref"]');
+}
+
+
+
+
+// Part to edit record
+if (($id || $ref) && $action == 'edit') {
+	print load_fiche_titre($langs->trans("Action"), '', 'object_'.$object->picto);
+
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="update">';
+	print '<input type="hidden" name="id" value="'.$object->id.'">';
+	print '<input type="hidden" name="origin" value="'.$origin.'">';
+	print '<input type="hidden" name="originid" value="'.$originid.'">';
+
+	if ($backtopage) {
+		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+	}
+	if ($backtopageforcancel) {
+		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
+	}
+
+	print dol_get_fiche_head();
+
+	print '<table class="border centpercent tableforfieldedit">'."\n";
+
+	// Common attributes
+	include DOL_DOCUMENT_ROOT.'/custom/actions/core/tpl/commonfields_edit.tpl.php';
+
+	// Other attributes
+	include DOL_DOCUMENT_ROOT.'/custom/actions/core/tpl/extrafields_edit.tpl.php';
+	
+	
+	if (!empty($origin) && !empty($originid)) {
+        print "\n<!-- ".$classname." info -->";
+        print "\n";
+
+		$element = $subelement = $origin;
+		if ($element == 'constat') {
+			$element = 'custom/constat';
+			$subelement = 'constat';
+			$txt = $langs->trans('Constat');
+		}
+
+        // switch ($classname) {
+        //     case 'Constat':
+        //         $newclassname = 'Constat';
+        //         break;
+        //     default:
+        //         $newclassname = $classname;
+        // }
+
+		require_once DOL_DOCUMENT_ROOT.'/'.$element.'/class/'.$subelement.'.class.php';
+		$classname = ucfirst($subelement);
+		$objectsrc = new $classname($db);
+		$objectsrc->fetch($originid);
+		$objectsrc->fetch_thirdparty();
+
+		if(is_object($objectsrc)) {
+        	print '<tr><td>'.$txt.'</td><td>'.$objectsrc->getNomUrl(1).'</td></tr>';
+		}
+    }
+	
+	print '</table>';
+
+	print dol_get_fiche_end();
+
+	print $form->buttonsSaveCancel();
+
+	print '</form>';
+
+}
+
+// Part to show record
+if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
+	$head = actionPrepareHead($object);
+
+	print dol_get_fiche_head($head, 'card', $langs->trans("Action"), -1, $object->picto, 0, '', '', 0, '', 1);
+
+	$formconfirm = '';
+
+	// Confirmation to delete
+	if ($action == 'delete') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&origin='.$origin.'&originid='.$originid, $langs->trans('DeleteAction'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 1);
+	}
+	
+	// Confirmation to delete line
+	if ($action == 'deleteline') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
+	}
+
+	// Clone confirmation
+	if ($action == 'clone') {
+		// Create an array for form
+		$formquestion = array();
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
+	}
 
 	
-	$action ='';
-
 	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
 	if ($action == 'xxx') {
 		$text = $langs->trans('ConfirmActionAction', $object->ref);
@@ -938,9 +944,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	 * Lines
 	 */
 
-
-
-
 	if (!empty($object->table_element_line)) {
 		// Show object lines
 		$result = $object->getLinesArray();
@@ -987,44 +990,44 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print "</form>\n";
 	}
 
-	print"<script> // Fonction pour afficher une popup temporaire
-	function showPopupMessage(message, type = 'info', duration = 10000) {
-		let popupContainer = document.getElementById('popup-container');
-		if (!popupContainer) {
-			popupContainer = document.createElement('div');
-			popupContainer.id = 'popup-container';
-			popupContainer.style.position = 'fixed';
-			popupContainer.style.top = '50px';
-			popupContainer.style.left = '50%';
-			popupContainer.style.transform = 'translateX(-50%)';
-			popupContainer.style.zIndex = '1000';
-			popupContainer.style.display = 'flex';
-			popupContainer.style.flexDirection = 'column';
-			popupContainer.style.alignItems = 'center';
-			document.body.appendChild(popupContainer);
-		}
+	// print"<script> // Fonction pour afficher une popup temporaire
+	// function showPopupMessage(message, type = 'info', duration = 10000) {
+	// 	let popupContainer = document.getElementById('popup-container');
+	// 	if (!popupContainer) {
+	// 		popupContainer = document.createElement('div');
+	// 		popupContainer.id = 'popup-container';
+	// 		popupContainer.style.position = 'fixed';
+	// 		popupContainer.style.top = '50px';
+	// 		popupContainer.style.left = '50%';
+	// 		popupContainer.style.transform = 'translateX(-50%)';
+	// 		popupContainer.style.zIndex = '1000';
+	// 		popupContainer.style.display = 'flex';
+	// 		popupContainer.style.flexDirection = 'column';
+	// 		popupContainer.style.alignItems = 'center';
+	// 		document.body.appendChild(popupContainer);
+	// 	}
 
-		let popup = document.createElement('div');
-		popup.className = 'popup-message';
-		popup.textContent = message;
-		popup.style.background = '#4CAF50';
-		popup.style.color = '#fff';
-		popup.style.fontWeight = 'bold';
-		popup.style.padding = '10px 20px';
-		popup.style.margin = '5px';
-		popup.style.borderRadius = '5px';
-		popup.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
-		popup.style.opacity = '1';
-		popup.style.transition = 'opacity 0.5s ease-in-out';
+	// 	let popup = document.createElement('div');
+	// 	popup.className = 'popup-message';
+	// 	popup.textContent = message;
+	// 	popup.style.background = '#4CAF50';
+	// 	popup.style.color = '#fff';
+	// 	popup.style.fontWeight = 'bold';
+	// 	popup.style.padding = '10px 20px';
+	// 	popup.style.margin = '5px';
+	// 	popup.style.borderRadius = '5px';
+	// 	popup.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
+	// 	popup.style.opacity = '1';
+	// 	popup.style.transition = 'opacity 0.5s ease-in-out';
 
-		popupContainer.appendChild(popup);
+	// 	popupContainer.appendChild(popup);
 
-		setTimeout(() => {
-			popup.style.opacity = '0';
-			setTimeout(() => popup.remove(), 500);
-		}, duration);
-	}
-	</script>";
+	// 	setTimeout(() => {
+	// 		popup.style.opacity = '0';
+	// 		setTimeout(() => popup.remove(), 500);
+	// 	}, duration);
+	// }
+	// </script>";
 	
 	// Buttons for actions
 
@@ -1123,7 +1126,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				//passé au status classé(annulé)
 				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED) {
 					print dolGetButtonAction('', $langs->trans('Annuler cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken(), '', $permissiontoadd);	
-					print "<script>showPopupMessage('Le pilote peut passer son action au status \'attente  soldée\' que si son avancement est à 100% ', 'error');</script>";	
+					//print "<script>showPopupMessage('Le pilote peut passer son action au status \'attente  soldée\' que si son avancement est à 100% ', 'error');</script>";	
 				}
 
 				if ($object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
@@ -1137,7 +1140,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 
 				if($object->status == $object::STATUS_SOLDEE){
-					print "<script>showPopupMessage('veuilliez évaluer l\'action', 'error');</script>";
+					//print "<script>showPopupMessage('veuilliez évaluer l\'action', 'error');</script>";
 				}
 			}
 

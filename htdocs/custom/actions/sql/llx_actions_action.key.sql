@@ -17,10 +17,10 @@
 -- BEGIN MODULEBUILDER INDEXES
 ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_rowid (rowid);
 ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_ref (ref);
-ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_numeroo (numeroo);
+ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_numero (numero);
+ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_status (status);
 ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_intervenant (intervenant);
 ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_alert (alert);
-ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_status (status);
 -- END MODULEBUILDER INDEXES
 
 --ALTER TABLE llx_actions_action ADD UNIQUE INDEX uk_actions_action_fieldxy(fieldx, fieldy);

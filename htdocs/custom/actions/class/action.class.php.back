@@ -125,11 +125,11 @@ class Action extends CommonObject
 		"status" => array("type"=>"integer", "label"=>"Statut", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("{0:Brouillon" => "1:Validé,2:En cours,3:Soldée,9:Classé}"), "validate"=>"1",),
 		"intervenant" => array("type"=>"integer:User:user/class/user.class.php:1", "label"=>"Pilote", "enabled"=>"1", 'position'=>42, 'notnull'=>0, "visible"=>"1", "index"=>"1",),
 		"fk_user_creat" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"5", "csslist"=>"tdoverflowmax150",),
-		"priority" => array("type"=>"integer", "label"=>"Priorité", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1", "help"=>"Urgent et important : Priorité 1 (AC suivi mensuellement)</br>Non urgent et important : Priorité 2 (Suivi 6mois)</br>Urgent et pas important : Priorité 2 (Suivi 6mois)</br>Non urgent et pas important : Priorité 3 (Suivi 1an)", "arrayofkeyval"=>array("1" => "1", "2" => "2", "3" => "3", ),),
+		"priority" => array("type"=>"integer", "label"=>"Priorité", "enabled"=>"1", 'position'=>31, 'notnull'=>1, "visible"=>"1", "help"=>"Urgent et important : Priorité 1 (AC suivi mensuellement)<br>Non urgent et important : Priorité 2 (Suivi 6mois)<br>Urgent et pas important : Priorité 2 (Suivi 6mois)<br>Non urgent et pas important : Priorité 3 (Suivi 1an)", "arrayofkeyval"=>array("1" => "1", "2" => "2", "3" => "3"),),
 		"alert" => array("type"=>"method:alerte", "label"=>"Alerte", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"5", "index"=>"1", "help"=>"Alerte visuelle pour le retard de l'action",),
 		"solde" => array("type"=>"method:solde_delais", "label"=>"Solde délai", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"5", "help"=>"Solde dans les délais (en nombre de jour).",),
-		"origins" => array("type"=>"integer", "label"=>"Origine", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "AUDIT EXTERNE", "2" => "AUDIT CROISE", "3" => "AUDIT INTERNE", "4" => "FC", "5" => "VEILLE REGLEMENTAIRE", "6" => "REMONTE TERRAIN", "7" => "DECISION INTERNE", "8" => "DOCUMENT UNIQUE", "10" => "POINT Q3SE & RP", "11" => "REVUE DIRECTION", "12" => "VISITE TERRAIN"),),
-		"label" => array("type"=>"varchar(255)", "label"=>"Libellé", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1", "help"=>"Nom de l'action",),
+		"origins" => array("type"=>"integer", "label"=>"Origine", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"1", "help"=>"Origine de l'action", "arrayofkeyval"=>array("{1:AUDIT EXTERNE" => "2:AUDIT CROISE,3:AUDIT INTERNE,4:FC,5:VEILLE REGLEMENTAIRE,6:REMONTE TERRAIN,7:DECISION INTERNE,8:DOCUMENT UNIQUE,10:POINT Q3SE&RP,11:REVUE DIRECTION,12:VISITE TERRAIN}"),),
+		"reference" => array("type"=>"varchar(255)", "label"=>"Libellé", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1", "help"=>"Nom de la référence et du libellé de l'action",),
 		"action_sse" => array("type"=>"integer", "label"=>"Action SSE", "enabled"=>"1", 'position'=>37, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Non", "1" => "Oui"),),
 		"action_rp" => array("type"=>"integer", "label"=>"Action RP", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Non", "1" => "Oui"),),
 		"action_surete" => array("type"=>"integer", "label"=>"Action SURETE", "enabled"=>"1", 'position'=>39, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Non", "1" => "Oui"),),
@@ -137,11 +137,11 @@ class Action extends CommonObject
 		"date_creation" => array("type"=>"date", "label"=>"Date création action", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"1",),
 		"action_txt" => array("type"=>"html", "label"=>"Description action", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1", "help"=>"Déscription détaillé de l'action",),
 		"date_eche" => array("type"=>"date", "label"=>"Date échéance", "enabled"=>"1", 'position'=>55, 'notnull'=>1, "visible"=>"1",),
-		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "help"=>"Avancement en %", "arrayofkeyval"=>array("0" => "0%", "1" => "25%", "2" => "50%", "3" => "75%", "4" => "100%", ),),
+		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "help"=>"Avancement en %", "arrayofkeyval"=>array("{1:0%" => "2:25%,3:50%,4:75%,5:100%}"),),
 		"date_sol" => array("type"=>"date", "label"=>"Date solde", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1",),
 		"diffusion" => array("type"=>"integer", "label"=>"Diffusion document", "enabled"=>"1", 'position'=>65, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Non", "1" => "Oui"),),
 		"com" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"1", "help"=>"Commmentaire sur l'action ",),
-		"eff_act" => array("type"=>"integer", "label"=>"Efficacité action", "enabled"=>"1", 'position'=>75, 'notnull'=>1, "visible"=>"1", "help"=>"Différent niveau d'éfficacité de l'action : A = le plus éfficace C = le moins", "arrayofkeyval"=>array("1" => "A", "2" => "B", "9" => "C"),),
+		"eff_act" => array("type"=>"integer", "label"=>"Efficacité action", "enabled"=>"1", 'position'=>75, 'notnull'=>1, "visible"=>"1", "help"=>"Différent niveau d'éfficacité de l'action : A = le plus éfficace C = le moins", "arrayofkeyval"=>array("0" => "", "1" => "A", "2" => "B", "9" => "C"),),
 		"eff_act_description" => array("type"=>"html", "label"=>"Détail efficacité", "enabled"=>"1", 'position'=>77, 'notnull'=>0, "visible"=>"1",),
 		"date_asse" => array("type"=>"date", "label"=>"Date évalutation", "enabled"=>"1", 'position'=>80, 'notnull'=>0, "visible"=>"1",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>270, 'notnull'=>0, "visible"=>"0",),
@@ -156,7 +156,7 @@ class Action extends CommonObject
 	public $alert;
 	public $solde;
 	public $origins;
-	public $label;
+	public $reference;
 	public $action_sse;
 	public $action_rp;
 	public $action_surete;
@@ -270,17 +270,6 @@ class Action extends CommonObject
 
 		//$resultvalidate = $this->validate($user, $notrigger);
 
-		$origin    =  GETPOST('origin', 'alpha');
-		$originid  = (GETPOST('originid', 'int') ? GETPOST('originid', 'int') : GETPOST('origin_id', 'int'));    // For backward compatibility
-		if($resultcreate && $origin && $originid) {
-			$resultlinkedobject = $this->add_object_linked($origin, $originid);
-
-			if(!$resultlinkedobject) {
-				$this->error = 'ErrorAddObjectLinked';
-				return -1;
-			}
-		}
-
 		return $resultcreate;
 	}
 
@@ -324,7 +313,7 @@ class Action extends CommonObject
 	// 	$sql .= " alert,";
 	// 	// $sql .= " solde,";
 	// 	$sql .= " origins,";
-	// 	// $sql .= " label,";
+	// 	// $sql .= " reference,";
 	// 	$sql .= " action_sse,";
 	// 	$sql .= " action_rp,";
 	// 	$sql .= " date_creation,";
@@ -345,7 +334,7 @@ class Action extends CommonObject
 	// 	$sql .= ", ".($this->alert > 0 ? ((int) $this->alert) : "null");
 	// 	// $sql .= ", '".$this->db->escape($this->solde)."'";
 	// 	$sql .= ", '".$this->db->escape($this->origins)."'";
-	// 	// $sql .= ", '".$this->db->escape($this->label)."'";
+	// 	// $sql .= ", '".$this->db->escape($this->reference)."'";
 	// 	$sql .= ", '".$this->action_sse."'";
 	// 	$sql .= ", '".$this->action_rp."'";
 	// 	$sql .= ", '".$this->db->idate($this->date_creation)."'";
@@ -584,7 +573,7 @@ class Action extends CommonObject
 		$sql .= " ac.alert,";
 		$sql .= " ac.solde,";
 		$sql .= " ac.origins,";
-		$sql .= " ac.label,";
+		$sql .= " ac.reference,";
 		$sql .= " ac.action_sse,";
 		$sql .= " ac.action_rp,";
 		$sql .= " ac.action_surete,";
@@ -627,7 +616,7 @@ class Action extends CommonObject
 			//	$this->alert = $this->alerte($obj->status, date('Y-m-d', $this->db->idate($obj->date_eche)));
 				$this->solde   = $this->solde_delai($obj->status,$obj->date_eche,$obj->date_sol);
 				$this->origins   = $obj->origins;
-				$this->label   = $obj->label;
+				$this->reference   = $obj->reference;
 				$this->action_sse   = $obj->action_sse;
 				$this->action_rp   = $obj->action_rp;
 				$this->action_surete   = $obj->action_surete;
@@ -1567,241 +1556,241 @@ class Action extends CommonObject
 	 *	@return int								<0 if KO, >0 if OK
 	 *  @see	add_object_linked(), updateObjectLinked(), deleteObjectLinked()
 	 */
-	// public function fetchObjectLinked2($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '', $clause = 'OR', $alsosametype = 1, $orderby = 'sourcetype', $loadalsoobjects = 1)
-	// {
-	// 	global $conf, $hookmanager, $action;
+	public function fetchObjectLinked2($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '', $clause = 'OR', $alsosametype = 1, $orderby = 'sourcetype', $loadalsoobjects = 1)
+	{
+		global $conf, $hookmanager, $action;
 
-	// 	$this->linkedObjectsIds = array();
-	// 	$this->linkedObjects = array();
+		$this->linkedObjectsIds = array();
+		$this->linkedObjects = array();
 
-	// 	$justsource = false;
-	// 	$justtarget = false;
-	// 	$withtargettype = false;
-	// 	$withsourcetype = false;
+		$justsource = false;
+		$justtarget = false;
+		$withtargettype = false;
+		$withsourcetype = false;
 
-	// 	$parameters = array('sourcetype'=>$sourcetype, 'sourceid'=>$sourceid, 'targettype'=>$targettype, 'targetid'=>$targetid);
-	// 	// Hook for explicitly set the targettype if it must be differtent than $this->element
-	// 	$reshook = $hookmanager->executeHooks('setLinkedObjectSourceTargetType', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
-	// 	if ($reshook > 0) {
-	// 		if (!empty($hookmanager->resArray['sourcetype'])) $sourcetype = $hookmanager->resArray['sourcetype'];
-	// 		if (!empty($hookmanager->resArray['sourceid'])) $sourceid = $hookmanager->resArray['sourceid'];
-	// 		if (!empty($hookmanager->resArray['targettype'])) $targettype = $hookmanager->resArray['targettype'];
-	// 		if (!empty($hookmanager->resArray['targetid'])) $targetid = $hookmanager->resArray['targetid'];
-	// 	}
+		$parameters = array('sourcetype'=>$sourcetype, 'sourceid'=>$sourceid, 'targettype'=>$targettype, 'targetid'=>$targetid);
+		// Hook for explicitly set the targettype if it must be differtent than $this->element
+		$reshook = $hookmanager->executeHooks('setLinkedObjectSourceTargetType', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+		if ($reshook > 0) {
+			if (!empty($hookmanager->resArray['sourcetype'])) $sourcetype = $hookmanager->resArray['sourcetype'];
+			if (!empty($hookmanager->resArray['sourceid'])) $sourceid = $hookmanager->resArray['sourceid'];
+			if (!empty($hookmanager->resArray['targettype'])) $targettype = $hookmanager->resArray['targettype'];
+			if (!empty($hookmanager->resArray['targetid'])) $targetid = $hookmanager->resArray['targetid'];
+		}
 
-	// 	if (!empty($sourceid) && !empty($sourcetype) && empty($targetid)) {
-	// 		$justsource = true; // the source (id and type) is a search criteria
-	// 		if (!empty($targettype)) {
-	// 			$withtargettype = true;
-	// 		}
-	// 	}
-	// 	if (!empty($targetid) && !empty($targettype) && empty($sourceid)) {
-	// 		$justtarget = true; // the target (id and type) is a search criteria
-	// 		if (!empty($sourcetype)) {
-	// 			$withsourcetype = true;
-	// 		}
-	// 	}
+		if (!empty($sourceid) && !empty($sourcetype) && empty($targetid)) {
+			$justsource = true; // the source (id and type) is a search criteria
+			if (!empty($targettype)) {
+				$withtargettype = true;
+			}
+		}
+		if (!empty($targetid) && !empty($targettype) && empty($sourceid)) {
+			$justtarget = true; // the target (id and type) is a search criteria
+			if (!empty($sourcetype)) {
+				$withsourcetype = true;
+			}
+		}
 
-	// 	$sourceid = (!empty($sourceid) ? $sourceid : $this->id);
-	// 	$targetid = (!empty($targetid) ? $targetid : $this->id);
-	// 	$sourcetype = (!empty($sourcetype) ? $sourcetype : $this->element);
-	// 	$targettype = (!empty($targettype) ? $targettype : $this->element);
+		$sourceid = (!empty($sourceid) ? $sourceid : $this->id);
+		$targetid = (!empty($targetid) ? $targetid : $this->id);
+		$sourcetype = (!empty($sourcetype) ? $sourcetype : $this->element);
+		$targettype = (!empty($targettype) ? $targettype : $this->element);
 
-	// 	/*if (empty($sourceid) && empty($targetid))
-	// 	 {
-	// 	 dol_syslog('Bad usage of function. No source nor target id defined (nor as parameter nor as object id)', LOG_ERR);
-	// 	 return -1;
-	// 	 }*/
+		/*if (empty($sourceid) && empty($targetid))
+		 {
+		 dol_syslog('Bad usage of function. No source nor target id defined (nor as parameter nor as object id)', LOG_ERR);
+		 return -1;
+		 }*/
 
-	// 	// Links between objects are stored in table element_element
-	// 	$sql = 'SELECT rowid, fk_source, sourcetype, fk_target, targettype';
-	// 	$sql .= ' FROM '.MAIN_DB_PREFIX.'element_element';
-	// 	$sql .= " WHERE ";
-	// 	// if ($justsource || $justtarget) {
-	// 		// if ($justsource) {
-	// 		// 	$sql .= "fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."'";
-	// 		// 	if ($withtargettype) {
-	// 		// 		$sql .= " AND targettype = '".$this->db->escape($targettype)."'";
-	// 		// 	}
-	// 		// } elseif ($justtarget) {
-	// 			$sql .= "fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape('actions_action')."'";
-	// 			// if ($withsourcetype) {
-	// 			// 	$sql .= " AND sourcetype = '".$this->db->escape($sourcetype)."'";
-	// 			// }
-	// 	// 	}
-	// 	// } else {
-	// 	// 	$sql .= "(fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."')";
-	// 	// 	$sql .= " ".$clause." (fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape($targettype)."')";
-	// 	// }
-	// 	$sql .= ' ORDER BY '.$orderby;
+		// Links between objects are stored in table element_element
+		$sql = 'SELECT rowid, fk_source, sourcetype, fk_target, targettype';
+		$sql .= ' FROM '.MAIN_DB_PREFIX.'element_element';
+		$sql .= " WHERE ";
+		// if ($justsource || $justtarget) {
+			// if ($justsource) {
+			// 	$sql .= "fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."'";
+			// 	if ($withtargettype) {
+			// 		$sql .= " AND targettype = '".$this->db->escape($targettype)."'";
+			// 	}
+			// } elseif ($justtarget) {
+				$sql .= "fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape('actions_action')."'";
+				// if ($withsourcetype) {
+				// 	$sql .= " AND sourcetype = '".$this->db->escape($sourcetype)."'";
+				// }
+		// 	}
+		// } else {
+		// 	$sql .= "(fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."')";
+		// 	$sql .= " ".$clause." (fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape($targettype)."')";
+		// }
+		$sql .= ' ORDER BY '.$orderby;
 
-	// 	dol_syslog(get_class($this)."::fetchObjectLink", LOG_DEBUG);
-	// 	$resql = $this->db->query($sql);
-	// 	if ($resql) {
-	// 		$num = $this->db->num_rows($resql);
-	// 		$i = 0;
-	// 		while ($i < $num) {
-	// 			$obj = $this->db->fetch_object($resql);
-	// 			// if ($justsource || $justtarget) {
-	// 			// 	if ($justsource) {
-	// 					// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
-	// 				// } elseif ($justtarget) {
-	// 				// 	$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
-	// 				// }
-	// 			// } else {
-	// 			// 	if ($obj->fk_source == $sourceid && $obj->sourcetype == $sourcetype) {
-	// 		 		// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
-	// 			// 	}
-	// 			// var_dump($obj->targettype);
-	// 			// 	if ($obj->fk_target == $targetid && $obj->targettype == $targettype) {
-	// 			 		$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
-	// 			// 	}
-	// 			// }
+		dol_syslog(get_class($this)."::fetchObjectLink", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($resql);
+				// if ($justsource || $justtarget) {
+				// 	if ($justsource) {
+						// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
+					// } elseif ($justtarget) {
+					// 	$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
+					// }
+				// } else {
+				// 	if ($obj->fk_source == $sourceid && $obj->sourcetype == $sourcetype) {
+			 		// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
+				// 	}
+				// var_dump($obj->targettype);
+				// 	if ($obj->fk_target == $targetid && $obj->targettype == $targettype) {
+				 		$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
+				// 	}
+				// }
 		
-	// 			$i++;
-	// 		}
+				$i++;
+			}
 
-	// 		if (!empty($this->linkedObjectsIds)) {
-	// 			$tmparray = $this->linkedObjectsIds;
-	// 			foreach ($tmparray as $objecttype => $objectids) {       // $objecttype is a module name ('facture', 'mymodule', ...) or a module name with a suffix ('project_task', 'mymodule_myobj', ...)
-	// 				// Parse element/subelement (ex: project_task, cabinetmed_consultation, ...)
-	// 				$module = $element = $subelement = $objecttype;
-	// 				$regs = array();
-	// 				if ($objecttype != 'supplier_proposal' && $objecttype != 'order_supplier' && $objecttype != 'invoice_supplier'
-	// 					&& preg_match('/^([^_]+)_([^_]+)/i', $objecttype, $regs)) {
-	// 					$module = $element = $regs[1];
-	// 					$subelement = $regs[2];
-	// 				}
+			if (!empty($this->linkedObjectsIds)) {
+				$tmparray = $this->linkedObjectsIds;
+				foreach ($tmparray as $objecttype => $objectids) {       // $objecttype is a module name ('facture', 'mymodule', ...) or a module name with a suffix ('project_task', 'mymodule_myobj', ...)
+					// Parse element/subelement (ex: project_task, cabinetmed_consultation, ...)
+					$module = $element = $subelement = $objecttype;
+					$regs = array();
+					if ($objecttype != 'supplier_proposal' && $objecttype != 'order_supplier' && $objecttype != 'invoice_supplier'
+						&& preg_match('/^([^_]+)_([^_]+)/i', $objecttype, $regs)) {
+						$module = $element = $regs[1];
+						$subelement = $regs[2];
+					}
 
-	// 				$classpath = $element.'/class';
-	// 				// To work with non standard classpath or module name
-	// 				if ($objecttype == 'facture') {
-	// 					$classpath = 'compta/facture/class';
-	// 				} elseif ($objecttype == 'facturerec') {
-	// 					$classpath = 'compta/facture/class';
-	// 					$module = 'facture';
-	// 				} elseif ($objecttype == 'propal') {
-	// 					$classpath = 'comm/propal/class';
-	// 				} elseif ($objecttype == 'supplier_proposal') {
-	// 					$classpath = 'supplier_proposal/class';
-	// 				} elseif ($objecttype == 'shipping') {
-	// 					$classpath = 'expedition/class';
-	// 					$subelement = 'expedition';
-	// 					$module = 'expedition_bon';
-	// 				} elseif ($objecttype == 'delivery') {
-	// 					$classpath = 'delivery/class';
-	// 					$subelement = 'delivery';
-	// 					$module = 'delivery_note';
-	// 				} elseif ($objecttype == 'invoice_supplier' || $objecttype == 'order_supplier') {
-	// 					$classpath = 'fourn/class';
-	// 					$module = 'fournisseur';
-	// 				} elseif ($objecttype == 'fichinter') {
-	// 					$classpath = 'fichinter/class';
-	// 					$subelement = 'fichinter';
-	// 					$module = 'ficheinter';
-	// 				} elseif ($objecttype == 'subscription') {
-	// 					$classpath = 'adherents/class';
-	// 					$module = 'adherent';
-	// 				} elseif ($objecttype == 'contact') {
-	// 					 $module = 'societe';
-	// 				}elseif ($objecttype == 'constat') {
-	// 					$module = 'custom/constat';
-	// 			   }elseif ($objecttype == 'constat_constat') {
-	// 				$module = 'custom/constat';
-	// 		   	   }elseif ($objecttype == 'actions') {
-	// 					$module = 'custom/actions';
-	// 			   }elseif ($objecttype == 'actions') {
-	// 				$module = 'custom/actions';
-	// 		   	   }
-	// 				// Set classfile
-	// 				$classfile = strtolower($subelement);
-	// 				$classname = ucfirst($subelement);
+					$classpath = $element.'/class';
+					// To work with non standard classpath or module name
+					if ($objecttype == 'facture') {
+						$classpath = 'compta/facture/class';
+					} elseif ($objecttype == 'facturerec') {
+						$classpath = 'compta/facture/class';
+						$module = 'facture';
+					} elseif ($objecttype == 'propal') {
+						$classpath = 'comm/propal/class';
+					} elseif ($objecttype == 'supplier_proposal') {
+						$classpath = 'supplier_proposal/class';
+					} elseif ($objecttype == 'shipping') {
+						$classpath = 'expedition/class';
+						$subelement = 'expedition';
+						$module = 'expedition_bon';
+					} elseif ($objecttype == 'delivery') {
+						$classpath = 'delivery/class';
+						$subelement = 'delivery';
+						$module = 'delivery_note';
+					} elseif ($objecttype == 'invoice_supplier' || $objecttype == 'order_supplier') {
+						$classpath = 'fourn/class';
+						$module = 'fournisseur';
+					} elseif ($objecttype == 'fichinter') {
+						$classpath = 'fichinter/class';
+						$subelement = 'fichinter';
+						$module = 'ficheinter';
+					} elseif ($objecttype == 'subscription') {
+						$classpath = 'adherents/class';
+						$module = 'adherent';
+					} elseif ($objecttype == 'contact') {
+						 $module = 'societe';
+					}elseif ($objecttype == 'constat') {
+						$module = 'custom/constat';
+				   }elseif ($objecttype == 'constat_constat') {
+					$module = 'custom/constat';
+			   	   }elseif ($objecttype == 'actions') {
+						$module = 'custom/actions';
+				   }elseif ($objecttype == 'actions') {
+					$module = 'custom/actions';
+			   	   }
+					// Set classfile
+					$classfile = strtolower($subelement);
+					$classname = ucfirst($subelement);
 
-	// 				if ($objecttype == 'order') {
-	// 					$classfile = 'commande';
-	// 					$classname = 'Commande';
-	// 				} elseif ($objecttype == 'invoice_supplier') {
-	// 					$classfile = 'fournisseur.facture';
-	// 					$classname = 'FactureFournisseur';
-	// 				} elseif ($objecttype == 'order_supplier') {
-	// 					$classfile = 'fournisseur.commande';
-	// 					$classname = 'CommandeFournisseur';
-	// 				} elseif ($objecttype == 'supplier_proposal') {
-	// 					$classfile = 'supplier_proposal';
-	// 					$classname = 'SupplierProposal';
-	// 				} elseif ($objecttype == 'facturerec') {
-	// 					$classfile = 'facture-rec';
-	// 					$classname = 'FactureRec';
-	// 				} elseif ($objecttype == 'subscription') {
-	// 					$classfile = 'subscription';
-	// 					$classname = 'Subscription';
-	// 				} elseif ($objecttype == 'project' || $objecttype == 'projet') {
-	// 					$classpath = 'projet/class';
-	// 					$classfile = 'project';
-	// 					$classname = 'Project';
-	// 				} elseif ($objecttype == 'conferenceorboothattendee') {
-	// 					$classpath = 'eventorganization/class';
-	// 					$classfile = 'conferenceorboothattendee';
-	// 					$classname = 'ConferenceOrBoothAttendee';
-	// 					$module = 'eventorganization';
-	// 				} elseif ($objecttype == 'conferenceorbooth') {
-	// 					$classpath = 'eventorganization/class';
-	// 					$classfile = 'conferenceorbooth';
-	// 					$classname = 'ConferenceOrBooth';
-	// 					$module = 'eventorganization';
-	// 				} elseif ($objecttype == 'mo') {
-	// 					$classpath = 'mrp/class';
-	// 					$classfile = 'mo';
-	// 					$classname = 'Mo';
-	// 					$module = 'mrp';
-	// 				}elseif ($objecttype == 'constat') {
-	// 					$classpath = 'constat/class';
-	// 					$classfile = 'constat';
-	// 					$classname = 'Constat';
-	// 					$module = 'constat';
-	// 				}elseif ($objecttype == 'constat_constat') {
-	// 					$classpath = 'constat/class';
-	// 					$classfile = 'constat';
-	// 					$classname = 'Constat';
-	// 					$module = 'constat';
-	// 				}elseif ($objecttype == 'actions') {
-	// 					$classpath = 'actions/class';
-	// 					$classfile = 'action';
-	// 					$classname = 'Action';
-	// 					$module = 'actions';
-	// 				}elseif ($objecttype == 'actions_action') {
-	// 					$classpath = 'actions/class';
-	// 					$classfile = 'action';
-	// 					$classname = 'Action';
-	// 					$module = 'actions';
-	// 				}
+					if ($objecttype == 'order') {
+						$classfile = 'commande';
+						$classname = 'Commande';
+					} elseif ($objecttype == 'invoice_supplier') {
+						$classfile = 'fournisseur.facture';
+						$classname = 'FactureFournisseur';
+					} elseif ($objecttype == 'order_supplier') {
+						$classfile = 'fournisseur.commande';
+						$classname = 'CommandeFournisseur';
+					} elseif ($objecttype == 'supplier_proposal') {
+						$classfile = 'supplier_proposal';
+						$classname = 'SupplierProposal';
+					} elseif ($objecttype == 'facturerec') {
+						$classfile = 'facture-rec';
+						$classname = 'FactureRec';
+					} elseif ($objecttype == 'subscription') {
+						$classfile = 'subscription';
+						$classname = 'Subscription';
+					} elseif ($objecttype == 'project' || $objecttype == 'projet') {
+						$classpath = 'projet/class';
+						$classfile = 'project';
+						$classname = 'Project';
+					} elseif ($objecttype == 'conferenceorboothattendee') {
+						$classpath = 'eventorganization/class';
+						$classfile = 'conferenceorboothattendee';
+						$classname = 'ConferenceOrBoothAttendee';
+						$module = 'eventorganization';
+					} elseif ($objecttype == 'conferenceorbooth') {
+						$classpath = 'eventorganization/class';
+						$classfile = 'conferenceorbooth';
+						$classname = 'ConferenceOrBooth';
+						$module = 'eventorganization';
+					} elseif ($objecttype == 'mo') {
+						$classpath = 'mrp/class';
+						$classfile = 'mo';
+						$classname = 'Mo';
+						$module = 'mrp';
+					}elseif ($objecttype == 'constat') {
+						$classpath = 'constat/class';
+						$classfile = 'constat';
+						$classname = 'Constat';
+						$module = 'constat';
+					}elseif ($objecttype == 'constat_constat') {
+						$classpath = 'constat/class';
+						$classfile = 'constat';
+						$classname = 'Constat';
+						$module = 'constat';
+					}elseif ($objecttype == 'actions') {
+						$classpath = 'actions/class';
+						$classfile = 'action';
+						$classname = 'Action';
+						$module = 'actions';
+					}elseif ($objecttype == 'actions_action') {
+						$classpath = 'actions/class';
+						$classfile = 'action';
+						$classname = 'Action';
+						$module = 'actions';
+					}
 
-	// 				// Here $module, $classfile and $classname are set, we can use them.
-	// 				if ($conf->$module->enabled && (($element != $this->element) || $alsosametype)) {
-	// 					if ($loadalsoobjects && (is_numeric($loadalsoobjects) || ($loadalsoobjects === $objecttype))) {
-	// 						dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
-	// 						//print '/'.$classpath.'/'.$classfile.'.class.php '.class_exists($classname);
-	// 						if (class_exists($classname)) {
-	// 							foreach ($objectids as $i => $objectid) {	// $i is rowid into llx_element_element
-	// 								$object = new $classname($this->db);
-	// 								$ret = $object->fetch($objectid);
-	// 								if ($ret >= 0) {
-	// 									$this->linkedObjects[$objecttype][$i] = $object;
-	// 								}
-	// 							}
-	// 						}
-	// 					}
-	// 				} else {
-	// 					unset($this->linkedObjectsIds[$objecttype]);
-	// 				}
-	// 			}
-	// 		}
-	// 		return 1;
-	// 	} else {
-	// 		dol_print_error($this->db);
-	// 		return -1;
-	// 	}
-	// }
+					// Here $module, $classfile and $classname are set, we can use them.
+					if ($conf->$module->enabled && (($element != $this->element) || $alsosametype)) {
+						if ($loadalsoobjects && (is_numeric($loadalsoobjects) || ($loadalsoobjects === $objecttype))) {
+							dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
+							//print '/'.$classpath.'/'.$classfile.'.class.php '.class_exists($classname);
+							if (class_exists($classname)) {
+								foreach ($objectids as $i => $objectid) {	// $i is rowid into llx_element_element
+									$object = new $classname($this->db);
+									$ret = $object->fetch($objectid);
+									if ($ret >= 0) {
+										$this->linkedObjects[$objecttype][$i] = $object;
+									}
+								}
+							}
+						}
+					} else {
+						unset($this->linkedObjectsIds[$objecttype]);
+					}
+				}
+			}
+			return 1;
+		} else {
+			dol_print_error($this->db);
+			return -1;
+		}
+	}
 
 	/**
 	 * 

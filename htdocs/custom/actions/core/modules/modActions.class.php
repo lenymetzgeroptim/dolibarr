@@ -118,6 +118,7 @@ class modActions extends DolibarrModules
 				  'data' => array(
 				      'constatLinked',
 				      'hookcontext2',
+					  'actioncard',
 				  ),
 				  'entity' => '0',
 			),
