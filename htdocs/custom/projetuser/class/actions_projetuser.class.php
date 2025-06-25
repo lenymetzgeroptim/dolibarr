@@ -66,8 +66,37 @@ class ActionsProjetUser
 	}
 
 
+	 public function formattachFile($parameters, &$object, &$action, $hookmanager)
+    {
+        global $langs;
 
-	/**
+        if ($parameters['currentcontext'] !== 'document') return 0;
+
+        $html = '';
+
+        // Ajout du champ checkbox
+        $html .= '<tr><td colspan="2">';
+        $html .= '<label><input type="checkbox" name="block_email" value="1"> ';
+        $html .= $langs->trans("Bloquer l'envoi d'emails") . '</label>';
+        $html .= '</td></tr>';
+
+        print $html;
+        return 1;
+    }
+
+
+	public function doActions($parameters, &$object, &$action, $hookmanager)
+    {
+        if (GETPOST('block_email', 'int')) {
+            $_SESSION['BLOCK_EMAIL_SEND'] = 1;
+        } else {
+            unset($_SESSION['BLOCK_EMAIL_SEND']);
+        }
+
+        return 0;
+    }
+
+/**
 	 * Overloading the formattachOptions function : replacing the parent's function with the one below
 	 *
 	 * @param   array           $parameters     Hook metadatas (context, etc...)
@@ -82,7 +111,49 @@ class ActionsProjetUser
 		$langs->loadLangs(array("projetuser@projetuser"));
 
 		$error = 0; // Error counter
+		if (!empty($object) && $object->element == 'project') {
+			$html = '';
+			// Ajout JS à la fin pour injecter la checkbox dans le <form>
+			$html .= '<script>
+				$(document).ready(function() {
+					if ($("#formuserfile").length) {
+						// Case cochée par défaut
+						var checkboxHTML = \'<input type="checkbox" name="block_email" value="1" id="block_email_checkbox" style="margin-right: 8px;" checked>\';
+						var labelHTML = \'<label id="block_email_label" for="block_email_checkbox" style="margin-right: 16px; display: inline-block; min-width: 180px;">Notifications activées</label>\';
 
+						var sendButton = $("#formuserfile input[name=\'sendit\']");
+						sendButton.before(checkboxHTML + labelHTML);
+
+						// Changement dynamique du label
+						$("#block_email_checkbox").change(function() {
+							if ($(this).is(":checked")) {
+								$("#block_email_label").text("Notifications activées");
+							} else {
+								$("#block_email_label").text("Notifications désactivées");
+							}
+						});
+					}
+				});
+				</script>';
+
+			print $html;
+
+			if (GETPOST('sendit', 'alpha')) {
+				if (GETPOST('block_email', 'alpha') == '') {
+					setEventMessages(
+						'La notification était désactivée : aucun email n’a été envoyé.',
+						null,
+						'warnings'
+					);
+				} else {
+					setEventMessages(
+						'Notification activée : un email a été envoyé aux destinataires.',
+						null,
+						'mesgs' 
+					);
+				}
+			}
+		}
 		if (GETPOST('sendit', 'alpha') && !empty($conf->global->MAIN_UPLOAD_DOC) && !empty($permissiontoadd) && $result) {
 			global $dolibarr_main_url_root;
 			$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
@@ -179,9 +250,21 @@ class ActionsProjetUser
 			$to = rtrim($to, ', ');
 			
 			$mail = new CMailFile($subject, $to, $from, $msg, '', '', '', '', '', 0, 1);
-			if (!empty($to)){
+			$sendMail = false;
+
+			if ($object->element == 'project') {
+				
+				if (GETPOST('block_email', 'int') == 1) {
+					$sendMail = true;
+				}
+			} else {
+				$sendMail = true;
+			}
+
+			if (!empty($to) && $sendMail) {
 				$res = $mail->sendfile();
 			}
+
 			if(!$res){
 				$error++;
 			}
