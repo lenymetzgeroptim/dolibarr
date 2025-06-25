@@ -133,6 +133,7 @@ $object->fetch($id);
 $isUserInContacts = $object->isUserInProjectContacts($user->id);
 $isUserManager = $object->isUserProjectManager($user->id);
 
+
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->ot->dir_output.'/temp/massgeneration/'.$user->id;
 $search_array_options = $extrafields->getOptionalsFromPost($object->table_element, '', 'search_');
@@ -1907,6 +1908,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let userdata = ' . json_encode($userdata) . ';
     let userjson = ' . $userjson . ';
     let status = ' . json_encode($object->status) . ';
+    let isUserProjectManager = ' . json_encode($isUserManager) . ';
     let isDataSaved = false;
     let isUniqueListCreated = false;
     console.log(cellData);
@@ -1945,8 +1947,8 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
 
 
 
-// Désactiver les champs si le statut est égal à 1
-    if (status === 1 || status === 2) {
+
+    if (status === 1 || status === 2 || !isUserProjectManager) {
     
     setTimeout(() => {
         // Masquer les boutons "Ajouter une carte" et "Ajouter une liste"
@@ -2201,7 +2203,7 @@ else if (cell.type === "list") {
                     items.forEach((item, index) => {
                         // Ne pas modifier le style du nom et du téléphone
                         if (index !== 0 && index !== 4) {
-                            if (listStatus === 1 || listStatus === 2) {
+                            if (listStatus === 1 || listStatus === 2 || !isUserProjectManager) {
                                 item.style.textAlign = "center";
                                 item.style.whiteSpace = "normal";
                             }
@@ -2324,7 +2326,7 @@ console.log("Status de la carte :", status);
             listTitleInput.style.textAlign = "center";
         } else {
             listTitleInput.placeholder = "";
-            if (cardStatus === 1 || cardStatus === 2) {
+            if (cardStatus === 1 || cardStatus === 2 || !isUserProjectManager) {
                 listTitleInput.style.textAlign = "center";
             }
         }
@@ -2662,7 +2664,7 @@ function createSupplierDropdown() {
         const status = parseInt(cardContainer.getAttribute("data-status") || "0");
         const inputs = tableContainer.querySelectorAll(".form-input");
         inputs.forEach(input => {
-            if (status === 1 || status === 2) {
+            if (status === 1 || status === 2 || !isUserProjectManager) {
                 input.style.textAlign = "center";
                 input.style.whiteSpace = "normal";
                 input.style.width = "100%";
@@ -2974,7 +2976,7 @@ function createUserList(column) {
             listTitleInput.style.textAlign = "center";
         } else {
             listTitleInput.placeholder = "";
-            if (listStatus === 1 || listStatus === 2) {
+            if (listStatus === 1 || listStatus === 2 || !isUserProjectManager) {
                 listTitleInput.style.textAlign = "center";
             }
         }
@@ -3041,7 +3043,7 @@ function createUserList(column) {
                 items.forEach((item, index) => {
                     // Ne pas modifier le style du nom et du téléphone
                     if (index !== 0 && index !== 4) {
-                        if (listStatus === 1 || listStatus === 2) {
+                        if (listStatus === 1 || listStatus === 2 || !isUserProjectManager) {
                             item.style.textAlign = "center";
                             item.style.whiteSpace = "normal";
                         } else {
