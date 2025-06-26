@@ -105,7 +105,7 @@ if ($id > 0 || !empty($ref)) {
 $enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('constat', 'constat', 'readall') || ($user->hasRight('constat', 'constat', 'read') && (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) || $is_responsable_affaire || $user->hasRight('constat', 'constat', 'complete_q3se')));
-	$permissiontoadd = $user->hasRight('constat', 'constat', 'write');
+	$permissiontoadd = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write')
 	$permissionnote = $permissiontoadd; // Used by the include of actions_setnotes.inc.php
 } else {
 	$permissiontoread = 1;

@@ -127,7 +127,7 @@ class Constat extends CommonObject
 		"status" => array("type"=>"integer", "label"=>"Statut", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Créé", "4" => "En cours", "7" => "Clôturé", "9" => "Annulé"), "validate"=>"1",),
 		"label" => array("type"=>"varchar(255)", "label"=>"Label", "enabled"=>"1", 'position'=>100, 'notnull'=>1, "visible"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "help"=>"Identifier le constat en quelques mots", "validate"=>"1",),
 		"fk_user_creat" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
-		"fk_user" => array("type"=>"integer:User:user\class\user.class.php:0:(statut:=:1)", "label"=>"Emetteur", "enabled"=>"1", 'position'=>101, 'notnull'=>1, "visible"=>"1",),
+		"fk_user" => array("type"=>"integer:User:user\class\user.class.php:0:(t.statut:=:1)", "label"=>"Emetteur", "enabled"=>"1", 'position'=>101, 'notnull'=>1, "visible"=>"1",),
 		"fk_project" => array("type"=>"chkbxlst:projet:ref|title:rowid", "label"=>"Project", "enabled"=>"1", 'position'=>102, 'notnull'=>1, "visible"=>"1",),
 		"site" => array("type"=>"integer:societe:societe/class/societe.class.php::(client:=:1)or(client:=:3:)", "label"=>"Site", "enabled"=>"1", 'position'=>103, 'notnull'=>1, "visible"=>"1", "index"=>"1",),
 		"emetteur_date" => array("type"=>"date", "label"=>"DateEmetteur", "enabled"=>"1", 'position'=>104, 'notnull'=>1, "visible"=>"1",),
@@ -313,12 +313,16 @@ class Constat extends CommonObject
 		}
 		
 		// Filtre sur les projets que l'utilisateur peut voir
-		if($user->hasRight('projet', 'all', 'lire')) {
+		if(!$user->hasRight('projet', 'all', 'lire')) {
 			$project = new Project($db);
 			$projectlist = $project->getProjectsAuthorizedForUser($user, 1);
 			$projectlist_id = implode(',', array_keys($projectlist));
 			
 			$this->fields['fk_project']['type'] = 'chkbxlst:projet:ref|title:rowid::(rowid IN ('.($projectlist_id ? $projectlist_id : 'NULL').'))';
+		}
+
+		if(!$user->hasRight('constat', 'constat', 'writeall')) {
+			$this->fields['fk_user']['type'] = 'integer:User:user\class\user.class.php:0:(t.statut:=:1)and(t.rowid:=:'.$user->id.')';
 		}
 	}	
 
@@ -504,7 +508,7 @@ class Constat extends CommonObject
 		}
 
 		$project = new Project($db);
-		if($user->hasRight('projet', 'all', 'lire')) {
+		if(!$user->hasRight('projet', 'all', 'lire')) {
 			$projectlist = $project->getProjectsAuthorizedForUser($user, 1);
 			$projectlist_id = implode(',', array_keys($projectlist));
 			if($this->fk_project) {

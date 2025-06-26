@@ -162,9 +162,9 @@ if ($object->status == $object::STATUS_EN_COURS) {
 $enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('constat', 'constat', 'readall') || ($user->hasRight('constat', 'constat', 'read') && (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) || $is_responsable_affaire || $user->hasRight('constat', 'constat', 'complete_q3se')));
-	$permissiontoadd = $user->hasRight('constat', 'constat', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+	$permissiontoadd = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write');
 	$permissiontodelete = $user->hasRight('constat', 'constat', 'delete') || (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) && isset($object->status) && $object->status == $object::STATUS_DRAFT);
-	$permissionnote = $user->hasRight('constat', 'constat', 'write'); // Used by the include of actions_setnotes.inc.php
+	$permissionnote = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write');
 	//$permissiondellink = $user->hasRight('constat', 'constat', 'write'); // Used by the include of actions_dellink.inc.php
 
 	if($object->status == $object::STATUS_DRAFT) {
@@ -1183,7 +1183,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			// }
 
 					
-			// Create action
+			// Créer action
 			if ($object->status == $object::STATUS_EN_COURS && $permissiontoupdate){
 				print '<a class="butAction" href="'.DOL_URL_ROOT.'/custom/actions/action_card.php?action=create&origin='.$object->element.'&originid='.$object->id.'&socid='.$object->socid.'">'.$langs->trans("Créer action").'</a>';
 			}

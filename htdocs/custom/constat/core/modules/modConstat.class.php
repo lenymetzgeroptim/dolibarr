@@ -303,11 +303,16 @@ class modConstat extends DolibarrModules
 		$this->rights[$r][5] = 'readall';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Créer un constat et compléter la partie émetteur';
+		$this->rights[$r][1] = 'Créer un constat pour soi-même et compléter la partie émetteur';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'write';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
+		$this->rights[$r][1] = 'Créer un constat pour tous les utilisateurs et compléter la partie émetteur';
+		$this->rights[$r][4] = 'constat';
+		$this->rights[$r][5] = 'writeall';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
 		$this->rights[$r][1] = 'Compléter la partie Q3SE';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'complete_q3se';
@@ -317,7 +322,7 @@ class modConstat extends DolibarrModules
 		// $this->rights[$r][4] = 'constat';
 		// $this->rights[$r][5] = 'Emetteur';
 		// $r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
 		$this->rights[$r][1] = 'Supprimer les constats';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'delete';
@@ -449,7 +454,7 @@ class modConstat extends DolibarrModules
             'langs'=>'q3serp@q3serp',
             'position'=>1108,
             'enabled'=>'$conf->constat->enabled',
-            'perms'=>'$user->hasRight(\'constat\', \'constat\', \'write\')',
+            'perms'=>'$user->hasRight(\'constat\', \'constat\', \'write\')||$user->hasRight(\'constat\', \'constat\', \'writeall\')',
             'target'=>'',
             'user'=>2
         );

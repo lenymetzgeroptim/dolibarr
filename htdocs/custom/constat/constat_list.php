@@ -189,7 +189,7 @@ $arrayfields = dol_sort_array($arrayfields, 'position');
 $enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('constat', 'constat', 'read');
-	$permissiontoadd = $user->hasRight('constat', 'constat', 'write');
+	$permissiontoadd = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write');
 	$permissiontodelete = $user->hasRight('constat', 'constat', 'delete');
 } else {
 	$permissiontoread = 1;
