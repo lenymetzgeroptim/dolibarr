@@ -440,12 +440,12 @@ if ($action == 'confirm_deleteline' && $confirm == 'yes' && !empty($permissionto
 			$outputlangs = new Translate("", $conf);
 			$outputlangs->setDefaultLang($newlang);
 		}
-		if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
-			if (method_exists($object, 'generateDocument')) {
-				$ret = $object->fetch($object->id); // Reload to get new records
-				$object->generateDocument($object->model_pdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
-			}
-		}
+		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+		// 	if (method_exists($object, 'generateDocument')) {
+		// 		$ret = $object->fetch($object->id); // Reload to get new records
+		// 		$object->generateDocument($object->model_pdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		// 	}
+		// }
 
 		setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
 
@@ -471,31 +471,31 @@ if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate 
 
 	if ($result >= 0) {
 		// Define output language
-		if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
-			if (method_exists($object, 'generateDocument')) {
-				$outputlangs = $langs;
-				$newlang = '';
-				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-					$newlang = GETPOST('lang_id', 'aZ09');
-				}
-				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
-					$newlang = !empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : "";
-				}
-				if (!empty($newlang)) {
-					$outputlangs = new Translate("", $conf);
-					$outputlangs->setDefaultLang($newlang);
-				}
+		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+		// 	if (method_exists($object, 'generateDocument')) {
+		// 		$outputlangs = $langs;
+		// 		$newlang = '';
+		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+		// 			$newlang = GETPOST('lang_id', 'aZ09');
+		// 		}
+		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+		// 			$newlang = !empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : "";
+		// 		}
+		// 		if (!empty($newlang)) {
+		// 			$outputlangs = new Translate("", $conf);
+		// 			$outputlangs->setDefaultLang($newlang);
+		// 		}
 
-				$ret = $object->fetch($id); // Reload to get new records
+		// 		$ret = $object->fetch($id); // Reload to get new records
 
-				$model = $object->model_pdf;
+		// 		$model = $object->model_pdf;
 
-				$retgen = $object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-				if ($retgen < 0) {
-					setEventMessages($object->error, $object->errors, 'warnings');
-				}
-			}
-		}
+		// 		$retgen = $object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		// 		if ($retgen < 0) {
+		// 			setEventMessages($object->error, $object->errors, 'warnings');
+		// 		}
+		// 	}
+		// }
 	} else {
 		$error++;
 		setEventMessages($object->error, $object->errors, 'errors');
@@ -514,26 +514,26 @@ if ($action == 'confirm_close' && $confirm == 'yes' && $permissiontoadd) {
 	$result = $object->cancel($user);
 	if ($result >= 0) {
 		// Define output language
-		if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
-			if (method_exists($object, 'generateDocument')) {
-				$outputlangs = $langs;
-				$newlang = '';
-				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-					$newlang = GETPOST('lang_id', 'aZ09');
-				}
-				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
-					$newlang = $object->thirdparty->default_lang;
-				}
-				if (!empty($newlang)) {
-					$outputlangs = new Translate("", $conf);
-					$outputlangs->setDefaultLang($newlang);
-				}
-				$model = $object->model_pdf;
-				$ret = $object->fetch($id); // Reload to get new records
+		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+		// 	if (method_exists($object, 'generateDocument')) {
+		// 		$outputlangs = $langs;
+		// 		$newlang = '';
+		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+		// 			$newlang = GETPOST('lang_id', 'aZ09');
+		// 		}
+		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+		// 			$newlang = $object->thirdparty->default_lang;
+		// 		}
+		// 		if (!empty($newlang)) {
+		// 			$outputlangs = new Translate("", $conf);
+		// 			$outputlangs->setDefaultLang($newlang);
+		// 		}
+		// 		$model = $object->model_pdf;
+		// 		$ret = $object->fetch($id); // Reload to get new records
 
-				$object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-			}
-		}
+		// 		$object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		// 	}
+		// }
 	} else {
 		$error++;
 		setEventMessages($object->error, $object->errors, 'errors');
@@ -558,26 +558,26 @@ if ($action == 'confirm_reopen' && $confirm == 'yes' && $permissiontoadd) {
 	$result = $object->reopen($user);
 	if ($result >= 0) {
 		// Define output language
-		if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
-			if (method_exists($object, 'generateDocument')) {
-				$outputlangs = $langs;
-				$newlang = '';
-				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-					$newlang = GETPOST('lang_id', 'aZ09');
-				}
-				if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
-					$newlang = $object->thirdparty->default_lang;
-				}
-				if (!empty($newlang)) {
-					$outputlangs = new Translate("", $conf);
-					$outputlangs->setDefaultLang($newlang);
-				}
-				$model = $object->model_pdf;
-				$ret = $object->fetch($id); // Reload to get new records
+		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+		// 	if (method_exists($object, 'generateDocument')) {
+		// 		$outputlangs = $langs;
+		// 		$newlang = '';
+		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+		// 			$newlang = GETPOST('lang_id', 'aZ09');
+		// 		}
+		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+		// 			$newlang = $object->thirdparty->default_lang;
+		// 		}
+		// 		if (!empty($newlang)) {
+		// 			$outputlangs = new Translate("", $conf);
+		// 			$outputlangs->setDefaultLang($newlang);
+		// 		}
+		// 		$model = $object->model_pdf;
+		// 		$ret = $object->fetch($id); // Reload to get new records
 
-				$object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-			}
-		}
+		// 		$object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		// 	}
+		// }
 	} else {
 		$error++;
 		setEventMessages($object->error, $object->errors, 'errors');
