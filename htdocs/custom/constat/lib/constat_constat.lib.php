@@ -108,3 +108,61 @@ function constatPrepareHead($object)
 
 	return $head;
 }
+
+function getCommandeWithProjects($projectlist) {
+	global $db;
+
+	$commande = array();
+
+	$sql = "SELECT c.rowid";
+	$sql .= " FROM ".MAIN_DB_PREFIX."commande as c";
+	$sql .= " WHERE c.fk_projet IN ($projectlist)";
+
+	$result = $db->query($sql);
+
+	if ($result) {
+		$num = $db->num_rows($result);
+		$i = 0;
+
+		while ($i < $num) {
+			$obj = $db->fetch_object($result);
+			if($obj->rowid > 0) $commande[$obj->rowid] = $obj->rowid;
+			$i++;
+		}
+
+		$db->free();
+	} else {
+		dol_print_error($db);
+	}
+
+	return $commande;
+}
+
+function getSiteWithProjects($projectlist) {
+	global $db;
+
+	$site = array();
+
+	$sql = "SELECT pe.tiers_secondaire";
+	$sql .= " FROM ".MAIN_DB_PREFIX."projet_extrafields as pe";
+	$sql .= " WHERE pe.fk_object IN ($projectlist)";
+
+	$result = $db->query($sql);
+
+	if ($result) {
+		$num = $db->num_rows($result);
+		$i = 0;
+
+		while ($i < $num) {
+			$obj = $db->fetch_object($result);
+			if($obj->tiers_secondaire > 0) $site[$obj->tiers_secondaire] = $obj->tiers_secondaire;
+			$i++;
+		}
+
+		$db->free();
+	} else {
+		dol_print_error($db);
+	}
+
+	return $site;
+}

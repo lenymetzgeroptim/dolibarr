@@ -135,7 +135,7 @@ class Constat extends CommonObject
 		"description_constat" => array("type"=>"html", "label"=>"DescritpionConstat", "enabled"=>"1", 'position'=>111, 'notnull'=>1, "visible"=>"1", "cssview"=>"wordbreak", "help"=>"Description détaillée du constat (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
 		"description_impact" => array("type"=>"html", "label"=>"DescritpionImpact", "enabled"=>"1", 'position'=>112, 'notnull'=>0, "visible"=>"1", "cssview"=>"wordbreak", "help"=>"Description impact (réels et potentiels)",),
 		"commentaire_emetteur" => array("type"=>"html", "label"=>"CommentaireEmetteur", "enabled"=>"1", 'position'=>120, 'notnull'=>0, "visible"=>"1",),
-		"num_commande" => array("type"=>"chkbxlst:commande:ref:rowid:", "label"=>"NumCommande", "enabled"=>"1", 'position'=>200, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
+		"num_commande" => array("type"=>"chkbxlst:commande:ref:rowid", "label"=>"NumCommande", "enabled"=>"1", 'position'=>200, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"type_constat" => array("type"=>"sellist:c_constat_type:label:rowid::(active:=:1)", "label"=>"TypeConstat", "enabled"=>"1", 'position'=>201, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"rubrique" => array("type"=>"chkbxlst:c_constat_rubrique:label:rowid::(active=1)", "label"=>"Rubrique", "enabled"=>"1", 'position'=>202, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"processus" => array("type"=>"chkbxlst:c_constat_processus:label:rowid::(active=1)", "label"=>"Processus", "enabled"=>"1", 'position'=>203, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
@@ -261,7 +261,7 @@ class Constat extends CommonObject
 	 */
 	public function __construct(DoliDB $db)
 	{
-		global $conf, $langs;
+		global $conf, $langs, $user;
 
 		$this->db = $db;
 
@@ -312,39 +312,14 @@ class Constat extends CommonObject
 			}
 		}
 		
-		global $user, $db;
-		$projects = new Project($db);
-		$projects = $projects->getProjectsAuthorizedForUser($user, 1);
-		
-		// Vérifiez si la liste des projets est non vide
-		
-		// if (
-		// 	(!$user->rights->constat->constat->ServiceQ3SE && 
-		// 	 !$user->rights->constat->constat->ResponsableQ3SE)
-		// ) {
+		// Filtre sur les projets que l'utilisateur peut voir
+		if($user->hasRight('projet', 'all', 'lire')) {
+			$project = new Project($db);
+			$projectlist = $project->getProjectsAuthorizedForUser($user, 1);
+			$projectlist_id = implode(',', array_keys($projectlist));
 			
-		// 	if (!empty($projects)) {
-				
-		// 		$rowids = implode(',', array_keys($projects));
-		
-				
-		// 		$this->fields['fk_project']['type'] = 'integer:Project:projet/class/project.class.php::(t.rowid:IN:'.$rowids.')';
-		// 	}
-		// }
-
-		/*global $user, $db;
-		$commande = new Commande($db);
-		
-		// Vérifiez si la liste des projets est non vide
-		
-		if (!empty($commande)) {
-				
-			$rowids = implode(',', array_keys($commande));
-		
-				
-			$this->fields['num_commande']['type'] = 'integer:Commande:commande/class/commande.class.php::(t.rowid:IN:'.$rowids.')';	
-		}*/
-
+			$this->fields['fk_project']['type'] = 'chkbxlst:projet:ref|title:rowid::(rowid IN ('.($projectlist_id ? $projectlist_id : 'NULL').'))';
+		}
 	}	
 
 	
@@ -474,6 +449,8 @@ class Constat extends CommonObject
 	 */
 	public function fetch($id, $ref = null)
 	{
+		global $user, $db; 
+
 		$result = $this->fetchCommon($id, $ref);
 		if ($result > 0 && !empty($this->table_element_line)) {
 			$this->fetchLines();
@@ -525,6 +502,37 @@ class Constat extends CommonObject
 			$this->fields['controleclient_commentaire']['notnull_validate'] = 1;
 			$this->fields['cout_total']['notnull_validate'] = 1;
 		}
+
+		$project = new Project($db);
+		if($user->hasRight('projet', 'all', 'lire')) {
+			$projectlist = $project->getProjectsAuthorizedForUser($user, 1);
+			$projectlist_id = implode(',', array_keys($projectlist));
+			if($this->fk_project) {
+				$projectlist_id .= ($projectlist_id ? ','.$this->fk_project : $this->fk_project);
+			}
+						
+			$this->fields['fk_project']['type'] = 'chkbxlst:projet:ref|title:rowid::(rowid IN ('.($projectlist_id ? $projectlist_id : 'NULL').'))';
+		}
+
+		// Filtre sur les commandes ratachées au projet
+		// if($this->fk_project) {
+		// 	$orderlist = getCommandeWithProjects($this->fk_project);
+		// 	$orderlist_id = implode(',', array_keys($orderlist));
+		// 	if($this->num_commande) {
+		// 		$orderlist_id .= ($orderlist_id ? ','.$this->num_commande : $this->num_commande);
+		// 	}
+		// 	$this->fields['num_commande']['type'] = 'chkbxlst:commande:ref:rowid::(rowid IN ('.$orderlist_id.'))';	
+		// }
+
+		// // Filtre sur les sites ratachées au projet
+		// if($this->fk_project) {
+		// 	$sitelist = getSiteWithProjects($this->fk_project);
+		// 	$sitelist_id = implode(',', array_keys($sitelist));
+		// 	if($this->site) {
+		// 		$sitelist_id .= ($sitelist_id ? ','.$this->site : $this->site);
+		// 	}
+		// 	$this->fields['site']['type'] = 'integer:societe:societe/class/societe.class.php::((client:=:1)or(client:=:3:))and(rowid:IN:('.$sitelist_id.'))';	
+		// }
 
 		return $result;
 	}
