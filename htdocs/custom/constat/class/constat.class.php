@@ -139,33 +139,32 @@ class Constat extends CommonObject
 		"type_constat" => array("type"=>"sellist:c_constat_type:label:rowid::(active:=:1)", "label"=>"TypeConstat", "enabled"=>"1", 'position'=>201, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"rubrique" => array("type"=>"chkbxlst:c_constat_rubrique:label:rowid::(active=1)", "label"=>"Rubrique", "enabled"=>"1", 'position'=>202, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"processus" => array("type"=>"chkbxlst:c_constat_processus:label:rowid::(active=1)", "label"=>"Processus", "enabled"=>"1", 'position'=>203, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"actionsimmediates" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"ActionsImmediates", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Coché si le constat est une action immédiate", "css"=>"linebreak"),
+		"actionsimmediates" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"ActionsImmediates", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Cocher si le constat est une action immédiate", "css"=>"linebreak"),
 		"actionsimmediates_date" => array("type"=>"date", "label"=>"ActionsImmediatesDate", "enabled"=>"1", 'position'=>211, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"actionsimmediates_par" => array("type"=>"varchar(64)", "label"=>"ActionsImmediatesPar", "enabled"=>"1", 'position'=>212, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"actionsimmediates_commentaire" => array("type"=>"html", "label"=>"ActionsImmediatesComm", "enabled"=>"1", 'position'=>213, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "cssview"=>"wordbreak", "help"=>"Détail action immédiate (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
-		"infoclient" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"InfoClient", "enabled"=>"1", 'position'=>220, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"client informé requis ou non",),
+		"infoclient" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"InfoClient", "enabled"=>"1", 'position'=>220, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Client informé requis ou non",),
 		"infoclient_date" => array("type"=>"date", "label"=>"InfoClientDate", "enabled"=>"1", 'position'=>221, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"infoclient_par" => array("type"=>"varchar(64)", "label"=>"InfoClientPar", "enabled"=>"1", 'position'=>222, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"infoclient_commentaire" => array("type"=>"html", "label"=>"InfoClientComm", "enabled"=>"1", 'position'=>223, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"précisez méthode d'information client",),
+		"infoclient_commentaire" => array("type"=>"html", "label"=>"InfoClientComm", "enabled"=>"1", 'position'=>223, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Préciser la méthode d'information client",),
 		"impact" => array("type"=>"chkbxlst:c_constat_impact:label:rowid::(active=1)", "label"=>"Impact", "enabled"=>"1", 'position'=>230, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"commentaire_resp_aff" => array("type"=>"html", "label"=>"CommRespAff", "enabled"=>"1", 'position'=>240, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"analyse_cause_racine" => array("type"=>"html", "label"=>"AnalyseCausesRacines", "enabled"=>"1", 'position'=>300, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "cssview"=>"wordbreak", "help"=>"(Arbre des causes, description détaillée, etc).",),
-		"recurent" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"Recurent", "enabled"=>"1", 'position'=>310, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Coché si le constat est récurent",),
+		"cout_total" => array("type"=>"int", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>240, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Coût total regroupant : le coût de traitement horraire, le coût de traitement financier et le coût de pénalité</br>0 possible",),
+		"commentaire_resp_aff" => array("type"=>"html", "label"=>"CommRespAff", "enabled"=>"1", 'position'=>250, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
+		"analyse_cause_racine" => array("type"=>"html", "label"=>"AnalyseCausesRacines", "enabled"=>"1", 'position'=>300, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "cssview"=>"wordbreak", "help"=>"5M, Arbre des causes, description détaillée, etc.",),
+		"recurent" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"Recurent", "enabled"=>"1", 'position'=>310, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Cocher si le constat est récurent",),
 		"accordclient" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"AccordClient", "enabled"=>"1", 'position'=>320, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Accord client requis ou non",),
 		"accordclient_date" => array("type"=>"date", "label"=>"AccordClientDate", "enabled"=>"1", 'position'=>321, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"accordclient_par" => array("type"=>"varchar(64)", "label"=>"AccordClientPar", "enabled"=>"1", 'position'=>322, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
-		"accordclient_commentaire" => array("type"=>"html", "label"=>"AccordClientComm", "enabled"=>"1", 'position'=>323, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"précisez méthode d'information client",),
-		"controleclient" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"ControleClient", "enabled"=>"1", 'position'=>330, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Contrôle client requis ou non",),
+		"accordclient_commentaire" => array("type"=>"html", "label"=>"AccordClientComm", "enabled"=>"1", 'position'=>323, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Préciser la méthode d'information client",),
+		"controleclient" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"ControleClient", "enabled"=>"1", 'position'=>330, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Contrôle du client requis ou non",),
 		"controleclient_date" => array("type"=>"date", "label"=>"ControleClientDate", "enabled"=>"1", 'position'=>331, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"controleclient_par" => array("type"=>"varchar(64)", "label"=>"ControleClientPar", "enabled"=>"1", 'position'=>332, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
-		"controleclient_commentaire" => array("type"=>"html", "label"=>"ControleClientComm", "enabled"=>"1", 'position'=>333, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"précisez méthode d'information client",),
-		"commentaire_resp_q3se" => array("type"=>"html", "label"=>"CommentaireRespQ3SE", "enabled"=>"1", 'position'=>340, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
-		"commentaire_serv_q3se" => array("type"=>"html", "label"=>"CommentaireServQ3SE", "enabled"=>"1", 'position'=>341, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
-		"cout_total" => array("type"=>"int", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>550, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Coût total regroupant : Coût traitement horraire ,coût traitement financier et coût pénalité",),
+		"controleclient_commentaire" => array("type"=>"html", "label"=>"ControleClientComm", "enabled"=>"1", 'position'=>333, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Préciser la méthode d'information client",),
+		"commentaire_resp_q3se" => array("type"=>"html", "label"=>"CommentaireRespQ3SE", "enabled"=>"1", 'position'=>350, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
+		"commentaire_serv_q3se" => array("type"=>"html", "label"=>"CommentaireServQ3SE", "enabled"=>"1", 'position'=>351, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>650, 'notnull'=>0, "visible"=>"0",),
-		"date_eche" => array("type"=>"date", "label"=>"DateEcheance", "enabled"=>"1", 'position'=>500, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
-		"cloture_date" => array("type"=>"date", "label"=>"ClotureDate", "enabled"=>"1", 'position'=>561, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Date à remplir quand le constat est soldé",),
-		"cloture_par" => array("type"=>"date", "label"=>"CloturePar", "enabled"=>"1", 'position'=>562, 'notnull'=>0, "visible"=>"\$object->status>1?1:0"),
+		"cloture_date" => array("type"=>"date", "label"=>"ClotureDate", "enabled"=>"1", 'position'=>400, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Date à remplir lorsque le constat est soldé",),
+		"cloture_par" => array("type"=>"date", "label"=>"CloturePar", "enabled"=>"1", 'position'=>401, 'notnull'=>0, "visible"=>"\$object->status>1?1:0"),
 	);
 	public $rowid;
 	public $ref;
@@ -185,34 +184,29 @@ class Constat extends CommonObject
 	public $rubrique;
 	public $processus;
 	public $actionsimmediates;
+	public $actionsimmediates_date;
+	public $actionsimmediates_par;
 	public $actionsimmediates_commentaire;
 	public $infoclient;
+	public $infoclient_date;
+	public $infoclient_par;
 	public $infoclient_commentaire;
 	public $impact;
 	public $commentaire_resp_aff;
 	public $analyse_cause_racine;
 	public $recurent;
 	public $accordclient;
+	public $accordclient_date;
+	public $accordclient_par;
 	public $accordclient_commentaire;
 	public $controleclient;
+	public $controleclient_date;
+	public $controleclient_par;
 	public $controleclient_commentaire;
 	public $commentaire_resp_q3se;
 	public $commentaire_serv_q3se;
 	public $cout_total;
 	public $last_main_doc;
-	public $date_eche;
-	public $actionsimmediates_date;
-	public $actionsimmediates_par;
-
-	public $infoclient_date;
-	public $infoclient_par;
-
-	public $accordclient_date;
-	public $accordclient_par;
-
-	public $controleclient_date;
-	public $controleclient_par;
-
 	public $cloture_date;
 	public $cloture_par;
 	// END MODULEBUILDER PROPERTIES
@@ -488,6 +482,7 @@ class Constat extends CommonObject
 			}
 			$this->fields['infoclient_commentaire']['notnull_validate'] = 1;
 			$this->fields['impact']['notnull_validate'] = 1;
+			$this->fields['cout_total']['notnull_validate'] = 1;
 		}
 		if($this->status >= self::STATUS_EN_COURS) {
 			$this->fields['analyse_cause_racine']['notnull_validate'] = 1;
@@ -504,7 +499,6 @@ class Constat extends CommonObject
 				$this->fields['controleclient_par']['notnull_validate'] = 1;
 			}
 			$this->fields['controleclient_commentaire']['notnull_validate'] = 1;
-			$this->fields['cout_total']['notnull_validate'] = 1;
 		}
 
 		$project = new Project($db);

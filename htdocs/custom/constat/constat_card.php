@@ -147,7 +147,10 @@ if($object->id) {
 // Est-ce que des champs obligatoire sont non renseignés ? 
 $fields_null = '';
 foreach($object->fields as $key => $val) {
-	if(!$object->$key && $val['notnull_validate']) $fields_null .= $langs->trans($val['label']).", ";
+	if(!$object->$key && $val['notnull_validate']) {
+		if($key == 'cout_total' && $object->$key === 0) continue;
+		$fields_null .= $langs->trans($val['label']).", ";
+	}
 }
 $fields_null = rtrim($fields_null, ', ');
 
@@ -173,7 +176,7 @@ if ($enablepermissioncheck) {
 	}
 	elseif($object->status == $object::STATUS_VALIDATED) {
 		$permissiontoupdate = $user->admin || $is_responsable_affaire;
-		$permissiontovalidate = $is_responsable_affaire;
+		$permissiontovalidate = $user->admin || $is_responsable_affaire;
 	}
 	elseif($object->status == $object::STATUS_EN_COURS) {
 		$permissiontoupdate = $user->hasRight('constat', 'constat', 'complete_q3se');
