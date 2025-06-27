@@ -129,7 +129,7 @@ class InterfaceOTTriggers extends DolibarrTriggers
                 }
             }
         }
-
+            
         if ($action == 'USERHABILITATION_DELETE') {
             if (isset($object->fk_user)) {
                 $sql = "SELECT DISTINCT p.rowid 
