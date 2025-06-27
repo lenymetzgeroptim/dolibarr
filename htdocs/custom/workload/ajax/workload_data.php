@@ -115,6 +115,7 @@ $proj = new Project($db);
 
 $rscIds = $rsc->getUsers();
 $absArray = $rsc->getAbsentUsers();
+$usersTrainingArray = $rsc->getUsersInCurrentTraining();
 
 // Récupération des données
 $fetchData = function($type, $str = null) use ($rsc, $arr_user, $date_start, $date_end) {
@@ -133,7 +134,7 @@ $genericData = array_merge($comArray, $propArray);
 $genericDataProj = array_merge($comArrayProj1, $propArray);
 
 $genericDataComm = $commArray;
-$genericDataAbs = array_merge($absArray);
+$genericDataAbs = array_merge($absArray, $usersTrainingArray);
 $genericDataProjAbs = $comArrayProjAbs;
 
 //Gestion des droits : par défaut, le chef de projet ne peut visualiser que 
@@ -180,7 +181,7 @@ foreach ($comArrayProjAbs as &$commItem) {
     $commItem->periodes = [];
     $commItem->arrayreference = [];
 
-    foreach ($absArray as $absItem) {
+    foreach ($genericDataAbs as $absItem) {
         if ($commItem->id === $absItem->id) {
             // Stockage des périodes d'absence dans datesabs
             $commItem->periodes[] = [
@@ -190,7 +191,8 @@ foreach ($comArrayProjAbs as &$commItem) {
                 "nb_open_day_calculated" => $absItem->nb_open_day_calculated,
                 'conge_label' => $absItem->conge_label,
                 'fk_type' => $absItem->fk_type,
-                'projet_id' => $commItem->projet_id
+                'projet_id' => $commItem->projet_id,
+                'idref' => $absItem->idref
             ];
 
             // Stockage des références des absences dans arrayreference

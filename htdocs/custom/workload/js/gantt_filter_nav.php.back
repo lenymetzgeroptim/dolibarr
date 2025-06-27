@@ -309,7 +309,7 @@ print '</div>';
 print '</td>';
 print '<td class="td_filter">';
 print '<div>';
-print $langs->trans("Type de Congé") . ' &nbsp;';
+print $langs->trans("Type d'absence") . ' &nbsp;';
 print img_picto('', 'list', 'class="pictofixedwidth"');
 print '<select id="absFilter" multiple></select>';
 print '</div>';

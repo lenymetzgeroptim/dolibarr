@@ -125,6 +125,7 @@ $listOrders = $rcs->getOrders();
 $listSkills = $rcs->getSkills();
 $listAgency = $rcs->getAgencies();
 $listPropal = $rcs->getPropals();
+$listTrainingType = $rcs->getUsersInCurrentTraining();
 $listAbsType = $rcs->getAbsentUsers();
 
 
@@ -137,7 +138,7 @@ $listAbsType = $rcs->getAbsentUsers();
  $arraySkills = array_merge($listSkills);
  $arrayAgencies = array_merge($listAgency);
  $arrayPropals = array_merge($listPropal);
- $arrayAbsType = array_merge($listAbsType);
+ $arrayAbsType = array_merge($listAbsType, $listTrainingType);
 
  
  

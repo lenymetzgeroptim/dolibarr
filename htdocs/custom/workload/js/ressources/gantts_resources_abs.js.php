@@ -87,6 +87,12 @@
         height: 13px;
     }
 
+    #tabs5 .gtaskFormation {
+        background: linear-gradient(to bottom,#e69138,#f0a94e,#f7ba67,#f0a94e,#d97b21) !important;
+            height: 13px;
+    }
+
+
     #tabs5 .gtaskname {
         width: 70% !important;
     }
@@ -119,7 +125,7 @@ function generateMembersAbs(ressources, filteredData) {
     const members = [];
     const member_dependencies = [];
     let membercursor = 0;
-
+    
     // Parcours des ressources
     if(!ressources) {
         // Si les ressources sont nulles, afficher un message
@@ -127,13 +133,14 @@ function generateMembersAbs(ressources, filteredData) {
     }else{
         const today = new Date().toISOString().split('T')[0];
         ressources.forEach((val) => {
+            console.log("val test ", val.idref);
             const condition =  (val.idref === "HL");
-            if (val.id != null) {
+            // if (1=1) {
                 const idparent = val.s ? val.id : `-${val.id}`;
             
                 members[membercursor] = {
                     member_id: val.element_id_abs,
-                    member_idref: val.idref || 'HL',
+                    member_idref: val.idref,
                     member_alternate_id: membercursor + 1,
                     member_member_id: val.id,
                     member_parent: idparent,
@@ -146,7 +153,7 @@ function generateMembersAbs(ressources, filteredData) {
                     member_projet_ref: val.ref, 
                     member_hl_ref: val.holidayref,
                     member_user_id: val.id,
-                    member_nb_open_day: val.nb_open_day_calculated,
+                    member_nb_open_day: val.nb_open_day_calculated || '',
                     member_name:''
                 };
 
@@ -157,21 +164,53 @@ function generateMembersAbs(ressources, filteredData) {
                     members[membercursor].member_css = 'gtaskred';
                 }else if(val.idref == "HL" && val.status == 2){
                     members[membercursor].member_css = 'gtaskyellow';
+                }else if(val.idref == 'FH') {
+                    members[membercursor].member_css = 'gtaskFormation';
                 }else{
                     members[membercursor].member_css = 'gtaskblack';
                 }
 
-                <?php if ($user->rights->holidaycustom->read) { ?>
-                    labelProjets = val.projets === null ? 'Vide' : val.projets; 
-                    members[membercursor].member_name = `<a href="/custom/holidaycustom/card.php?id=${val.element_id_abs}&withproject=1">
-                        <span title="Salarié affecté aux projets : ${val.projets} | Référence du congé : ${val.holidayref}">
-                            ${val.holidayref} </a><span> - ${labelProjets}
-                        </span></span>`;
+                labelProjets = val.projets == null || val.projets === '' ? '' : val.projets;
+                labelHoliday = val.holidayref == null || val.holidayref === '' ? 'Aucune absence' : val.holidayref;
+                <?php
+                    $canReadHoliday = !empty($user->rights->holidaycustom->read);
+                    $canReadFormation = !empty($user->rights->formationhabilitation->userformation->readall);
+                ?>
+
+                if (val.idref === 'HL') {
+                    <?php if ($canReadHoliday) { ?>
+                    members[membercursor].member_name = `
+                        <a href="/custom/holidaycustom/card.php?id=${val.element_id_abs}&withproject=1"
+                        title="Salarié affecté aux projets : ${val.projets} | Référence du congé : ${val.holidayref}">
+                            ${labelHoliday}
+                        </a> - <span>${labelProjets}</span>`;
                     <?php } else { ?>
-                        members[membercursor].member_name = `<span title="Salarié affecté aux projets : ${val.projets} | Référence du congé : ${val.holidayref}">
-                            ${val.holidayref} - ${labelProjets}
+                    members[membercursor].member_name = `
+                        <span title="Salarié affecté aux projets : ${val.projets} | Référence du congé : ${val.holidayref}">
+                            ${labelHoliday} - ${labelProjets}
                         </span>`;
-                <?php } ?>
+                    <?php } ?>
+                }
+                else if (val.idref === 'FH') {
+                    <?php if ($canReadFormation) { ?>
+                    members[membercursor].member_name = `
+                        <a href="/custom/formationhabilitation/userformation_card.php?id=${val.element_id_abs}&withproject=1"
+                        title="Salarié affecté aux projets : ${val.projets} | Référence de la formation : ${val.holidayref}">
+                            ${labelHoliday}
+                        </a> - <span>${labelProjets}</span>`;
+                    <?php } else { ?>
+                    members[membercursor].member_name = `
+                        <span title="Salarié affecté aux projets : ${val.projets} | Référence de la formation : ${val.holidayref}">
+                            ${labelHoliday} - ${labelProjets}
+                        </span>`;
+                    <?php } ?>
+                }
+                else {
+                    members[membercursor].member_name = `
+                        <span title="Salarié affecté aux projets : ${val.projets} | Référence du congé : ${val.holidayref}">
+                            ${labelHoliday} - ${labelProjets}
+                        </span>`;
+                }
 
             
             
@@ -187,9 +226,17 @@ function generateMembersAbs(ressources, filteredData) {
                     members[membercursor].member_resources = `<span class="badge badge-large badge-a1" style="font-size: 1.2em;" title="Congé en approbation 1 : ${val.conge_label}">Appro. 1</span>
                     <span class="badge badge-secondary" style="font-size: 0.9em;">${val.conge_label}</span> 
                     <span class="badge badge-info" style="background-color: #0075A8; color: white; padding: 3px 6px; border-radius: 4px; font-size: 0.9em;">🗓️ ${val.nb_open_day_calculated} jours</span>`;
-                } 
+                }  else if (val.idref === 'FH') {
+                    members[membercursor].member_resources = `<span class="badge badge-large" 
+                        style="background-color: #8a2be2; opacity:0.6; color: #fff; font-size: 0.9em; padding: 3px 6px; border-radius: 4px;" 
+                        title="En formation : ${val.conge_label}">
+                        🎓 En formation
+                    </span>
+                    <span class="badge badge-secondary" style="font-size: 0.9em;"> ${val.conge_label}</span>
+                    <span class="badge badge-info" style="font-size: 0.9em;background-color: #0075A8; color: white; padding: 3px 6px; border-radius: 4px; font-size: 0.9em;">🗓️ ${countWorkingDays(val.date_start, val.date_end)} jours</span>`;
+                }
                 membercursor++;
-             }
+            // }
         });
     }
     console.log('ressources data test', members);
@@ -201,6 +248,27 @@ function generateMembersAbs(ressources, filteredData) {
 
 
     return members;
+}
+
+/**
+ * Calucler la période entre date de debut et date de fin
+ * 
+ * 
+ */
+function countWorkingDays(startDateStr, endDateStr) {
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+    let count = 0;
+    
+    // Parcours jour par jour
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const day = d.getDay();
+        if (day !== 0 && day !== 6) { // 0 = dimanche, 6 = samedi
+            count++;
+        }
+    }
+
+    return count;
 }
 
 // Fonction pour mettre à jour le Gantt avec les données filtrées
@@ -428,7 +496,9 @@ function constructGanttLineAbs(members, member, memberDependencies = [], level =
 		link = '';
 	} else if (member["member_idref"] === "HL") {
         link = DOL_URL_ROOT + '/custom/holidaycustom/card.php?id=' + Math.abs(member["member_id"]);
-    } 
+    } else if (member["member_idref"] === "FH") {
+        link = DOL_URL_ROOT + '/custom/formationhabilitation/userformation_card.php?id=' + Math.abs(member["member_id"]);
+    }
    
 
     return {
