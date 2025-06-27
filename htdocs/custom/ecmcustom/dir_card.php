@@ -113,11 +113,13 @@ if (!$permtoread) {
 /*
  * Actions
  */
-
+var_dump(GETPOST("sendit"));
 // Upload file
 if (GETPOST("sendit") && !empty($conf->global->MAIN_UPLOAD_DOC) && $permtoupload) {
+	var_dump('test');
 	if (dol_mkdir($upload_dir) >= 0) {
 		$resupload = dol_move_uploaded_file($_FILES['userfile']['tmp_name'], $upload_dir."/".dol_unescapefile($_FILES['userfile']['name']), 0, 0, $_FILES['userfile']['error']);
+		var_dump($resupload);
 		if (is_numeric($resupload) && $resupload > 0) {
 			$result = $ecmdir->changeNbOfFiles('+');
 		} else {

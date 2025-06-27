@@ -129,17 +129,113 @@ $allowsendingmail = (GETPOST('emailing', 'int') ? 1 : 0);
 // TODO Replace sendit and confirm_deletefile with
 //$backtopage=$_SERVER["PHP_SELF"].'?file_manager=1&website='.$websitekey.'&pageid='.$pageid;	// used after a confirm_deletefile into actions_linkedfiles.inc.php
 //include DOL_DOCUMENT_ROOT.'/core/actions_linkedfiles.inc.php';
-
+/*
+ * Actions
+ */
 // Upload file (code similar but different than actions_linkedfiles.inc.php)
+// if (GETPOST("sendit", 'alphanohtml') && !empty($conf->global->MAIN_UPLOAD_DOC)) {
+//     // Le chemin de destination
+//     $relativepath = $ecmdir->id ? $ecmdir->getRelativePath() : $section_dir;
+//     $upload_dir = $conf->ecmcustom->dir_output . '/' . $relativepath;
+	
+//     // Préparation des fichiers utilisateurs
+//     $userfiles = is_array($_FILES['userfile']['tmp_name']) ? $_FILES['userfile']['tmp_name'] : array($_FILES['userfile']['tmp_name']);
+//     $errors = 0;
+	
+//     foreach ($userfiles as $key => $userfile) {
+//         if (empty($userfile)) {
+//             $errors++;
+//             $errorCode = $_FILES['userfile']['error'][$key];
+//             $msg = ($errorCode == 1 || $errorCode == 2)
+//                 ? $langs->trans('ErrorFileSizeTooLarge')
+//                 : $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("File"));
+//             setEventMessages($msg, null, 'errors');
+//         }
+//     }
+
+//     if (!$errors) {
+//         // Upload les fichiers
+//         $generatethumbs = 0;
+//         $res = dol_add_file_process($upload_dir, 0, 1, 'userfile', '', null, '', $generatethumbs);
+
+//         // Liste des fichiers uploadés
+//         $listofpaths = dol_dir_list($upload_dir, "files", 0); // 0 pour non récursif
+// 		$foldername = rtrim($section_dir, '/');
+
+// 		foreach ($listofpaths as $key => $file) {
+// 			if ($file['name'] != '.' && $file['name'] != '..' && !preg_match('/\.meta$/i', $file['name'])) {
+// 				if (strpos($file['name'], '_rapport_emails_') !== false) {
+// 					$rapportFiles[$key] = $file;
+// 				} else {
+// 					$normalFiles[$key] = $file;
+// 				}
+// 			}
+// 		}
+
+// 		$number = count($normalFiles); // nombre réel de fichiers uploadés
+//         $ecmdir->changeNbOfFiles($number); // met à jour la base
+		
+//         // Préparation les liens de téléchargement
+//         $urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
+//         $urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
+
+//         // $foldername = rtrim($section_dir, '/');
+		
+//         $filesname = array_filter(array_unique($_FILES['userfile']['name']));
+//         $lastfiles = [];
+
+//         foreach ($filesname as $file) {
+//             // Nettoyage nom
+//             $safeFile = htmlentities($file, ENT_NOQUOTES, 'utf-8');
+//             $safeFile = preg_replace('#&([A-za-z])(?:acute|cedil|caron|circ|grave|orn|ring|slash|th|tilde|uml);#', '\1', $safeFile);
+//             $info = pathinfo($safeFile);
+//             $filename = dol_sanitizeFileName($safeFile);
+
+// 			$fullpath = DOL_DATA_ROOT . '/ecmcustom/' . $section_dir . $filename;
+			
+//             // Lien téléchargement
+//             $downloadlink = $urlwithroot . '/document.php?modulepart=ecmcustom&attachment=1&file=' . rawurlencode($section_dir . $filename);
+//             $lastfiles[] = $info['filename'] . ' ==> <strong>Télécharger</strong> <a href="' . $downloadlink . '"> ici.</a>';
+//         }
+
+// 		// Envoi d'email
+//         if ($allowsendingmail === 1 && !empty($conf->global->MAIN_UPLOAD_DOC)) {
+//             $emailLogs = send_bulk_emails($senders, $foldername, $filesname, $downloadlink, $lastfiles);
+//         }
+		
+// 		foreach ($filesname as $file) {
+// 			$safeFile = dol_sanitizeFileName($file);
+// 			$info = pathinfo($safeFile);
+// 			$filenameWithExt = $info['basename'];
+// 			$fullFilePath = $upload_dir . '/' . $safeFile;
+
+// 			// // Filtrer les logs pour ce fichier
+// 			$logsForThisFile = array_filter($emailLogs, function ($log) use ($safeFile) {
+// 				return strpos($log['file'], $safeFile) !== false;
+// 			});
+			
+// 			if (empty($logsForThisFile)) continue;
+// 			// var_dump($info);
+// 			// Nom du fichier PDF
+// 			$pdfname = $filenameWithExt . '_rapport_emails_' . date('Ymd_His') . '.pdf';
+// 			$pdfpath = $upload_dir . '/' . $pdfname;
+
+// 			$reportData = generateEmailReportPDF($upload_dir, $foldername, $safeFile, $logsForThisFile, $user, $langs, $mysoc, $conf);
+// 		}
+		
+//     }
+// }
 if (GETPOST("sendit", 'alphanohtml') && !empty($conf->global->MAIN_UPLOAD_DOC)) {
-    // Le chemin de destination
+    $overwrite = GETPOST('overwritefile', 'alpha') ? true : false;
+
+    // Chemin de destination
     $relativepath = $ecmdir->id ? $ecmdir->getRelativePath() : $section_dir;
     $upload_dir = $conf->ecmcustom->dir_output . '/' . $relativepath;
-	
-    // Préparation des fichiers utilisateurs
+
+    // Fichiers utilisateurs
     $userfiles = is_array($_FILES['userfile']['tmp_name']) ? $_FILES['userfile']['tmp_name'] : array($_FILES['userfile']['tmp_name']);
     $errors = 0;
-	
+
     foreach ($userfiles as $key => $userfile) {
         if (empty($userfile)) {
             $errors++;
@@ -152,82 +248,103 @@ if (GETPOST("sendit", 'alphanohtml') && !empty($conf->global->MAIN_UPLOAD_DOC)) 
     }
 
     if (!$errors) {
-        // Upload les fichiers
-        $generatethumbs = 0;
-        $res = dol_add_file_process($upload_dir, 0, 1, 'userfile', '', null, '', $generatethumbs);
+        $filesname = array_filter(array_unique($_FILES['userfile']['name']));
+        $emailLogs = [];
 
-        // Liste des fichiers uploadés
-        $listofpaths = dol_dir_list($upload_dir, "files", 0); // 0 pour non récursif
-		$foldername = rtrim($section_dir, '/');
+        foreach ($filesname as $key => $file) {
+            $safeFile = dol_sanitizeFileName($file);
+            $fullFilePath = $upload_dir . '/' . $safeFile;
 
-		foreach ($listofpaths as $key => $file) {
-			if ($file['name'] != '.' && $file['name'] != '..' && !preg_match('/\.meta$/i', $file['name'])) {
-				if (strpos($file['name'], '_rapport_emails_') !== false) {
-					$rapportFiles[$key] = $file;
-				} else {
-					$normalFiles[$key] = $file;
-				}
-			}
-		}
+            // Vérification du remplacement
+            if (file_exists($fullFilePath) && GETPOST('overwritefile')) {
+                if ($overwrite) {
+                    @unlink($fullFilePath); // suppression manuelle
+                    setEventMessage("Fichier remplacé : $safeFile", 'mesgs');
+                } else {
+                    setEventMessages("Le fichier '$safeFile' existe déjà et ne sera pas remplacé.", null, 'warnings');
+                    continue;
+                }
+            }
 
-		$number = count($normalFiles); // nombre réel de fichiers uploadés
-        $ecmdir->changeNbOfFiles($number); // met à jour la base
-		
-        // Préparation les liens de téléchargement
+            // Upload du fichier
+            $resupload = dol_move_uploaded_file(
+                $_FILES['userfile']['tmp_name'][$key],
+                $fullFilePath,
+                0, 0,
+                $_FILES['userfile']['error'][$key]
+            );
+
+            if (!is_numeric($resupload) || $resupload <= 0) {
+                $langs->load("errors");
+                if ($resupload < 0) {
+                    setEventMessages($langs->trans("ErrorFileNotUploaded"), null, 'errors');
+                } elseif (preg_match('/ErrorFileIsInfectedWithAVirus/', $resupload)) {
+                    setEventMessages($langs->trans("ErrorFileIsInfectedWithAVirus"), null, 'errors');
+                } else {
+                    setEventMessages($langs->trans($resupload), null, 'errors');
+                }
+            }
+        }
+
+        // Rafraîchir la liste des fichiers
+        $listofpaths = dol_dir_list($upload_dir, "files", 0);
+        $rapportFiles = $normalFiles = [];
+        $foldername = rtrim($section_dir, '/');
+
+        foreach ($listofpaths as $key => $file) {
+            if ($file['name'] != '.' && $file['name'] != '..' && !preg_match('/\.meta$/i', $file['name'])) {
+                if (strpos($file['name'], '_rapport_emails_') !== false) {
+                    $rapportFiles[$key] = $file;
+                } else {
+                    $normalFiles[$key] = $file;
+                }
+            }
+        }
+
+        // Mise à jour du nombre de fichiers
+        $number = count($normalFiles);
+        $ecmdir->changeNbOfFiles($number);
+
+        // Génération des liens de téléchargement
         $urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
         $urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
 
-        // $foldername = rtrim($section_dir, '/');
-		
-        $filesname = array_filter(array_unique($_FILES['userfile']['name']));
         $lastfiles = [];
-
         foreach ($filesname as $file) {
-            // Nettoyage nom
             $safeFile = htmlentities($file, ENT_NOQUOTES, 'utf-8');
             $safeFile = preg_replace('#&([A-za-z])(?:acute|cedil|caron|circ|grave|orn|ring|slash|th|tilde|uml);#', '\1', $safeFile);
             $info = pathinfo($safeFile);
             $filename = dol_sanitizeFileName($safeFile);
-
-			$fullpath = DOL_DATA_ROOT . '/ecmcustom/' . $section_dir . $filename;
-			
-            // Lien téléchargement
             $downloadlink = $urlwithroot . '/document.php?modulepart=ecmcustom&attachment=1&file=' . rawurlencode($section_dir . $filename);
             $lastfiles[] = $info['filename'] . ' ==> <strong>Télécharger</strong> <a href="' . $downloadlink . '"> ici.</a>';
         }
 
-		var_dump($fullpath);
-		if (file_exists($fullpath)) {
-			var_dump($fullpath);
-		}
-		// Envoi d'email
+        // Envoi d’e-mails
         if ($allowsendingmail === 1 && !empty($conf->global->MAIN_UPLOAD_DOC)) {
             $emailLogs = send_bulk_emails($senders, $foldername, $filesname, $downloadlink, $lastfiles);
         }
-		
-		foreach ($filesname as $file) {
-			$safeFile = dol_sanitizeFileName($file);
-			$info = pathinfo($safeFile);
-			$filenameWithExt = $info['basename'];
-			$fullFilePath = $upload_dir . '/' . $safeFile;
 
-			// // Filtrer les logs pour ce fichier
-			$logsForThisFile = array_filter($emailLogs, function ($log) use ($safeFile) {
-				return strpos($log['file'], $safeFile) !== false;
-			});
-			
-			if (empty($logsForThisFile)) continue;
-			// var_dump($info);
-			// Nom du fichier PDF
-			$pdfname = $filenameWithExt . '_rapport_emails_' . date('Ymd_His') . '.pdf';
-			$pdfpath = $upload_dir . '/' . $pdfname;
+        // Génération des rapports PDF
+        foreach ($filesname as $file) {
+            $safeFile = dol_sanitizeFileName($file);
+            $info = pathinfo($safeFile);
+            $filenameWithExt = $info['basename'];
+            $fullFilePath = $upload_dir . '/' . $safeFile;
 
-			$reportData = generateEmailReportPDF($upload_dir, $foldername, $safeFile, $logsForThisFile, $user, $langs, $mysoc, $conf);
-		}
-		
+            $logsForThisFile = array_filter($emailLogs, function ($log) use ($safeFile) {
+                return strpos($log['file'], $safeFile) !== false;
+            });
+
+            if (empty($logsForThisFile)) continue;
+
+            $pdfname = $filenameWithExt . '_rapport_emails_' . date('Ymd_His') . '.pdf';
+            $pdfpath = $upload_dir . '/' . $pdfname;
+
+            $reportData = generateEmailReportPDF($upload_dir, $foldername, $safeFile, $logsForThisFile, $user, $langs, $mysoc, $conf);
+        }
     }
 }
-  
+ 
 // Remove file (code similar but different than actions_linkedfiles.inc.php)
 if ($action == 'confirm_deletefile') {
     if (GETPOST('confirm', 'alpha') == 'yes') {
