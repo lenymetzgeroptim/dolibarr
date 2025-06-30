@@ -4480,7 +4480,7 @@ class FeuilleDeTempsLine extends CommonObjectLine
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 1;
+	public $isextrafieldmanaged = 0;
 
 	/**
 	 * Constructor

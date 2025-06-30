@@ -1416,7 +1416,7 @@ elseif (!$conf->global->FDT_DISPLAY_COLUMN && $action == 'addtime' && GETPOST('f
 				}
 
 				// S'il existe une ligne et que tous les champs sont = null
-				if($res > 0 && empty($deplacement_ponctuel[$idw]) && $moyen_transport[$idw] == 0 && $type_deplacement[$idw] == 0 && empty($notes_deplacement[$idw])) {
+				if($res > 0 && empty($deplacement_ponctuel[$idw]) && $moyen_transport[$idw] == 0 && $type_deplacement[$idw] == 0 && empty($deplacement->note)) {
 					if($is_day_anticipe) {
 						if(empty($deplacement_ponctuel[$idw]) && !empty($deplacement->deplacement_ponctuel)) {
 							$deplacement->note = (!empty($deplacement->note) ? $deplacement->note.' / ' : '');

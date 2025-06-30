@@ -45,7 +45,7 @@ class ExtendedExportFDT extends Export
 			$code_silae_RTTN1 = $holiday->getCodeSilae('RTT_N-1');
 		}
 		if($datatoexport == 'donnees_variables' && substr($array_filterValue['fdt.date_debut'], 4, 2) == $conf->global->FDT_EXPORT_RTT_N1_ACQUIS) {
-			$acquisRTTN1 = $holiday->getAcquisRTT();
+			$acquisRTTN1 = $holiday->getSoldeRTT(substr($array_filterValue['fdt.date_debut'], 4, 2));
 		}
 
 		dol_syslog(__METHOD__." ".$model.", ".$datatoexport.", ".implode(",", $array_selected));
@@ -594,7 +594,7 @@ class ExtendedExportFDT extends Export
 								$obj->valeur = '';
 
 								if(in_array(dol_print_date($array_filterValue['h.date_fin'], '%m'), explode(',', $conf->global->FDT_EXPORT_RTT_N1)) && $obj->ht_code == 'RTT' && $soldeRTTN1[$obj->rowid] >= 0.5) {
-									$num_open_day = num_open_day($date_debut_tmp, $date_fin_tmp, 0, 1, $obj->halfday);
+									$num_open_day = num_open_day($date_debut_tmp, $date_fin_tmp, 0, 1, $obj->h_halfday);
 
 									if($num_open_day > $soldeRTTN1[$obj->rowid]) {
 										$code_silae_tmp = $obj->ht_code_silae;
@@ -739,29 +739,26 @@ class ExtendedExportFDT extends Export
 								$obj->type = '';
 								$obj->code = 'HS-HS00';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-								continue;
 							}
 							if(!empty($obj->s_heure_sup25)) {
 								$obj->valeur = $obj->s_heure_sup25 / 3600;
 								$obj->type = '';
 								$obj->code = 'HS-HS25';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-								continue;
 							}
 							if(!empty($obj->s_heure_sup50)) {
 								$obj->valeur = $obj->s_heure_sup50 / 3600;
 								$obj->type = '';
 								$obj->code = 'HS-HS50';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-								continue;
 							}
 							if($conf->global->HEURE_SUP_SUPERIOR_HEURE_MAX_SEMAINE && !empty($obj->s_heure_sup50ht)) {
 								$obj->valeur = $obj->s_heure_sup50ht / 3600;
 								$obj->type = '';
 								$obj->code = 'HS-HS50-HT';
 								$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
-								continue;
 							}
+							continue;
 						}
 	
 						$objmodel->write_record($array_selected, $obj, $outputlangs, isset($array_export_TypeFields[$indice]) ? $array_export_TypeFields[$indice] : null);
@@ -1247,6 +1244,7 @@ class ExtendedExportFDT extends Export
 								WHEN t.type = 6 THEN 'Demande pieces'
 								WHEN t.type = 7 THEN 'ADMIN'
 								WHEN t.type = 8 THEN 'Soldé ADMIN'
+								WHEN t.type = 9 THEN 'Modif après export'
 								ELSE '' END) AS t_type";
 			}
 	

@@ -936,8 +936,8 @@ function updateTotalWeek($mode, temps_prec = 0, temps_suiv = 0, weekNumber, time
         diff = totalHourWeek - parseFloat(heure_semaine - timeHoliday);
     } else {
         const extraHours = Math.floor(totalMinutes / 60);
-        totalMinutes = totalMinutes % 60;
-        diff = ((extraHours + totalHours) * 60 + totalMinutes) - parseInt((heure_semaine - timeHoliday) * 60);
+        diffTotalMinutes = totalMinutes % 60;
+        diff = ((extraHours + totalHours) * 60 + diffTotalMinutes) - parseInt((heure_semaine - timeHoliday) * 60);
     }
 
     // Choix de la couleur en fonction du dépassement
@@ -1146,7 +1146,7 @@ function validateTotal(idw, mode_input, heure_max_jour) {
         //var Total = document.getElementsByClassName('TotalColumn_'+idw);
         var col = document.getElementsByClassName('time_' + idw);
         var Total = document.getElementsByClassName('totalDay' + idw);
-        if($mode_input = 'hours_decimal') {
+        if(mode_input == 'hours_decimal') {
             if (Total[0].innerHTML) {
                 total += parseFloat(Total[0].innerHTML * 60);
             }
@@ -1211,6 +1211,9 @@ function validateTotalSemaine(object, idw, jour_ecart, temps, nb_jour, heure_sem
                 }
             }
             var hours = total / 60;
+                        console.log(total)
+            console.log(hours)
+
             if (hours > heure_max_semaine) {
                 $.jnotify(ERR_HEURE_MAX_SEMAINE_DEPASSEMENT, 'error', false);
                 return -1;
