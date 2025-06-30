@@ -111,6 +111,46 @@ class InterfaceConstatTriggers extends DolibarrTriggers
 
 		// Or you can execute some code here
 		switch ($action) {
+			// Envoi d'un mail au(x) responsable(s) d'affaires lors de la validation par l'émetteur
+			case 'CONSTAT_VALIDATE':
+				$subject = '[OPTIM Industries] Notification automatique constat';
+				$from = 'erp@optim-industries.fr';
+				
+				$projet = new Project($this->db);
+				$user_static = new Project($this->db);
+				$projet->fetch($object->fk_project);
+				$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
+		
+				$to = ''; 
+				foreach($liste_chef_projet as $chef_projet){
+					$user_static->fetch($chef_projet);
+					if($user_static->statut == 1 && !empty($user_static->email)){
+						$to .= $user_static->email;
+						$to .= ", ";
+					}
+				}
+				$to = rtrim($to, ", ");
+
+				// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+				$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+				$resql_creator = $db->query($sql_creator);
+				$creator_name = "";
+				if ($resql_creator) {
+					if ($db->num_rows($resql_creator) > 0) {
+						$creator = $db->fetch_object($resql_creator);
+						$creator_name = $creator->firstname . ' ' . $creator->lastname;
+					}
+				}
+				global $dolibarr_main_url_root;
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$this->id.'">'.$this->ref.'</a>';
+
+				$to = rtrim($to, ", ");
+				$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été validé. Veuillez compléter votre partie. Cordialement, votre système de notification.");
+				$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
+				
+				$res = $cmail->sendfile();
 		
 			default:
 				dol_syslog("Trigger '".$this->name."' for action '".$action."' launched by ".__FILE__.". id=".$object->id);

@@ -274,298 +274,298 @@ if (empty($reshook)) {
 		$object->setProject(GETPOST('projectid', 'int'));
 	}
 	
-	if ($action == 'setPrise' && $confirm == 'yes'){
+	// if ($action == 'setPrise' && $confirm == 'yes'){
 	
-		$subject = '[OPTIM Industries] Notification automatique constat vérifié ';
+	// 	$subject = '[OPTIM Industries] Notification automatique constat vérifié ';
 	
-		$from = 'erp@optim-industries.fr';
+	// 	$from = 'erp@optim-industries.fr';
 		
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$to .= $email . ", ";
-				}
-			}
-		}
+	// 	// Si la requête a réussi
+	// 	if ($result) {
+	// 		$to = ''; // Initialisation de la chaîne d'emails
+	// 		while ($obj = $db->fetch_object($result)) {
+	// 			$email = $obj->email;
+	// 			// Ajoute l'email à la liste
+	// 			if (!empty($email)) {
+	// 				$to .= $email . ", ";
+	// 			}
+	// 		}
+	// 	}
 	
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Resp. Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-			}
-		}
+	// 	$user_group = New UserGroup($db);
+	// 	$user_group->fetch('', 'Resp. Q3SE');
+	// 	$liste_utilisateur = $user_group->listUsersForGroup();
+	// 	foreach($liste_utilisateur as $qualite){
+	// 		if(!empty($qualite->email)){
+	// 			$to .= $qualite->email;
+	// 		}
+	// 	}
 	
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql = "SELECT lastname, firstname FROM llx_user WHERE rowid = ".$object->fk_user_creat;
-		$resql = $db->query($sql);
-		$creator_name = "";
-		if ($resql) {
-			if ($db->num_rows($resql) > 0) {
-				$creator = $db->fetch_object($resql);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-		}
+	// 	// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+	// 	$sql = "SELECT lastname, firstname FROM llx_user WHERE rowid = ".$object->fk_user_creat;
+	// 	$resql = $db->query($sql);
+	// 	$creator_name = "";
+	// 	if ($resql) {
+	// 		if ($db->num_rows($resql) > 0) {
+	// 			$creator = $db->fetch_object($resql);
+	// 			$creator_name = $creator->firstname . ' ' . $creator->lastname;
+	// 		}
+	// 	}
 	
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-		$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+	// 	global $dolibarr_main_url_root;
+	// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+	// 	$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+	// 	$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
 	
-		$to = rtrim($to, ", ");
-		$message = $langs->transnoentitiesnoconv(" Bonjour, le constat ".$link." créé par ". $creator_name. " a été vérifié. Veuillez compléter votre partie et passer au statut suivant. Cordialement, votre système de notification.");
+	// 	$to = rtrim($to, ", ");
+	// 	$message = $langs->transnoentitiesnoconv(" Bonjour, le constat ".$link." créé par ". $creator_name. " a été vérifié. Veuillez compléter votre partie et passer au statut suivant. Cordialement, votre système de notification.");
 
 	
-		$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
+	// 	$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			 setEventMessages($langs->trans("EmailSend"), null, 'warning');
-			// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-			// exit;
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-			</script>';
-		} 		
+	// 	// Send mail
+	// 	$res = $cmail->sendfile();
+	// 	if($res) {
+	// 		 setEventMessages($langs->trans("EmailSend"), null, 'warning');
+	// 		// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+	// 		// exit;
+	// 		print '<script>
+	// 		window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
+	// 		</script>';
+	// 	} 		
 	
-	}
+	// }
 
-	if ($action == 'confirmsetCloture' && $confirm == 'yes'){
+	// if ($action == 'confirmsetCloture' && $confirm == 'yes'){
 
-		$subject = '[OPTIM Industries] Notification automatique constat classé';
+	// 	$subject = '[OPTIM Industries] Notification automatique constat classé';
 	
-		$from = 'erp@optim-industries.fr';
+	// 	$from = 'erp@optim-industries.fr';
 		
-		$projet = new Project($db);
-		$projet->fetch($object->fk_project);
-		$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
+	// 	$projet = new Project($db);
+	// 	$projet->fetch($object->fk_project);
+	// 	$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
 	
-		// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
-		$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
-		$result = $db->query($sql);
+	// 	// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
+	// 	$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
+	// 	$result = $db->query($sql);
 	
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$tochef .= $email . ", ";
-				}
-			}
-		}
+	// 	// Si la requête a réussi
+	// 	if ($result) {
+	// 		$to = ''; // Initialisation de la chaîne d'emails
+	// 		while ($obj = $db->fetch_object($result)) {
+	// 			$email = $obj->email;
+	// 			// Ajoute l'email à la liste
+	// 			if (!empty($email)) {
+	// 				$tochef .= $email . ", ";
+	// 			}
+	// 		}
+	// 	}
 	
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				$to .= ", ";
-			}
-		}
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Resp. Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				$torespQ3 .= ", ";
-			}
-		}
-		$emeteur = New User($db);
-		$emeteur->fetch($object->fk_user_creat);
+	// 	$user_group = New UserGroup($db);
+	// 	$user_group->fetch('', 'Q3SE');
+	// 	$liste_utilisateur = $user_group->listUsersForGroup();
+	// 	foreach($liste_utilisateur as $qualite){
+	// 		if(!empty($qualite->email)){
+	// 			$to .= $qualite->email;
+	// 			$to .= ", ";
+	// 		}
+	// 	}
+	// 	$user_group = New UserGroup($db);
+	// 	$user_group->fetch('', 'Resp. Q3SE');
+	// 	$liste_utilisateur = $user_group->listUsersForGroup();
+	// 	foreach($liste_utilisateur as $qualite){
+	// 		if(!empty($qualite->email)){
+	// 			$to .= $qualite->email;
+	// 			$torespQ3 .= ", ";
+	// 		}
+	// 	}
+	// 	$emeteur = New User($db);
+	// 	$emeteur->fetch($object->fk_user_creat);
 		
-		if(!empty($emeteur->email)){
-			$toemeteur = $emeteur->email;
-		}
+	// 	if(!empty($emeteur->email)){
+	// 		$toemeteur = $emeteur->email;
+	// 	}
 	
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-		if ($resql_creator) {
-			if ($db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-		}
+	// 	// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+	// 	$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+	// 	$resql_creator = $db->query($sql_creator);
+	// 	$creator_name = "";
+	// 	if ($resql_creator) {
+	// 		if ($db->num_rows($resql_creator) > 0) {
+	// 			$creator = $db->fetch_object($resql_creator);
+	// 			$creator_name = $creator->firstname . ' ' . $creator->lastname;
+	// 		}
+	// 	}
 	
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-		$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+	// 	global $dolibarr_main_url_root;
+	// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+	// 	$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+	// 	$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
 	
-		$to .= $tochef;
-		$to .= $toemeteur;
-		$to .= $torespQ3;
-		$to = rtrim($to, ", ");
+	// 	$to .= $tochef;
+	// 	$to .= $toemeteur;
+	// 	$to .= $torespQ3;
+	// 	$to = rtrim($to, ", ");
 		
-		$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ". $link. " créé par ". $creator_name." a été clôturé. Cordialement, Votre système de notification." );
+	// 	$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ". $link. " créé par ". $creator_name." a été clôturé. Cordialement, Votre système de notification." );
 	
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
+	// 	$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-			</script>';
-		} 
-	}
+	// 	// Send mail
+	// 	$res = $cmail->sendfile();
+	// 	if($res) {
+	// 		setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
+	// 	} else {
+	// 		setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+	// 		print '<script>
+	// 		window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
+	// 		</script>';
+	// 	} 
+	// }
 
-	if ($action == 'setSolde' && $confirm == 'yes'){
+	// if ($action == 'setSolde' && $confirm == 'yes'){
 
 
-		$subject = '[OPTIM Industries] Notification automatique  constat soldé';
+	// 	$subject = '[OPTIM Industries] Notification automatique  constat soldé';
 
-		$from = 'erp@optim-industries.fr';
+	// 	$from = 'erp@optim-industries.fr';
 		
-		$projet = new Project($db);
-		$projet->fetch($object->fk_project);
-		$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
+	// 	$projet = new Project($db);
+	// 	$projet->fetch($object->fk_project);
+	// 	$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
 
-		// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
-		$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
-		$result = $db->query($sql);
+	// 	// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
+	// 	$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
+	// 	$result = $db->query($sql);
 
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$tochef .= $email . ", ";
-				}
-			}
-		}
+	// 	// Si la requête a réussi
+	// 	if ($result) {
+	// 		$to = ''; // Initialisation de la chaîne d'emails
+	// 		while ($obj = $db->fetch_object($result)) {
+	// 			$email = $obj->email;
+	// 			// Ajoute l'email à la liste
+	// 			if (!empty($email)) {
+	// 				$tochef .= $email . ", ";
+	// 			}
+	// 		}
+	// 	}
 
-			$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				$to .= ", ";
+	// 		$user_group = New UserGroup($db);
+	// 	$user_group->fetch('', 'Q3SE');
+	// 	$liste_utilisateur = $user_group->listUsersForGroup();
+	// 	foreach($liste_utilisateur as $qualite){
+	// 		if(!empty($qualite->email)){
+	// 			$to .= $qualite->email;
+	// 			$to .= ", ";
 					
-			}
-		}
+	// 		}
+	// 	}
 
-		$emeteur = New User($db);
-		$emeteur->fetch($object->fk_user_creat);
+	// 	$emeteur = New User($db);
+	// 	$emeteur->fetch($object->fk_user_creat);
 		
-		if(!empty($emeteur->email)){
-		$toemeteur = $emeteur->email;
-			}	
+	// 	if(!empty($emeteur->email)){
+	// 	$toemeteur = $emeteur->email;
+	// 		}	
 
-			// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-		if ($resql_creator) {
-			if ($db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-		}
+	// 		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+	// 	$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+	// 	$resql_creator = $db->query($sql_creator);
+	// 	$creator_name = "";
+	// 	if ($resql_creator) {
+	// 		if ($db->num_rows($resql_creator) > 0) {
+	// 			$creator = $db->fetch_object($resql_creator);
+	// 			$creator_name = $creator->firstname . ' ' . $creator->lastname;
+	// 		}
+	// 	}
 
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-        $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-        $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+	// 	global $dolibarr_main_url_root;
+	// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+    //     $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+    //     $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
 
-		$to .= $tochef;
-		$to .= $toemeteur;
-		$to = rtrim($to, ", ");
-		$msg =  $langs->transnoentitiesnoconv("Le constat  ".$link." créé par " .$creator_name. " est à classé par le service Q3SE votre system d'information");
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
+	// 	$to .= $tochef;
+	// 	$to .= $toemeteur;
+	// 	$to = rtrim($to, ", ");
+	// 	$msg =  $langs->transnoentitiesnoconv("Le constat  ".$link." créé par " .$creator_name. " est à classé par le service Q3SE votre system d'information");
+	// 	$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-			</script>';
-		}	
-	}
+	// 	// Send mail
+	// 	$res = $cmail->sendfile();
+	// 	if($res) {
+	// 		setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
+	// 	} else {
+	// 		setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+	// 		print '<script>
+	// 		window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
+	// 		</script>';
+	// 	}	
+	// }
 	
-	if ($action == 'setSolde' && $confirm == 'yes'){
+	// if ($action == 'setSolde' && $confirm == 'yes'){
 	
-		$subject = '[OPTIM Industries] Notification automatique constat soldé ';
+	// 	$subject = '[OPTIM Industries] Notification automatique constat soldé ';
 
-		$from = 'erp@optim-industries.fr';
+	// 	$from = 'erp@optim-industries.fr';
 		
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$to .= $email . ", ";
-				}
-			}
-		}
+	// 	// Si la requête a réussi
+	// 	if ($result) {
+	// 		$to = ''; // Initialisation de la chaîne d'emails
+	// 		while ($obj = $db->fetch_object($result)) {
+	// 			$email = $obj->email;
+	// 			// Ajoute l'email à la liste
+	// 			if (!empty($email)) {
+	// 				$to .= $email . ", ";
+	// 			}
+	// 		}
+	// 	}
 
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Resp. Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
+	// 	$user_group = New UserGroup($db);
+	// 	$user_group->fetch('', 'Resp. Q3SE');
+	// 	$liste_utilisateur = $user_group->listUsersForGroup();
+	// 	foreach($liste_utilisateur as $qualite){
+	// 		if(!empty($qualite->email)){
+	// 			$to .= $qualite->email;
 				
 	
-			}
-		}
+	// 		}
+	// 	}
 
-			// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-			$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-			$resql_creator = $db->query($sql_creator);
-			$creator_name = "";
-			if ($resql_creator) {
-				if ($db->num_rows($resql_creator) > 0) {
-					$creator = $db->fetch_object($resql_creator);
-					$creator_name = $creator->firstname . ' ' . $creator->lastname;
-				}
-			}
+	// 		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+	// 		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+	// 		$resql_creator = $db->query($sql_creator);
+	// 		$creator_name = "";
+	// 		if ($resql_creator) {
+	// 			if ($db->num_rows($resql_creator) > 0) {
+	// 				$creator = $db->fetch_object($resql_creator);
+	// 				$creator_name = $creator->firstname . ' ' . $creator->lastname;
+	// 			}
+	// 		}
 
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-        $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-        $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+	// 	global $dolibarr_main_url_root;
+	// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+    //     $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+    //     $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
 
 		
-		$to = rtrim($to, ", ");
-		$message = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été soldé. Le constat est donc terminé. Veuillez le passer au statut clôturé pour qu'il ne puisse être modifié. Cordialement, Votre système de notification.");
-		//$msg = 'test notif ( a ne pas prendre en compte si reçu )';
-		$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
+	// 	$to = rtrim($to, ", ");
+	// 	$message = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été soldé. Le constat est donc terminé. Veuillez le passer au statut clôturé pour qu'il ne puisse être modifié. Cordialement, Votre système de notification.");
+	// 	//$msg = 'test notif ( a ne pas prendre en compte si reçu )';
+	// 	$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
 		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			 setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-			// exit;
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-			</script>';
-		} 		
+	// 	// Send mail
+	// 	$res = $cmail->sendfile();
+	// 	if($res) {
+	// 		 setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
+	// 		// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+	// 		// exit;
+	// 		print '<script>
+	// 		window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
+	// 		</script>';
+	// 	} 		
 	
-	}
+	// }
 
 	// if( $action == 'setPrise'  && $confirm == 'yes' ){
 	// 	$object->updatePrise();
