@@ -511,7 +511,7 @@ if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate 
 
 // Action close object
 if ($action == 'confirm_close' && $confirm == 'yes' && $permissiontoadd) {
-	$result = $object->cancel($user);
+	$result = $object->close($user);
 	if ($result >= 0) {
 		// Define output language
 		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {

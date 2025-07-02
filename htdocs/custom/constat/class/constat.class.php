@@ -74,7 +74,7 @@ class Constat extends CommonObject
 	// const STATUS_PRISE = 3;
 	const STATUS_EN_COURS = 4;
 	// const STATUS_SOLDEE = 5;
-	const STATUS_CLOTURE = 7;
+	const STATUS_CLOSE = 7;
 	const STATUS_CANCELED = 9;
 
 
@@ -865,10 +865,10 @@ class Constat extends CommonObject
 	public function close($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status == self::STATUS_CLOTURE) {
+		if ($this->status == self::STATUS_CLOSE) {
 			return 0;
 		}
-		return $this->setStatusCommon($user, self::STATUS_CLOTURE, $notrigger, 'CONSTAT_CLOSE');
+		return $this->setStatusCommon($user, self::STATUS_CLOSE, $notrigger, 'CONSTAT_CLOSE');
 	}
 
 	/**
@@ -894,7 +894,7 @@ class Constat extends CommonObject
 	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
 	 *	@return	int						<0 if KO, 0=Nothing done, >0 if OK
 	 */
-	public function setCancel($user, $notrigger = 0)
+	public function cancel($user, $notrigger = 0)
 	{
 		// Protection
 		if ($this->status != self::STATUS_VALIDATED) {
@@ -1131,7 +1131,7 @@ class Constat extends CommonObject
 			// $this->labelStatus[self::STATUS_PRISE] = $langs->transnoentitiesnoconv('Vérifiée');
 			$this->labelStatus[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			// $this->labelStatus[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldé');
-			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Classé');
+			$this->labelStatus[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturé');
 
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Créé');
@@ -1139,13 +1139,19 @@ class Constat extends CommonObject
 			// $this->labelStatusShort[self::STATUS_PRISE] = $langs->transnoentitiesnoconv('Vérifiée');
 			$this->labelStatusShort[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			// $this->labelStatusShort[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldé');
-			$this->labelStatusShort[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Classé');
+			$this->labelStatusShort[self::STATUS_CLOSE] = $langs->transnoentitiesnoconv('Clôturé');
 		}
 	
 		$statusType = 'status'.$status;
 		//if ($status == self::STATUS_VALIDATED) $statusType = 'status1';
 		if ($status == self::STATUS_CANCELED) {
 			$statusType = 'status6';
+		}
+		if ($status == self::STATUS_CLOSE) {
+			$statusType = 'status9';
+		}
+		if ($status == self::STATUS_EN_COURS) {
+			$statusType = 'status2';
 		}
 	
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
@@ -1499,82 +1505,91 @@ class Constat extends CommonObject
 
 	public function drafttolong(){
 
-		if ($this->status == 0) {
-	
-			$now = new DateTime(); 
-			$date_creation = new DateTime($this->date_creation); 
-			$interval = $date_creation->diff($now); 
+		$sql = "SELECT c.rowid, c.fk_user";
+		$sql .= " FROM ".MAIN_DB_PREFIX."constat_constat as c";
+		$sql .= " WHERE c.statut = 0 AND c.date_cration dddd";
+
+		$result = $db->query($sql);
+		
+		if ($result) {
+			$nume = $db->num_rows($result);
+			$i = 0;
+			while ($i < $nume) {
+				$now = new DateTime(); 
+				$date_creation = new DateTime($this->date_creation); 
+				$interval = $date_creation->diff($now); 
 				if ($interval->days > 3) {
 
-				$subject = '[OPTIM Industries] Notification automatique alerte constat en brouillon ';
+					$subject = '[OPTIM Industries] Notification automatique alerte constat en brouillon ';
 
-				$from = 'erp@optim-industries.fr';
-				
+					$from = 'erp@optim-industries.fr';
+					
 
+						$user_group = New UserGroup($db);
+					$user_group->fetch('', 'Q3SE');
+					$liste_utilisateur = $user_group->listUsersForGroup();
+					foreach($liste_utilisateur as $qualite){
+						if(!empty($qualite->email)){
+							$to .= $qualite->email;
+							$to .= ", ";
+								
+						}
+					}
 					$user_group = New UserGroup($db);
-				$user_group->fetch('', 'Q3SE');
-				$liste_utilisateur = $user_group->listUsersForGroup();
-				foreach($liste_utilisateur as $qualite){
-					if(!empty($qualite->email)){
-						$to .= $qualite->email;
-						$to .= ", ";
-							
+					$user_group->fetch('', 'Resp. Q3SE');
+					$liste_utilisateur = $user_group->listUsersForGroup();
+					foreach($liste_utilisateur as $qualite){
+						if(!empty($qualite->email)){
+							$to .= $qualite->email;
+							$torespQ3 .= ", ";
+						
+						}
 					}
-				}
-				$user_group = New UserGroup($db);
-				$user_group->fetch('', 'Resp. Q3SE');
-				$liste_utilisateur = $user_group->listUsersForGroup();
-				foreach($liste_utilisateur as $qualite){
-					if(!empty($qualite->email)){
-						$to .= $qualite->email;
-						$torespQ3 .= ", ";
+					$emeteur = New User($db);
+					$emeteur->fetch($this->object->fk_user_creat);
 					
-					}
-				}
-				$emeteur = New User($db);
-				$emeteur->fetch($this->object->fk_user_creat);
-				
-				if(!empty($emeteur->email)){
-				$toemeteur = $emeteur->email;
-					}
-					
-					
-				// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-				$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-				$resql_creator = $db->query($sql_creator);
-				$creator_name = "";
-				if ($resql_creator) {
-					if ($db->num_rows($resql_creator) > 0) {
-						$creator = $db->fetch_object($resql_creator);
-						$creator_name = $creator->firstname . ' ' . $creator->lastname;
-					}
-				}	
+					if(!empty($emeteur->email)){
+					$toemeteur = $emeteur->email;
+						}
+						
+						
+					// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+					$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+					$resql_creator = $db->query($sql_creator);
+					$creator_name = "";
+					if ($resql_creator) {
+						if ($db->num_rows($resql_creator) > 0) {
+							$creator = $db->fetch_object($resql_creator);
+							$creator_name = $creator->firstname . ' ' . $creator->lastname;
+						}
+					}	
 
-				global $dolibarr_main_url_root;
-				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$this->id.'">'.$this->ref.'</a>';
+					global $dolibarr_main_url_root;
+					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+					$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$this->id.'">'.$this->ref.'</a>';
 
-				
-				$to .= $toemeteur;
-				$to .= $torespQ3;
-				$to = rtrim($to, ", ");
-				$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name. " est toujours à l'état de brouillon. Veuillez le passer à l'état validé. Cordialement, votre système de notification.");
-				$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$this->object->id);
-				
-				// Send mail
-				$res = $cmail->sendfile();
-				if($res) {
-					setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
-				} else {
-					setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-					print '<script>
-					window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$this->object->id.'");
-					</script>';
+					
+					$to .= $toemeteur;
+					$to .= $torespQ3;
+					$to = rtrim($to, ", ");
+					$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name. " est toujours à l'état de brouillon. Veuillez le passer à l'état validé. Cordialement, votre système de notification.");
+					$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$this->object->id);
+					
+					// Send mail
+					$res = $cmail->sendfile();
+					if($res) {
+						setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
+					} else {
+						setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+						print '<script>
+						window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$this->object->id.'");
+						</script>';
+					}
 				}
 			}
-		}	
-    }
+    	}
+	}
 
 	public function getActionsByConstat()
 	{

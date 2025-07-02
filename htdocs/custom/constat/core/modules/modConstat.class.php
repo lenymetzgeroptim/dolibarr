@@ -273,7 +273,7 @@ class modConstat extends DolibarrModules
 				'objectname' => 'Constat',
 				'method' => 'drafttolong',
 				'parameters' => '',
-				'comment' => 'Notification si toutes les actions sont soldée',
+				'comment' => 'Notification pour les constats en vrouillon depuis trop longtemps',
 			  'frequency' => 1,
 				'unitfrequency' => 86400,
 			   'status' => 1,

@@ -124,3 +124,13 @@ CoutTotal = Coût Total
 ClotureDate = Clôture le
 CloturePar = Clôture par
 DateEcheance = Date échéance
+
+
+
+#
+# Email
+#
+EMailTextConstatValidate = Bonjour,<br><br>Le constat %s émis par %s a été validé. Veuillez compléter votre partie.<br><br>Cordialement
+EMailTextConstatClose = Bonjour,<br><br>Le constat %s émis par %s a été clôturé par le service Q3SE.<br><br>Cordialement
+EMailTextConstatEnCours = Bonjour,<br><br>Le constat %s émis par %s a été validé par le responsable d'affaire. Veuillez compléter la partie Q3SE.<br><br>Cordialement
+EMailTextConstatCancel = Bonjour,<br><br>Le constat %s émis par %s a été annulé par %s.<br><br>Cordialement

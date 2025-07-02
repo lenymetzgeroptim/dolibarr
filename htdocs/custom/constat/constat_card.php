@@ -76,6 +76,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/constat/class/html.form.class.php';
+require_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
+require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+
 
 dol_include_once('/constat/class/constat.class.php');
 dol_include_once('/constat/lib/constat_constat.lib.php');
@@ -146,13 +149,13 @@ if($object->id) {
 
 // Est-ce que des champs obligatoire sont non renseignés ? 
 $fields_null = '';
-foreach($object->fields as $key => $val) {
-	if(!$object->$key && $val['notnull_validate']) {
-		if($key == 'cout_total' && $object->$key === 0) continue;
-		$fields_null .= $langs->trans($val['label']).", ";
-	}
-}
-$fields_null = rtrim($fields_null, ', ');
+// foreach($object->fields as $key => $val) {
+// 	if(!$object->$key && $val['notnull_validate']) {
+// 		if($key == 'cout_total' && $object->$key === 0) continue;
+// 		$fields_null .= $langs->trans($val['label']).", ";
+// 	}
+// }
+// $fields_null = rtrim($fields_null, ', ');
 
 $label_button_action_validate = ($fields_null ? $langs->trans('ConstatFieldsNullMendatory', $fields_null) : '');
 if ($object->status == $object::STATUS_EN_COURS) {
@@ -241,12 +244,6 @@ if (empty($reshook)) {
 
 	$triggermodname = 'CONSTAT_CONSTAT_MODIFY'; // Name of trigger action code to execute when we modify record
 
-	include_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
-	include_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
-
-
-
 	if($action == 'update') {
 		$object->oldcopy = clone $object;
 	}
@@ -273,313 +270,6 @@ if (empty($reshook)) {
 	if ($action == 'classin' && $permissiontoadd) {
 		$object->setProject(GETPOST('projectid', 'int'));
 	}
-	
-	// if ($action == 'setPrise' && $confirm == 'yes'){
-	
-	// 	$subject = '[OPTIM Industries] Notification automatique constat vérifié ';
-	
-	// 	$from = 'erp@optim-industries.fr';
-		
-	// 	// Si la requête a réussi
-	// 	if ($result) {
-	// 		$to = ''; // Initialisation de la chaîne d'emails
-	// 		while ($obj = $db->fetch_object($result)) {
-	// 			$email = $obj->email;
-	// 			// Ajoute l'email à la liste
-	// 			if (!empty($email)) {
-	// 				$to .= $email . ", ";
-	// 			}
-	// 		}
-	// 	}
-	
-	// 	$user_group = New UserGroup($db);
-	// 	$user_group->fetch('', 'Resp. Q3SE');
-	// 	$liste_utilisateur = $user_group->listUsersForGroup();
-	// 	foreach($liste_utilisateur as $qualite){
-	// 		if(!empty($qualite->email)){
-	// 			$to .= $qualite->email;
-	// 		}
-	// 	}
-	
-	// 	// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-	// 	$sql = "SELECT lastname, firstname FROM llx_user WHERE rowid = ".$object->fk_user_creat;
-	// 	$resql = $db->query($sql);
-	// 	$creator_name = "";
-	// 	if ($resql) {
-	// 		if ($db->num_rows($resql) > 0) {
-	// 			$creator = $db->fetch_object($resql);
-	// 			$creator_name = $creator->firstname . ' ' . $creator->lastname;
-	// 		}
-	// 	}
-	
-	// 	global $dolibarr_main_url_root;
-	// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-	// 	$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-	// 	$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-	
-	// 	$to = rtrim($to, ", ");
-	// 	$message = $langs->transnoentitiesnoconv(" Bonjour, le constat ".$link." créé par ". $creator_name. " a été vérifié. Veuillez compléter votre partie et passer au statut suivant. Cordialement, votre système de notification.");
-
-	
-	// 	$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-	// 	// Send mail
-	// 	$res = $cmail->sendfile();
-	// 	if($res) {
-	// 		 setEventMessages($langs->trans("EmailSend"), null, 'warning');
-	// 		// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-	// 		// exit;
-	// 		print '<script>
-	// 		window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-	// 		</script>';
-	// 	} 		
-	
-	// }
-
-	// if ($action == 'confirmsetCloture' && $confirm == 'yes'){
-
-	// 	$subject = '[OPTIM Industries] Notification automatique constat classé';
-	
-	// 	$from = 'erp@optim-industries.fr';
-		
-	// 	$projet = new Project($db);
-	// 	$projet->fetch($object->fk_project);
-	// 	$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
-	
-	// 	// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
-	// 	$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
-	// 	$result = $db->query($sql);
-	
-	// 	// Si la requête a réussi
-	// 	if ($result) {
-	// 		$to = ''; // Initialisation de la chaîne d'emails
-	// 		while ($obj = $db->fetch_object($result)) {
-	// 			$email = $obj->email;
-	// 			// Ajoute l'email à la liste
-	// 			if (!empty($email)) {
-	// 				$tochef .= $email . ", ";
-	// 			}
-	// 		}
-	// 	}
-	
-	// 	$user_group = New UserGroup($db);
-	// 	$user_group->fetch('', 'Q3SE');
-	// 	$liste_utilisateur = $user_group->listUsersForGroup();
-	// 	foreach($liste_utilisateur as $qualite){
-	// 		if(!empty($qualite->email)){
-	// 			$to .= $qualite->email;
-	// 			$to .= ", ";
-	// 		}
-	// 	}
-	// 	$user_group = New UserGroup($db);
-	// 	$user_group->fetch('', 'Resp. Q3SE');
-	// 	$liste_utilisateur = $user_group->listUsersForGroup();
-	// 	foreach($liste_utilisateur as $qualite){
-	// 		if(!empty($qualite->email)){
-	// 			$to .= $qualite->email;
-	// 			$torespQ3 .= ", ";
-	// 		}
-	// 	}
-	// 	$emeteur = New User($db);
-	// 	$emeteur->fetch($object->fk_user_creat);
-		
-	// 	if(!empty($emeteur->email)){
-	// 		$toemeteur = $emeteur->email;
-	// 	}
-	
-	// 	// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-	// 	$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-	// 	$resql_creator = $db->query($sql_creator);
-	// 	$creator_name = "";
-	// 	if ($resql_creator) {
-	// 		if ($db->num_rows($resql_creator) > 0) {
-	// 			$creator = $db->fetch_object($resql_creator);
-	// 			$creator_name = $creator->firstname . ' ' . $creator->lastname;
-	// 		}
-	// 	}
-	
-	// 	global $dolibarr_main_url_root;
-	// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-	// 	$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-	// 	$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-	
-	// 	$to .= $tochef;
-	// 	$to .= $toemeteur;
-	// 	$to .= $torespQ3;
-	// 	$to = rtrim($to, ", ");
-		
-	// 	$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ". $link. " créé par ". $creator_name." a été clôturé. Cordialement, Votre système de notification." );
-	
-	// 	$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-	// 	// Send mail
-	// 	$res = $cmail->sendfile();
-	// 	if($res) {
-	// 		setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-	// 	} else {
-	// 		setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-	// 		print '<script>
-	// 		window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-	// 		</script>';
-	// 	} 
-	// }
-
-	// if ($action == 'setSolde' && $confirm == 'yes'){
-
-
-	// 	$subject = '[OPTIM Industries] Notification automatique  constat soldé';
-
-	// 	$from = 'erp@optim-industries.fr';
-		
-	// 	$projet = new Project($db);
-	// 	$projet->fetch($object->fk_project);
-	// 	$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
-
-	// 	// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
-	// 	$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
-	// 	$result = $db->query($sql);
-
-	// 	// Si la requête a réussi
-	// 	if ($result) {
-	// 		$to = ''; // Initialisation de la chaîne d'emails
-	// 		while ($obj = $db->fetch_object($result)) {
-	// 			$email = $obj->email;
-	// 			// Ajoute l'email à la liste
-	// 			if (!empty($email)) {
-	// 				$tochef .= $email . ", ";
-	// 			}
-	// 		}
-	// 	}
-
-	// 		$user_group = New UserGroup($db);
-	// 	$user_group->fetch('', 'Q3SE');
-	// 	$liste_utilisateur = $user_group->listUsersForGroup();
-	// 	foreach($liste_utilisateur as $qualite){
-	// 		if(!empty($qualite->email)){
-	// 			$to .= $qualite->email;
-	// 			$to .= ", ";
-					
-	// 		}
-	// 	}
-
-	// 	$emeteur = New User($db);
-	// 	$emeteur->fetch($object->fk_user_creat);
-		
-	// 	if(!empty($emeteur->email)){
-	// 	$toemeteur = $emeteur->email;
-	// 		}	
-
-	// 		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-	// 	$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-	// 	$resql_creator = $db->query($sql_creator);
-	// 	$creator_name = "";
-	// 	if ($resql_creator) {
-	// 		if ($db->num_rows($resql_creator) > 0) {
-	// 			$creator = $db->fetch_object($resql_creator);
-	// 			$creator_name = $creator->firstname . ' ' . $creator->lastname;
-	// 		}
-	// 	}
-
-	// 	global $dolibarr_main_url_root;
-	// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-    //     $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-    //     $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-
-	// 	$to .= $tochef;
-	// 	$to .= $toemeteur;
-	// 	$to = rtrim($to, ", ");
-	// 	$msg =  $langs->transnoentitiesnoconv("Le constat  ".$link." créé par " .$creator_name. " est à classé par le service Q3SE votre system d'information");
-	// 	$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-	// 	// Send mail
-	// 	$res = $cmail->sendfile();
-	// 	if($res) {
-	// 		setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
-	// 	} else {
-	// 		setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-	// 		print '<script>
-	// 		window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-	// 		</script>';
-	// 	}	
-	// }
-	
-	// if ($action == 'setSolde' && $confirm == 'yes'){
-	
-	// 	$subject = '[OPTIM Industries] Notification automatique constat soldé ';
-
-	// 	$from = 'erp@optim-industries.fr';
-		
-	// 	// Si la requête a réussi
-	// 	if ($result) {
-	// 		$to = ''; // Initialisation de la chaîne d'emails
-	// 		while ($obj = $db->fetch_object($result)) {
-	// 			$email = $obj->email;
-	// 			// Ajoute l'email à la liste
-	// 			if (!empty($email)) {
-	// 				$to .= $email . ", ";
-	// 			}
-	// 		}
-	// 	}
-
-	// 	$user_group = New UserGroup($db);
-	// 	$user_group->fetch('', 'Resp. Q3SE');
-	// 	$liste_utilisateur = $user_group->listUsersForGroup();
-	// 	foreach($liste_utilisateur as $qualite){
-	// 		if(!empty($qualite->email)){
-	// 			$to .= $qualite->email;
-				
-	
-	// 		}
-	// 	}
-
-	// 		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-	// 		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-	// 		$resql_creator = $db->query($sql_creator);
-	// 		$creator_name = "";
-	// 		if ($resql_creator) {
-	// 			if ($db->num_rows($resql_creator) > 0) {
-	// 				$creator = $db->fetch_object($resql_creator);
-	// 				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-	// 			}
-	// 		}
-
-	// 	global $dolibarr_main_url_root;
-	// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-    //     $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-    //     $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-
-		
-	// 	$to = rtrim($to, ", ");
-	// 	$message = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été soldé. Le constat est donc terminé. Veuillez le passer au statut clôturé pour qu'il ne puisse être modifié. Cordialement, Votre système de notification.");
-	// 	//$msg = 'test notif ( a ne pas prendre en compte si reçu )';
-	// 	$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-	// 	// Send mail
-	// 	$res = $cmail->sendfile();
-	// 	if($res) {
-	// 		 setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-	// 		// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-	// 		// exit;
-	// 		print '<script>
-	// 		window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-	// 		</script>';
-	// 	} 		
-	
-	// }
-
-	// if( $action == 'setPrise'  && $confirm == 'yes' ){
-	// 	$object->updatePrise();
-
-	// 		$object->actionmsg = $langs->transnoentitiesnoconv("CONSTAT_PRISEInDolibarrr", $object->ref);
-	// 		// Call trigger
-	// 		$result = $object->call_trigger('CONSTAT_PRISE', $user);
-	// 		if ($result < 0) {
-	// 			$error++;
-	// 		}
-	// 		// End call triggers
-		
-
-	// }
 
 	if ($action == 'confirm_setencours' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
 		$result = $object->setEnCours($user);
@@ -908,9 +598,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// ------------------------------------------------------------
 	$linkback = '<a href="'.dol_buildpath('/constat/constat_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 	
-	$morehtmlref = '<div class="instruction">';
-	$morehtmlref .= $object->labelStatusExplication[$object->status];
-	$morehtmlref .= '</div>';
+	if($object->labelStatusExplication[$object->status]) {
+		$morehtmlref = '<div class="instruction">';
+		$morehtmlref .= $object->labelStatusExplication[$object->status];
+		$morehtmlref .= '</div>';
+	}
 
 	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 
@@ -1068,7 +760,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		if (empty($reshook)) {
 			// Modifier
-			if ($object->status != $object::STATUS_CLOTURE && $object->status != $object::STATUS_CANCELED) {
+			if ($object->status != $object::STATUS_CLOSE && $object->status != $object::STATUS_CANCELED) {
 				print dolGetButtonAction('', $langs->trans('Modifier / Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoupdate);
 			}
 
@@ -1160,7 +852,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			// }
 			//passé au  Status Clôturé
 			// if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
-			// 	if ($object->status != $object::STATUS_CLOTURE) {
+			// 	if ($object->status != $object::STATUS_CLOSE) {
 			// 		print dolGetButtonAction('', $langs->trans('classer le constat'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloture&confirm=yes&token='.newToken(), '', $permissiontoadd);
 			// 		// $object->updateCloture();
 					
