@@ -2729,9 +2729,17 @@ if ((empty($id) && empty($ref)) || $action == 'create' || $action == 'add') {
 			$holyday_franc_anc_datestart = dol_mktime(0, 0, 0, substr($holyday_franc_anc_datestart, 3, 2), substr($holyday_franc_anc_datestart, 0, 2), substr($holyday_franc_anc_datestart, 6, 4));
 			$holyday_franc_anc_dateend = dol_mktime(0, 0, 0, substr($holyday_franc_anc_dateend, 3, 2), substr($holyday_franc_anc_dateend, 0, 2), substr($holyday_franc_anc_dateend, 6, 4));
 
-			if((dol_now() > $holyday_franc_anc_datestart || dol_now() < $holyday_franc_anc_dateend) && ($nb_ANC_SOLDE + $nb_FRAC_SOLDE) >= 1) {
+			$typeleaves_CP_FRAC_ACQUIS = $object->getTypesCP(1, 'CP_FRAC_ACQUIS');
+			$typeleaves_CP_FRAC_PRIS = $object->getTypesCP(1, 'CP_FRAC_PRIS');
+			$nb_FRAC_ACQUIS = $object->getCPforUser($user->id, $typeleaves_CP_FRAC_ACQUIS['rowid']);
+			$nb_FRAC_ACQUIS = ($nb_FRAC_ACQUIS ? price2num($nb_FRAC_ACQUIS) : 0);
+			$nb_FRAC_PRIS = $object->getCPforUser($user->id, $typeleaves_CP_FRAC_PRIS['rowid']);
+			$nb_FRAC_PRIS = ($nb_FRAC_PRIS ? price2num($nb_FRAC_PRIS) : 0);
+			$nb_FRAC_SOLDE = $nb_FRAC_ACQUIS - $nb_FRAC_PRIS;
+
+			if((dol_now() > $holyday_franc_anc_datestart || dol_now() < $holyday_franc_anc_dateend) && $nb_FRAC_SOLDE > 0) {
 				print '<div class="center" style="color: #c40000; font-size: larger;"><strong>';
-				print '⚠ Vous avez des congés payés fractionné / d\'ancienneté, veuillez les consommer en priorité';
+				print '⚠ Vous avez des congés payés fractionné, veuillez les consommer en priorité';
 				print '</strong></div><br>';
 			}
 

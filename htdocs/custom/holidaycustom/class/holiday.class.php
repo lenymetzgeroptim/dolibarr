@@ -2519,7 +2519,7 @@ class Holiday extends CommonObject
 		if ($affect >= 0) {
 			$sql .= " AND affect = ".((int) $affect);
 		}
-		$sql .= " AND code NOT IN ('CP_N-1_ACQUIS', 'CP_N-1_PRIS', 'CP_N_ACQUIS', 'CP_N_PRIS', 'CP_FRAC_ACQUIS', 'CP_FRAC_PRIS', 'CP_ANC_ACQUIS', 'CP_ANC_PRIS', 'RTT_ACQUIS', 'RTT_PRIS')";
+		$sql .= " AND code NOT IN ('CP_N-1_ACQUIS', 'CP_N-1_PRIS', 'CP_N_ACQUIS', 'CP_N_PRIS', 'CP_FRAC_ACQUIS', 'CP_FRAC_PRIS', 'CP_ANC_ACQUIS', 'CP_ANC_PRIS', 'RTT_N-1_ACQUIS', 'RTT_N-1_PRIS', 'RTT_ACQUIS', 'RTT_PRIS')";
 
 		$result = $this->db->query($sql);
 		if ($result) {
@@ -2588,7 +2588,7 @@ class Holiday extends CommonObject
 		$sql = "SELECT rowid, code, label, affect, delay, newbymonth";
 		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types";
 		$sql .= " WHERE (fk_country IS NULL OR fk_country = ".((int) $mysoc->country_id).')';
-		$sql .= " AND code IN ('ACP', 'CP_N-1_ACQUIS', 'CP_N-1_PRIS', 'CP_N_ACQUIS', 'CP_N_PRIS', 'CP_FRAC_ACQUIS', 'CP_FRAC_PRIS', 'CP_ANC_ACQUIS', 'CP_ANC_PRIS', 'RTT_ACQUIS', 'RTT_PRIS')";
+		$sql .= " AND code IN ('ACP', 'CP_N-1_ACQUIS', 'CP_N-1_PRIS', 'CP_N_ACQUIS', 'CP_N_PRIS', 'CP_FRAC_ACQUIS', 'CP_FRAC_PRIS', 'CP_ANC_ACQUIS', 'CP_ANC_PRIS', 'RTT_N-1_ACQUIS', 'RTT_N-1_PRIS', 'RTT_ACQUIS', 'RTT_PRIS')";
 
 		$result = $this->db->query($sql);
 		if ($result) {
@@ -3169,8 +3169,10 @@ class Holiday extends CommonObject
         $typeleaves_CP_N_PRIS = $this->getTypesCP(1, 'CP_N_PRIS');
         $typeleaves_CP_FRAC_ACQUIS = $this->getTypesCP(1, 'CP_FRAC_ACQUIS');
         $typeleaves_CP_FRAC_PRIS = $this->getTypesCP(1, 'CP_FRAC_PRIS');
-        $typeleaves_CP_ANC_ACQUIS = $this->getTypesCP(1, 'CP_ANC_ACQUIS');
-        $typeleaves_CP_ANC_PRIS = $this->getTypesCP(1, 'CP_ANC_PRIS');
+        // $typeleaves_CP_ANC_ACQUIS = $this->getTypesCP(1, 'CP_ANC_ACQUIS');
+        // $typeleaves_CP_ANC_PRIS = $this->getTypesCP(1, 'CP_ANC_PRIS');
+		$typeleaves_RTT_N1_ACQUIS = $this->getTypesCP(1, 'RTT_N-1_ACQUIS');
+		$typeleaves_RTT_N1_PRIS = $this->getTypesCP(1, 'RTT_N-1_PRIS');
 		$typeleaves_RTT_ACQUIS = $this->getTypesCP(1, 'RTT_ACQUIS');
 		$typeleaves_RTT_PRIS = $this->getTypesCP(1, 'RTT_PRIS');
         $typeleaves_ACP = $this->getTypesCP(1, 'ACP');
@@ -3189,13 +3191,16 @@ class Holiday extends CommonObject
                     $acquis_Frac = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(13, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(13, $i)->getValue() : 0);
                     $pris_Frac = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(14, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(14, $i)->getValue() : 0);
                     $solde_Frac = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(15, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(15, $i)->getValue() : $acquis_Frac - $pris_Frac);
-                    $acquis_Anc = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(16, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(16, $i)->getValue() : 0);
-                    $pris_Anc = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(17, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(17, $i)->getValue() : 0);
-                    $solde_Anc = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(18, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(18, $i)->getValue() : $acquis_Anc - $pris_Anc);
-                    $acquis_RTT = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(10, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(10, $i)->getValue() : 0);
+                    // $acquis_Anc = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(16, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(16, $i)->getValue() : 0);
+                    // $pris_Anc = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(17, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(17, $i)->getValue() : 0);
+                    // $solde_Anc = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(18, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(18, $i)->getValue() : $acquis_Anc - $pris_Anc);
+                    $acquis_RTT_N1 = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(16, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(16, $i)->getValue() : 0);
+                    $pris_RTT_N1 = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(17, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(17, $i)->getValue() : 0);
+                    $solde_RTT_N1 = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(18, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(18, $i)->getValue() : $acquis_RTT_N1 - $pris_RTT_N1);
+					$acquis_RTT = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(10, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(10, $i)->getValue() : 0);
                     $pris_RTT = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(11, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(11, $i)->getValue() : 0);
                     $solde_RTT = (!empty($spreadsheet->getActiveSheet()->getCellByColumnAndRow(12, $i)->getValue()) ? $spreadsheet->getActiveSheet()->getCellByColumnAndRow(12, $i)->getValue() : $acquis_RTT - $pris_RTT);
-					$solde_total = $solde_N1 + $solde_N + $solde_Frac + $solde_Anc + $solde_RTT; // Récupération du nombre de congés
+					$solde_total = $solde_N1 + $solde_N + $solde_Frac + $solde_RTT_N1 + $solde_RTT; // Récupération du nombre de congés
 
 					$sql = 'SELECT u.fk_object, uu.firstname, uu.lastname FROM llx_user_extrafields as u LEFT JOIN llx_user as uu ON uu.rowid = u.fk_object WHERE u.matricule = '.$matricule;
 					$resql = $this->db->query($sql);
@@ -3456,30 +3461,97 @@ class Holiday extends CommonObject
 
 
 
-						// Gestion des CP Anc Acquis 
+						// // Gestion des CP Anc Acquis 
+						// $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						// $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						// $sql .= ' ON u.fk_object = h.fk_user';
+						// $sql .= ' WHERE u.matricule = '.$matricule;
+						// $sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_ACQUIS['rowid'];
+						// $resql = $this->db->query($sql);
+
+						// if($this->db->num_rows($resql) > 0){
+						// 	$obj = $this->db->fetch_object($resql);
+						// 	if($obj->nb_holiday != $acquis_Anc){
+						// 		$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+						// 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						// 		$sql .= ' ON u.fk_object = h.fk_user';
+						// 		$sql .= ' SET h.nb_holiday = '.$acquis_Anc;
+						// 		$sql .= ' WHERE u.matricule = '.$matricule;
+						// 		$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_ACQUIS['rowid'];
+						// 	}
+						// }
+						// elseif($acquis_Anc != 0) {
+						// 	$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+						// 	$sql .= $obj_user->fk_object.",";
+						// 	$sql .= " ".$typeleaves_CP_ANC_ACQUIS['rowid'].",";
+						// 	$sql .= ' '.$acquis_Anc.')';
+						// }
+
+						// $resql = $this->db->query($sql);
+						// if (!$resql) {
+						// 	dol_print_error($this->db);
+						// 	$this->error = $this->db->lasterror();
+						// 	$error++;
+						// }
+
+						// // Gestion des CP Anc Pris
+						// $sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
+						// $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						// $sql .= ' ON u.fk_object = h.fk_user';
+						// $sql .= ' WHERE u.matricule = '.$matricule;
+						// $sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_PRIS['rowid'];
+						// $resql = $this->db->query($sql);
+
+						// if($this->db->num_rows($resql) > 0){
+						// 	$obj = $this->db->fetch_object($resql);
+						// 	if($obj->nb_holiday != $pris_Anc){
+						// 		$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
+						// 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
+						// 		$sql .= ' ON u.fk_object = h.fk_user';
+						// 		$sql .= ' SET h.nb_holiday = '.$pris_Anc;
+						// 		$sql .= ' WHERE u.matricule = '.$matricule;
+						// 		$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_PRIS['rowid'];
+						// 	}
+						// }
+						// elseif($pris_Anc != 0) {
+						// 	$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
+						// 	$sql .= $obj_user->fk_object.",";
+						// 	$sql .= " ".$typeleaves_CP_ANC_PRIS['rowid'].",";
+						// 	$sql .= ' '.$pris_Anc.')';
+						// }
+
+						// $resql = $this->db->query($sql);
+						// if (!$resql) {
+						// 	dol_print_error($this->db);
+						// 	$this->error = $this->db->lasterror();
+						// 	$error++;
+						// }
+
+
+						// Gestion des RTT N-1 Acquis 
 						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
 						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
 						$sql .= ' ON u.fk_object = h.fk_user';
 						$sql .= ' WHERE u.matricule = '.$matricule;
-						$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_ACQUIS['rowid'];
+						$sql .= ' AND h.fk_type = '.$typeleaves_RTT_N1_ACQUIS['rowid'];
 						$resql = $this->db->query($sql);
 
 						if($this->db->num_rows($resql) > 0){
 							$obj = $this->db->fetch_object($resql);
-							if($obj->nb_holiday != $acquis_Anc){
+							if($obj->nb_holiday != $acquis_RTT_N1){
 								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
 								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
 								$sql .= ' ON u.fk_object = h.fk_user';
-								$sql .= ' SET h.nb_holiday = '.$acquis_Anc;
+								$sql .= ' SET h.nb_holiday = '.$acquis_RTT_N1;
 								$sql .= ' WHERE u.matricule = '.$matricule;
-								$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_ACQUIS['rowid'];
+								$sql .= ' AND h.fk_type = '.$typeleaves_RTT_N1_ACQUIS['rowid'];
 							}
 						}
-						elseif($acquis_Anc != 0) {
+						elseif($acquis_RTT_N1 != 0) {
 							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
 							$sql .= $obj_user->fk_object.",";
-							$sql .= " ".$typeleaves_CP_ANC_ACQUIS['rowid'].",";
-							$sql .= ' '.$acquis_Anc.')';
+							$sql .= " ".$typeleaves_RTT_N1_ACQUIS['rowid'].",";
+							$sql .= ' '.$acquis_RTT_N1.')';
 						}
 
 						$resql = $this->db->query($sql);
@@ -3489,30 +3561,30 @@ class Holiday extends CommonObject
 							$error++;
 						}
 
-						// Gestion des CP Frac Pris
+						// Gestion des RTT N-1 Pris
 						$sql = 'SELECT h.nb_holiday FROM '.MAIN_DB_PREFIX.'holiday_users h';
 						$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
 						$sql .= ' ON u.fk_object = h.fk_user';
 						$sql .= ' WHERE u.matricule = '.$matricule;
-						$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_PRIS['rowid'];
+						$sql .= ' AND h.fk_type = '.$typeleaves_RTT_N1_PRIS['rowid'];
 						$resql = $this->db->query($sql);
 
 						if($this->db->num_rows($resql) > 0){
 							$obj = $this->db->fetch_object($resql);
-							if($obj->nb_holiday != $pris_Anc){
+							if($obj->nb_holiday != $pris_RTT_N1){
 								$sql = 'UPDATE '.MAIN_DB_PREFIX.'holiday_users h';
 								$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as u';
 								$sql .= ' ON u.fk_object = h.fk_user';
-								$sql .= ' SET h.nb_holiday = '.$pris_Anc;
+								$sql .= ' SET h.nb_holiday = '.$pris_RTT_N1;
 								$sql .= ' WHERE u.matricule = '.$matricule;
-								$sql .= ' AND h.fk_type = '.$typeleaves_CP_ANC_PRIS['rowid'];
+								$sql .= ' AND h.fk_type = '.$typeleaves_RTT_N1_PRIS['rowid'];
 							}
 						}
-						elseif($pris_Anc != 0) {
+						elseif($pris_RTT_N1 != 0) {
 							$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'holiday_users(fk_user, fk_type, nb_holiday) VALUES(';
 							$sql .= $obj_user->fk_object.",";
-							$sql .= " ".$typeleaves_CP_ANC_PRIS['rowid'].",";
-							$sql .= ' '.$pris_Anc.')';
+							$sql .= " ".$typeleaves_RTT_N1_PRIS['rowid'].",";
+							$sql .= ' '.$pris_RTT_N1.')';
 						}
 
 						$resql = $this->db->query($sql);
@@ -3521,7 +3593,6 @@ class Holiday extends CommonObject
 							$this->error = $this->db->lasterror();
 							$error++;
 						}
-
 
 
 
@@ -4423,8 +4494,10 @@ class Holiday extends CommonObject
 		$typeleaves_CP_N_PRIS = $this->getTypesCP(1, 'CP_N_PRIS');
 		$typeleaves_CP_FRAC_ACQUIS = $this->getTypesCP(1, 'CP_FRAC_ACQUIS');
 		$typeleaves_CP_FRAC_PRIS = $this->getTypesCP(1, 'CP_FRAC_PRIS');
-		$typeleaves_CP_ANC_ACQUIS = $this->getTypesCP(1, 'CP_ANC_ACQUIS');
-		$typeleaves_CP_ANC_PRIS = $this->getTypesCP(1, 'CP_ANC_PRIS');
+		// $typeleaves_CP_ANC_ACQUIS = $this->getTypesCP(1, 'CP_ANC_ACQUIS');
+		// $typeleaves_CP_ANC_PRIS = $this->getTypesCP(1, 'CP_ANC_PRIS');
+		$typeleaves_RTT_N1_ACQUIS = $this->getTypesCP(1, 'RTT_N-1_ACQUIS');
+		$typeleaves_RTT_N1_PRIS = $this->getTypesCP(1, 'RTT_N-1_PRIS');
 		$typeleaves_RTT_ACQUIS = $this->getTypesCP(1, 'RTT_ACQUIS');
 		$typeleaves_RTT_PRIS = $this->getTypesCP(1, 'RTT_PRIS');
 		$typeleaves_ACP = $this->getTypesCP(1, 'ACP');
@@ -4447,11 +4520,17 @@ class Holiday extends CommonObject
 		$nb_FRAC_PRIS = ($nb_FRAC_PRIS ? price2num($nb_FRAC_PRIS) : 0);
 		$nb_FRAC_SOLDE = $nb_FRAC_ACQUIS-$nb_FRAC_PRIS;
 
-		$nb_ANC_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_ANC_ACQUIS['rowid']);
-		$nb_ANC_ACQUIS = ($nb_ANC_ACQUIS ? price2num($nb_ANC_ACQUIS) : 0);
-		$nb_ANC_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_ANC_PRIS['rowid']);
-		$nb_ANC_PRIS = ($nb_ANC_PRIS ? price2num($nb_ANC_PRIS) : 0);
-		$nb_ANC_SOLDE = $nb_ANC_ACQUIS-$nb_ANC_PRIS;
+		// $nb_ANC_ACQUIS = $this->getCPforUser($user_id, $typeleaves_CP_ANC_ACQUIS['rowid']);
+		// $nb_ANC_ACQUIS = ($nb_ANC_ACQUIS ? price2num($nb_ANC_ACQUIS) : 0);
+		// $nb_ANC_PRIS = $this->getCPforUser($user_id, $typeleaves_CP_ANC_PRIS['rowid']);
+		// $nb_ANC_PRIS = ($nb_ANC_PRIS ? price2num($nb_ANC_PRIS) : 0);
+		// $nb_ANC_SOLDE = $nb_ANC_ACQUIS-$nb_ANC_PRIS;
+
+		$nb_RTT_N1_ACQUIS = $this->getCPforUser($user_id, $typeleaves_RTT_N1_ACQUIS['rowid']);
+		$nb_RTT_N1_ACQUIS = ($nb_RTT_N1_ACQUIS ? price2num($nb_RTT_N1_ACQUIS) : 0);
+		$nb_RTT_N1_PRIS = $this->getCPforUser($user_id, $typeleaves_RTT_N1_PRIS['rowid']);
+		$nb_RTT_N1_PRIS = ($nb_RTT_N1_PRIS ? price2num($nb_RTT_N1_PRIS) : 0);
+		$nb_RTT_N1_SOLDE = $nb_RTT_N1_ACQUIS-$nb_RTT_N1_PRIS;
 
 		$nb_RTT_ACQUIS = $this->getCPforUser($user_id, $typeleaves_RTT_ACQUIS['rowid']);
 		$nb_RTT_ACQUIS = ($nb_RTT_ACQUIS ? price2num($nb_RTT_ACQUIS) : 0);
@@ -4508,15 +4587,18 @@ class Holiday extends CommonObject
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #29ff695c; width: 6.4%;">Acquis<br>CP N-1</td>';
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #29ff695c; width: 6.4%;">Pris<br>CP N-1</td>';
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #29ff695c; width: 6.4%;"><strong>Solde<br>CP N-1</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">Acquis<br>CP Anc</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">Pris<br>CP Anc</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>Solde<br>CP Anc</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;">Acquis<br>CP Frac</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;">Pris<br>CP Frac</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;"><strong>Solde<br>CP Frac</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;">Acquis<br>RTT</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;">Pris<br>RTT</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;"><strong>Solde<br>RTT</strong></td>';
+						// $ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">Acquis<br>CP Anc</td>';
+			// $ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">Pris<br>CP Anc</td>';
+			// $ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>Solde<br>CP Anc</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">Acquis<br>CP Frac</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">Pris<br>CP Frac</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>Solde<br>CP Frac</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;">Acquis<br>RTT</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;">Pris<br>RTT</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;"><strong>Solde<br>RTT</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;">Acquis<br>RTT N-1</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;">Pris<br>RTT N-1</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;"><strong>Solde<br>RTT N-1</strong></td>';
 			$ret .= '</tr>';
 			$ret .= '<tr>';
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #0070ff2e; width: 6.4%;">'.$nb_N_ACQUIS.'</td>';
@@ -4525,15 +4607,18 @@ class Holiday extends CommonObject
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #29ff695c; width: 6.4%;">'.$nb_N1_ACQUIS.'</td>';
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #29ff695c; width: 6.4%;">'.$nb_N1_PRIS.'</td>';
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #29ff695c; width: 6.4%;"><strong>'.$nb_N1_SOLDE.'</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">'.$nb_ANC_ACQUIS.'</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">'.$nb_ANC_PRIS.'</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>'.$nb_ANC_SOLDE.'</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;">'.$nb_FRAC_ACQUIS.'</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;">'.$nb_FRAC_PRIS.'</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;"><strong>'.$nb_FRAC_SOLDE.'</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;">'.$nb_RTT_ACQUIS.'</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;">'.$nb_RTT_PRIS.'</td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;"><strong>'.$nb_RTT_SOLDE.'</strong></td>';
+			// $ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">'.$nb_ANC_ACQUIS.'</td>';
+			// $ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">'.$nb_ANC_PRIS.'</td>';
+			// $ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>'.$nb_ANC_SOLDE.'</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">'.$nb_FRAC_ACQUIS.'</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;">'.$nb_FRAC_PRIS.'</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>'.$nb_FRAC_SOLDE.'</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;">'.$nb_RTT_ACQUIS.'</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;">'.$nb_RTT_PRIS.'</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;"><strong>'.$nb_RTT_SOLDE.'</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;">'.$nb_RTT_N1_ACQUIS.'</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;">'.$nb_RTT_N1_PRIS.'</td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;"><strong>'.$nb_RTT_N1_SOLDE.'</strong></td>';
 			$ret .= '</tr>';
 			$ret .= '</table><br>';
 		}
@@ -4550,16 +4635,18 @@ class Holiday extends CommonObject
 			$ret .= '<tr>';
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #0070ff2e; width: 6.4%;"><strong>Solde<br>CP N</strong></td>';
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #29ff695c; width: 6.4%;"><strong>Solde<br>CP N-1</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>Solde<br>CP Anc</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;"><strong>Solde<br>CP Frac</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;"><strong>Solde<br>RTT</strong></td>';
+			// $ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>Solde<br>CP Anc</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>Solde<br>CP Frac</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;"><strong>Solde<br>RTT</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;"><strong>Solde<br>RTT N-1</strong></td>';
 			$ret .= '</tr>';
 			$ret .= '<tr>';
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #0070ff2e; width: 6.4%;"><strong>'.$nb_N_SOLDE.'</strong></td>';
 			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #29ff695c; width: 6.4%"><strong>'.$nb_N1_SOLDE.'</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>'.$nb_ANC_SOLDE.'</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;"><strong>'.$nb_FRAC_SOLDE.'</strong></td>';
-			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;"><strong>'.$nb_RTT_SOLDE.'</strong></td>';
+			// $ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>'.$nb_ANC_SOLDE.'</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ff480030; width: 6.4%;"><strong>'.$nb_FRAC_SOLDE.'</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #ffb30038; width: 6.4%;"><strong>'.$nb_RTT_SOLDE.'</strong></td>';
+			$ret .= '<td style="border :#b9b9b9 0.5px solid; background-color: #c8c8c8; width: 6.4%;"><strong>'.$nb_RTT_N1_SOLDE.'</strong></td>';
 			$ret .= '</tr>';
 			$ret .= '</table>';
 		}
