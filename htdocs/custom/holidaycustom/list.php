@@ -469,7 +469,12 @@ if ($id > 0) {
 }
 
 $sql .= " GROUP BY cp.rowid";
-$sql .= $db->order($sortfield, $sortorder);
+if($sortfield == 'cp.fk_user') {
+	$sql .= $db->order('uu.lastname, uu.firstname', $sortorder);
+}
+else {
+	$sql .= $db->order($sortfield, $sortorder);
+}
 
 // Count total nb of records
 $nbtotalofrecords = '';
