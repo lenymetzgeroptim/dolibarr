@@ -1,0 +1,112 @@
+class configd3js {
+    constructor() {
+        // Code d'initialisation
+    }
+    
+    // Liste des mots é exclure (déterminants, prépositions, etc.)
+    motsExclus = ['le', 'la', 'les', 'un', 'une', 'des', 'de', 'du', 'd', 'l', 'au', 'aux', 'et', 'en', 'sur', 'sous', 'dans', 'avec', 'pour', 'par', 'à', 'chez'];
+    // Fonction pour récupérer les trois premieres lettres d'un mot
+    creerAbbreviation(domaine) {
+        // Diviser le domaine en mots et exclure les mots non pertinents
+        return domaine
+            .split(/\s+|'/) // Diviser par espace ou apostrophe
+            .filter(word => word && !this.motsExclus.includes(word.toLowerCase())) // Exclure les mots inutiles
+            .map(word => word.slice(0, 3).toUpperCase()) // Prendre les 3 premiéres lettres en majuscules
+            .join(' '); // Joindre les résultats
+    }
+
+    // Fonction pour formater les montants avec les suffixes appropriés
+    formatMontant(value) {
+        if (value >= 1e9) {
+            return d3.format(".1f")(value / 1e9) + " B"; // Milliards
+        } else if (value >= 1e6) {
+            return d3.format(".1f")(value / 1e6) + " M"; // Millions
+        } else if (value >= 1e3) {
+            return d3.format(".1f")(value / 1e3) + " k"; // Milliers
+        } else {
+            return d3.format(".1f")(value); // Valeurs normales
+        }
+    }
+
+    // Fonction pour gérer les couleurs par agence et domaine
+    getDomainColor(agence, domaine, data) {
+        const matchingItem = data.find(item => item.agence === agence && item.domaine === domaine);
+        return matchingItem && matchingItem.color ? matchingItem.color : "#ccc";
+    }
+
+    calculateMonthlyData(data) {
+        // Parse dates
+        const parseDate = d3.timeParse("%Y-%m");
+        const formatYear = d3.timeFormat("%Y");
+        const formatMonth = d3.timeFormat("%Y-%m");
+      
+        // Regrouper les données par clé et mois
+        const groupedData = {};
+        data.forEach(entry => {
+          const date = parseDate(entry.date);
+          const year = formatYear(date);
+          const month = formatMonth(date);
+      
+          Object.keys(entry).forEach(key => {
+            if (key !== "date") {
+              if (!groupedData[key]) groupedData[key] = {};
+              if (!groupedData[key][year]) groupedData[key][year] = {};
+              if (!groupedData[key][year][month]) groupedData[key][year][month] = 0;
+      
+              // Ajouter les valeurs pour chaque clé, année et mois
+              groupedData[key][year][month] += entry[key];
+            }
+          });
+        });
+      
+        // console.log("Grouped Data:", groupedData);
+      
+        // Calcul des cumuls par année
+        const cumulativeSums = {};
+        Object.keys(groupedData).forEach(key => {
+          cumulativeSums[key] = {};
+          Object.keys(groupedData[key]).forEach(year => {
+            cumulativeSums[key][year] = {};
+            const months = Object.keys(groupedData[key][year]).sort(); // Trier les mois
+      
+            let cumulativeSum = 0;
+      
+            months.forEach((month) => {
+              cumulativeSum += groupedData[key][year][month];
+              cumulativeSums[key][year][month] = cumulativeSum; // Cumul par mois
+            });
+          });
+        });
+      
+        // console.log("Cumulative Sums:", cumulativeSums);
+      
+        // Reconstruire les données avec la même structure
+        const result = [];
+        const allMonths = [...new Set(data.map(d => d.date))].sort(); // Tous les mois uniques triés
+      
+        allMonths.forEach(month => {
+          const entry = { date: month };
+          const date = parseDate(month);
+          const year = formatYear(date);
+      
+          Object.keys(cumulativeSums).forEach(key => {
+            entry[key] = cumulativeSums[key][year]?.[month] || 0; // Valeur pour ce mois (ou 0 si inexistante)
+          });
+      
+          result.push(entry);
+        });
+      
+        // console.log("Final Result:", result);
+        return result;
+      }
+
+      // Fonction de formatage de la date
+        formatDate(date) {
+            const day = ("0" + date.getDate()).slice(-2); // Ajouter un 0 devant les jours < 10
+            const month = ("0" + (date.getMonth() + 1)).slice(-2); // Ajouter un 0 devant les mois < 10
+            const year = date.getFullYear();
+            
+            return `${day}-${month}-${year}`;
+        }
+}
+window.configd3js = configd3js;

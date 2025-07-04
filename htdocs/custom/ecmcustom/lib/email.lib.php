@@ -330,7 +330,7 @@ function send_bulk_emails($senders, $foldername, $filenames, $attachments, $last
                 );
 
                 $success = $mailfile->sendfile();
-                sleep(1); // Limite de débit : pause de 2 secondes entre chaque envoi
+                sleep(1); // Pause de 2 secondes entre chaque envoi
 
 				date_default_timezone_set('Europe/Paris');
                 $now = $db->idate(dol_now());
