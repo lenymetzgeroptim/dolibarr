@@ -428,8 +428,8 @@ class pdf_standard_ot extends ModelePDFOt
 				// Formatter la date en "jour/mois/année"
 				$formattedDateAppli = $dateAppli->format('d/m/Y');
 
-				// Position verticale juste après le header
-				$current_y = 40; 
+				// Position verticale juste après le header RÉDUITE
+				$current_y = 30; 
 
 				// Récupération des références client des commandes
 				$sql_commandes = "SELECT ref_client 
@@ -447,23 +447,23 @@ class pdf_standard_ot extends ModelePDFOt
 				}
 				$refs_commandes_str = !empty($refs_commandes) ? implode(" & ", $refs_commandes) : "";
 
-				// Affichage des commandes concernées
-				$current_y += 10; // Augmenté de 5 à 10 pour plus d'espace après le header
-				$pdf->SetFont('', '', 10);
+				// Affichage des commandes concernées (plus compact)
+				$current_y += 8; // Réduit de 10 à 8
+				$pdf->SetFont('', '', 9); // Réduit de 10 à 9
 				$pdf->SetTextColor(0, 0, 0);
 				$pdf->Text($this->marge_gauche, $current_y, "Commande concernée : ");
-				$pdf->SetFont('', 'B', 10);
-				$pdf->Text($this->marge_gauche + 48, $current_y, $refs_commandes_str);
+				$pdf->SetFont('', 'B', 9); // Réduit de 10 à 9
+				$pdf->Text($this->marge_gauche + 45, $current_y, $refs_commandes_str); // Réduit de 48 à 45
 
-				// Affichage de la date d'applicabilité
-				$current_y += 7; // Réduit de 5 à 7 pour un espacement plus petit entre les champs
-				$pdf->SetFont('', '', 10);
+				// Affichage de la date d'applicabilité (plus compact)
+				$current_y += 6; // Réduit de 7 à 6
+				$pdf->SetFont('', '', 9); // Réduit de 10 à 9
 				$pdf->Text($this->marge_gauche, $current_y, "Date d'applicabilité de l'OT : ");
-				$pdf->SetFont('', 'B', 10);
-				$pdf->Text($this->marge_gauche + 48, $current_y, $formattedDateAppli);
+				$pdf->SetFont('', 'B', 9); // Réduit de 10 à 9
+				$pdf->Text($this->marge_gauche + 45, $current_y, $formattedDateAppli); // Réduit de 48 à 45
 
-				// Laisser un espace plus important avant les cartes principales
-				$current_y += 15; // Augmenté de 5 à 15 pour éviter la fusion avec les cartes
+				// Laisser un espace plus petit avant les cartes principales
+				$current_y += 12; // Réduit de 15 à 12
 
 				// Récupération des cartes principales (RA, Q3, PCR)
 				$sql_cards = "SELECT c.rowid, c.title, c.type 
@@ -709,68 +709,45 @@ class pdf_standard_ot extends ModelePDFOt
 						// Position initiale pour cette ligne
 						$current_x = $this->marge_gauche + ($line_width - $total_cards_width) / 2;
 						
-						// Afficher chaque carte de la ligne
-						foreach ($cardsOnY as $card) {
-							// Vérifier l'espace disponible pour cette carte
-							if ($current_y + $card_height > $this->page_hauteur - $this->marge_basse) {
-								$pdf->AddPage();
-								$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-								$current_x = $this->marge_gauche + ($line_width - $total_cards_width) / 2;
-								$this->_pagefoot($pdf, $object, $outputlangs);
-							}
-
-							// Déterminer la largeur de la carte
+						// Calculer la hauteur maximale pour cette ligne AVANT d'afficher les cartes
+						$max_line_height = 0;
+						$card_heights = array(); // Stocker la hauteur de chaque carte
+						
+						foreach ($cardsOnY as $card_index => $card) {
 							$card_width = ($card['type'] === 'list') ? $list_card_width : $normal_card_width;
-							
-							// Calculer la hauteur nécessaire pour le contenu
-							$content_height = 15; // Hauteur pour le titre
+							$card_content_height = 15; // Hauteur pour le titre
 							
 							if (!empty($card['userNames'])) {
-								// Vérifier l'espace disponible pour le contenu
-								if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
-									$pdf->AddPage();
-									$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-									$current_x = $this->marge_gauche + ($line_width - $total_cards_width) / 2;
-									$this->_pagefoot($pdf, $object, $outputlangs);
-								}
-
-								// ... reste du code pour l'affichage des cartes ...
 								if ($card['type'] === 'list') {
-									// AFFICHAGE EN TABLEAU POUR LES LISTES
-									// Définir les colonnes du tableau pour un utilisateur (la moitié de la largeur)
+									// Calculer la hauteur RÉELLE pour les listes
+									$total_users = count($card['userNames']);
 									$is_alone = count($cardsOnY) === 1;
 									
+									// Recalculer la logique de division
 									if ($is_alone) {
-										// Double colonne si la carte est seule
-										$col_widths = array(
-											'nom' => ($card_width * 0.25) / 2,
-											'habilitation' => ($card_width * 0.35) / 2,
-											'fonction' => ($card_width * 0.25) / 2,
-											'contrat' => ($card_width * 0.15) / 2
-										);
-										$users_per_row = 2;
+										$should_split_list = $total_users > 4;
+										if ($should_split_list) {
+											$first_half = array_slice($card['userNames'], 0, ceil($total_users / 2));
+											$second_half = array_slice($card['userNames'], ceil($total_users / 2));
+											$lists_to_display = array($first_half, $second_half);
+										} else {
+											$lists_to_display = array($card['userNames']);
+										}
 									} else {
-										// Colonne simple si la carte partage la ligne
-										$col_widths = array(
-											'nom' => $card_width * 0.25,
-											'habilitation' => $card_width * 0.35,
-											'fonction' => $card_width * 0.25,
-											'contrat' => $card_width * 0.15
-										);
-										$users_per_row = 1;
+										$should_split_list = false;
+										$lists_to_display = array($card['userNames']);
 									}
 									
-									// Calculer la hauteur nécessaire pour le contenu
-									$content_height = 15; // Hauteur pour le titre
-									$content_height += 10; // Hauteur pour la légende et sa ligne
+									$users_per_row = ($is_alone && $should_split_list) ? 2 : 1;
 									
-									// Calculer la hauteur nécessaire pour les utilisateurs
-									$total_users = count($card['userNames']);
-									$total_rows = ceil($total_users / $users_per_row);
+									// Calculer la hauteur PRÉCISE basée sur les données réelles
+									$list_height = 15; // Titre
+									$list_height += 10; // Légende et ligne de séparation
 									
+									// Calculer la hauteur exacte nécessaire pour les utilisateurs
+									$actual_users_height = 0;
 									foreach (array_chunk($card['userNames'], $users_per_row) as $row_users) {
-										$max_lines_in_row = 0;
-										
+										$max_lines_in_row = 1; // Au minimum 1 ligne par utilisateur
 										foreach ($row_users as $userInfo) {
 											$info_parts = explode(' - ', $userInfo);
 											$fonction = '';
@@ -784,156 +761,210 @@ class pdf_standard_ot extends ModelePDFOt
 												}
 											}
 											
-											// Calculer les lignes pour les fonctions
-											$fonc_lines = array();
-											$words = explode('-', $fonction);
-											$current_line = '';
-											foreach ($words as $word) {
-												$word = trim($word);
-												$test_line = $current_line . ($current_line ? '-' : '') . $word;
-												if ($pdf->GetStringWidth($test_line) < $col_widths['fonction'] - 2) {
-													$current_line = $test_line;
-												} else {
-													if ($current_line) {
-														$fonc_lines[] = $current_line;
-													}
-													$current_line = $word;
-												}
-											}
-											if ($current_line) {
-												$fonc_lines[] = $current_line;
+											// Calcul précis des lignes nécessaires
+											$hab_line_count = 1;
+											if (!empty($habilitation)) {
+												$hab_words = explode('-', $habilitation);
+												$hab_line_count = max(1, ceil(count($hab_words) / 3));
 											}
 											
-											// Calculer les lignes pour les habilitations
-											$hab_lines = array();
-											$words = explode('-', $habilitation);
-											$current_line = '';
-											foreach ($words as $word) {
-												$word = trim($word);
-												$test_line = $current_line . ($current_line ? '-' : '') . $word;
-												if ($pdf->GetStringWidth($test_line) < $col_widths['habilitation'] - 2) {
-													$current_line = $test_line;
-												} else {
-													if ($current_line) {
-														$hab_lines[] = $current_line;
-													}
-													$current_line = $word;
-												}
-											}
-											if ($current_line) {
-												$hab_lines[] = $current_line;
+											$fonc_line_count = 1;
+											if (!empty($fonction)) {
+												$fonc_words = explode('-', $fonction);
+												$fonc_line_count = max(1, ceil(count($fonc_words) / 2));
 											}
 											
-											$max_lines = max(1, count($fonc_lines), count($hab_lines));
-											$max_lines_in_row = max($max_lines_in_row, $max_lines);
+											$max_lines_in_row = max($max_lines_in_row, $hab_line_count, $fonc_line_count);
+										}
+										$actual_users_height += ($max_lines_in_row * 3) + 2; // 3px par ligne + 2px d'espacement
+									}
+									$list_height += $actual_users_height;
+									$list_height += 3; // Marge finale réduite
+									
+									$card_content_height = $list_height;
+								} else {
+									// Calculer la hauteur pour les cartes normales (inchangé)
+									foreach ($card['userNames'] as $userInfo) {
+										$info_parts = explode(' - ', $userInfo);
+										$name = $info_parts[0];
+										$habilitations = '';
+										
+										foreach ($info_parts as $part) {
+											if (strpos($part, 'Habilitations:') === 0) {
+												$habilitations = substr($part, 14);
+											}
 										}
 										
-										$content_height += ($max_lines_in_row * 3) + 2; // 3 pixels par ligne + 2 pixels d'espacement
+										$hab_lines = 1;
+										if (!empty($habilitations)) {
+											$max_width = $card_width - 30;
+											$hab_lines = max(1, ceil(strlen($habilitations) / 25));
+										}
+										
+										$card_content_height += 5; // Nom
+										$card_content_height += ($hab_lines * 4); // Habilitations
+										$card_content_height += 8; // Espacement
+									}
+									$card_content_height += 2; // Marge
+								}
+							}
+							
+							$card_heights[$card_index] = $card_content_height;
+							$max_line_height = max($max_line_height, $card_content_height);
+						}
+						
+						// Vérifier si on a assez d'espace pour toute la ligne
+						if ($current_y + $max_line_height > $this->page_hauteur - $this->marge_basse) {
+							$pdf->AddPage();
+							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
+							$this->_pagefoot($pdf, $object, $outputlangs);
+							$current_x = $this->marge_gauche + ($line_width - $total_cards_width) / 2;
+						}
+						
+						// Maintenant afficher chaque carte de la ligne
+						$temp_current_x = $current_x; // Position X temporaire pour cette ligne
+						
+						foreach ($cardsOnY as $card_index => $card) {
+							$card_width = ($card['type'] === 'list') ? $list_card_width : $normal_card_width;
+							$content_height = $card_heights[$card_index];
+							
+							if (!empty($card['userNames'])) {
+								if ($card['type'] === 'list') {
+									// AFFICHAGE EN TABLEAU POUR LES LISTES
+									$is_alone = count($cardsOnY) === 1;
+									$total_users = count($card['userNames']);
+									
+									// Logique de division identique au calcul de hauteur
+									if ($is_alone) {
+										$should_split_list = $total_users > 4;
+										if ($should_split_list) {
+											$first_half = array_slice($card['userNames'], 0, ceil($total_users / 2));
+											$second_half = array_slice($card['userNames'], ceil($total_users / 2));
+											$lists_to_display = array($first_half, $second_half);
+										} else {
+											$lists_to_display = array($card['userNames']);
+										}
+									} else {
+										$should_split_list = false;
+										$lists_to_display = array($card['userNames']);
 									}
 									
-									// Ajouter une petite marge en bas
-									$content_height += 2;
+									if ($is_alone && $should_split_list) {
+										$col_widths = array(
+											'nom' => ($card_width * 0.25) / 2,
+											'habilitation' => ($card_width * 0.35) / 2,
+											'fonction' => ($card_width * 0.25) / 2,
+											'contrat' => ($card_width * 0.15) / 2
+										);
+										$users_per_row = 2;
+									} else {
+										$col_widths = array(
+											'nom' => $card_width * 0.25,
+											'habilitation' => $card_width * 0.35,
+											'fonction' => $card_width * 0.25,
+											'contrat' => $card_width * 0.15
+										);
+										$users_per_row = 1;
+									}
 									
-									// Dessiner le contour de la carte
-						$pdf->SetDrawColor(0, 0, 0);
-						$pdf->SetDrawColor(0, 0, 0);
-							// Lignes verticales uniquement (pas de haut, pas de bas)
-							$side_line_start_y = $current_y + 12; // Commence après le titre
-							$pdf->Line($current_x, $side_line_start_y, $current_x, $current_y + $content_height); // gauche
-							$pdf->Line($current_x + $card_width, $side_line_start_y, $current_x + $card_width, $current_y + $content_height); // droite
-				
-									// Afficher le titre de la liste
-									$pdf->SetFont('', 'B', 9); // Réduit de 10 à 9
-						$title_width = $pdf->GetStringWidth($card['title']);
-									$pdf->Text($current_x + ($card_width - $title_width) / 2, $current_y + 5, $card['title']);
+									// Dessiner le contour UNIQUEMENT POUR LA PREMIÈRE PARTIE
+									$pdf->SetDrawColor(0, 0, 0);
+									$side_line_start_y = $current_y + 12;
+									$pdf->Line($temp_current_x, $side_line_start_y, $temp_current_x, $current_y + $content_height);
+									$pdf->Line($temp_current_x + $card_width, $side_line_start_y, $temp_current_x + $card_width, $current_y + $content_height);
+									$pdf->Line($temp_current_x, $current_y + $content_height, $temp_current_x + $card_width, $current_y + $content_height);
 									
-									// Afficher la légende
+									// Afficher le titre UNIQUEMENT UNE FOIS
+									$pdf->SetFont('', 'B', 9);
+									$list_title = $card['title'];
+									$title_width = $pdf->GetStringWidth($list_title);
+									$pdf->Text($temp_current_x + ($card_width - $title_width) / 2, $current_y + 5, $list_title);
+									
+									// Afficher la légende UNIQUEMENT UNE FOIS
 									$legend_y = $current_y + 15;
-									$current_x_legend = $current_x + 2;
+									$current_x_legend = $temp_current_x + 2;
 									
-									// Afficher les titres des colonnes
-									$pdf->SetFont('', '', 5); // Réduit de 6 à 5
+									$pdf->SetFont('', '', 5);
 									$pdf->Text($current_x_legend, $legend_y, 'Nom');
 									$current_x_legend += $col_widths['nom'];
 									
-									// Centrer la légende "Habilitations"
 									$habilitation_title = 'Habilitation';
 									$habilitation_width = $pdf->GetStringWidth($habilitation_title);
 									$habilitation_x = $current_x_legend + ($col_widths['habilitation'] - $habilitation_width) / 2;
 									$pdf->Text($habilitation_x, $legend_y, $habilitation_title);
 									$current_x_legend += $col_widths['habilitation'];
 									
-									// Fonction avec légende (1)
 									$fonction_x = $current_x_legend;
 									$pdf->Text($fonction_x, $legend_y, 'Fonction');
-									$pdf->SetTextColor(128, 128, 128); // Gris
+									$pdf->SetTextColor(128, 128, 128);
 									$pdf->Text($fonction_x + $pdf->GetStringWidth('Fonction') + 1, $legend_y, '(1)');
-									$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
+									$pdf->SetTextColor(0, 0, 0);
 									$current_x_legend += $col_widths['fonction'];
 									
-									// Contrat avec légende (2)
 									$contrat_x = $current_x_legend;
 									$pdf->Text($contrat_x, $legend_y, 'Contrat');
-									$pdf->SetTextColor(128, 128, 128); // Gris
+									$pdf->SetTextColor(128, 128, 128);
 									$pdf->Text($contrat_x + $pdf->GetStringWidth('Contrat') + 1, $legend_y, '(2)');
-									$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
-									$current_x_legend += $col_widths['contrat'];
+									$pdf->SetTextColor(0, 0, 0);
 									
-									// Si c'est une liste double, ajouter les titres pour le deuxième utilisateur
-									if ($is_alone && count($cardsOnY) === 1) {
+									// Pour une liste divisée, ajouter les en-têtes de la deuxième colonne
+									if ($is_alone && $should_split_list) {
+										$current_x_legend += $col_widths['contrat'];
+										
 										$pdf->Text($current_x_legend, $legend_y, 'Nom');
 										$current_x_legend += $col_widths['nom'];
 										
-										// Centrer la légende "Habilitations" pour le deuxième utilisateur
 										$habilitation_x = $current_x_legend + ($col_widths['habilitation'] - $habilitation_width) / 2;
 										$pdf->Text($habilitation_x, $legend_y, $habilitation_title);
 										$current_x_legend += $col_widths['habilitation'];
 										
-										// Fonction avec légende (1) pour le deuxième utilisateur
 										$fonction_x = $current_x_legend;
 										$pdf->Text($fonction_x, $legend_y, 'Fonction');
-										$pdf->SetTextColor(128, 128, 128); // Gris
+										$pdf->SetTextColor(128, 128, 128);
 										$pdf->Text($fonction_x + $pdf->GetStringWidth('Fonction') + 1, $legend_y, '(1)');
-										$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
+										$pdf->SetTextColor(0, 0, 0);
 										$current_x_legend += $col_widths['fonction'];
 										
-										// Contrat avec légende (2) pour le deuxième utilisateur
 										$contrat_x = $current_x_legend;
 										$pdf->Text($contrat_x, $legend_y, 'Contrat');
-										$pdf->SetTextColor(128, 128, 128); // Gris
+										$pdf->SetTextColor(128, 128, 128);
 										$pdf->Text($contrat_x + $pdf->GetStringWidth('Contrat') + 1, $legend_y, '(2)');
-										$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
-										$current_x_legend += $col_widths['contrat'];
+										$pdf->SetTextColor(0, 0, 0);
 									}
 
 									// Ligne de séparation sous la légende
 									$pdf->SetDrawColor(200, 200, 200);
-									if ($is_alone) {
-										// Dessiner deux segments de ligne avec un espace au milieu
-										$mid_x = $current_x + ($card_width / 2);
-										$gap = 10; // Largeur de l'espace
-										$pdf->Line($current_x + 2, $legend_y + 4, $mid_x - ($gap/2), $legend_y + 4);
-										$pdf->Line($mid_x + ($gap/2), $legend_y + 4, $current_x + $card_width - 2, $legend_y + 4);
+									if ($is_alone && $should_split_list) {
+										// Pour une liste divisée, ligne complète + séparation verticale
+										$pdf->Line($temp_current_x + 2, $legend_y + 4, $temp_current_x + $card_width - 2, $legend_y + 4);
+										$mid_x = $temp_current_x + ($card_width / 2);
+										$pdf->Line($mid_x, $legend_y + 4, $mid_x, $current_y + $content_height);
 									} else {
-										$pdf->Line($current_x + 2, $legend_y + 4, $current_x + $card_width - 2, $legend_y + 4);
+										$pdf->Line($temp_current_x + 2, $legend_y + 4, $temp_current_x + $card_width - 2, $legend_y + 4);
 									}
 									
-									// Passer à la ligne suivante pour les données
+									// Afficher les utilisateurs UNE SEULE FOIS
 									$y_offset = $legend_y + 7;
-									$pdf->SetFont('', '', 7); // Réduit de 8 à 7
+									$pdf->SetFont('', '', 7);
 									
-									// Afficher les utilisateurs par paires
-									foreach (array_chunk($card['userNames'], $users_per_row) as $row_users) {
+									// Utiliser TOUS les utilisateurs pour l'affichage
+									$users_to_display = $card['userNames'];
+									
+									foreach (array_chunk($users_to_display, $users_per_row) as $row_users) {
 										$max_lines_in_row = 0;
-										$current_x_user = $current_x + 2;
+										$current_x_user = $temp_current_x + 2;
 										
-										foreach ($row_users as $userInfo) {
-											// Séparer les informations
+										foreach ($row_users as $user_index => $userInfo) {
+											// Ajuster la position X pour la deuxième colonne si nécessaire
+											if ($user_index > 0 && $is_alone && $should_split_list) {
+												$current_x_user = $temp_current_x + ($card_width / 2) + 2;
+											}
+											
 											$info_parts = explode(' - ', $userInfo);
 											$name_parts = explode(' ', $info_parts[0]);
 											$lastname = $name_parts[count($name_parts) - 1];
 											$firstname = $name_parts[0];
-											$name = $lastname . '.' . substr($firstname, 0, 1); // Changé de ' ' à '.'
+											$name = $lastname . '.' . substr($firstname, 0, 1);
 											
 											$fonction = '';
 											$contrat = '';
@@ -949,11 +980,10 @@ class pdf_standard_ot extends ModelePDFOt
 												}
 											}
 											
-											// Afficher le nom
 											$pdf->Text($current_x_user, $y_offset, $name);
 											$current_x_user += $col_widths['nom'];
 											
-											// Afficher les habilitations
+											// Traitement habilitations
 											$hab_lines = array();
 											$words = explode('-', $habilitation);
 											$current_line = '';
@@ -973,7 +1003,7 @@ class pdf_standard_ot extends ModelePDFOt
 												$hab_lines[] = $current_line;
 											}
 											
-											// Afficher les fonctions
+											// Traitement fonctions
 											$fonc_lines = array();
 											$words = explode('-', $fonction);
 											$current_line = '';
@@ -993,21 +1023,19 @@ class pdf_standard_ot extends ModelePDFOt
 												$fonc_lines[] = $current_line;
 											}
 											
-											// Afficher le contrat
 											$pdf->Text($current_x_user + $col_widths['habilitation'] + $col_widths['fonction'], $y_offset, $contrat);
 											
-											// Calculer le nombre maximum de lignes pour cette entrée
 											$max_lines = max(1, count($fonc_lines), count($hab_lines));
 											$max_lines_in_row = max($max_lines_in_row, $max_lines);
 											
-											// Afficher les habilitations sur plusieurs lignes si nécessaire
+											// Afficher habilitations
 											$temp_y = $y_offset;
 											foreach ($hab_lines as $line) {
 												$pdf->Text($current_x_user, $temp_y, $line);
 												$temp_y += 3;
 											}
 											
-											// Afficher les fonctions sur plusieurs lignes si nécessaire
+											// Afficher fonctions
 											$temp_y = $y_offset;
 											foreach ($fonc_lines as $line) {
 												$pdf->Text($current_x_user + $col_widths['habilitation'], $temp_y, $line);
@@ -1017,124 +1045,39 @@ class pdf_standard_ot extends ModelePDFOt
 											$current_x_user += $col_widths['habilitation'] + $col_widths['fonction'] + $col_widths['contrat'];
 										}
 										
-										// Dessiner la ligne verticale de séparation après avoir calculé la hauteur
-										if ($is_alone && count($row_users) === 2) {
-											$separator_x = $current_x + ($card_width / 2);
-											$pdf->SetDrawColor(200, 200, 200);
-											$pdf->Line($separator_x, $legend_y + 4, $separator_x, $y_offset + ($max_lines_in_row * 3) + 2);
-										}
-										
-										// Mettre à jour la position Y pour la prochaine ligne
 										$y_offset += ($max_lines_in_row * 3) + 2;
 										
-										// Ajouter une ligne de séparation entre les lignes d'utilisateurs
-										if ($y_offset < $current_y + $content_height - 2) {
+										// Ligne de séparation entre les lignes (sauf la dernière)
+										if ($y_offset < $current_y + $content_height - 5) {
 											$pdf->SetDrawColor(200, 200, 200);
-											if ($is_alone) {
-												// Dessiner deux segments de ligne avec un espace au milieu
-												$mid_x = $current_x + ($card_width / 2);
-												$gap = 10; // Largeur de l'espace
-												$pdf->Line($current_x + 2, $y_offset - 1, $mid_x - ($gap/2), $y_offset - 1);
-												$pdf->Line($mid_x + ($gap/2), $y_offset - 1, $current_x + $card_width - 2, $y_offset - 1);
+											if ($is_alone && $should_split_list) {
+												$mid_x = $temp_current_x + ($card_width / 2);
+												$gap = 10;
+												$pdf->Line($temp_current_x + 2, $y_offset - 1, $mid_x - ($gap/2), $y_offset - 1);
+												$pdf->Line($mid_x + ($gap/2), $y_offset - 1, $temp_current_x + $card_width - 2, $y_offset - 1);
 											} else {
-												// Ligne continue si ce n'est pas une double colonne
-												$pdf->Line($current_x + 2, $y_offset - 1, $current_x + $card_width - 2, $y_offset - 1);
+												$pdf->Line($temp_current_x + 2, $y_offset - 1, $temp_current_x + $card_width - 2, $y_offset - 1);
 											}
 										}
 									}
 								} else {
-									// AFFICHAGE STANDARD POUR LES CARTES
-									$y_offset = $current_y + 12; // Augmenter l'espace initial de 8 à 12
-									$pdf->SetFont('', '', 8);
-									
-									// Calculer la hauteur nécessaire pour le contenu
-									$content_height = 15; // Hauteur pour le titre
-									
-									foreach ($card['userNames'] as $userInfo) {
-										// Séparer les informations
-										$info_parts = explode(' - ', $userInfo);
-										$name = $info_parts[0];
-										$contrat = '';
-										$habilitations = '';
-										
-										foreach ($info_parts as $part) {
-											if (strpos($part, 'Contrat:') === 0) {
-												$contrat = substr($part, 9);
-											} elseif (strpos($part, 'Habilitations:') === 0) {
-												$habilitations = substr($part, 14);
-											}
-										}
-										
-										// Calculer la hauteur pour les habilitations
-										$hab_lines = 1; // Au moins une ligne
-										if (!empty($habilitations)) {
-											$max_width = $card_width - 30;
-											$words = explode('-', $habilitations);
-											$current_line = '';
-											$hab_lines = 0;
-											
-											foreach ($words as $word) {
-												$word = trim($word);
-												$test_line = $current_line . ($current_line ? '-' : '') . $word;
-												
-												if ($pdf->GetStringWidth($test_line) < $max_width) {
-													$current_line = $test_line;
-												} else {
-													if ($current_line) {
-														$hab_lines++;
-													}
-													$current_line = $word;
-												}
-											}
-											if ($current_line) {
-												$hab_lines++;
-											}
-										}
-										
-										// Ajouter la hauteur nécessaire pour cet utilisateur
-										$content_height += 5; // Espace pour le nom
-										$content_height += ($hab_lines * 4); // 4 pixels par ligne d'habilitation
-										if (!empty($contrat)) {
-											$content_height += 5; // Espace pour le contrat
-										}
-										$content_height += 3; // Espacement entre les utilisateurs
-									}
-									
-									// Ajouter une marge en bas de la carte
-									$content_height += 2;
-									
-									// Vérifier si la carte dépasse la page
-									if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
-										$pdf->AddPage();
-										$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-										$this->_pagefoot($pdf, $object, $outputlangs);
-										$pdf->SetY($current_y);
-									}
-									
-									// Dessiner les lignes de la carte au lieu du rectangle
+									// AFFICHAGE STANDARD POUR LES CARTES NORMALES
 									$pdf->SetDrawColor(0, 0, 0);
-									// Ligne du bas
-									$pdf->Line($current_x, $current_y + $content_height, $current_x + $card_width, $current_y + $content_height);
-									// Lignes latérales (qui s'arrêtent au niveau du nom/prénom)
-									$side_line_start_y = $current_y + 12; // Commence après le titre
-									$pdf->Line($current_x, $side_line_start_y, $current_x, $current_y + $content_height); // Ligne gauche
-									$pdf->Line($current_x + $card_width, $side_line_start_y, $current_x + $card_width, $current_y + $content_height); // Ligne droite
+									$pdf->Line($temp_current_x, $current_y + $content_height, $temp_current_x + $card_width, $current_y + $content_height);
+									$side_line_start_y = $current_y + 12;
+									$pdf->Line($temp_current_x, $side_line_start_y, $temp_current_x, $current_y + $content_height);
+									$pdf->Line($temp_current_x + $card_width, $side_line_start_y, $temp_current_x + $card_width, $current_y + $content_height);
 
-									// Réinitialiser la position Y pour le contenu
-									$y_offset = $current_y + 12; // Augmenter l'espace initial de 8 à 12
-									
-									// Afficher le titre
-					$pdf->SetFont('', 'B', 10);
-					$pdf->SetTextColor(0, 0, 0);
-					$title_width = $pdf->GetStringWidth($card['title']);
-									$center_title_x = $current_x + ($card_width - $title_width) / 2 - $shift_left;
+									$pdf->SetFont('', 'B', 10);
+									$pdf->SetTextColor(0, 0, 0);
+									$title_width = $pdf->GetStringWidth($card['title']);
+									$center_title_x = $temp_current_x + ($card_width - $title_width) / 2 - $shift_left;
 									$pdf->Text($center_title_x, $current_y + 5, $card['title']);
 									
-									// Afficher le contenu
+									$y_offset = $current_y + 12;
 									$pdf->SetFont('', '', 8);
 									
 									foreach ($card['userNames'] as $userInfo) {
-										// Séparer les informations
 										$info_parts = explode(' - ', $userInfo);
 										$name = $info_parts[0];
 										$contrat = '';
@@ -1148,13 +1091,11 @@ class pdf_standard_ot extends ModelePDFOt
 											}
 										}
 										
-										// Affichage avec labels et gestion des retours à la ligne
 										$pdf->SetFont('', '', 6);
-										$pdf->Text($current_x + 2, $y_offset, 'Nom/Prénom :');
+										$pdf->Text($temp_current_x + 2, $y_offset, 'Nom/Prénom :');
 										$pdf->SetFont('', '', 8);
 										
-										// Gestion des retours à la ligne pour le nom
-										$max_width = $card_width - 25; // Largeur maximale pour le nom
+										$max_width = $card_width - 25;
 										$name_parts = explode(' ', $name);
 										$current_line = '';
 										$name_lines = array();
@@ -1174,20 +1115,18 @@ class pdf_standard_ot extends ModelePDFOt
 											$name_lines[] = $current_line;
 										}
 										
-										// Afficher le nom sur plusieurs lignes si nécessaire
 										foreach ($name_lines as $line) {
-											$pdf->Text($current_x + 20, $y_offset, $line);
+											$pdf->Text($temp_current_x + 20, $y_offset, $line);
 											$y_offset += 4;
 										}
 										
-										$y_offset += 1; // Espace entre nom et habilitation
+										$y_offset += 1;
 										
 										if (!empty($habilitations)) {
 											$pdf->SetFont('', '', 6);
-											$pdf->Text($current_x + 2, $y_offset, 'Habilitation :');
+											$pdf->Text($temp_current_x + 2, $y_offset, 'Habilitation :');
 											$pdf->SetFont('', '', 8);
 											
-											// Gestion des retours à la ligne pour les habilitations
 											$max_width = $card_width - 30;
 											$words = explode('-', $habilitations);
 											$current_line = '';
@@ -1200,151 +1139,179 @@ class pdf_standard_ot extends ModelePDFOt
 													$current_line = $test_line;
 												} else {
 													if ($current_line) {
-														$pdf->Text($current_x + 20, $y_offset, $current_line);
-														$y_offset += 4; // Espacement normal pour les retours à la ligne des habilitations
+														$pdf->Text($temp_current_x + 20, $y_offset, $current_line);
+														$y_offset += 4;
 													}
 													$current_line = $word;
 												}
 											}
 											
 											if ($current_line) {
-												$pdf->Text($current_x + 20, $y_offset, $current_line);
-												$y_offset += 5; // Espace entre habilitation et contrat
+												$pdf->Text($temp_current_x + 20, $y_offset, $current_line);
+												$y_offset += 5;
 											}
 										}
 										
 										if (!empty($contrat)) {
 											$pdf->SetFont('', '', 6);
-											$pdf->Text($current_x + 2, $y_offset, 'Contrat :');
-											$pdf->SetFont('', 'B', 8); // Mettre en gras les données de contrat
-											$pdf->Text($current_x + 20, $y_offset, $contrat);
-											$y_offset += 5; // Espace après le contrat
+											$pdf->Text($temp_current_x + 2, $y_offset, 'Contrat :');
+											$pdf->SetFont('', 'B', 8);
+											$pdf->Text($temp_current_x + 20, $y_offset, $contrat);
+											$y_offset += 5;
 										}
 										
-										$y_offset += 2; // Espace entre les utilisateurs
+										$y_offset += 2;
 									}
 								}
 							}
 							
-							// Ajouter une marge en bas de la carte
-							$content_height += 2; // Réduire la marge en bas de la carte de 5 à 2
-				
-							// Vérifier si la carte dépasse la page en Y
-							if ($current_y + $content_height > $this->page_hauteur - $this->marge_basse) {
-								$pdf->AddPage();
-								$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-								$this->_pagefoot($pdf, $object, $outputlangs);
-								$pdf->SetY($current_y);
-							}
-				
 							// Passer à la position suivante
-							$current_x += $card_width + $card_margin;
+							$temp_current_x += $card_width + $card_margin;
 						}
 						
-						// Passer à la ligne suivante
-						$current_y += $content_height + 2; // Réduit de 5 à 2
+						// Passer à la ligne suivante en utilisant la hauteur maximale
+						$current_y += $max_line_height + 2;
 					}
 				}
 
 				// AFFICHAGE DES LISTES
 				if (!empty($listeUniqueCards)) {
-					$current_y += 0; // Suppression de l'espace supplémentaire
-
-					 // Calculer la hauteur totale de la liste
-					$estimatedHeightPerItem = 50; // Estimation de la hauteur par élément
-					$totalListHeight = count($listeUniqueCards) * $estimatedHeightPerItem; // Estimation de la hauteur totale
-
-					// Vérifier l'espace disponible sur la page
-					$availableSpace = $this->page_hauteur - $current_y - $this->marge_basse;
-
-					// Si la liste dépasse l'espace disponible, ajouter une nouvelle page
-					if ($totalListHeight > $availableSpace) {
-						$pdf->AddPage();
-						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-						$this->_pagefoot($pdf, $object, $outputlangs);
-					}
-
 					foreach ($listeUniqueCards as $card) {
-						// Calculer la largeur de la carte (largeur maximale)
-						$card_width = $this->page_largeur - $this->marge_gauche - $this->marge_droite;
+						// Calculer la hauteur PRÉCISE de la liste
+						$estimated_height = 30; // Header + en-têtes
+						$users_count = count($card['userNames']);
+						$rows_needed = ceil($users_count / 2);
 						
-						// Ajuster les largeurs des colonnes en mode compact
-						$col_widths = array(
-							'nom' => ($card_width * 0.25) / 2,
-							'habilitation' => ($card_width * 0.35) / 2,
-							'fonction' => ($card_width * 0.25) / 2,
-							'contrat' => ($card_width * 0.15) / 2
-						);
+						// Calculer la hauteur réelle nécessaire pour chaque ligne
+						$actual_content_height = 0;
+						foreach (array_chunk($card['userNames'], 2) as $row_users) {
+							$max_lines_in_row = 1;
+							foreach ($row_users as $userInfo) {
+								$info_parts = explode(' - ', $userInfo);
+								$habilitation = '';
+								$fonction = '';
+								
+								foreach ($info_parts as $part) {
+									if (strpos($part, 'Habilitations:') === 0) {
+										$habilitation = substr($part, 14);
+									} elseif (strpos($part, 'Fonctions:') === 0) {
+										$fonction = substr($part, 10);
+									}
+								}
+								
+								// Calculer le nombre de lignes nécessaires
+								$hab_lines = 1;
+								if (!empty($habilitation)) {
+									$hab_parts = explode('-', $habilitation);
+									$hab_lines = max(1, ceil(count($hab_parts) / 3));
+								}
+								
+								$fonc_lines = 1;
+								if (!empty($fonction)) {
+									$fonc_parts = explode('-', $fonction);
+									$fonc_lines = max(1, ceil(count($fonc_parts) / 2));
+								}
+								
+								$max_lines_in_row = max($max_lines_in_row, $hab_lines, $fonc_lines);
+							}
+							$actual_content_height += ($max_lines_in_row * 2.0) + 3;
+						}
 						
-						// Vérifier si le tableau dépasse la page
-						if ($current_y + 40 > $this->page_hauteur - $this->marge_basse) { // Réduit de 50 à 40
+						$totalListHeight = $estimated_height + $actual_content_height;
+
+						// Réduire l'espace disponible en bas pour forcer moins de sauts de page
+						$reduced_bottom_margin = 25; // Réduit de 50 à 25
+						$availableSpace = $this->page_hauteur - $current_y - $reduced_bottom_margin;
+						
+						if ($totalListHeight > $availableSpace) {
+							// Forcer un saut de page
 							$pdf->AddPage();
 							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 							$this->_pagefoot($pdf, $object, $outputlangs);
-							$pdf->SetY($current_y);
 						}
-						
-						// Calculer la position X pour centrer la carte
-						$card_x = $this->marge_gauche;
-						
-						// Afficher le titre de la liste avec plus d'espace
-						$pdf->SetFont('', 'B', 9); // Réduit la taille en mode compact
-						$title_width = $pdf->GetStringWidth($card['title']);
-						$title_y = $current_y + 5;
-						$pdf->Text($card_x + ($card_width - $title_width) / 2, $title_y, $card['title']);
-						
-						// Afficher la légende
-						$legend_y = $title_y + 10;
-						$current_x_legend = $card_x + 2;
-						
-						// Afficher les titres des colonnes
-						$pdf->SetFont('', '', 5); // Réduit la taille en mode compact
-						$pdf->Text($current_x_legend, $legend_y, 'Nom');
-						$current_x_legend += $col_widths['nom'];
-						
-						// Centrer la légende "Habilitations"
-						$habilitation_title = 'Habilitation';
-						$habilitation_width = $pdf->GetStringWidth($habilitation_title);
-						$habilitation_x = $current_x_legend + ($col_widths['habilitation'] - $habilitation_width) / 2;
-						$pdf->Text($habilitation_x, $legend_y, $habilitation_title);
-						$current_x_legend += $col_widths['habilitation'];
-						
-						$pdf->Text($current_x_legend, $legend_y, 'Fonction');
-						$current_x_legend += $col_widths['fonction'];
-						$pdf->Text($current_x_legend, $legend_y, 'Contrat');
-						
-						// Afficher les titres des colonnes pour le deuxième utilisateur
-						$current_x_legend += $col_widths['contrat'];
-						$pdf->Text($current_x_legend, $legend_y, 'Nom');
-						$current_x_legend += $col_widths['nom'];
-						
-						// Centrer la légende "Habilitations" pour le deuxième utilisateur
-						$habilitation_x = $current_x_legend + ($col_widths['habilitation'] - $habilitation_width) / 2;
-						$pdf->Text($habilitation_x, $legend_y, $habilitation_title);
-						$current_x_legend += $col_widths['habilitation'];
-						
-						$pdf->Text($current_x_legend, $legend_y, 'Fonction');
-						$current_x_legend += $col_widths['fonction'];
-						$pdf->Text($current_x_legend, $legend_y, 'Contrat');
 
-						// Ligne de séparation sous la légende
-						$pdf->SetDrawColor(200, 200, 200);
-						// Dessiner deux segments de ligne avec un espace au milieu
-						$mid_x = $card_x + ($card_width / 2);
-						$gap = 10; // Largeur de l'espace
-						$pdf->Line($card_x + 2, $legend_y + 4, $mid_x - ($gap/2), $legend_y + 4);
-						$pdf->Line($mid_x + ($gap/2), $legend_y + 4, $card_x + $card_width - 2, $legend_y + 4);
+						// Afficher la liste avec des colonnes plus compactes
+						$card_width = ($this->page_largeur - $this->marge_gauche - $this->marge_droite) * 0.95;
 						
-						// Passer à la ligne suivante pour les données
-						$y_offset = $legend_y + 7; // Réduire l'espace en mode compact
+						// Ajustement des largeurs pour bien séparer les colonnes avec espacements égalisés
+						$col_widths = array(
+							'nom' => $card_width * 0.10,
+							'habilitation' => $card_width * 0.28,
+							'fonction' => $card_width * 0.10,
+							'contrat' => $card_width * 0.10
+						);
+
+						// Calculer les espacements entre colonnes (égalisés)
+						$total_col_width = $col_widths['nom'] + $col_widths['habilitation'] + $col_widths['fonction'] + $col_widths['contrat'];
+						$remaining_space = ($card_width / 2) - $total_col_width - 4; // 4 pour les marges de début
+						$spacing = $remaining_space / 3; // 3 espaces entre 4 colonnes
+
+						// Calculer les positions exactes avec espacements égalisés
+						$separator_x = $this->marge_gauche + ($card_width / 2);
+						$col_positions = array(
+							// Première personne
+							'nom1' => $this->marge_gauche + 2,
+							'hab1' => $this->marge_gauche + 2 + $col_widths['nom'] + $spacing,
+							'fonc1' => $this->marge_gauche + 2 + $col_widths['nom'] + $spacing + $col_widths['habilitation'] + $spacing,
+							'cont1' => $this->marge_gauche + 2 + $col_widths['nom'] + $spacing + $col_widths['habilitation'] + $spacing + $col_widths['fonction'] + $spacing,
+							// Séparateur au milieu
+							'separator' => $separator_x,
+							// Deuxième personne
+							'nom2' => $separator_x + 3,
+							'hab2' => $separator_x + 3 + $col_widths['nom'] + $spacing,
+							'fonc2' => $separator_x + 3 + $col_widths['nom'] + $spacing + $col_widths['habilitation'] + $spacing,
+							'cont2' => $separator_x + 3 + $col_widths['nom'] + $spacing + $col_widths['habilitation'] + $spacing + $col_widths['fonction'] + $spacing
+						);
+
 						$pdf->SetFont('', '', 7);
+						$current_x = $this->marge_gauche;
+						$y_offset = $current_y + 5;
+
+						// Afficher le titre de la liste
+						$pdf->SetFont('', 'B', 9);
+						$title_width = $pdf->GetStringWidth($card['title']);
+						$pdf->Text($current_x + ($card_width - $title_width) / 2, $y_offset, $card['title']);
+						$y_offset += 8;
+
+						// Afficher les en-têtes de colonnes avec centrage
+						$pdf->SetFont('', 'B', 6);
+						$pdf->SetTextColor(0, 0, 0);
 						
-						// Afficher les utilisateurs par paires
+						// En-têtes pour la première personne (centrés dans leurs colonnes)
+						$nom_header_width = $pdf->GetStringWidth('Nom');
+						$pdf->Text($col_positions['nom1'] + ($col_widths['nom'] - $nom_header_width) / 2, $y_offset, 'Nom');
+						
+						$hab_header_width = $pdf->GetStringWidth('Habilitations');
+						$pdf->Text($col_positions['hab1'] + ($col_widths['habilitation'] - $hab_header_width) / 2, $y_offset, 'Habilitations');
+						
+						$fonc_header_width = $pdf->GetStringWidth('Fonction');
+						$pdf->Text($col_positions['fonc1'] + ($col_widths['fonction'] - $fonc_header_width) / 2, $y_offset, 'Fonction');
+						
+						$cont_header_width = $pdf->GetStringWidth('Contrat');
+						$pdf->Text($col_positions['cont1'] + ($col_widths['contrat'] - $cont_header_width) / 2, $y_offset, 'Contrat');
+						
+						// En-têtes pour la deuxième personne (centrés dans leurs colonnes)
+						$pdf->Text($col_positions['nom2'] + ($col_widths['nom'] - $nom_header_width) / 2, $y_offset, 'Nom');
+						$pdf->Text($col_positions['hab2'] + ($col_widths['habilitation'] - $hab_header_width) / 2, $y_offset, 'Habilitations');
+						$pdf->Text($col_positions['fonc2'] + ($col_widths['fonction'] - $fonc_header_width) / 2, $y_offset, 'Fonction');
+						$pdf->Text($col_positions['cont2'] + ($col_widths['contrat'] - $cont_header_width) / 2, $y_offset, 'Contrat');
+						
+						$y_offset += 4;
+						
+						// Ligne de séparation sous les en-têtes
+						$pdf->SetDrawColor(200, 200, 200);
+						$pdf->Line($current_x + 2, $y_offset, $current_x + $card_width - 2, $y_offset);
+						$y_offset += 3;
+
+						// Retour à la police normale pour les données
+						$pdf->SetFont('', '', 6);
+
 						foreach (array_chunk($card['userNames'], 2) as $row_users) {
 							$max_lines_in_row = 0;
-							$current_x_user = $card_x + 2;
-							
-							foreach ($row_users as $userInfo) {
+							$user_data = array(); // Stocker les données des utilisateurs de cette ligne
+
+							// Traitement des données pour chaque utilisateur de la ligne
+							foreach ($row_users as $index => $userInfo) {
 								// Séparer les informations
 								$info_parts = explode(' - ', $userInfo);
 								$name_parts = explode(' ', $info_parts[0]);
@@ -1352,406 +1319,220 @@ class pdf_standard_ot extends ModelePDFOt
 								$firstname = $name_parts[0];
 								$name = $lastname . '.' . substr($firstname, 0, 1); // Changé de ' ' à '.'
 								
+								$habilitation = '';
 								$fonction = '';
 								$contrat = '';
-								$habilitation = '';
-								
+
 								foreach ($info_parts as $part) {
-									if (strpos($part, 'Fonctions:') === 0) {
+									if (strpos($part, 'Habilitations:') === 0) {
+										$habilitation = substr($part, 14);
+									} elseif (strpos($part, 'Fonctions:') === 0) {
 										$fonction = substr($part, 10);
 									} elseif (strpos($part, 'Contrat:') === 0) {
 										$contrat = substr($part, 9);
-									} elseif (strpos($part, 'Habilitations:') === 0) {
-										$habilitation = substr($part, 14);
 									}
+								 }
+
+								// Calculer les limites pour les habilitations (ajustées avec les nouveaux espacements)
+								if ($index == 0) {
+									$max_hab_width = $col_widths['habilitation'] - 4;
+								} else {
+									$max_hab_width = $col_widths['habilitation'] - 4;
 								}
-								
-								// Afficher le nom
-								$pdf->Text($current_x_user, $y_offset, $name);
-								$current_x_user += $col_widths['nom'];
-								
-								// Afficher les habilitations
-								$hab_lines = array();
-								$words = explode('-', $habilitation);
-								$current_line = '';
-								foreach ($words as $word) {
-									$word = trim($word);
-									$test_line = $current_line . ($current_line ? '-' : '') . $word;
-									if ($pdf->GetStringWidth($test_line) < $col_widths['habilitation'] - 2) {
-										$current_line = $test_line;
-									} else {
-										if ($current_line) {
-											$hab_lines[] = $current_line;
+
+								// Gestion ultra-restrictive des retours à la ligne pour les habilitations
+								$habilitation_lines = [];
+								if (!empty($habilitation)) {
+									// Découper d'abord par tirets
+									$habilitation_parts = explode('-', $habilitation);
+									$current_line = '';
+									$max_elements_per_line = 3; // Limiter à 3 éléments par ligne maximum
+
+									foreach ($habilitation_parts as $part_index => $part) {
+										$part = trim($part);
+										
+										// Si la partie est vide, passer au suivant
+										if (empty($part)) continue;
+										
+										// Tester si on peut ajouter cette partie à la ligne actuelle
+										$test_line = $current_line . ($current_line ? '-' : '') . $part;
+										
+										// Conditions pour forcer un retour à la ligne :
+										// 1. Largeur dépassée
+										// 2. Plus de 3 éléments par ligne
+										// 3. Ligne actuelle + nouveau élément trop long
+										if ($pdf->GetStringWidth($test_line) > $max_hab_width || 
+											(substr_count($current_line, '-') >= ($max_elements_per_line - 1) && !empty($current_line))) {
+											
+											// Sauvegarder la ligne actuelle si elle n'est pas vide
+											if ($current_line) {
+												$habilitation_lines[] = $current_line;
+											}
+											
+											// Commencer une nouvelle ligne avec cet élément
+											$current_line = $part;
+											
+											// Si même cet élément seul dépasse, le tronquer
+											if ($pdf->GetStringWidth($current_line) > $max_hab_width) {
+												// Tronquer caractère par caractère
+												while ($pdf->GetStringWidth($current_line) > $max_hab_width && strlen($current_line) > 0) {
+													$current_line = substr($current_line, 0, -1);
+												}
+											}
+										} else {
+											$current_line = $test_line;
 										}
-										$current_line = $word;
+									}
+									
+									// Ajouter la dernière ligne si elle n'est pas vide
+									if ($current_line) {
+										$habilitation_lines[] = $current_line;
+									}
+									
+									// Si aucune ligne n'a été créée, créer au moins une ligne vide
+									if (empty($habilitation_lines)) {
+										$habilitation_lines[] = '';
 									}
 								}
-								if ($current_line) {
-									$hab_lines[] = $current_line;
-								}
-								
-								// Afficher les fonctions
-								$fonc_lines = array();
-								$words = explode('-', $fonction);
-								$current_line = '';
-								foreach ($words as $word) {
-									$word = trim($word);
-									$test_line = $current_line . ($current_line ? '-' : '') . $word;
-									if ($pdf->GetStringWidth($test_line) < $col_widths['fonction'] - 2) {
-										$current_line = $test_line;
-									} else {
-										if ($current_line) {
-											$fonc_lines[] = $current_line;
+
+								// Traitement similaire pour les fonctions
+								$fonction_lines = [];
+								if (!empty($fonction)) {
+									$fonction_parts = explode('-', $fonction);
+									$current_line = '';
+									$max_fonc_width = $col_widths['fonction'] - 2;
+
+									foreach ($fonction_parts as $part) {
+										$part = trim($part);
+										if (empty($part)) continue;
+										
+										$test_line = $current_line . ($current_line ? '-' : '') . $part;
+										
+										if ($pdf->GetStringWidth($test_line) > $max_fonc_width) {
+											if ($current_line) {
+												$fonction_lines[] = $current_line;
+											}
+											$current_line = $part;
+											
+											// Tronquer si nécessaire
+											while ($pdf->GetStringWidth($current_line) > $max_fonc_width && strlen($current_line) > 0) {
+												$current_line = substr($current_line, 0, -1);
+											}
+										} else {
+											$current_line = $test_line;
 										}
-										$current_line = $word;
+									}
+									
+									if ($current_line) {
+										$fonction_lines[] = $current_line;
+									}
+									
+									if (empty($fonction_lines)) {
+										$fonction_lines[] = $fonction; // Afficher tel quel si pas de tirets
 									}
 								}
-								if ($current_line) {
-									$fonc_lines[] = $current_line;
-								}
-								
-								// Afficher le contrat
-								$pdf->Text($current_x_user + $col_widths['habilitation'] + $col_widths['fonction'], $y_offset, $contrat);
-								
-								// Calculer le nombre maximum de lignes pour cette entrée
-								$max_lines = max(1, count($fonc_lines), count($hab_lines));
-								$max_lines_in_row = max($max_lines_in_row, $max_lines);
-								
-								// Afficher les habilitations sur plusieurs lignes si nécessaire
-								$temp_y = $y_offset;
-								foreach ($hab_lines as $line) {
-									$pdf->Text($current_x_user, $temp_y, $line);
-									$temp_y += 3; // Réduire l'espacement des lignes en mode compact
-								}
-								
-								// Afficher les fonctions sur plusieurs lignes si nécessaire
-								$temp_y = $y_offset;
-								foreach ($fonc_lines as $line) {
-									$pdf->Text($current_x_user + $col_widths['habilitation'], $temp_y, $line);
-									$temp_y += 3; // Réduire l'espacement des lignes en mode compact
-								}
-								
-								$current_x_user += $col_widths['habilitation'] + $col_widths['fonction'] + $col_widths['contrat'];
+
+								// Stocker les données de cet utilisateur
+								$user_data[$index] = array(
+									'name' => $name,
+									'habilitation_lines' => $habilitation_lines,
+									'fonction_lines' => $fonction_lines,
+									'contrat' => $contrat
+								);
+
+								$max_lines_in_row = max($max_lines_in_row, count($habilitation_lines), count($fonction_lines), 1);
 							}
-							
-							// Dessiner la ligne verticale de séparation
-							$separator_x = $card_x + ($card_width / 2);
-							$pdf->SetDrawColor(200, 200, 200);
-							$pdf->Line($separator_x, $legend_y + 4, $separator_x, $y_offset + ($max_lines_in_row * 3) + 2);
-							
-							// Mettre à jour la position Y pour la prochaine ligne
-							$y_offset += ($max_lines_in_row * 3) + 2;
-							
-							// Ajouter une ligne de séparation entre les lignes d'utilisateurs
-							if ($y_offset < $current_y + $content_height - 2) {
+
+							// Affichage des utilisateurs
+							foreach ($user_data as $index => $userData) {
+								if ($index == 0) {
+									// Première personne
+									$nom_x = $col_positions['nom1'];
+									$hab_x = $col_positions['hab1'];
+									$fonc_x = $col_positions['fonc1'];
+									$cont_x = $col_positions['cont1'];
+								} else {
+									// Deuxième personne
+									$nom_x = $col_positions['nom2'];
+									$hab_x = $col_positions['hab2'];
+									$fonc_x = $col_positions['fonc2'];
+									$cont_x = $col_positions['cont2'];
+								}
+
+								// Afficher le nom (centré dans sa colonne)
+								$name_width = $pdf->GetStringWidth($userData['name']);
+								$centered_nom_x = $nom_x + ($col_widths['nom'] - $name_width) / 2;
+								$pdf->Text($centered_nom_x, $y_offset, $userData['name']);
+
+								// Afficher les habilitations sur plusieurs lignes (centrées dans leur colonne)
+								$temp_y = $y_offset;
+								foreach ($userData['habilitation_lines'] as $line) {
+									$line_width = $pdf->GetStringWidth($line);
+									$centered_hab_x = $hab_x + ($col_widths['habilitation'] - $line_width) / 2;
+									$pdf->Text($centered_hab_x, $temp_y, $line);
+									$temp_y += 2.0;
+								}
+
+								// Afficher les fonctions sur plusieurs lignes (centrées dans leur colonne)
+								$temp_y = $y_offset;
+								foreach ($userData['fonction_lines'] as $line) {
+									$line_width = $pdf->GetStringWidth($line);
+									$centered_fonc_x = $fonc_x + ($col_widths['fonction'] - $line_width) / 2;
+									$pdf->Text($centered_fonc_x, $temp_y, $line);
+									$temp_y += 2.0;
+								}
+
+								// Afficher le contrat (centré dans sa colonne)
+								$contrat_display = $userData['contrat'];
+								$max_cont_width = $col_widths['contrat'] - 2;
+								while ($pdf->GetStringWidth($contrat_display) > $max_cont_width && strlen($contrat_display) > 0) {
+									$contrat_display = substr($contrat_display, 0, -1);
+								}
+								$contrat_width = $pdf->GetStringWidth($contrat_display);
+								$centered_cont_x = $cont_x + ($col_widths['contrat'] - $contrat_width) / 2;
+								$pdf->Text($centered_cont_x, $y_offset, $contrat_display);
+							}
+
+							// Ligne de séparation verticale entre les deux utilisateurs
+							if (count($row_users) == 2) {
 								$pdf->SetDrawColor(200, 200, 200);
-								// Dessiner deux segments de ligne avec un espace au milieu
-								$mid_x = $card_x + ($card_width / 2);
-								$gap = 10; // Réduit l'espace en mode compact
-								$pdf->Line($card_x + 2, $y_offset - 1, $mid_x - ($gap/2), $y_offset - 1);
-								$pdf->Line($mid_x + ($gap/2), $y_offset - 1, $card_x + $card_width - 2, $y_offset - 1);
+								$line_height = ($max_lines_in_row * 2.0) + 1;
+								$pdf->Line($col_positions['separator'], $y_offset - 1, $col_positions['separator'], $y_offset + $line_height);
 							}
+
+							// Passer à la ligne suivante
+							$y_offset += ($max_lines_in_row * 2.0) + 3; // Espacement entre les rangées
+
+							// Ligne de séparation horizontale entre les lignes (optionnelle)
+							$pdf->SetDrawColor(230, 230, 230);
+							$pdf->Line($current_x + 2, $y_offset - 2, $current_x + $card_width - 2, $y_offset - 2);
 						}
-						
-						// Dessiner le contour de la carte
+
+						// Dessiner le contour de la liste
 						$pdf->SetDrawColor(0, 0, 0);
-						$pdf->Line($card_x, $current_y + 12, $card_x, $y_offset + 2); // Ligne gauche
-						$pdf->Line($card_x + $card_width, $current_y + 12, $card_x + $card_width, $y_offset + 2); // Ligne droite
-						
-						$current_y = $y_offset + 2; // Réduit l'espace après la carte
+						$pdf->Line($current_x, $current_y + 12, $current_x, $y_offset + 1); // Ligne gauche
+						$pdf->Line($current_x + $card_width, $current_y + 12, $current_x + $card_width, $y_offset + 1); // Ligne droite
+						$pdf->Line($current_x, $y_offset + 1, $current_x + $card_width, $y_offset + 1); // Ligne du bas
+
+						// Mettre à jour la position Y actuelle
+						$current_y = $y_offset + 3;
 					}
 				}
 
-				// AFFICHAGE DES SOUS-TRAITANTS
-				$current_y += 8; // Réduction de l'espace entre les tableaux (de 15 à 8)
+				// Calculer l'espace disponible pour les signatures RÉDUIT
+				$signature_height = 18; // Réduit de 20 à 18
+				$signature_spacing = 2; // Réduit de 3 à 2
+				$signature_margin = 2; // Réduit de 3 à 2
+				$min_space_needed = $signature_height + $signature_spacing + $signature_margin + 8; // Réduit de 10 à 8
 
-				// Récupérer les sous-traitants
-				$sql_sous_traitants = "SELECT 
-					COALESCE(u.firstname, sp.firstname) as firstname,
-					COALESCE(u.lastname, sp.lastname) as lastname,
-					s.nom as entreprise,
-					st.fonction,
-					st.contrat,
-					st.habilitation
-					FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants st
-					LEFT JOIN " . MAIN_DB_PREFIX . "user u ON st.fk_socpeople = u.rowid
-					LEFT JOIN " . MAIN_DB_PREFIX . "socpeople sp ON st.fk_socpeople = sp.rowid
-					LEFT JOIN " . MAIN_DB_PREFIX . "societe s ON st.fk_societe = s.rowid
-					WHERE st.ot_id = " . $object->id;
-
-				$resql_sous_traitants = $db->query($sql_sous_traitants);
-				if ($resql_sous_traitants && $db->num_rows($resql_sous_traitants) > 0) {
-					// Calculer l'espace nécessaire pour les sous-traitants
-					$subcontractors_height = ($db->num_rows($resql_sous_traitants) * 7) + 50; // Hauteur approximative
-					
-					// Vérifier si on a assez d'espace pour les sous-traitants et les signatures
-					if ($current_y + $subcontractors_height + $signature_height > $this->page_hauteur - $this->marge_basse) {
-						// Ajouter une nouvelle page
-						$pdf->AddPage();
-						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-					}
-
-					// Réduire la largeur du tableau des sous-traitants pour laisser de la place aux légendes
-					$card_width = ($this->page_largeur - $this->marge_gauche - $this->marge_droite) * 0.6; // 60% de la largeur disponible
-
-					// Afficher le titre
-					$pdf->SetFont('', 'B', 9);
-					$title = "Sous-traitants";
-					$title_width = $pdf->GetStringWidth($title);
-					$title_y = $current_y + 5;
-					$pdf->Text($this->marge_gauche + ($card_width - $title_width) / 2, $title_y, $title);
-
-					// Afficher la légende
-					$legend_y = $title_y + 10;
-					$current_x_legend = $this->marge_gauche + 2;
-
-					// Définir les colonnes du tableau
-					$col_widths = array(
-						'nom' => $card_width * 0.15,
-						'entreprise' => $card_width * 0.20,
-						'habilitation' => $card_width * 0.25,
-						'fonction' => $card_width * 0.20,
-						'contrat' => $card_width * 0.20
-					);
-
-					// Afficher les titres des colonnes
-					$pdf->SetFont('', '', 5);
-					$pdf->Text($current_x_legend, $legend_y, 'Nom/Prénom');
-					$current_x_legend += $col_widths['nom'];
-
-					// Ajouter un espace avant Entreprise
-					$current_x_legend += 3; // Ajout d'un espace de 3 unités
-					$pdf->Text($current_x_legend, $legend_y, 'Entreprise');
-					$current_x_legend += $col_widths['entreprise'];
-
-					// Ajouter un espace supplémentaire avant Habilitations
-					$current_x_legend += 5; // Ajout d'un espace de 5 unités
-					$pdf->Text($current_x_legend, $legend_y, 'Habilitations');
-					$current_x_legend += $col_widths['habilitation'];
-
-					// Fonction avec légende (1)
-					$pdf->Text($current_x_legend, $legend_y, 'Fonction');
-					$pdf->SetFont('', '', 5);
-					$pdf->SetTextColor(128, 128, 128); // Gris
-					$pdf->Text($current_x_legend + $pdf->GetStringWidth('Fonction') + 1, $legend_y, '(1)');
-					$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
-					$current_x_legend += $col_widths['fonction'];
-
-					// Contrat avec légende (2)
-					$pdf->SetFont('', '', 5);
-					$pdf->Text($current_x_legend, $legend_y, 'Contrat');
-					$pdf->SetFont('', '', 5);
-					$pdf->SetTextColor(128, 128, 128); // Gris
-					$pdf->Text($current_x_legend + $pdf->GetStringWidth('Contrat') + 1, $legend_y, '(2)');
-					$pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
-					$current_x_legend += $col_widths['contrat'];
-
-					// Ligne de séparation sous la légende
-					$pdf->SetDrawColor(200, 200, 200);
-					$pdf->Line($this->marge_gauche + 2, $legend_y + 4, $this->marge_gauche + $card_width - 2, $legend_y + 4);
-
-					// Passer à la ligne suivante pour les données
-					$y_offset = $legend_y + 7;
-					$pdf->SetFont('', '', 7);
-
-					// Afficher les sous-traitants
-					while ($sous_traitant = $db->fetch_object($resql_sous_traitants)) {
-						// Vérifier si on a assez d'espace pour le sous-traitant suivant
-						if ($y_offset + 7 > $this->page_hauteur - $this->marge_basse - $signature_height) {
-							// Ajouter une nouvelle page
-							$pdf->AddPage();
-							$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-							$y_offset = $current_y + 5;
-						}
-
-						$current_x = $this->marge_gauche + 2;
-
-						// Nom/Prénom (format modifié)
-						$name_parts = explode(' ', $sous_traitant->lastname . ' ' . $sous_traitant->firstname);
-						$lastname = $name_parts[0];
-						$firstname = $name_parts[1];
-						$name = $lastname . '.' . substr($firstname, 0, 1); // Changé de ' ' à '.'
-						$pdf->Text($current_x, $y_offset, $name);
-						$current_x += $col_widths['nom'];
-
-						// Ajouter un espace avant Entreprise
-						$current_x += 3;
-						// Entreprise
-						$pdf->Text($current_x, $y_offset, $sous_traitant->entreprise);
-						$current_x += $col_widths['entreprise'];
-
-						// Ajouter un espace supplémentaire avant Habilitations
-						$current_x += 8;
-						// Habilitations (gestion des retours à la ligne)
-						$habilitation_lines = [];
-						$max_width = $col_widths['habilitation'] - 2; // Largeur maximale pour la colonne
-						$words = explode('-', $sous_traitant->habilitation);
-						$current_line = '';
-
-						foreach ($words as $word) {
-							$test_line = $current_line . ($current_line ? '-' : '') . $word;
-							if ($pdf->GetStringWidth($test_line) < $max_width) {
-								$current_line = $test_line;
-							} else {
-								if ($current_line) {
-									$habilitation_lines[] = $current_line;
-								}
-								$current_line = $word;
-							}
-						}
-						if ($current_line) {
-							$habilitation_lines[] = $current_line;
-						}
-
-						$temp_y = $y_offset;
-						foreach ($habilitation_lines as $line) {
-							$pdf->Text($current_x, $temp_y, $line);
-							$temp_y += 4; // Espacement entre les lignes
-						}
-						$current_x += $col_widths['habilitation'];
-
-						// Fonction
-						$pdf->Text($current_x, $y_offset, $sous_traitant->fonction);
-						$current_x += $col_widths['fonction'];
-
-						// Contrat
-						$pdf->Text($current_x, $y_offset, $sous_traitant->contrat);
-						$current_x += $col_widths['contrat'];
-
-						// Ligne de séparation entre les sous-traitants
-						$y_offset = max($temp_y, $y_offset + 7); // Ajuster la position verticale
-						$pdf->SetDrawColor(200, 200, 200);
-						$pdf->Line($this->marge_gauche + 2, $y_offset - 1, $this->marge_gauche + $card_width - 2, $y_offset - 1);
-					}
-
-					// Dessiner le contour de la carte
-					$pdf->SetDrawColor(0, 0, 0);
-					$pdf->Line($this->marge_gauche, $y_offset + 2, $this->marge_gauche + $card_width, $y_offset + 2); // Ligne du bas
-					$pdf->Line($this->marge_gauche, $current_y + 12, $this->marge_gauche, $y_offset + 2); // Ligne gauche
-					$pdf->Line($this->marge_gauche + $card_width, $current_y + 12, $this->marge_gauche + $card_width, $y_offset + 2); // Ligne droite
-
-					// Afficher les légendes à côté du tableau
-                    $legend_x = $this->marge_gauche + $card_width + 5; // Position X des légendes
-                    $legend_y = $current_y + 2; // Position Y des légendes
-                    $pdf->SetFont('', '', 6);
-                    $pdf->SetTextColor(128, 128, 128); // Gris
-
-                    // Calculer la largeur disponible pour les légendes (40% de la largeur totale)
-                    $legend_width = ($this->page_largeur - $legend_x - $this->marge_droite) * 0.4;
-
-                    // Légende (1)
-                    $legend1 = "(1) RA = Responsable d'Affaire – RS = Responsable de Site – RSI = Responsable de Suivi d'Intervention – RE = Responsable d'Équipes – RI = Responsable d'Intervention – CdT = Chargé de Travaux – CT = Contrôleur Technique – V = Vérificateur - INT = Intervenant – RSR/PTC = Responsable du Suivi Radiologique / Personne Techniquement Compétente PI = Primo-Intervenant – TPI = Tuteur Primo-Intervenant (Si Primo-Intervenant) CO = Personnel en Compagnonnage – SST = Sauveteur Secouriste du Travail";
-                    
-                    // Formater le texte de la légende 1
-                    $legend1_lines = array(
-                        "(1) RA = Responsable d'Affaire – RS = Responsable de Site –",
-                        "RSI = Responsable de Suivi d'Intervention –",
-                        "RE = Responsable d'Équipes – RI = Responsable d'Intervention –",
-                        "CdT = Chargé de Travaux – CT = Contrôleur Technique –",
-                        "V = Vérificateur - INT = Intervenant –",
-                        "RSR/PTC = Responsable du Suivi Radiologique / Personne",
-                        "Techniquement Compétente",
-                        "PI = Primo-Intervenant – TPI = Tuteur Primo-Intervenant",
-                        "(Si Primo-Intervenant)",
-                        "CO = Personnel en Compagnonnage – SST = Sauveteur Secouriste du Travail"
-                    );
-
-                    // Afficher chaque ligne de la légende 1
-                    foreach ($legend1_lines as $line) {
-                        $pdf->Text($legend_x, $legend_y, $line);
-                        $legend_y += 3;
-                    }
-
-                    // Légende (2)
-                    $legend_y += 2; // Ajouter un espace entre les légendes
-                    $legend2_lines = array(
-                        "(2) CDI = Contrat à Durée Indéterminée – CDD = Contrat à Durée Déterminée",
-                        "ETT = Intérimaire"
-                    );
-
-                    // Afficher chaque ligne de la légende 2
-                    foreach ($legend2_lines as $line) {
-                        $pdf->Text($legend_x, $legend_y, $line);
-                        $legend_y += 3;
-                    }
-
-                    $pdf->SetTextColor(0, 0, 0); // Retour à la couleur noire
-					
-					// Mettre à jour la position Y actuelle
-					$current_y = $y_offset + 2;
-				}
-
-				// Calculer l'espace disponible pour les signatures
-				$signature_height = 20; // Hauteur nécessaire pour les signatures
-				$signature_spacing = 3; // Réduit l'espacement
-				$signature_margin = 3; // Réduit la marge
-				$min_space_needed = $signature_height + $signature_spacing + $signature_margin + 10; // Espace minimum nécessaire réduit
-
-				// Forcer la position Y pour les signatures (juste avant le footer)
-				$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - 18;
+				// Forcer la position Y pour les signatures (plus haut)
+				$signature_y = $this->page_hauteur - 15 - $signature_height - 15; // Réduit les marges
 
 				// Vérifier si les signatures se superposent avec le contenu
-				if ($current_y > $signature_y - 10) {
-					// Calculer l'espace nécessaire pour les signatures
-					$space_needed = $signature_height + 20; // Hauteur des signatures + marge
-					
-					// Calculer l'espace disponible sur la page actuelle
-					$available_space = $this->page_hauteur - $this->marge_basse - $current_y;
-					
-					// Réduire les espaces entre les éléments
-					$reduction_factor = 0.7; // Réduire de 30%
-					
-					// Réduire l'espace après le header
-					$current_y = $this->_pagehead($pdf, $object, $outputlangs) + 5; // Réduit de 15 à 5
-					
-					// Réduire l'espace entre "Commande concernée" et "Date d'applicabilité"
-					$current_y += 5; // Réduit de 10 à 5
-					
-					// Réduire l'espace entre les cards
-					$card_spacing = 5; // Réduit de 10 à 5
-					
-					// Réduire l'espace entre les éléments de la liste
-					$list_spacing = 3; // Réduit de 5 à 3
-					
-					// Réduire l'espace entre les sections
-					$section_spacing = 5; // Réduit de 10 à 5
-					
-					// Recalculer la position Y des signatures
-					$signature_y = $this->page_hauteur - $this->marge_basse - $signature_height - 18;
-					
-					// Si on a toujours pas assez de place après réduction, forcer un saut de page
-					if ($current_y > $signature_y - 10) {
-						// Sauvegarder les signatures
-						$signatures = array(
-							'type' => 'signatures',
-							'height' => $signature_height,
-							'content' => $this->page_signatures
-						);
-						
-						// Ajouter une nouvelle page
-						$pdf->AddPage();
-						$current_y = $this->_pagehead($pdf, $object, $outputlangs);
-						
-						// Réinitialiser le compteur de signatures
-						$this->page_signatures = 0;
-						
-						// Afficher les signatures sur la nouvelle page
-						if ($signatures['type'] === 'signatures') {
-							$pdf->SetFont('', '', $default_font_size - 1);
-							$pdf->SetTextColor(0, 0, 0);
-							
-							$signature_y = $this->page_hauteur - $this->marge_basse - ($signatures['content'] * 30);
-							$pdf->SetY($signature_y);
-							
-							for ($i = 0; $i < $signatures['content']; $i++) {
-								$pdf->SetY($signature_y + ($i * 30));
-								$pdf->Cell(0, 5, 'Signature', 0, 1, 'C');
-							}
-						}
-						
-						// Retourner true pour indiquer qu'un saut de page a été effectué
-						return true;
-					}
+				if ($current_y > $signature_y - 8) { // Réduit de 10 à 8
+					// Ajouter une nouvelle page
+					$pdf->AddPage();
+					$current_y = $this->_pagehead($pdf, $object, $outputlangs);
 				}
 
 				// Positionner le curseur pour les signatures
@@ -1892,18 +1673,6 @@ class pdf_standard_ot extends ModelePDFOt
 	 *
 	 *  @param	DoliDB	$db     			Database handler
 	 *  @param  integer	$maxfilenamelength  Max length of value to show
-	 *  @return	array						List of templates
-	 */
-	public static function liste_modeles($db, $maxfilenamelength = 0)
-	{
-		// phpcs:enable
-		return parent::liste_modeles($db, $maxfilenamelength); // TODO: Change the autogenerated stub
-	}
-
-	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.PublicUnderscore
-	/**
-	 *   	Show header of page. Need this->emetteur object
-	 *
 	 *   	@param	TCPDF		$pdf     			PDF
 	 * 		@param	Object		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
@@ -1914,11 +1683,11 @@ class pdf_standard_ot extends ModelePDFOt
 	{
 		global $conf, $langs, $db;
 
-		// Position initiale pour l'en-tête
-		$header_y = 10;
-		$header_height = 30;
+		// Position initiale pour l'en-tête RÉDUITE
+		$header_y = 8; // Réduit de 10 à 8
+		$header_height = 25; // Réduit de 30 à 25
 
-		// Logo à gauche
+		// Logo à gauche (plus compact)
 		if (!getDolGlobalInt('PDF_DISABLE_MYCOMPANY_LOGO')) {
 			if ($this->emetteur->logo) {
 				$logodir = $conf->mycompany->dir_output;
@@ -1932,10 +1701,9 @@ class pdf_standard_ot extends ModelePDFOt
 				}
 				if (is_readable($logo)) {
 					$height = pdf_getHeightForLogo($logo);
-					$height = $height * 0.7; // 70% de la taille originale
-					// Positionner le logo à gauche avec un léger décalage
-					$logo_x = $this->marge_gauche + 10; // Réduit de 15 à 10 pour décaler vers la gauche
-					$pdf->Image($logo, $logo_x, $header_y + 8, 0, $height); // Réduit de 12 à 8 pour remonter le logo
+					$height = $height * 0.6; // Réduit de 0.7 à 0.6
+					$logo_x = $this->marge_gauche + 8; // Réduit de 10 à 8
+					$pdf->Image($logo, $logo_x, $header_y + 6, 0, $height); // Réduit de 8 à 6
 				} else {
 					$pdf->SetTextColor(200, 0, 0);
 					$pdf->SetFont('', 'B', $default_font_size - 2);
@@ -1948,8 +1716,8 @@ class pdf_standard_ot extends ModelePDFOt
 			}
 		}
 
-		// Informations centrales
-		$pdf->SetFont('helvetica', '', 8); // Réduit de 10 à 8
+		// Informations centrales (plus compactes)
+		$pdf->SetFont('helvetica', '', 7); // Réduit de 8 à 7
 		$center_x = $this->page_largeur / 2;
 
 		// Récupérer les informations du projet et de la société
@@ -1979,53 +1747,53 @@ class pdf_standard_ot extends ModelePDFOt
 		}
 		
 		// Site d'intervention
-		$pdf->SetFont('helvetica', 'B', 8); // Réduit de 10 à 8
+		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 8 à 7
 		$site_width = $pdf->GetStringWidth($site);
-		$pdf->Text($center_x - ($site_width / 2), $header_y + 5, $site);
+		$pdf->Text($center_x - ($site_width / 2), $header_y + 4, $site); // Réduit de 5 à 4
 
 		// Libellé du projet
-		$pdf->SetFont('helvetica', '', 8); // Réduit de 10 à 8
+		$pdf->SetFont('helvetica', '', 7); // Réduit de 8 à 7
 		$project_width = $pdf->GetStringWidth($project_label);
-		$pdf->Text($center_x - ($project_width / 2), $header_y + 12, $project_label);
+		$pdf->Text($center_x - ($project_width / 2), $header_y + 9, $project_label); // Réduit de 12 à 9
 
 		// "Organigramme d'affaire"
-		$pdf->SetFont('helvetica', 'B', 8); // Réduit de 10 à 8
+		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 8 à 7
 		$title = "Organigramme d'affaire";
 		$title_width = $pdf->GetStringWidth($title);
-		$pdf->Text($center_x - ($title_width / 2), $header_y + 19, $title);
+		$pdf->Text($center_x - ($title_width / 2), $header_y + 14, $title); // Réduit de 19 à 14
 
-		// Informations à droite
-		$pdf->SetFont('helvetica', '', 7); // Réduit de 10 à 7
-		$right_x = $this->page_largeur - $this->marge_droite - 40;
+		// Informations à droite (plus compactes)
+		$pdf->SetFont('helvetica', '', 6); // Réduit de 7 à 6
+		$right_x = $this->page_largeur - $this->marge_droite - 35; // Réduit de 40 à 35
 		
 		// Référence OT
-		$pdf->Text($right_x, $header_y + 5, "Réf. OT : ");
-		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 10 à 7
-		$pdf->Text($right_x + 20, $header_y + 5, $object->ref);
+		$pdf->Text($right_x, $header_y + 4, "Réf. OT : "); // Réduit de 5 à 4
+		$pdf->SetFont('helvetica', 'B', 6); // Réduit de 7 à 6
+		$pdf->Text($right_x + 18, $header_y + 4, $object->ref); // Réduit de 20 à 18
 		
 		// Indice
-		$pdf->SetFont('helvetica', '', 7); // Réduit de 10 à 7
-		$pdf->Text($right_x, $header_y + 10, "Indice : "); // Réduit de 12 à 10
-		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 10 à 7
-		$pdf->Text($right_x + 20, $header_y + 10, $object->indice); // Réduit de 12 à 10
+		$pdf->SetFont('helvetica', '', 6); // Réduit de 7 à 6
+		$pdf->Text($right_x, $header_y + 8, "Indice : "); // Réduit de 10 à 8
+		$pdf->SetFont('helvetica', 'B', 6); // Réduit de 7 à 6
+		$pdf->Text($right_x + 18, $header_y + 8, $object->indice); // Réduit de 20 à 18
 		
 		// Numéro d'affaire
-		$pdf->SetFont('helvetica', '', 7); // Réduit de 10 à 7
-		$pdf->Text($right_x, $header_y + 15, "Affaire : "); // Réduit de 19 à 15
-		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 10 à 7
-		$pdf->Text($right_x + 20, $header_y + 15, $project_ref); // Réduit de 19 à 15
+		$pdf->SetFont('helvetica', '', 6); // Réduit de 7 à 6
+		$pdf->Text($right_x, $header_y + 12, "Affaire : "); // Réduit de 15 à 12
+		$pdf->SetFont('helvetica', 'B', 6); // Réduit de 7 à 6
+		$pdf->Text($right_x + 18, $header_y + 12, $project_ref); // Réduit de 20 à 18
 
 		// Numéro de page
-		$pdf->SetFont('helvetica', '', 7); // Réduit de 10 à 7
-		$pdf->Text($right_x, $header_y + 20, "Page : "); // Réduit de 26 à 20
-		$pdf->SetFont('helvetica', 'B', 7); // Réduit de 10 à 7
-		$pdf->Text($right_x + 20, $header_y + 20, $pdf->getPage() . " / " . $pdf->getAliasNbPages()); // Réduit de 26 à 20
+		$pdf->SetFont('helvetica', '', 6); // Réduit de 7 à 6
+		$pdf->Text($right_x, $header_y + 16, "Page : "); // Réduit de 20 à 16
+		$pdf->SetFont('helvetica', 'B', 6); // Réduit de 7 à 6
+		$pdf->Text($right_x + 18, $header_y + 16, $pdf->getPage() . " / " . $pdf->getAliasNbPages()); // Réduit de 20 à 18
 
 		// Ligne noire horizontale
 		$pdf->SetDrawColor(0, 0, 0);
-		$pdf->Line($this->marge_gauche, $header_y + 30, $this->page_largeur - $this->marge_droite, $header_y + 30); // Réduit de 35 à 30
+		$pdf->Line($this->marge_gauche, $header_y + 22, $this->page_largeur - $this->marge_droite, $header_y + 22); // Réduit de 30 à 22
 
-		return $header_y + 35; // Retourne la position Y après l'en-tête
+		return $header_y + 25; // Réduit de 35 à 25
 	}
 
 	/**
@@ -2105,24 +1873,6 @@ class pdf_standard_ot extends ModelePDFOt
 			'padding' => array(0.5, 0, 0.5, 0), // Like css 0 => top , 1 => right, 2 => bottom, 3 => left
 		);
 
-		/*
-		 * For exemple
-		$this->cols['theColKey'] = array(
-			'rank' => $rank, // int : use for ordering columns
-			'width' => 20, // the column width in mm
-			'title' => array(
-				'textkey' => 'yourLangKey', // if there is no label, yourLangKey will be translated to replace label
-				'label' => ' ', // the final label : used fore final generated text
-				'align' => 'L', // text alignement :  R,C,L
-				'padding' => array(0.5,0.5,0.5,0.5), // Like css 0 => top , 1 => right, 2 => bottom, 3 => left
-			),
-			'content' => array(
-				'align' => 'L', // text alignement :  R,C,L
-				'padding' => array(0.5,0.5,0.5,0.5), // Like css 0 => top , 1 => right, 2 => bottom, 3 => left
-			),
-		);
-		*/
-
 		$rank = 0; // do not use negative rank
 		$this->cols['desc'] = array(
 			'rank' => $rank,
@@ -2131,8 +1881,6 @@ class pdf_standard_ot extends ModelePDFOt
 			'title' => array(
 				'textkey' => 'Designation', // use lang key is usefull in somme case with module
 				'align' => 'L',
-				// 'textkey' => 'yourLangKey', // if there is no label, yourLangKey will be translated to replace label
-				// 'label' => ' ', // the final label
 				'padding' => array(0.5, 0.5, 0.5, 0.5), // Like css 0 => top , 1 => right, 2 => bottom, 3 => left
 			),
 			'content' => array(
@@ -2154,23 +1902,6 @@ class pdf_standard_ot extends ModelePDFOt
 			'content' => array(
 				'padding' => array(0, 0, 0, 0), // Like css 0 => top , 1 => right, 2 => bottom, 3 => left
 			),
-			'border-left' => false, // remove left line separator
-		);
-
-		if (getDolGlobalInt('MAIN_GENERATE_INVOICES_WITH_PICTURE') && !empty($this->atleastonephoto)) {
-			$this->cols['photo']['status'] = true;
-		}
-
-
-		$rank = $rank + 10;
-		$this->cols['vat'] = array(
-			'rank' => $rank,
-			'status' => false,
-			'width' => 16, // in mm
-			'title' => array(
-				'textkey' => 'VAT'
-			),
-			'border-left' => true, // add left line separator
 		);
 
 		if (!getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT') && !getDolGlobalInt('MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT_COLUMN')) {
@@ -2281,35 +2012,89 @@ class pdf_standard_ot extends ModelePDFOt
      * Récupère les fonctions d'un utilisateur pour un projet
      */
     private function getFonctions($userId, $projectId, $db) {
-        $fonction_map = [
-            160 => "RA",
-            1031113 => "RI",
-            161 => "INT",
-            1031119 => "CT",
-            1032001 => "PCRREF",
-            1031139 => "CONS"
-        ];
+        // Mapping des labels complets vers les raccourcis
+        $fonction_mapping = array(
+            "Responsable d'Affaire" => "RA",
+            "Responsable de Site" => "RS", 
+            "Responsable de Suivi d'Intervention" => "RSI",
+            "Responsable d'Équipes" => "RE",
+            "Responsable d'Intervention" => "RI",
+            "Chargé de Travaux" => "CdT",
+            "Contrôleur Technique" => "CT",
+            "Vérificateur" => "V",
+            "Intervenant" => "INT",
+            "Responsable du Suivi Radiologique" => "RSR",
+            "Personne Techniquement Compétente" => "PTC",
+            "Primo-Intervenant" => "PI",
+            "Tuteur Primo-Intervenant" => "TPI",
+            "Personnel en Compagnonnage" => "CO",
+            "Sauveteur Secouriste du Travail" => "SST",
+            // Ajoutez d'autres mappings selon vos besoins
+        );
 
         $fonctions = [];
 
-        $sql = "SELECT sp.fk_c_type_contact 
-                FROM ".MAIN_DB_PREFIX."element_contact as sp
-                JOIN ".MAIN_DB_PREFIX."c_type_contact as ctc ON sp.fk_c_type_contact = ctc.rowid
-                WHERE sp.fk_socpeople = ".intval($userId)."
-                AND sp.element_id = ".intval($projectId)."
-                AND ctc.element = 'project'
-                AND sp.statut = 4";
+        $sql = "SELECT cf.label 
+                FROM " . MAIN_DB_PREFIX . "element_contact_fonction ecf
+                JOIN " . MAIN_DB_PREFIX . "contact_fonction cf ON ecf.function_id = cf.rowid
+                WHERE ecf.contact_id = " . intval($userId) . "
+                AND ecf.element_id = " . intval($projectId);
 
         $resql = $db->query($sql);
         if ($resql) {
             while ($obj = $db->fetch_object($resql)) {
-                if (isset($fonction_map[$obj->fk_c_type_contact])) {
-                    $fonctions[] = $fonction_map[$obj->fk_c_type_contact];
+                $label = $obj->label;
+                
+                // Vérifier si on a un mapping défini pour ce label
+                if (isset($fonction_mapping[$label])) {
+                    $fonctions[] = $fonction_mapping[$label];
+                } else {
+                    // Créer un raccourci automatique pour les nouvelles fonctions
+                    $raccourci = $this->createFunctionShortcut($label);
+                    $fonctions[] = $raccourci;
                 }
             }
         }
 
         return !empty($fonctions) ? implode("-", $fonctions) : null;
+    }
+
+    /**
+     * Crée un raccourci automatique pour une fonction non mappée
+     */
+    private function createFunctionShortcut($label) {
+        // Supprimer les mots courants et créer un raccourci
+        $mots_a_ignorer = array('de', 'du', 'des', 'le', 'la', 'les', 'et', 'en', 'pour', 'sur', 'avec', 'dans', 'par');
+        
+        // Diviser le label en mots
+        $mots = explode(' ', $label);
+        $raccourci = '';
+        
+        foreach ($mots as $mot) {
+            $mot = trim($mot);
+            // Ignorer les mots courants et les mots de moins de 3 caractères (sauf s'ils sont importants)
+            if (!in_array(strtolower($mot), $mots_a_ignorer) && strlen($mot) > 0) {
+                if (strlen($mot) <= 3) {
+                    // Garder les mots courts tels quels
+                    $raccourci .= strtoupper($mot);
+                } else {
+                    // Prendre les premières lettres des mots longs
+                    $raccourci .= strtoupper(substr($mot, 0, 2));
+                }
+            }
+        }
+        
+        // Si le raccourci est trop long, le limiter à 6 caractères maximum
+        if (strlen($raccourci) > 6) {
+            $raccourci = substr($raccourci, 0, 6);
+        }
+        
+        // Si le raccourci est vide ou trop court, utiliser les premières lettres du label original
+        if (strlen($raccourci) < 2) {
+            $raccourci = strtoupper(substr(str_replace(' ', '', $label), 0, 4));
+        }
+        
+        return $raccourci;
     }
 
     /**
