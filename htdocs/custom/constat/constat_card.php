@@ -149,13 +149,13 @@ if($object->id) {
 
 // Est-ce que des champs obligatoire sont non renseignés ? 
 $fields_null = '';
-// foreach($object->fields as $key => $val) {
-// 	if(!$object->$key && $val['notnull_validate']) {
-// 		if($key == 'cout_total' && $object->$key === 0) continue;
-// 		$fields_null .= $langs->trans($val['label']).", ";
-// 	}
-// }
-// $fields_null = rtrim($fields_null, ', ');
+foreach($object->fields as $key => $val) {
+	if(!$object->$key && $val['notnull_validate']) {
+		if($key == 'cout_total' && $object->$key === 0) continue;
+		$fields_null .= $langs->trans($val['label']).", ";
+	}
+}
+$fields_null = rtrim($fields_null, ', ');
 
 $label_button_action_validate = ($fields_null ? $langs->trans('ConstatFieldsNullMendatory', $fields_null) : '');
 if ($object->status == $object::STATUS_EN_COURS) {

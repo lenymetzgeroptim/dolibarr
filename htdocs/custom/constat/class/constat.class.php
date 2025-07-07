@@ -139,11 +139,11 @@ class Constat extends CommonObject
 		"type_constat" => array("type"=>"sellist:c_constat_type:label:rowid::(active:=:1)", "label"=>"TypeConstat", "enabled"=>"1", 'position'=>201, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"rubrique" => array("type"=>"chkbxlst:c_constat_rubrique:label:rowid::(active=1)", "label"=>"Rubrique", "enabled"=>"1", 'position'=>202, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"processus" => array("type"=>"chkbxlst:c_constat_processus:label:rowid::(active=1)", "label"=>"Processus", "enabled"=>"1", 'position'=>203, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
-		"actionsimmediates" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"ActionsImmediates", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Cocher si le constat est une action immédiate", "css"=>"linebreak"),
+		"actionsimmediates" => array("type"=>"integer", "label"=>"ActionsImmediates", "enabled"=>"1", 'position'=>210, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "css"=>"linebreak", "help"=>"Cocher si le constat est une action immédiate", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"),),
 		"actionsimmediates_date" => array("type"=>"date", "label"=>"ActionsImmediatesDate", "enabled"=>"1", 'position'=>211, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"actionsimmediates_par" => array("type"=>"varchar(64)", "label"=>"ActionsImmediatesPar", "enabled"=>"1", 'position'=>212, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"actionsimmediates_commentaire" => array("type"=>"html", "label"=>"ActionsImmediatesComm", "enabled"=>"1", 'position'=>213, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "cssview"=>"wordbreak", "help"=>"Détail action immédiate (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi)",),
-		"infoclient" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"InfoClient", "enabled"=>"1", 'position'=>220, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Client informé requis ou non",),
+		"infoclient" => array("type"=>"integer", "label"=>"InfoClient", "enabled"=>"1", 'position'=>220, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Client informé requis ou non", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"),),
 		"infoclient_date" => array("type"=>"date", "label"=>"InfoClientDate", "enabled"=>"1", 'position'=>221, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"infoclient_par" => array("type"=>"varchar(64)", "label"=>"InfoClientPar", "enabled"=>"1", 'position'=>222, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"infoclient_commentaire" => array("type"=>"html", "label"=>"InfoClientComm", "enabled"=>"1", 'position'=>223, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Préciser la méthode d'information client",),
@@ -151,12 +151,12 @@ class Constat extends CommonObject
 		"cout_total" => array("type"=>"int", "label"=>"CoutTotal", "enabled"=>"1", 'position'=>240, 'notnull'=>0, "visible"=>"\$object->status>0?1:0", "help"=>"Coût total regroupant : le coût de traitement horraire, le coût de traitement financier et le coût de pénalité</br>0 possible",),
 		"commentaire_resp_aff" => array("type"=>"html", "label"=>"CommRespAff", "enabled"=>"1", 'position'=>250, 'notnull'=>0, "visible"=>"\$object->status>0?1:0",),
 		"analyse_cause_racine" => array("type"=>"html", "label"=>"AnalyseCausesRacines", "enabled"=>"1", 'position'=>300, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "cssview"=>"wordbreak", "help"=>"5M, Arbre des causes, description détaillée, etc.",),
-		"recurent" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"Recurent", "enabled"=>"1", 'position'=>310, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Cocher si le constat est récurent",),
-		"accordclient" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"AccordClient", "enabled"=>"1", 'position'=>320, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Accord client requis ou non",),
+		"recurent" => array("type"=>"integer", "label"=>"Recurent", "enabled"=>"1", 'position'=>310, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Cocher si le constat est récurent", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"),),
+		"accordclient" => array("type"=>"integer", "label"=>"AccordClient", "enabled"=>"1", 'position'=>320, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Accord client requis ou non", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"),),
 		"accordclient_date" => array("type"=>"date", "label"=>"AccordClientDate", "enabled"=>"1", 'position'=>321, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"accordclient_par" => array("type"=>"varchar(64)", "label"=>"AccordClientPar", "enabled"=>"1", 'position'=>322, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"accordclient_commentaire" => array("type"=>"html", "label"=>"AccordClientComm", "enabled"=>"1", 'position'=>323, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Préciser la méthode d'information client",),
-		"controleclient" => array("type"=>"integer", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"), "label"=>"ControleClient", "enabled"=>"1", 'position'=>330, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Contrôle du client requis ou non",),
+		"controleclient" => array("type"=>"integer", "label"=>"ControleClient", "enabled"=>"1", 'position'=>330, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Contrôle du client requis ou non", "arrayofkeyval"=>array("1" => "Oui", "2" => "Non"),),
 		"controleclient_date" => array("type"=>"date", "label"=>"ControleClientDate", "enabled"=>"1", 'position'=>331, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"controleclient_par" => array("type"=>"varchar(64)", "label"=>"ControleClientPar", "enabled"=>"1", 'position'=>332, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"controleclient_commentaire" => array("type"=>"html", "label"=>"ControleClientComm", "enabled"=>"1", 'position'=>333, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Préciser la méthode d'information client",),
@@ -164,7 +164,10 @@ class Constat extends CommonObject
 		"commentaire_serv_q3se" => array("type"=>"html", "label"=>"CommentaireServQ3SE", "enabled"=>"1", 'position'=>351, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>650, 'notnull'=>0, "visible"=>"0",),
 		"cloture_date" => array("type"=>"date", "label"=>"ClotureDate", "enabled"=>"1", 'position'=>400, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Date à remplir lorsque le constat est soldé",),
-		"cloture_par" => array("type"=>"date", "label"=>"CloturePar", "enabled"=>"1", 'position'=>401, 'notnull'=>0, "visible"=>"\$object->status>1?1:0"),
+		"cloture_par" => array("type"=>"date", "label"=>"CloturePar", "enabled"=>"1", 'position'=>401, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
+		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
+		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
+		"fk_user_modif" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
 	);
 	public $rowid;
 	public $ref;
@@ -192,6 +195,7 @@ class Constat extends CommonObject
 	public $infoclient_par;
 	public $infoclient_commentaire;
 	public $impact;
+	public $cout_total;
 	public $commentaire_resp_aff;
 	public $analyse_cause_racine;
 	public $recurent;
@@ -205,10 +209,12 @@ class Constat extends CommonObject
 	public $controleclient_commentaire;
 	public $commentaire_resp_q3se;
 	public $commentaire_serv_q3se;
-	public $cout_total;
 	public $last_main_doc;
 	public $cloture_date;
 	public $cloture_par;
+	public $date_creation;
+	public $tms;
+	public $fk_user_modif;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1503,218 +1509,212 @@ class Constat extends CommonObject
 	// 	return $out;
 	// }
 
-	public function drafttolong(){
+	public function draftToLong($jour){
+		global $langs;
 
-		$sql = "SELECT c.rowid, c.fk_user";
+		$error = 0; 
+		$res = 1;
+
+		$sql = "SELECT c.rowid, c.fk_user, c.fk_user_creat";
 		$sql .= " FROM ".MAIN_DB_PREFIX."constat_constat as c";
-		$sql .= " WHERE c.statut = 0 AND c.date_cration dddd";
+		$sql .= " WHERE c.statut = 0";
+		$sql .= " AND c.date_creation < NOW() - INTERVAL $jour DAY";
 
-		$result = $db->query($sql);
+		$result = $this->db->query($sql);
 		
 		if ($result) {
-			$nume = $db->num_rows($result);
+			$num = $this->db->num_rows($result);
 			$i = 0;
-			while ($i < $nume) {
-				$now = new DateTime(); 
-				$date_creation = new DateTime($this->date_creation); 
-				$interval = $date_creation->diff($now); 
-				if ($interval->days > 3) {
+			while ($i < $num) {
+				$obj = $this->db->fetch_object($result);
 
-					$subject = '[OPTIM Industries] Notification automatique alerte constat en brouillon ';
-
-					$from = 'erp@optim-industries.fr';
-					
-
-						$user_group = New UserGroup($db);
-					$user_group->fetch('', 'Q3SE');
-					$liste_utilisateur = $user_group->listUsersForGroup();
-					foreach($liste_utilisateur as $qualite){
-						if(!empty($qualite->email)){
-							$to .= $qualite->email;
-							$to .= ", ";
-								
-						}
-					}
-					$user_group = New UserGroup($db);
-					$user_group->fetch('', 'Resp. Q3SE');
-					$liste_utilisateur = $user_group->listUsersForGroup();
-					foreach($liste_utilisateur as $qualite){
-						if(!empty($qualite->email)){
-							$to .= $qualite->email;
-							$torespQ3 .= ", ";
-						
-						}
-					}
-					$emeteur = New User($db);
-					$emeteur->fetch($this->object->fk_user_creat);
-					
-					if(!empty($emeteur->email)){
-					$toemeteur = $emeteur->email;
-						}
-						
-						
-					// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-					$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-					$resql_creator = $db->query($sql_creator);
-					$creator_name = "";
-					if ($resql_creator) {
-						if ($db->num_rows($resql_creator) > 0) {
-							$creator = $db->fetch_object($resql_creator);
-							$creator_name = $creator->firstname . ' ' . $creator->lastname;
-						}
-					}	
-
-					global $dolibarr_main_url_root;
-					$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-					$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-					$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$this->id.'">'.$this->ref.'</a>';
-
-					
-					$to .= $toemeteur;
-					$to .= $torespQ3;
-					$to = rtrim($to, ", ");
-					$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name. " est toujours à l'état de brouillon. Veuillez le passer à l'état validé. Cordialement, votre système de notification.");
-					$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$this->object->id);
-					
-					// Send mail
-					$res = $cmail->sendfile();
-					if($res) {
-						setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
-					} else {
-						setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-						print '<script>
-						window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$this->object->id.'");
-						</script>';
+				$subject = '[OPTIM Industries] Notification automatique constat';
+				$from = 'erp@optim-industries.fr';
+				
+				$to = '';
+				$user_group = New UserGroup($this->db);
+				$user_group->fetch('', 'Q3SE');
+				$liste_utilisateur = $user_group->listUsersForGroup();
+				foreach($liste_utilisateur as $qualite){
+					if(!empty($qualite->email)){
+						$to .= $qualite->email;
+						$to .= ", ";
 					}
 				}
-			}
-    	}
-	}
 
-	public function getActionsByConstat()
-	{
-		global $db;
+				$user_group->fetch('', 'Resp. Q3SE');
+				$liste_utilisateur = $user_group->listUsersForGroup();
+				foreach($liste_utilisateur as $qualite){
+					if(!empty($qualite->email)){
+						$to .= $qualite->email;
+						$to .= ", ";
+					
+					}
+				}
 
-		$sql = "SELECT e.fk_target, e.fk_source, a.status";
-		$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_action as a ON e.fk_target = a.rowid";
-		$sql .= " WHERE e.fk_source = $this->id AND e.sourcetype = 'constat' ";
+				$user_static = New User($this->db);
+				$user_static->fetch($obj->fk_user_creat);
+				if(!empty($user_static->email)){
+					$to .= $user_static->email;
+				}
+				$to = rtrim($to, ", ");
 
-		$result = $db->query($sql);
-		
-		if ($result) {
-			$nume = $db->num_rows($result);
-			$i = 0;
-			while ($i < $nume) {
-				$obj = $db->fetch_object($result);
-				$selectedelement[$obj->fk_source][$obj->fk_target] = $obj; 
-				$status[] = $obj->status; 
+				global $dolibarr_main_url_root;
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$obj->id.'">'.$obj->ref.'</a>';
 				
+				$message = $langs->transnoentitiesnoconv("EMailTextConstatDraftToLong", $link, $user_static->lastname." ".$user_static->firstname, $jour);
+				$mail = new CMailFile($subject, $to, $from, $message, array(), array(), array(), '', '', 0, 1, '', '', 'constat'.'_'.$obj->id);
+				
+				if(!empty($to)) {
+					$this->output .= "Envoi d'un mail pour le constat $obj->ref<br>";
+					$res = $mail->sendfile();
+				}
+
+				if($res){
+					return 1;
+				}
+				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+					$error++;
+				}
+
 				$i++;
 			}
-		} else {
-			dol_print_error($db);
+    	}
+
+		if($error == 0) {
+			return 0;
 		}
-		foreach($selectedelement as $elements) {
-			foreach($elements as $val) {
-				$is_exist = true;
-				if($val->status !== '3'){
-					$is_exist = false;
-				}
-			}
+		else {
+			return 1;
 		}
-		if($is_exist === true) {
-
-			$subject = '[OPTIM Industries] Notification automatique toute les actions sont soldés ';
-
-		$from = 'erp@optim-industries.fr';
-		
-		$projet = new Project($db);
-		$projet->fetch($this->object->fk_project);
-		$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
-
-		// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
-		$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
-		$result = $db->query($sql);
-
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$tochef .= $email . ", ";
-				}
-			}
-		}
-
-			$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				$to .= ", ";
-					
-			}
-		}
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Resp. Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				$torespQ3 .= ", ";
-				
-			}
-		}
-		$emeteur = New User($db);
-		$emeteur->fetch($this->object->fk_user_creat);
-		
-		if(!empty($emeteur->email)){
-		$toemeteur = $emeteur->email;
-			}	
-
-
-			// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-			$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-			$resql_creator = $db->query($sql_creator);
-			$creator_name = "";
-			if ($resql_creator) {
-				if ($db->num_rows($resql_creator) > 0) {
-					$creator = $db->fetch_object($resql_creator);
-					$creator_name = $creator->firstname . ' ' . $creator->lastname;
-				}
-			}
-			
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-        $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-        $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$this->id.'">'.$this->ref.'</a>';
-
-		$to .= $tochef;
-		$to .= $toemeteur;
-		$to .= $torespQ3;
-		$to = rtrim($to, ", ");
-		$msg = $langs->transnoentitiesnoconv(" Bonjour, toutes les actions du constat " .$link." créé par ".$creator_name. " sont soldées. Cordialement, votre système de notification.");
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$this->object->id);
-		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$this->object->id.'");
-			</script>';
-		}	
-
-		}
-		
-		return $is_exist;
 	}
+
+	// public function getActionsByConstat()
+	// {
+	// 	global $db;
+
+	// 	$sql = "SELECT e.fk_target, e.fk_source, a.status";
+	// 	$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
+	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_action as a ON e.fk_target = a.rowid";
+	// 	$sql .= " WHERE e.fk_source = $this->id AND e.sourcetype = 'constat' ";
+
+	// 	$result = $db->query($sql);
+		
+	// 	if ($result) {
+	// 		$nume = $db->num_rows($result);
+	// 		$i = 0;
+	// 		while ($i < $nume) {
+	// 			$obj = $db->fetch_object($result);
+	// 			$selectedelement[$obj->fk_source][$obj->fk_target] = $obj; 
+	// 			$status[] = $obj->status; 
+				
+	// 			$i++;
+	// 		}
+	// 	} else {
+	// 		dol_print_error($db);
+	// 	}
+	// 	foreach($selectedelement as $elements) {
+	// 		foreach($elements as $val) {
+	// 			$is_exist = true;
+	// 			if($val->status !== '3'){
+	// 				$is_exist = false;
+	// 			}
+	// 		}
+	// 	}
+	// 	if($is_exist === true) {
+
+	// 		$subject = '[OPTIM Industries] Notification automatique toute les actions sont soldés ';
+
+	// 	$from = 'erp@optim-industries.fr';
+		
+	// 	$projet = new Project($db);
+	// 	$projet->fetch($this->object->fk_project);
+	// 	$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
+
+	// 	// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
+	// 	$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
+	// 	$result = $db->query($sql);
+
+	// 	// Si la requête a réussi
+	// 	if ($result) {
+	// 		$to = ''; // Initialisation de la chaîne d'emails
+	// 		while ($obj = $db->fetch_object($result)) {
+	// 			$email = $obj->email;
+	// 			// Ajoute l'email à la liste
+	// 			if (!empty($email)) {
+	// 				$tochef .= $email . ", ";
+	// 			}
+	// 		}
+	// 	}
+
+	// 		$user_group = New UserGroup($db);
+	// 	$user_group->fetch('', 'Q3SE');
+	// 	$liste_utilisateur = $user_group->listUsersForGroup();
+	// 	foreach($liste_utilisateur as $qualite){
+	// 		if(!empty($qualite->email)){
+	// 			$to .= $qualite->email;
+	// 			$to .= ", ";
+					
+	// 		}
+	// 	}
+	// 	$user_group = New UserGroup($db);
+	// 	$user_group->fetch('', 'Resp. Q3SE');
+	// 	$liste_utilisateur = $user_group->listUsersForGroup();
+	// 	foreach($liste_utilisateur as $qualite){
+	// 		if(!empty($qualite->email)){
+	// 			$to .= $qualite->email;
+	// 			$torespQ3 .= ", ";
+				
+	// 		}
+	// 	}
+	// 	$emeteur = New User($db);
+	// 	$emeteur->fetch($this->object->fk_user_creat);
+		
+	// 	if(!empty($emeteur->email)){
+	// 	$toemeteur = $emeteur->email;
+	// 		}	
+
+
+	// 		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+	// 		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+	// 		$resql_creator = $db->query($sql_creator);
+	// 		$creator_name = "";
+	// 		if ($resql_creator) {
+	// 			if ($db->num_rows($resql_creator) > 0) {
+	// 				$creator = $db->fetch_object($resql_creator);
+	// 				$creator_name = $creator->firstname . ' ' . $creator->lastname;
+	// 			}
+	// 		}
+			
+	// 	global $dolibarr_main_url_root;
+	// 	$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+    //     $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+    //     $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$this->id.'">'.$this->ref.'</a>';
+
+	// 	$to .= $tochef;
+	// 	$to .= $toemeteur;
+	// 	$to .= $torespQ3;
+	// 	$to = rtrim($to, ", ");
+	// 	$msg = $langs->transnoentitiesnoconv(" Bonjour, toutes les actions du constat " .$link." créé par ".$creator_name. " sont soldées. Cordialement, votre système de notification.");
+	// 	$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$this->object->id);
+		
+	// 	// Send mail
+	// 	$res = $cmail->sendfile();
+	// 	if($res) {
+	// 		setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
+	// 	} else {
+	// 		setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+	// 		print '<script>
+	// 		window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$this->object->id.'");
+	// 		</script>';
+	// 	}	
+
+	// 	}
+		
+	// 	return $is_exist;
+	// }
 
 	public function generateConstatReference($fk_project){
 		global $db;
