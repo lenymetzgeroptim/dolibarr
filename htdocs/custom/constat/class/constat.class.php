@@ -336,6 +336,8 @@ class Constat extends CommonObject
 	 */
 	public function create(User $user, $notrigger = false)
 	{		 
+		$this->ref = $this->generateConstatReference();
+
 		$resultcreate = $this->createCommon($user, $notrigger);
 		
 		//$resultvalidate = $this->validate($user, $notrigger);
@@ -714,7 +716,7 @@ class Constat extends CommonObject
 
 		$this->db->begin();
 
-		$this->ref = $this->generateConstatReference($this->fk_project);
+		$this->ref = $this->generateConstatReference();
 
 		// Define new ref
 		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
@@ -1716,11 +1718,11 @@ class Constat extends CommonObject
 	// 	return $is_exist;
 	// }
 
-	public function generateConstatReference($fk_project){
+	public function generateConstatReference(){
 		global $db;
 
 		// 1. Rechercher la référence du projet via le fk_project
-		$sqlProjectRef = "SELECT ref FROM ".MAIN_DB_PREFIX."projet WHERE rowid = ".intval($fk_project);	
+		$sqlProjectRef = "SELECT ref FROM ".MAIN_DB_PREFIX."projet WHERE rowid = ".intval(explode(',', $this->fk_project)[0]);	
 
 		$resqlProjectRef = $db->query($sqlProjectRef);
 		$projectRef = null; // Initialiser la variable
@@ -1735,24 +1737,24 @@ class Constat extends CommonObject
 		}
 
 		// 2. Récupérer le dernier rowid
-		$sqlRowid = "SELECT MAX(rowid) as max_rowid FROM ".MAIN_DB_PREFIX."constat_constat";
-		$resqlRowid = $db->query($sqlRowid);
-		$newIndice = 138;
+		$sqlIndice = "SELECT MAX(CAST(SUBSTRING_INDEX(ref, '_', -1) AS UNSIGNED)) AS max_indice FROM ".MAIN_DB_PREFIX."constat_constat";
+		$resqlIndice = $db->query($sqlIndice);
+		$newIndice = explode('_', $this->ref)[2];
 
-		if ($resqlRowid) {
-			$objRowid = $db->fetch_object($resqlRowid);
-			if ($objRowid && $objRowid->max_rowid !== null) {
-				$newIndice = $objRowid->max_rowid; // Pas de +1 ici
+		if(!$newIndice && $resqlIndice) {
+			$objIndice = $db->fetch_object($resqlIndice);
+			if ($objIndice && $objIndice->max_indice !== null) {
+				$newIndice = $objIndice->max_indice + 1; // Pas de +1 ici
 			}
 		}
 
 		// 3. Construire la référence
-		if ($projectRef) {
+		//if ($projectRef) {
 			$reference = 'FC_'.str_replace(' ', '', $projectRef).'_'.$newIndice;
-		} else {
+		//} else {
 			// Si pas de projet, créer la référence avec "FC" et le rowid
-			$reference = 'FC_'.$newIndice;
-		}
+		//	$reference = 'FC_'.$newIndice;
+		//}
 
 		return $reference; // Retourne la référence construite
 	}
