@@ -2,4 +2,6 @@ ModuleName=OT
 ModuleDesc=Module OT
 OTProjectContactDescription=Gestion des fonctions de contact pour les projets
 Function=Fonction
-SelectAFunction=Sélectionner une fonction 
+SelectAFunction=Sélectionner une fonction
+
+ErrorDateApplicationRequired=Veuillez renseigner la date d'application avant de valider l'OT

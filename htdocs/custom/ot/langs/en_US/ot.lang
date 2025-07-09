@@ -32,7 +32,7 @@ OT_MYPARAM1 = My param 1
 OT_MYPARAM1Tooltip = My param 1 tooltip
 OT_MYPARAM2=My param 2
 OT_MYPARAM2Tooltip=My param 2 tooltip
-
+ErrorDateApplicationRequired=Please fill in the application date before validating the OT
 
 #
 # About page
