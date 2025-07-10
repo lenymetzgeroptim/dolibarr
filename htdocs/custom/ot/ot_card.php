@@ -498,31 +498,8 @@ if (empty($reshook)) {
 
 	$triggermodname = 'OT_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
 
-	// Action spécifique pour la validation avec vérification de date
 	if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontoadd) {
-		// Vérifier si la date d'application est renseignée
-		if (empty($object->date_applica_ot)) {
-			// La date n'est pas renseignée, afficher une notification d'erreur
-			setEventMessages('Veuillez renseigner la date d\'application avant de valider l\'OT', null, 'errors');
-			// Ne pas rediriger, rester sur la même page pour afficher l'erreur
-		} else {
-			// La date est renseignée, procéder à la validation normale
-			// Changer le statut directement dans la base de données
-			$sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot SET status = 1 WHERE rowid = " . intval($object->id);
-			$result = $db->query($sql);
-			
-			if ($result) {
-				setEventMessages('OT validé avec succès', null, 'mesgs');
-				
-				// Recharger l'objet pour avoir le nouveau statut
-				$object->fetch($object->id);
-				
-				header('Location: '.$_SERVER['PHP_SELF'].'?id='.$object->id);
-				exit;
-			} else {
-				setEventMessages('Erreur lors de la validation de l\'OT', null, 'errors');
-			}
-		}
+		// ... existing code ...
 	}
 
 	// Actions cancel, add, update, update_extras, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
