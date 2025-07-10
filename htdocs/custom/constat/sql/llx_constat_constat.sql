@@ -58,7 +58,7 @@ CREATE TABLE llx_constat_constat(
 	commentaire_serv_q3se text, 
 	last_main_doc varchar(255), 
 	cloture_date date, 
-	cloture_par date, 
+	cloture_par varchar(64), 
 	date_creation datetime NOT NULL, 
 	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
 	fk_user_modif integer

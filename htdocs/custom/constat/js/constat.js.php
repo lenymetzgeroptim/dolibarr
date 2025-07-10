@@ -156,12 +156,14 @@ $(document).ready(function () {
     };
 
     // Initialisation + écoute des événements
-    $.each(mapping, function(checkboxId, targetClasses) {
-        toggleRows(checkboxId, targetClasses);
-        $('#' + checkboxId).on('change', function () {
+    if (!$('body').hasClass('view')) {
+        $.each(mapping, function(checkboxId, targetClasses) {
             toggleRows(checkboxId, targetClasses);
+            $('#' + checkboxId).on('change', function () {
+                toggleRows(checkboxId, targetClasses);
+            });
         });
-    });
+    }
 });
 
 function toggleRows(selectId, targetClasses) {

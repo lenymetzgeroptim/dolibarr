@@ -396,7 +396,9 @@ $formproject = new FormProjets($db);
 
 $title = $langs->trans("Constat");
 $help_url = '';
-llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'constat');
+$morecssonbody = 'constat';
+if($action != 'create' && $action != 'edit') $morecssonbody .= ' view';
+llxHeader('', $title, $help_url, '', 0, 0, '', '', '', $morecssonbody);
 
 // $resp = $object->getAgencesBySoc();
 

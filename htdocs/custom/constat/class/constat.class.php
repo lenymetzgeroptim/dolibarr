@@ -164,7 +164,7 @@ class Constat extends CommonObject
 		"commentaire_serv_q3se" => array("type"=>"html", "label"=>"CommentaireServQ3SE", "enabled"=>"1", 'position'=>351, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>650, 'notnull'=>0, "visible"=>"0",),
 		"cloture_date" => array("type"=>"date", "label"=>"ClotureDate", "enabled"=>"1", 'position'=>400, 'notnull'=>0, "visible"=>"\$object->status>1?1:0", "help"=>"Date à remplir lorsque le constat est soldé",),
-		"cloture_par" => array("type"=>"date", "label"=>"CloturePar", "enabled"=>"1", 'position'=>401, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
+		"cloture_par" => array("type"=>"varchar(64)", "label"=>"CloturePar", "enabled"=>"1", 'position'=>401, 'notnull'=>0, "visible"=>"\$object->status>1?1:0",),
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
 		"fk_user_modif" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
@@ -2293,6 +2293,151 @@ class Constat extends CommonObject
 		}
 
 		return $actions_unsold;
+	}
+
+	/**
+	 * 	Return tous les sujet à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllSujet()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT c.rowid, c.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_constat_sujet as c";
+		$sql .= " WHERE c.active = 1";
+
+		dol_syslog(get_class($this)."::getAllSujet", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return tous les types à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllType()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT c.rowid, c.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_constat_type as c";
+		$sql .= " WHERE c.active = 1";
+
+		dol_syslog(get_class($this)."::getAllType", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return tous les impacts à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllImpact()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT c.rowid, c.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_constat_impact as c";
+		$sql .= " WHERE c.active = 1";
+
+		dol_syslog(get_class($this)."::getAllImpact", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return tous les processus à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllProcessus()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT c.rowid, c.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_constat_processus as c";
+		$sql .= " WHERE c.active = 1";
+
+		dol_syslog(get_class($this)."::getAllProcessus", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return toutes les rubriques à partir du dictionnaire
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllRubrique()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT c.rowid, c.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_constat_rubrique as c";
+		$sql .= " WHERE c.active = 1";
+
+		dol_syslog(get_class($this)."::getAllRubrique", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
 	}
 }
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobjectline.class.php';

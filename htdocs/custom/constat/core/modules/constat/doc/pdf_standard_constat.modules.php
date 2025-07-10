@@ -745,200 +745,130 @@ class pdf_standard_constat extends ModelePDFConstat
 				// Connexion à la base de données
 				
 
-								// Récupération des données de l'objet
-				$fk_user_creat = intval($object->fk_user_creat);
-				$fk_project = intval($object->fk_project);
-				$site_id = intval($object->site);
+				// Récupération des données de l'objet
 				$actionsimmediates = intval($object->actionsimmediates);
 				$infoclient = intval($object->infoclient);
 				$recurent = intval($object->recurent);
-				$commande_id = intval($object->num_commande);
 				$recurent_display = $recurent == 1 ? "Oui" : "Non";
 
-				
-				// Déclaration des variables pour stocker les résultats
-				$nom_utilisateur = '';
-				$ref_projet = '';
-				$nom_site = '';
 
-				// // Requête pour récupérer le nom et prénom de l'utilisateur créateur
-				// $sql = "SELECT u.rowid AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname ";
-				// $sql .= "FROM " . MAIN_DB_PREFIX . "user AS u ";
-				// $sql .= "WHERE u.rowid = " . $fk_user_creat;
+				// Formater la date dans le format "Y-m-d"
+				$formattedDateEmetteur = dol_print_date($object->emetteur_date, '%Y-%m-%d');
+				$formattedDateActionImmediate = dol_print_date($object->actionsimmediates_date, '%Y-%m-%d');
+				$formattedDateInfoClient = dol_print_date($object->infoclient_date, '%Y-%m-%d');
+				$formattedDateAccordClient = dol_print_date($object->accordclient_date, '%Y-%m-%d');
+				$formattedDateControleClient = dol_print_date($object->controleclient_date, '%Y-%m-%d');
+				$formattedDateCloture = dol_print_date($object->cloture_date, '%Y-%m-%d');
 
-				// // Exécuter la requête utilisateur
-				// $resql = $db->query($sql);
-				// if ($resql && $db->num_rows($resql) > 0) {
-				// 	$user = $db->fetch_object($resql);
-				// 	$nom_utilisateur = $user->firstname . ' ' . $user->lastname;
-				// }
 
-			// Récupération des données de l'objet
-			$fk_user_creat = intval($object->fk_user_creat);
-			$fk_project = intval($object->fk_project);
-			$site_id = intval($object->site);
+				// Correspondances des valeurs
+				$sujetLabels = $object->getAllSujet();
+				$typeLabels = $object->getAllType();
+				$statusLabels = $object->field['status']['arrayofkeyval'];
+				$impact_map = $object->getAllImpact();
+				$processus_map = $object->getAllProcessus();
+				$rubrique_map = $object->getAllRubrique();
 
-			// Déclaration des variables pour stocker les résultats
-			$nom_utilisateur = '';
-			$ref_projet = '';
-			$intitule_projet = '';
-			$nom_site = '';
-			$ref_commande = '';
+				// Conversion des IDs en noms lisibles
+				$sujet_nom = isset($sujetLabels[$object->sujet]) ? $sujetLabels[$object->sujet] : 'Inconnu';
+				$type_constat_nom = isset($typeLabels[$object->type_constat]) ? $typeLabels[$object->type_constat] : 'Inconnu';
+				$status_nom = isset($statusLabels[$object->status]) ? $statusLabels[$object->status] : 'Inconnu';
 
-			// Correspondances des valeurs
-			$sujetLabels = [
-				1 => 'Produit/Service',
-				4 => 'Document',
-				3 => 'Situation'
-			];
+				$impact_ids = isset($object->impact) ? explode(',', $object->impact) : [];
+				$rubrique_ids = isset($object->rubrique) ? explode(',', $object->rubrique) : [];
+				$processus_ids = isset($object->processus) ? explode(',', $object->processus) : [];
+				$impacts = array_map(function($id) use ($impact_map) {
+					return isset($impact_map[$id]) ? $impact_map[$id] : $id;
+				}, $impact_ids);
 
-			$typeLabels = [
-				2 => 'Écart',
-				1 => 'Non-conformité',
-				3 => 'Réclamation client'
-			];
+				$rubriques = array_map(function($id) use ($rubrique_map) {
+					return isset($rubrique_map[$id]) ? $rubrique_map[$id] : $id;
+				}, $rubrique_ids);
 
-			$statusLabels = [
-				0 => 'Brouillon',
-				1 => 'Validé',
-				3 => 'Vérifié',
-				4 => 'En cours',
-				5 => 'Soldée',
-				7 => 'Clôturé',
-				9 => 'Annulé'
-			];
-
-			// Conversion des IDs en noms lisibles
-			$sujet_nom = isset($sujetLabels[$object->sujet]) ? $sujetLabels[$object->sujet] : 'Inconnu';
-			$type_constat_nom = isset($typeLabels[$object->type_constat]) ? $typeLabels[$object->type_constat] : 'Inconnu';
-			$status_nom = isset($statusLabels[$object->status]) ? $statusLabels[$object->status] : 'Inconnu';
-
-			// Requête pour récupérer la référence du projet
-			$sql = "SELECT p.rowid, p.ref, p.title";
-			$sql .= " FROM " . MAIN_DB_PREFIX . "projet AS p";
-			$sql .= " WHERE p.rowid = " . $fk_project;
-
-			// Exécuter la requête projet
-			$resql = $db->query($sql);
-
-			// Vérifiez si la requête a échoué
-			if ($resql === false) {
-				echo 'SQL Error: ' . $db->lasterror();
-				exit;
-			}
+				$processus = array_map(function($id) use ($processus_map) {
+					return isset($processus_map[$id]) ? $processus_map[$id] : $id;
+				}, $processus_ids);
+				// Générer la chaîne des noms en les séparant par une virgule
+				$impact_display = implode(', ', $impacts);
+				$rubrique_display = implode(', ', $rubriques);
+				$processus_display = implode(', ', $processus);
+				$impact_display_safe = htmlspecialchars($impact_display, ENT_QUOTES, 'UTF-8');
 
 
 
-			// Vérifiez si des lignes sont retournées
-			if ($resql->num_rows > 0) {
-				$projet = $resql->fetch_object();
-				if ($projet) {
+				// Requête pour récupérer la référence du projet
+				$sql = "SELECT p.rowid, p.ref, p.title";
+				$sql .= " FROM " . MAIN_DB_PREFIX . "projet AS p";
+				$sql .= " WHERE p.rowid IN (".$object->fk_project.")";
+
+				// Exécuter la requête projet
+				$resql = $db->query($sql);
+
+				// Vérifiez si la requête a échoué
+				if ($resql === false) {
+					echo 'SQL Error: ' . $db->lasterror();
+					exit;
+				}
+
+				// Vérifiez si des lignes sont retournées
+				while($projet = $resql->fetch_object()) {
 					$ref_projet = htmlspecialchars($projet->ref);
 					$intitule_projet = htmlspecialchars($projet->title);
-				} 
-			}
-
-			$sql = "SELECT com.rowid, com.ref";
-			$sql .= " FROM " . MAIN_DB_PREFIX . "commande AS com";
-			$sql .= " WHERE com.rowid = " . $commande_id;
-
-			// Exécuter la requête site
-			$resql = $db->query($sql);
-
-			// Vérifiez si la requête a échoué
-			if ($resql === false) {
-				echo 'SQL Error: ' . $db->lasterror();
-				exit;
-			}
-
-			// Vérifiez si des lignes sont retournées
-			if ($resql->num_rows > 0) {
-				$commande = $resql->fetch_object();
-				if ($commande) {
-					$ref_commande = htmlspecialchars($commande->ref);
-				} 
-			}
+					$projet_combined .= htmlspecialchars($ref_projet).' - '.htmlspecialchars($intitule_projet).' / ';
+				}
+				$projet_combined = rtrim($projet_combined, ' / ');
 
 
-			// Requête pour récupérer le nom du site
-			$sql = "SELECT s.rowid, s.nom";
-			$sql .= " FROM " . MAIN_DB_PREFIX . "societe AS s";
-			$sql .= " WHERE s.rowid = " . $site_id;
 
-			// Exécuter la requête site
-			$resql = $db->query($sql);
+				$sql = "SELECT com.rowid, com.ref";
+				$sql .= " FROM " . MAIN_DB_PREFIX . "commande AS com";
+				$sql .= " WHERE com.rowid IN (".$object->num_commande.")";
 
-			// Vérifiez si la requête a échoué
-			if ($resql === false) {
-				echo 'SQL Error: ' . $db->lasterror();
-				exit;
-			}
+				// Exécuter la requête site
+				$resql = $db->query($sql);
 
-			// Vérifiez si des lignes sont retournées
-			if ($resql->num_rows > 0) {
-				$site = $resql->fetch_object();
-				if ($site) {
-					$nom_site = htmlspecialchars($site->nom);
-				} 
-			}
+				// Vérifiez si la requête a échoué
+				if ($resql === false) {
+					echo 'SQL Error: ' . $db->lasterror();
+					exit;
+				}
 
-			$impact_map = [
-				1 => 'Impact de la non conformité',
-				2 => 'Impact Finnancier',
-				3 => 'Impact Contractuel',
-				4 => 'Impact sur l\'analyse',
-				5 => 'Impact sur le temps',
-				6 => 'Impact sur la non-facturation'
-			];
+				// Vérifiez si des lignes sont retournées
+				while($commande = $resql->fetch_object()) {
+					$ref_commande .= htmlspecialchars($commande->ref)." / ";
+				}
+				$ref_commande = rtrim($ref_commande, ' / ');
 
-			// Map des processus
-			$processus_map = [
-				2 => 'Pilotage et Amélioration',
-				3 => 'Gestion et mise à disposition des compétences',
-				4 => 'Gestion de la prestation client',
-				5 => 'Recrutement',
-				6 => 'Vente'
-			];
 
-			// Map des rubriques
-			$rubrique_map = [
-				1 => 'Qualité',
-				2 => 'Sécurité',
-				3 => 'Environnement',
-				4 => 'Sûreté',
-				5 => 'Radioprotection'
-			];
 
-			$projet_combined = htmlspecialchars($intitule_projet) . " / " . htmlspecialchars($ref_projet);
+				// Requête pour récupérer le nom du site
+				$sql = "SELECT s.rowid, s.nom";
+				$sql .= " FROM " . MAIN_DB_PREFIX . "societe AS s";
+				$sql .= " WHERE s.rowid = ".$object->site;
 
-			// Accéder aux valeurs des extrafields et les convertir
-			$impact_ids = isset($object->array_options['options_impact']) ? explode(',', $object->array_options['options_impact']) : [];
-			$rubrique_ids = isset($object->array_options['options_rubrique']) ? explode(',', $object->array_options['options_rubrique']) : [];
-			$processus_ids = isset($object->array_options['options_processusconcern']) ? explode(',', $object->array_options['options_processusconcern']) : [];
+				// Exécuter la requête site
+				$resql = $db->query($sql);
 
-			// Convertir les IDs en noms
-			$impacts = array_map(function($id) use ($impact_map) {
-				return isset($impact_map[$id]) ? $impact_map[$id] : $id;
-			}, $impact_ids);
+				// Vérifiez si la requête a échoué
+				if ($resql === false) {
+					echo 'SQL Error: ' . $db->lasterror();
+					exit;
+				}
 
-			$rubriques = array_map(function($id) use ($rubrique_map) {
-				return isset($rubrique_map[$id]) ? $rubrique_map[$id] : $id;
-			}, $rubrique_ids);
+				// Vérifiez si des lignes sont retournées
+				if ($resql->num_rows > 0) {
+					$site = $resql->fetch_object();
+					if ($site) {
+						$nom_site = htmlspecialchars($site->nom);
+					} 
+				}
 
-			$processus = array_map(function($id) use ($processus_map) {
-				return isset($processus_map[$id]) ? $processus_map[$id] : $id;
-			}, $processus_ids);
+			
 
-			// Générer la chaîne des noms en les séparant par une virgule
-			$impact_display = implode(', ', $impacts);
-			$rubrique_display = implode(', ', $rubriques);
-			$processus_display = implode(', ', $processus);
-			$impact_display_safe = htmlspecialchars($impact_display, ENT_QUOTES, 'UTF-8');
-
-			new user ($db);
-			$user->fetch($object->fk_user_creat);
-			$firstnameconstat = htmlspecialchars($user->firstname); // Assure-toi que ces propriétés existent
-			$lastnameconstat = htmlspecialchars($user->lastname);
+			$user_static = new User($db);
+			$user_static->fetch($object->fk_user_creat);
+			$firstnameEmetteur = htmlspecialchars($user_static->firstname);
+			$lastnameEmetteur = htmlspecialchars($user_static->lastname);
 
 			// Décoder les entités HTML dans la description
 			$description_impact = html_entity_decode($object->description_impact, ENT_QUOTES, 'UTF-8');
@@ -1072,12 +1002,7 @@ class pdf_standard_constat extends ModelePDFConstat
 			$controleClientcomm = preg_replace("/\n\s*\n+/", "\n", $controleClientcomm); // Retirer les lignes vides
 			$controleClientcomm_safe = nl2br(htmlspecialchars(trim($controleClientcomm), ENT_QUOTES, 'UTF-8'));
 			$controleClient_display = intval($controleclient) === 1 ? "Oui" : "Non";
-
-
-			// $date = new DateTime($object->emetteur_date);
-				
-			// Formater la date dans le format "Y-m-d"
-			$formattedDate = dol_print_date($object->emetteur_date, '%Y-%m-%d');
+			
 
 			$sql = "SELECT e.fk_target, e.fk_source, a.status";
 			$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
@@ -1111,32 +1036,30 @@ class pdf_standard_constat extends ModelePDFConstat
 			// Génération du tableau HTML
 			$html = '
 			<table border="0" cellpadding="5" cellspacing="0" width="100%"><table border="0" cellpadding="5" cellspacing="0" width="100%">
+				<tr><td colspan="4"><strong> IDENTIFICATION DE L\'EMETTEUR </strong></td></tr>
 				<tr>
 					<td><strong>Émeteur</strong></td>
-					<td>' . $firstnameconstat . ' ' . $lastnameconstat . '</td>
-					<td><strong>Date de création</strong></td>
-					<td>' . nl2br(htmlspecialchars($formattedDate)) . '</td>
-				</tr>
-				<tr>
-					<td><strong>Référence</strong></td>
-					<td>' . nl2br(htmlspecialchars($object->ref)) . '</td>
+					<td>' . $firstnameEmetteur . ' ' . $lastnameEmetteur . '</td>
 					<td><strong>Site</strong></td>
 					<td>' . nl2br(htmlspecialchars($nom_site)) . '</td>
 				</tr>
-			</table>
-			<table border="0" cellpadding="5" cellspacing="0" width="100%"><table border="0" cellpadding="5" cellspacing="0" width="100%">
+				<tr>
+					<td><strong>Date de création</strong></td>
+					<td>' . nl2br(htmlspecialchars($formattedDateEmetteur)) . '</td>
+					<td rowspan="2" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Affaire</strong></td>
+					<td rowspan="2" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . nl2br($projet_combined ) . '</td>
+				</tr>
 				<tr>
 					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Commande</strong></td>
 					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . nl2br(htmlspecialchars($ref_commande)) . '</td>
-					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Affaire</strong></td>
-					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . nl2br($projet_combined ) . '</td>
+					
 				</tr>
-			</table>
-			';
+			</table>';
 
 
 			$html .= '
 			<table border="0" cellpadding="5" cellspacing="0" width="100%"><table border="0" cellpadding="5" cellspacing="0" width="100%">
+			<tr><td colspan="2"><strong> OBJET DU CONSTAT </strong></td></tr>
 			<tr>
 					<td><strong>Sujet</strong></td>
 					<td style="color: rgb(40, 80, 139);">' . nl2br(htmlspecialchars($sujet_nom)) .  '</td>
@@ -1163,8 +1086,10 @@ class pdf_standard_constat extends ModelePDFConstat
 					<td style="color: rgb(40, 80, 139);">' . $impact_display_safe . '</td>
 				</tr>
 				<tr>
-					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Description impact</strong></td>
-					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $description_impact_safe . '</td>
+					<td colspan="2"><strong>Description impact</strong></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $description_impact_safe . '</td>
 				</tr>
 				<tr>
 					<td><strong>Type de constat</strong></td>
@@ -1178,83 +1103,126 @@ class pdf_standard_constat extends ModelePDFConstat
 					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Processus</strong></td>
 					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139); color: rgb(40, 80, 139);">' . $processus_display . '</td>
 				</tr>
-
-
-
-				<tr>
-					<td><strong>Action(s) immédiate(s)</strong></td>
-					<td style="color: rgb(40, 80, 139);">' . $actionsimmediates_display . '</td>
-				</tr>
-				</table>';
+			</table>';
 				
 
 				// Vérification de l'affichage d'actionsimmediates_commentaire
-				if ($actionsimmediates == 1 && !empty($actionsimmediates_commentaire_safe)) {
+				if ($actionsimmediates == 1) {
 					$html .= '
 					<table border="0" cellpadding="5" cellspacing="0" width="100%">
 						<tr>
-								<td><strong>Détails de l\'action immédiate : </strong></td>
+							<td colspan="2"><strong> ACTION(S) IMMEDIATE(S)</strong></td>
+							<td colspan="2" style="color: rgb(40, 80, 139);">' . $actionsimmediates_display . '</td>
 						</tr>
 						<tr>
-								<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $actionsimmediates_commentaire_safe . '</td>
+							<td><strong>Mise en place le : </strong></td>
+							<td>'.$formattedDateActionImmediate.'</td>
+							<td><strong>Par : </strong></td>
+							<td>'.$object->actionsimmediates_par.'</td>
+						</tr>
+						<tr>
+							<td colspan="4"><strong>Détails de l\'action immédiate : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $actionsimmediates_commentaire_safe . '</td>
+						</tr>
+					</table>';
+				}
+				else {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td colspan="2"><strong> ACTION(S) IMMEDIATE(S)</strong></td>
+							<td colspan="2" style="color: rgb(40, 80, 139);">' . $actionsimmediates_display . '</td>					
+						</tr>
+						<tr>
+							<td colspan="4"><strong>Détails de l\'action immédiate : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $actionsimmediates_commentaire_safe . '</td>
 						</tr>
 					</table>';
 				}
 
 				
 
-				$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-							<tr>
-								<td><strong> Information du client</strong></td>
-								<td style="color: rgb(40, 80, 139);">' . $infoclient_display . '</td>
-							</tr>
-							</table>';
-				if ($infoclient == 1 && !empty($infoclientcomm_safe)) {
+
+				if ($infoclient == 1) {
 					$html .= '
 					<table border="0" cellpadding="5" cellspacing="0" width="100%">
 						<tr>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>			
+							<td><strong> INFORMATION CLIENT REQUISE </strong></td>
+							<td style="color: rgb(40, 80, 139);">' . $infoclient_display . '</td>
 						</tr>
 					</table>
-					<br></br>';
-					
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td><strong>Le : </strong></td>
+							<td>'.$formattedDateInfoClient.'</td>
+							<td><strong>Par : </strong></td>
+							<td>'.$object->infoclient_par.'</td>
+							<td><strong>Visa : </strong></td>	
+							<td></td>	
+						</tr>
+						<tr>
+							<td colspan="6"><strong>Commentaire : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $infoclientcomm_safe . '</td>
+						</tr>
+					</table>';
+				}
+				else {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td><strong> INFORMATION CLIENT REQUISE </strong></td>
+							<td style="color: rgb(40, 80, 139);">' . $infoclient_display . '</td>
+						</tr>
+					</table>
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td colspan="6"><strong>Commentaire : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $infoclientcomm_safe . '</td>
+						</tr>
+					</table>';
 				}
 
-				$html .= '</table>';
-
-				$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
+				// $html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
 							
-								<tr>
-									<td><strong>Validation du service Q3SE :</strong></td>
-									<td style="color: rgb(40, 80, 139);"></td>
-								</tr>
-							<br></br>
-						</table>';
+				// 				<tr>
+				// 					<td><strong>Validation du service Q3SE :</strong></td>
+				// 					<td style="color: rgb(40, 80, 139);"></td>
+				// 				</tr>
+				// 			<br></br>
+				// 		</table>';
 				
 
 				$html .= '
 				<table border="0" cellpadding="5" cellspacing="0" width="100%">
-				<tr>
-						<td><strong>Analyse cause racine (Le choix de la méthode est laissé à l\'appréciation du Service Q3SE) : </strong></td>
-				</tr>
-				<tr>
-						<td>' . $analyseracine_safe . '</td>
-				</tr>
+					<tr>
+							<td><strong> ANALYSE DE CAUSE RACINE (Le choix de la méthode est laissé à l\'appréciation du Service Q3SE) </strong></td>
+					</tr>
+					<tr>
+							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $analyseracine_safe . '</td>
+					</tr>
 				</table>
 
 				<table border="0" cellpadding="5" cellspacing="0" width="100%">
 					<tr>
-						<td  style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Constat récurent</strong></td>
-						<td style=" border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139); color: rgb(40, 80, 139);">' . $recurent_display . '</td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong> CONSTAT RECURRENT </strong></td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139); color: rgb(40, 80, 139);">' . $recurent_display . '</td>
 					</tr>
 				</table>';
 				
 
-				// Ajouter le titre
-				$html .= '<h3>Action corrective et préventive ( C/P) :</h3>';
-
+				$pdf->setY($pdf->getY() - 10);
+				$pdf->writeHTML($html, true, false, true, false, '');
+				if ($pdf->getPage() == 1) { 
+					$pdf->addPage();
+				}
 
 
 				$sql = "SELECT ee.fk_target";
@@ -1279,7 +1247,11 @@ class pdf_standard_constat extends ModelePDFConstat
 
 				// Si aucune action n'est liée, on affiche un message
 				if (empty($action_ids)) {
-					$html .= '<p>Aucune action préventive ou corréctive n\'est liée à ce constat.</p>';
+					$html = '
+							<table border="0" cellpadding="5" cellspacing="0" width="100%">
+								<tr><td><strong> ACTIONS CORRECTIVES ET PREVENTIVES (C/P) </strong></td></tr>
+								<tr>Aucune action préventive ou corréctive n\'est liée à ce constat.</tr>
+							</table>';
 				} else {
 					// Étape 2 : Requête pour récupérer les détails des actions
 					$action_ids_str = implode(',', $action_ids);
@@ -1295,39 +1267,47 @@ class pdf_standard_constat extends ModelePDFConstat
 
 
 						// Générer le tableau des actions
-					$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-					<thead>
-						<tr>
-							<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;"><strong>Numéro</strong></th>
-							<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;"><strong>Référence</strong></th>
-							<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;"><strong>Intervenant</strong></th>
-							<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;"><strong>Délai</strong></th>
-							<th style="border-bottom: 0.2pt solid #000; text-align: center;"><strong>C/P</strong></th>
-						</tr>
-					</thead>
-					<tbody>';
+					$html = '<table border="0" cellpadding="5" cellspacing="0" width="100%">
+								<tr><td colspan="5"><strong> ACTIONS CORRECTIVES ET PREVENTIVES (C/P) </strong></td></tr>
+								<thead>
+									<tr>
+										<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;"><strong>Numéro</strong></th>
+										<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;"><strong>Référence</strong></th>
+										<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;"><strong>Intervenant</strong></th>
+										<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;"><strong>Délai</strong></th>
+										<th style="border-bottom: 0.2pt solid #000; text-align: center;"><strong>C/P</strong></th>
+									</tr>
+								</thead>
+								<tbody>';
 
 					while ($action = $db->fetch_object($resql_actions)) {
 						// Extraction des informations de l'action
-						new user($db);
-						$user->fetch($action->intervenant);
-						$firstname = htmlspecialchars($user->firstname);
-						$lastname = htmlspecialchars($user->lastname);
+						if($action->intervenant > 0) {
+							$user_static->fetch($action->intervenant);
+							$firstname = htmlspecialchars($user_static->firstname);
+							$lastname = htmlspecialchars($user_static->lastname);
+						}
+						else {
+							$firstname = '';
+							$lastname = '';
+						}
+
 						$action_rowid = htmlspecialchars($action->rowid);
 						$action_ref = htmlspecialchars($action->ref);
 						$action_date_eche = htmlspecialchars($action->date_eche);
 						$action_CP = htmlspecialchars($action->CP);
 
 						$action_CP_map = [
-							1 => 'C',
-							2 => 'P',
+							1 => 'P',
+							2 => 'C',
 							3 => 'C/P'
 						];
 
-						$action_CP_show= isset($action_CP_map[$action->CP]) ? $action_CP_map[$action->CP] : 'Inconnu';
+						$action_CP_show= isset($action_CP_map[$action->CP]) ? $action_CP_map[$action->CP] : '';
 
 						// Affichage des informations dans une ligne du tableau
-						$html .= '<tr>
+						$html .= '
+						<tr>
 							<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;">' . $action_rowid . '</td>
 							<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;">' . $action_ref . '</td>
 							<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;">' . $firstname . ' ' . $lastname . '</td>
@@ -1336,35 +1316,62 @@ class pdf_standard_constat extends ModelePDFConstat
 						</tr>';
 					}
 
-				$html .= '</tbody></table>
-						<br></br>
-						<br></br>';
+				$html .= '
+					</tbody></table>';
 
 				}
 
 				
-				$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
+				if (intval($accordclient) === 1) {
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
 							<tr>
-								<td><strong> Accord du client sur le traitement</strong></td>
+								<td><strong> ACCORD CLIENT REQUIS SUR TRAITEMENT </strong></td>
 								<td style="color: rgb(40, 80, 139);">' . $accordClient_display . '</td>
 							</tr>
-							</table>';
-				if (intval($accordclient) === 1 && !empty($accordClientcomm_safe)) {
-					// Ligne pour les détails de l'accord client
-					
-					$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-								<tr>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>		
-								</tr>
-							</table>';
+						</table>';
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							<tr>
+								<td><strong>Le : </strong></td>
+								<td>'.$formattedDateAccordClient.'</td>
+								<td><strong>Par : </strong></td>
+								<td>'.$object->accordclient_par.'</td>
+								<td><strong>Visa : </strong></td>	
+								<td></td>	
+							</tr>
+							<tr>
+								<td colspan="6"><strong>Commentaire : </strong></td>
+							</tr>
+							<tr>
+								<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $accordClientcomm_safe . '</td>
+							</tr>
+						</table>';
 				} 
+				else {
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							<tr>
+								<td><strong> ACCORD CLIENT REQUIS SUR TRAITEMENT </strong></td>
+								<td style="color: rgb(40, 80, 139);">' . $accordClient_display . '</td>
+							</tr>
+						</table>';
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							<tr>
+								<td colspan="6"><strong>Commentaire : </strong></td>
+							</tr>
+							<tr>
+								<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $accordClientcomm_safe . '</td>
+							</tr>
+						</table>';
+				}
 
-				$html .= '</table>';
 
 				// Section pour les actions soldées
-				$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
+				$html .= '
+				<table border="0" cellpadding="5" cellspacing="0" width="100%">
+					<tr><td colspan="2"><strong> SUIVI DES ACTIONS </strong></td></tr>
 					<tr>
 						<td><strong>Action soldées</strong></td>';
 						
@@ -1377,9 +1384,10 @@ class pdf_standard_constat extends ModelePDFConstat
 
 				$html .= '</tr></table>';
 
-				$html .='<table border="0" cellpadding="5" cellspacing="0" width="100%">
+				$html .='
+				<table border="0" cellpadding="5" cellspacing="0" width="100%">
 					<tr>
-						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"> <strong>Efficacité à court terme des actions :</strong></td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Efficacité à court terme des actions :</strong></td>
 						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139) ; color: rgb(40, 80, 139);">	
 							<label>
 								<input type="checkbox" name="efficacite" value="oui"> Oui
@@ -1391,49 +1399,76 @@ class pdf_standard_constat extends ModelePDFConstat
 					</tr>
 				</table>';
 
-				// Section pour le contrôle client
-				$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-					<tr>
-						<td><strong> Contrôle client </strong></td>
-						<td style="color: rgb(40, 80, 139);">' . $controleClient_display . '</td>
-					</tr>';
 
-				if (intval($controleclient) === 1 && !empty($controleClientcomm_safe)) {
-					// Ligne pour les détails du contrôle client
-					$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-								<tr>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>		
-								</tr>
-							</table>
-					<br></br>';
+				if (intval($controleclient) === 1) {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td><strong> CONTRÔLE CLIENT </strong></td>
+							<td style="color: rgb(40, 80, 139);">' . $controleClient_display . '</td>
+						</tr>
+					</table>';
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							<tr>
+								<td><strong>Le : </strong></td>
+								<td>'.$formattedDateControleClient.'</td>
+								<td><strong>Par : </strong></td>
+								<td>'.$object->controleclient_par.'</td>
+								<td><strong>Visa : </strong></td>	
+								<td></td>	
+							</tr>
+							<tr>
+								<td colspan="6"><strong>Commentaire : </strong></td>
+							</tr>
+							<tr>
+								<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $controleClientcomm_safe . '</td>
+							</tr>
+						</table>';
+				}
+				else {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td><strong> CONTRÔLE CLIENT </strong></td>
+							<td style="color: rgb(40, 80, 139);">' . $controleClient_display . '</td>
+						</tr>
+					</table>';
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td colspan="6"><strong>Commentaire : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $controleClientcomm_safe . '</td>
+						</tr>
+					</table>';
 				}
 
-				$html .= '</table>';
 
-				$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-				<tr>
-					<td><strong>Clôture de la fiche de constat :</strong></td>
-				</tr>
+				
+				$html .= '
+				<table border="0" cellpadding="5" cellspacing="0" width="100%">
+					<tr>
+						<td><strong> CLÔTURE DE LA FICHE DE CONSTAT </strong></td>
+					</tr>
 				</table>
 				<br></br>
 				<table border="0" cellpadding="5" cellspacing="0" width="100%">
-				<tr>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
-							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>		
-					
-				</tr>
+					<tr>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">'.$formattedDateCloture.'</td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">'.$object->controleclient_par.'</td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>		
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"></td>
+					</tr>
 				</table>';
-				
+	
 
-
-
-				if ($pdf->getY() > 260 || $pdf->getPage() == 1) { // Si la dernière page a encore du contenu
-					$html .= '</tbody></table>';
-					$pdf->writeHTML($html, true, false, true, false, '');
-				}
+				$pdf->writeHTML($html, true, false, true, false, '');
+				$this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
+			
 
 				// Pagefoot
 				$this->_pagefoot($pdf, $object, $outputlangs);
@@ -1698,7 +1733,7 @@ class pdf_standard_constat extends ModelePDFConstat
 
 		// Ajouter la ligne horizontale
 		$pdf->SetXY($this->marge_gauche, $posy);  // Positionner la ligne
-		$pdf->WriteHTML('<hr color="#00285e">');
+		$pdf->WriteHTML('<hr>');
 		
 		/*if (!empty($conf->global->PDF_SHOW_PROJECT)) {
 			$object->fetch_projet();
