@@ -171,6 +171,7 @@ if ($enablepermissioncheck) {
 	$permissiontoadd = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write');
 	$permissiontodelete = $user->hasRight('constat', 'constat', 'delete') || (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) && isset($object->status) && $object->status == $object::STATUS_DRAFT);
 	$permissionnote = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write');
+	$permissiontocancel = $user->hasRight('constat', 'constat', 'cancel');
 	//$permissiondellink = $user->hasRight('constat', 'constat', 'write'); // Used by the include of actions_dellink.inc.php
 
 	if($object->status == $object::STATUS_DRAFT) {
@@ -269,54 +270,6 @@ if (empty($reshook)) {
 	}
 	if ($action == 'classin' && $permissiontoadd) {
 		$object->setProject(GETPOST('projectid', 'int'));
-	}
-
-	if ($action == 'confirm_setencours' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
-		$result = $object->setEnCours($user);
-
-		if ($result >= 0) {
-			$object->actionmsg = $langs->transnoentitiesnoconv("CONSTAT_EN_COURSInDolibarr", $object->ref);
-			
-			// Call trigger
-			$result = $object->call_trigger('CONSTAT_EN_COURS', $user);
-			if ($result < 0) {
-				$error++;
-			}
-			// End call triggers
-		} else {
-			$error++;
-			setEventMessages($object->error, $object->errors, 'errors');
-		}
-		$action = '';
-		
-		if(!$error) {
-			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-			exit;
-		}
-	}
-
-	if ($action == 'confirm_close' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
-		$result = $object->close($user);
-
-		if ($result >= 0) {
-			$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_CLOTUREInDolibarr", $object->ref);
-			// Call trigger
-			$result = $object->call_trigger('CONSTAT_CLOTURE', $user);
-			
-			if ($result < 0) {
-				$error++;
-			}
-			// End call triggers
-		} else {
-			$error++;
-			setEventMessages($object->error, $object->errors, 'errors');
-		}
-		$action = '';
-		
-		if(!$error) {
-			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-			exit;
-		}
 	}
 
 	// if( $action == 'setSolde'  && $confirm == 'yes' ){
@@ -572,6 +525,41 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
 	}
 
+	// Validate confirmation
+	if ($action == 'validate') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Validate'), $langs->trans('ConfirmValidateConstat', $object->ref), 'confirm_validate', '', 'yes', 1);
+	}
+
+	// Setencours confirmation
+	if ($action == 'setencours') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Validate'), $langs->trans('ConfirmValidateConstat', $object->ref), 'confirm_setencours', '', 'yes', 1);
+	}
+
+	// Close confirmation
+	if ($action == 'close') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Close'), $langs->trans('ConfirmCloseConstat', $object->ref), 'confirm_close', '', 'yes', 1);
+	}
+
+	// Decline confirmation
+	if ($action == 'decline') {
+		$formquestion = array(
+			array('label'=>$langs->trans('DeclineReason') ,'type'=>'text', 'name'=>'decline_reason', 'value'=>''),
+		);
+		if($object->status == $object::STATUS_VALIDATED) {
+			$question = $langs->trans('ConfirmDeclineConstatRespAff', $object->ref);
+		}
+		elseif ($object->status == $object::STATUS_EN_COURS) {
+			$question = $langs->trans('ConfirmDeclineConstatQ3SE', $object->ref);
+		}
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Decline'), $question, 'confirm_decline', $formquestion, 'yes', 1);
+	}
+
+	// Cancel confirmation
+	if ($action == 'cancel') {
+		$formquestion = array();
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Cancel'), $langs->trans('ConfirmCancelConstat', $object->ref), 'confirm_cancel', $formquestion, 'yes', 1);
+	}
+
 
 	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
 	if ($action == 'xxx') {
@@ -766,16 +754,18 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print dolGetButtonAction('', $langs->trans('Modifier / Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoupdate);
 			}
 
-			// Valider
+			// Valider / Refuser
 			if ($object->status == $object::STATUS_DRAFT && $permissiontovalidate) {
 				// print "<script>showPopupMessage('L\'émetteur doit remplir les champs en gras pour valider le constat. ', 'error');</script>";
-				print dolGetButtonAction($label_button_action_validate, $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', empty($label_button_action_validate));
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=validate&token='.newToken(), '', empty($label_button_action_validate));
 			}
 			elseif($object->status == $object::STATUS_VALIDATED && $permissiontovalidate) {
-				print dolGetButtonAction($label_button_action_validate, $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setencours&confirm=yes&token='.newToken(), '', empty($label_button_action_validate));
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setencours&token='.newToken(), '', empty($label_button_action_validate));
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Decline'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=decline&token='.newToken(), '');
 			}
 			elseif ($object->status == $object::STATUS_EN_COURS && $permissiontovalidate) {
-				print dolGetButtonAction($label_button_action_validate, $langs->trans('Close'), 'default', $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=confirm_close&confirm=yes&token=' . newToken(), '', empty($label_button_action_validate));
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Close'), 'default', $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=close&token=' . newToken(), '', empty($label_button_action_validate));
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Decline'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=decline&token='.newToken(), '');
 			}
 			
 			
@@ -885,9 +875,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print '<a class="butAction" href="'.DOL_URL_ROOT.'/custom/actions/action_card.php?action=create&origin='.$object->element.'&originid='.$object->id.'&socid='.$object->socid.'">'.$langs->trans("Créer action").'</a>';
 			}
 		
-			//généré pdf constat
+			// Générer pdf constat
 			if ($object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_EN_COURS) {
 				print dolGetButtonAction('', $langs->trans('générer PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoupdate);
+			}
+
+			if($permissiontocancel) {
+				print dolGetButtonAction('', $langs->trans('Cancel'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=cancel&token='.newToken(), '');
 			}
 			
 			// Delete (need delete permission, or if draft, just need create/modify permission)

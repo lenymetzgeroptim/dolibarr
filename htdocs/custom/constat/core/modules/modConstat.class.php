@@ -162,16 +162,15 @@ class modConstat extends DolibarrModules
 		//                             2 => array('CONSTAT_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
 		// );
 		$this->const = array(
-			1 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_SENDMAIL', 'chaine', '1', '', 0), 
+			//1 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_SENDMAIL', 'chaine', '1', '', 0), 
 			2 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CREATE', 'chaine', '1', '', 0), 
 			3 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_MODIFY', 'chaine', '1', '', 0), 
-			4 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_DELETE', 'chaine', '1', '', 0), 
+			//4 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_DELETE', 'chaine', '1', '', 0), 
 			5 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_VALIDATE', 'chaine', '1', '', 0),
-			6 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_PRISE', 'chaine', '1', '', 0), 
 			7 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_EN_COURS', 'chaine', '1', '', 0),
-			8 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_SOLDEE', 'chaine', '1', '', 0), 
-			9 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CLOTURE', 'chaine', '1', '', 0), 
-			10 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CANCELED', 'chaine', '1', '', 0),
+			8 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_DECLINE', 'chaine', '1', '', 0),
+			9 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CLOSE', 'chaine', '1', '', 0), 
+			10 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CANCEL', 'chaine', '1', '', 0),
 		);
 
 		// Some keys to add into the overwriting translation tables
@@ -326,6 +325,11 @@ class modConstat extends DolibarrModules
 		$this->rights[$r][1] = 'Supprimer les constats';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'delete';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 6 + 1);
+		$this->rights[$r][1] = 'Annuler les constats';
+		$this->rights[$r][4] = 'constat';
+		$this->rights[$r][5] = 'cancel';
 		$r++;
 		// $this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
 		// $this->rights[$r][1] = 'Show Responsable Q3SE objects of Constat';

@@ -325,6 +325,8 @@ function msgAgendaUpdateForConstat($object, $onlydiff, $excluded_key = array(), 
 		$object->fields = dol_sort_array($object->fields, 'position');
 
 		foreach ($object->fields as $key => $val) {
+			$val['visible'] = dol_eval($val['visible'], 1);
+			
 			if(!empty($included_key) && !in_array($key, $included_key)) {
 				continue;
 			}
@@ -333,7 +335,7 @@ function msgAgendaUpdateForConstat($object, $onlydiff, $excluded_key = array(), 
 				continue;
 			}
 
-			if($val['visible'] <= 0) {
+			if(abs($val['visible']) <= 0) {
 				continue;
 			}
 

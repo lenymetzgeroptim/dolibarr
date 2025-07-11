@@ -70,15 +70,14 @@ ConstatAlerteDraft = Bonjour, le constat %s est toujours à l'état de brouillon
 # Agenda
 #
 CONSTAT_CREATEInDolibarr = Le constat %s est créé
-CONSTAT_MODIFYInDolibarr = Le constat %s est modifiée
-CONSTAT_DELETEInDolibarr = Le constat  %s, est supprimé
-CONSTAT_VAVIDATEInDolibarr = Le constat %s, est validé
-CONSTAT_PRISEInDolibarr = Le constat %s, est vérifié
-CONSTAT_EN_COURSInDolibarr = Le constat %s est en cours
-CONSTAT_SOLDEEInDolibarr = Le constat %s est soldée
-CONSTAT_CLOTUREInDolibarr = Le constat %s réalisée, est cloturé
-CONSTAT_CANCELEDInDolibarr = Le constat %s est annulé
-
+CONSTAT_MODIFYInDolibarr = Le constat %s est modifié
+CONSTAT_DELETEInDolibarr = Le constat  %s est supprimé
+CONSTAT_VALIDATEInDolibarr = Le constat %s est validé par l'emetteur
+CONSTAT_EN_COURSInDolibarr = Le constat %s est validé par le responsable d'affaire
+CONSTAT_CLOTUREInDolibarr = Le constat %s est cloturé
+CONSTAT_CANCELInDolibarr = Le constat %s est annulé
+CONSTAT_DECLINERespAffInDolibarr = Le constat %s est refusé par le responsable d'affaire
+CONSTAT_DECLINEQ3SEInDolibarr = Le constat %s est refusé par le service Q3SE
 
 #
 # Statuts
@@ -135,3 +134,17 @@ EMailTextConstatClose = Bonjour,<br><br>Le constat %s émis par %s a été clôt
 EMailTextConstatEnCours = Bonjour,<br><br>Le constat %s émis par %s a été validé par le responsable d'affaire. Veuillez compléter la partie Q3SE.<br><br>Cordialement
 EMailTextConstatCancel = Bonjour,<br><br>Le constat %s émis par %s a été annulé par %s.<br><br>Cordialement
 EMailTextConstatDraftToLong = Bonjour,<br><br>Le constat %s créé par %s est toujours à l'état de brouillon, malgré sa création il y a plus de %s jours.<br><br>Cordialement
+EMailTextConstatDeclineRespAff = Bonjour,<br><br>Le constat %s a été refusé par le responsable d'affaire (%s) pour le motif suivant : %s.<br><br>Cordialement
+EMailTextConstatDeclineQ3SE = Bonjour,<br><br>Le constat %s a été refusé par le service Q3SE (%s) pour le motif suivant : %s.<br><br>Cordialement
+
+
+#
+# Button and FormConfirm
+#
+Decline = Refuser
+ConfirmValidateConstat = Voulez vous valider le constat ?
+ConfirmCloseConstat = Voulez vous clôturer le constat ?
+ConfirmCancelConstat = Voulez vous annuler le constat ?
+ConfirmDeclineConstatRespAff = Voulez vous refuser le constat et le renvoyer à l'emetteur ?
+ConfirmDeclineConstatQ3SE = Voulez vous refuser le constat et le renvoyer au responsable d'affaire ?
+DeclineReason = Motif du refus

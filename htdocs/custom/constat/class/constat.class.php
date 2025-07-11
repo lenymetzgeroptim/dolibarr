@@ -123,7 +123,7 @@ class Constat extends CommonObject
 	 */
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"\$object->status>0||!\$object->id?1:0", "default"=>"(PROV)", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"5", "default"=>"", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
 		"status" => array("type"=>"integer", "label"=>"Statut", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "Créé", "4" => "En cours", "7" => "Clôturé", "9" => "Annulé"), "validate"=>"1",),
 		"label" => array("type"=>"varchar(255)", "label"=>"Label", "enabled"=>"1", 'position'=>100, 'notnull'=>1, "visible"=>"1", "searchall"=>"1", "css"=>"minwidth300", "cssview"=>"wordbreak", "help"=>"Identifier le constat en quelques mots", "validate"=>"1",),
 		"fk_user_creat" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
@@ -339,7 +339,6 @@ class Constat extends CommonObject
 		$this->ref = $this->generateConstatReference();
 
 		$resultcreate = $this->createCommon($user, $notrigger);
-		
 		//$resultvalidate = $this->validate($user, $notrigger);
 		if (!empty($this->linkedObjectsIds) && empty($this->linked_objects)) {	// To use new linkedObjectsIds instead of old linked_objects
 			$this->linked_objects = $this->linkedObjectsIds; // TODO Replace linked_objects with linkedObjectsIds
@@ -903,10 +902,34 @@ class Constat extends CommonObject
 	public function cancel($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status != self::STATUS_VALIDATED) {
+		if ($this->status == self::STATUS_CANCELED) {
 			return 0;
 		}
 		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'CONSTAT_CANCEL');
+	}
+
+	/**
+	 *	Decline
+	 *
+	 *	@param	User	$user			Object user that modify
+	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
+	 *	@return	int						<0 if KO, 0=Nothing done, >0 if OK
+	 */
+	public function decline($user, $notrigger = 0)
+	{
+		global $langs;
+
+		if ($this->status == self::STATUS_VALIDATED) {
+			$this->actionmsg = $langs->trans('CONSTAT_DECLINERespAffInDolibarr', $this->ref);
+			$this->actionmsg2 = $langs->trans('CONSTAT_DECLINERespAffInDolibarr', $this->ref);
+			return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'CONSTAT_DECLINE');
+		}
+		elseif ($this->status == self::STATUS_EN_COURS) {
+			$this->actionmsg = $langs->trans('CONSTAT_DECLINEQ3SEInDolibarr', $this->ref);
+			$this->actionmsg2 = $langs->trans('CONSTAT_DECLINEQ3SEInDolibarr', $this->ref);
+			return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'CONSTAT_DECLINE');
+		}
+		else return 0;
 	}
 
 	/**
@@ -1133,7 +1156,7 @@ class Constat extends CommonObject
 			//$langs->load("constat@constat");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Créé');
-			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
+			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Annulé');
 			// $this->labelStatus[self::STATUS_PRISE] = $langs->transnoentitiesnoconv('Vérifiée');
 			$this->labelStatus[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			// $this->labelStatus[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldé');
@@ -1141,7 +1164,7 @@ class Constat extends CommonObject
 
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Créé');
-			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
+			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Annulé');
 			// $this->labelStatusShort[self::STATUS_PRISE] = $langs->transnoentitiesnoconv('Vérifiée');
 			$this->labelStatusShort[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			// $this->labelStatusShort[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldé');

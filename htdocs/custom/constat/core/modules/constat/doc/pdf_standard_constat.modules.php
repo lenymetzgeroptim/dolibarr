@@ -1250,7 +1250,7 @@ class pdf_standard_constat extends ModelePDFConstat
 					$html = '
 							<table border="0" cellpadding="5" cellspacing="0" width="100%">
 								<tr><td><strong> ACTIONS CORRECTIVES ET PREVENTIVES (C/P) </strong></td></tr>
-								<tr>Aucune action préventive ou corréctive n\'est liée à ce constat.</tr>
+								<tr><td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">Aucune action préventive ou corréctive n\'est liée à ce constat.</td></tr>
 							</table>';
 				} else {
 					// Étape 2 : Requête pour récupérer les détails des actions

@@ -326,59 +326,59 @@ if ($action == 'update' && !empty($permissiontoupdate)) {
 }
 
 // Action to update one modulebuilder field
-$reg = array();
-if (preg_match('/^set(\w+)$/', $action, $reg) && GETPOST('id', 'int') > 0 && !empty($permissiontoadd)) {
-	$object->fetch(GETPOST('id', 'int'));
+// $reg = array();
+// if (preg_match('/^set(\w+)$/', $action, $reg) && GETPOST('id', 'int') > 0 && !empty($permissiontoadd)) {
+// 	$object->fetch(GETPOST('id', 'int'));
 
-	$keyforfield = $reg[1];
-	if (property_exists($object, $keyforfield)) {
-		if (!empty($object->fields[$keyforfield]) && in_array($object->fields[$keyforfield]['type'], array('date', 'datetime', 'timestamp'))) {
-			$object->$keyforfield = dol_mktime(GETPOST($keyforfield.'hour'), GETPOST($keyforfield.'min'), GETPOST($keyforfield.'sec'), GETPOST($keyforfield.'month'), GETPOST($keyforfield.'day'), GETPOST($keyforfield.'year'));
-		} else {
-			$object->$keyforfield = GETPOST($keyforfield);
-		}
+// 	$keyforfield = $reg[1];
+// 	if (property_exists($object, $keyforfield)) {
+// 		if (!empty($object->fields[$keyforfield]) && in_array($object->fields[$keyforfield]['type'], array('date', 'datetime', 'timestamp'))) {
+// 			$object->$keyforfield = dol_mktime(GETPOST($keyforfield.'hour'), GETPOST($keyforfield.'min'), GETPOST($keyforfield.'sec'), GETPOST($keyforfield.'month'), GETPOST($keyforfield.'day'), GETPOST($keyforfield.'year'));
+// 		} else {
+// 			$object->$keyforfield = GETPOST($keyforfield);
+// 		}
 
-		$result = $object->update($user);
+// 		$result = $object->update($user);
 
-		if ($result > 0) {
-			setEventMessages($langs->trans('RecordSaved'), null, 'mesgs');
-			$action = 'view';
-		} else {
-			$error++;
-			setEventMessages($object->error, $object->errors, 'errors');
-			$action = 'edit'.$reg[1];
-		}
-	}
-}
+// 		if ($result > 0) {
+// 			setEventMessages($langs->trans('RecordSaved'), null, 'mesgs');
+// 			$action = 'view';
+// 		} else {
+// 			$error++;
+// 			setEventMessages($object->error, $object->errors, 'errors');
+// 			$action = 'edit'.$reg[1];
+// 		}
+// 	}
+// }
 
 // Action to update one extrafield
-if ($action == "update_extras" && GETPOST('id', 'int') > 0 && !empty($permissiontoupdate)) {
-	$object->fetch(GETPOST('id', 'int'));
+// if ($action == "update_extras" && GETPOST('id', 'int') > 0 && !empty($permissiontoupdate)) {
+// 	$object->fetch(GETPOST('id', 'int'));
 
-	$object->oldcopy = dol_clone($object, 2);
+// 	$object->oldcopy = dol_clone($object, 2);
 
-	$attribute = GETPOST('attribute', 'alphanohtml');
+// 	$attribute = GETPOST('attribute', 'alphanohtml');
 
-	$error = 0;
+// 	$error = 0;
 
-	// Fill array 'array_options' with data from update form
-	$ret = $extrafields->setOptionalsFromPost(null, $object, $attribute);
-	if ($ret < 0) {
-		$error++;
-		setEventMessages($extrafields->error, $object->errors, 'errors');
-		$action = 'edit_extras';
-	} else {
-		$result = $object->updateExtraField($attribute, empty($triggermodname) ? '' : $triggermodname, $user);
-		if ($result > 0) {
-			setEventMessages($langs->trans('RecordSaved'), null, 'mesgs');
-			$action = 'view';
-		} else {
-			$error++;
-			setEventMessages($object->error, $object->errors, 'errors');
-			$action = 'edit_extras';
-		}
-	}
-}
+// 	// Fill array 'array_options' with data from update form
+// 	$ret = $extrafields->setOptionalsFromPost(null, $object, $attribute);
+// 	if ($ret < 0) {
+// 		$error++;
+// 		setEventMessages($extrafields->error, $object->errors, 'errors');
+// 		$action = 'edit_extras';
+// 	} else {
+// 		$result = $object->updateExtraField($attribute, empty($triggermodname) ? '' : $triggermodname, $user);
+// 		if ($result > 0) {
+// 			setEventMessages($langs->trans('RecordSaved'), null, 'mesgs');
+// 			$action = 'view';
+// 		} else {
+// 			$error++;
+// 			setEventMessages($object->error, $object->errors, 'errors');
+// 			$action = 'edit_extras';
+// 		}
+// 	}
+// }
 
 // Action to delete
 if ($action == 'confirm_delete' && !empty($permissiontodelete)) {
@@ -420,45 +420,45 @@ if ($action == 'confirm_delete' && !empty($permissiontodelete)) {
 }
 
 // Remove a line
-if ($action == 'confirm_deleteline' && $confirm == 'yes' && !empty($permissiontoadd)) {
-	if (method_exists($object, 'deleteline')) {
-		$result = $object->deleteline($user, $lineid); // For backward compatibility
-	} else {
-		$result = $object->deleteLine($user, $lineid);
-	}
-	if ($result > 0) {
-		// Define output language
-		$outputlangs = $langs;
-		$newlang = '';
-		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-			$newlang = GETPOST('lang_id', 'aZ09');
-		}
-		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && is_object($object->thirdparty)) {
-			$newlang = $object->thirdparty->default_lang;
-		}
-		if (!empty($newlang)) {
-			$outputlangs = new Translate("", $conf);
-			$outputlangs->setDefaultLang($newlang);
-		}
-		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
-		// 	if (method_exists($object, 'generateDocument')) {
-		// 		$ret = $object->fetch($object->id); // Reload to get new records
-		// 		$object->generateDocument($object->model_pdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
-		// 	}
-		// }
+// if ($action == 'confirm_deleteline' && $confirm == 'yes' && !empty($permissiontoadd)) {
+// 	if (method_exists($object, 'deleteline')) {
+// 		$result = $object->deleteline($user, $lineid); // For backward compatibility
+// 	} else {
+// 		$result = $object->deleteLine($user, $lineid);
+// 	}
+// 	if ($result > 0) {
+// 		// Define output language
+// 		$outputlangs = $langs;
+// 		$newlang = '';
+// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+// 			$newlang = GETPOST('lang_id', 'aZ09');
+// 		}
+// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && is_object($object->thirdparty)) {
+// 			$newlang = $object->thirdparty->default_lang;
+// 		}
+// 		if (!empty($newlang)) {
+// 			$outputlangs = new Translate("", $conf);
+// 			$outputlangs->setDefaultLang($newlang);
+// 		}
+// 		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+// 		// 	if (method_exists($object, 'generateDocument')) {
+// 		// 		$ret = $object->fetch($object->id); // Reload to get new records
+// 		// 		$object->generateDocument($object->model_pdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
+// 		// 	}
+// 		// }
 
-		setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
+// 		setEventMessages($langs->trans('RecordDeleted'), null, 'mesgs');
 
-		if (empty($noback)) {
-			header('Location: '.((empty($backtopage)) ? $_SERVER["PHP_SELF"].'?id='.$object->id : $backtopage));
-			exit;
-		}
-	} else {
-		$error++;
-		setEventMessages($object->error, $object->errors, 'errors');
-	}
-	$action = '';
-}
+// 		if (empty($noback)) {
+// 			header('Location: '.((empty($backtopage)) ? $_SERVER["PHP_SELF"].'?id='.$object->id : $backtopage));
+// 			exit;
+// 		}
+// 	} else {
+// 		$error++;
+// 		setEventMessages($object->error, $object->errors, 'errors');
+// 	}
+// 	$action = '';
+// }
 
 // Action validate object
 if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
@@ -508,110 +508,137 @@ if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate 
 	}
 }
 
-
-// Action close object
-if ($action == 'confirm_close' && $confirm == 'yes' && $permissiontoadd) {
-	$result = $object->close($user);
-	if ($result >= 0) {
-		// Define output language
-		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
-		// 	if (method_exists($object, 'generateDocument')) {
-		// 		$outputlangs = $langs;
-		// 		$newlang = '';
-		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-		// 			$newlang = GETPOST('lang_id', 'aZ09');
-		// 		}
-		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
-		// 			$newlang = $object->thirdparty->default_lang;
-		// 		}
-		// 		if (!empty($newlang)) {
-		// 			$outputlangs = new Translate("", $conf);
-		// 			$outputlangs->setDefaultLang($newlang);
-		// 		}
-		// 		$model = $object->model_pdf;
-		// 		$ret = $object->fetch($id); // Reload to get new records
-
-		// 		$object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-		// 	}
-		// }
-	} else {
-		$error++;
-		setEventMessages($object->error, $object->errors, 'errors');
-	}
-	$action = '';
-}
-
 // Action setdraft object
-if ($action == 'confirm_setdraft' && $confirm == 'yes' && $permissiontoadd) {
-	$result = $object->setDraft($user);
-	if ($result >= 0) {
-		// Nothing else done
-	} else {
-		$error++;
-		setEventMessages($object->error, $object->errors, 'errors');
-	}
-	$action = '';
-}
+// if ($action == 'confirm_setdraft' && $confirm == 'yes' && $permissiontoadd) {
+// 	$result = $object->setDraft($user);
+// 	if ($result >= 0) {
+// 		// Nothing else done
+// 	} else {
+// 		$error++;
+// 		setEventMessages($object->error, $object->errors, 'errors');
+// 	}
+// 	$action = '';
+// }
 
 // Action reopen object
-if ($action == 'confirm_reopen' && $confirm == 'yes' && $permissiontoadd) {
-	$result = $object->reopen($user);
-	if ($result >= 0) {
-		// Define output language
-		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
-		// 	if (method_exists($object, 'generateDocument')) {
-		// 		$outputlangs = $langs;
-		// 		$newlang = '';
-		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
-		// 			$newlang = GETPOST('lang_id', 'aZ09');
-		// 		}
-		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
-		// 			$newlang = $object->thirdparty->default_lang;
-		// 		}
-		// 		if (!empty($newlang)) {
-		// 			$outputlangs = new Translate("", $conf);
-		// 			$outputlangs->setDefaultLang($newlang);
-		// 		}
-		// 		$model = $object->model_pdf;
-		// 		$ret = $object->fetch($id); // Reload to get new records
+// if ($action == 'confirm_reopen' && $confirm == 'yes' && $permissiontoadd) {
+// 	$result = $object->reopen($user);
+// 	if ($result >= 0) {
+// 		// Define output language
+// 		// if (!getDolGlobalString('MAIN_DISABLE_PDF_AUTOUPDATE')) {
+// 		// 	if (method_exists($object, 'generateDocument')) {
+// 		// 		$outputlangs = $langs;
+// 		// 		$newlang = '';
+// 		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+// 		// 			$newlang = GETPOST('lang_id', 'aZ09');
+// 		// 		}
+// 		// 		if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
+// 		// 			$newlang = $object->thirdparty->default_lang;
+// 		// 		}
+// 		// 		if (!empty($newlang)) {
+// 		// 			$outputlangs = new Translate("", $conf);
+// 		// 			$outputlangs->setDefaultLang($newlang);
+// 		// 		}
+// 		// 		$model = $object->model_pdf;
+// 		// 		$ret = $object->fetch($id); // Reload to get new records
 
-		// 		$object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
-		// 	}
-		// }
-	} else {
+// 		// 		$object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+// 		// 	}
+// 		// }
+// 	} else {
+// 		$error++;
+// 		setEventMessages($object->error, $object->errors, 'errors');
+// 	}
+// 	$action = '';
+// }
+
+// Action clone object
+// if ($action == 'confirm_clone' && $confirm == 'yes' && !empty($permissiontoadd)) {
+// 	if (1 == 0 && !GETPOST('clone_content') && !GETPOST('clone_receivers')) {
+// 		setEventMessages($langs->trans("NoCloneOptionsSpecified"), null, 'errors');
+// 	} else {
+// 		// We clone object to avoid to denaturate loaded object when setting some properties for clone or if createFromClone modifies the object.
+// 		$objectutil = dol_clone($object, 1);
+// 		// We used native clone to keep this->db valid and allow to use later all the methods of object.
+// 		//$objectutil->date = dol_mktime(12, 0, 0, GETPOST('newdatemonth', 'int'), GETPOST('newdateday', 'int'), GETPOST('newdateyear', 'int'));
+// 		// ...
+// 		$result = $objectutil->createFromClone($user, (($object->id > 0) ? $object->id : $id));
+// 		if (is_object($result) || $result > 0) {
+// 			$newid = 0;
+// 			if (is_object($result)) {
+// 				$newid = $result->id;
+// 			} else {
+// 				$newid = $result;
+// 			}
+
+// 			if (empty($noback)) {
+// 				header("Location: " . $_SERVER['PHP_SELF'] . '?id=' . $newid); // Open record of new object
+// 				exit;
+// 			}
+// 		} else {
+// 			$error++;
+// 			setEventMessages($objectutil->error, $objectutil->errors, 'errors');
+// 			$action = '';
+// 		}
+// 	}
+// }
+
+if ($action == 'confirm_setencours' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
+	$result = $object->setEnCours($user);
+
+	if ($result < 0) {
 		$error++;
 		setEventMessages($object->error, $object->errors, 'errors');
 	}
 	$action = '';
+	
+	if(!$error) {
+		header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+		exit;
+	}
 }
 
-// Action clone object
-if ($action == 'confirm_clone' && $confirm == 'yes' && !empty($permissiontoadd)) {
-	if (1 == 0 && !GETPOST('clone_content') && !GETPOST('clone_receivers')) {
-		setEventMessages($langs->trans("NoCloneOptionsSpecified"), null, 'errors');
-	} else {
-		// We clone object to avoid to denaturate loaded object when setting some properties for clone or if createFromClone modifies the object.
-		$objectutil = dol_clone($object, 1);
-		// We used native clone to keep this->db valid and allow to use later all the methods of object.
-		//$objectutil->date = dol_mktime(12, 0, 0, GETPOST('newdatemonth', 'int'), GETPOST('newdateday', 'int'), GETPOST('newdateyear', 'int'));
-		// ...
-		$result = $objectutil->createFromClone($user, (($object->id > 0) ? $object->id : $id));
-		if (is_object($result) || $result > 0) {
-			$newid = 0;
-			if (is_object($result)) {
-				$newid = $result->id;
-			} else {
-				$newid = $result;
-			}
+if ($action == 'confirm_close' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
+	$result = $object->close($user);
 
-			if (empty($noback)) {
-				header("Location: " . $_SERVER['PHP_SELF'] . '?id=' . $newid); // Open record of new object
-				exit;
-			}
-		} else {
-			$error++;
-			setEventMessages($objectutil->error, $objectutil->errors, 'errors');
-			$action = '';
-		}
+	if ($result < 0) {
+		$error++;
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
+	$action = '';
+	
+	if(!$error) {
+		header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+		exit;
+	}
+}
+
+if ($action == 'confirm_cancel' && $confirm == 'yes' && $permissiontocancel) {
+	$result = $object->cancel($user);
+
+	if ($result < 0) {
+		$error++;
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
+	$action = '';
+	
+	if(!$error) {
+		header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+		exit;
+	}
+}
+
+if ($action == 'confirm_decline' && $confirm == 'yes' && $permissiontovalidate) {
+	$result = $object->decline($user);
+
+	if ($result < 0) {
+		$error++;
+		setEventMessages($object->error, $object->errors, 'errors');
+	}
+	$action = '';
+	
+	if(!$error) {
+		header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+		exit;
 	}
 }
