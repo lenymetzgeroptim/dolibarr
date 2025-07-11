@@ -39,6 +39,6 @@ CREATE TABLE llx_actions_action(
 	last_main_doc varchar(255), 
 	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
 	fk_user_modif integer, 
-	type varchar(128)
+	type chkbxlst
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

@@ -259,7 +259,7 @@ class modActions extends DolibarrModules
 			//      'label' => 'MyJob label',
 			//      'jobtype' => 'method',
 			//      'class' => '/actions/class/action.class.php',
-			//      'objectname' => 'Action',
+			//      'objectname' => 'ActionQ3SE',
 			//      'method' => 'doScheduledJob',
 			//      'parameters' => '',
 			//      'comment' => 'Comment',
@@ -281,35 +281,40 @@ class modActions extends DolibarrModules
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Read objects of Actions'; // Permission label
+		$this->rights[$r][1] = 'Lire ses propres actions'; // Permission label
 		$this->rights[$r][4] = 'action';
 		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->hasRight('actions', 'action', 'read'))
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Create/Update objects of Actions'; // Permission label
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 2); // Permission id (must not be already used)
+		$this->rights[$r][1] = 'Lire toutes les actions'; // Permission label
+		$this->rights[$r][4] = 'action';
+		$this->rights[$r][5] = 'readall'; // In php code, permission will be checked by test if ($user->hasRight('actions', 'action', 'read'))
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 3); // Permission id (must not be already used)
+		$this->rights[$r][1] = 'Créer/Modifier les actions'; // Permission label
 		$this->rights[$r][4] = 'action';
 		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->hasRight('actions', 'action', 'write'))
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Delete objects of Actions'; // Permission label
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 4); // Permission id (must not be already used)
+		$this->rights[$r][1] = 'Supprimer les actions'; // Permission label
 		$this->rights[$r][4] = 'action';
 		$this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->actions->action->delete)
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Accès partie service Q3SE'; // Permission label
-		$this->rights[$r][4] = 'action';
-		$this->rights[$r][5] = 'ServiceQ3SE'; // In php code, permission will be checked by test if ($user->rights->actions->action->ServiceQ3SE)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Accès partie intervenant'; // Permission label
-		$this->rights[$r][4] = 'action';
-		$this->rights[$r][5] = 'intervenant'; // In php code, permission will be checked by test if ($user->rights->actions->action->intervenant)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Droit des statistique'; // Permission label
-		$this->rights[$r][4] = 'action';
-		$this->rights[$r][5] = 'Statistique'; // In php code, permission will be checked by test if ($user->rights->actions->action->Statistique)
-		$r++;
+		// $this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
+		// $this->rights[$r][1] = 'Accès partie service Q3SE'; // Permission label
+		// $this->rights[$r][4] = 'action';
+		// $this->rights[$r][5] = 'ServiceQ3SE'; // In php code, permission will be checked by test if ($user->rights->actions->action->ServiceQ3SE)
+		// $r++;
+		// $this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
+		// $this->rights[$r][1] = 'Accès partie intervenant'; // Permission label
+		// $this->rights[$r][4] = 'action';
+		// $this->rights[$r][5] = 'intervenant'; // In php code, permission will be checked by test if ($user->rights->actions->action->intervenant)
+		// $r++;
+		// $this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
+		// $this->rights[$r][1] = 'Droit des statistique'; // Permission label
+		// $this->rights[$r][4] = 'action';
+		// $this->rights[$r][5] = 'Statistique'; // In php code, permission will be checked by test if ($user->rights->actions->action->Statistique)
+		// $r++;
 
 
 
@@ -348,7 +353,7 @@ class modActions extends DolibarrModules
 			'langs'=>'q3serp@q3serp',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1107,
 			'enabled'=>'isModEnabled("actions")', // Define condition to show or hide menu entry. Use 'isModEnabled("actions")' if entry must be visible if module is enabled.
-			'perms'=>'$user->hasRight("actions", "action", "read")',
+			'perms'=>'$user->hasRight("actions", "action", "read")||$user->hasRight("actions", "action", "readall")',
 			'target'=>'',
 			'user'=>2,			                // 0=Menu for internal users, 1=external users, 2=both
 		);
@@ -363,7 +368,7 @@ class modActions extends DolibarrModules
 			'langs'=>'q3serp@q3serp',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1108,
 			'enabled'=>'isModEnabled("actions")', // Define condition to show or hide menu entry. Use 'isModEnabled("actions")' if entry must be visible if module is enabled.
-			'perms'=>'$user->hasRight("actions", "action", "read")',
+			'perms'=>'$user->hasRight("actions", "action", "read")||$user->hasRight("actions", "action", "readall")',
 			'target'=>'',
 			'user'=>2,			                // 0=Menu for internal users, 1=external users, 2=both
 		);
@@ -377,7 +382,7 @@ class modActions extends DolibarrModules
 			'langs'=>'q3serp@q3serp',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1109,
 			'enabled'=>'isModEnabled("actions")', // Define condition to show or hide menu entry. Use 'isModEnabled("actions")' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-			'perms'=>'$user->rights->actions->action->ServiceQ3SE',
+			'perms'=>'$user->hasRight("actions", "action", "write")',
 			'target'=>'',
 			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
 		);
@@ -439,7 +444,7 @@ class modActions extends DolibarrModules
 		$this->export_label[$r]='ActionLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
 		$this->export_icon[$r]='action@actions';
 		// Define $this->export_fields_array, $this->export_TypeFields_array and $this->export_entities_array
-		$keyforclass = 'Action'; $keyforclassfile='/actions/class/action.class.php'; $keyforelement='action@actions';
+		$keyforclass = 'ActionQ3SE'; $keyforclassfile='/actions/class/action.class.php'; $keyforelement='action@actions';
 		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
 		//$this->export_fields_array[$r]['t.fieldtoadd']='FieldToAdd'; $this->export_TypeFields_array[$r]['t.fieldtoadd']='Text';
 		//unset($this->export_fields_array[$r]['t.fieldtoremove']);
@@ -476,7 +481,7 @@ class modActions extends DolibarrModules
 		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_author'); // Fields to store import user id
 
 		$import_sample = array();
-		$keyforclass = 'Action';
+		$keyforclass = 'ActionQ3SE';
 		$keyforclassfile = '/actions/class/action.class.php';
 		$keyforelement = 'action@actions';
 
@@ -500,10 +505,10 @@ class modActions extends DolibarrModules
 			'rule' => 'getrowidifauto',
 			'class' => (!getDolGlobalString('ACTIONS_MYOBJECT_ADDON') ? 'mod_action_standard' : getDolGlobalString('ACTIONS_MYOBJECT_ADDON')),
 		),
-		't.date_eche' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'Action', 'method' => 'formatDateString'),
-		't.date_sol' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'Action', 'method' => 'formatDateString'),
-		't.date_asse' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'Action', 'method' => 'formatDateString'),
-		't.date_creation' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'Action', 'method' => 'formatDateStringHours'),
+		't.date_eche' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateString'),
+		't.date_sol' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateString'),
+		't.date_asse' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateString'),
+		't.date_creation' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateStringHours'),
 		);
 		/* END MODULEBUILDER IMPORT MYOBJECT */
 	}
@@ -543,10 +548,10 @@ class modActions extends DolibarrModules
 		// Document templates
 		$moduledir = dol_sanitizeFileName('actions');
 		$myTmpObjects = array();
-		$myTmpObjects['Action'] = array('includerefgeneration'=>0, 'includedocgeneration'=>0);
+		$myTmpObjects['ActionQ3SE'] = array('includerefgeneration'=>0, 'includedocgeneration'=>0);
 
 		foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
-			if ($myTmpObjectKey == 'Action') {
+			if ($myTmpObjectKey == 'ActionQ3SE') {
 				continue;
 			}
 			if ($myTmpObjectArray['includerefgeneration']) {

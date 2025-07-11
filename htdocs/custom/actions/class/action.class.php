@@ -32,7 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/custom/actions/lib/actions.lib.php';
 /**
  * Class for Action
  */
-class Action extends CommonObject
+class ActionQ3SE extends CommonObject
 {
 	/**
 	 * @var string ID of module.
@@ -42,7 +42,7 @@ class Action extends CommonObject
 	/**
 	 * @var string ID to identify managed object.
 	 */
-	public $element = 'action';
+	public $element = 'actionq3se';
 
 	/**
 	 * @var string Name of table without prefix where object is stored. This is also the key used for extrafields management.
@@ -68,9 +68,9 @@ class Action extends CommonObject
 
 	const STATUS_DRAFT = 0;
 	const STATUS_VALIDATED = 1;
-	const STATUS_EN_COURS = 2;
+	//const STATUS_EN_COURS = 2;
 	const STATUS_SOLDEE = 3;
-	const STATUS_ATT_SOLDEE = 4;
+	//const STATUS_ATT_SOLDEE = 4;
 	const STATUS_CLOTURE = 8;
 	const STATUS_CANCELED = 9;
 
@@ -124,7 +124,7 @@ class Action extends CommonObject
 		"numero" => array("type"=>"integer", "label"=>"Numéro", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"0", "index"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Statut", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("{0:Brouillon" => "1:Validé,2:En cours,3:Soldée,9:Classé}"), "validate"=>"1",),
 		"intervenant" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Pilote", "enabled"=>"1", 'position'=>46, 'notnull'=>0, "visible"=>"1", "index"=>"1",),
-		"fk_user_creat" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"5", "csslist"=>"tdoverflowmax150",),
+		"fk_user_creat" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
 		"priority" => array("type"=>"integer", "label"=>"Priorité", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1", "help"=>"Urgent et important : Priorité 1 (AC suivi mensuellement)Non urgent et important : Priorité 2 (Suivi 6mois)Urgent et pas important : Priorité 2 (Suivi 6mois)Non urgent et pas important : Priorité 3 (Suivi 1an)", "arrayofkeyval"=>array("1" => "1", "2" => "2", "3" => "3"),),
 		"origins" => array("type"=>"integer", "label"=>"Origine", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "AUDIT EXTERNE", "2" => "AUDIT CROISE", "3" => "AUDIT INTERNE", "4" => "FC", "5" => "VEILLE REGLEMENTAIRE", "6" => "REMONTE TERRAIN", "7" => "DECISION INTERNE", "8" => "DOCUMENT UNIQUE", "10" => "POINT Q3SE & RP", "11" => "REVUE DIRECTION", "12" => "VISITE TERRAIN"),),
 		"label" => array("type"=>"varchar(255)", "label"=>"Libellé", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1", "help"=>"Nom de l'action",),
@@ -132,13 +132,13 @@ class Action extends CommonObject
 		"date_creation" => array("type"=>"date", "label"=>"Date création action", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1",),
 		"action_txt" => array("type"=>"html", "label"=>"Description action", "enabled"=>"1", 'position'=>42, 'notnull'=>1, "visible"=>"1", "help"=>"Déscription détaillé de l'action",),
 		"date_eche" => array("type"=>"date", "label"=>"Date échéance", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"1",),
-		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1", "help"=>"Avancement en %", "arrayofkeyval"=>array("0" => "0%", "1" => "25%", "2" => "50%", "3" => "75%", "4" => "100%"),),
-		"date_sol" => array("type"=>"date", "label"=>"Date solde", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1",),
-		"diffusion" => array("type"=>"integer", "label"=>"Diffusion document", "enabled"=>"1", 'position'=>65, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Non", "1" => "Oui"),),
-		"com" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"1", "help"=>"Commmentaire sur l'action ",),
-		"eff_act" => array("type"=>"integer", "label"=>"Efficacité action", "enabled"=>"1", 'position'=>75, 'notnull'=>1, "visible"=>"1", "help"=>"Différent niveau d'éfficacité de l'action : A = le plus éfficace C = le moins", "arrayofkeyval"=>array("1" => "A", "2" => "B", "9" => "C"),),
-		"eff_act_description" => array("type"=>"html", "label"=>"Détail efficacité", "enabled"=>"1", 'position'=>77, 'notnull'=>0, "visible"=>"1",),
-		"date_asse" => array("type"=>"date", "label"=>"Date évalutation", "enabled"=>"1", 'position'=>80, 'notnull'=>0, "visible"=>"1",),
+		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"4", "help"=>"Avancement en %", "arrayofkeyval"=>array("{[0%:25%" => "50%,75%,100%]}"),),
+		"date_sol" => array("type"=>"date", "label"=>"Date solde", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"5",),
+		"diffusion" => array("type"=>"integer", "label"=>"Diffusion document", "enabled"=>"1", 'position'=>65, 'notnull'=>1, "visible"=>"4", "arrayofkeyval"=>array("[Non" => "Oui]"),),
+		"com" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"4", "help"=>"Commmentaire sur l'action",),
+		"eff_act" => array("type"=>"integer", "label"=>"Efficacité action", "enabled"=>"1", 'position'=>75, 'notnull'=>1, "visible"=>"4", "help"=>"Différent niveau d'éfficacité de l'action : A = le plus éfficace C = le moins", "arrayofkeyval"=>array("{1:A" => "2:B,9:C}"),),
+		"eff_act_description" => array("type"=>"html", "label"=>"Détail efficacité", "enabled"=>"1", 'position'=>77, 'notnull'=>0, "visible"=>"4",),
+		"date_asse" => array("type"=>"date", "label"=>"Date évalutation", "enabled"=>"1", 'position'=>80, 'notnull'=>0, "visible"=>"4",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>650, 'notnull'=>0, "visible"=>"0",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
 		"fk_user_modif" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
@@ -281,181 +281,6 @@ class Action extends CommonObject
 	}
 
 	/**
-	 * Create object into database
-	 *
-	 * @param  User $user      User that creates
-	 * @param  bool $notrigger false=launch triggers after, true=disable triggers
-	 * @return int             <0 if KO, Id of created object if OK
-	 */
-	// public function create($user, $notrigger = 0)
-	// {
-	// 	global $conf, $langs, $mysoc;
-	// 	$error = 0;
-
-	// 	// Clean parameters
-	// 	$this->brouillon = 1; // set command as draft
-
-	// 	dol_syslog(get_class($this)."::create user=".$user->id);
-
-	// 	// Check parameters
-	// 	if (!empty($this->ref)) {	// We check that ref is not already used
-	// 		$result = self::isExistingObject($this->element, 0, $this->ref); // Check ref is not yet used
-	// 		if ($result > 0) {
-	// 			$this->error = 'ErrorRefAlreadyExists';
-	// 			dol_syslog(get_class($this)."::create ".$this->error, LOG_WARNING);
-	// 			$this->db->rollback();
-	// 			return -1;
-	// 		}
-	// 	}
-
-	// 	$now = dol_now();
-
-	// 	$this->db->begin();
-
-	// 	$sql = "INSERT INTO ".MAIN_DB_PREFIX."actions_action (";
-	// 	// $sql .= " ref,";
-	// 	// $sql .= " numero,";
-	// 	$sql .= " priority,";
-	// 	//$sql .= " rowid,";
-	// 	$sql .= " origins,";
-	// 	// $sql .= " label,";
-	// 	$sql .= " action_sse,";
-	// 	$sql .= " action_rp,";
-	// 	$sql .= " date_creation,";
-	// 	$sql .= " action_txt,";
-	// 	$sql .= " date_eche,";
-	// 	$sql .= " avancement,";
-	// 	$sql .= " date_sol,";
-	// 	$sql .= " diffusion";
-	// 	// $sql .= " com";
-	// 	$sql .= ")";
-	// 	//$sql .= " VALUES ('(PROV)')";
-	// 	// $sql .= ", ".($this->fk_project > 0 ? ((int) $this->fk_project) : "null");
-	// 	// $sql .= ", '".$this->db->idate($date)."'";
-	// 	// $sql .= ", ".($this->source >= 0 && $this->source != '' ? $this->db->escape($this->source) : 'null');
-	// 	// $sql .= ", '".$this->numero."'";
-	// 	$sql .= " VALUES (".(int) $this->priority."";
-	// 	//$sql .= ", ".(int) $this->id."";
-	// 	// $sql .= ", '".$this->db->escape($this->solde)."'";
-	// 	$sql .= ", '".$this->db->escape($this->origins)."'";
-	// 	// $sql .= ", '".$this->db->escape($this->label)."'";
-	// 	$sql .= ", '".$this->action_sse."'";
-	// 	$sql .= ", '".$this->action_rp."'";
-	// 	$sql .= ", '".$this->db->idate($this->date_creation)."'";
-	// 	$sql .= ", '".$this->db->escape($this->action_txt)."'";
-	// 	$sql .= ", '".$this->db->idate($this->date_eche)."'";
-	// 	$sql .= ", '".$this->db->escape($this->avancement)."'";
-	// 	$sql .= ", '".$this->db->idate($this->date_sol)."'";
-	// 	$sql .= ", '".$this->db->escape($this->diffusion)."')";
-	// 	// $sql .= ", '".$this->db->escape($this->com)."'";
-
-
-	// 	dol_syslog(get_class($this)."::create", LOG_DEBUG);
-	// 	$resql = $this->db->query($sql);
-	// 	if ($resql) {
-	// 		$this->id = $this->db->last_insert_id(MAIN_DB_PREFIX.'actions_action');
-
-	// 		if ($this->id) {
-				
-	// 			// update ref
-	// 			$initialref = '(PROV'.$this->id.')';
-	// 			if (!empty($this->ref)) {
-	// 				$initialref = $this->ref;
-	// 			}
-
-	// 			$sql = 'UPDATE '.MAIN_DB_PREFIX."actions_action SET ref='".$this->db->escape($initialref)."' WHERE rowid=".((int) $this->id);
-	// 			if ($this->db->query($sql)) {
-	// 				$this->ref = $initialref;
-
-	// 				if (!empty($this->linkedObjectsIds) && empty($this->linked_objects)) {	// To use new linkedObjectsIds instead of old linked_objects
-	// 					$this->linked_objects = $this->linkedObjectsIds; // TODO Replace linked_objects with linkedObjectsIds
-	// 				}
-				
-	// 				// Add object linked
-	// 				if (!$error && $this->id && !empty($this->linked_objects) && is_array($this->linked_objects)) {
-	// 					foreach ($this->linked_objects as $origin => $tmp_origin_id) {
-	// 						if (is_array($tmp_origin_id)) {       // New behaviour, if linked_object can have several links per type, so is something like array('contract'=>array(id1, id2, ...))
-	// 							foreach ($tmp_origin_id as $origin_id) {
-	// 								$ret = $this->add_object_linked($origin, $origin_id);
-	// 								if (!$ret) {
-	// 									$this->error = $this->db->lasterror();
-	// 									$error++;
-	// 								}
-	// 							}
-	// 						} else // Old behaviour, if linked_object has only one link per type, so is something like array('contract'=>id1))
-	// 						{
-	// 							$origin_id = $tmp_origin_id;
-	// 							$ret = $this->add_object_linked($origin, $origin_id);
-	// 							if (!$ret) {
-	// 								$this->error = $this->db->lasterror();
-	// 								$error++;
-	// 							}
-	// 						}
-	// 					}
-	// 				}
-	// 				// var_dump($this->origin);
-	// 				if (!$error && $this->id && !empty($conf->global->MAIN_PROPAGATE_CONTACTS_FROM_ORIGIN) && !empty($this->origin) && !empty($this->origin_id)) {   // Get contact from origin object
-	// 					$originforcontact = $this->origin;
-	// 					$originidforcontact = $this->origin_id;
-	// 					if ($originforcontact == 'constat') {     // shipment and order share the same contacts. If creating from shipment we take data of order
-	// 						require_once DOL_DOCUMENT_ROOT.'/custom/constat/class/constat.class.php';
-	// 						$exp = new Constat($this->db);
-	// 						$exp->fetch($this->origin_id);
-	// 						$exp->fetchObjectLinked();
-	// 						if (count($exp->linkedObjectsIds['constat']) > 0) {
-	// 							foreach ($exp->linkedObjectsIds['constat'] as $key => $value) {
-	// 								$originforcontact = 'constat';
-	// 								if (is_object($value)) {
-	// 									$originidforcontact = $value->id;
-	// 								} else {
-	// 									$originidforcontact = $value;
-	// 								}
-	// 								break; // We take first one
-	// 							}
-	// 						}
-	// 					}
-	// 				}
-
-
-	// 				if (!$error) {
-	// 					$result = $this->insertExtraFields();
-	// 					if ($result < 0) {
-	// 						$error++;
-	// 					}
-	// 				}
-
-	// 				if (!$error && !$notrigger) {
-	// 					// Call trigger
-	// 					$result = $this->call_trigger('ACTIONS_ACTION', $user);
-	// 					if ($result < 0) {
-	// 						$error++;
-	// 					}
-	// 					// End call triggers
-	// 				}
-
-	// 				if (!$error) {
-	// 					$this->db->commit();
-	// 					return $this->id;
-	// 				} else {
-	// 					$this->db->rollback();
-	// 					return -1 * $error;
-	// 				}
-	// 			}
-	// 		} else {
-	// 			$this->error = $this->db->lasterror();
-	// 			$this->db->rollback();
-	// 			return -1;
-	// 		}
-
-	// 		return 0;
-	// 	} else {
-	// 		dol_print_error($this->db);
-	// 		$this->db->rollback();
-	// 		return -1;
-	// 	}
-	// }
-
-	/**
 	 * Clone an object into another one
 	 *
 	 * @param  	User 	$user      	User that creates
@@ -562,96 +387,11 @@ class Action extends CommonObject
 	 */
 	public function fetch($id, $ref = null)
 	{
-		// Check parameters
-		if (empty($id) && empty($ref)) {
-			return -1;
-		}
-
-		$sql = "SELECT";
-		$sql .= " ac.rowid,";
-		$sql .= " ac.ref,";
-		$sql .= " ac.numero,";
-		$sql .= " ac.intervenant,";
-		$sql .= " ac.priority,";
-		$sql .= " ac.fk_user_creat,";
-		$sql .= " ac.origins,";
-		$sql .= " ac.label,";
-		$sql .= " ac.action_sse,";
-		$sql .= " ac.action_rp,";
-		$sql .= " ac.action_surete,";
-		$sql .= " ac.CP,";
-		$sql .= " ac.date_creation,";
-		$sql .= " ac.action_txt,";
-		$sql .= " ac.date_eche,";
-		// $sql .= " ac.user_pilote,";
-		$sql .= " ac.avancement,";
-		$sql .= " ac.status,";
-		$sql .= " ac.date_sol,";
-		$sql .= " ac.diffusion,";
-		$sql .= " ac.com,";
-		$sql .= " ac.rowid_constat,";
-	
-		$sql .= " ac.eff_act,";
-		$sql .= " ac.eff_act_description,";
-		$sql .= " ac.date_asse";
-		
-		
-		$sql .= " FROM ".MAIN_DB_PREFIX."actions_action as ac";
-		if ($id) {
-			$sql .= " WHERE ac.rowid = ".((int) $id);
-		}
-
-		dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
-		$resql = $this->db->query($sql);
-		if ($resql) {
-
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-
-				$this->id    = $obj->rowid;
-				$this->ref   = $obj->ref;
-				$this->numero   = $obj->numero;
-				$this->intervenant   = $obj->intervenant;
-				$this->priority   = $obj->priority;
-				$this->fk_user_creat   = $obj->fk_user_creat;
-				$this->origins   = $obj->origins;
-				$this->label   = $obj->label;
-				$this->action_sse   = $obj->action_sse;
-				$this->action_rp   = $obj->action_rp;
-				$this->action_surete   = $obj->action_surete;
-				$this->CP   = $obj->CP;
-				$this->date_creation = $this->db->idate($obj->date_creation);
-				$this->action_txt   = $obj->action_txt;
-				$this->date_eche = $this->db->idate($obj->date_eche);
-				$this->avancement	= $obj->avancement;
-				$this->status	= $obj->status;
-				$this->date_sol = $this->db->idate($obj->date_sol);
-				$this->diffusion	= $obj->diffusion;
-				$this->com	= $obj->com;
-				$this->eff_act	= $obj->eff_act;
-				$this->eff_act_description	= $obj->eff_act_description;
-				$this->date_asse = $this->db->idate($obj->date_asse);
-
-				$this->fetch_optionals();
-				//$this->user_pilote = $this->listUserPilote();
-				//var_dump($rowid_constat);
-				//$this->inanimation_talk(412);
-				
-			}
-			
-			$this->db->free($resql);
-
-			return 1;
-		} else {
-			$this->error = "Error ".$this->db->lasterror();
-			return -1;
-		}
-
 		$result = $this->fetchCommon($id, $ref);
 		if ($result > 0 && !empty($this->table_element_line)) {
 			$this->fetchLines();
-			
 		}
+
 		return $result;
 	}
 	
@@ -757,8 +497,7 @@ class Action extends CommonObject
 	public function update(User $user, $notrigger = false)
 	{
 		$this->actionmsg = msgAgendaUpdateForAction($this, 1);
-		return $this->updateCommonCustom($user, ($this->actionmsg ? 0 : $notrigger));
-
+		return $this->updateCommon($user, ($this->actionmsg ? 0 : $notrigger));
 	}
 
 	/**
@@ -1311,17 +1050,17 @@ class Action extends CommonObject
 			global $langs;
 			//$langs->load("actions@actions");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Validé');
-			$this->labelStatus[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
+			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('En cours');
+			// $this->labelStatus[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatus[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldée');
-			$this->labelStatus[self::STATUS_ATT_SOLDEE ] = $langs->transnoentitiesnoconv('Attente validation Soldée');
+			// $this->labelStatus[self::STATUS_ATT_SOLDEE ] = $langs->transnoentitiesnoconv('Attente validation Soldée');
 			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturée');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Classé sans suite');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Validé');
-			$this->labelStatusShort[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
+			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('En cours');
+			// $this->labelStatusShort[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatusShort[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldée');
-			$this->labelStatusShort[self::STATUS_ATT_SOLDEE] = $langs->transnoentitiesnoconv('Attente validation Soldée');
+			// $this->labelStatusShort[self::STATUS_ATT_SOLDEE] = $langs->transnoentitiesnoconv('Attente validation Soldée');
 			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturée');
 			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Classé sans suite');
 		}
@@ -1533,290 +1272,15 @@ class Action extends CommonObject
 		return $error;
 	}
 
-	/**
-	 *	Fetch array of objects linked to current object (object of enabled modules only). Links are loaded into
-	 *		this->linkedObjectsIds array +
-	 *		this->linkedObjects array if $loadalsoobjects = 1 or $loadalsoobjects = type
-	 *  Possible usage for parameters:
-	 *  - all parameters empty -> we look all link to current object (current object can be source or target)
-	 *  - source id+type -> will get list of targets linked to source
-	 *  - target id+type -> will get list of sources linked to target
-	 *  - source id+type + target type -> will get list of targets of the type linked to source
-	 *  - target id+type + source type -> will get list of sources of the type linked to target
-	 *
-	 *	@param	int			$sourceid			Object source id (if not defined, id of object)
-	 *	@param  string		$sourcetype			Object source type (if not defined, element name of object)
-	 *	@param  int			$targetid			Object target id (if not defined, id of object)
-	 *	@param  string		$targettype			Object target type (if not defined, element name of object)
-	 *	@param  string		$clause				'OR' or 'AND' clause used when both source id and target id are provided
-	 *  @param  int			$alsosametype		0=Return only links to object that differs from source type. 1=Include also link to objects of same type.
-	 *  @param  string		$orderby			SQL 'ORDER BY' clause
-	 *  @param	int|string	$loadalsoobjects	Load also array this->linkedObjects. Use 0 to increase performances, Use 1 to load all, Use value of type ('facture', 'facturerec', ...) to load only a type of object.
-	 *	@return int								<0 if KO, >0 if OK
-	 *  @see	add_object_linked(), updateObjectLinked(), deleteObjectLinked()
-	 */
-	// public function fetchObjectLinked2($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '', $clause = 'OR', $alsosametype = 1, $orderby = 'sourcetype', $loadalsoobjects = 1)
-	// {
-	// 	global $conf, $hookmanager, $action;
 
-	// 	$this->linkedObjectsIds = array();
-	// 	$this->linkedObjects = array();
-
-	// 	$justsource = false;
-	// 	$justtarget = false;
-	// 	$withtargettype = false;
-	// 	$withsourcetype = false;
-
-	// 	$parameters = array('sourcetype'=>$sourcetype, 'sourceid'=>$sourceid, 'targettype'=>$targettype, 'targetid'=>$targetid);
-	// 	// Hook for explicitly set the targettype if it must be differtent than $this->element
-	// 	$reshook = $hookmanager->executeHooks('setLinkedObjectSourceTargetType', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
-	// 	if ($reshook > 0) {
-	// 		if (!empty($hookmanager->resArray['sourcetype'])) $sourcetype = $hookmanager->resArray['sourcetype'];
-	// 		if (!empty($hookmanager->resArray['sourceid'])) $sourceid = $hookmanager->resArray['sourceid'];
-	// 		if (!empty($hookmanager->resArray['targettype'])) $targettype = $hookmanager->resArray['targettype'];
-	// 		if (!empty($hookmanager->resArray['targetid'])) $targetid = $hookmanager->resArray['targetid'];
-	// 	}
-
-	// 	if (!empty($sourceid) && !empty($sourcetype) && empty($targetid)) {
-	// 		$justsource = true; // the source (id and type) is a search criteria
-	// 		if (!empty($targettype)) {
-	// 			$withtargettype = true;
+	// public function setEncours($user, $notrigger = 0)
+	// 	{
+	// 		// Protection
+	// 		if ($this->status <= self::STATUS_EN_COURS) {
+	// 			return 0;
 	// 		}
+	// 		return $this->setStatusCommon($user, self::STATUS_EN_COURS, $notrigger, 'CONSTAT_UNVALIDATE');
 	// 	}
-	// 	if (!empty($targetid) && !empty($targettype) && empty($sourceid)) {
-	// 		$justtarget = true; // the target (id and type) is a search criteria
-	// 		if (!empty($sourcetype)) {
-	// 			$withsourcetype = true;
-	// 		}
-	// 	}
-
-	// 	$sourceid = (!empty($sourceid) ? $sourceid : $this->id);
-	// 	$targetid = (!empty($targetid) ? $targetid : $this->id);
-	// 	$sourcetype = (!empty($sourcetype) ? $sourcetype : $this->element);
-	// 	$targettype = (!empty($targettype) ? $targettype : $this->element);
-
-	// 	/*if (empty($sourceid) && empty($targetid))
-	// 	 {
-	// 	 dol_syslog('Bad usage of function. No source nor target id defined (nor as parameter nor as object id)', LOG_ERR);
-	// 	 return -1;
-	// 	 }*/
-
-	// 	// Links between objects are stored in table element_element
-	// 	$sql = 'SELECT rowid, fk_source, sourcetype, fk_target, targettype';
-	// 	$sql .= ' FROM '.MAIN_DB_PREFIX.'element_element';
-	// 	$sql .= " WHERE ";
-	// 	// if ($justsource || $justtarget) {
-	// 		// if ($justsource) {
-	// 		// 	$sql .= "fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."'";
-	// 		// 	if ($withtargettype) {
-	// 		// 		$sql .= " AND targettype = '".$this->db->escape($targettype)."'";
-	// 		// 	}
-	// 		// } elseif ($justtarget) {
-	// 			$sql .= "fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape('actions_action')."'";
-	// 			// if ($withsourcetype) {
-	// 			// 	$sql .= " AND sourcetype = '".$this->db->escape($sourcetype)."'";
-	// 			// }
-	// 	// 	}
-	// 	// } else {
-	// 	// 	$sql .= "(fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."')";
-	// 	// 	$sql .= " ".$clause." (fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape($targettype)."')";
-	// 	// }
-	// 	$sql .= ' ORDER BY '.$orderby;
-
-	// 	dol_syslog(get_class($this)."::fetchObjectLink", LOG_DEBUG);
-	// 	$resql = $this->db->query($sql);
-	// 	if ($resql) {
-	// 		$num = $this->db->num_rows($resql);
-	// 		$i = 0;
-	// 		while ($i < $num) {
-	// 			$obj = $this->db->fetch_object($resql);
-	// 			// if ($justsource || $justtarget) {
-	// 			// 	if ($justsource) {
-	// 					// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
-	// 				// } elseif ($justtarget) {
-	// 				// 	$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
-	// 				// }
-	// 			// } else {
-	// 			// 	if ($obj->fk_source == $sourceid && $obj->sourcetype == $sourcetype) {
-	// 		 		// $this->linkedObjectsIds[$obj->targettype][$obj->rowid] = $obj->fk_target;
-	// 			// 	}
-	// 			// var_dump($obj->targettype);
-	// 			// 	if ($obj->fk_target == $targetid && $obj->targettype == $targettype) {
-	// 			 		$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid] = $obj->fk_source;
-	// 			// 	}
-	// 			// }
-		
-	// 			$i++;
-	// 		}
-
-	// 		if (!empty($this->linkedObjectsIds)) {
-	// 			$tmparray = $this->linkedObjectsIds;
-	// 			foreach ($tmparray as $objecttype => $objectids) {       // $objecttype is a module name ('facture', 'mymodule', ...) or a module name with a suffix ('project_task', 'mymodule_myobj', ...)
-	// 				// Parse element/subelement (ex: project_task, cabinetmed_consultation, ...)
-	// 				$module = $element = $subelement = $objecttype;
-	// 				$regs = array();
-	// 				if ($objecttype != 'supplier_proposal' && $objecttype != 'order_supplier' && $objecttype != 'invoice_supplier'
-	// 					&& preg_match('/^([^_]+)_([^_]+)/i', $objecttype, $regs)) {
-	// 					$module = $element = $regs[1];
-	// 					$subelement = $regs[2];
-	// 				}
-
-	// 				$classpath = $element.'/class';
-	// 				// To work with non standard classpath or module name
-	// 				if ($objecttype == 'facture') {
-	// 					$classpath = 'compta/facture/class';
-	// 				} elseif ($objecttype == 'facturerec') {
-	// 					$classpath = 'compta/facture/class';
-	// 					$module = 'facture';
-	// 				} elseif ($objecttype == 'propal') {
-	// 					$classpath = 'comm/propal/class';
-	// 				} elseif ($objecttype == 'supplier_proposal') {
-	// 					$classpath = 'supplier_proposal/class';
-	// 				} elseif ($objecttype == 'shipping') {
-	// 					$classpath = 'expedition/class';
-	// 					$subelement = 'expedition';
-	// 					$module = 'expedition_bon';
-	// 				} elseif ($objecttype == 'delivery') {
-	// 					$classpath = 'delivery/class';
-	// 					$subelement = 'delivery';
-	// 					$module = 'delivery_note';
-	// 				} elseif ($objecttype == 'invoice_supplier' || $objecttype == 'order_supplier') {
-	// 					$classpath = 'fourn/class';
-	// 					$module = 'fournisseur';
-	// 				} elseif ($objecttype == 'fichinter') {
-	// 					$classpath = 'fichinter/class';
-	// 					$subelement = 'fichinter';
-	// 					$module = 'ficheinter';
-	// 				} elseif ($objecttype == 'subscription') {
-	// 					$classpath = 'adherents/class';
-	// 					$module = 'adherent';
-	// 				} elseif ($objecttype == 'contact') {
-	// 					 $module = 'societe';
-	// 				}elseif ($objecttype == 'constat') {
-	// 					$module = 'custom/constat';
-	// 			   }elseif ($objecttype == 'constat_constat') {
-	// 				$module = 'custom/constat';
-	// 		   	   }elseif ($objecttype == 'actions') {
-	// 					$module = 'custom/actions';
-	// 			   }elseif ($objecttype == 'actions') {
-	// 				$module = 'custom/actions';
-	// 		   	   }
-	// 				// Set classfile
-	// 				$classfile = strtolower($subelement);
-	// 				$classname = ucfirst($subelement);
-
-	// 				if ($objecttype == 'order') {
-	// 					$classfile = 'commande';
-	// 					$classname = 'Commande';
-	// 				} elseif ($objecttype == 'invoice_supplier') {
-	// 					$classfile = 'fournisseur.facture';
-	// 					$classname = 'FactureFournisseur';
-	// 				} elseif ($objecttype == 'order_supplier') {
-	// 					$classfile = 'fournisseur.commande';
-	// 					$classname = 'CommandeFournisseur';
-	// 				} elseif ($objecttype == 'supplier_proposal') {
-	// 					$classfile = 'supplier_proposal';
-	// 					$classname = 'SupplierProposal';
-	// 				} elseif ($objecttype == 'facturerec') {
-	// 					$classfile = 'facture-rec';
-	// 					$classname = 'FactureRec';
-	// 				} elseif ($objecttype == 'subscription') {
-	// 					$classfile = 'subscription';
-	// 					$classname = 'Subscription';
-	// 				} elseif ($objecttype == 'project' || $objecttype == 'projet') {
-	// 					$classpath = 'projet/class';
-	// 					$classfile = 'project';
-	// 					$classname = 'Project';
-	// 				} elseif ($objecttype == 'conferenceorboothattendee') {
-	// 					$classpath = 'eventorganization/class';
-	// 					$classfile = 'conferenceorboothattendee';
-	// 					$classname = 'ConferenceOrBoothAttendee';
-	// 					$module = 'eventorganization';
-	// 				} elseif ($objecttype == 'conferenceorbooth') {
-	// 					$classpath = 'eventorganization/class';
-	// 					$classfile = 'conferenceorbooth';
-	// 					$classname = 'ConferenceOrBooth';
-	// 					$module = 'eventorganization';
-	// 				} elseif ($objecttype == 'mo') {
-	// 					$classpath = 'mrp/class';
-	// 					$classfile = 'mo';
-	// 					$classname = 'Mo';
-	// 					$module = 'mrp';
-	// 				}elseif ($objecttype == 'constat') {
-	// 					$classpath = 'constat/class';
-	// 					$classfile = 'constat';
-	// 					$classname = 'Constat';
-	// 					$module = 'constat';
-	// 				}elseif ($objecttype == 'constat_constat') {
-	// 					$classpath = 'constat/class';
-	// 					$classfile = 'constat';
-	// 					$classname = 'Constat';
-	// 					$module = 'constat';
-	// 				}elseif ($objecttype == 'actions') {
-	// 					$classpath = 'actions/class';
-	// 					$classfile = 'action';
-	// 					$classname = 'Action';
-	// 					$module = 'actions';
-	// 				}elseif ($objecttype == 'actions_action') {
-	// 					$classpath = 'actions/class';
-	// 					$classfile = 'action';
-	// 					$classname = 'Action';
-	// 					$module = 'actions';
-	// 				}
-
-	// 				// Here $module, $classfile and $classname are set, we can use them.
-	// 				if ($conf->$module->enabled && (($element != $this->element) || $alsosametype)) {
-	// 					if ($loadalsoobjects && (is_numeric($loadalsoobjects) || ($loadalsoobjects === $objecttype))) {
-	// 						dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
-	// 						//print '/'.$classpath.'/'.$classfile.'.class.php '.class_exists($classname);
-	// 						if (class_exists($classname)) {
-	// 							foreach ($objectids as $i => $objectid) {	// $i is rowid into llx_element_element
-	// 								$object = new $classname($this->db);
-	// 								$ret = $object->fetch($objectid);
-	// 								if ($ret >= 0) {
-	// 									$this->linkedObjects[$objecttype][$i] = $object;
-	// 								}
-	// 							}
-	// 						}
-	// 					}
-	// 				} else {
-	// 					unset($this->linkedObjectsIds[$objecttype]);
-	// 				}
-	// 			}
-	// 		}
-	// 		return 1;
-	// 	} else {
-	// 		dol_print_error($this->db);
-	// 		return -1;
-	// 	}
-	// }
-
-	/**
-	 * 
-	 * TOUTE LES FONCTION POUR LES CHANGEMENT DE ROLE AVEC LES BOUTONS 
-	 * 
-	 * 
-	  *	@param	int			$sourceid			Object source id (if not defined, id of object)
-	 *	@param  string		$sourcetype			Object source type (if not defined, element name of object)
-	 *	@param  int			$targetid			Object target id (if not defined, id of object)
-	 *	@param  string		$targettype			Object target type (if not defined, element name of object)
-	 *	@param  string		$clause				'OR' or 'AND' clause used when both source id and target id are provided
-	 *  @param  int			$alsosametype		0=Return only links to object that differs from source type. 1=Include also link to objects of same type.
-	 *  @param  string		$orderby			SQL 'ORDER BY' clause
-	 *  @param	int|string	$loadalsoobjects	Load also array this->linkedObjects. Use 0 to increase performances, Use 1 to load all, Use value of type ('facture', 'facturerec', ...) to load only a type of object.
-	 *	@return int								<0 if KO, >0 if OK
-	 *  @see	add_object_linked(), updateObjectLinked(), deleteObjectLinked()
-	 */
-
-
-	public function setEncours($user, $notrigger = 0)
-		{
-			// Protection
-			if ($this->status <= self::STATUS_EN_COURS) {
-				return 0;
-			}
-			return $this->setStatusCommon($user, self::STATUS_EN_COURS, $notrigger, 'CONSTAT_UNVALIDATE');
-		}
 	
 	public function setSolde($user, $notrigger = 0)
 	{
@@ -1827,22 +1291,14 @@ class Action extends CommonObject
 		
 		return $this->setStatusCommon($user, self::STATUS_SOLDEE, $notrigger, 'CONSTAT_UNVALIDATE');
 	}
-	public function setAttSolde($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status <= self::STATUS_ATT_SOLDEE) {
-			return 0;
-		}
-		return $this->setStatusCommon($user, self::STATUS_ATT_SOLDEE , $notrigger, 'CONSTAT_UNVALIDATE');
-	}
-	public function setClasse($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status <= self::STATUS_CANCELED) {
-			return 0;
-		}
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'CONSTAT_UNVALIDATE');
-	}
+	// public function setAttSolde($user, $notrigger = 0)
+	// {
+	// 	// Protection
+	// 	if ($this->status <= self::STATUS_ATT_SOLDEE) {
+	// 		return 0;
+	// 	}
+	// 	return $this->setStatusCommon($user, self::STATUS_ATT_SOLDEE , $notrigger, 'CONSTAT_UNVALIDATE');
+	// }
 
 	public function setCloture($user, $notrigger = 0)
 	{
@@ -1854,349 +1310,59 @@ class Action extends CommonObject
 	}
 	
 
-	public function updateEnCours()
-	{
-		$error = 0;
 
-		$sql = "UPDATE ".MAIN_DB_PREFIX."actions_action";
-		$sql .= " SET status = ".self::STATUS_EN_COURS;
-		$sql .= " WHERE rowid = ".((int) $this->id);
+   	function alerte($status, $timestamp) {
+		date_default_timezone_set('Europe/Paris');
+		if (empty($timestamp)) {
+			return "";
+		}
 
-		$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
+		try {
+			$date_eche = new DateTime($timestamp);
+		} catch (Exception $e) {
+			return "";
+		}
+
+		$today = new DateTime();
+		if (empty($today)) {
+			throw new Exception("Failed to create DateTime object for today");
+		}
+
+		$interval = $today->diff($date_eche);
+		if (!$interval) {
+			throw new Exception("Failed to calculate date difference");
+		}
+
+		$days = (int)$interval->format('%r%a'); 
+
+		if ($status == "soldee" || $status == "classee") {
+			return "";
+		} elseif ($days > 20) {
+			return "vert";
+		} elseif ($days < 0 || $days < 10) { 
+			return "rouge";
+		} else {
+			return "orange";
+		}
+	}
+
+	function solde_delai($status, $date_eche, $date_sol) {
+		if ($status != "en cours") {
+			if ($date_sol === null) {
+				// Retourner une valeur par défaut ou une erreur
+				return "";
 			}
-		if (!$error) {
-			$this->status = self::STATUS_EN_COURS;
-			$this->db->commit();
-			return 1;
+			$date1 = new DateTime($date_eche);
+			$date2 = new DateTime($date_sol);
+			$interval = $date1->diff($date2);
+			return $interval->days;
 		} else {
-			$this->db->rollback();
-			return -1;
-		}
-	}
-
-		public function updateSolde()
-	{
-		$error = 0;
-
-
-		$today = date('Y-m-d');
-
-		$sql = "UPDATE " . MAIN_DB_PREFIX . "actions_action";
-		$sql .= " SET status = " . self::STATUS_SOLDEE . ", date_sol = '" . $this->db->escape($today) . "'";
-		$sql .= " WHERE rowid = " . ((int)$this->id);
-
-		$resql = $this->db->query($sql);
-		if (!$resql) {
-			dol_print_error($this->db);
-			$this->error = $this->db->lasterror();
-			$error++;
-		}
-		if (!$error) {
-			$this->status = self::STATUS_SOLDEE;
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-	}
-	public function updateAttSolde()
-	{
-		$error = 0;
-
-
-		$today = date('Y-m-d');
-
-		$sql = "UPDATE " . MAIN_DB_PREFIX . "actions_action";
-		$sql .= " SET status = " . self::STATUS_ATT_SOLDEE . ", date_sol = '" . $this->db->escape($today) . "'";
-		$sql .= " WHERE rowid = " . ((int)$this->id);
-
-		$resql = $this->db->query($sql);
-		if (!$resql) {
-			dol_print_error($this->db);
-			$this->error = $this->db->lasterror();
-			$error++;
-		}
-		if (!$error) {
-			$this->status = self::STATUS_ATT_SOLDEE;
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-	}
-
-	public function updateClasse()
-	{
-		$error = 0;
-
-		$sql = "UPDATE ".MAIN_DB_PREFIX."actions_action";
-		$sql .= " SET status = ".self::STATUS_CANCELED;
-		$sql .= " WHERE rowid = ".((int) $this->id);
-
-		$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
-		if (!$error) {
-			$this->status = self::STATUS_CANCELED;
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
+			return "";
 		}
 	}
 
 
-	
-	public function updateCloture()
-	{
-		$error = 0;
-
-		$sql = "UPDATE ".MAIN_DB_PREFIX."actions_action";
-		$sql .= " SET status = ".self::STATUS_CLOTURE;
-		$sql .= " WHERE rowid = ".((int) $this->id);
-
-		$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
-		if (!$error) {
-			$this->status = self::STATUS_CLOTURE;
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-	}
-
-
-
-	public function SetUserInGroup($group)
-   {
-     // phpcs:enable
-     global $conf, $langs, $user;
-  
-     $error = 0;
-  
-     $this->db->begin();
-  
-     $sql = "DELETE FROM ".$this->db->prefix()."usergroup_user";
-     $sql .= " WHERE fk_user  = ".((int) $this->intervanant);
-     $sql .= " AND fk_usergroup = ".((int) $group);
-    
-  
-     $result = $this->db->query($sql);
-  
-     $sql = "INSERT INTO ".$this->db->prefix()."usergroup_user ( fk_user, rowid)";
-     $sql .= " VALUES (".((int) $this->intervenant).",".((int) $group).")";
-  
-     $result = $this->db->query($sql);
-     if ($result) {
-       if (!$error && !$notrigger) {
-         $this->newgroupid = $group; // deprecated. Remove this.
-         $this->context = array('audit'=>$langs->trans("UserSetInGroup"), 'newgroupid'=>$group);
-  
-         // Call trigger
-         $result = $this->call_trigger('USER_MODIFY', $user);
-         if ($result < 0) {
-           $error++;
-         }
-         // End call triggers
-       }
-  
-       if (!$error) {
-         $this->db->commit();
-         return 1;
-       } else {
-         dol_syslog(get_class($this)."::SetInGroup ".$this->error, LOG_ERR);
-         $this->db->rollback();
-         return -2;
-       }
-     } else {
-       $this->error = $this->db->lasterror();
-       $this->db->rollback();
-       return -1;
-     }
-   }
-
-
-
-   function alerte($status, $timestamp) {
-
-	date_default_timezone_set('Europe/Paris');
-    if (empty($timestamp)) {
-        return "";
-    }
-
-    try {
-        $date_eche = new DateTime($timestamp);
-    } catch (Exception $e) {
-        return "";
-    }
-
-    $today = new DateTime();
-    if (empty($today)) {
-        throw new Exception("Failed to create DateTime object for today");
-    }
-
-    $interval = $today->diff($date_eche);
-    if (!$interval) {
-        throw new Exception("Failed to calculate date difference");
-    }
-
-    $days = (int)$interval->format('%r%a'); 
-
-    if ($status == "soldee" || $status == "classee") {
-        return "";
-    } elseif ($days > 20) {
-        return "vert";
-    } elseif ($days < 0 || $days < 10) { 
-        return "rouge";
-    } else {
-        return "orange";
-    }
-}
-
-function solde_delai($status, $date_eche, $date_sol) {
-    if ($status != "en cours") {
-        if ($date_sol === null) {
-            // Retourner une valeur par défaut ou une erreur
-            return "";
-        }
-        $date1 = new DateTime($date_eche);
-        $date2 = new DateTime($date_sol);
-        $interval = $date1->diff($date2);
-        return $interval->days;
-    } else {
-        return "";
-    }
-}
-
-public function updateCommonCustom(User $user, $notrigger = 0)
-  {
-    dol_syslog(get_class($this)."::updateCommon update", LOG_DEBUG);
- 
-    $error = 0;
- 
-    $now = dol_now();
- 
-    // $this->oldcopy should have been set by the caller of update
-    //if (empty($this->oldcopy)) {
-    //  dol_syslog("this->oldcopy should have been set by the caller of update (here properties were already modified)", LOG_WARNING);
-    //  $this->oldcopy = dol_clone($this, 2);
-    //}
- 
-    $fieldvalues = $this->setSaveQuery();
- 
-    // Note: Here, $fieldvalues contains same keys (or less) that are inside ->fields
- 
-    if (array_key_exists('date_modification', $fieldvalues) && empty($fieldvalues['date_modification'])) {
-      $fieldvalues['date_modification'] = $this->db->idate($now);
-    }
-    if (array_key_exists('fk_user_modif', $fieldvalues) && !($fieldvalues['fk_user_modif'] > 0)) {
-      $fieldvalues['fk_user_modif'] = $user->id;
-    }
-    if (array_key_exists('user_modification_id', $fieldvalues) && !($fieldvalues['user_modification_id'] > 0)) {
-      $fieldvalues['user_modification_id'] = $user->id;
-    }
-    if (array_key_exists('ref', $fieldvalues)) {
-      $fieldvalues['ref'] = dol_string_nospecial($fieldvalues['ref']); // If field is a ref, we sanitize data
-    }
- 
-    unset($fieldvalues['rowid']); // The field 'rowid' is reserved field name for autoincrement field so we don't need it into update.
- 
-    // Add quotes and escape on fields with type string
-    $keys = array();
-    $values = array();
-    $tmp = array();
-    foreach ($fieldvalues as $k => $v) {
-      $keys[$k] = $k;
-      $value = $this->fields[$k];
-      // @phan-suppress-next-line PhanPluginSuspiciousParamPosition
-      $values[$k] = $this->quote($v, $value);
-      if (($value["type"] == "text") && !empty($value['arrayofkeyval']) && is_array($value['arrayofkeyval'])) {
-        // Clean values for text with selectbox
-        $v = preg_replace('/\s/', ',', $v);
-        $v = preg_replace('/,+/', ',', $v);
-      }
-      // @phan-suppress-next-line PhanPluginSuspiciousParamPosition
-      $tmp[] = $k.'='.$this->quote($v, $this->fields[$k]);
-    }
- 
-    // Clean and check mandatory fields
-    foreach ($keys as $key) {
-      if (preg_match('/^integer:/i', $this->fields[$key]['type']) && $values[$key] == '-1') {
-        $values[$key] = ''; // This is an implicit foreign key field
-      }
-      if (!empty($this->fields[$key]['foreignkey']) && $values[$key] == '-1') {
-        $values[$key] = ''; // This is an explicit foreign key field
-      }
- 
-      //var_dump($key.'-'.$values[$key].'-'.($this->fields[$key]['notnull'] == 1));
-      /*
-       if ($this->fields[$key]['notnull'] == 1 && empty($values[$key]))
-       {
-       $error++;
-       $this->errors[]=$langs->trans("ErrorFieldRequired", $this->fields[$key]['label']);
-       }*/
-    }
- 
-    $sql = 'UPDATE '.$this->db->prefix().$this->table_element.' SET '.implode(', ', $tmp).' WHERE rowid='.((int) $this->id);
- 
-    $this->db->begin();
- 
-    if (!$error) {
-      $res = $this->db->query($sql);
-      if (!$res) {
-        $error++;
-        $this->errors[] = $this->db->lasterror();
-      }
-    }
- 
-    // Update extrafield
-    if (!$error) {
-      $result = $this->insertExtraFields(); // This delete and reinsert extrafields
-      if ($result < 0) {
-        $error++;
-      }
-    }
- 
-    // Triggers
-    if (!$error && !$notrigger) {
-      // Call triggers
-      $result = $this->call_trigger(strtoupper(get_class($this)).'S_MODIFY', $user);
-      if ($result < 0) {
-        $error++;
-      } //Do also here what you must do to rollback action if trigger fail
-      // End call triggers
-    }
- 
-    // Commit or rollback
-    if ($error) {
-      $this->db->rollback();
-      return -1;
-    } else {
-      $this->db->commit();
-      return $this->id;
-    }
-  }
-
-/**
- * 
- */
-public function insertIntoElementElement($arrayofselected, $idaction)
+	public function insertIntoElementElement($arrayofselected, $idaction)
 	{
 		// phpcs:enable
 		global $conf, $langs, $user;
@@ -2230,35 +1396,30 @@ public function insertIntoElementElement($arrayofselected, $idaction)
 			$this->error = $this->db->lasterror();
 			$this->db->rollback();
 			return -1;
+		}	
+	}
+
+	public function generateActionsReference($fk_project, $userId, $dateCreation)
+	{
+		global $db, $user;
+
+		// Récupérer l'ID de l'action actuelle (si disponible)
+		$currentActionId = isset($this->id) ? $this->id : null;
+
+		// Vérifier si nous avons un ID valide
+		if ($currentActionId === null) {
+			// Gérer le cas où l'ID n'est pas disponible
+			return 'Erreur: ID d\'action non disponible';
 		}
-		
-}
 
-public function generateActionsReference($fk_project, $userId, $dateCreation)
-{
-    global $db, $user;
+		// 1. Utiliser l'ID de l'action actuelle pour générer la référence
+		$newIndice = $currentActionId;
 
-    // Récupérer l'ID de l'action actuelle (si disponible)
-    $currentActionId = isset($this->id) ? $this->id : null;
+		// 2. Générer la référence sous le format AC-<newIndice>
+		$constatRef = 'AC' . $newIndice;
 
-    // Vérifier si nous avons un ID valide
-    if ($currentActionId === null) {
-        // Gérer le cas où l'ID n'est pas disponible
-        return 'Erreur: ID d\'action non disponible';
-    }
-
-    // 1. Utiliser l'ID de l'action actuelle pour générer la référence
-    $newIndice = $currentActionId;
-
-    // 2. Générer la référence sous le format AC-<newIndice>
-    $constatRef = 'AC' . $newIndice;
-
-    return $constatRef; // Retourner la référence générée
-}
-
-
-
-
+		return $constatRef; // Retourner la référence générée
+	}
 	public function getElementElement($idaction){
 
 		global $conf, $langs, $user, $db;		
@@ -2288,17 +1449,17 @@ public function generateActionsReference($fk_project, $userId, $dateCreation)
 		}
 
 
-		public function formatDateString(&$arrayrecord, $listfields, $record_key)
-{
-	$value = dol_print_date(dol_stringtotime($arrayrecord[$record_key]['val']), '%Y-%m-%d');
-	return $value;
-}
+	public function formatDateString(&$arrayrecord, $listfields, $record_key)
+	{
+		$value = dol_print_date(dol_stringtotime($arrayrecord[$record_key]['val']), '%Y-%m-%d');
+		return $value;
+	}
 
-public function formatDateStringHours(&$arrayrecord, $listfields, $record_key)
-{
-	$value = dol_print_date(dol_stringtotime($arrayrecord[$record_key]['val']), '%Y-%m-%d %H:%M:%S');
-	return $value;
-}
+	public function formatDateStringHours(&$arrayrecord, $listfields, $record_key)
+	{
+		$value = dol_print_date(dol_stringtotime($arrayrecord[$record_key]['val']), '%Y-%m-%d %H:%M:%S');
+		return $value;
+	}
 
 }
 

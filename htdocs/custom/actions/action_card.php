@@ -77,7 +77,6 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/actions/class/html.form.class.php';
 dol_include_once('/actions/class/action.class.php');
 dol_include_once('/actions/lib/actions_action.lib.php');
 
@@ -106,7 +105,7 @@ if (!empty($backtopagejsfields)) {
 }
 
 // Initialize technical objects
-$object = new Action($db);
+$object = new ActionQ3SE($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->actions->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array('actioncard', 'globalcard')); // Note that conf->hooks_modules contains array
@@ -134,7 +133,7 @@ include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be includ
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('actions', 'action', 'read');
 	$permissiontoadd = $user->hasRight('actions', 'action', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
@@ -184,10 +183,6 @@ if (empty($reshook)) {
 				$backtopage = $backurlforlist;
 			} else {
 				$backtopage = dol_buildpath('/actions/action_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__').'&origin='.$origin.'&origin_id='.$originid.'';
-				// if($id != '' && !empty($origin) && !empty($originid)) {
-				// 	$object->deleteObjectLinked($origin, $originid);
-				// 	$object->add_object_linked($origin, $originid);
-				// }
 			}
 		}
 	}
@@ -197,12 +192,9 @@ if (empty($reshook)) {
 		$object->oldcopy = clone $object;
 	}
 	
-	//ajout de l'intervenant dans le groupe "action pilote" 
-	//if ($user->id )
 
-		// Encours confirmation
+	// Encours confirmation
 	if( $action == 'setEnCours'){
-
 		$object->updateEnCours();
 
 		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_EN_COURSInDolibarr", $object->ref);
@@ -212,13 +204,9 @@ if (empty($reshook)) {
 		if ($result < 0) {
 			$error++;
 		}
-
-		
 	}
 
-	// Clone confirmation
 	if( $action == 'setSolde'  && $confirm == 'yes' ){
-
 		$object->updateSolde();
 
 		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_SOLDEEInDolibarr", $object->ref);
@@ -228,13 +216,9 @@ if (empty($reshook)) {
 		if ($result < 0) {
 			$error++;
 		}
-
-		
 	}
-
 	
 	if( $action == 'setAttSolde'  && $confirm == 'yes' ){
-
 		$object->updateAttSolde();
 
 		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_ATT_SOLDEEInDolibarr", $object->ref);
@@ -244,27 +228,10 @@ if (empty($reshook)) {
 		if ($result < 0) {
 			$error++;
 		}
-
 	}
 
-
-	if( $action == 'setClasse'  && $confirm == 'yes' ){
-
-		$object->updateClasse();
-
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_CLASSEInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_CLASSE', $user);
-		if ($result < 0) {
-			$error++;
-		}
-
-		
-	}
 
 	if( $action == 'setCloturee'  && $confirm == 'yes' ){
-
 		$object->updateCloture();
 
 		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_CLOTUREInDolibarr", $object->ref);
@@ -274,294 +241,182 @@ if (empty($reshook)) {
 		if ($result < 0) {
 			$error++;
 		}
-
-		
 	}
 
-	//envoie notification de fin d'une action au service Q3SE et au pilote
-	if ($action == 'setSolde' && $confirm == 'yes') {
-		$subject = '[OPTIM Industries] Notification automatique action soldé ';
-		$from = 'erp@optim-industries.fr';
-	
-		$pilote = new User($db);
-		$pilote->fetch();
-	
-		$emails = [];
-	
-		// Vérification de l'email du pilote
-		if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-			$emails[] = $pilote->email;
-		}
-	
-		// Fonction pour ajouter des emails valides à la liste
-		function addValidEmails($user_group, $group_name, &$emails)
-		{
-			$user_group->fetch('', $group_name);
-			$liste_utilisateur = $user_group->listUsersForGroup();
-			foreach ($liste_utilisateur as $qualite) {
-				if (!empty($qualite->email) && filter_var($qualite->email, FILTER_VALIDATE_EMAIL)) {
-					$emails[] = $qualite->email;
-				}
-			}
-		}
-	
-		// Récupération des emails des groupes "Q3SE" et "Resp. Q3SE"
-		$user_group = new UserGroup($db);
-		addValidEmails($user_group, 'Q3SE', $emails);
-		addValidEmails($user_group, 'Resp. Q3SE', $emails);
-	
-		// Suppression des doublons
-		$emails = array_unique($emails);
-		$to = implode(", ", $emails);
-	
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-	
-		if ($resql_creator) {
-			if ($db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-		}
-	
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-		$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-	
-		$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous informons que l'action " . $link . " créé par " . $creator_name . " a été marquée comme soldée. Cordialement, Votre système de notification");
-	
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-	
-		// Send mail
-		$res = $cmail->sendfile();
-		if ($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			print '<script>
-				window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");
-			</script>';
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-		}
-	}
-
-
-	//envoie notification au pilote si action est de retour au status en cours	
-	if ($action == 'setEnCours' && $confirm == 'oui') {
-		$subject = '[OPTIM Industries] Notification automatique action en cours';
-		$from = 'erp@optim-industries.fr';
-
-		$pilote = new User($db);
-		$pilote->fetch($object->intervenant);
-
-		$emails = [];
-
-		// Vérification de l'email du pilote
-		if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-			$emails[] = $pilote->email;
-		}
-
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-
-		if ($resql_creator && $db->num_rows($resql_creator) > 0) {
-			$creator = $db->fetch_object($resql_creator);
-			$creator_name = $creator->firstname . ' ' . $creator->lastname;
-		}
-
-		// Suppression des doublons
-		$emails = array_unique($emails);
-		$to = implode(", ", $emails);
-
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-		$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-
-		$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous informons que l'action " . $link . " créée par " . $creator_name . " est désormais en cours. Cordialement, Votre système de notification");
-
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-
-		// Envoi du mail
-		$res = $cmail->sendfile();
-		if ($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			print '<script>
-				window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");
-			</script>';
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-		}
-	}
-	
-	//notification de l'action en attente de validation de solde
-	if ($action == 'setAttSolde') {
-		$subject = '[OPTIM Industries] Notification automatique - Une action en attente de validation de solde';
-		$from = 'erp@optim-industries.fr';
-	
-		$emails = [];
-	
-		// Fonction pour ajouter des emails valides à la liste
-		function addValidEmails($user_group, $group_name, &$emails)
-		{
-			$user_group->fetch('', $group_name);
-			$liste_utilisateur = $user_group->listUsersForGroup();
-			foreach ($liste_utilisateur as $qualite) {
-				if (!empty($qualite->email) && filter_var($qualite->email, FILTER_VALIDATE_EMAIL)) {
-					$emails[] = $qualite->email;
-				}
-			}
-		}
-	
-		// Récupération des emails des groupes "Q3SE" et "Resp. Q3SE"
-		$user_group = new UserGroup($db);
-		addValidEmails($user_group, 'Q3SE', $emails);
-		addValidEmails($user_group, 'Resp. Q3SE', $emails);
-	
-		// Suppression des doublons
-		$emails = array_unique($emails);
-		$to = implode(", ", $emails);
-	
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-	
-		if ($resql_creator && $db->num_rows($resql_creator) > 0) {
-			$creator = $db->fetch_object($resql_creator);
-			$creator_name = $creator->firstname . ' ' . $creator->lastname;
-		}
-	
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-		$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-	
-		$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous informons que l'action " . $link . " créée par " . $creator_name . " est en attente de validation pour être marquée comme soldée. Veuillez indiquer si cette action est terminée ou non. Cordialement, Votre système de notification");
-	
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-	
-		// Envoi du mail
-		$res = $cmail->sendfile();
-		if ($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			print '<script>
-				window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");
-			</script>';
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-		}
-	}
-	
-	//notification de l'action en attente de validation de solde
-	if ($action == 'setEnCours') {
-		$currentDateTime = date('Y-m-d H:i:s');
-		$dueDateTime = $object->date_eche;
-	
-		if ($currentDateTime > $dueDateTime) {
-			$subject = '[OPTIM Industries] Notification automatique - Relance Action en cours';
-			$from = 'erp@optim-industries.fr';
-			$emails = [];
-	
-			// Récupération de l'email du pilote
-			$pilote = new User($db);
-			$pilote->fetch($object->intervenant);
-			if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-				$emails[] = $pilote->email;
-			}
-	
-			// Suppression des doublons
-			$emails = array_unique($emails);
-			$to = implode(", ", $emails);
-	
-			// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-			$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-			$resql_creator = $db->query($sql_creator);
-			$creator_name = "";
-	
-			if ($resql_creator && $db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-	
-			global $dolibarr_main_url_root;
-			$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-			$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-			$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-	
-			$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous rappelons que l'action " . $link . " créée par " . $creator_name . " est toujours en cours et a dépassé la date d'échéance. Cordialement, Votre système de notification");
-	
-			$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-	
-			// Envoi du mail
-			$res = $cmail->sendfile();
-			if ($res) {
-				setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			} else {
-				setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			}
-		}
-	}
-	
-	// mail pour relance action en cours
-	if ($action == 'setRelance') {
-		$currentDateTime = date('Y-m-d H:i:s');
-		$dueDateTime = $object->date_eche;
-	
-		if ($currentDateTime > $dueDateTime) {
-			$subject = '[OPTIM Industries] Notification automatique - Relance Action en cours';
-			$from = 'erp@optim-industries.fr';
-			$emails = [];
-	
-			// Récupération de l'email du pilote
-			$pilote = new User($db);
-			$pilote->fetch($object->intervenant);
-			if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-				$emails[] = $pilote->email;
-			}
-	
-			// Suppression des doublons
-			$emails = array_unique($emails);
-			$to = implode(", ", $emails);
-	
-			// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-			$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-			$resql_creator = $db->query($sql_creator);
-			$creator_name = "";
-	
-			if ($resql_creator && $db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-	
-			global $dolibarr_main_url_root;
-			$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-			$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-			$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-	
-			$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous rappelons que l'action " . $link . " créée par " . $creator_name . " n'est pas encore terminée. Cordialement, Votre système de notification");
-	
-			$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-	
-			// Envoi du mail
-			$res = $cmail->sendfile();
-			if ($res) {
-				setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-				print '<script>window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");</script>';
-			} else {
-				setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			}
-		}
-	}
-	
 	if ($action == 'confirm_delete' && !empty($permissiontodelete)) {
 		$result = $object->deleteObjectLinked($origin, $originid);
 	}
 
+	//envoie notification de fin d'une action au service Q3SE et au pilote
+	// if ($action == 'setSolde' && $confirm == 'yes') {
+	// 	$subject = '[OPTIM Industries] Notification automatique action soldé ';
+	// 	$from = 'erp@optim-industries.fr';
+	
+	// 	$pilote = new User($db);
+	// 	$pilote->fetch();
+	
+	// 	$emails = [];
+	
+	// 	// Vérification de l'email du pilote
+	// 	if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
+	// 		$emails[] = $pilote->email;
+	// 	}
+	
+	// 	// Fonction pour ajouter des emails valides à la liste
+	// 	function addValidEmails($user_group, $group_name, &$emails)
+	// 	{
+	// 		$user_group->fetch('', $group_name);
+	// 		$liste_utilisateur = $user_group->listUsersForGroup();
+	// 		foreach ($liste_utilisateur as $qualite) {
+	// 			if (!empty($qualite->email) && filter_var($qualite->email, FILTER_VALIDATE_EMAIL)) {
+	// 				$emails[] = $qualite->email;
+	// 			}
+	// 		}
+	// 	}
+	
+	// 	// Récupération des emails des groupes "Q3SE" et "Resp. Q3SE"
+	// 	$user_group = new UserGroup($db);
+	// 	addValidEmails($user_group, 'Q3SE', $emails);
+	// 	addValidEmails($user_group, 'Resp. Q3SE', $emails);
+	
+	// 	// Suppression des doublons
+	// 	$emails = array_unique($emails);
+	// 	$to = implode(", ", $emails);
+	
+	// 	// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+	// 	$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+	// 	$resql_creator = $db->query($sql_creator);
+	// 	$creator_name = "";
+	
+	// 	if ($resql_creator) {
+	// 		if ($db->num_rows($resql_creator) > 0) {
+	// 			$creator = $db->fetch_object($resql_creator);
+	// 			$creator_name = $creator->firstname . ' ' . $creator->lastname;
+	// 		}
+	// 	}
+	
+	// 	global $dolibarr_main_url_root;
+	// 	$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
+	// 	$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
+	// 	$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
+	
+	// 	$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous informons que l'action " . $link . " créé par " . $creator_name . " a été marquée comme soldée. Cordialement, Votre système de notification");
+	
+	// 	$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
+	
+	// 	// Send mail
+	// 	$res = $cmail->sendfile();
+	// 	if ($res) {
+	// 		setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
+	// 		print '<script>
+	// 			window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");
+	// 		</script>';
+	// 	} else {
+	// 		setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+	// 	}
+	// }
+
+	//envoie notification au pilote si action est de retour au status en cours	
+	// if ($action == 'setEnCours' && $confirm == 'oui') {
+	// 	$subject = '[OPTIM Industries] Notification automatique action en cours';
+	// 	$from = 'erp@optim-industries.fr';
+
+	// 	$pilote = new User($db);
+	// 	$pilote->fetch($object->intervenant);
+
+	// 	$emails = [];
+
+	// 	// Vérification de l'email du pilote
+	// 	if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
+	// 		$emails[] = $pilote->email;
+	// 	}
+
+	// 	// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+	// 	$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+	// 	$resql_creator = $db->query($sql_creator);
+	// 	$creator_name = "";
+
+	// 	if ($resql_creator && $db->num_rows($resql_creator) > 0) {
+	// 		$creator = $db->fetch_object($resql_creator);
+	// 		$creator_name = $creator->firstname . ' ' . $creator->lastname;
+	// 	}
+
+	// 	// Suppression des doublons
+	// 	$emails = array_unique($emails);
+	// 	$to = implode(", ", $emails);
+
+	// 	global $dolibarr_main_url_root;
+	// 	$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
+	// 	$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
+	// 	$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
+
+	// 	$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous informons que l'action " . $link . " créée par " . $creator_name . " est désormais en cours. Cordialement, Votre système de notification");
+
+	// 	$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
+
+	// 	// Envoi du mail
+	// 	$res = $cmail->sendfile();
+	// 	if ($res) {
+	// 		setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
+	// 		print '<script>
+	// 			window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");
+	// 		</script>';
+	// 	} else {
+	// 		setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+	// 	}
+	// }
+	
+	// mail pour relance action en cours
+	// if ($action == 'setRelance') {
+	// 	$currentDateTime = date('Y-m-d H:i:s');
+	// 	$dueDateTime = $object->date_eche;
+	
+	// 	if ($currentDateTime > $dueDateTime) {
+	// 		$subject = '[OPTIM Industries] Notification automatique - Relance Action en cours';
+	// 		$from = 'erp@optim-industries.fr';
+	// 		$emails = [];
+	
+	// 		// Récupération de l'email du pilote
+	// 		$pilote = new User($db);
+	// 		$pilote->fetch($object->intervenant);
+	// 		if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
+	// 			$emails[] = $pilote->email;
+	// 		}
+	
+	// 		// Suppression des doublons
+	// 		$emails = array_unique($emails);
+	// 		$to = implode(", ", $emails);
+	
+	// 		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+	// 		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+	// 		$resql_creator = $db->query($sql_creator);
+	// 		$creator_name = "";
+	
+	// 		if ($resql_creator && $db->num_rows($resql_creator) > 0) {
+	// 			$creator = $db->fetch_object($resql_creator);
+	// 			$creator_name = $creator->firstname . ' ' . $creator->lastname;
+	// 		}
+	
+	// 		global $dolibarr_main_url_root;
+	// 		$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
+	// 		$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
+	// 		$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
+	
+	// 		$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous rappelons que l'action " . $link . " créée par " . $creator_name . " n'est pas encore terminée. Cordialement, Votre système de notification");
+	
+	// 		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
+	
+	// 		// Envoi du mail
+	// 		$res = $cmail->sendfile();
+	// 		if ($res) {
+	// 			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
+	// 			print '<script>window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");</script>';
+	// 		} else {
+	// 			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+	// 		}
+	// 	}
+	// }
+	
 	$triggermodname = 'ACTIONS_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
 
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
@@ -598,7 +453,6 @@ if (empty($reshook)) {
  */
 
 $form = new Form($db);
-$actionForm = new actionsForm($db);
 $formfile = new FormFile($db);
 $formproject = new FormProjets($db);
 
@@ -765,7 +619,21 @@ if (($id || $ref) && $action == 'edit') {
 	print '<table class="border centpercent tableforfieldedit">'."\n";
 
 	// Common attributes
-	include DOL_DOCUMENT_ROOT.'/custom/actions/core/tpl/commonfields_edit.tpl.php';
+	if($object->status == $object::STATUS_DRAFT) {
+		unset($object->fields["avancement"]);
+		unset($object->fields["date_sol"]);
+		unset($object->fields["diffusion"]);
+		unset($object->fields["com"]);
+		unset($object->fields["eff_act"]);
+		unset($object->fields["eff_act_description"]);
+		unset($object->fields["date_asse"]);
+	}
+	elseif($object->status == $object::STATUS_VALIDATED) {
+		unset($object->fields["eff_act"]);
+		unset($object->fields["eff_act_description"]);
+		unset($object->fields["date_asse"]);
+	}
+	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
 
 	// Other attributes
 	include DOL_DOCUMENT_ROOT.'/custom/actions/core/tpl/extrafields_edit.tpl.php';
@@ -923,7 +791,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Common attributes
-	$keyforbreak='date_eche';	// We change column just before this field
+	$keyforbreak='avancement';	// We change column just before this field
 	
 	//unset($object->fields['date_eche']);				// Hide field already shown in banner
 	//unset($object->fields['fk_soc']);					// Hide field already shown in banner
@@ -1041,27 +909,21 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		//var_dump($object->table_element);
 		if (empty($reshook)) {
 			// Send
-			if (empty($user->socid)) {
-				print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
-			}
+			// if (empty($user->socid)) {
+			// 	print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
+			// }
 
 			// Back to draft
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_VALIDATED) {
-					print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				}
-			}
-			
-			
-			/*if (($object->status != $object::STATUS_SOLDEE && !in_array('intervenant', $user->rights->actions->action)) ||($object->status == $object::STATUS_SOLDEE && in_array('intervenant', $user->rights->actions->action)) ) {
-				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
-			}*/
+			// if($user->rights->actions->action->ServiceQ3SE){
+			// 	if ($object->status == $object::STATUS_VALIDATED) {
+			// 		print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// 	}
+			// }
 
 			if (!($object->status == $object::STATUS_SOLDEE && in_array('intervenant', $user->rights->actions->action)) && $object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
-				print dolGetButtonAction('', $langs->trans('Modifier/Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
+				print dolGetButtonAction('', $langs->trans('Modifier / Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
 			}
-				//print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
-		//var_dump($object->module);
+
 			if($user->rights->actions->action->ServiceQ3SE){
 				// Validate
 				if ($object->status == $object::STATUS_DRAFT) {
@@ -1073,32 +935,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					}
 				}
 			}
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_ATT_SOLDEE) {
-					
-					print dolGetButtonAction('', $langs->trans('passer au status soldé'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setSolde&confirm=yes&token='.newToken(), '', $permissiontoadd);
-	
-				}
-			}
-			
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_ATT_SOLDEE) {
-					print dolGetButtonAction('', $langs->trans('Retourner au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=oui&token='.newToken(), '', $permissiontoadd);		
-				}
-			}
 
 			if($user->rights->actions->action->ServiceQ3SE){
 				if ($object->status == $object::STATUS_EN_COURS) {
 					print dolGetButtonAction('', $langs->trans('Relancer le pilote'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setRelance&confirm=yes&token='.newToken(), '', $permissiontoadd);		
-				}
-			}
-
-			if($user->rights->actions->action->intervenant || $user->rights->actions->action->ServiceQ3SE){
-				//passé au status attente solde
-				if ($object->status == $object::STATUS_EN_COURS) {
-					if($object->avancement == '5'){
-					print dolGetButtonAction('', $langs->trans('passer au status validation soldé'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setAttSolde&confirm=yes&token='.newToken(), '', $permissiontoadd);	
-					}	
 				}
 			}
 
@@ -1117,53 +957,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}	
 			}
 
-			if($user->rights->actions->action->ServiceQ3SE){
-			//passé au status en cours
-				if ($object->status == $object::STATUS_VALIDATED) {
-					print dolGetButtonAction('', $langs->trans('passer au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				}
-					
-				//passé au status classé(annulé)
-				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED) {
-					print dolGetButtonAction('', $langs->trans('Annuler cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken(), '', $permissiontoadd);	
-					//print "<script>showPopupMessage('Le pilote peut passer son action au status \'attente  soldée\' que si son avancement est à 100% ', 'error');</script>";	
-				}
-
-				if ($object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
-					if($object->eff_act !=null){
-						print dolGetButtonAction('', $langs->trans('Classer cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken(), '', $permissiontoadd);		
-					}
-				}
-
-				if($object->status == $object::STATUS_SOLDEE){
-					print dolGetButtonAction('', $langs->trans('Cloture cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloturee&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				}
-
-				if($object->status == $object::STATUS_SOLDEE){
-					//print "<script>showPopupMessage('veuilliez évaluer l\'action', 'error');</script>";
-				}
-			}
-
-			/*
-			if ($permissiontoadd) {
-				if ($object->status == $object::STATUS_ENABLED) {
-					print dolGetButtonAction('', $langs->trans('Disable'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=disable&token='.newToken(), '', $permissiontoadd);
-				} else {
-					print dolGetButtonAction('', $langs->trans('Enable'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=enable&token='.newToken(), '', $permissiontoadd);
-				}
-			}
-			if ($permissiontoadd) {
-				if ($object->status == $object::STATUS_VALIDATED) {
-					print dolGetButtonAction('', $langs->trans('Cancel'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=close&token='.newToken(), '', $permissiontoadd);
-				} else {
-					print dolGetButtonAction('', $langs->trans('Re-Open'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=reopen&token='.newToken(), '', $permissiontoadd);
-				}
-			}
-			*/
-
-			// Delete
-
-			
+			if($object->status == $object::STATUS_SOLDEE){
+				print dolGetButtonAction('', $langs->trans('Cloture cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloturee&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			}			
 		}
 		print '</div>'."\n";
 	}
@@ -1197,13 +993,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		//Show links to link elements
 		
 		$linktoelem = $form->showLinkToObjectBlock($object, null, array('action'));
-		$somethingshown = $actionForm->showLinkedObjectBlock($object, $linktoelem);
+		$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 	
 		// // Show links to link elements
 		// $linktoelem = $form->showLinkToObjectBlock($object, null, array('action'));
 
 		//  $compatibleImportElementsList = false;
-		// // // if ($usercancreate && $object->statut == Action::STATUS_DRAFT) {
+		// // // if ($usercancreate && $object->statut == ActionQ3SE::STATUS_DRAFT) {
 		// 	$compatibleImportElementsList = array('constat', 'actions_action'); // import from linked elements
 		// // // }
 		//  $somethingshown = $actionForm->showLinkedObjectBlock($object, $linktoelem, $compatibleImportElementsList);

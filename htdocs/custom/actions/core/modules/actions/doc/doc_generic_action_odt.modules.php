@@ -247,7 +247,7 @@ class doc_generic_action_odt extends ModelePDFAction
 			// If $object is id instead of object
 			if (!is_object($object)) {
 				$id = $object;
-				$object = new Action($this->db);
+				$object = new ActionQ3SE($this->db);
 				$result = $object->fetch($id);
 				if ($result < 0) {
 					dol_print_error($this->db, $object->error);

@@ -98,7 +98,7 @@ class mod_action_advanced extends ModeleNumRefAction
 	{
 		global $conf, $db, $langs, $mysoc;
 
-		$object = new Action($db);
+		$object = new ActionQ3SE($db);
 		$object->initAsSpecimen();
 
 		/*$old_code_client = $mysoc->code_client;
