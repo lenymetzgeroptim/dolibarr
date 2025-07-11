@@ -121,30 +121,28 @@ class Action extends CommonObject
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
 		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>2, 'notnull'=>1, "visible"=>"4", "noteditable"=>"1", "default"=>"(PROV)", "index"=>"1", "searchall"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
-		"numero" => array("type"=>"integer", "label"=>"Numéro", "enabled"=>"1", 'position'=>30, 'notnull'=>0, "visible"=>"0", "index"=>"1",),
+		"numero" => array("type"=>"integer", "label"=>"Numéro", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"0", "index"=>"1",),
 		"status" => array("type"=>"integer", "label"=>"Statut", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("{0:Brouillon" => "1:Validé,2:En cours,3:Soldée,9:Classé}"), "validate"=>"1",),
-		"intervenant" => array("type"=>"integer:User:user/class/user.class.php:1", "label"=>"Pilote", "enabled"=>"1", 'position'=>42, 'notnull'=>0, "visible"=>"1", "index"=>"1",),
+		"intervenant" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Pilote", "enabled"=>"1", 'position'=>46, 'notnull'=>0, "visible"=>"1", "index"=>"1",),
 		"fk_user_creat" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"5", "csslist"=>"tdoverflowmax150",),
-		"priority" => array("type"=>"integer", "label"=>"Priorité", "enabled"=>"1", 'position'=>32, 'notnull'=>1, "visible"=>"1", "help"=>"Urgent et important : Priorité 1 (AC suivi mensuellement)</br>Non urgent et important : Priorité 2 (Suivi 6mois)</br>Urgent et pas important : Priorité 2 (Suivi 6mois)</br>Non urgent et pas important : Priorité 3 (Suivi 1an)", "arrayofkeyval"=>array("1" => "1", "2" => "2", "3" => "3", ),),
-		"alert" => array("type"=>"method:alerte", "label"=>"Alerte", "enabled"=>"1", 'position'=>33, 'notnull'=>0, "visible"=>"5", "index"=>"1", "help"=>"Alerte visuelle pour le retard de l'action",),
-		"solde" => array("type"=>"method:solde_delais", "label"=>"Solde délai", "enabled"=>"1", 'position'=>35, 'notnull'=>0, "visible"=>"5", "help"=>"Solde dans les délais (en nombre de jour).",),
+		"priority" => array("type"=>"integer", "label"=>"Priorité", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1", "help"=>"Urgent et important : Priorité 1 (AC suivi mensuellement)Non urgent et important : Priorité 2 (Suivi 6mois)Urgent et pas important : Priorité 2 (Suivi 6mois)Non urgent et pas important : Priorité 3 (Suivi 1an)", "arrayofkeyval"=>array("1" => "1", "2" => "2", "3" => "3"),),
 		"origins" => array("type"=>"integer", "label"=>"Origine", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "AUDIT EXTERNE", "2" => "AUDIT CROISE", "3" => "AUDIT INTERNE", "4" => "FC", "5" => "VEILLE REGLEMENTAIRE", "6" => "REMONTE TERRAIN", "7" => "DECISION INTERNE", "8" => "DOCUMENT UNIQUE", "10" => "POINT Q3SE & RP", "11" => "REVUE DIRECTION", "12" => "VISITE TERRAIN"),),
-		"label" => array("type"=>"varchar(255)", "label"=>"Libellé", "enabled"=>"1", 'position'=>31, 'notnull'=>0, "visible"=>"1", "help"=>"Nom de l'action",),
-		"action_sse" => array("type"=>"integer", "label"=>"Action SSE", "enabled"=>"1", 'position'=>37, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Non", "1" => "Oui"),),
-		"action_rp" => array("type"=>"integer", "label"=>"Action RP", "enabled"=>"1", 'position'=>38, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Non", "1" => "Oui"),),
-		"action_surete" => array("type"=>"integer", "label"=>"Action SURETE", "enabled"=>"1", 'position'=>39, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Non", "1" => "Oui"),),
-		"CP" => array("type"=>"integer", "label"=>"Préventive/Corrective", "enabled"=>"1", 'position'=>42, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Préventive", "2" => "Corrective", "3" => "Préventive/Corrective"),),
-		"date_creation" => array("type"=>"date", "label"=>"Date création action", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"1",),
-		"action_txt" => array("type"=>"html", "label"=>"Description action", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1", "help"=>"Déscription détaillé de l'action",),
-		"date_eche" => array("type"=>"date", "label"=>"Date échéance", "enabled"=>"1", 'position'=>55, 'notnull'=>1, "visible"=>"1",),
-		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>20, 'notnull'=>1, "visible"=>"1", "help"=>"Avancement en %", "arrayofkeyval"=>array("0" => "0%", "1" => "25%", "2" => "50%", "3" => "75%", "4" => "100%", ),),
+		"label" => array("type"=>"varchar(255)", "label"=>"Libellé", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1", "help"=>"Nom de l'action",),
+		"CP" => array("type"=>"integer", "label"=>"Préventive/Corrective", "enabled"=>"1", 'position'=>25, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Préventive", "2" => "Corrective", "3" => "Préventive / Corrective"),),
+		"date_creation" => array("type"=>"date", "label"=>"Date création action", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1",),
+		"action_txt" => array("type"=>"html", "label"=>"Description action", "enabled"=>"1", 'position'=>42, 'notnull'=>1, "visible"=>"1", "help"=>"Déscription détaillé de l'action",),
+		"date_eche" => array("type"=>"date", "label"=>"Date échéance", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"1",),
+		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"1", "help"=>"Avancement en %", "arrayofkeyval"=>array("0" => "0%", "1" => "25%", "2" => "50%", "3" => "75%", "4" => "100%"),),
 		"date_sol" => array("type"=>"date", "label"=>"Date solde", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"1",),
 		"diffusion" => array("type"=>"integer", "label"=>"Diffusion document", "enabled"=>"1", 'position'=>65, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("0" => "Non", "1" => "Oui"),),
 		"com" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"1", "help"=>"Commmentaire sur l'action ",),
 		"eff_act" => array("type"=>"integer", "label"=>"Efficacité action", "enabled"=>"1", 'position'=>75, 'notnull'=>1, "visible"=>"1", "help"=>"Différent niveau d'éfficacité de l'action : A = le plus éfficace C = le moins", "arrayofkeyval"=>array("1" => "A", "2" => "B", "9" => "C"),),
 		"eff_act_description" => array("type"=>"html", "label"=>"Détail efficacité", "enabled"=>"1", 'position'=>77, 'notnull'=>0, "visible"=>"1",),
 		"date_asse" => array("type"=>"date", "label"=>"Date évalutation", "enabled"=>"1", 'position'=>80, 'notnull'=>0, "visible"=>"1",),
-		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>270, 'notnull'=>0, "visible"=>"0",),
+		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>650, 'notnull'=>0, "visible"=>"0",),
+		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
+		"fk_user_modif" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
+		"type" => array("type"=>"chkbxlst:c_actions_type:label:rowid::(active=1)", "label"=>"Type", "enabled"=>"1", 'position'=>30, 'notnull'=>0, "visible"=>"1",),
 	);
 	public $rowid;
 	public $ref;
@@ -153,13 +151,8 @@ class Action extends CommonObject
 	public $intervenant;
 	public $fk_user_creat;
 	public $priority;
-	public $alert;
-	public $solde;
 	public $origins;
 	public $label;
-	public $action_sse;
-	public $action_rp;
-	public $action_surete;
 	public $CP;
 	public $date_creation;
 	public $action_txt;
@@ -172,6 +165,9 @@ class Action extends CommonObject
 	public $eff_act_description;
 	public $date_asse;
 	public $last_main_doc;
+	public $tms;
+	public $fk_user_modif;
+	public $type;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -321,8 +317,6 @@ class Action extends CommonObject
 	// 	// $sql .= " numero,";
 	// 	$sql .= " priority,";
 	// 	//$sql .= " rowid,";
-	// 	$sql .= " alert,";
-	// 	// $sql .= " solde,";
 	// 	$sql .= " origins,";
 	// 	// $sql .= " label,";
 	// 	$sql .= " action_sse,";
@@ -342,7 +336,6 @@ class Action extends CommonObject
 	// 	// $sql .= ", '".$this->numero."'";
 	// 	$sql .= " VALUES (".(int) $this->priority."";
 	// 	//$sql .= ", ".(int) $this->id."";
-	// 	$sql .= ", ".($this->alert > 0 ? ((int) $this->alert) : "null");
 	// 	// $sql .= ", '".$this->db->escape($this->solde)."'";
 	// 	$sql .= ", '".$this->db->escape($this->origins)."'";
 	// 	// $sql .= ", '".$this->db->escape($this->label)."'";
@@ -581,8 +574,6 @@ class Action extends CommonObject
 		$sql .= " ac.intervenant,";
 		$sql .= " ac.priority,";
 		$sql .= " ac.fk_user_creat,";
-		$sql .= " ac.alert,";
-		$sql .= " ac.solde,";
 		$sql .= " ac.origins,";
 		$sql .= " ac.label,";
 		$sql .= " ac.action_sse,";
@@ -623,9 +614,6 @@ class Action extends CommonObject
 				$this->intervenant   = $obj->intervenant;
 				$this->priority   = $obj->priority;
 				$this->fk_user_creat   = $obj->fk_user_creat;
-				$this->alert   = $this->alerte($obj->status,$obj->date_eche);
-			//	$this->alert = $this->alerte($obj->status, date('Y-m-d', $this->db->idate($obj->date_eche)));
-				$this->solde   = $this->solde_delai($obj->status,$obj->date_eche,$obj->date_sol);
 				$this->origins   = $obj->origins;
 				$this->label   = $obj->label;
 				$this->action_sse   = $obj->action_sse;

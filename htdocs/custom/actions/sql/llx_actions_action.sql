@@ -23,13 +23,8 @@ CREATE TABLE llx_actions_action(
 	intervenant integer, 
 	fk_user_creat integer NOT NULL, 
 	priority integer NOT NULL, 
-	alert method, 
-	solde method, 
 	origins integer NOT NULL, 
 	label varchar(255), 
-	action_sse integer NOT NULL, 
-	action_rp integer NOT NULL, 
-	action_surete integer NOT NULL, 
 	CP integer, 
 	date_creation date NOT NULL, 
 	action_txt text NOT NULL, 
@@ -41,6 +36,9 @@ CREATE TABLE llx_actions_action(
 	eff_act integer NOT NULL, 
 	eff_act_description text, 
 	date_asse date, 
-	last_main_doc varchar(255)
+	last_main_doc varchar(255), 
+	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+	fk_user_modif integer, 
+	type varchar(128)
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

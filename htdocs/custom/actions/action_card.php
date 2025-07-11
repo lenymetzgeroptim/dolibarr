@@ -596,7 +596,7 @@ if (empty($reshook)) {
 /*
  * View
  */
-//var_dump($object->alert);
+
 $form = new Form($db);
 $actionForm = new actionsForm($db);
 $formfile = new FormFile($db);

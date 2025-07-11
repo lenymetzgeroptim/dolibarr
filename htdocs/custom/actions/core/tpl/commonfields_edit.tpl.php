@@ -158,7 +158,7 @@ foreach ($object->fields as $key => $val) {
 /*affichage des noms des champs de la liste lié au role Service Q3SE */
 	if ($user->rights->actions->action->ServiceQ3SE && $user->id != 75 && !($object->id <= 643 && $object->id >= 1140)) {
 		if ($object->status != $object::STATUS_SOLDEE)  {
-			$keys = array('ref', 'intervenant','priority','alert','solde','origins','label','action_sse','action_rp','action_surete','CP','date_creation','date_creation','action_txt','date_eche','rowid_constat');
+			$keys = array('ref', 'intervenant','priority','z','solde','origins','label','action_sse','action_rp','action_surete','CP','date_creation','date_creation','action_txt','date_eche','rowid_constat');
 				if(in_array($key, $keys)) {
 					print '<tr class="field_'.$key.'"><td';
 					print ' class="titlefieldcreate';
