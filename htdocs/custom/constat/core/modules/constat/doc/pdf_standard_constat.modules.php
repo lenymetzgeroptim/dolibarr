@@ -1006,7 +1006,7 @@ class pdf_standard_constat extends ModelePDFConstat
 
 			$sql = "SELECT e.fk_target, e.fk_source, a.status";
 			$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
-			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_action as a ON e.fk_target = a.rowid";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_actionq3se as a ON e.fk_target = a.rowid";
 			$sql .= " WHERE e.fk_source = $object->id AND e.sourcetype = 'constat' ";
 
 			$result = $db->query($sql);
@@ -1229,7 +1229,7 @@ class pdf_standard_constat extends ModelePDFConstat
 				$sql .= " FROM " . MAIN_DB_PREFIX . "element_element AS ee";
 				$sql .= " WHERE ee.sourcetype = 'constat'";
 				$sql .= " AND ee.fk_source = " . intval($object->id);
-				$sql .= " AND ee.targettype = 'actions_action'";
+				$sql .= " AND ee.targettype = 'actions_actionq3se'";
 
 				// Exécution de la requête
 				$resql = $db->query($sql);
@@ -1255,7 +1255,7 @@ class pdf_standard_constat extends ModelePDFConstat
 				} else {
 					// Étape 2 : Requête pour récupérer les détails des actions
 					$action_ids_str = implode(',', $action_ids);
-					$sql_actions = "SELECT * FROM " . MAIN_DB_PREFIX . "actions_action AS a";
+					$sql_actions = "SELECT * FROM " . MAIN_DB_PREFIX . "actions_actionq3se AS a";
 					$sql_actions .= " WHERE a.rowid IN ($action_ids_str)";
 
 					$resql_actions = $db->query($sql_actions);
