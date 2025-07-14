@@ -24,6 +24,10 @@ if (empty($conf) || !is_object($conf)) {
 	exit;
 }
 
+if($object->element != 'actionq3se') {
+	return 0;
+}
+
 print "<!-- BEGIN PHP TEMPLATE custom/actions/core/tpl/linkedobjectblock.tpl.php -->\n";
 
 global $user;
@@ -71,7 +75,7 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 		echo $objectlink->label;
 	// }
 	echo '</td>';
-	echo '<td class="linkedcol-statut right">'.$objectlink->getLibStatut(1).'</td>';
+	echo '<td class="linkedcol-statut right">'.$objectlink->getLibStatut(4).'</td>';
 	echo '<td class="linkedcol-action right">';
 	// For now, shipments must stay linked to order, so link is not deletable
 	/*if ($object->element != 'shipping') {

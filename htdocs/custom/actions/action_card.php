@@ -131,6 +131,21 @@ if (empty($action) && empty($id) && empty($ref)) {
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
 
+// Est-ce que des champs obligatoire sont non renseignés ? 
+$fields_null = '';
+foreach($object->fields as $key => $val) {
+	if(!$object->$key && $val['notnull_validate']) {
+ 		$fields_null .= $langs->trans($val['label']).", ";
+	}
+}
+$fields_null = rtrim($fields_null, ', ');
+
+$label_button_action_validate = ($fields_null ? $langs->trans('ActionFieldsNullMendatory', $fields_null) : '');
+if ($object->status == $object::STATUS_VALIDATED) {
+	$label_button_action_validate .= $label_button_action_validate && $object->avancement != 4 ? '<br>' : '';
+	$label_button_action_validate .= $object->avancement != 4 ? $langs->trans('ActionNoEnd') : '';
+}
+
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 1;
@@ -140,12 +155,34 @@ if ($enablepermissioncheck) {
 	$permissiontodelete = $user->hasRight('actions', 'action', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
 	$permissionnote = $user->hasRight('actions', 'action', 'write'); // Used by the include of actions_setnotes.inc.php
 	$permissiondellink = $user->hasRight('actions', 'action', 'write'); // Used by the include of actions_dellink.inc.php
+	$permissiontocancel = $user->hasRight('actions', 'action', 'cancel');
+	$permissiontorelance = $user->hasRight('actions', 'action', 'close');
+
+	if($object->status == $object::STATUS_DRAFT) {
+		$permissiontoupdate = $user->admin || $user->id == $object->fk_user_creat;
+		$permissiontovalidate = $user->admin || $user->id == $object->fk_user_creat;
+	}
+	elseif($object->status == $object::STATUS_VALIDATED) {
+		$permissiontoupdate = $user->admin || $user->id == $object->intervenant;
+		$permissiontovalidate = $user->admin || $user->id == $object->intervenant;
+	}
+	elseif($object->status == $object::STATUS_SOLDEE) {
+		$permissiontoupdate = $user->hasRight('actions', 'action', 'close');
+		$permissiontovalidate = $user->hasRight('actions', 'action', 'close');
+	}
+	else {
+		$permissiontoupdate = 0;
+		$permissiontovalidate = 0;
+	}
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 	$permissiontodelete = 1;
 	$permissionnote = 1;
-	$permissiondellink = 1;
+	//$permissiondellink = 1;
+	$permissiontoupdate = 1;
+	$permissiontovalidate = 1;
+	$permissiontorelance = 1;
 }
 
 $upload_dir = $conf->actions->multidir_output[isset($object->entity) ? $object->entity : 1].'/action';
@@ -192,59 +229,49 @@ if (empty($reshook)) {
 		$object->oldcopy = clone $object;
 	}
 	
+	if ($action == 'confirm_solde' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
+		$result = $object->solde($user);
 
-	// Encours confirmation
-	if( $action == 'setEnCours'){
-		$object->updateEnCours();
-
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_EN_COURSInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_EN_COURS', $user);
 		if ($result < 0) {
 			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
+		$action = '';
+		
+		if(!$error) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+			exit;
 		}
 	}
 
-	if( $action == 'setSolde'  && $confirm == 'yes' ){
-		$object->updateSolde();
+	if ($action == 'confirm_close' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
+		$result = $object->close($user);
 
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_SOLDEEInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_SOLDEE', $user);
 		if ($result < 0) {
 			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
-	}
-	
-	if( $action == 'setAttSolde'  && $confirm == 'yes' ){
-		$object->updateAttSolde();
-
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_ATT_SOLDEEInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_ATT_SOLDEE', $user);
-		if ($result < 0) {
-			$error++;
+		$action = '';
+		
+		if(!$error) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+			exit;
 		}
 	}
 
+	if ($action == 'confirm_cancel' && $confirm == 'yes' && $permissiontocancel) {
+		$result = $object->cancel($user);
 
-	if( $action == 'setCloturee'  && $confirm == 'yes' ){
-		$object->updateCloture();
-
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_CLOTUREInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_CLOTURE', $user);
 		if ($result < 0) {
 			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
-	}
-
-	if ($action == 'confirm_delete' && !empty($permissiontodelete)) {
-		$result = $object->deleteObjectLinked($origin, $originid);
+		$action = '';
+		
+		if(!$error) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+			exit;
+		}
 	}
 
 	//envoie notification de fin d'une action au service Q3SE et au pilote
@@ -618,21 +645,11 @@ if (($id || $ref) && $action == 'edit') {
 
 	print '<table class="border centpercent tableforfieldedit">'."\n";
 
+	foreach ($object->fields as $key => $val) {
+		$object->fields[$key]['visible'] = dol_eval($val['visible'], 1);
+	}
+
 	// Common attributes
-	if($object->status == $object::STATUS_DRAFT) {
-		unset($object->fields["avancement"]);
-		unset($object->fields["date_sol"]);
-		unset($object->fields["diffusion"]);
-		unset($object->fields["com"]);
-		unset($object->fields["eff_act"]);
-		unset($object->fields["eff_act_description"]);
-		unset($object->fields["date_asse"]);
-	}
-	elseif($object->status == $object::STATUS_VALIDATED) {
-		unset($object->fields["eff_act"]);
-		unset($object->fields["eff_act_description"]);
-		unset($object->fields["date_asse"]);
-	}
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
 
 	// Other attributes
@@ -703,6 +720,27 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formquestion = array();
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
 	}
+	
+	// Validate confirmation
+	if ($action == 'validate') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Validate'), $langs->trans('ConfirmValidateActionQ3SE', $object->ref), 'confirm_validate', '', 'yes', 1);
+	}
+
+	// Solde confirmation
+	if ($action == 'solde') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Solde'), $langs->trans('ConfirmSoldeActionQ3SE', $object->ref), 'confirm_solde', '', 'yes', 1);
+	}
+
+	// Close confirmation
+	if ($action == 'close') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Close'), $langs->trans('ConfirmCloseActionQ3SE', $object->ref), 'confirm_close', '', 'yes', 1);
+	}
+
+	// Cancel confirmation
+	if ($action == 'cancel') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Cancel'), $langs->trans('ConfirmCancelActionQ3SE', $object->ref), 'confirm_cancel', '', 'yes', 1);
+	}
+
 
 	
 	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
@@ -792,6 +830,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// Common attributes
 	$keyforbreak='avancement';	// We change column just before this field
+	
+	foreach ($object->fields as $key => $val) {
+		$object->fields[$key]['visible'] = dol_eval($val['visible'], 1);
+	}
 	
 	//unset($object->fields['date_eche']);				// Hide field already shown in banner
 	//unset($object->fields['fk_soc']);					// Hide field already shown in banner
@@ -920,46 +962,44 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			// 	}
 			// }
 
-			if (!($object->status == $object::STATUS_SOLDEE && in_array('intervenant', $user->rights->actions->action)) && $object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
-				print dolGetButtonAction('', $langs->trans('Modifier / Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
+			// Modifier
+			if ($object->status == $object::STATUS_DRAFT || $object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_SOLDEE) {
+				print dolGetButtonAction('', $langs->trans('Modifier / Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoupdate);
 			}
 
-			if($user->rights->actions->action->ServiceQ3SE){
-				// Validate
-				if ($object->status == $object::STATUS_DRAFT) {
-					if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
-					} else {
-						$langs->load("errors");
-						print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
-					}
-				}
+			// Validate
+			if ($object->status == $object::STATUS_DRAFT && $permissiontovalidate) {
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate&token='.newToken(), '', empty($label_button_action_validate));
 			}
-
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_EN_COURS) {
-					print dolGetButtonAction('', $langs->trans('Relancer le pilote'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setRelance&confirm=yes&token='.newToken(), '', $permissiontoadd);		
-				}
+			elseif ($object->status == $object::STATUS_VALIDATED && $permissiontovalidate) {
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Solde'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=solde&token='.newToken(), '', empty($label_button_action_validate));
 			}
-
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_DRAFT ){
-					print dolGetButtonAction('', $langs->trans('lier a un constat'), 'default', '/erp/custom/actions/action_constat_list.php?idaction='.$object->id.'&action=setCloture&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				}	
+			elseif($object->status == $object::STATUS_SOLDEE && $permissiontovalidate){ // Clôturer
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Close'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=close&token='.newToken(), '', empty($label_button_action_validate));
+			}		
+			
+			// Relancer
+			if ($object->status == $object::STATUS_VALIDATED) {
+				print dolGetButtonAction('', $langs->trans('Relancer le pilote'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setRelance&token='.newToken(), '', $permissiontorelance);		
 			}
 			
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_SOLDEE ){
-					if($object->eff_act == 9){
-						print dolGetButtonAction('', $langs->trans('Créé une nouvelle action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create&confirm=yes&token='.newToken(), '', $permissiontoadd);
-								
-					}
-				}	
+			// if($user->rights->actions->action->ServiceQ3SE){
+			// 	if ($object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_DRAFT ){
+			// 		print dolGetButtonAction('', $langs->trans('lier a un constat'), 'default', '/erp/custom/actions/action_constat_list.php?idaction='.$object->id.'&action=setCloture&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// 	}	
+			// }
+			
+			// Nouvelle action 
+			// if ($object->status == $object::STATUS_SOLDEE && $object->eff_act == 9){
+			// 	print dolGetButtonAction('', $langs->trans('NewActionQ3SE'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create&token='.newToken(), '', $permissiontoadd);
+			// }
+			
+			if($permissiontocancel) {
+				print dolGetButtonAction('', $langs->trans('Cancel'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=cancel&token='.newToken(), '');
 			}
 
-			if($object->status == $object::STATUS_SOLDEE){
-				print dolGetButtonAction('', $langs->trans('Cloture cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloturee&confirm=yes&token='.newToken(), '', $permissiontoadd);
-			}			
+			// Delete (need delete permission, or if draft, just need create/modify permission)
+			print dolGetButtonAction($langs->trans('Delete'), '', 'delete', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=delete&token='.newToken(), '', $permissiontodelete);
 		}
 		print '</div>'."\n";
 	}
@@ -1000,7 +1040,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		//  $compatibleImportElementsList = false;
 		// // // if ($usercancreate && $object->statut == ActionQ3SE::STATUS_DRAFT) {
-		// 	$compatibleImportElementsList = array('constat', 'actions_action'); // import from linked elements
+		// 	$compatibleImportElementsList = array('constat', 'actions_actionq3se'); // import from linked elements
 		// // // }
 		//  $somethingshown = $actionForm->showLinkedObjectBlock($object, $linktoelem, $compatibleImportElementsList);
 		

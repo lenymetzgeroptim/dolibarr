@@ -14,17 +14,16 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-CREATE TABLE llx_actions_action(
+CREATE TABLE llx_actions_actionq3se(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
 	ref varchar(128) DEFAULT '(PROV)' NOT NULL, 
-	numero integer, 
 	status integer NOT NULL, 
-	intervenant integer, 
+	intervenant integer NOT NULL, 
 	fk_user_creat integer NOT NULL, 
 	priority integer NOT NULL, 
 	origins integer NOT NULL, 
-	label varchar(255), 
+	label varchar(255) NOT NULL, 
 	CP integer, 
 	date_creation date NOT NULL, 
 	action_txt text NOT NULL, 

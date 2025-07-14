@@ -163,17 +163,16 @@ class modActions extends DolibarrModules
 		//                             2 => array('ACTIONS_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
 		// );
 		$this->const = array(
-			1 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_SENDMAIL', 'chaine', '1', '', 0), 
-			2 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_CREATE', 'chaine', '1', '', 0), 
-			3 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_MODIFY', 'chaine', '1', '', 0), 
-			4 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_DELETE', 'chaine', '1', '', 0), 
-			5 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_VALIDATE', 'chaine', '1', '', 0),
-			6 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_ATT_SOLDEE', 'chaine', '1', '', 0), 
-			7 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_EN_COURS', 'chaine', '1', '', 0),
-			8 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_SOLDEE', 'chaine', '1', '', 0), 
-			9 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_CLOTURE', 'chaine', '1', '', 0), 
-			10 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_CLASSE', 'chaine', '1', '', 0),
-			
+			//1 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONS_SENDMAIL', 'chaine', '1', '', 0), 
+			2 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_CREATE', 'chaine', '1', '', 0), 
+			3 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_MODIFY', 'chaine', '1', '', 0), 
+			// 4 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_DELETE', 'chaine', '1', '', 0), 
+			5 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_VALIDATE', 'chaine', '1', '', 0),
+			// 6 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_ATT_SOLDEE', 'chaine', '1', '', 0), 
+			// 7 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_EN_COURS', 'chaine', '1', '', 0),
+			8 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_SOLDE', 'chaine', '1', '', 0), 
+			9 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_CLOTURE', 'chaine', '1', '', 0), 
+			10 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_CANCEL', 'chaine', '1', '', 0),
 		);
 
 		// Some keys to add into the overwriting translation tables
@@ -296,6 +295,16 @@ class modActions extends DolibarrModules
 		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->hasRight('actions', 'action', 'write'))
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 4); // Permission id (must not be already used)
+		$this->rights[$r][1] = 'Clôturer les actions'; // Permission label
+		$this->rights[$r][4] = 'action';
+		$this->rights[$r][5] = 'close'; // In php code, permission will be checked by test if ($user->rights->actions->action->delete)
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 5); // Permission id (must not be already used)
+		$this->rights[$r][1] = 'Annuler les actions'; // Permission label
+		$this->rights[$r][4] = 'action';
+		$this->rights[$r][5] = 'cancel'; // In php code, permission will be checked by test if ($user->rights->actions->action->delete)
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 6); // Permission id (must not be already used)
 		$this->rights[$r][1] = 'Supprimer les actions'; // Permission label
 		$this->rights[$r][4] = 'action';
 		$this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->actions->action->delete)
@@ -477,7 +486,7 @@ class modActions extends DolibarrModules
 		$this->import_code[$r] = $this->rights_class . '_' . $r;
 		$this->import_label[$r] = 'ActionLines'; // Translation key (used only if key ExportDataset_xxx_z not found)
 		$this->import_icon[$r] = 'action@actions';
-		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX . 'actions_action', 'extra' => MAIN_DB_PREFIX . 'actions_action_extrafields');
+		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX . 'actions_actionq3se', 'extra' => MAIN_DB_PREFIX . 'actions_actionq3se_extrafields');
 		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_author'); // Fields to store import user id
 
 		$import_sample = array();
@@ -496,7 +505,7 @@ class modActions extends DolibarrModules
 		// error_log("Inclusion de extrafieldsinimport.inc.php");
 		include DOL_DOCUMENT_ROOT . '/core/extrafieldsinimport.inc.php';
 
-		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-' . MAIN_DB_PREFIX . 'actions_action');
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-' . MAIN_DB_PREFIX . 'actions_actionq3se');
 		$this->import_regex_array[$r] = array();
 		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
 		$this->import_updatekeys_array[$r] = array('t.rowid' => 'ID');

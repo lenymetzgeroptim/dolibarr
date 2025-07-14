@@ -126,8 +126,8 @@ if ($id > 0 || !empty($ref)) {
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->actions->action->read;
-	$permissiontoadd = $user->rights->actions->action->write; // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
+	$permissiontoread = $user->hasRight('actions', 'action', 'read');
+	$permissiontoadd = $user->hasRight('actions', 'action', 'write');
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;

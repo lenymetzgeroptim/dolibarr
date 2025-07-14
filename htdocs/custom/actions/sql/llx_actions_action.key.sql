@@ -15,14 +15,13 @@
 
 
 -- BEGIN MODULEBUILDER INDEXES
-ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_rowid (rowid);
-ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_ref (ref);
-ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_numero (numero);
-ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_status (status);
-ALTER TABLE llx_actions_action ADD INDEX idx_actions_action_intervenant (intervenant);
+ALTER TABLE llx_actions_actionq3se ADD INDEX idx_actions_actionq3se_rowid (rowid);
+ALTER TABLE llx_actions_actionq3se ADD INDEX idx_actions_actionq3se_ref (ref);
+ALTER TABLE llx_actions_actionq3se ADD INDEX idx_actions_actionq3se_status (status);
+ALTER TABLE llx_actions_actionq3se ADD INDEX idx_actions_actionq3se_intervenant (intervenant);
 -- END MODULEBUILDER INDEXES
 
---ALTER TABLE llx_actions_action ADD UNIQUE INDEX uk_actions_action_fieldxy(fieldx, fieldy);
+--ALTER TABLE llx_actions_actionq3se ADD UNIQUE INDEX uk_actions_actionq3se_fieldxy(fieldx, fieldy);
 
---ALTER TABLE llx_actions_action ADD CONSTRAINT llx_actions_action_fk_field FOREIGN KEY (fk_field) REFERENCES llx_actions_myotherobject(rowid);
+--ALTER TABLE llx_actions_actionq3se ADD CONSTRAINT llx_actions_actionq3se_fk_field FOREIGN KEY (fk_field) REFERENCES llx_actions_myotherobject(rowid);
 

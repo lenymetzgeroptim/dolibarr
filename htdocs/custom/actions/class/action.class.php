@@ -47,7 +47,7 @@ class ActionQ3SE extends CommonObject
 	/**
 	 * @var string Name of table without prefix where object is stored. This is also the key used for extrafields management.
 	 */
-	public $table_element = 'actions_action';
+	public $table_element = 'actions_actionq3se';
 
 	/**
 	 * @var int  Does this object support multicompany module ?
@@ -120,25 +120,24 @@ class ActionQ3SE extends CommonObject
 	 */
 	public $fields=array(
 		"rowid" => array("type"=>"integer", "label"=>"TechnicalID", "enabled"=>"1", 'position'=>1, 'notnull'=>1, "visible"=>"0", "noteditable"=>"1", "index"=>"1", "css"=>"left", "comment"=>"Id"),
-		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>2, 'notnull'=>1, "visible"=>"4", "noteditable"=>"1", "default"=>"(PROV)", "index"=>"1", "searchall"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
-		"numero" => array("type"=>"integer", "label"=>"Numéro", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"0", "index"=>"1",),
-		"status" => array("type"=>"integer", "label"=>"Statut", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("{0:Brouillon" => "1:Validé,2:En cours,3:Soldée,9:Classé}"), "validate"=>"1",),
-		"intervenant" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Pilote", "enabled"=>"1", 'position'=>46, 'notnull'=>0, "visible"=>"1", "index"=>"1",),
+		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>2, 'notnull'=>1, "visible"=>"5", "noteditable"=>"1", "default"=>"(PROV)", "index"=>"1", "searchall"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
+		"status" => array("type"=>"integer", "label"=>"Statut", "enabled"=>"1", 'position'=>2000, 'notnull'=>1, "visible"=>"5", "index"=>"1", "arrayofkeyval"=>array("0" => "Brouillon", "1" => "En cours", "3" => "Soldée", "8" => "Clôturée", "9" => "Classée"), "validate"=>"1",),
+		"intervenant" => array("type"=>"integer:user:user/class/user.class.php:0", "label"=>"Pilote", "enabled"=>"1", 'position'=>46, 'notnull'=>1, "visible"=>"1", "index"=>"1",),
 		"fk_user_creat" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
-		"priority" => array("type"=>"integer", "label"=>"Priorité", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1", "help"=>"Urgent et important : Priorité 1 (AC suivi mensuellement)Non urgent et important : Priorité 2 (Suivi 6mois)Urgent et pas important : Priorité 2 (Suivi 6mois)Non urgent et pas important : Priorité 3 (Suivi 1an)", "arrayofkeyval"=>array("1" => "1", "2" => "2", "3" => "3"),),
+		"priority" => array("type"=>"integer", "label"=>"Priorité", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1", "help"=>"Urgent et important : Priorité 1 (AC suivi mensuellement)</br>Non urgent et important : Priorité 2 (Suivi 6mois)</br>Urgent et pas important : Priorité 2 (Suivi 6mois)</br>Non urgent et pas important : Priorité 3 (Suivi 1an)", "arrayofkeyval"=>array("1" => "1", "2" => "2", "3" => "3"),),
 		"origins" => array("type"=>"integer", "label"=>"Origine", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "AUDIT EXTERNE", "2" => "AUDIT CROISE", "3" => "AUDIT INTERNE", "4" => "FC", "5" => "VEILLE REGLEMENTAIRE", "6" => "REMONTE TERRAIN", "7" => "DECISION INTERNE", "8" => "DOCUMENT UNIQUE", "10" => "POINT Q3SE & RP", "11" => "REVUE DIRECTION", "12" => "VISITE TERRAIN"),),
-		"label" => array("type"=>"varchar(255)", "label"=>"Libellé", "enabled"=>"1", 'position'=>41, 'notnull'=>0, "visible"=>"1", "help"=>"Nom de l'action",),
+		"label" => array("type"=>"varchar(255)", "label"=>"Libellé", "enabled"=>"1", 'position'=>41, 'notnull'=>1, "visible"=>"1", "help"=>"Nom de l'action",),
 		"CP" => array("type"=>"integer", "label"=>"Préventive/Corrective", "enabled"=>"1", 'position'=>25, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Préventive", "2" => "Corrective", "3" => "Préventive / Corrective"),),
 		"date_creation" => array("type"=>"date", "label"=>"Date création action", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1",),
 		"action_txt" => array("type"=>"html", "label"=>"Description action", "enabled"=>"1", 'position'=>42, 'notnull'=>1, "visible"=>"1", "help"=>"Déscription détaillé de l'action",),
 		"date_eche" => array("type"=>"date", "label"=>"Date échéance", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"1",),
-		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"4", "help"=>"Avancement en %", "arrayofkeyval"=>array("{[0%:25%" => "50%,75%,100%]}"),),
-		"date_sol" => array("type"=>"date", "label"=>"Date solde", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"5",),
-		"diffusion" => array("type"=>"integer", "label"=>"Diffusion document", "enabled"=>"1", 'position'=>65, 'notnull'=>1, "visible"=>"4", "arrayofkeyval"=>array("[Non" => "Oui]"),),
-		"com" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"4", "help"=>"Commmentaire sur l'action",),
-		"eff_act" => array("type"=>"integer", "label"=>"Efficacité action", "enabled"=>"1", 'position'=>75, 'notnull'=>1, "visible"=>"4", "help"=>"Différent niveau d'éfficacité de l'action : A = le plus éfficace C = le moins", "arrayofkeyval"=>array("{1:A" => "2:B,9:C}"),),
-		"eff_act_description" => array("type"=>"html", "label"=>"Détail efficacité", "enabled"=>"1", 'position'=>77, 'notnull'=>0, "visible"=>"4",),
-		"date_asse" => array("type"=>"date", "label"=>"Date évalutation", "enabled"=>"1", 'position'=>80, 'notnull'=>0, "visible"=>"4",),
+		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"\$object->status>0?4:0", "help"=>"Avancement en %", "arrayofkeyval"=>array("0%", "25%", "50%", "75%", "100%"),),
+		"date_sol" => array("type"=>"date", "label"=>"Date solde", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"\$object->status>3?5:0",),
+		"diffusion" => array("type"=>"integer", "label"=>"Diffusion document", "enabled"=>"1", 'position'=>65, 'notnull'=>1, "visible"=>"\$object->status>0?4:0", "arrayofkeyval"=>array("1" => "Non", "2"=> "Oui"),),
+		"com" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"\$object->status>0?4:0", "help"=>"Commmentaire sur l'action",),
+		"eff_act" => array("type"=>"integer", "label"=>"Efficacité action", "enabled"=>"1", 'position'=>75, 'notnull'=>1, "visible"=>"\$object->status>1?4:0", "help"=>"Différent niveau d'éfficacité de l'action : A = le plus éfficace C = le moins", "arrayofkeyval"=>array("1" => "A", "2" => "B", "9" => "C"),),
+		"eff_act_description" => array("type"=>"html", "label"=>"Détail efficacité", "enabled"=>"1", 'position'=>77, 'notnull'=>0, "visible"=>"\$object->status>1?4:0",),
+		"date_asse" => array("type"=>"date", "label"=>"Date évalutation", "enabled"=>"1", 'position'=>80, 'notnull'=>0, "visible"=>"\$object->status>1?4:0",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>650, 'notnull'=>0, "visible"=>"0",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
 		"fk_user_modif" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
@@ -146,7 +145,6 @@ class ActionQ3SE extends CommonObject
 	);
 	public $rowid;
 	public $ref;
-	public $numero;
 	public $status;
 	public $intervenant;
 	public $fk_user_creat;
@@ -262,14 +260,19 @@ class ActionQ3SE extends CommonObject
 	 */
 	public function create(User $user, $notrigger = false)
 	{
+		$origin    =  GETPOST('origin', 'alpha');
+		$originid  = (GETPOST('originid', 'int') ? GETPOST('originid', 'int') : GETPOST('origin_id', 'int'));    // For backward compatibility
+
+		if($origin == 'constat' && $originid) {
+			$this->origins = 4;
+		}
+
 		$resultcreate = $this->createCommon($user, $notrigger);
 
 		//$resultvalidate = $this->validate($user, $notrigger);
 
-		$origin    =  GETPOST('origin', 'alpha');
-		$originid  = (GETPOST('originid', 'int') ? GETPOST('originid', 'int') : GETPOST('origin_id', 'int'));    // For backward compatibility
 		if($resultcreate && $origin && $originid) {
-			$resultlinkedobject = $this->add_object_linked($origin, $originid);
+			$resultlinkedobject = $this->add_object_linked($origin, $originid, null, 1);
 
 			if(!$resultlinkedobject) {
 				$this->error = 'ErrorAddObjectLinked';
@@ -390,6 +393,24 @@ class ActionQ3SE extends CommonObject
 		$result = $this->fetchCommon($id, $ref);
 		if ($result > 0 && !empty($this->table_element_line)) {
 			$this->fetchLines();
+		}
+
+		if($this->status >= self::STATUS_DRAFT) {
+			$this->fields['origins']['notnull_validate'] = 1;
+			$this->fields['priority']['notnull_validate'] = 1;
+			$this->fields['date_creation']['notnull_validate'] = 1;
+			$this->fields['label']['notnull_validate'] = 1;
+			$this->fields['action_txt']['notnull_validate'] = 1;
+			$this->fields['date_eche']['notnull_validate'] = 1;
+			$this->fields['intervenant']['notnull_validate'] = 1;
+		}
+		if($this->status >= self::STATUS_VALIDATED) {
+			$this->fields['diffusion']['notnull_validate'] = 1;
+		}
+		if($this->status >= self::STATUS_SOLDEE) {
+			$this->fields['eff_act']['notnull_validate'] = 1;
+			$this->fields['eff_act_description']['notnull_validate'] = 1;
+			$this->fields['date_asse']['notnull_validate'] = 1;
 		}
 
 		return $result;
@@ -515,7 +536,7 @@ class ActionQ3SE extends CommonObject
 
 		if (!$error && !$notrigger) {
 			// Call trigger
-			$result = $this->call_trigger('ACTION_DELETE', $user);
+			$result = $this->call_trigger('ACTIONQ3SE_DELETE', $user);
 			if ($result < 0) {
 				$error++;
 			}
@@ -616,7 +637,7 @@ class ActionQ3SE extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
-				$result = $this->call_trigger('ACTIONS_VALIDATE', $user);
+				$result = $this->call_trigger('ACTIONQ3SE_VALIDATE', $user);
 				if ($result < 0) {
 					$error++;
 				}
@@ -667,54 +688,56 @@ class ActionQ3SE extends CommonObject
 				}
 			}
 		}
-				// Set new ref and current status
-				if (!$error) {
-					$this->ref = $num;
-					$this->status = self::STATUS_VALIDATED;
-				}
+
+		// Set new ref and current status
 		if (!$error) {
-			require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
-			include_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
-			include_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-			include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
-			include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
-			global $db;
+			$this->ref = $num;
+			$this->status = self::STATUS_VALIDATED;
+		}
+
+		// if (!$error) {
+		// 	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+		// 	include_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
+		// 	include_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
+		// 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
+		// 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
+		// 	global $db;
 		
-			$subject = '[OPTIM Industries] Notification automatique - Nouvelle action assignée';
+		// 	$subject = '[OPTIM Industries] Notification automatique - Nouvelle action assignée';
 
-			$from = 'erp@optim-industries.fr';
-			$emails = [];
+		// 	$from = 'erp@optim-industries.fr';
+		// 	$emails = [];
 
-			// Récupération de l'email du pilote
-			$pilote = new User($db);
-			$pilote->fetch($this->intervenant);
-			if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-				$emails[] = $pilote->email;
-			}
+		// 	// Récupération de l'email du pilote
+		// 	$pilote = new User($db);
+		// 	$pilote->fetch($this->intervenant);
+		// 	if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
+		// 		$emails[] = $pilote->email;
+		// 	}
 
-			// Suppression des doublons
-			$emails = array_unique($emails);
-			$to = implode(", ", $emails);
+		// 	// Suppression des doublons
+		// 	$emails = array_unique($emails);
+		// 	$to = implode(", ", $emails);
 
-			global $dolibarr_main_url_root;
-			$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-			$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-			$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $this->id . '">' . $this->ref . '</a>';
+		// 	global $dolibarr_main_url_root;
+		// 	$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
+		// 	$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
+		// 	$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $this->id . '">' . $this->ref . '</a>';
 
-			$msg = $langs->transnoentitiesnoconv("Bonjour, vous avez été ajouté à une nouvelle action : " . $link);
+		// 	$msg = $langs->transnoentitiesnoconv("Bonjour, vous avez été ajouté à une nouvelle action : " . $link);
 
-			$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $this->id);
+		// 	$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $this->id);
 
-			// Envoi du mail
-			$res = $cmail->sendfile();
-			if ($res) {
-				setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-				print '<script>window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $this->id . '");</script>';
-			} else {
-				setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			}
+		// 	// Envoi du mail
+		// 	$res = $cmail->sendfile();
+		// 	if ($res) {
+		// 		setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
+		// 		print '<script>window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $this->id . '");</script>';
+		// 	} else {
+		// 		setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+		// 	}
 
-		}	
+		// }	
 
 		if (!$error) {
 			$this->db->commit();
@@ -725,6 +748,67 @@ class ActionQ3SE extends CommonObject
 		}
 	}
 
+	/**
+	 *	Solde object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function solde($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_SOLDEE) {
+			dol_syslog(get_class($this)."::solde action abandonned: already solde", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_SOLDEE;
+		if (!empty($this->fields['date_sol'])) {
+			$sql .= ", date_sol = '".$this->db->idate($now)."'";
+		}
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::solde()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('ACTIONQ3SE_SOLDE', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_SOLDEE;
+		}	
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
 
 	/**
 	 *	Set draft status
@@ -747,7 +831,7 @@ class ActionQ3SE extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'ACTIONS_MYOBJECT_UNVALIDATE');
+		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'ACTIONQ3SE_UNVALIDATE');
 	}
 
 	/**
@@ -771,7 +855,24 @@ class ActionQ3SE extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'ACTIONS_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'ACTIONQ3SE_CANCEL');
+	}
+
+	/**
+	 *	Set close status
+	 *
+	 *	@param	User	$user			Object user that modify
+	 *  @param	int		$notrigger		1=Does not execute triggers, 0=Execute triggers
+	 *	@return	int						<0 if KO, 0=Nothing done, >0 if OK
+	 */
+	public function close($user, $notrigger = 0)
+	{
+		// Protection
+		if ($this->status != self::STATUS_SOLDEE) {
+			return 0;
+		}
+
+		return $this->setStatusCommon($user, self::STATUS_CLOTURE, $notrigger, 'ACTIONQ3SE_CLOTURE');
 	}
 
 	/**
@@ -795,7 +896,7 @@ class ActionQ3SE extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'ACTIONS_MYOBJECT_REOPEN');
+		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'ACTIONQ3SE_REOPEN');
 	}
 
 	/**
@@ -1070,6 +1171,9 @@ class ActionQ3SE extends CommonObject
 		if ($status == self::STATUS_CANCELED) {
 			$statusType = 'status6';
 		}
+		if ($status == self::STATUS_CLOTURE) {
+			$statusType = 'status9';
+		}
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
 	}
@@ -1220,7 +1324,7 @@ class ActionQ3SE extends CommonObject
 		global $conf, $langs;
 
 		$result = 0;
-		$includedocgeneration = 1;
+		$includedocgeneration = 0;
 
 		$langs->load("actions@actions");
 
@@ -1299,15 +1403,6 @@ class ActionQ3SE extends CommonObject
 	// 	}
 	// 	return $this->setStatusCommon($user, self::STATUS_ATT_SOLDEE , $notrigger, 'CONSTAT_UNVALIDATE');
 	// }
-
-	public function setCloture($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status <= self::STATUS_CLOTURE) {
-			return 0;
-		}
-		return $this->setStatusCommon($user, self::STATUS_CLOTURE, $notrigger, 'CONSTAT_UNVALIDATE');
-	}
 	
 
 
@@ -1370,7 +1465,7 @@ class ActionQ3SE extends CommonObject
 
 		foreach($arrayofselected as $selected){
 			$sql = "INSERT INTO ".$this->db->prefix()."element_element(fk_source, sourcetype, fk_target, targettype)";
-			$sql .= " VALUES (".((int) $selected).", 'constat', ".((int) $idaction).", 'actions_action')";
+			$sql .= " VALUES (".((int) $selected).", 'constat', ".((int) $idaction).", 'actions_actionq3se')";
 		$result = $this->db->query($sql);
 		}
 		
@@ -1428,7 +1523,7 @@ class ActionQ3SE extends CommonObject
 		$sql .= " FROM ".MAIN_DB_PREFIX."element_element";
 		$sql .= " WHERE fk_target = ".((int) $idaction);
 		$sql .= " AND sourcetype = 'constat'";
-		$sql .= " AND targettype = 'actions_action'";
+		$sql .= " AND targettype = 'actions_actionq3se'";
 
 
 		$result = $this->db->query($sql);
