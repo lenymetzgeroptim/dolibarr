@@ -116,7 +116,7 @@ $pageprev = $page - 1;
 $pagenext = $page + 1;
 
 // Initialize technical objects
-$object = new Action($db);
+$object = new ActionQ3SE($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->actions->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($contextpage)); 	// Note that conf->hooks_modules contains array of activated contexes
@@ -191,7 +191,7 @@ $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('actions', 'action', 'read');
 	$permissiontoadd = $user->hasRight('actions', 'action', 'write');
@@ -254,8 +254,8 @@ if (empty($reshook)) {
 	}
 
 	// Mass actions
-	$objectclass = 'Action';
-	$objectlabel = 'Action';
+	$objectclass = 'ActionQ3SE';
+	$objectlabel = 'ActionQ3SE';
 	$uploaddir = $conf->actions->dir_output;
 	include DOL_DOCUMENT_ROOT.'/core/actions_massactions.inc.php';
 
@@ -570,7 +570,7 @@ print_barre_liste('Action', $page, $_SERVER["PHP_SELF"], $param, $sortfield, $so
 // Add code for pre mass action (confirmation or email presend form)
 $topicmail = "SendActionRef";
 $modelmail = "action";
-$objecttmp = new Action($db);
+$objecttmp = new ActionQ3SE($db);
 $trackid = 'xxxx'.$object->id;
 include DOL_DOCUMENT_ROOT.'/core/tpl/massactions_pre.tpl.php';
 

@@ -122,7 +122,7 @@ $pagenext = $page + 1;
 
 // Initialize technical objects
 $object = new Constat($db);
-$objectAct = new Action($db);
+$objectAct = new ActionQ3SE($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->constat->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array('constatlist')); // Note that conf->hooks_modules contains array
@@ -187,7 +187,7 @@ $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('constat', 'constat', 'read');
 	$permissiontoadd = $user->hasRight('constat', 'constat', 'write');

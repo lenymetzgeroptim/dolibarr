@@ -21,6 +21,7 @@
 ModuleActionsName = Actions
 # Module description 'ModuleActionsDesc'
 ModuleActionsDesc = Actions description
+Actionq3se = Action
 
 #
 # Admin page
@@ -82,3 +83,36 @@ ActionsOnactions = Actions passé de l'action
 # Erreur
 #
 ErrorAddObjectLinked = Erreur lors de l'ajout de l'objet lié
+ActionFieldsNullMendatory = Les champs suivants doivent être renseignés : %s
+ActionNoEnd = L'avancement doit être à 100%%
+
+#
+# Button and FormConfirm
+#
+Decline = Refuser
+ConfirmValidateActionQ3SE = Voulez vous valider l'action et la transmettre au pilote ?
+ConfirmSoldeActionQ3SE = Voulez vous solder l'action et la transmettre au service Q3SE ?
+ConfirmCloseActionQ3SE = Voulez vous clôturer l'action ?
+Solde = Solder
+NewActionQ3SE = Nouvelle Action
+
+
+#
+# Agenda
+#
+ACTIONQ3SE_CREATEInDolibarr = L'action %s est créée
+ACTIONQ3SE_MODIFYInDolibarr = L'action %s est modifiée
+ACTIONQ3SE_DELETEInDolibarr = L'action  %s est supprimée
+ACTIONQ3SE_VALIDATEInDolibarr = L'action %s est validée
+ACTIONQ3SE_CLOTUREInDolibarr = L'action %s est cloturée
+ACTIONQ3SE_CANCELInDolibarr = L'action %s est annulée
+ACTIONQ3SE_SOLDEInDolibarr = L'action %s est soldée
+
+
+#
+# Email
+#
+EMailTextActionValidate = Bonjour,<br><br>L'action %s émis par %s a été validé. Vous êtes le pilote de celle-ci.<br><br>Cordialement
+EMailTextActionClose = Bonjour,<br><br>L'action %s pilotée par %s a été clôturé par %s.<br><br>Cordialement
+EMailTextActionSolde = Bonjour,<br><br>L'action %s pilotée par %s a été soldée. Vous pouvez clôturer celle-ci après évaluation.<br><br>Cordialement
+EMailTextConstatCancel = Bonjour,<br><br>Le constat %s pilotée par %s a été annulé par %s.<br><br>Cordialement

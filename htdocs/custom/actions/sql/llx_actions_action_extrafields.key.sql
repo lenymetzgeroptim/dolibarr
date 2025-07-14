@@ -15,5 +15,5 @@
 
 
 -- BEGIN MODULEBUILDER INDEXES
-ALTER TABLE llx_actions_action_extrafields ADD INDEX idx_action_fk_object(fk_object);
+ALTER TABLE llx_actions_actionq3se_extrafields ADD INDEX idx_action_fk_object(fk_object);
 -- END MODULEBUILDER INDEXES

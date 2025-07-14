@@ -175,7 +175,7 @@ class doc_generic_action_odt extends ModelePDFAction
 			$texte .= '<div id="div_'.get_class($this).'" class="hiddenx">';
 			// Show list of found files
 			foreach ($listoffiles as $file) {
-				$texte .= '- '.$file['name'].' <a href="'.DOL_URL_ROOT.'/document.php?modulepart=doctemplates&file=actions_action/'.urlencode(basename($file['name'])).'">'.img_picto('', 'listlight').'</a>';
+				$texte .= '- '.$file['name'].' <a href="'.DOL_URL_ROOT.'/document.php?modulepart=doctemplates&file=actions_actionq3se/'.urlencode(basename($file['name'])).'">'.img_picto('', 'listlight').'</a>';
 				$texte .= ' &nbsp; <a class="reposition" href="'.$_SERVER["PHP_SELF"].'?modulepart=doctemplates&keyforuploaddir=ACTIONS_MYOBJECT_ADDON_PDF_ODT_PATH&action=deletefile&token='.newToken().'&file='.urlencode(basename($file['name'])).'">'.img_picto('', 'delete').'</a>';
 				$texte .= '<br>';
 			}
@@ -247,7 +247,7 @@ class doc_generic_action_odt extends ModelePDFAction
 			// If $object is id instead of object
 			if (!is_object($object)) {
 				$id = $object;
-				$object = new Action($this->db);
+				$object = new ActionQ3SE($this->db);
 				$result = $object->fetch($id);
 				if ($result < 0) {
 					dol_print_error($this->db, $object->error);

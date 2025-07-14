@@ -524,7 +524,7 @@ class ActionsActions
 	 */
 	public function setLinkedObjectSourceTargetType($parameters, &$object, &$action, $hookmanager)
 	{
-		$this->results = array('sourcetype' => 'actions_action', 'targettype' => 'actions_action');
+		$this->results = array('sourcetype' => 'actions_actionq3se', 'targettype' => 'actions_actionq3se');
 		return 1; // or return 1 to replace standard code
 	}
 }

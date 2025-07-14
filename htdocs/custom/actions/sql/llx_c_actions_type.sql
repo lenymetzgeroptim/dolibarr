@@ -1,4 +1,4 @@
--- Copyright (C) 2023 FADEL Soufiane <s.fadel@optim-industries.fr>
+-- Copyright (C) 2023 Faure Louis
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -15,13 +15,14 @@
 
 
 -- BEGIN MODULEBUILDER INDEXES
-ALTER TABLE llx_actions_actionq3se ADD INDEX idx_actions_actionq3se_rowid (rowid);
-ALTER TABLE llx_actions_actionq3se ADD INDEX idx_actions_actionq3se_ref (ref);
-ALTER TABLE llx_actions_actionq3se ADD INDEX idx_actions_actionq3se_status (status);
-ALTER TABLE llx_actions_actionq3se ADD INDEX idx_actions_actionq3se_intervenant (intervenant);
+CREATE TABLE llx_c_actions_type (
+  rowid             integer AUTO_INCREMENT PRIMARY KEY,
+  label             varchar(64)  COLLATE utf8_unicode_ci NOT NULL,
+  active            int(11) DEFAULT 1
+) ENGINE=innodb;
 -- END MODULEBUILDER INDEXES
 
---ALTER TABLE llx_actions_actionq3se ADD UNIQUE INDEX uk_actions_actionq3se_fieldxy(fieldx, fieldy);
+--ALTER TABLE llx_constat_constat ADD UNIQUE INDEX uk_constat_constat_fieldxy(fieldx, fieldy);
 
---ALTER TABLE llx_actions_actionq3se ADD CONSTRAINT llx_actions_actionq3se_fk_field FOREIGN KEY (fk_field) REFERENCES llx_actions_myotherobject(rowid);
+--ALTER TABLE llx_constat_constat ADD CONSTRAINT llx_constat_constat_fk_field FOREIGN KEY (fk_field) REFERENCES llx_constat_myotherobject(rowid);
 
