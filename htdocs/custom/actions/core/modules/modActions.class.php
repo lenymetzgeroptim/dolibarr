@@ -168,7 +168,7 @@ class modActions extends DolibarrModules
 			3 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_MODIFY', 'chaine', '1', '', 0), 
 			// 4 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_DELETE', 'chaine', '1', '', 0), 
 			5 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_VALIDATE', 'chaine', '1', '', 0),
-			// 6 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_ATT_SOLDEE', 'chaine', '1', '', 0), 
+			6 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_ATT_SOLDE', 'chaine', '1', '', 0), 
 			// 7 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_EN_COURS', 'chaine', '1', '', 0),
 			8 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_SOLDE', 'chaine', '1', '', 0), 
 			9 => array('MAIN_AGENDA_ACTIONAUTO_ACTIONQ3SE_CLOTURE', 'chaine', '1', '', 0), 
@@ -257,7 +257,7 @@ class modActions extends DolibarrModules
 			//  0 => array(
 			//      'label' => 'MyJob label',
 			//      'jobtype' => 'method',
-			//      'class' => '/actions/class/action.class.php',
+			//      'class' => '/actions/class/actionq3se.class.php',
 			//      'objectname' => 'ActionQ3SE',
 			//      'method' => 'doScheduledJob',
 			//      'parameters' => '',
@@ -453,11 +453,11 @@ class modActions extends DolibarrModules
 		$this->export_label[$r]='ActionLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
 		$this->export_icon[$r]='action@actions';
 		// Define $this->export_fields_array, $this->export_TypeFields_array and $this->export_entities_array
-		$keyforclass = 'ActionQ3SE'; $keyforclassfile='/actions/class/action.class.php'; $keyforelement='action@actions';
+		$keyforclass = 'ActionQ3SE'; $keyforclassfile='/actions/class/actionq3se.class.php'; $keyforelement='action@actions';
 		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
 		//$this->export_fields_array[$r]['t.fieldtoadd']='FieldToAdd'; $this->export_TypeFields_array[$r]['t.fieldtoadd']='Text';
 		//unset($this->export_fields_array[$r]['t.fieldtoremove']);
-		//$keyforclass = 'ActionLine'; $keyforclassfile='/actions/class/action.class.php'; $keyforelement='actionline@actions'; $keyforalias='tl';
+		//$keyforclass = 'ActionLine'; $keyforclassfile='/actions/class/actionq3se.class.php'; $keyforelement='actionline@actions'; $keyforalias='tl';
 		//include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
 		$keyforselect='action'; $keyforaliasextra='extra'; $keyforelement='action@actions';
 		include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
@@ -487,11 +487,11 @@ class modActions extends DolibarrModules
 		$this->import_label[$r] = 'ActionLines'; // Translation key (used only if key ExportDataset_xxx_z not found)
 		$this->import_icon[$r] = 'action@actions';
 		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX . 'actions_actionq3se', 'extra' => MAIN_DB_PREFIX . 'actions_actionq3se_extrafields');
-		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_author'); // Fields to store import user id
+		// $this->import_tables_creator_array[$r] = array('t' => 'fk_user_author'); // Fields to store import user id
 
 		$import_sample = array();
 		$keyforclass = 'ActionQ3SE';
-		$keyforclassfile = '/actions/class/action.class.php';
+		$keyforclassfile = '/actions/class/actionq3se.class.php';
 		$keyforelement = 'action@actions';
 
 		// error_log("Inclusion de commonfieldsinimport.inc.php");
@@ -514,10 +514,10 @@ class modActions extends DolibarrModules
 			'rule' => 'getrowidifauto',
 			'class' => (!getDolGlobalString('ACTIONS_MYOBJECT_ADDON') ? 'mod_action_standard' : getDolGlobalString('ACTIONS_MYOBJECT_ADDON')),
 		),
-		't.date_eche' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateString'),
-		't.date_sol' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateString'),
-		't.date_asse' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateString'),
-		't.date_creation' => array('rule' => 'compute', 'file' => '/custom/actions/class/action.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateStringHours'),
+		't.date_eche' => array('rule' => 'compute', 'file' => '/custom/actions/class/actionq3se.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateString'),
+		't.date_sol' => array('rule' => 'compute', 'file' => '/custom/actions/class/actionq3se.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateString'),
+		't.date_asse' => array('rule' => 'compute', 'file' => '/custom/actions/class/actionq3se.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateString'),
+		't.date_creation' => array('rule' => 'compute', 'file' => '/custom/actions/class/actionq3se.class.php', 'class' => 'ActionQ3SE', 'method' => 'formatDateStringHours'),
 		);
 		/* END MODULEBUILDER IMPORT MYOBJECT */
 	}

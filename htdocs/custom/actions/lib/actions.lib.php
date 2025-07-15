@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-require_once DOL_DOCUMENT_ROOT.'/custom/actions/class/action.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/actions/class/actionq3se.class.php';
 /**
  * \file    actions/lib/actions.lib.php
  * \ingroup actions

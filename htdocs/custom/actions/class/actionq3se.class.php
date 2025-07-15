@@ -18,7 +18,7 @@
  */
 
 /**
- * \file        class/action.class.php
+ * \file        class/actionq3se.class.php
  * \ingroup     actions
  * \brief       This file is a CRUD class file for Action (Create/Read/Update/Delete)
  */
@@ -68,9 +68,8 @@ class ActionQ3SE extends CommonObject
 
 	const STATUS_DRAFT = 0;
 	const STATUS_VALIDATED = 1;
-	//const STATUS_EN_COURS = 2;
+	const STATUS_ATT_SOLDEE = 2;
 	const STATUS_SOLDEE = 3;
-	//const STATUS_ATT_SOLDEE = 4;
 	const STATUS_CLOTURE = 8;
 	const STATUS_CANCELED = 9;
 
@@ -126,22 +125,24 @@ class ActionQ3SE extends CommonObject
 		"fk_user_creat" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserAuthor", "enabled"=>"1", 'position'=>510, 'notnull'=>1, "visible"=>"-2", "csslist"=>"tdoverflowmax150",),
 		"priority" => array("type"=>"integer", "label"=>"Priorité", "enabled"=>"1", 'position'=>21, 'notnull'=>1, "visible"=>"1", "help"=>"Urgent et important : Priorité 1 (AC suivi mensuellement)</br>Non urgent et important : Priorité 2 (Suivi 6mois)</br>Urgent et pas important : Priorité 2 (Suivi 6mois)</br>Non urgent et pas important : Priorité 3 (Suivi 1an)", "arrayofkeyval"=>array("1" => "1", "2" => "2", "3" => "3"),),
 		"origins" => array("type"=>"integer", "label"=>"Origine", "enabled"=>"1", 'position'=>10, 'notnull'=>1, "visible"=>"1", "arrayofkeyval"=>array("1" => "AUDIT EXTERNE", "2" => "AUDIT CROISE", "3" => "AUDIT INTERNE", "4" => "FC", "5" => "VEILLE REGLEMENTAIRE", "6" => "REMONTE TERRAIN", "7" => "DECISION INTERNE", "8" => "DOCUMENT UNIQUE", "10" => "POINT Q3SE & RP", "11" => "REVUE DIRECTION", "12" => "VISITE TERRAIN"),),
-		"label" => array("type"=>"varchar(255)", "label"=>"Libellé", "enabled"=>"1", 'position'=>41, 'notnull'=>1, "visible"=>"1", "help"=>"Nom de l'action",),
+		"label" => array("type"=>"varchar(255)", "label"=>"Libellé", "enabled"=>"1", 'position'=>41, 'notnull'=>1, "visible"=>"1", "help"=>"Identifier l'action en quelques mots",),
 		"CP" => array("type"=>"integer", "label"=>"Préventive/Corrective", "enabled"=>"1", 'position'=>25, 'notnull'=>0, "visible"=>"1", "arrayofkeyval"=>array("1" => "Préventive", "2" => "Corrective", "3" => "Préventive / Corrective"),),
 		"date_creation" => array("type"=>"date", "label"=>"Date création action", "enabled"=>"1", 'position'=>40, 'notnull'=>1, "visible"=>"1",),
 		"action_txt" => array("type"=>"html", "label"=>"Description action", "enabled"=>"1", 'position'=>42, 'notnull'=>1, "visible"=>"1", "help"=>"Déscription détaillé de l'action",),
 		"date_eche" => array("type"=>"date", "label"=>"Date échéance", "enabled"=>"1", 'position'=>45, 'notnull'=>1, "visible"=>"1",),
-		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"\$object->status>0?4:0", "help"=>"Avancement en %", "arrayofkeyval"=>array("0%", "25%", "50%", "75%", "100%"),),
-		"date_sol" => array("type"=>"date", "label"=>"Date solde", "enabled"=>"1", 'position'=>60, 'notnull'=>0, "visible"=>"\$object->status>3?5:0",),
-		"diffusion" => array("type"=>"integer", "label"=>"Diffusion document", "enabled"=>"1", 'position'=>65, 'notnull'=>1, "visible"=>"\$object->status>0?4:0", "arrayofkeyval"=>array("1" => "Non", "2"=> "Oui"),),
-		"com" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"\$object->status>0?4:0", "help"=>"Commmentaire sur l'action",),
-		"eff_act" => array("type"=>"integer", "label"=>"Efficacité action", "enabled"=>"1", 'position'=>75, 'notnull'=>1, "visible"=>"\$object->status>1?4:0", "help"=>"Différent niveau d'éfficacité de l'action : A = le plus éfficace C = le moins", "arrayofkeyval"=>array("1" => "A", "2" => "B", "9" => "C"),),
-		"eff_act_description" => array("type"=>"html", "label"=>"Détail efficacité", "enabled"=>"1", 'position'=>77, 'notnull'=>0, "visible"=>"\$object->status>1?4:0",),
-		"date_asse" => array("type"=>"date", "label"=>"Date évalutation", "enabled"=>"1", 'position'=>80, 'notnull'=>0, "visible"=>"\$object->status>1?4:0",),
+		"avancement" => array("type"=>"integer", "label"=>"Avancement", "enabled"=>"1", 'position'=>50, 'notnull'=>1, "visible"=>"\$object->status>0||!\$object->id?4:0", "help"=>"Avancement en %", "arrayofkeyval"=>array("0" => "0%", "1" => "25%", "2" => "50%", "3" => "75%", "4" => "100%"),),
+		"date_sol" => array("type"=>"date", "label"=>"Date solde", "enabled"=>"1", 'position'=>70, 'notnull'=>0, "visible"=>"\$object->status>3||!\$object->id?5:0",),
+		"diffusion" => array("type"=>"integer", "label"=>"Diffusion document", "enabled"=>"1", 'position'=>60, 'notnull'=>1, "visible"=>"\$object->status>0||!\$object->id?4:0", "arrayofkeyval"=>array("1" => "Non", "2" => "Oui"),),
+		"com" => array("type"=>"html", "label"=>"Commentaire", "enabled"=>"1", 'position'=>65, 'notnull'=>0, "visible"=>"\$object->status>0||!\$object->id?-4:0", "help"=>"Commmentaire sur l'action",),
+		"eff_act" => array("type"=>"integer", "label"=>"Efficacité action", "enabled"=>"1", 'position'=>75, 'notnull'=>0, "visible"=>"\$object->status>2||!\$object->id?4:0", "help"=>"Différent niveau d'éfficacité de l'action : A = le plus éfficace C = le moins", "arrayofkeyval"=>array("1" => "A", "2" => "B", "9" => "C"),),
+		"eff_act_description" => array("type"=>"html", "label"=>"Détail efficacité", "enabled"=>"1", 'position'=>77, 'notnull'=>0, "visible"=>"\$object->status>2||!\$object->id?4:0",),
+		"date_asse" => array("type"=>"date", "label"=>"Date évalutation", "enabled"=>"1", 'position'=>80, 'notnull'=>0, "visible"=>"\$object->status>1||!\$object->id?4:0",),
 		"last_main_doc" => array("type"=>"varchar(255)", "label"=>"LastMainDoc", "enabled"=>"1", 'position'=>650, 'notnull'=>0, "visible"=>"0",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
 		"fk_user_modif" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
 		"type" => array("type"=>"chkbxlst:c_actions_type:label:rowid::(active=1)", "label"=>"Type", "enabled"=>"1", 'position'=>30, 'notnull'=>0, "visible"=>"1",),
+		"reference_label" => array("type"=>"varchar", "label"=>"RefLabel", "enabled"=>"1", 'position'=>11, 'notnull'=>0, "visible"=>"1",),
+		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 	);
 	public $rowid;
 	public $ref;
@@ -166,6 +167,8 @@ class ActionQ3SE extends CommonObject
 	public $tms;
 	public $fk_user_modif;
 	public $type;
+	public $reference_label;
+	public $import_key;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -407,10 +410,12 @@ class ActionQ3SE extends CommonObject
 		if($this->status >= self::STATUS_VALIDATED) {
 			$this->fields['diffusion']['notnull_validate'] = 1;
 		}
+		if($this->status >= self::STATUS_ATT_SOLDEE) {
+			$this->fields['date_asse']['notnull_validate'] = 1;
+		}
 		if($this->status >= self::STATUS_SOLDEE) {
 			$this->fields['eff_act']['notnull_validate'] = 1;
 			$this->fields['eff_act_description']['notnull_validate'] = 1;
-			$this->fields['date_asse']['notnull_validate'] = 1;
 		}
 
 		return $result;
@@ -530,30 +535,10 @@ class ActionQ3SE extends CommonObject
 	 */
 	public function delete(User $user, $notrigger = false)
 	{
-		$error = 0;
-
-		$this->db->begin();
-
-		if (!$error && !$notrigger) {
-			// Call trigger
-			$result = $this->call_trigger('ACTIONQ3SE_DELETE', $user);
-			if ($result < 0) {
-				$error++;
-			}
-			// End call triggers
-		}
-
-		if (!$error) {
-			// Delete linked object
-			$res = $this->deleteObjectLinked();
-			if ($res < 0) {
-				$error++;
-			}
-		}
 		return $this->deleteCommon($user, $notrigger);
 		//return $this->deleteCommon($user, $notrigger, 1);
 	}
-
+	
 	/**
 	 *  Delete a line of object in database
 	 *
@@ -693,51 +678,7 @@ class ActionQ3SE extends CommonObject
 		if (!$error) {
 			$this->ref = $num;
 			$this->status = self::STATUS_VALIDATED;
-		}
-
-		// if (!$error) {
-		// 	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
-		// 	include_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
-		// 	include_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-		// 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
-		// 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
-		// 	global $db;
-		
-		// 	$subject = '[OPTIM Industries] Notification automatique - Nouvelle action assignée';
-
-		// 	$from = 'erp@optim-industries.fr';
-		// 	$emails = [];
-
-		// 	// Récupération de l'email du pilote
-		// 	$pilote = new User($db);
-		// 	$pilote->fetch($this->intervenant);
-		// 	if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-		// 		$emails[] = $pilote->email;
-		// 	}
-
-		// 	// Suppression des doublons
-		// 	$emails = array_unique($emails);
-		// 	$to = implode(", ", $emails);
-
-		// 	global $dolibarr_main_url_root;
-		// 	$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-		// 	$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-		// 	$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $this->id . '">' . $this->ref . '</a>';
-
-		// 	$msg = $langs->transnoentitiesnoconv("Bonjour, vous avez été ajouté à une nouvelle action : " . $link);
-
-		// 	$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $this->id);
-
-		// 	// Envoi du mail
-		// 	$res = $cmail->sendfile();
-		// 	if ($res) {
-		// 		setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-		// 		print '<script>window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $this->id . '");</script>';
-		// 	} else {
-		// 		setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-		// 	}
-
-		// }	
+		}	
 
 		if (!$error) {
 			$this->db->commit();
@@ -811,6 +752,65 @@ class ActionQ3SE extends CommonObject
 	}
 
 	/**
+	 *	Attente de Solde object
+	 *
+	 *	@param		User	$user     		User making status change
+	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
+	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
+	 */
+	public function att_solde($user, $notrigger = 0)
+	{
+		global $conf, $langs;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$error = 0;
+
+		// Protection
+		if ($this->status == self::STATUS_ATT_SOLDEE) {
+			dol_syslog(get_class($this)."::att_solde action abandonned: already att_solde", LOG_WARNING);
+			return 0;
+		}
+
+		$now = dol_now();
+
+		// Validate
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
+		$sql .= " SET status = ".self::STATUS_ATT_SOLDEE;
+		$sql .= " WHERE rowid = ".((int) $this->id);
+
+		dol_syslog(get_class($this)."::att_solde()", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('ACTIONQ3SE_ATT_SOLDE', $user);
+			if ($result < 0) {
+				$error++;
+			}
+			// End call triggers
+		}
+
+		// Set new ref and current status
+		if (!$error) {
+			$this->status = self::STATUS_ATT_SOLDEE;
+		}	
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
 	 *	Set draft status
 	 *
 	 *	@param	User	$user			Object user that modify
@@ -844,7 +844,7 @@ class ActionQ3SE extends CommonObject
 	public function cancel($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status != self::STATUS_VALIDATED) {
+		if ($this->status != self::STATUS_DRAFT && $this->status != self::STATUS_VALIDATED && $this->status != self::STATUS_ATT_SOLDEE) {
 			return 0;
 		}
 
@@ -1154,14 +1154,14 @@ class ActionQ3SE extends CommonObject
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('En cours');
 			// $this->labelStatus[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatus[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldée');
-			// $this->labelStatus[self::STATUS_ATT_SOLDEE ] = $langs->transnoentitiesnoconv('Attente validation Soldée');
+			$this->labelStatus[self::STATUS_ATT_SOLDEE ] = $langs->transnoentitiesnoconv('Attente solde');
 			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturée');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Classé sans suite');
 			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('En cours');
 			// $this->labelStatusShort[self::STATUS_EN_COURS] = $langs->transnoentitiesnoconv('En cours');
 			$this->labelStatusShort[self::STATUS_SOLDEE] = $langs->transnoentitiesnoconv('Soldée');
-			// $this->labelStatusShort[self::STATUS_ATT_SOLDEE] = $langs->transnoentitiesnoconv('Attente validation Soldée');
+			$this->labelStatusShort[self::STATUS_ATT_SOLDEE] = $langs->transnoentitiesnoconv('Attente solde');
 			$this->labelStatus[self::STATUS_CLOTURE] = $langs->transnoentitiesnoconv('Cloturée');
 			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Classé sans suite');
 		}
@@ -1173,6 +1173,9 @@ class ActionQ3SE extends CommonObject
 		}
 		if ($status == self::STATUS_CLOTURE) {
 			$statusType = 'status9';
+		}
+		if ($status == self::STATUS_SOLDEE) {
+			$statusType = 'status4';
 		}
 
 		return dolGetStatus($this->labelStatus[$status], $this->labelStatusShort[$status], '', $statusType, $mode);
@@ -1386,15 +1389,15 @@ class ActionQ3SE extends CommonObject
 	// 		return $this->setStatusCommon($user, self::STATUS_EN_COURS, $notrigger, 'CONSTAT_UNVALIDATE');
 	// 	}
 	
-	public function setSolde($user, $notrigger = 0)
-	{
-		// Protection
-		if ($this->status <= self::STATUS_SOLDEE) {
-			return 0;	
-		}
+	// public function setSolde($user, $notrigger = 0)
+	// {
+	// 	// Protection
+	// 	if ($this->status <= self::STATUS_SOLDEE) {
+	// 		return 0;	
+	// 	}
 		
-		return $this->setStatusCommon($user, self::STATUS_SOLDEE, $notrigger, 'CONSTAT_UNVALIDATE');
-	}
+	// 	return $this->setStatusCommon($user, self::STATUS_SOLDEE, $notrigger, 'CONSTAT_UNVALIDATE');
+	// }
 	// public function setAttSolde($user, $notrigger = 0)
 	// {
 	// 	// Protection

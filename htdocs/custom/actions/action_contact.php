@@ -55,7 +55,7 @@ if (!$res) {
 
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
-dol_include_once('/actions/class/action.class.php');
+dol_include_once('/actions/class/actionq3se.class.php');
 dol_include_once('/actions/lib/actions_action.lib.php');
 
 // Load translation files required by the page
@@ -82,8 +82,8 @@ include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be includ
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
 $enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->actions->action->read;
-	$permission = $user->rights->actions->action->write;
+	$permissiontoread = $user->hasRight('actions', 'action', 'readall') || ($user->hasRight('actions', 'action', 'read') && ($user->id == $object->fk_user_creat || $user->id == $object->intervenant));
+	$permission = $user->hasRight('actions', 'action', 'write');
 } else {
 	$permissiontoread = 1;
 	$permission = 1;

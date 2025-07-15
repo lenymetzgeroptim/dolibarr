@@ -145,6 +145,55 @@ class InterfaceActionsTriggers extends DolibarrTriggers
 				}
 
 			// Envoi d'un mail au service Q3SE, responsable Q3SE lorsque l'action est soldée
+			case 'ACTIONQ3SE_ATT_SOLDE':
+				$subject = '[OPTIM Industries] Notification automatique action';
+				$from = 'erp@optim-industries.fr';
+				
+				$user_static = new User($this->db);
+				$user_static->fetch($object->intervenant);
+		
+				$to = ''; 
+				$user_group = New UserGroup($this->db);
+				$user_group->fetch('', 'Q3SE');
+				$liste_utilisateur = $user_group->listUsersForGroup();
+				foreach($liste_utilisateur as $qualite){
+					if(!empty($qualite->email)){
+						$to .= $qualite->email;
+						$to .= ", ";
+							
+					}
+				}
+				$user_group->fetch('', 'Resp. Q3SE');
+				$liste_utilisateur = $user_group->listUsersForGroup();
+				foreach($liste_utilisateur as $qualite){
+					if(!empty($qualite->email)){
+						$to .= $qualite->email;
+						$to .= ", ";
+							
+					}
+				}
+				$to = rtrim($to, ", ");
+
+				global $dolibarr_main_url_root;
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/actions/action_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+				$message = $langs->transnoentitiesnoconv("EMailTextActionAttSolde", $link, $user_static->lastname." ".$user_static->firstname);
+				$mail = new CMailFile($subject, $to, $from, $message, array(), array(), array(), '', '', 0, 1, '', '', 'action'.'_'.$object->id);
+
+				if(!empty($to)) {
+					$res = $mail->sendfile();
+				}
+
+				if($res){
+					return 1;
+				}
+				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+					setEventMessages("Impossible d'envoyer le mail", null, 'warnings');
+					return 0;
+				}
+
+			// Envoi d'un mail au service Q3SE, responsable Q3SE et au pilote lorsque l'action est soldée
 			case 'ACTIONQ3SE_SOLDE':
 				$subject = '[OPTIM Industries] Notification automatique action';
 				$from = 'erp@optim-industries.fr';
@@ -172,6 +221,9 @@ class InterfaceActionsTriggers extends DolibarrTriggers
 							
 					}
 				}
+				if(!empty($user_static->email)){
+					$to .= $user_static->email;
+				}	
 				$to = rtrim($to, ", ");
 
 				global $dolibarr_main_url_root;
@@ -283,7 +335,7 @@ class InterfaceActionsTriggers extends DolibarrTriggers
 				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 				$link = '<a href="'.$urlwithroot.'/custom/actions/action_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-				$message = $langs->transnoentitiesnoconv("EMailTextActionCancel", $link, $user_static->lastname." ".$user_static->firstname, $user->lastname." ".$user->firstname);
+				$message = $langs->transnoentitiesnoconv("EMailTextConstatCancel", $link, $user_static->lastname." ".$user_static->firstname, $user->lastname." ".$user->firstname);
 				$mail = new CMailFile($subject, $to, $from, $message, array(), array(), array(), '', '', 0, 1, '', '', 'constat'.'_'.$object->id);
 
 				if(!empty($to)) {
