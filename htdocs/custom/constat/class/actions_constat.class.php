@@ -467,6 +467,7 @@ class ActionsConstat
 		print '<td class="center"></td>';
 		print '<td class="center">' . $langs->trans("Date") . '</td>';
 		print '<td class="right">' . $langs->trans("Label") . '</td>';
+		print '<td class="right">' . $langs->trans("Avancement") . '</td>';
 		print '<td class="right">' . $langs->trans("Status") . '</td>';
 		print '<td></td>';
 		print '</tr>';

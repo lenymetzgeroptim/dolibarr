@@ -24,6 +24,10 @@ if (empty($conf) || !is_object($conf)) {
 	exit;
 }
 
+if($object->element != 'constat') {
+	return 0;
+}
+
 print "<!-- BEGIN PHP TEMPLATE custom/constat/core/tpl/linkedobjectblock.tpl.php -->\n";
 
 global $user;
@@ -57,10 +61,10 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	echo '<td class="linkedcol-name nowraponall" >'.$objectlink->getNomUrl(1).'</td>';
 	echo '<td class="linkedcol-ref">'.$objectlink->ref_client.'</td>';
 
-	if($objectlink->element == 'action' && $objectlink->date_creation > 0) {
-		echo '<td class="linkedcol-date">'.dol_print_date($objectlink->date_creation, 'day').'</td>';
+	if($objectlink->element == 'actionq3se' && $objectlink->date_creation > 0) {
+		echo '<td class="linkedcol-date center">'.dol_print_date($objectlink->date_creation, 'day').'</td>';
 	}elseif($objectlink->element == 'constat' && $objectlink->emetteur_date > 0){
-		echo '<td class="linkedcol-date">'.dol_print_date($objectlink->emetteur_date, 'day').'</td>';
+		echo '<td class="linkedcol-date center">'.dol_print_date($objectlink->emetteur_date, 'day').'</td>';
 	}else{
 		echo '<td class="linkedcol-date"></td>';
 	}
@@ -71,7 +75,8 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 		echo $objectlink->label;
 	
 	echo '</td>';
-	echo '<td class="linkedcol-statut right">'.$objectlink->getLibStatut(1).'</td>';
+	echo '<td class="linkedcol-avancement right">'.$objectlink->fields['avancement']['arrayofkeyval'][$objectlink->avancement].'</td>';
+	echo '<td class="linkedcol-statut right">'.$objectlink->getLibStatut(4).'</td>';
 	echo '<td class="linkedcol-action right">';
 	// For now, shipments must stay linked to order, so link is not deletable
 	/*if ($object->element != 'shipping') {

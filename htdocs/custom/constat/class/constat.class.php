@@ -168,6 +168,7 @@ class Constat extends CommonObject
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
 		"fk_user_modif" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
+		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 	);
 	public $rowid;
 	public $ref;
@@ -215,6 +216,7 @@ class Constat extends CommonObject
 	public $date_creation;
 	public $tms;
 	public $fk_user_modif;
+	public $import_key;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1620,7 +1622,7 @@ class Constat extends CommonObject
 
 	// 	$sql = "SELECT e.fk_target, e.fk_source, a.status";
 	// 	$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_action as a ON e.fk_target = a.rowid";
+	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_actionq3se as a ON e.fk_target = a.rowid";
 	// 	$sql .= " WHERE e.fk_source = $this->id AND e.sourcetype = 'constat' ";
 
 	// 	$result = $db->query($sql);
@@ -2004,7 +2006,7 @@ class Constat extends CommonObject
 	// 					$classfile = 'action';
 	// 					$classname = 'Action';
 	// 					$module = 'actions';
-	// 				}elseif ($objecttype == 'actions_action') {
+	// 				}elseif ($objecttype == 'actions_actionq3se') {
 	// 					$classpath = 'actions/class';
 	// 					$classfile = 'action';
 	// 					$classname = 'Action';
@@ -2143,7 +2145,7 @@ class Constat extends CommonObject
 		}
 		$now = dol_now();
 		$sql = 'SELECT t.rowid';
-		$sql .= " FROM " . MAIN_DB_PREFIX . "actions_action as t";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "actions_actionq3se as t";
 
 		// Requête principale pour sélectionner les actions
 		$sql .= " WHERE t.status IN (0, 1, 2, 3, 4) AND ("; // Ajout du filtre sur les statuts
@@ -2169,7 +2171,7 @@ class Constat extends CommonObject
 			JOIN " . MAIN_DB_PREFIX . "constat_constat AS c ON (
 				(ee.fk_source = t.rowid AND ee.sourcetype = 'action' AND ee.targettype = 'constat_constat' AND ee.fk_target = c.rowid)
 				OR 
-				(ee.fk_target = t.rowid AND ee.targettype = 'actions_action' AND ee.sourcetype = 'constat_constat' AND ee.fk_source = c.rowid)
+				(ee.fk_target = t.rowid AND ee.targettype = 'actions_actionq3se' AND ee.sourcetype = 'constat_constat' AND ee.fk_source = c.rowid)
 			)
 			WHERE c.fk_project IS NOT NULL
 			AND c.fk_project IN (
@@ -2216,7 +2218,7 @@ class Constat extends CommonObject
 			}
 
 			// Deuxième requête pour récupérer les actions en retard
-			$sql_late = 'SELECT t.rowid, t.date_eche FROM ' . MAIN_DB_PREFIX . 'actions_action as t';
+			$sql_late = 'SELECT t.rowid, t.date_eche FROM ' . MAIN_DB_PREFIX . 'actions_actionq3se as t';
 			$sql_late .= " WHERE t.status IN ( 1, 2, 4) AND t.date_eche < '" . $this->db->idate($now) . "' AND (";
 			$sql_late .= " (
 				EXISTS (
@@ -2239,7 +2241,7 @@ class Constat extends CommonObject
 				JOIN " . MAIN_DB_PREFIX . "constat_constat AS c ON (
 					(ee.fk_source = t.rowid AND ee.sourcetype = 'action' AND ee.targettype = 'constat_constat' AND ee.fk_target = c.rowid)
 					OR 
-					(ee.fk_target = t.rowid AND ee.targettype = 'actions_action' AND ee.sourcetype = 'constat_constat' AND ee.fk_source = c.rowid)
+					(ee.fk_target = t.rowid AND ee.targettype = 'actions_actionq3se' AND ee.sourcetype = 'constat_constat' AND ee.fk_source = c.rowid)
 				)
 				WHERE c.fk_project IS NOT NULL
 				AND c.fk_project IN (
@@ -2293,7 +2295,7 @@ class Constat extends CommonObject
 
 		$sql = "SELECT e.fk_target, e.fk_source, a.status";
 		$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_action as a ON e.fk_target = a.rowid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_actionq3se as a ON e.fk_target = a.rowid";
 		$sql .= " WHERE e.fk_source = $this->id AND e.sourcetype = 'constat' AND a.status = 3";
 
 		$result = $db->query($sql);

@@ -125,7 +125,7 @@ class actionsForm extends Form
     //                 if (empty($conf->action->enabled)) {
     //                     continue; // Do not show if module disabled
     //                 }
-    //             }elseif ($objecttype == 'actions_action') {
+    //             }elseif ($objecttype == 'actions_actionq3se') {
     //                 $tplpath = 'custom/'.$element;
     //                 if (empty($conf->propal->enabled)) {
     //                     continue; // Do not show if module disabled
@@ -142,7 +142,7 @@ class actionsForm extends Form
 	// 				$tplpath = 'eventorganization';
 	// 			} elseif ($objecttype == 'conferenceorboothattendee') {
 	// 				$tplpath = 'eventorganization';
-    //             } elseif ($objecttype == 'actions_action') {
+    //             } elseif ($objecttype == 'actions_actionq3se') {
 	// 				$tplpath = 'custom/actions/core';
 	// 			} elseif ($objecttype == 'mo') {
 	// 				$tplpath = 'mrp';

@@ -950,7 +950,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		
 			
 		// 	$sql = "SELECT ac.status "; 
-		// 	$sql .= "FROM ".MAIN_DB_PREFIX."actions_action as ac ";
+		// 	$sql .= "FROM ".MAIN_DB_PREFIX."actions_actionq3se as ac ";
 		// 	$sql .= "WHERE ac.rowid = $targetId ";
 
 		// 	$resultStatus = $db->query($sql);
@@ -966,7 +966,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// }
 
 		
-		/*$sql .= "JOIN ".MAIN_DB_PREFIX."element_element as e ON ac.rowid = e.fk_target AND e.targettype = 'actions_action' ";
+		/*$sql .= "JOIN ".MAIN_DB_PREFIX."element_element as e ON ac.rowid = e.fk_target AND e.targettype = 'actions_actionq3se' ";
 			$sql .= "JOIN ".MAIN_DB_PREFIX."constat_constat as co ON e.fk_source = co.rowid AND e.sourcetype = 'constat' ";
 			$sql .= "WHERE ac.status = 3 AND e.fk_source = $id ";
 			$sql .= "ORDER BY e.targettype";

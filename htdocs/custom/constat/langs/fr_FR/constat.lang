@@ -22,6 +22,8 @@ ModuleConstatName = Constat
 # Module description 'ModuleConstatDesc'
 ModuleConstatDesc = Constat description
 ActionsOnConstat = Actions sur le constat
+Actionq3se = Action
+
 #
 # Admin page
 #

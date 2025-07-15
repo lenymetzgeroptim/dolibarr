@@ -351,12 +351,12 @@ class InterfaceConstatTriggers extends DolibarrTriggers
 				}
 
 			// Envoi d'un mail au(x) responsable(s) d'affaires, au service Q3SE, au responsable Q3SE et au créateur lorsue toutes les actions sont soldées
-			case 'ACTION_SOLDEE':
-				$subject = '[OPTIM Industries] Notification automatique constat';
-				$from = 'erp@optim-industries.fr';
+			// case 'ACTION_SOLDEE':
+			// 	$subject = '[OPTIM Industries] Notification automatique constat';
+			// 	$from = 'erp@optim-industries.fr';
 
-				$object->fetchObjectLinked(null, '', null, '', 'OR', 1, 'sourcetype', 'constat');
-				var_dump($object->linkedObjects);
+			// 	$object->fetchObjectLinked(null, '', null, '', 'OR', 1, 'sourcetype', 'constat');
+			// 	var_dump($object->linkedObjects);
 
 				// $constat = new Constat($this->db);
 				// $constat->fetch($object)
