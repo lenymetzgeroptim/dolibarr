@@ -168,6 +168,7 @@ class Constat extends CommonObject
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>1, "visible"=>"-2",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>501, 'notnull'=>0, "visible"=>"-2",),
 		"fk_user_modif" => array("type"=>"integer:user:user/class/user.class.php", "label"=>"UserModif", "enabled"=>"1", 'position'=>511, 'notnull'=>-1, "visible"=>"-2",),
+		"import_key" => array("type"=>"varchar(14)", "label"=>"ImportId", "enabled"=>"1", 'position'=>1000, 'notnull'=>-1, "visible"=>"-2",),
 	);
 	public $rowid;
 	public $ref;
@@ -215,6 +216,7 @@ class Constat extends CommonObject
 	public $date_creation;
 	public $tms;
 	public $fk_user_modif;
+	public $import_key;
 	// END MODULEBUILDER PROPERTIES
 
 

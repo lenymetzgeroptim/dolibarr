@@ -117,10 +117,12 @@ if ($tmp) {
 
 
 
-$tmp = getStatusByYearChart();
-if ($tmp) {
-	print $tmp;
-	print '<br>';
+if($user->hasRight('constat', 'constat', 'readall')) {
+	$tmp = getStatusByYearChart();
+	if ($tmp) {
+		print $tmp;
+		print '<br>';
+	}
 }
 
 

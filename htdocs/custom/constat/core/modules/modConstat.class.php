@@ -499,13 +499,12 @@ class modConstat extends DolibarrModules
 		// Imports profiles provided by this module
 		$r = 1;
 		/* BEGIN MODULEBUILDER IMPORT CONSTAT */
-		/*
 		$langs->load("constat@constat");
 		$this->import_code[$r]=$this->rights_class.'_'.$r;
 		$this->import_label[$r]='ConstatLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
 		$this->import_icon[$r]='constat@constat';
 		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX.'constat_constat', 'extra' => MAIN_DB_PREFIX.'constat_constat_extrafields');
-		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_author'); // Fields to store import user id
+		//$this->import_tables_creator_array[$r] = array('t' => 'fk_user_author'); // Fields to store import user id
 		$import_sample = array();
 		$keyforclass = 'Constat'; $keyforclassfile='/constat/class/constat.class.php'; $keyforelement='constat@constat';
 		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
@@ -517,18 +516,9 @@ class modConstat extends DolibarrModules
 		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
 		$this->import_updatekeys_array[$r] = array('t.ref' => 'Ref');
 		$this->import_convertvalue_array[$r] = array(
-			't.ref' => array(
-				'rule'=>'getrefifauto',
-				'class'=>(empty($conf->global->CONSTAT_CONSTAT_ADDON) ? 'mod_constat_standard' : $conf->global->CONSTAT_CONSTAT_ADDON),
-				'path'=>"/core/modules/commande/".(empty($conf->global->CONSTAT_CONSTAT_ADDON) ? 'mod_constat_standard' : $conf->global->CONSTAT_CONSTAT_ADDON).'.php'
-				'classobject'=>'Constat',
-				'pathobject'=>'/constat/class/constat.class.php',
-			),
-			't.fk_soc' => array('rule' => 'fetchidfromref', 'file' => '/societe/class/societe.class.php', 'class' => 'Societe', 'method' => 'fetch', 'element' => 'ThirdParty'),
 			't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
-			't.fk_mode_reglement' => array('rule' => 'fetchidfromcodeorlabel', 'file' => '/compta/paiement/class/cpaiement.class.php', 'class' => 'Cpaiement', 'method' => 'fetch', 'element' => 'cpayment'),
 		);
-		$r++; */
+		$r++; 
 		/* END MODULEBUILDER IMPORT CONSTAT */
 	}
 
