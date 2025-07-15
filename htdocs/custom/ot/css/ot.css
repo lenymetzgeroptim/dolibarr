@@ -1,9 +1,21 @@
 body {
-    background: yellow !important;
+  background: #fff !important;
     font-family: Arial, sans-serif;
     color: #333;
     margin: 0;
     padding: 0;
+}
+body,
+tr,
+td,
+th,
+.tableforfield,
+.fichecenter,
+.fichehalfleft,
+.fichehalfright,
+.div-table-responsive-no-min,
+.container-fluid {
+    background: #fff !important;
 }
 .card {
     border: 1px solid #ddd;
@@ -295,6 +307,26 @@ input:disabled, select:disabled, textarea:disabled {
     padding: 0 10px;
     text-align: center;
     box-sizing: border-box;
+}
+
+/* Force le fond blanc sur les éléments Dolibarr qui peuvent être jaunes */
+.bg-warning,
+.bg-holiday,
+.bg-draft,
+.bgcolorholidaydraft,
+tr.bg-warning,
+tr.bg-holiday,
+tr.bg-draft,
+tr.bgcolorholidaydraft,
+td.bg-warning,
+td.bg-holiday,
+td.bg-draft,
+td.bgcolorholidaydraft,
+th.bg-warning,
+th.bg-holiday,
+th.bg-draft,
+th.bgcolorholidaydraft {
+    background: #fff !important;
 }
 
 

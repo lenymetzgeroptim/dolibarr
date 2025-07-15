@@ -4,7 +4,6 @@ header('Cache-Control: max-age=10800, public, must-revalidate');
 ?>
 
 body {
-    background: yellow !important;
     font-family: Arial, sans-serif;
     color: #333;
     margin: 0;
