@@ -1173,22 +1173,23 @@ print '
             </div>
         </div>
     </div>
-
 ';
 
-print '<script>
-window.cellData = ' . $cellDataJson . ';
-window.otId = ' . json_encode($otId) . ';
-window.userdata = ' . json_encode($userdata) . ';
-window.userjson = ' . $userjson . ';
-window.status = ' . json_encode($object->status) . ';
-window.isUserProjectManager = ' . json_encode($isUserManager) . ';
-window.jsdata = ' . $data . ';
-</script>';
+if ($permissiontoread) {
+    print '<script>
+    window.cellData = ' . $cellDataJson . ';
+    window.otId = ' . json_encode($otId) . ';
+    window.userdata = ' . json_encode($userdata) . ';
+    window.userjson = ' . $userjson . ';
+    window.status = ' . json_encode($object->status) . ';
+    window.isUserProjectManager = ' . json_encode($isUserManager) . ';
+    window.jsdata = ' . $data . ';
+    </script>';
 
-print '<script src="'.dol_buildpath('/custom/ot/js/liste_card_dynamique.js', 1).'"></script>';
+    print '<script src="'.dol_buildpath('/custom/ot/js/liste_card_dynamique.js', 1).'"></script>';
+}
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------
+//----  --------------------------------------------------------------------------------------------------------------------------------------------------------
 	if ($action != 'presend') {
 		print '<div class="fichecenter"><div class="fichehalfleft">';
 		print '<a name="builddoc"></a>'; // ancre
