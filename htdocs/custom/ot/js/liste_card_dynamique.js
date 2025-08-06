@@ -233,23 +233,31 @@ document.addEventListener("DOMContentLoaded", function() {
                     titleInput.value = cell.title;
 
                     const nameDropdown = card.querySelector(".name-dropdown");
-                    nameDropdown.innerHTML = userOptions;
+                    nameDropdown.innerHTML = alluser; // Utiliser alluser au lieu de userOptions
 
                     if (cell.userId) {  
                         const userId = cell.userId;  
                         console.log("User ID détecté :", userId);
 
+                        // Chercher dans userjson au lieu de uniqueJsData
                         const user = userjson.find(u => u.rowid == userId);
                         if (user) {
                             nameDropdown.value = userId;
+                            
+                            // Déclencher l'événement change pour mettre à jour les informations
+                            const changeEvent = new Event('change');
+                            nameDropdown.dispatchEvent(changeEvent);
                             
                             // Afficher les habilitations et le contrat
                             const habilitationInfo = card.querySelector(".habilitation-info");
                             const contratInfo = card.querySelector(".contrat-info");
                             
                             if (habilitationInfo && contratInfo) {
-                                habilitationInfo.textContent = `Habilitations: ${cell.habilitations || user.habilitations || "Non spécifié"}`;
-                                contratInfo.textContent = `Contrat: ${cell.contrat || user.contrat || "Non spécifié"}`;
+                                 const habilitations = cell.habilitations || user.habilitations || "Non spécifié";
+                                const formattedHabilitations = habilitations.split(",").map(h => h.trim()).join(",\n");
+                                
+                                habilitationInfo.innerHTML = `<strong>Habilitations:</strong><br>${formattedHabilitations}`;
+                                contratInfo.innerHTML = `<strong>Contrat:</strong><br>${cell.contrat || user.contrat || "Non spécifié"}`;
                                 
                                 // Sauvegarder dans le dataset
                                 card.dataset.habilitations = cell.habilitations || user.habilitations || "";
@@ -702,11 +710,54 @@ document.addEventListener("DOMContentLoaded", function() {
         observer.observe(cardContainer, { attributes: true, attributeFilter: ["data-status"] });
 
         // Chargement et affichage des sous-traitants
-        const subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
+        const subcontractorData = cellData.find(cell => cell.type === "soustraitantlist" || cell.type === "listesoustraitant");
        
-        if ((!subcontractorData || !subcontractorData.subcontractors || subcontractorData.subcontractors.length === 0) 
-        && jsdatasoustraitants && Array.isArray(jsdatasoustraitants) && jsdatasoustraitants.length > 0) {
-            // Afficher les sous-traitants de `jsdatasoustraitants` une seule fois
+        console.log("Données sous-traitants cellData:", subcontractorData);
+        console.log("Données jsdatasoustraitants:", jsdatasoustraitants);
+        
+        if (subcontractorData && subcontractorData.subcontractors && subcontractorData.subcontractors.length > 0) {
+            // Afficher les sous-traitants sauvegardés depuis cellData
+            console.log("Affichage depuis cellData");
+            subcontractorData.subcontractors.forEach(contact => {
+                const dataRow = document.createElement("div");
+                dataRow.className = "data-row";
+                dataRow.setAttribute("data-contact-id", contact.soc_people);
+                dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
+
+                const fields = [
+                    `${contact.firstname} ${contact.lastname}`,
+                    `${contact.supplier_name}`,
+                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
+                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
+                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
+                ];
+
+                fields.forEach(field => {
+                    const fieldCell = document.createElement("div");
+                    fieldCell.style.flex = "1";
+                    fieldCell.innerHTML = field;
+                    dataRow.appendChild(fieldCell);
+                });
+
+                tableContainer.appendChild(dataRow);
+
+                // Ajouter à selectedContacts s'il n'y est pas déjà
+                if (!selectedContacts.find(c => c.contact_id == contact.soc_people)) {
+                    selectedContacts.push({
+                        contact_id: contact.soc_people,
+                        firstname: contact.firstname,
+                        lastname: contact.lastname,
+                        supplier_name: contact.supplier_name,
+                        supplier_id: contact.supplier_id,
+                        function: contact.fonction,
+                        contract: contact.contrat,
+                        qualifications: contact.habilitation
+                    });
+                }
+            });
+        } else if (jsdatasoustraitants && Array.isArray(jsdatasoustraitants) && jsdatasoustraitants.length > 0) {
+            // Afficher les sous-traitants de `jsdatasoustraitants` si pas de données en BDD
+            console.log("Affichage depuis jsdatasoustraitants");
             jsdatasoustraitants.forEach(contact => {
                 const dataRow = document.createElement("div");
                 dataRow.className = "data-row";
@@ -731,25 +782,24 @@ document.addEventListener("DOMContentLoaded", function() {
                 tableContainer.appendChild(dataRow);
 
                 // Ajouter le contact dans `selectedContacts` pour éviter les doublons
-                selectedContacts.push({
-                    contact_id: contact.fk_socpeople,
-                    firstname: contact.firstname,
-                    lastname: contact.lastname,
-                    supplier_name: contact.societe_nom,
-                    supplier_id: contact.fk_societe,
-                    function: contact.fonction,
-                    contract: contact.contrat,
-                    qualifications: contact.habilitation
-                });
+                if (!selectedContacts.find(c => c.contact_id == contact.fk_socpeople)) {
+                    selectedContacts.push({
+                        contact_id: contact.fk_socpeople,
+                        firstname: contact.firstname,
+                        lastname: contact.lastname,
+                        supplier_name: contact.societe_nom,
+                        supplier_id: contact.fk_societe,
+                        function: contact.fonction,
+                        contract: contact.contrat,
+                        qualifications: contact.habilitation
+                    });
+                }
             });
 
-            // Sauvegarder les données après affichage
+            // Sauvegarder les données après affichage initial
             saveData();
-        } else if (subcontractorData && subcontractorData.subcontractors) {
-            // Afficher uniquement les sous-traitants enregistrés dans `cellData`
-            subcontractorData.subcontractors.forEach(contact => {
-                // ...existing code for displaying saved subcontractors...
-            });
+        } else {
+            console.log("Aucun sous-traitant trouvé");
         }
 
         // Appliquer le style initial
@@ -788,7 +838,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     /**
      * Crée une nouvelle carte vide pour un utilisateur
-     * Génère une carte avec champ de titre, menu déroulant de sélec   tion,
+     * Génère une carte avec champ de titre, menu déroulant de sélection,
      * affichage des habilitations et contrat, et bouton de suppression
      * 
      * @param {number} column - Le numéro de la colonne où créer la carte
@@ -1131,10 +1181,17 @@ document.addEventListener("DOMContentLoaded", function() {
             let x = Array.from(card.closest(".card-column").parentNode.children).indexOf(card.closest(".card-column")) + 1;
             let y = Array.from(card.closest(".card-column").querySelectorAll(".card")).indexOf(card) + 1;
 
-            if (titleInput && nameDropdown) {
+            if (titleInput) {
                 let title = titleInput.value;
-                let userId = nameDropdown.value || card.dataset.userId || "undefined";
-                let cardId = card.querySelector(".card-id").value; 
+                // Améliorer la récupération de l'userId
+                let userId = "";
+                if (nameDropdown && nameDropdown.value) {
+                    userId = nameDropdown.value;
+                } else if (card.dataset.userId) {
+                    userId = card.dataset.userId;
+                }
+                
+                let cardId = card.querySelector(".card-id") ? card.querySelector(".card-id").value : `card_${Date.now()}`;
 
                 // Récupérer les habilitations et le contrat depuis le dataset de la carte
                 let habilitations = card.dataset.habilitations || "";
@@ -1143,7 +1200,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 let cardCoordinates = {
                     title: title,
                     userId: userId, 
-                    type: card.classList.contains("user-list") ? "list" : "card",
+                    type: "card",
                     otid: otId, 
                     id: cardId, 
                     x: x || 0,
@@ -1153,6 +1210,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 };
 
                 cardsData.push(cardCoordinates);
+                console.log("Carte sauvegardée:", cardCoordinates);
             }
         });
 
