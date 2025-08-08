@@ -347,6 +347,490 @@ if ($conf->categorie->enabled) {
 	print "</td></tr>";
 }
 
+
+print '<tr><td colspan="2" style="background: #f9f9f9; border-radius: 8px;">';
+print '<h4 style="margin-top: 0; margin-left: 5px; font-family: sans-serif; color: #888;">Vue d’ensemble des indicateurs commerciaux
+<button id="toggleChartBtn" class="collapse-toggle" style="float:right">▼</button>
+</h4></td></tr>';
+print '<script src="https://d3js.org/d3.v7.min.js"></script>';
+
+print '
+<style>
+    #chart-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    #legend-container {
+        font-family: sans-serif;
+        margin-top: 10px;
+        background: #fff;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 0 4px rgba(0,0,0,0.05);
+    }
+
+    #legend-container ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+		justify-content:center;
+    }
+
+    #legend-container li {
+        display: flex;
+        align-items: center;
+        font-size: 13px;
+        color: #444;
+        padding: 4px 8px;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: background 0.2s;
+    }
+
+    #legend-container li:hover {
+        background: #f0f0f0;
+    }
+
+    #legend-container li.disabled span {
+        text-decoration: line-through;
+        opacity: 0.5;
+    }
+
+    #legend-container li div {
+        width: 16px;
+        height: 10px;
+        margin-right: 5px;
+    }
+
+    svg text {
+        font-family: sans-serif;
+        font-size: 12px;
+        fill: #333;
+    }
+
+    .d3-axis path,
+    .d3-axis line {
+        stroke: #999;
+    }
+
+    .hidden-line {
+        display: none;
+    }
+
+	.collapse {
+		max-height: 0;
+		overflow: hidden;
+		transition: max-height 0.4s ease;
+	}
+
+	.collapse.show {
+		max-height: 2000px; /* valeur assez grande pour couvrir tout le contenu */
+	}
+
+	.collapse-toggle {
+		background: none;
+		border: none;
+		font-size: 16px;
+		cursor: pointer;
+		margin-left: 10px;
+	}
+
+</style>
+
+<tr><td colspan="2"">
+<div id="chart-container" class="collapse show"></div>
+<div id="legend-container" style="margin: 1rem;"></div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("toggleChartBtn");
+    const chart = document.getElementById("chart-container");
+
+    btn.addEventListener("click", function () {
+      chart.classList.toggle("show");
+
+      if (chart.classList.contains("show")) {
+        btn.textContent = "▼";
+      } else {
+        btn.textContent = "▲";
+      }
+    });
+  });
+
+$(document).ready(function () {
+    const objectId = '. (int) $object->id .';
+
+    $.ajax({
+        url: "/custom/feuilledetemps/ajax/get_comm_data.php",
+        method: "GET",
+        data: { id: objectId },
+        dataType: "json",
+        success: function (res) {
+			const chartData = res.data;     
+        	const seriesColors = res.colors;  
+            const structured = restructureData(chartData);
+            createChart(structured, seriesColors);
+        },
+        error: function () {
+            console.error("Erreur lors du chargement des données.");
+        }
+    });
+
+	
+    function toCssSafe(str) {
+        return str.replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function formatAmount(value) {
+        if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(1) + " Md€";
+        if (value >= 1_000_000) return (value / 1_000_000).toFixed(1) + " M€";
+        if (value >= 1_000) return (value / 1_000).toFixed(1) + " k€";
+        return value.toFixed(2) + " €";
+    }
+
+    function restructureData(data) {
+        const result = {};
+        data.forEach(row => {
+            const date = new Date(row.date);
+            for (const key in row) {
+                if (key !== "date") {
+                    if (!result[key]) result[key] = [];
+                    result[key].push({
+                        date: date,
+                        value: row[key] !== null ? parseFloat(row[key]) : NaN,
+                        valueWithZero: row[key] !== null ? parseFloat(row[key]) : 0
+                    });
+                }
+            }
+        });
+
+        for (const serie in result) {
+            result[serie].sort((a, b) => a.date - b.date);
+        }
+
+        return result;
+    }
+
+	function createChart(seriesMap, seriesColors) {
+		const width = 900, height = 380;
+		const marginTop = 20, marginRight = 30, marginBottom = 30, marginLeft = 50;
+
+		const allDates = new Set();
+		const allValues = [];
+	
+		for (const serie in seriesMap) {
+			seriesMap[serie].forEach(d => {
+				allDates.add(+d.date);
+				if (!isNaN(d.value)) allValues.push(d.value);
+			});
+		}
+
+		const dateArray = Array.from(allDates).map(d => new Date(d)).sort((a, b) => a - b);
+		const x = d3.scaleUtc(d3.extent(dateArray), [marginLeft, width - marginRight]);
+		const y = d3.scaleLinear([0, d3.max(allValues)], [height - marginBottom, marginTop]);
+
+		// Si aucune donnée dispo
+		const cleanedValues = allValues.filter(v => v !== null && v !== 0 && !isNaN(v));
+		const cleanedDates = dateArray.filter(d => d instanceof Date && !isNaN(d));
+		if (cleanedValues.length === 0 || cleanedDates.length === 0) {
+			const svg = d3.create("svg")
+				.attr("width", width)
+				.attr("height", height)
+				.attr("viewBox", [0, 0, width, height])
+				.attr("style", "max-width: 100%; height: auto; background: #f9f9f9;");
+
+			svg.append("text")
+				.attr("x", width / 2)
+				.attr("y", height / 2)
+				.attr("text-anchor", "middle")
+				.attr("dominant-baseline", "middle")
+				.style("font-family", "Arial, sans-serif")
+				.style("font-size", "18px")
+				.style("fill", "#666")
+				.text("Aucune donnée disponible");
+
+			document.getElementById("chart-container").appendChild(svg.node());
+			return;
+		}
+
+		// Palette personnalisée avec les couleurs prédéfines
+		const color = d3.scaleOrdinal()
+			.domain(Object.keys(seriesMap))
+			.range(Object.keys(seriesMap).map(k => seriesColors[k] || "#666"));
+			
+		const svg = d3.create("svg")
+			.attr("width", width)
+			.attr("height", height)
+			.attr("viewBox", [0, 0, width, height])
+			.attr("style", "max-width: 100%; height: auto;");
+
+		// Tooltip
+		const tooltip = d3.select("body").append("div")
+			.style("position", "absolute")
+			.style("padding", "12px 20px")
+			.style("background", "#333")
+			.style("color", "#fff")
+			.style("font-size", "12px")
+			.style("border-radius", "4px")
+			.style("pointer-events", "none")
+			.style("opacity", 0);
+
+		// Les lignes avec zones de hover
+		for (const serieName in seriesMap) {
+			const serieData = seriesMap[serieName];
+			const safeClass = toCssSafe(serieName);
+			const colorValue = color(serieName);
+
+			const line = d3.line()
+				.defined(d => !isNaN(d.value))
+				.x(d => x(d.date))
+				.y(d => y(d.value));
+
+				// Ligne visible
+				svg.append("path")
+					.datum(serieData)
+					.attr("fill", "none")
+					.attr("stroke", colorValue)
+					.attr("stroke-width", 2)
+					.attr("class", `line-${safeClass}`)
+					.attr("d", line);
+
+				// Ligne invisible pour le hover
+				svg.append("path")
+					.datum(serieData)
+					.attr("fill", "none")
+					.attr("stroke", "transparent")
+					.attr("stroke-width", 10)
+					.attr("class", `hover-line-${safeClass}`)
+					.attr("d", line)
+					.on("mousemove", function(event) {
+						const [mx] = d3.pointer(event);
+						const hoveredDate = x.invert(mx);
+
+						// la date la plus proche dans cette série uniquement
+						const closestPoint = serieData.reduce((a, b) =>
+							Math.abs(a.date - hoveredDate) < Math.abs(b.date - hoveredDate) ? a : b
+						);
+
+						if (!isNaN(closestPoint.value)) {
+							tooltip
+								.style("opacity", 1)
+								.html(`<strong>${serieName}</strong><br>${d3.utcFormat("%B %Y")(closestPoint.date)}<br>Valeur : ${formatAmount(closestPoint.value)}`)
+								.style("left", (event.pageX + 10) + "px")
+								.style("top", (event.pageY - 30) + "px");
+						}
+					})
+					.on("mouseout", () => tooltip.style("opacity", 0));
+		}
+
+		// La plage d`\'années
+		let firstYear = null;
+		let lastYear = null;
+		let yearSpan = 0;
+
+		if (dateArray.length > 0) {
+			firstYear = dateArray[0].getUTCFullYear();
+			lastYear = dateArray[dateArray.length - 1].getUTCFullYear();
+			yearSpan = lastYear - firstYear + 1;
+		} else {
+			// Valeurs par défaut si aucune date 
+			console.warn("dateArray est vide – impossible de calculer la plage d\'années.");
+			firstYear = new Date().getUTCFullYear();
+			lastYear = firstYear;
+			yearSpan = 1;
+		}
+
+		// Choix dynamique des mois à afficher
+		let visibleMonths = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // Tous
+		if (yearSpan > 2 && yearSpan <= 8) visibleMonths = [0, 5, 11];       // 01, 06, 12
+		else if (yearSpan > 8) visibleMonths = [0, 11];                      // 01, 12
+
+		const xAxis = g => {
+			// Mois filtrés 
+			const axisMonth = d3.axisBottom(x)
+				.ticks(d3.utcMonth.every(1))
+				.tickFormat(d => visibleMonths.includes(d.getUTCMonth()) ? d3.utcFormat("%m")(d) : "")
+				.tickSize(4);
+
+			// Années affichées
+			const axisYear = d3.axisBottom(x)
+				.ticks(d3.utcYear.every(1))
+				.tickFormat(d3.utcFormat("%Y"))
+				.tickSizeOuter(0);
+
+			// Repères mois
+			g.append("g")
+				.call(axisMonth)
+				.call(g => g.selectAll("text")
+					.attr("dy", 10)
+					.style("font-size", "10px")
+					.style("fill", "#888"));
+
+			// Années
+			g.append("g")
+				.call(axisYear)
+				.call(g => g.selectAll("text")
+					.style("font-weight", "bold")
+					.style("font-size", "12px"));
+		};
+
+		svg.append("g")
+			.attr("transform", `translate(0,${height - marginBottom})`)
+			.call(xAxis);
+
+		svg.append("g")
+			.attr("transform", `translate(${marginLeft},0)`)
+			.attr("class", "y-axis")
+			.call(d3.axisLeft(y).ticks(height / 40))
+			.call(g => g.select(".domain").remove())
+			.call(g => g.selectAll(".tick line").clone()
+				.attr("x2", width - marginLeft - marginRight)
+				.attr("stroke-opacity", 0.1))
+			.call(g => g.append("text")
+				.attr("x", -marginLeft)
+				.attr("y", 10)
+				.attr("fill", "currentColor")
+				.attr("text-anchor", "start")
+				.text("Montant (€)"));
+
+		// Pour rendre axe Y dynamique en fonction des courbe visible ou masque 
+		const visibleSeries = new Set(Object.keys(seriesMap));
+		const legend = d3.select("#legend-container").html("").append("ul");
+
+		for (const serie in seriesMap) {
+			const serieData = seriesMap[serie];
+			const safeClass = toCssSafe(serie);
+
+			const greyLine = d3.line()
+				.x(d => x(d.date))
+				.y(d => y(d.valueWithZero));
+
+			svg.append("path")
+				.datum(serieData)
+				.attr("fill", "none")
+				.attr("stroke", "#ccc")
+				.attr("stroke-width", 2)
+				.attr("class", `path-grey-${safeClass}`)
+				.attr("d", greyLine);
+
+			const coloredLine = d3.line()
+				.defined(d => !isNaN(d.value))
+				.x(d => x(d.date))
+				.y(d => y(d.value));
+
+			svg.append("path")
+				.datum(serieData)
+				.attr("fill", "none")
+				.attr("stroke", color(serie))
+				.attr("stroke-width", 2)
+				.attr("class", `line-${safeClass}`)
+				.attr("d", coloredLine);
+		}
+
+		// Légende interactive
+		legend.selectAll("li")
+		.data(Object.keys(seriesMap))
+		.enter()
+		.append("li")
+		.attr("data-serie", d => toCssSafe(d))
+		.on("click", function(event, d) {
+			const className = toCssSafe(d);
+			const isActive = !d3.select(this).classed("disabled");
+			d3.select(this).classed("disabled", isActive);
+
+			if (isActive) visibleSeries.delete(d);
+			else visibleSeries.add(d);
+
+			d3.selectAll(`.line-${className}`).classed("hidden-line", isActive);
+			d3.selectAll(`.path-grey-${className}`).classed("hidden-line", isActive);
+			updateYAxisAndLines();
+		})
+		.html(d => {
+			const serieData = seriesMap[d];
+			// Calcul de la somme des valeurs non-NaN
+			let sum = 0;
+			console.log(seriesMap);
+			for(let i = 0; i < serieData.length; i++) {
+			const val = serieData[i].value;
+			if(!isNaN(val)) {
+				sum += val;
+			}
+			}
+			const formattedValue = sum !== 0 ? formatAmount(sum) : "N/D";
+
+			return `
+			<div style="background:${color(d)};"></div>
+			<span><strong>${formattedValue}</strong> ${d}</span>
+			`;
+		});
+
+		function updateYAxisAndLines() {
+    		let visibleValues = [];
+
+    		const activeSeries = Array.from(visibleSeries);
+
+    		if (activeSeries.length === 0) return;
+
+			for (const serie of activeSeries) {
+				const data = seriesMap[serie];
+				data.forEach(d => {
+					if (!isNaN(d.value)) visibleValues.push(d.value);
+				});
+			}
+
+   	 		const yMax = visibleValues.length ? d3.max(visibleValues) : 1;
+
+			const newY = d3.scaleLinear()
+				.domain([0, yMax])
+				.range([height - marginBottom, marginTop]);
+
+			// axe Y en fonction de son id
+			svg.select(".y-axis")
+				.transition()
+				.duration(500)
+				.call(d3.axisLeft(newY).ticks(height / 40));
+
+			for (const serie of activeSeries) {
+				const data = seriesMap[serie];
+				const className = toCssSafe(serie);
+
+				const greyLine = d3.line()
+					.x(d => x(d.date))
+					.y(d => newY(isNaN(d.value) ? 0 : d.value));
+
+				const coloredLine = d3.line()
+					.defined(d => !isNaN(d.value))
+					.x(d => x(d.date))
+					.y(d => newY(d.value));
+
+				svg.selectAll(`.line-${className}`)
+					.transition()
+					.duration(500)
+					.attr("d", coloredLine(data));
+
+				svg.selectAll(`.path-grey-${className}`)
+					.transition()
+					.duration(500)
+					.attr("d", greyLine(data));
+
+				svg.selectAll(`.hover-line-${className}`)
+					.transition()
+					.duration(500)
+					.attr("d", greyLine(data));
+			}
+		}
+
+
+		document.getElementById("chart-container").appendChild(svg.node());
+	}
+
+});
+</script>
+</td></tr>';
 print '</table>';
 
 print '</div>';

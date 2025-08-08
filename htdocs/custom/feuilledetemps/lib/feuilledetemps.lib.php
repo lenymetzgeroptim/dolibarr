@@ -269,7 +269,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 					print '<th style="min-width: 90px; border-right: 1px solid var(--colortopbordertitle1); border-left: 1px solid var(--colortopbordertitle1); border-bottom: none;" width="9%"></th>';
 				}
 
-				if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0])) {
+				if(!empty($holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]) && $holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0] != $holiday_without_canceled[$dayinloopfromfirstdaytoshow_array[$idw - 1]]['rowid'][1]) {
 					$holiday->fetch((int)$holiday_without_canceled[$dayinloopfromfirstdaytoshow]['rowid'][0]);
 					$numberDay = (num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) ? num_between_day(($holiday->date_debut_gmt < $firstdaytoshow ? $firstdaytoshow : $holiday->date_debut_gmt), $holiday->date_fin_gmt, 1) : 1);
 					if($idw + $numberDay > $nb_jour) $numberDay = $nb_jour - $idw;
@@ -304,7 +304,7 @@ function FeuilleDeTempsLinesPerWeek($mode, &$inc, $firstdaytoshow, $lastdaytosho
 					$cptholiday++;
 				}
 				else {
-					print '<th class="center hide'.$idw.($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').'">';
+					print '<th class="center hide'.$idw./*($css_holiday[$dayinloopfromfirstdaytoshow][0] ? ' '.$css_holiday[$dayinloopfromfirstdaytoshow][0] : '').*/'">';
 				}
 
 				print '</th>';
