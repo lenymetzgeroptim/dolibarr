@@ -95,6 +95,7 @@ if ($action == 'addcontact') {
     </script>';
 }
 
+
 if (empty($preselectedtypeofcontact)) {
 	$preselectedtypeofcontact = 0;
 }

@@ -78,6 +78,207 @@ class ActionsOT
         if ($action == 'create_ot_from_button') {
             $this->createOTForProject($object);
         }
+
+        // Traitement de l'ajout de contact avec popup
+        if ($action == 'addcontact') {
+            // Ajouter un script pour afficher la popup pour créer un OT après l'ajout d'un contact
+            print '<script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    var popup = document.createElement("div");
+                    popup.style.position = "fixed";
+                    popup.style.top = "50%";
+                    popup.style.left = "50%";
+                    popup.style.transform = "translate(-50%, -50%)";
+                    popup.style.backgroundColor = "#fff";
+                    popup.style.border = "1px solid #ccc";
+                    popup.style.padding = "30px";
+                    popup.style.zIndex = "1000";
+                    popup.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+                    popup.style.borderRadius = "5px";
+                    popup.style.textAlign = "center";
+                    popup.style.minWidth = "400px";
+                    popup.innerHTML = `
+                        <h3 style="margin-bottom: 20px; color: #333;">'.$langs->trans('Créer un OT').'</h3>
+                        <p style="margin-bottom: 30px; color: #666; line-height: 1.5;">'.$langs->trans('Voulez-vous créer un OT pour ce projet ?').'</p>
+                        <div style="display: flex; justify-content: center; gap: 15px;">
+                            <button type="button" id="confirmCreateOT" style="
+                                background-color: rgb(40, 80, 139);
+                                color: white;
+                                border: 1px solid rgb(40, 80, 139);
+                                padding: 8px 16px;
+                                border-radius: 3px;
+                                cursor: pointer;
+                                font-size: 13px;
+                                font-weight: bold;
+                                text-transform: uppercase;
+                                min-width: 80px;
+                            ">'.$langs->trans('Confirmer').'</button>
+                            <button type="button" id="cancelCreateOT" style="
+                                background-color: rgb(40, 80, 139);
+                                color: white;
+                                border: 1px solid rgb(40, 80, 139);
+                                padding: 8px 16px;
+                                border-radius: 3px;
+                                cursor: pointer;
+                                font-size: 13px;
+                                font-weight: bold;
+                                text-transform: uppercase;
+                                min-width: 80px;
+                            ">'.$langs->trans('Annuler').'</button>
+                        </div>
+                    `;
+                    
+                    // Ajouter un overlay pour assombrir le fond
+                    var overlay = document.createElement("div");
+                    overlay.style.position = "fixed";
+                    overlay.style.top = "0";
+                    overlay.style.left = "0";
+                    overlay.style.width = "100%";
+                    overlay.style.height = "100%";
+                    overlay.style.backgroundColor = "rgba(0,0,0,0.5)";
+                    overlay.style.zIndex = "999";
+                    
+                    document.body.appendChild(overlay);
+                    document.body.appendChild(popup);
+
+                    document.getElementById("confirmCreateOT").addEventListener("click", function() {
+                        document.body.removeChild(popup);
+                        document.body.removeChild(overlay);
+                        window.location.href = "'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create_ot_from_button&token='.newToken().'";
+                    });
+
+                    document.getElementById("cancelCreateOT").addEventListener("click", function() {
+                        document.body.removeChild(popup);
+                        document.body.removeChild(overlay);
+                    });
+                });
+            </script>';
+        }
+
+        // Gérer la confirmation de suppression d'OT
+        if ($action == 'delete_ot_from_button') {
+            $this->createOTForProject($object);
+            $this->notifyContactChange($object, 'remove');
+        }
+
+        // Afficher le JavaScript pour intercepter les clics de suppression
+        if ($object->element == 'project') {
+            $this->addDeleteContactConfirmationScript($object);
+        }
+    }
+
+    /**
+     * Hook to handle contact deletion from project
+     */
+    public function doActions($parameters, &$object, &$action, $hookmanager)
+    {
+        global $langs, $user;
+
+        // Gérer la suppression avec confirmation
+        if ($action == 'deletecontact' && is_object($object) && $object->element == 'project') {
+            if (GETPOST('confirm_delete_ot', 'alpha') == 'yes') {
+                // L'utilisateur a confirmé, créer l'OT
+                dol_syslog("ActionsOT: Contact deleted from project, creating new OT", LOG_DEBUG);
+                $this->createOTForProject($object);
+                $this->notifyContactChange($object, 'remove');
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Ajouter le script JavaScript pour intercepter les suppressions de contact
+     */
+    private function addDeleteContactConfirmationScript($project)
+    {
+        global $langs;
+        
+        echo '<script type="text/javascript">
+        $(document).ready(function() {
+            // Intercepter tous les liens de suppression de contact
+            $("a[href*=\"action=deletecontact\"]").click(function(e) {
+                var href = $(this).attr("href");
+                
+                // Vérifier si ce n\'est pas déjà une confirmation
+                if (href.indexOf("confirm_delete_ot") === -1) {
+                    e.preventDefault();
+                    
+                    // Créer la popup stylisée
+                    var popup = document.createElement("div");
+                    popup.style.position = "fixed";
+                    popup.style.top = "50%";
+                    popup.style.left = "50%";
+                    popup.style.transform = "translate(-50%, -50%)";
+                    popup.style.backgroundColor = "#fff";
+                    popup.style.border = "1px solid #ccc";
+                    popup.style.padding = "30px";
+                    popup.style.zIndex = "1000";
+                    popup.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+                    popup.style.borderRadius = "5px";
+                    popup.style.textAlign = "center";
+                    popup.style.minWidth = "400px";
+                    popup.innerHTML = `
+                        <h3 style="margin-bottom: 20px; color: #333;">'.$langs->trans('Créer un OT').'</h3>
+                        <p style="margin-bottom: 30px; color: #666; line-height: 1.5;">'.$langs->trans('Voulez-vous créer un OT lors de la suppression de ce contact du projet').' ' . $project->ref . ' ?</p>
+                        <div style="display: flex; justify-content: center; gap: 15px;">
+                            <button type="button" id="confirmDeleteOT" style="
+                                background-color: rgb(40, 80, 139);
+                                color: white;
+                                border: 1px solid rgb(40, 80, 139);
+                                padding: 8px 16px;
+                                border-radius: 3px;
+                                cursor: pointer;
+                                font-size: 13px;
+                                font-weight: bold;
+                                text-transform: uppercase;
+                                min-width: 80px;
+                            ">'.$langs->trans('Confirmer').'</button>
+                            <button type="button" id="cancelDeleteOT" style="
+                                background-color: rgb(40, 80, 139);
+                                color: white;
+                                border: 1px solid rgb(40, 80, 139);
+                                padding: 8px 16px;
+                                border-radius: 3px;
+                                cursor: pointer;
+                                font-size: 13px;
+                                font-weight: bold;
+                                text-transform: uppercase;
+                                min-width: 80px;
+                            ">'.$langs->trans('Annuler').'</button>
+                        </div>
+                    `;
+                    
+                    // Ajouter un overlay pour assombrir le fond
+                    var overlay = document.createElement("div");
+                    overlay.style.position = "fixed";
+                    overlay.style.top = "0";
+                    overlay.style.left = "0";
+                    overlay.style.width = "100%";
+                    overlay.style.height = "100%";
+                    overlay.style.backgroundColor = "rgba(0,0,0,0.5)";
+                    overlay.style.zIndex = "999";
+                    
+                    document.body.appendChild(overlay);
+                    document.body.appendChild(popup);
+
+                    document.getElementById("confirmDeleteOT").addEventListener("click", function() {
+                        // Supprimer la popup et rediriger avec confirmation
+                        document.body.removeChild(popup);
+                        document.body.removeChild(overlay);
+                        window.location.href = href + "&confirm_delete_ot=yes";
+                    });
+
+                    document.getElementById("cancelDeleteOT").addEventListener("click", function() {
+                        // Supprimer la popup et rediriger sans créer d\'OT
+                        document.body.removeChild(popup);
+                        document.body.removeChild(overlay);
+                        window.location.href = href + "&confirm_delete_ot=no";
+                    });
+                }
+            });
+        });
+        </script>';
     }
 
     private function notifyContactChange($project, $actionType)
@@ -94,14 +295,13 @@ class ActionsOT
             setEventMessages($langs->trans("bravoo"), null, 'mesgs');
         } elseif ($actionType == 'remove') {
             $subject = "Contact supprimé du projet " . $projectRef;
-            setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+           
         }
 
         // Exemple : Envoyer un mail ou afficher dans le log
-        dol_syslog($subject . ': ' . $message);
+        dol_syslog($subject, LOG_INFO);
         
     }
-
 
     private function createOTForProject($project)
     {
