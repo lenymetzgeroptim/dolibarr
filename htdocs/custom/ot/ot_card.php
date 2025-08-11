@@ -587,9 +587,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
             }
 
             //généré pdf constat
-            if ($isUserInContacts && $isUserManager) {
+            
                 print dolGetButtonAction('', $langs->trans('généré PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
-            }  
+             
                 /*//passé au  Status Cancel
                 if ($user->rights->constat->constat->ResponsableQ3SE) {
                     if ($object->status == $object::STATUS_EN_COURS) {
