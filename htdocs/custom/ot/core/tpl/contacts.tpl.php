@@ -74,22 +74,65 @@ if ($action == 'addcontact') {
             popup.style.transform = "translate(-50%, -50%)";
             popup.style.backgroundColor = "#fff";
             popup.style.border = "1px solid #ccc";
-            popup.style.padding = "20px";
+            popup.style.padding = "30px";
             popup.style.zIndex = "1000";
+            popup.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+            popup.style.borderRadius = "5px";
+            popup.style.textAlign = "center";
+            popup.style.minWidth = "400px";
             popup.innerHTML = `
-                <h3>'.$langs->trans('Créer un OT').'</h3>
-                <p>'.$langs->trans('Voulez-vous créer un OT pour ce projet ?').'</p>
-                <button type="button" id="confirmCreateOT" class="button">'.$langs->trans('Confirmer').'</button>
-                <button type="button" id="cancelCreateOT" class="button">'.$langs->trans('Annuler').'</button>
+                <h3 style="margin-bottom: 20px; color: #333;">'.$langs->trans('Créer un OT').'</h3>
+                <p style="margin-bottom: 30px; color: #666; line-height: 1.5;">'.$langs->trans('Voulez-vous créer un OT pour ce projet ?').'</p>
+                <div style="display: flex; justify-content: center; gap: 15px;">
+                    <button type="button" id="confirmCreateOT" style="
+                        background-color: rgb(40, 80, 139);
+                        color: white;
+                        border: 1px solid rgb(40, 80, 139);
+                        padding: 8px 16px;
+                        border-radius: 3px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        min-width: 80px;
+                    ">'.$langs->trans('Confirmer').'</button>
+                    <button type="button" id="cancelCreateOT" style="
+                        background-color: rgb(40, 80, 139);
+                        color: white;
+                        border: 1px solid rgb(40, 80, 139);
+                        padding: 8px 16px;
+                        border-radius: 3px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        min-width: 80px;
+                    ">'.$langs->trans('Annuler').'</button>
+                </div>
             `;
+            
+            // Ajouter un overlay pour assombrir le fond
+            var overlay = document.createElement("div");
+            overlay.style.position = "fixed";
+            overlay.style.top = "0";
+            overlay.style.left = "0";
+            overlay.style.width = "100%";
+            overlay.style.height = "100%";
+            overlay.style.backgroundColor = "rgba(0,0,0,0.5)";
+            overlay.style.zIndex = "999";
+            
+            document.body.appendChild(overlay);
             document.body.appendChild(popup);
 
             document.getElementById("confirmCreateOT").addEventListener("click", function() {
+                document.body.removeChild(popup);
+                document.body.removeChild(overlay);
                 window.location.href = "'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create_ot_from_button&token='.newToken().'";
             });
 
             document.getElementById("cancelCreateOT").addEventListener("click", function() {
                 document.body.removeChild(popup);
+                document.body.removeChild(overlay);
             });
         });
     </script>';
