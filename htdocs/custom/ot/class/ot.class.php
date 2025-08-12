@@ -1246,7 +1246,6 @@ class Ot extends CommonObject
 				0,
 				1
 			);
-		
 	}
 
 	/**
@@ -1300,8 +1299,387 @@ class Ot extends CommonObject
 		}
 	}
 
+	/**
+	 * Get all users with their qualifications and contract information
+	 * 
+	 * @return array Array of users with qualifications
+	 */
+	public function getAllUsersWithQualifications()
+	{
+		$sql = "SELECT u.lastname, u.firstname, u.rowid, 
+				GROUP_CONCAT(DISTINCT fh.ref) as habilitations,
+				cct.type AS contrat
+				FROM ".MAIN_DB_PREFIX."user as u
+				LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as fuh 
+					ON u.rowid = fuh.fk_user
+				LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as fh 
+					ON fuh.fk_habilitation = fh.rowid
+				LEFT JOIN ".MAIN_DB_PREFIX."ot_ot_cellule_donne AS ocd 
+					ON ocd.fk_user = u.rowid
+				LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_positionetcoefficient_extrafields AS drh 
+					ON drh.fk_object = u.rowid
+				LEFT JOIN ".MAIN_DB_PREFIX."c_contrattravail AS cct 
+					ON drh.contratdetravail = cct.rowid
+				WHERE u.statut = 1
+				GROUP BY u.rowid, u.lastname, u.firstname, cct.type";
 
+		$resql = $this->db->query($sql);
+		$arrayresult = [];
 
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$arrayresult[] = $obj;
+			}
+		} else {
+			return array('error' => 'SQL query error: '.$this->db->lasterror());
+		}
+
+		return $arrayresult;
+	}
+
+	/**
+	 * Get project contacts with internal and external users
+	 * 
+	 * @return array Array of contacts
+	 */
+	public function getProjectContacts()
+	{
+		$sql = "
+			(SELECT  
+				u.firstname,
+				u.lastname,
+				u.office_phone AS phone,
+				ctc.libelle, 
+				sp.fk_c_type_contact, 
+				sp.fk_socpeople,
+				cct.type AS contrat,
+				ctc.source AS source,
+				NULL AS fonction,      
+				NULL AS habilitation,
+				NULL AS fk_societe,
+				NULL AS societe_nom  
+			FROM ".MAIN_DB_PREFIX."element_contact AS sp 
+			JOIN ".MAIN_DB_PREFIX."user AS u 
+				ON sp.fk_socpeople = u.rowid 
+			JOIN ".MAIN_DB_PREFIX."c_type_contact AS ctc 
+				ON sp.fk_c_type_contact = ctc.rowid 
+			LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_positionetcoefficient_extrafields AS drh 
+				ON drh.fk_object = u.rowid  
+			LEFT JOIN ".MAIN_DB_PREFIX."c_contrattravail AS cct 
+				ON drh.contratdetravail = cct.rowid  
+			WHERE sp.element_id = ".(int)$this->fk_project."
+			AND sp.statut = 4
+			AND ctc.element = 'project'
+			AND ctc.source = 'internal')
+
+			UNION
+
+			(SELECT  
+				spc.firstname,
+				spc.lastname,
+				spc.phone_mobile AS phone,
+				ctc.libelle, 
+				sp.fk_c_type_contact, 
+				sp.fk_socpeople,
+				ots.contrat AS contrat,
+				ctc.source AS source,
+				ots.fonction,  
+				ots.habilitation,
+				spc.fk_soc as fk_societe,
+				s.nom AS societe_nom
+			FROM ".MAIN_DB_PREFIX."element_contact AS sp 
+			JOIN ".MAIN_DB_PREFIX."socpeople AS spc 
+				ON sp.fk_socpeople = spc.rowid 
+			JOIN ".MAIN_DB_PREFIX."c_type_contact AS ctc 
+				ON sp.fk_c_type_contact = ctc.rowid 
+			LEFT JOIN ".MAIN_DB_PREFIX."ot_ot_sous_traitants AS ots 
+				ON sp.fk_socpeople = ots.fk_socpeople 
+				AND ots.ot_id = ".(int)$this->id."
+			LEFT JOIN ".MAIN_DB_PREFIX."societe AS s 
+				ON spc.fk_soc = s.rowid
+			WHERE sp.element_id = ".(int)$this->fk_project."
+			AND sp.statut = 4
+			AND ctc.element = 'project'
+			AND ctc.source = 'external')";
+
+		$resql = $this->db->query($sql);
+		$arrayresult = [];
+
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				// Pour les utilisateurs internes, récupérer les fonctions et habilitations
+				if ($obj->source == 'internal') {
+					$obj->fonction = $this->getFonctions($obj->fk_socpeople);
+					$obj->habilitation = $this->getHabilitations($obj->fk_socpeople);
+				}
+				$arrayresult[] = $obj; 
+			}
+		} else {
+			return array('error' => 'SQL query error: '.$this->db->lasterror());
+		}
+
+		return $arrayresult;
+	}
+
+	/**
+	 * Get user functions for a specific user and project
+	 * 
+	 * @param int $userId User ID
+	 * @return string User functions
+	 */
+	public function getFonctions($userId)
+	{
+		// Implementation of getFonctions function
+		// This should be moved from your existing external function
+		return ""; // Placeholder - implement the actual logic
+	}
+
+	/**
+	 * Get user qualifications for a specific user
+	 * 
+	 * @param int $userId User ID
+	 * @return string User qualifications
+	 */
+	public function getHabilitations($userId)
+	{
+		// Implementation of getHabilitations function
+		// This should be moved from your existing external function
+		return ""; // Placeholder - implement the actual logic
+	}
+
+	/**
+	 * Get all cells data for this OT
+	 * 
+	 * @return array Array of cells with their data
+	 */
+	public function getCellsData()
+	{
+		$sql = "SELECT oc.rowid, oc.x, oc.y, oc.type, oc.title, oc.tms
+				FROM " . MAIN_DB_PREFIX . "ot_ot_cellule as oc
+				WHERE oc.ot_id = " . (int)$this->id . "
+				ORDER BY oc.x ASC, oc.y ASC, oc.tms DESC";
+
+		$resql = $this->db->query($sql);
+		$cellData = [];
+
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$cellData[] = $obj;
+			}
+		}
+
+		// Ajouter les informations utilisateur aux cellules
+		foreach ($cellData as $cell) {
+			if (!is_object($cell) || !isset($cell->rowid)) {
+				continue;
+			}
+
+			// Pour les cartes principales
+			if ($cell->type === 'cardprincipale') {
+				$userInfo = $this->getCellUserInfo($cell->rowid);
+				if ($userInfo) {
+					$cell->userId = $userInfo->userId;
+					$cell->firstname = $userInfo->firstname;
+					$cell->lastname = $userInfo->lastname;
+					$cell->phone = $userInfo->phone ?? '';
+				} else {
+					$cell->userId = null;
+					$cell->firstname = '';
+					$cell->lastname = '';
+					$cell->phone = '';
+				}
+			}
+
+			// Pour les listes uniques
+			if ($cell->type === 'listeunique') {
+				$cell->userDetails = $this->getCellUserDetails($cell->rowid);
+			}
+
+			// Pour toutes les cellules, récupérer les IDs utilisateurs
+			$userIds = $this->getCellUserIds($cell->rowid);
+			if ($cell->type == 'card') {
+				$cell->userId = count($userIds) > 0 ? $userIds[0] : null;
+			} else {
+				$cell->userIds = $userIds;
+			}
+		}
+
+		// Ajouter les sous-traitants
+		$cellData[] = [
+			'type' => 'soustraitantlist',
+			'subcontractors' => $this->getSubcontractors()
+		];
+
+		return $cellData;
+	}
+
+	/**
+	 * Get user information for a specific cell
+	 * 
+	 * @param int $cellId Cell ID
+	 * @return object|null User information
+	 */
+	private function getCellUserInfo($cellId)
+	{
+		$sql = "SELECT 
+					u.rowid AS userId,
+					u.firstname,
+					u.lastname,
+					u.office_phone AS phone
+				FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne AS ocd
+				JOIN " . MAIN_DB_PREFIX . "user AS u ON ocd.fk_user = u.rowid
+				WHERE ocd.ot_cellule_id = " . (int)$cellId;
+
+		$resql = $this->db->query($sql);
+		
+		if ($resql) {
+			return $this->db->fetch_object($resql);
+		}
+		
+		return null;
+	}
+
+	/**
+	 * Get detailed user information for a specific cell (for unique lists)
+	 * 
+	 * @param int $cellId Cell ID
+	 * @return array Array of user details
+	 */
+	private function getCellUserDetails($cellId)
+	{
+		$sql = "SELECT  
+			u.rowid AS userId,
+			u.firstname,
+			u.lastname,
+			u.office_phone AS phone,        
+			cct.type AS contrat
+		FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne AS ocd
+		JOIN " . MAIN_DB_PREFIX . "user AS u 
+			ON ocd.fk_user = u.rowid
+		LEFT JOIN " . MAIN_DB_PREFIX . "donneesrh_positionetcoefficient_extrafields AS drh 
+			ON drh.fk_object = u.rowid
+		LEFT JOIN " . MAIN_DB_PREFIX . "c_contrattravail AS cct 
+			ON drh.contratdetravail = cct.rowid
+		WHERE ocd.ot_cellule_id = " . (int)$cellId;
+
+		$resql = $this->db->query($sql);
+		$userDetails = [];
+		$seenUserIds = [];
+
+		if ($resql) {
+			while ($user = $this->db->fetch_object($resql)) {
+				if (in_array($user->userId, $seenUserIds)) {
+					continue;
+				}
+				$seenUserIds[] = $user->userId;
+
+				// Vérifier si l'utilisateur n'est pas Q3SE ou PCR
+				if (!$this->isUserQ3SEOrPCR($user->userId)) {
+					$userDetails[] = [
+						'userId' => $user->userId,
+						'firstname' => $user->firstname,
+						'lastname' => $user->lastname,
+						'phone' => $user->phone,
+						'contrat' => $user->contrat ?? 'Non défini',
+						'fonction' => $this->getFonctions($user->userId) ?? 'Non définie',
+						'habilitation' => $this->getHabilitations($user->userId) ?? 'Aucune habilitation'
+					];
+				}
+			}
+		}
+
+		return $userDetails;
+	}
+
+	/**
+	 * Check if user is Q3SE or PCR
+	 * 
+	 * @param int $userId User ID
+	 * @return bool True if user is Q3SE or PCR
+	 */
+	private function isUserQ3SEOrPCR($userId)
+	{
+		$sql = "SELECT ctc.libelle 
+				 FROM ".MAIN_DB_PREFIX."element_contact AS sp 
+				 JOIN ".MAIN_DB_PREFIX."c_type_contact AS ctc 
+					ON sp.fk_c_type_contact = ctc.rowid 
+				 WHERE sp.fk_socpeople = ".(int)$userId." 
+				 AND sp.element_id = ".(int)$this->fk_project." 
+				 AND sp.statut = 4 
+				 AND ctc.element = 'project'";
+
+		$resql = $this->db->query($sql);
+		
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				if (in_array($obj->libelle, array('ResponsableQ3SE', 'PCRRéférent'))) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+
+	/**
+	 * Get user IDs for a specific cell
+	 * 
+	 * @param int $cellId Cell ID
+	 * @return array Array of user IDs
+	 */
+	private function getCellUserIds($cellId)
+	{
+		$sql = "SELECT fk_user
+				FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne
+				WHERE ot_cellule_id = " . (int)$cellId;
+
+		$resql = $this->db->query($sql);
+		$users = [];
+
+		if ($resql) {
+			while ($user = $this->db->fetch_object($resql)) {
+				$users[] = $user->fk_user;
+			}
+		}
+
+		return $users;
+	}
+
+	/**
+	 * Get subcontractors for this OT
+	 * 
+	 * @return array Array of subcontractors
+	 */
+	public function getSubcontractors()
+	{
+		$sql = "SELECT ots.rowid, ots.fk_socpeople, ots.fk_societe, ots.fonction, ots.contrat, ots.habilitation,
+					sp.firstname, sp.lastname, s.nom AS societe_nom
+				FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants AS ots
+				LEFT JOIN " . MAIN_DB_PREFIX . "socpeople AS sp ON ots.fk_socpeople = sp.rowid
+				LEFT JOIN " . MAIN_DB_PREFIX . "societe AS s ON ots.fk_societe = s.rowid
+				WHERE ots.ot_id = " . (int)$this->id;
+
+		$resql = $this->db->query($sql);
+		$subcontractors = [];
+
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$subcontractors[] = [
+					'rowid' => $obj->rowid,
+					'fk_socpeople' => $obj->fk_socpeople,
+					'fk_societe' => $obj->fk_societe,
+					'fonction' => $obj->fonction,
+					'contrat' => $obj->contrat,
+					'habilitation' => $obj->habilitation,
+					'firstname' => $obj->firstname,
+					'lastname' => $obj->lastname,
+					'societe_nom' => $obj->societe_nom
+				];
+			}
+		}
+
+		return $subcontractors;
+	}
 }
 
 
@@ -1333,3 +1711,5 @@ class OtLine extends CommonObjectLine
 		$this->db = $db;
 	}
 }
+
+

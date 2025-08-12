@@ -1,4 +1,7 @@
 <?php
+
+// Ce code n'est pas utilisé. c'est un code pour créer un bouton pour généré des ot dans la page contact des projets.
+// Actuellement le systeme de création d'ot est dans actions_ot.class.php et dans interface_99_modOT_OTTriggers.class.php
 class ActionsOt
 { 
 	/**
@@ -112,7 +115,5 @@ class ActionsOt
             setEventMessage("Erreur lors de la création de l'OT : " . $db->lasterror(), 'errors');
         }
     }
-
-
 
 }
