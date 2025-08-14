@@ -1421,7 +1421,7 @@ class Ot extends CommonObject
 		return $arrayresult;
 	}
 
-	/**
+/**
 	 * Get user functions for a specific user and project
 	 * 
 	 * @param int $userId User ID
@@ -1429,9 +1429,43 @@ class Ot extends CommonObject
 	 */
 	public function getFonctions($userId)
 	{
-		// Implementation of getFonctions function
-		// This should be moved from your existing external function
-		return ""; // Placeholder - implement the actual logic
+			// Vérification de base
+		if (empty($userId) || !is_numeric($userId)) {
+			return "Utilisateur invalide";
+		}
+		
+		if (empty($this->fk_project) || !is_numeric($this->fk_project)) {
+			return "Projet non défini";
+		}
+
+		try {
+			$fonctions = array();
+		
+			// Requête SQL simplifiée pour le test
+			$sql = "SELECT cf.label 
+					FROM ".MAIN_DB_PREFIX."element_contact_fonction as ecf 
+					INNER JOIN ".MAIN_DB_PREFIX."contact_fonction as cf ON cf.rowid = ecf.function_id 
+					WHERE ecf.element_id = ".intval($this->fk_project)." 
+					AND ecf.contact_id = ".intval($userId);
+			
+			$resql = $this->db->query($sql);
+			if ($resql) {
+				$num = $this->db->num_rows($resql);
+				if ($num > 0) {
+					while ($obj = $this->db->fetch_object($resql)) {
+						$fonctions[] = $obj->label;
+					}
+				}
+				$this->db->free($resql);
+			} else {
+				return "Erreur SQL: " . $this->db->lasterror();
+			}
+			
+			return !empty($fonctions) ? implode('-', $fonctions) : "Aucune fonction";
+			
+		} catch (Exception $e) {
+			return "Erreur: " . $e->getMessage();
+		}
 	}
 
 	/**
@@ -1442,9 +1476,38 @@ class Ot extends CommonObject
 	 */
 	public function getHabilitations($userId)
 	{
-		// Implementation of getHabilitations function
-		// This should be moved from your existing external function
-		return ""; // Placeholder - implement the actual logic
+			// Vérification de base
+		if (empty($userId) || !is_numeric($userId)) {
+			return "Utilisateur invalide";
+		}
+
+		try {
+			$habilitationRefs = [];
+
+			$sql = "SELECT fh.ref 
+					FROM ".MAIN_DB_PREFIX."formationhabilitation_userhabilitation as fuh 
+					JOIN ".MAIN_DB_PREFIX."formationhabilitation_habilitation as fh 
+						ON fuh.fk_habilitation = fh.rowid 
+					WHERE fuh.fk_user = ".intval($userId);
+		
+			$resql = $this->db->query($sql);
+			if ($resql) {
+				$num = $this->db->num_rows($resql);
+				if ($num > 0) {
+					while ($obj = $this->db->fetch_object($resql)) {
+						$habilitationRefs[] = $obj->ref;
+					}
+				}
+				$this->db->free($resql);
+			} else {
+				return "Erreur SQL: " . $this->db->lasterror();
+			}
+		
+			return !empty($habilitationRefs) ? implode("-", $habilitationRefs) : "Aucune habilitation";
+			
+		} catch (Exception $e) {
+			return "Erreur: " . $e->getMessage();
+		}
 	}
 
 	/**

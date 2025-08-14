@@ -1,4 +1,9 @@
 <?php
+// Activer l'affichage des erreurs temporairement pour le debug
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 /* Copyright (C) 2017 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2024 Faure Louis <l.faure@optim-industries.fr>
  *
@@ -78,9 +83,10 @@ if (!$res) {
 }
 
 
-ini_set('display_errors',0);
-ini_set('display_startup_errors', 0);
-error_reporting(0);
+// Commentons temporairement ces lignes pour le debug
+// ini_set('display_errors',0);
+// ini_set('display_startup_errors', 0);
+// error_reporting(0);
 
 // Required files and initializations
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
@@ -638,18 +644,40 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 
 // Récupérer les utilisateurs avec leurs qualifications dans le back puis conversion dans le json
-$usersWithQualifications = $object->getAllUsersWithQualifications();
-$userjson = json_encode($usersWithQualifications);
+if ($object->id > 0) {
+    try {
+        // Récupérer les utilisateurs avec leurs qualifications dans le back puis conversion dans le json
+        $usersWithQualifications = $object->getAllUsersWithQualifications();
+        if (is_array($usersWithQualifications) && isset($usersWithQualifications['error'])) {
+            throw new Exception("Erreur getAllUsersWithQualifications: " . $usersWithQualifications['error']);
+        }
+        $userjson = json_encode($usersWithQualifications);
 
-// Récupérer les contacts du projet
-$projectContacts = $object->getProjectContacts();
-$data = json_encode($projectContacts);
+        // Récupérer les contacts du projet
+        $projectContacts = $object->getProjectContacts();
+        if (is_array($projectContacts) && isset($projectContacts['error'])) {
+            throw new Exception("Erreur getProjectContacts: " . $projectContacts['error']);
+        }
+        $data = json_encode($projectContacts);
 
-// Récupérer les données des cellules
-$cellData = $object->getCellsData();
-$cellDataJson = json_encode($cellData);
+        // Récupérer les données des cellules
+        $cellData = $object->getCellsData();
+        $cellDataJson = json_encode($cellData);
 
-$otId = $object->id;
+        $otId = $object->id;
+
+    } catch (Exception $e) {
+        echo "Erreur détectée: " . $e->getMessage();
+        echo "<br>Trace: " . $e->getTraceAsString();
+        exit;
+    }
+} else {
+    // Si pas d'objet, initialiser des valeurs par défaut
+    $userjson = json_encode([]);
+    $data = json_encode([]);
+    $cellDataJson = json_encode([]);
+    $otId = 0;
+}
 
 print '
 
