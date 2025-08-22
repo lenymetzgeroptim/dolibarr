@@ -97,76 +97,40 @@ function displayUserList() {
         const hasUniqueList = cellData.some(cell => cell.type === "listeunique");
 
         if (hasUniqueList) {
-        
             cellData.forEach(cell => {
                 if (cell.type === "listeunique") {
-                    const listVersion = parseInt(cell.version || 1); // Version de la liste dans la BDD
-                    const domVersion = existingUniqueList ? parseInt(existingUniqueList.dataset.version || 0) : 0;
+                    const list = createUniqueUserList();
 
-                    // Comparer les versions
-                    if (listVersion > domVersion) {
-                       
-                        const list = createUniqueUserList();
+                    // Remplir le titre de la liste
+                    const titleInput = list.querySelector(".list-title-input");
+                    if (titleInput) {
+                        titleInput.value = cell.title || "Organigramme - Liste des utilisateurs"; // Titre par défaut si vide
+                    }
 
-                        // Remplir le titre de la liste
-                        const titleInput = list.querySelector(".list-title-input");
-                        titleInput.value = cell.title;
-
-                        // Vérifier si `userDetails` est défini et est un tableau
-                        if (Array.isArray(cell.userDetails)) {
-                            // Remplir les utilisateurs de la liste depuis `cellData`
-                            const ulElement = list.querySelector("ul");
-                            ulElement.innerHTML = ""; // Vider la liste avant de la remplir
-                            cell.userDetails.forEach(user => {
-                              
-                                // Vérifier si lutilisateur nest pas Q3SE ou PCR
-                                if (user.type !== "ResponsableQ3SE" && user.type !== "PCRRéférent") {
-                                    const li = document.createElement("li");
-                                    li.setAttribute("data-user-id", user.userId);
-                                    li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
-
-                                    li.innerHTML = `
-                                        <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
-                                        <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
-                                        <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
-                                        <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-                                        <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
-                                    `;
-                                    ulElement.appendChild(li);
-                                }
-                            });
-                        } else {
-                            console.warn(`userDetails est manquant ou nest pas un tableau pour la cellule avec le titre : ${cell.title}`);
-                        }
-
-                        // Ajouter la version au DOM
-                        list.dataset.version = listVersion;
-
-                        attachUserRemoveListeners(list);
-
-                        // Ajouter la liste au conteneur
-                        columnsContainer.appendChild(list);
-                    } 
+                    // Ajouter la liste au conteneur
+                    columnsContainer.appendChild(list);
                 }
             });
         } else {
-          
+            // Créer une nouvelle liste unique avec titre par défaut
             const uniqueList = createUniqueUserList();
-            uniqueList.style.marginTop = "20px"; // Ajouter un espace de 20px en haut
-            uniqueList.dataset.version = 1; // Initialiser la version à 1
+            uniqueList.style.marginTop = "20px";
+            const titleInput = uniqueList.querySelector(".list-title-input");
+            if (titleInput) {
+                titleInput.value = "Organigramme - Liste des utilisateurs";
+            }
             columnsContainer.appendChild(uniqueList);
-
-            // Sauvegarder la nouvelle liste dans la BDD
             saveData();
         }
     } else {
-        
+        // Créer une nouvelle liste unique avec titre par défaut
         const uniqueList = createUniqueUserList();
-        uniqueList.style.marginTop = "20px"; // Ajouter un espace de 20px en haut
-        uniqueList.dataset.version = 1; // Initialiser la version à 1
+        uniqueList.style.marginTop = "20px";
+        const titleInput = uniqueList.querySelector(".list-title-input");
+        if (titleInput) {
+            titleInput.value = "Organigramme - Liste des utilisateurs";
+        }
         columnsContainer.appendChild(uniqueList);
-
-        // Sauvegarder la nouvelle liste dans la BDD
         saveData();
     }
 }
@@ -357,14 +321,12 @@ else if (cell.type === "list") {
                     <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
                     <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
                     <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
-                     <span class="remove-user" style="color:red; cursor:pointer;">&times;</span>`;
+                `;
                 ulElement.appendChild(li);
             } else {
                 console.warn(`Utilisateur avec ID ${userId} introuvable dans uniqueJsData.`);
             }
         });
-
-        attachUserRemoveListeners(list);
 
         if (columnsContainer) {
             columnsContainer.appendChild(list);
@@ -467,13 +429,6 @@ function createUniqueUserList() {
                 <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
             `;
 
-            // Ajouter le bouton de suppression
-            const removeSpan = document.createElement("span");
-            removeSpan.textContent = "×";
-            removeSpan.style = "color:red; cursor:pointer;";
-            removeSpan.className = "remove-user";
-            li.appendChild(removeSpan);
-
             ulElement.appendChild(li);
         }
     });
@@ -486,11 +441,6 @@ function createUniqueUserList() {
     listBody.appendChild(ulElement);
 
     list.appendChild(listBody);
-
-
-
-    // Attacher les écouteurs de suppression utilisateur
-    attachUserRemoveListeners(list);
 
     return list;
 }
@@ -678,8 +628,6 @@ function updateCards() {
  * 
  */
 
-
-
     // Fonction pour récupérer les fournisseurs et contacts via Ajax
     function fetchSuppliersAndContacts() {
         $.ajax({
@@ -704,11 +652,6 @@ function updateCards() {
     // Appel de la fonction pour récupérer les données dès que la page est prête
     fetchSuppliersAndContacts();
 
-
-
-
-
-
 function createSupplierDropdown() {
     const existingCard = document.querySelector(".cardsoustraitant");
     if (existingCard) {
@@ -718,7 +661,7 @@ function createSupplierDropdown() {
     cardContainer.className = "cardsoustraitant";
 
     const cardTitle = document.createElement("h3");
-   cardTitle.textContent = "Sous traitants";
+    cardTitle.textContent = "Sous traitants";
     cardTitle.className = "card-header-soustraitant";
     cardContainer.appendChild(cardTitle);
 
@@ -755,9 +698,9 @@ function createSupplierDropdown() {
                 input.style.width = "100%";
                 input.style.padding = "0 5px";
                 input.style.boxSizing = "border-box";
-                input.disabled = true; // Désactiver les champs quand le status est 1 ou 2
-                input.style.backgroundColor = "#f5f5f5"; // Gris clair pour indiquer que le champ est désactivé
-                input.style.cursor = "not-allowed"; // Curseur "non autorisé"
+                input.disabled = true;
+                input.style.backgroundColor = "#f5f5f5";
+                input.style.cursor = "not-allowed";
             } else {
                 input.style.textAlign = "left";
                 input.style.whiteSpace = "nowrap";
@@ -766,14 +709,14 @@ function createSupplierDropdown() {
                 input.style.width = "100%";
                 input.style.padding = "0 5px";
                 input.style.boxSizing = "border-box";
-                input.disabled = false; // Réactiver les champs quand le status est 0
-                input.style.backgroundColor = ""; // Retour à la couleur par défaut
-                input.style.cursor = "text"; // Curseur normal
+                input.disabled = false;
+                input.style.backgroundColor = "";
+                input.style.cursor = "text";
             }
         });
     }
 
-    // Observer les changements dattribut data-status
+    // Observer les changements d'attribut data-status
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === "attributes" && mutation.attributeName === "data-status") {
@@ -783,64 +726,30 @@ function createSupplierDropdown() {
     });
     observer.observe(cardContainer, { attributes: true, attributeFilter: ["data-status"] });
 
-    // Vérifier si les données de `cellData` contiennent des sous-traitants
+    // Vider la liste selectedContacts avant de la remplir
+    selectedContacts = [];
+
+    // **PRIORITÉ 1 : Récupérer d'abord les sous-traitants de la BDD (cellData)**
     const subcontractorData = cellData.find(cell => cell.type === "soustraitantlist");
    
-    if ((!subcontractorData || !subcontractorData.subcontractors || subcontractorData.subcontractors.length === 0) 
-    && jsdatasoustraitants && Array.isArray(jsdatasoustraitants) && jsdatasoustraitants.length > 0) {
-        // Afficher les sous-traitants de `jsdatasoustraitants` une seule fois
-        jsdatasoustraitants.forEach(contact => {
-            const dataRow = document.createElement("div");
-            dataRow.className = "data-row";
-            dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
-            dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
-
-            const fields = [
-                `${contact.firstname} ${contact.lastname}`,
-                `${contact.societe_nom}`,
-                `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
-                `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
-                `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
-            ];
-
-            fields.forEach(field => {
-                const fieldCell = document.createElement("div");
-                fieldCell.style.flex = "1";
-                fieldCell.innerHTML = field;
-                dataRow.appendChild(fieldCell);
-            });
-
-            tableContainer.appendChild(dataRow);
-
-            // Ajouter le contact dans `selectedContacts` pour éviter les doublons
-            selectedContacts.push({
-                contact_id: contact.fk_socpeople,
-                firstname: contact.firstname,
-                lastname: contact.lastname,
-                supplier_name: contact.societe_nom,
-                supplier_id: contact.fk_societe,
-                function: contact.fonction,
-                contract: contact.contrat,
-                qualifications: contact.habilitation
-            });
-        });
-
-        // Sauvegarder les données après affichage
-        saveData();
-    } else if (subcontractorData && subcontractorData.subcontractors) {
-        // Afficher uniquement les sous-traitants enregistrés dans `cellData`
+    if (subcontractorData && subcontractorData.subcontractors && subcontractorData.subcontractors.length > 0) {
+        console.log("✅ Affichage des sous-traitants depuis cellData:", subcontractorData.subcontractors);
+        
+        // Afficher UNIQUEMENT les sous-traitants de la BDD
         subcontractorData.subcontractors.forEach(contact => {
+            console.log("📋 Contact traité:", contact);
+            
             const dataRow = document.createElement("div");
             dataRow.className = "data-row";
             dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
             dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
 
             const fields = [
-                `${contact.firstname} ${contact.lastname}`,
-                `${contact.societe_nom}`,
-                `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
-                `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
-                `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
+                `${contact.firstname || ''} ${contact.lastname || ''}`,
+                `${contact.societe_nom || ''}`,
+                `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ''}">`,
+                `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ''}">`,
+                `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ''}">`
             ];
 
             fields.forEach(field => {
@@ -852,18 +761,62 @@ function createSupplierDropdown() {
 
             tableContainer.appendChild(dataRow);
 
-            // Ajouter le contact dans `selectedContacts` pour éviter les doublons
+            // Ajouter le contact dans `selectedContacts`
             selectedContacts.push({
                 contact_id: contact.fk_socpeople,
-                firstname: contact.firstname,
-                lastname: contact.lastname,
-                supplier_name: contact.societe_nom,
+                firstname: contact.firstname || '',
+                lastname: contact.lastname || '',
+                supplier_name: contact.societe_nom || '',
                 supplier_id: contact.fk_societe,
-                function: contact.fonction,
-                contract: contact.contrat,
-                qualifications: contact.habilitation
+                function: contact.fonction || '',
+                contract: contact.contrat || '',
+                qualifications: contact.habilitation || ''
             });
         });
+    } else {
+        console.log("⚠️ Pas de sous-traitants dans cellData, utilisation de jsdatasoustraitants");
+        
+        // **PRIORITÉ 2 : S'il n'y a pas de données BDD, chercher les nouveaux contacts du projet**
+        if (jsdatasoustraitants && Array.isArray(jsdatasoustraitants) && jsdatasoustraitants.length > 0) {
+            jsdatasoustraitants.forEach(contact => {
+                const dataRow = document.createElement("div");
+                dataRow.className = "data-row";
+                dataRow.setAttribute("data-contact-id", contact.fk_socpeople);
+                dataRow.style.cssText = "display: flex; text-align: center; padding: 5px 0;";
+
+                const fields = [
+                    `${contact.firstname} ${contact.lastname}`,
+                    `${contact.societe_nom}`,
+                    `<input type="text" placeholder="Fonction" class="form-input" data-field="function" value="${contact.fonction || ""}">`,
+                    `<input type="text" placeholder="Contrat" class="form-input" data-field="contract" value="${contact.contrat || ""}">`,
+                    `<input type="text" placeholder="Habilitations" class="form-input" data-field="qualifications" value="${contact.habilitation || ""}">`
+                ];
+
+                fields.forEach(field => {
+                    const fieldCell = document.createElement("div");
+                    fieldCell.style.flex = "1";
+                    fieldCell.innerHTML = field;
+                    dataRow.appendChild(fieldCell);
+                });
+
+                tableContainer.appendChild(dataRow);
+
+                // Ajouter le contact dans `selectedContacts`
+                selectedContacts.push({
+                    contact_id: contact.fk_socpeople,
+                    firstname: contact.firstname,
+                    lastname: contact.lastname,
+                    supplier_name: contact.societe_nom,
+                    supplier_id: contact.fk_societe,
+                    function: contact.fonction,
+                    contract: contact.contrat,
+                    qualifications: contact.habilitation
+                });
+            });
+
+            // Sauvegarder les données après affichage initial
+            saveData();
+        }
     }
 
     // Appliquer le style initial
@@ -881,20 +834,13 @@ function createSupplierDropdown() {
             if (selectedContact) {
                 const fieldName = inputField.getAttribute("data-field");
                 selectedContact[fieldName] = inputField.value; // Mettre à jour la valeur
+                console.log("💾 Sauvegarde champ:", fieldName, "=", inputField.value, "pour contact:", contactId);
             }
 
             saveData(); // Sauvegarder les modifications
         }
     }, true);
 }
-
-
-// Appel de la fonction pour récupérer et afficher les fournisseurs
-fetchSuppliersAndContacts();
-
-
-
-
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -926,7 +872,7 @@ function createEmptyCard(column) {
                     style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
                 <select class="name-dropdown" name="name" required
                     style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
-                    ${alluser}
+                    ${userOptions}
                 </select>
                 <div class="user-details" style="margin-top: 10px; width: 100%; display: flex; flex-direction: column; align-items: center;">
                     <div class="habilitation-info" style="margin-bottom: 5px; word-wrap: break-word; white-space: normal; text-align: center; padding: 5px; font-size: 0.9em; line-height: 1.4; width: 90%;"></div>
@@ -964,21 +910,22 @@ function createEmptyCard(column) {
     const nameDropdown = card.querySelector(".name-dropdown");
     nameDropdown.addEventListener("change", function() {
         const selectedUserId = this.value;
-        const selectedUser = userjson.find(user => user.rowid === selectedUserId);
+        // Chercher dans uniqueJsData au lieu de userjson pour les contacts du projet
+        const selectedUser = uniqueJsData.find(user => user.fk_socpeople === selectedUserId);
         
         if (selectedUser) {
             const habilitationInfo = card.querySelector(".habilitation-info");
             const contratInfo = card.querySelector(".contrat-info");
             
             // Formater les habilitations avec des retours à la ligne
-            const habilitations = selectedUser.habilitations || "Non spécifié";
+            const habilitations = selectedUser.habilitation || "Non spécifié";
             const formattedHabilitations = habilitations.split(",").map(h => h.trim()).join(",\n");
             
             habilitationInfo.innerHTML = `<strong>Habilitations:</strong><br>${formattedHabilitations}`;
             contratInfo.innerHTML = `<strong>Contrat:</strong><br>${selectedUser.contrat || "Non spécifié"}`;
             
             // Sauvegarder les informations dans le dataset de la carte
-            card.dataset.habilitations = selectedUser.habilitations || "";
+            card.dataset.habilitations = selectedUser.habilitation || "";
             card.dataset.contrat = selectedUser.contrat || "";
         }
     });
@@ -986,11 +933,12 @@ function createEmptyCard(column) {
     card.querySelector(".card-form").addEventListener("submit", function (event) {
         event.preventDefault();
         const selectedUserId = card.querySelector(".name-dropdown").value;
-        const selectedUser = userjson.find(user => user.rowid === selectedUserId);
+        // Chercher dans uniqueJsData au lieu de userjson pour les contacts du projet
+        const selectedUser = uniqueJsData.find(user => user.fk_socpeople === selectedUserId);
         const name = selectedUser ? `${selectedUser.firstname} ${selectedUser.lastname}` : "Non spécifié";
 
         // Formater les habilitations avec des retours à la ligne
-        const habilitations = selectedUser ? (selectedUser.habilitations || "Non spécifié") : "Non spécifié";
+        const habilitations = selectedUser ? (selectedUser.habilitation || "Non spécifié") : "Non spécifié";
         const formattedHabilitations = habilitations.split(",").map(h => h.trim()).join(",\n");
 
         card.innerHTML = `
@@ -1148,12 +1096,6 @@ function createUserList(column) {
             // Appliquer le style initial
             updateListItemsStyle();
 
-            // Ajouter le bouton de suppression
-            const removeSpan = document.createElement("span");
-            removeSpan.textContent = "×";
-            removeSpan.style = "color:red; cursor:pointer;";
-            removeSpan.className = "remove-user";
-            li.appendChild(removeSpan);
 
             ulElement.appendChild(li);
 
@@ -1491,7 +1433,7 @@ function saveData() {
         let uniqueListId = uniqueList.getAttribute("data-list-id");
 
         if (titleInput) {
-            let title = titleInput.value;
+            let title = titleInput.value || "Organigramme - Liste des utilisateurs"; // Titre par défaut si vide
             let userIds = Array.from(uniqueList.querySelectorAll("li[data-user-id]")).map(function (li) {
                 return li.getAttribute("data-user-id");
             }).filter((id, index, self) => self.indexOf(id) === index); // Supprimer les doublons si nécessaire
@@ -1501,7 +1443,7 @@ function saveData() {
                 userIds: userIds,
                 type: "listeunique",
                 otid: otId,
-                id: 1
+                id: uniqueListId || "unique_list_1"
             };
 
             cardsData.push(uniqueListCoordinates); // Ajouter la liste unique à cardsData
@@ -1575,8 +1517,3 @@ function saveData() {
 }
     updateCards(); 
 });
-
-
-
-
-

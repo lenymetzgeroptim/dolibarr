@@ -206,33 +206,45 @@ if (empty($reshook)) {
 	$triggermodname = 'OT_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
 
 	if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontoadd) {
-		// ... existing code ...
-	}
+		$result = $object->validate($user);
+		if ($result > 0) {
+			// Génération automatique du PDF après validation
+			if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+				$outputlangs = $langs;
+				$newlang = '';
+				if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+					$newlang = GETPOST('lang_id', 'aZ09');
+				}
+				if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
+					$newlang = $object->thirdparty->default_lang;
+				}
+				if (!empty($newlang)) {
+					$outputlangs = new Translate("", $conf);
+					$outputlangs->setDefaultLang($newlang);
+					}
+					
+					$model = 'standard_ot';
+					$hidedetails = 0;
+					$hidedesc = 0;
+					$hideref = 0;
+					
+					$ret = $object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+					if ($ret < 0) {
+						setEventMessages($object->error, $object->errors, 'warnings');
+					} else {
+						setEventMessages($langs->trans('PDFGeneratedSuccessfully'), null, 'mesgs');
+					}
+				}
+				
+				header('Location: '.$_SERVER['PHP_SELF'].'?id='.$object->id);
+				exit;
+			} else {
+				setEventMessages($object->error, $object->errors, 'errors');
+			}
+		}
 
 	// Actions cancel, add, update, update_extras, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
-
-	// Actions when linking object each other
-	include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
-
-	// Actions when printing a doc from card
-	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
-
-	// Action to build doc
-	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
-
-	if ($action == 'set_thirdparty' && $permissiontoadd) {
-		$object->setValueFrom('fk_soc', GETPOST('fk_soc', 'int'), '', '', 'date', '', $user, $triggermodname);
-	}
-	if ($action == 'classin' && $permissiontoadd) {
-		$object->setProject(GETPOST('projectid', 'int'));
-	}
-
-	// Actions to send emails
-	$triggersendname = 'OT_MYOBJECT_SENTBYMAIL';
-	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
-	$trackid = 'ot'.$object->id;
-	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 
 	if ($action == 'confirm_archive' && $confirm == 'yes' && $permissiontoadd) {
 		$result = $object->setArchive($user);
@@ -262,10 +274,6 @@ if (empty($reshook)) {
 		}
 		header('Location: '.$_SERVER['PHP_SELF'].'?id='.$object->id);
 		exit;
-	}
-
-	if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontoadd) {
-		// ... existing code ...
 	}
 }
 
@@ -432,16 +440,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			$text .= $notify->confirmMessage('MYOBJECT_CLOSE', $object->socid, $object);
 		}*/
 
-
-
-
 		$formquestion = array();
 	
-
-		
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('XXX'), $text, 'confirm_xxx', $formquestion, 0, 1, 220);
-	
-		
+			
 	}
 
 	// Call Hook formConfirm
@@ -569,8 +571,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
             }   
 
             //Modify
-            if ($isUserInContacts && $isUserManager) {
-			    print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
+            if ($isUserInContacts && $isUserManager && $object->status != $object::STATUS_ARCHIVED) {
+                print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
             }
 
 			// Validate
@@ -592,10 +594,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
                 }
             }
 
-            //généré pdf constat
-            
-                print dolGetButtonAction('', $langs->trans('généré PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
-             
+            // Générer PDF - uniquement en statut brouillon
+            if ($object->status == $object::STATUS_DRAFT) {
+                print dolGetButtonAction('', $langs->trans('générer PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
+            }
+			print dolGetButtonAction('', $langs->trans('générer PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
                 /*//passé au  Status Cancel
                 if ($user->rights->constat->constat->ResponsableQ3SE) {
                     if ($object->status == $object::STATUS_EN_COURS) {
@@ -626,6 +629,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 			}
 			*/
+
 
 			// Delete
 			$params = array();
@@ -662,6 +666,17 @@ if ($object->id > 0) {
 
         // Récupérer les données des cellules
         $cellData = $object->getCellsData();
+
+        // DEBUG : Vérifier le contenu des sous-traitants
+        echo "<!-- DEBUG SUBCONTRACTORS: ";
+        foreach ($cellData as $cell) {
+            if (is_array($cell) && isset($cell['type']) && $cell['type'] === 'soustraitantlist') {
+                echo "Found subcontractors: " . print_r($cell['subcontractors'], true);
+                break;
+            }
+        }
+        echo " -->";
+
         $cellDataJson = json_encode($cellData);
 
         $otId = $object->id;

@@ -674,7 +674,6 @@ class Ot extends CommonObject
 
 		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'OT_MYOBJECT_CANCEL');
 	}
-
 	/**
 	 *	Set back to validated status
 	 *
@@ -714,6 +713,139 @@ class Ot extends CommonObject
 		}
 
 		return $this->setStatusCommon($user, self::STATUS_ARCHIVED, $notrigger, 'OT_MYOBJECT_ARCHIVE');
+	}
+
+	/**
+	 * Set status to archived
+	 *
+	 * @param User $user      User that set status
+	 * @param int  $notrigger 1=Does not execute triggers, 0= execute triggers
+	 * @return int Return integer <0 if error, 0 if nothing done, >0 if success
+	 */
+	public function setStatusArchived($user, $notrigger = 0)
+	{
+		return $this->setStatusCommon($user, self::STATUS_ARCHIVED, $notrigger, 'OT_ARCHIVED');
+	}
+
+	/**
+	 * Set status
+	 *
+	 * @param User $user       Object user that modify
+	 * @param int  $status     Status
+	 * @param int  $notrigger  1=Does not execute triggers, 0=Execute triggers
+	 * @param string $triggercode Trigger code to use
+	 * @return int Return integer <0 if error, 0 if nothing done, >0 if success
+	 */
+	public function setStatusCommon($user, $status, $notrigger = 0, $triggercode = '')
+	{
+		global $conf, $langs;
+
+		$error = 0;
+
+		$this->db->begin();
+
+		$sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot";
+		$sql .= " SET status = " . ((int) $status);
+		$sql .= " WHERE rowid = " . ((int) $this->id);
+
+		if ($this->db->query($sql)) {
+			$this->status = $status;
+
+			if (!$error && !$notrigger) {
+				// Call trigger
+				$result = $this->call_trigger($triggercode, $user);
+				if ($result < 0) {
+					$error++;
+				}
+			}
+
+			// Si le statut est "archivé" (2), générer automatiquement le PDF avec filigrane
+			if (!$error && $status == self::STATUS_ARCHIVED) {
+				$result = $this->generatePDFWithWatermark($user);
+				if ($result < 0) {
+					dol_syslog("Erreur lors de la génération du PDF avec filigrane", LOG_ERR);
+					// Ne pas considérer cela comme une erreur bloquante
+				}
+			}
+		} else {
+			$error++;
+			$this->errors[] = $this->db->lasterror();
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 1;
+		} else {
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
+	/**
+	 * Generate PDF with watermark when OT is archived
+	 *
+	 * @param User $user User object
+	 * @return int Return integer <0 if error, >0 if success
+	 */
+	private function generatePDFWithWatermark($user)
+	{
+		global $conf, $langs;
+
+		try {
+			// Charger les langues nécessaires
+			$langs->loadLangs(array("main", "bills", "ot@ot"));
+
+			// Définir le modèle PDF à utiliser
+			$modelpdf = !empty($this->model_pdf) ? $this->model_pdf : 'standard';
+
+			// Créer l'instance du générateur PDF
+			$classname = 'pdf_' . $modelpdf . '_ot';
+			$module_file = '/custom/ot/core/modules/ot/doc/' . $classname . '.modules.php';
+			
+			if (file_exists(DOL_DOCUMENT_ROOT . $module_file)) {
+				require_once DOL_DOCUMENT_ROOT . $module_file;
+				
+				if (class_exists($classname)) {
+					$obj = new $classname($this->db);
+					
+					 // S'assurer que l'objet est complet
+					$this->fetch_thirdparty();
+					
+					// Générer le PDF
+					$result = $obj->write_file($this, $langs);
+					
+					if ($result > 0) {
+						// Mettre à jour le champ last_main_doc
+						$filename = dol_sanitizeFileName($this->ref) . '.pdf';
+						$sql = "UPDATE " . MAIN_DB_PREFIX . "ot_ot";
+						$sql .= " SET last_main_doc = '" . $this->db->escape($filename) . "'";
+						$sql .= " WHERE rowid = " . ((int) $this->id);
+						$this->db->query($sql);
+						
+						dol_syslog("PDF avec filigrane généré avec succès pour l'OT " . $this->ref, LOG_INFO);
+						
+						// Afficher un message de succès
+						global $langs;
+						$langs->loadLangs(array("ot@ot"));
+						setEventMessages($langs->trans("PDFWithWatermarkGenerated"), null, 'mesgs');
+						
+						return 1;
+					} else {
+						dol_syslog("Erreur lors de la génération du PDF avec filigrane pour l'OT " . $this->ref . ": " . $obj->error, LOG_ERR);
+						return -1;
+					}
+				} else {
+					dol_syslog("Classe $classname non trouvée", LOG_ERR);
+					return -1;
+				}
+			} else {
+				dol_syslog("Fichier module PDF non trouvé: " . $module_file, LOG_ERR);
+				return -1;
+			}
+		} catch (Exception $e) {
+			dol_syslog("Exception lors de la génération du PDF: " . $e->getMessage(), LOG_ERR);
+			return -1;
+		}
 	}
 
 	/**
@@ -835,8 +967,6 @@ class Ot extends CommonObject
 					} else {
 						$result .= '<div class="floatleft inline-block valignmiddle divphotoref"><img class="photouserphoto userphoto" alt="No photo" border="0" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$module.'&entity='.$conf->entity.'&file='.urlencode($pathtophoto).'"></div>';
 					}
-
-					$result .= '</div>';
 				} else {
 					$result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="'.(($withpicto != 2) ? 'paddingright ' : '').'"'), 0, 0, $notooltip ? 0 : 1);
 				}
@@ -1567,10 +1697,11 @@ class Ot extends CommonObject
 			}
 		}
 
-		// Ajouter les sous-traitants
-		$cellData[] = [
+		// Ajouter les sous-traitants avec la structure correcte
+		$subcontractors = $this->getSubcontractors();
+		$cellData[] = (object)[
 			'type' => 'soustraitantlist',
-			'subcontractors' => $this->getSubcontractors()
+			'subcontractors' => $subcontractors
 		];
 
 		return $cellData;
@@ -1743,6 +1874,175 @@ class Ot extends CommonObject
 
 		return $subcontractors;
 	}
+
+    /**
+     * Clone l'architecture d'un autre OT vers cet OT
+     * 
+     * @param int $sourceOTId ID de l'OT source à cloner
+     * @return int <0 if error, >0 if success
+     */
+    public function cloneArchitectureFrom($sourceOTId)
+    {
+        global $user;
+
+        if (empty($this->id) || empty($sourceOTId)) {
+            $this->error = "IDs des OTs manquants pour le clonage";
+            return -1;
+        }
+
+        try {
+            $this->db->begin();
+
+            // 1. Cloner les cellules (ot_ot_cellule) - exclure les listes uniques
+            $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule 
+                    (ot_id, title, type, x, y)
+                    SELECT 
+                        " . intval($this->id) . ",
+                        title,
+                        type,
+                        x,
+                        y
+                    FROM " . MAIN_DB_PREFIX . "ot_ot_cellule 
+                    WHERE ot_id = " . intval($sourceOTId) . "
+                    AND type != 'listeunique'";
+
+            $resql = $this->db->query($sql);
+            if (!$resql) {
+                $this->error = "Erreur lors du clonage des cellules: " . $this->db->lasterror();
+                $this->db->rollback();
+                return -1;
+            }
+
+            // 2. Récupérer les mappings anciens/nouveaux IDs des cellules (sans les listes uniques)
+            $cellMapping = array();
+            $sql = "SELECT rowid, title, type, x, y FROM " . MAIN_DB_PREFIX . "ot_ot_cellule 
+                    WHERE ot_id = " . intval($sourceOTId) . " AND type != 'listeunique'";
+            $resql = $this->db->query($sql);
+            if ($resql) {
+                $oldCells = array();
+                while ($obj = $this->db->fetch_object($resql)) {
+                    $oldCells[] = $obj;
+                }
+
+                // Récupérer les nouvelles cellules créées (sans les listes uniques)
+                $sql = "SELECT rowid, title, type, x, y FROM " . MAIN_DB_PREFIX . "ot_ot_cellule 
+                        WHERE ot_id = " . intval($this->id) . " AND type != 'listeunique' ORDER BY rowid";
+                $resql = $this->db->query($sql);
+                if ($resql) {
+                    $newCells = array();
+                    while ($obj = $this->db->fetch_object($resql)) {
+                        $newCells[] = $obj;
+                    }
+
+                    // Créer le mapping basé sur la position et le type
+                    for ($i = 0; $i < count($oldCells) && $i < count($newCells); $i++) {
+                        if ($oldCells[$i]->type == $newCells[$i]->type && 
+                            $oldCells[$i]->x == $newCells[$i]->x && 
+                            $oldCells[$i]->y == $newCells[$i]->y) {
+                            $cellMapping[$oldCells[$i]->rowid] = $newCells[$i]->rowid;
+                        }
+                    }
+                }
+            }
+
+            // 3. Cloner les données des cellules (ot_ot_cellule_donne) - sans habilitations et contrat
+            foreach ($cellMapping as $oldCellId => $newCellId) {
+                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_cellule_donne 
+                        (ot_cellule_id, fk_user)
+                        SELECT 
+                            " . intval($newCellId) . ",
+                            fk_user
+                        FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne 
+                        WHERE ot_cellule_id = " . intval($oldCellId);
+
+                $resql = $this->db->query($sql);
+                if (!$resql) {
+                    $this->error = "Erreur lors du clonage des données de cellule " . $oldCellId . ": " . $this->db->lasterror();
+                    $this->db->rollback();
+                    return -1;
+                }
+            }
+
+            // 4. Gestion des sous-traitants avec comparaison projet/OT précédent
+            $this->cloneAndUpdateSubcontractors($sourceOTId);
+
+            $this->db->commit();
+            return 1;
+
+        } catch (Exception $e) {
+            $this->error = "Erreur lors du clonage de l'architecture: " . $e->getMessage();
+            $this->db->rollback();
+            return -1;
+        }
+    }
+
+    /**
+     * Clone et met à jour les sous-traitants
+     * 
+     * @param int $sourceOTId ID de l'OT source
+     */
+    private function cloneAndUpdateSubcontractors($sourceOTId)
+    {
+        // Vérifier s'il y a déjà des données dans l'OT
+        $sql = "SELECT COUNT(*) as count FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants WHERE ot_id = " . intval($this->id);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $obj = $this->db->fetch_object($resql);
+            if ($obj->count > 0) {
+                // Il y a déjà des données, on ne fait rien
+                return;
+            }
+        }
+
+        // 1. D'abord, cloner tous les sous-traitants de l'OT source
+        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
+                (ot_id, fk_socpeople, fk_societe, fonction, contrat, habilitation)
+                SELECT 
+                    " . intval($this->id) . ",
+                    fk_socpeople,
+                    fk_societe,
+                    fonction,
+                    contrat,
+                    habilitation
+                FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
+                WHERE ot_id = " . intval($sourceOTId);
+
+        $resql = $this->db->query($sql);
+        if (!$resql) {
+            $this->error = "Erreur lors du clonage des sous-traitants: " . $this->db->lasterror();
+            return -1;
+        }
+
+        // 2. Ensuite, ajouter SEULEMENT les nouveaux sous-traitants du projet qui ne sont PAS dans l'OT source
+        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
+                (ot_id, fk_socpeople, fk_societe, fonction, contrat, habilitation)
+                SELECT DISTINCT
+                    " . intval($this->id) . ",
+                    ec.fk_socpeople,
+                    sp.fk_soc,
+                    NULL,
+                    NULL,
+                    NULL
+                FROM " . MAIN_DB_PREFIX . "element_contact AS ec 
+                JOIN " . MAIN_DB_PREFIX . "socpeople AS sp ON ec.fk_socpeople = sp.rowid 
+                JOIN " . MAIN_DB_PREFIX . "c_type_contact AS ctc ON ec.fk_c_type_contact = ctc.rowid 
+                WHERE ec.element_id = " . intval($this->fk_project) . "
+                AND ec.statut = 4
+                AND ctc.element = 'project'
+                AND ctc.source = 'external'
+                AND ec.fk_socpeople NOT IN (
+                    SELECT fk_socpeople 
+                    FROM " . MAIN_DB_PREFIX . "ot_ot_sous_traitants 
+                    WHERE ot_id = " . intval($sourceOTId) . "
+                    AND fk_socpeople IS NOT NULL
+                )";
+
+        $resql = $this->db->query($sql);
+        if (!$resql) {
+            $this->error = "Erreur lors de l'ajout des nouveaux sous-traitants: " . $this->db->lasterror();
+            return -1;
+        }
+    }
 }
 
 

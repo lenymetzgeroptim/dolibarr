@@ -676,8 +676,8 @@ class pdf_standard_ot extends ModelePDFOt
 					$max_x = 0;
 					$max_y = 0; 
 					foreach ($cardsData as $card) { 
-						if ($card['x'] > $max_x) $max_x = $card['x'];
-						if ($card['y'] > $max_y) $max_y = $card['y'];
+						if ($card['x'] > $max_x) $card['x'] = $max_x;
+						if ($card['y'] > $max_y) $card['y'] = $max_y;
 					}
 					
 					// Calculer la largeur totale disponible
@@ -1040,9 +1040,8 @@ class pdf_standard_ot extends ModelePDFOt
 											}
 											
 											$info_parts = explode(' - ', $userInfo);
-											$name_parts = explode(' ', $info_parts[0]);
-											$lastname = $name_parts[count($name_parts) - 1];
-											$firstname = $name_parts[0];
+											$lastname = $info_parts[0];
+											$firstname = $info_parts[1];
 											$name = $lastname . '.' . substr($firstname, 0, 1);
 											
 											$fonction = '';
@@ -1990,6 +1989,9 @@ class pdf_standard_ot extends ModelePDFOt
 					// Pied de page
 					$this->_pagefoot($pdf, $object, $outputlangs, true);
 					
+						// AJOUTER LE FILIGRANE SUR TOUTES LES PAGES À LA FIN
+						$this->addWatermarkToAllPages($pdf, $object);
+
 					// Fermer le PDF sans forcer de nouvelle page
 					$pdf->Close();
 					
@@ -2473,5 +2475,114 @@ class pdf_standard_ot extends ModelePDFOt
         }
 
         return !empty($habilitationRefs) ? implode("-", $habilitationRefs) : null;
+	}
+
+	/**
+	 * Vérifie si l'OT est périmé
+	 *
+	 * @param Object $object Objet OT
+	 * @return bool True si périmé, False sinon
+	 */
+	private function isOTPerime($object)
+	{
+		// Vérifier si l'OT est au statut "archivé"
+		// Utiliser la constante STATUS_ARCHIVED qui vaut 2
+		if (isset($object->status) && $object->status == 2) {
+			return true;
+		}
+		
+		// Vérifier aussi par un champ spécifique si vous en avez un
+		if (isset($object->archived) && $object->archived == 1) {
+			return true;
+		}
+		
+		return false;
+		
+		// Code de test commenté (pour forcer l'affichage sur tous les PDF)
+		// return true;
+	}
+
+	/**
+	 * Ajoute un filigrane "Périmé" sur le PDF
+	 *
+	 * @param TCPDF $pdf Instance PDF
+	 * @param string $text Texte du filigrane
+	 * @return void
+	 */
+	private function addWatermark(&$pdf, $text = 'PÉRIMÉ')
+	{
+		// Sauvegarder l'état actuel
+		$pdf->startTransaction();
+		
+		// Récupérer les dimensions de la page
+		$pageWidth = $pdf->getPageWidth();
+		$pageHeight = $pdf->getPageHeight();
+		
+		// Calculer le centre de la page
+		$centerX = $pageWidth / 2;
+		$centerY = $pageHeight / 2;
+		
+		// Configurer la transparence
+		$pdf->SetAlpha(0.3); // Transparence à 30%
+		
+		// Configurer la police pour le filigrane
+		$pdf->SetFont('helvetica', 'B', 60);
+		$pdf->SetTextColor(255, 0, 0); // Rouge
+		
+		// Calculer la largeur du texte
+		$textWidth = $pdf->GetStringWidth($text);
+		
+		// Sauvegarder la rotation actuelle
+		$pdf->StartTransform();
+		
+		// Rotation de 45 degrés au centre de la page
+		$pdf->Rotate(45, $centerX, $centerY);
+		
+		// Positionner le texte au centre
+		$x = $centerX - ($textWidth / 2);
+		$y = $centerY;
+		
+		// Afficher le texte
+		$pdf->Text($x, $y, $text);
+		
+		// Restaurer la rotation
+		$pdf->StopTransform();
+		
+		// Restaurer la transparence
+		$pdf->SetAlpha(1);
+		
+		// Restaurer les couleurs par défaut
+		$pdf->SetTextColor(0, 0, 0);
+		
+		// Valider la transaction
+		$pdf->commitTransaction();
+	}
+
+	/**
+	 * Ajoute le filigrane sur toutes les pages du PDF
+	 *
+	 * @param TCPDF $pdf Instance PDF
+	 * @param Object $object Objet OT
+	 * @return void
+	 */
+	private function addWatermarkToAllPages(&$pdf, $object)
+	{
+		 // REMETTRE LA CONDITION - AFFICHER LE FILIGRANE SEULEMENT SI OT ARCHIVÉ
+		if (!$this->isOTPerime($object)) {
+			return;
+		}
+
+		// Sauvegarder la page actuelle
+		$currentPage = $pdf->getPage();
+		$totalPages = $pdf->getNumPages();
+		
+		// Parcourir toutes les pages
+		for ($pageNum = 1; $pageNum <= $totalPages; $pageNum++) {
+			$pdf->setPage($pageNum);
+			$this->addWatermark($pdf);
+		}
+		
+		// Retourner à la page courante
+		$pdf->setPage($currentPage);
 	}
 }
