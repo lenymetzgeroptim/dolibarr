@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let userjson = window.userjson;
     let status = window.status;
     let isUserProjectManager = window.isUserProjectManager;
+    let hasOTWriteRights = window.hasOTWriteRights; // Nouveau droit
     let jsdata = window.jsdata;
     let isDataSaved = false;
     let isUniqueListCreated = false;
@@ -32,7 +33,7 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
     ))
 );
 
-if (status === 1 || status === 2 || !isUserProjectManager) {
+if (status === 1 || status === 2 || !hasOTWriteRights) {
     setTimeout(() => {
         // Masquer les boutons "Ajouter une carte" et "Ajouter une liste"
         document.querySelectorAll(".dropdown").forEach(function (dropdown) {
@@ -238,7 +239,7 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
                             items.forEach((item, index) => {
                                 // Ne pas modifier le style du nom et du téléphone
                                 if (index !== 0 && index !== 4) {
-                                    if (listStatus === 1 || listStatus === 2 || !isUserProjectManager) {
+                                    if (listStatus === 1 || listStatus === 2 || !hasOTWriteRights) {
                                         item.style.textAlign = "center";
                                         item.style.whiteSpace = "normal";
                                     }
@@ -358,7 +359,7 @@ function createUniqueUserList() {
             listTitleInput.style.textAlign = "center";
         } else {
             listTitleInput.placeholder = "";
-            if (cardStatus === 1 || cardStatus === 2 || !isUserProjectManager || status === 1 || status === 2) {
+            if (cardStatus === 1 || cardStatus === 2 || !hasOTWriteRights || status === 1 || status === 2) {
                 listTitleInput.style.textAlign = "center";
             }
         }
@@ -660,10 +661,10 @@ function createSupplierDropdown() {
 
     // Fonction pour mettre à jour le style des champs en fonction du status
     function updateFieldsStyle() {
-        const status = parseInt(cardContainer.getAttribute("data-status") || "0");
+        const cardStatus = parseInt(cardContainer.getAttribute("data-status") || "0");
         const inputs = tableContainer.querySelectorAll(".form-input");
         inputs.forEach(input => {
-            if (status === 1 || status === 2 || !isUserProjectManager || status === 1 || status === 2) {
+            if (cardStatus === 1 || cardStatus === 2 || !hasOTWriteRights || status === 1 || status === 2) {
                 input.style.textAlign = "center";
                 input.style.whiteSpace = "normal";
                 input.style.width = "100%";
@@ -993,7 +994,7 @@ function createUserList(column) {
             listTitleInput.style.textAlign = "center";
         } else {
             listTitleInput.placeholder = "";
-            if (listStatus === 1 || listStatus === 2 || !isUserProjectManager || status === 1 || status === 2) {
+            if (listStatus === 1 || listStatus === 2 || !hasOTWriteRights || status === 1 || status === 2) {
                 listTitleInput.style.textAlign = "center";
             }
         }
@@ -1060,7 +1061,7 @@ function createUserList(column) {
                 items.forEach((item, index) => {
                     // Ne pas modifier le style du nom et du téléphone
                     if (index !== 0 && index !== 4) {
-                        if (listStatus === 1 || listStatus === 2 || !isUserProjectManager || status === 1 || status === 2) {
+                        if (listStatus === 1 || listStatus === 2 || !hasOTWriteRights || status === 1 || status === 2) {
                             item.style.textAlign = "center";
                             item.style.whiteSpace = "normal";
                         } else {
@@ -1149,7 +1150,7 @@ function updateUserIdsForCard(cell, newUserId) {
 }
 
 function addItemToColumn(column, type) {
-    if (status === 1 || status === 2) {
+    if (status === 1 || status === 2 || !hasOTWriteRights) {
         return;
     }
     var columnElement = document.querySelector(`.card-column:nth-child(${column})`);
@@ -1178,7 +1179,7 @@ function addItemToColumn(column, type) {
 
 // Remplacer complètement la gestion des clics dropdown par ceci :
 document.addEventListener("click", function(event) {
-    if (status === 1 || status === 2) {
+    if (status === 1 || status === 2 || !hasOTWriteRights) {
         return;
     }
     // Vérifier si c'est un bouton dans .dropdown-content
@@ -1200,7 +1201,7 @@ function attachEventListeners() {
     document.querySelectorAll(".title-input, .list-title-input").forEach(input => {
         if (!input.dataset.listenerAttached) {
             input.addEventListener("blur", function() {
-                if (status === 1 || status === 2) {
+                if (status === 1 || status === 2 || !hasOTWriteRights) {
                     return;
                 }
                 saveData();
@@ -1213,7 +1214,7 @@ function attachEventListeners() {
     document.querySelectorAll(".card .delete-button").forEach(button => {
         if (!button.dataset.listenerAttached) {
             button.addEventListener("click", function() {
-                if (status === 1 || status === 2) {
+                if (status === 1 || status === 2 || !hasOTWriteRights) {
                     return;
                 }
                 const card = button.closest(".card");
@@ -1230,7 +1231,7 @@ function attachEventListeners() {
     document.querySelectorAll(".delete-list-button").forEach(button => {
         if (!button.dataset.listenerAttached) {
             button.addEventListener("click", function() {
-                if (status === 1 || status === 2) {
+                if (status === 1 || status === 2 || !hasOTWriteRights) {
                     return;
                 }
                 const list = button.closest(".user-list");
@@ -1247,7 +1248,7 @@ function attachEventListeners() {
     document.querySelectorAll(".user-list .remove-user").forEach(removeButton => {
         if (!removeButton.dataset.listenerAttached) {
             removeButton.addEventListener("click", function() {
-                if (status === 1 || status === 2) {
+                if (status === 1 || status === 2 || !hasOTWriteRights) {
                     return;
                 }
                 const li = this.closest("li");
@@ -1264,7 +1265,7 @@ function attachEventListeners() {
     document.querySelectorAll(".card .name-dropdown").forEach(dropdown => {
         if (!dropdown.dataset.listenerAttached) {
             dropdown.addEventListener("change", function() {
-                if (status === 1 || status === 2) {
+                if (status === 1 || status === 2 || !hasOTWriteRights) {
                     return;
                 }
                 const selectedUser = this.value;
@@ -1283,7 +1284,7 @@ function attachEventListeners() {
 document.querySelectorAll(".unique-list .list-title-input").forEach(input => {
     if (!input.dataset.listenerAttached) {
         input.addEventListener("blur", function () {
-            if (status === 1 || status === 2) {
+            if (status === 1 || status === 2 || !hasOTWriteRights) {
                 return;
             }
             saveData(); 
@@ -1295,7 +1296,7 @@ document.querySelectorAll(".unique-list .list-title-input").forEach(input => {
 attachEventListeners();
 
 function saveData() { 
-    if (status === 1 || status === 2) {
+    if (status === 1 || status === 2 || !hasOTWriteRights) {
         return;
     }
     let cardsData = [];

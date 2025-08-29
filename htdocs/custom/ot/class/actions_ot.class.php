@@ -74,6 +74,11 @@ class ActionsOT
     {
         global $langs, $user;
 
+        // Vérifier les droits OT avant d'afficher les options de création d'OT
+        if (!$user->hasRight('ot', 'ot', 'write')) {
+            return 0; // Pas de droits, ne rien afficher
+        }
+
         // Gérer l'action de création d'OT via l'ajout de contact
         if ($action == 'create_ot_from_button') {
             $this->createOTForProject($object);
@@ -97,6 +102,11 @@ class ActionsOT
     public function doActions($parameters, &$object, &$action, $hookmanager)
     {
         global $langs, $user;
+
+        // Vérifier les droits OT avant de permettre la création d'OT
+        if (!$user->hasRight('ot', 'ot', 'write')) {
+            return 0; // Pas de droits, ne rien faire
+        }
 
         // Gérer la suppression avec confirmation
         if ($action == 'deletecontact' && is_object($object) && $object->element == 'project') {
@@ -122,7 +132,12 @@ class ActionsOT
      */
     private function addDeleteContactConfirmationScript($project)
     {
-        global $langs;
+        global $langs, $user;
+        
+        // Vérifier les droits avant d'afficher le script
+        if (!$user->hasRight('ot', 'ot', 'write')) {
+            return; // Pas de droits, ne pas afficher le script
+        }
         
         echo '<script type="text/javascript">
         $(document).ready(function() {

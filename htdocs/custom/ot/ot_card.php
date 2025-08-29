@@ -694,6 +694,10 @@ if ($object->id > 0) {
     $otId = 0;
 }
 
+// Variables globales à passer au JavaScript
+$hasOTWriteRights = $user->hasRight('ot', 'ot', 'write') ? 'true' : 'false';
+$isUserProjectManager = $object->isUserProjectManager($user->id) ? 'true' : 'false';
+
 print '
 
 <div class="container-fluid">
@@ -786,10 +790,106 @@ if ($permissiontoread) {
     window.userjson = ' . $userjson . ';
     window.status = ' . json_encode($object->status) . ';
     window.isUserProjectManager = ' . json_encode($isUserManager) . ';
+    window.hasOTWriteRights = ' . $hasOTWriteRights . ';
     window.jsdata = ' . $data . ';
     </script>';
 
-    print '<script src="'.dol_buildpath('/custom/ot/js/liste_card_dynamique.js', 1).'"></script>';
+    print '<script src="'.dol_buildpath('/custom/ot/js/liste_card_dynamique.js', 1).'?v='.time().'"></script>';
+}
+
+// Ajouter une section pour la popup de création d'OT si l'utilisateur a les droits
+if ($user->hasRight('ot', 'ot', 'write')) {
+    ?>
+    <script>
+    // Script pour la popup de création d'OT depuis un projet
+    $(document).ready(function() {
+        // Ajouter un bouton "Créer OT" si on est sur une page de projet
+        if (typeof projectId !== 'undefined' && projectId > 0) {
+            // Créer le bouton de création d'OT
+            var createOTButton = $('<button type="button" class="btn btn-primary" id="createOTButton">Créer un OT</button>');
+            
+            // Ajouter le bouton à l'interface (adapter selon votre structure HTML)
+            $('.project-actions, .tabsAction').first().append(createOTButton);
+            
+            // Gérer le clic sur le bouton
+            $('#createOTButton').click(function(e) {
+                e.preventDefault();
+                
+                // Créer la popup de confirmation
+                var popup = document.createElement("div");
+                popup.style.position = "fixed";
+                popup.style.top = "50%";
+                popup.style.left = "50%";
+                popup.style.transform = "translate(-50%, -50%)";
+                popup.style.backgroundColor = "#fff";
+                popup.style.border = "1px solid #ccc";
+                popup.style.padding = "30px";
+                popup.style.zIndex = "1000";
+                popup.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+                popup.style.borderRadius = "5px";
+                popup.style.textAlign = "center";
+                popup.style.minWidth = "400px";
+                popup.innerHTML = `
+                    <h3 style="margin-bottom: 20px; color: #333;">Créer un OT</h3>
+                    <p style="margin-bottom: 30px; color: #666; line-height: 1.5;">Voulez-vous créer un OT pour ce projet ?</p>
+                    <div style="display: flex; justify-content: center; gap: 15px;">
+                        <button type="button" id="confirmCreateOT" style="
+                            background-color: rgb(40, 80, 139);
+                            color: white;
+                            border: 1px solid rgb(40, 80, 139);
+                            padding: 8px 16px;
+                            border-radius: 3px;
+                            cursor: pointer;
+                            font-size: 13px;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            min-width: 80px;
+                        ">Confirmer</button>
+                        <button type="button" id="cancelCreateOT" style="
+                            background-color: rgb(40, 80, 139);
+                            color: white;
+                            border: 1px solid rgb(40, 80, 139);
+                            padding: 8px 16px;
+                            border-radius: 3px;
+                            cursor: pointer;
+                            font-size: 13px;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            min-width: 80px;
+                        ">Annuler</button>
+                    </div>
+                `;
+                
+                // Ajouter un overlay
+                var overlay = document.createElement("div");
+                overlay.style.position = "fixed";
+                overlay.style.top = "0";
+                overlay.style.left = "0";
+                overlay.style.width = "100%";
+                overlay.style.height = "100%";
+                overlay.style.backgroundColor = "rgba(0,0,0,0.5)";
+                overlay.style.zIndex = "999";
+                
+                document.body.appendChild(overlay);
+                document.body.appendChild(popup);
+
+                document.getElementById("confirmCreateOT").addEventListener("click", function() {
+                    // Rediriger vers la création d'OT
+                    document.body.removeChild(popup);
+                    document.body.removeChild(overlay);
+                    window.location.href = "<?php echo dol_buildpath('/ot/ot_card.php', 1); ?>?action=create&projectid=" + projectId;
+                });
+
+                document.getElementById("cancelCreateOT").addEventListener("click", function() {
+                    // Fermer la popup
+                    document.body.removeChild(popup);
+                    document.body.removeChild(overlay);
+                });
+            });
+        }
+    });
+    </script>
+    <?php
 }
 
 //----  --------------------------------------------------------------------------------------------------------------------------------------------------------

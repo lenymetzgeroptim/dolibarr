@@ -2043,6 +2043,25 @@ class Ot extends CommonObject
             return -1;
         }
     }
+
+	/**
+	 * Vérifie si l'utilisateur a les droits d'écriture sur les OT.
+	 *
+	 * @param int $userId ID de l'utilisateur
+	 * @return bool True si l'utilisateur a les droits, False sinon
+	 */
+	public function hasOTWriteRights($userId)
+	{
+		global $db;
+		
+		require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
+		$user = new User($db);
+		if ($user->fetch($userId) > 0) {
+			return $user->hasRight('ot', 'ot', 'write');
+		}
+		
+		return false;
+	}
 }
 
 

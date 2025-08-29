@@ -205,6 +205,29 @@ class modOT extends DolibarrModules
 
 		// Dictionaries
 		$this->dictionaries = array();
+
+		$this->dictionaries=array(
+			'langs'=>'ot@ot',
+			// List of tables we want to see into dictonnary editor
+			'tabname'=>array( MAIN_DB_PREFIX."contact_fonction",),
+			// Label of tables
+			'tablib'=>array("fonction des constats"),
+			// Request to select fields
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'contact_fonction as f'),
+			// Sort order
+			'tabsqlsort'=>array("label ASC"),
+			// List of fields (result of select to show dictionary)
+			'tabfield'=>array("label"),
+			// List of fields (list of fields to edit a record)
+			'tabfieldvalue'=>array("label"),
+			// List of fields (list of fields for insert)
+			'tabfieldinsert'=>array("label"),
+			// Name of columns with primary key (try to always name it 'rowid')
+			'tabrowid'=>array("rowid"),
+			// Condition to show each dictionary
+			'tabcond'=>array($conf->constat->enabled),
+		);
+
 		/* Example:
 		$this->dictionaries=array(
 			'langs'=>'ot@ot',

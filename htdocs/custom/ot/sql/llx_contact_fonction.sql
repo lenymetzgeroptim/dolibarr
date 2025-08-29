@@ -19,11 +19,5 @@
 CREATE TABLE llx_contact_fonction (
     rowid integer AUTO_INCREMENT PRIMARY KEY,
     label varchar(255) NOT NULL,
-    description text,
-    status integer DEFAULT 1,
-    entity integer DEFAULT 1,
-    date_creation datetime NOT NULL,
-    tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    fk_user_creat integer NOT NULL,
-    fk_user_modif integer
+    active integer DEFAULT 1,
 ) ENGINE=innodb; 

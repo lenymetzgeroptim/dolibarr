@@ -232,7 +232,7 @@ if ($permission) {
 		<div class="tagtd noborderbottom" style="width: 150px;">
 			<?php
 				// Utilisation de Form::selectarray pour générer le dropdown des fonctions avec le style Dolibarr
-				$sql = "SELECT rowid, label FROM ".MAIN_DB_PREFIX."contact_fonction WHERE status = 1 ORDER BY label ASC";
+				$sql = "SELECT rowid, label FROM ".MAIN_DB_PREFIX."contact_fonction WHERE active = 1 ORDER BY label ASC";
 				$resql = $db->query($sql);
 				$functionOptions = array();
 				if ($resql) {
@@ -455,7 +455,7 @@ foreach ($list as $entry) {
 			INNER JOIN ".MAIN_DB_PREFIX."element_contact_fonction as ecf ON ecf.function_id = cf.rowid 
 			WHERE ecf.element_id = ".((int) $object->id)." 
 			AND ecf.contact_id = ".((int) $entry->contact_id)." 
-			AND cf.status = 1";
+			AND cf.active = 1";
 	$resql = $db->query($sql);
 	if ($resql && ($obj = $db->fetch_object($resql))) {
 		print $obj->label;

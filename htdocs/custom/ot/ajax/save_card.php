@@ -77,6 +77,12 @@ try {
         throw new Exception("Impossible de vérifier le statut de l'OT");
     }
 
+    // Check user rights for OT modification
+    require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
+    if (!$user->hasRight('ot', 'ot', 'write')) {
+        throw new Exception("Vous n'avez pas les droits pour modifier cet OT");
+    }
+
     // Commencer une transaction
     $db->begin();
 
