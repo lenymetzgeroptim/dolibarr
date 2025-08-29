@@ -176,7 +176,10 @@ class modOT extends DolibarrModules
 		}
 
 		// Array to add new pages in new tabs
-		$this->tabs = array();
+		$this->tabs = array(
+			'data'=>'project:+ot_list:Liste des OT:ot@ot:$user->rights->ot->ot->read:/ot/ot_project_list.php?projectid=__ID__'
+		);
+
 		// Example:
 		// $this->tabs[] = array('data'=>'objecttype:+tabname1:Title1:mylangfile@ot:$user->rights->ot->read:/ot/mynewtab1.php?id=__ID__');  					// To add a new tab identified by code tabname1
 		// $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@ot:$user->rights->othermodule->read:/ot/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
@@ -358,10 +361,10 @@ class modOT extends DolibarrModules
 			$r++ ,		                // 0=Menu for internal users, 1=external users, 2=both
 		);
 		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=ot,fk_leftmenu=ot',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'fk_menu'=>'fk_mainmenu=project',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',			                // This is a Left menu entry
 			'titre'=>'List des Organigramme de travail',
-			'mainmenu'=>'ot',
+			'mainmenu'=>'project',
 			'leftmenu'=>'ot_ot_list',
 			'url'=>'/ot/ot_list.php',
 			'langs'=>'ot@ot',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
