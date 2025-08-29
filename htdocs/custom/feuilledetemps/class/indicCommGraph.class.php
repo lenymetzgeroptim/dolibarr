@@ -36,12 +36,14 @@ require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedUser.class.
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 if($conf->donneesrh->enabled) require_once DOL_DOCUMENT_ROOT.'/custom/donneesrh/class/userfield.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/feuilledetemps/class/extendedexport.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
 /**
  * Class for IndicCommGraph - Vue d’ensemble des indicateurs commerciaux 
  */
 class IndicCommGraph extends CommonObject
 {
+
     /**
      * 
      */
@@ -59,13 +61,15 @@ class IndicCommGraph extends CommonObject
             'propal_open'          => $this->toStructuredArray($this->fetchPropalOpen($fk_projet)),
             'propal_signed'        => $this->toStructuredArray($this->fetchPropalSigned($fk_projet)),
             'cost_temps'           => $this->toStructuredArray($this->fetchCostTemps($fk_projet)),
+            'nb_heure'             => $this->fetchMonthlyHoursByProject($fk_projet),
+            'note_frais'          =>  $this->fetchExpenseReport($fk_projet),
         ];
 
         $vals = [];
         $factureParAnnee = [];
 
         $moisExistants = [];
-
+       
 
         foreach ($values as $key => $arr) {
             foreach ($arr as $val) {
@@ -73,7 +77,6 @@ class IndicCommGraph extends CommonObject
                 $date = $val['date']; // format YYYY-MM
                 $year = substr($date, 0, 4);
                 $month = substr($date, 5, 2);
-
 
                 $moisExistants[$year][$month] = true;
 
@@ -92,7 +95,9 @@ class IndicCommGraph extends CommonObject
                         break;
                     case 'facture':
                         $vals[$date]['facture'] = $val['total'];
-                        $factureParAnnee[$year][$month] = $val['total'];
+                        if (preg_match('/^\d{4}$/', $year) && $year >= 1900 && $year <= 2100) {
+                            $factureParAnnee[$year][$month] = $val['total'];
+                        }
                         break;
                     case 'facture_pv':
                         $vals[$date]['facture_pv'] = $val['total'];
@@ -106,66 +111,104 @@ class IndicCommGraph extends CommonObject
                     case 'reste_a_facturer':
                         $vals[$date]['reste'] = $val['total'];
                         break;
+                    case 'nb_heure':
+                        $vals[$date]['nb_heure'] = $val['total'];
+                        break;
+                    case 'note_frais':
+                        $vals[$date]['note_frais'] = $val['total'];
+                        break;
                 }
             }
         }
 
+ 
         $project = new Project($db);
         $project->fetch($fk_projet);
 
         // Identifier les années min et max
-        $invoiceyears = array_keys($factureParAnnee);
-        sort($invoiceyears);
-        $firstYear = (int) $invoiceyears[0];
-        $lastYear = (int) end($invoiceyears);
-        foreach (range($firstYear, $lastYear) as $year) {
-            $moisFin = ($year == $lastYear) ? dol_print_date($project->date_end, "%m") : 12;
-            $moisDebut = ($year == $firstYear) ? dol_print_date($project->date_start, "%m") : 1;
-            for ($m = $moisDebut; $m <= $moisFin; $m++) {
-                $month = str_pad($m, 2, '0', STR_PAD_LEFT);
-                $dateKey = "$year-$month";
-                if (!isset($vals[$dateKey])) {
-                    $vals[$dateKey] = []; // mois vide mais affiché
+       $invoiceyears = array_keys($factureParAnnee);
+        if (empty($invoiceyears)) {
+            // Aucune facture : on continue quand même sans les moyennes
+            $firstYear = $lastYear = null;
+            $courbeMoyenneParMois = [];
+        } else {
+            sort($invoiceyears);
+            $firstYear = (int) $invoiceyears[0];
+            $lastYear = (int) end($invoiceyears);
+
+            foreach (range($firstYear, $lastYear) as $year) {
+                $moisFin = ($year == $lastYear) ? dol_print_date($project->date_end, "%m") : 12;
+                $moisDebut = ($year == $firstYear) ? dol_print_date($project->date_start, "%m") : 1;
+
+                for ($m = $moisDebut; $m <= $moisFin; $m++) {
+                    $month = str_pad($m, 2, '0', STR_PAD_LEFT);
+                    $monthInt = (int)$month;
+                    if ($monthInt < 1 || $monthInt > 12) continue;
+
+                    $dateKey = "$year-$month";
+                    if (!isset($vals[$dateKey])) {
+                        $vals[$dateKey] = []; // mois vide mais affiché
+                    }
+                    if (!isset($factureParAnnee[$year][$month])) {
+                        $factureParAnnee[$year][$month] = 0; // ajouter mois avec 0
+                    }
                 }
-                if (!isset($factureParAnnee[$year][$month])) {
-                    $factureParAnnee[$year][$month] = 0; // ajouter mois avec 0
+            }
+
+            // Compléter les mois manquants pour la dernière année
+            if (!empty($factureParAnnee[$lastYear])) {
+                $moisDejaPresents = array_keys($factureParAnnee[$lastYear]);
+                $moisDejaPresents = array_map('intval', $moisDejaPresents);
+                $moisMin = !empty($moisDejaPresents) ? min($moisDejaPresents) : 12;
+
+                for ($m = 1; $m < $moisMin; $m++) {
+                    $month = str_pad($m, 2, '0', STR_PAD_LEFT);
+                    if (!isset($factureParAnnee[$lastYear][$month])) {
+                        $factureParAnnee[$lastYear][$month] = 0;
+                    }
+                }
+                ksort($factureParAnnee[$lastYear]); // TRI
+            }
+
+            // Calcul des moyennes annuelles
+            $moyenneParAnnee = [];
+            foreach ($factureParAnnee as $year => $moisData) {
+                ksort($moisData);
+                $somme = array_sum($moisData);
+
+                if ((int)$year === $lastYear) {
+                    $moisFactures = array_filter($moisData, fn($val) => $val > 0);
+                    $nbMois = !empty($moisFactures) ? (int) max(array_keys($moisFactures)) : count($moisData);
+                } else {
+                    $nbMois = count($moisData);
+                }
+
+                $moyenneParAnnee[$year] = ($nbMois > 0) ? round($somme / $nbMois, 2) : 0;
+            }
+
+            // Récupération du dernier mois réel de facturation pour l'année de fin
+            $dernierMoisFacturation = '12';
+            if (!empty($factureParAnnee[$lastYear])) {
+                $moisFactures = array_filter($factureParAnnee[$lastYear], fn($val) => $val > 0);
+                if (!empty($moisFactures)) {
+                    $dernierMoisFacturation = max(array_keys($moisFactures));
+                }
+            }
+
+            // Courbe des moyennes mensuelles
+            $courbeMoyenneParMois = [];
+            foreach ($factureParAnnee as $year => $moisData) {
+                foreach ($moisData as $month => $_) {
+                    if ((int)$year === $lastYear && (int)$month > (int)$dernierMoisFacturation) {
+                        continue;
+                    }
+                    $dateKey = "$year-$month";
+                    $courbeMoyenneParMois[$dateKey] = $moyenneParAnnee[$year];
                 }
             }
         }
 
-         // les mois manquants en début d’année de fin
-        if (!empty($factureParAnnee[$lastYear])) {
-            $moisDejaPresents = array_keys($factureParAnnee[$lastYear]);
-            $moisDejaPresents = array_map('intval', $moisDejaPresents);
-            $moisMin = !empty($moisDejaPresents) ? min($moisDejaPresents) : 12;
-
-            for ($m = 1; $m < $moisMin; $m++) {
-                $month = str_pad($m, 2, '0', STR_PAD_LEFT);
-                if (!isset($factureParAnnee[$lastYear][$month])) {
-                    $factureParAnnee[$lastYear][$month] = 0;
-                }
-            }
-            ksort($factureParAnnee[$lastYear]); // TRI
-        }
-
-        // Calcul des moyennes annuelles : somme sur tous les mois (même vides)
-        $moyenneParAnnee = [];
-        foreach ($factureParAnnee as $year => $moisData) {
-            ksort($moisData);
-            $nbMois = count($moisData);
-            $somme = array_sum($moisData);
-            $moyenneParAnnee[$year] = ($nbMois > 0) ? round($somme / $nbMois, 2) : 0;
-        }
-
-        //  Moyenne par mois
-        $courbeMoyenneParMois = [];
-        foreach ($factureParAnnee as $year => $moisData) {
-            foreach ($moisData as $month => $_) {
-                $dateKey = "$year-$month";
-                $courbeMoyenneParMois[$dateKey] = $moyenneParAnnee[$year];
-            }
-        }
-
+    
         ksort($vals);
 
         // Génération du format graphique
@@ -181,6 +224,8 @@ class IndicCommGraph extends CommonObject
             $facture_fourn  = $value['supplier'] ?? null;
             $temps          = $value['temps'] ?? null;
             $reste          = $value['reste'] ?? null;
+            $nbHeure        = $value['nb_heure'] ?? null;
+            $noteFrais      = $vals['note_frais'] ?? null;
             $facture_moy    = $courbeMoyenneParMois[$month] ?? null;
 
             $row = ['date' => $month . '-01'];
@@ -194,13 +239,14 @@ class IndicCommGraph extends CommonObject
             $row['Fact. attente compta'] = $facture_pv;
             $row['Fact. à venir']      = $facture_draft;
             $row['Fact. fournisseur']  = $facture_fourn;
-            $row['Temps consommé']     = $temps;
+            $row['Charges']     = $temps + $noteFrais;
             $row['Reste à facturer']   = $reste;
+            $row['Nb. Heure']   = $nbHeure;
             
 
             $chartData[] = $row;
         }
-
+  
         return $chartData;
     }
 
@@ -277,7 +323,7 @@ class IndicCommGraph extends CommonObject
             'Fact. attente compta'   => '#FD7F7F',
             'Fact. à venir'          => '#FCCACA',
             'Fact. fournisseur'      => '#04D0D4',
-            'Temps consommé'         => '#0005FF',
+            'Charges'         => '#0005FF',
             'Reste à facturer'       => '#FF7F00',
         ];
 
@@ -289,34 +335,152 @@ class IndicCommGraph extends CommonObject
 	 * 
 	 * @param string option to filter by option either resp or all py default
 	 */
-	public function employeeCostByProject($fk_projet)
-	{
-		global $db, $user;
+	// public function employeeCostByProject($fk_projet)
+	// {
+	// 	global $db, $user;
 
-		$sql = "SELECT sum((t.thm) * (t.element_duration / 3600)) as cost, DATE_FORMAT(t.element_date,'%Y-%m') as dm";
-		$sql .= ", SUM(hs.heure_sup_25_duration / 3600 * ".$db->ifsql("t.thm IS NULL", 0, "t.thm * 0.25").") as amount_hs25,";
-        $sql .= " SUM(hs.heure_sup_50_duration / 3600 * ".$db->ifsql("t.thm IS NULL", 0, "t.thm * 0.5").") as amount_hs50, u.rowid as userid";
+	// 	$sql = "SELECT sum((t.thm) * (t.element_duration / 3600)) as cost, DATE_FORMAT(t.element_date,'%Y-%m') as dm";
+	// 	$sql .= ", SUM(hs.heure_sup_25_duration / 3600 * ".$db->ifsql("t.thm IS NULL", 0, "t.thm * 0.25").") as amount_hs25,";
+    //     $sql .= " SUM(hs.heure_sup_50_duration / 3600 * ".$db->ifsql("t.thm IS NULL", 0, "t.thm * 0.5").") as amount_hs50, u.rowid as userid";
 
-		$sql .= " FROM ".MAIN_DB_PREFIX."element_time as t";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_task as pt ON pt.rowid = t.fk_element";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = pt.fk_projet";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe ON p.rowid = pe.fk_object";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_projet_task_time_heure_sup as hs ON hs.fk_projet_task_time = t.rowid";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec on ec.element_id = p.rowid";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u on ec.fk_socpeople = u.rowid";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc on ec.fk_c_type_contact = tc.rowid";
-		$sql .= " WHERE 1 = 1";
-        $sql .= " AND tc.element = 'project'";
-        $sql .= " AND tc.source = 'internal'";
-        $sql .= " AND tc.code = 'PROJECTLEADER'";
-        $sql .= " AND ec.element_id = '".$fk_projet."'";
+	// 	$sql .= " FROM ".MAIN_DB_PREFIX."element_time as t";
+	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_task as pt ON pt.rowid = t.fk_element";
+	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = pt.fk_projet";
+	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe ON p.rowid = pe.fk_object";
+	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_projet_task_time_heure_sup as hs ON hs.fk_projet_task_time = t.rowid";
+	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec on ec.element_id = p.rowid";
+	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u on ec.fk_socpeople = u.rowid";
+	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc on ec.fk_c_type_contact = tc.rowid";
+	// 	$sql .= " WHERE 1 = 1";
+    //     $sql .= " AND tc.element = 'project'";
+    //     $sql .= " AND tc.source = 'internal'";
+    //     $sql .= " AND tc.code = 'PROJECTLEADER'";
+    //     $sql .= " AND ec.element_id = '".$fk_projet."'";
 
-		$sql .= " AND t.elementtype = 'task'";
-        // $sql .= " t.element_date BETWEEN p.dateo AND p.datee";
-		$sql .= " GROUP BY dm, u.rowid";
-		$sql .= " ORDER BY dm";
+	// 	$sql .= " AND t.elementtype = 'task'";
+    //     // $sql .= " t.element_date BETWEEN p.dateo AND p.datee";
+	// 	$sql .= " GROUP BY dm, u.rowid";
+	// 	$sql .= " ORDER BY dm";
 	
-		dol_syslog(get_class($this)."::employeeCostByProject", LOG_DEBUG);
+	// 	dol_syslog(get_class($this)."::employeeCostByProject", LOG_DEBUG);
+	// 	$resql = $db->query($sql);
+		
+	// 	if ($resql) {
+	// 		$num = $db->num_rows($resql);
+			
+	// 		$i = 0;
+	// 		while ($i < $num) {
+	// 			$obj = $db->fetch_object($resql);
+		
+	// 			$hs25 =  $obj->amount_hs25 == null ? 0 : $obj->amount_hs25;
+	// 			$hs50 = $obj->amount_hs50 == null ? 0 : $obj->amount_hs50;
+	// 			$cost = $obj->cost + $hs25 + $hs50;
+	// 			$salaries[] = array('date' => $obj->dm, 'amount' => $cost);
+	
+	// 			$i++;
+	// 		} 
+
+	// 		return $salaries;
+	// 	} else {
+	// 		$this->error = $db->error();
+	// 		return -1;
+	// 	}
+	
+	// }
+
+    public function employeeCostByProject($fk_projet)
+    {
+        global $db, $user, $mysoc;
+
+        $sql = "SELECT t.rowid, t.element_date, t.element_duration, t.thm, DATE_FORMAT(t.element_date,'%Y-%m') as dm";
+        $sql .= ", hs.heure_sup_25_duration, hs.heure_sup_50_duration";
+        $sql .= " FROM ".MAIN_DB_PREFIX."element_time as t";
+        $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_task as pt ON pt.rowid = t.fk_element";
+        // $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = pt.fk_projet";
+        // $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe ON p.rowid = pe.fk_object";
+        $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_projet_task_time_heure_sup as hs ON hs.fk_projet_task_time = t.rowid";
+        // $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec on ec.element_id = p.rowid";
+        // $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u on ec.fk_socpeople = u.rowid";
+        // $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc on ec.fk_c_type_contact = tc.rowid";
+        // $sql .= " WHERE tc.element = 'project'";
+        // $sql .= " AND tc.source = 'internal'";
+        // $sql .= " AND tc.code = 'PROJECTLEADER'";
+        $sql .= " WHERE pt.fk_projet = '".$fk_projet."'";
+        // $sql .= " AND t.elementtype = 'task'";
+        $sql .= " ORDER BY t.element_date";
+
+        dol_syslog(get_class($this)."::employeeCostByProject", LOG_DEBUG);
+        $resql = $db->query($sql);
+
+        if ($resql) {
+            $salaries = [];
+
+            while ($obj = $db->fetch_object($resql)) {
+                $date = $obj->element_date;
+                $thm = $obj->thm ?? 0;
+                $duration = $obj->element_duration ?? 0;
+                $dm = $obj->dm;
+
+                $hs25 = $obj->heure_sup_25_duration ? ($obj->heure_sup_25_duration / 3600 * $thm * 0.25) : 0;
+                $hs50 = $obj->heure_sup_50_duration ? ($obj->heure_sup_50_duration / 3600 * $thm * 0.5) : 0;
+
+                $standard_cost = $thm * ($duration / 3600);
+
+                // Vérifier si dimanche ou jour férié
+                $isSunday = dol_print_date(strtotime($date), '%a') === 'Dim';
+
+                $isPublicHoliday = num_public_holiday(strtotime($date) + 86400, strtotime($date) + 172800, $mysoc->country_code, 0, 0, 0);
+                // var_dump(dol_print_date(strtotime($date), '%a'));
+                $extra_cost = 0;
+       
+                if ($isSunday || $isPublicHoliday) {
+                    $extra_cost = $standard_cost;
+                }
+
+                $total = $standard_cost + $hs25 + $hs50 + $extra_cost;
+
+                if (!isset($salaries[$dm])) $salaries[$dm] = 0;
+                $salaries[$dm] += $total;
+            }
+
+            // Remise en tableau avec clé => valeur
+            $data = [];
+            foreach ($salaries as $dm => $amount) {
+                $data[] = ['date' => $dm, 'amount' => $amount];
+            }
+
+            return $data;
+        } else {
+            $this->error = $db->error();
+            return -1;
+        }
+    }
+
+
+    /**
+	 * get expense report
+	 * 
+	 * @return array date and exepnense report amount 
+	 */
+	public function fetchExpenseReport($fk_projet)
+	{
+		global $db;
+
+		$sql = "SELECT date_format(r.date_debut,'%Y-%m') as dm, sum(de.total_ht) as amount_ht";
+		$sql .= " FROM ".MAIN_DB_PREFIX."expensereport as r";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."expensereport_det as de ON r.rowid = de.fk_expensereport";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p on de.fk_projet = p.rowid";
+	
+		$sql .= " WHERE p.rowid = '".$fk_projet."'";
+		
+		$sql .= " AND r.entity IN (".getEntity('expensereport').")";
+		$sql .= " AND r.fk_statut = 6";
+        $sql .= " AND r.date_debut BETWEEN p.dateo AND p.datee";
+		$sql .= " GROUP BY dm";
+  
+
+
+		dol_syslog(get_class($this)."::fetchExpenseReport", LOG_DEBUG);
 		$resql = $db->query($sql);
 		
 		if ($resql) {
@@ -326,21 +490,56 @@ class IndicCommGraph extends CommonObject
 			while ($i < $num) {
 				$obj = $db->fetch_object($resql);
 		
-				$hs25 =  $obj->amount_hs25 == null ? 0 : $obj->amount_hs25;
-				$hs50 = $obj->amount_hs50 == null ? 0 : $obj->amount_hs50;
-				$cost = $obj->cost + $hs25 + $hs50;
-				$salaries[] = array('date' => $obj->dm, 'amount' => $cost);
-	
+				$exepnesereport[] = array('date' => $obj->dm, 'amount' => $obj->amount_ht);
+				
 				$i++;
 			} 
-
-			return $salaries;
+			return $exepnesereport;
 		} else {
 			$this->error = $db->error();
 			return -1;
 		}
-	
 	}
+
+
+    // Par nb Heure
+        /**
+     * Récupère les heures totales travaillées par mois pour un projet donné.
+     *
+     * @param DoliDB $db         Objet base de données Dolibarr
+     * @param int    $projectId  ID du projet (fk_projet)
+     * @return array             Tableau associatif ['YYYY-MM' => heures]
+     */
+    public function fetchMonthlyHoursByProject($fk_projet) {
+        global $db;
+        $data = [];
+
+        $sql = "
+            SELECT 
+                DATE_FORMAT(t.element_date, '%Y-%m') AS mois,
+                SUM(t.element_duration) / 3600 AS heures_total
+            FROM llx_element_time AS t
+            LEFT JOIN llx_projet_task AS p ON p.rowid = t.fk_element
+            WHERE p.fk_projet = ".((int) $fk_projet)."
+            GROUP BY mois
+            ORDER BY mois
+        ";
+    
+        dol_syslog("fetchMonthlyHoursByProject sql=".$sql, LOG_DEBUG);
+
+        $resql = $db->query($sql);
+        if (!$resql) {
+            dol_print_error($db);
+            return $data;
+        }
+
+        while ($obj = $db->fetch_object($resql)) {
+            // $data['nb_heure'][$obj->mois] = round($obj->heures_total, 2);
+            $data[] = ['date' => $obj->mois, 'total' => round($obj->heures_total, 2)];
+        }
+
+        return $data;
+    }
 
     
     //par commande
@@ -365,12 +564,12 @@ class IndicCommGraph extends CommonObject
             return []; // Date absente
         }
 
-        $sql = "SELECT c.rowid as commande_id, c.total_ht, c.date_livraison, ce.date_start";
+        $sql = "SELECT c.rowid as commande_id, c.total_ht, c.date_livraison, ce.date_start, c.date_creation, c.fk_statut as statut";
         $sql .= " FROM " . MAIN_DB_PREFIX . "commande as c";
         $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "commande_extrafields as ce ON c.rowid = ce.fk_object";
         $sql .= " WHERE c.fk_projet = " . ((int)$fk_projet);
         // $sql .= " AND p.dateo <= ce.date_start AND p.datee >= c.date_livraison";
-
+        
         $resql = $db->query($sql);
         if (!$resql) return [];
 
@@ -380,7 +579,12 @@ class IndicCommGraph extends CommonObject
         while ($obj = $db->fetch_object($resql)) {
             $start = !empty($obj->date_start) ? new DateTimeImmutable(dol_print_date($obj->date_start, '%Y-%m-%d')) : null;
             $end   = !empty($obj->date_livraison) ? new DateTimeImmutable(dol_print_date($obj->date_livraison, '%Y-%m-%d')) : null;
-            $commandeTotal = (float)$obj->total_ht;
+        
+            // Toute les commandes except à l'état brouillon.
+            if($obj->statut > 0) {
+                $commandeTotal = (float)$obj->total_ht;
+            }
+            
 
             if ($start && $end && $commandeTotal > 0) {
                 // Répartition commande sur sa période
@@ -403,7 +607,10 @@ class IndicCommGraph extends CommonObject
                     }
                 }
 
-                $sumTotalCommande += $commandeTotal;
+                 if($obj->statut > 0) {
+                    $sumTotalCommande += $commandeTotal;
+                }
+                
                 $sumTotalFacture  += $totalFacture;
             }
         }
@@ -505,7 +712,7 @@ class IndicCommGraph extends CommonObject
         $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "propal_extrafields as pfe ON p.rowid = pfe.fk_object";
         $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "projet as pr ON pr.rowid = p.fk_projet";
         $sql .= " WHERE p.fk_statut = 1 AND p.fk_projet = " . ((int)$fk_projet);
-        $sql .= " AND pr.dateo <= pfe.datedmarrage AND pr.datee >=  p.date_livraison";
+        // $sql .= " AND pr.dateo <= pfe.datedmarrage AND pr.datee >=  p.date_livraison";
 
         $resql = $db->query($sql);
         while ($obj = $db->fetch_object($resql)) {
@@ -531,7 +738,7 @@ class IndicCommGraph extends CommonObject
         $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "propal_extrafields as pfe ON p.rowid = pfe.fk_object";
         $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "projet as pr ON pr.rowid = p.fk_projet";
         $sql .= " WHERE p.fk_statut = 2 AND p.fk_projet = " . ((int)$fk_projet);
-        $sql .= " AND pr.dateo <= pfe.datedmarrage AND pr.datee >=  p.date_livraison";
+        // $sql .= " AND pr.dateo <= pfe.datedmarrage AND pr.datee >=  p.date_livraison";
 
         $resql = $db->query($sql);
         while ($obj = $db->fetch_object($resql)) {
@@ -552,23 +759,49 @@ class IndicCommGraph extends CommonObject
         global $db;
         $data = [];
 
-        $sql = "SELECT f.total_ht, f.datef";
-        $sql .= " FROM " . MAIN_DB_PREFIX . "facture as f";
+     $sql = "SELECT f.rowid, DATE_FORMAT(f.datef,'%Y-%m') as dm, SUM(f.total_ht) as amount_ht, f.fk_projet";
+		$sql .= " FROM ".MAIN_DB_PREFIX."societe as s";
+		$sql .= ", ".MAIN_DB_PREFIX."facture as f";
         $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "projet as p ON f.fk_projet = p.rowid";
         $sql .= " WHERE f.fk_projet = " . ((int)$fk_projet);
-        // $sql .= " AND f.datef BETWEEN p.dateo AND p.datee";
+		$sql .= " AND f.fk_soc = s.rowid"; 
+		
+		$sql.= " GROUP BY DATE_FORMAT(f.datef,'%Y-%m')";
 
         $resql = $db->query($sql);
-        while ($obj = $db->fetch_object($resql)) {
-            $start = !empty($obj->datef) ? new DateTimeImmutable(dol_print_date($obj->datef, '%Y-%m-%d')) : null;
-            if ($start && $obj->total_ht > 0) {
-                $spread = $this->spreadAmountOverMonths($start, $start, $obj->total_ht);
-                foreach ($spread as $month => $val) $data[$month] = ($data[$month] ?? 0) + $val;
+        if ($resql) {
+            while ($obj = $db->fetch_object($resql)) {
+                $data[$obj->dm] = $obj->amount_ht;
             }
+        } else {
+            dol_print_error($db, 'Erreur SQL : '.$sql);
         }
 
         return $data;
     }
+
+    // public function fetchFacture($fk_projet)
+    // {
+    //     global $db;
+    //     $data = [];
+
+    //     $sql = "SELECT f.total_ht, f.datef";
+    //     $sql .= " FROM " . MAIN_DB_PREFIX . "facture as f";
+    //     $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "projet as p ON f.fk_projet = p.rowid";
+    //     $sql .= " WHERE f.fk_projet = " . ((int)$fk_projet);
+    //     // $sql .= " AND f.datef BETWEEN p.dateo AND p.datee";
+
+    //     $resql = $db->query($sql);
+    //     while ($obj = $db->fetch_object($resql)) {
+    //         $start = !empty($obj->datef) ? new DateTimeImmutable(dol_print_date($obj->datef, '%Y-%m-%d')) : null;
+    //         if ($start && $obj->total_ht > 0) {
+    //             $spread = $this->spreadAmountOverMonths($start, $start, $obj->total_ht);
+    //             foreach ($spread as $month => $val) $data[$month] = ($data[$month] ?? 0) + $val;
+    //         }
+    //     }
+
+    //     return $data;
+    // }
 
     public function fetchFactureDraft($fk_projet)
     {

@@ -92,49 +92,52 @@ if (empty($date_end)) {
 
 $id = GETPOST('id', 'int');
 
-$vals = array();
-foreach($values as $key => $arr) {
-	foreach($arr as $val) {
+// $vals = array();
+// foreach($values as $key => $arr) {
+// 	foreach($arr as $val) {
 
-		isset($val['total']) ? $val['total'] = $val['total'] :  $val['total'] = 0;
-		switch ($key) {
-			case 'commande':
-				$vals[$val['date']]['commande'] = $val['total']; 
-			break;
-			case 'facture_fournisseur':
-				$vals[$val['date']]['supplier'] = $val['total']; 
-			break;
-			case 'propal_open':
-				$vals[$val['date']]['open'] = $val['total']; 
-				// var_dump($val['total']);
-			break;
-			case 'propal_signed':
-				$vals[$val['date']]['signed'] = $val['total']; 
-			break;
-			case 'facture':
-				$vals[$val['date']]['facture'] = $val['total']; 
-			break;
-			case 'facture_pv':
-				$vals[$val['date']]['facture_pv'] = $val['total']; 
-			break;
-			case 'facture_draft':
-				$vals[$val['date']]['facture_d'] = $val['total']; 
-			break;
-		}
-	}
-}
+// 		isset($val['total']) ? $val['total'] = $val['total'] :  $val['total'] = 0;
+// 		switch ($key) {
+// 			case 'commande':
+// 				$vals[$val['date']]['commande'] = $val['total']; 
+// 			break;
+// 			case 'facture_fournisseur':
+// 				$vals[$val['date']]['supplier'] = $val['total']; 
+// 			break;
+// 			case 'propal_open':
+// 				$vals[$val['date']]['open'] = $val['total']; 
+// 				// var_dump($val['total']);
+// 			break;
+// 			case 'propal_signed':
+// 				$vals[$val['date']]['signed'] = $val['total']; 
+// 			break;
+// 			case 'facture':
+// 				$vals[$val['date']]['facture'] = $val['total']; 
+// 			break;
+// 			case 'facture_pv':
+// 				$vals[$val['date']]['facture_pv'] = $val['total']; 
+// 			break;
+// 			case 'facture_draft':
+// 				$vals[$val['date']]['facture_d'] = $val['total']; 
+// 			break;
+// 			case 'nb_heure':
+// 				$vals[$val['date']]['nbHeure'] = $val['total']; 
+// 			break;
+// 		}
+// 	}
+// }
         
-$chartData = [];
-foreach ($vals as $month => $fields) {
-    $row = ['date' => $month . '-01']; 
+// $chartData = [];
+// foreach ($vals as $month => $fields) {
+//     $row = ['date' => $month . '-01']; 
 
-    // Ajoute toutes les colonnes dynamiquement
-    foreach ($fields as $key => $value) {
-        $row[$key] = (float) $value;
-    }
+//     // Ajoute toutes les colonnes dynamiquement
+//     foreach ($fields as $key => $value) {
+//         $row[$key] = (float) $value;
+//     }
 
-    // $chartData[] = $row;
-}
+//     // $chartData[] = $row;
+// }
 
 $commGraph = new IndicCommGraph($db);
 $chartData = $commGraph->fetchAllChartDataByMonth($id);
