@@ -64,6 +64,19 @@ try {
         throw new Exception("ID OT manquant");
     }
 
+    // Check OT status before allowing modifications
+    $sql = "SELECT status FROM " . MAIN_DB_PREFIX . "ot_ot WHERE rowid = " . intval($otId);
+    $result = $db->query($sql);
+    
+    if ($result) {
+        $obj = $db->fetch_object($result);
+        if ($obj && ($obj->status == 1 || $obj->status == 2)) {
+            throw new Exception("Impossible de modifier un OT validé ou archivé (statut: " . $obj->status . ")");
+        }
+    } else {
+        throw new Exception("Impossible de vérifier le statut de l'OT");
+    }
+
     // Commencer une transaction
     $db->begin();
 

@@ -14,9 +14,6 @@ document.addEventListener("DOMContentLoaded", function() {
     let jsdataFiltered = users.filter(user => user.source !== "external"); 
     jsdata = jsdataFiltered;
 
-
-
-
 let columnsContainer = document.querySelector(".card-columns") ||
     document.querySelector("#card-columns") ||
     document.querySelector(".main-columns-container");
@@ -29,18 +26,13 @@ if (!columnsContainer) {
     document.body.appendChild(columnsContainer);
 }
 
-
 const uniqueJsData = jsdata.filter((value, index, self) => 
     index === self.findIndex((t) => (
         t.fk_socpeople === value.fk_socpeople
     ))
 );
 
-
-
-
-    if (status === 1 || status === 2 || !isUserProjectManager) {
-    
+if (status === 1 || status === 2 || !isUserProjectManager) {
     setTimeout(() => {
         // Masquer les boutons "Ajouter une carte" et "Ajouter une liste"
         document.querySelectorAll(".dropdown").forEach(function (dropdown) {
@@ -83,7 +75,6 @@ const uniqueJsData = jsdata.filter((value, index, self) =>
     }, 500); 
 }
 
-
 function displayUserList() {
     const existingUniqueList = document.querySelector(".user-list.unique-list");
 
@@ -104,7 +95,7 @@ function displayUserList() {
                     // Remplir le titre de la liste
                     const titleInput = list.querySelector(".list-title-input");
                     if (titleInput) {
-                        titleInput.value = cell.title || "Organigramme - Liste des utilisateurs"; // Titre par défaut si vide
+                        titleInput.value = cell.title || "Liste des utilisateurs"; // Titre par défaut si vide
                     }
 
                     // Ajouter la liste au conteneur
@@ -117,7 +108,7 @@ function displayUserList() {
             uniqueList.style.marginTop = "20px";
             const titleInput = uniqueList.querySelector(".list-title-input");
             if (titleInput) {
-                titleInput.value = "Organigramme - Liste des utilisateurs";
+                titleInput.value = "Liste des utilisateurs";
             }
             columnsContainer.appendChild(uniqueList);
             saveData();
@@ -128,35 +119,34 @@ function displayUserList() {
         uniqueList.style.marginTop = "20px";
         const titleInput = uniqueList.querySelector(".list-title-input");
         if (titleInput) {
-            titleInput.value = "Organigramme - Liste des utilisateurs";
+            titleInput.value = "Liste des utilisateurs";
         }
         columnsContainer.appendChild(uniqueList);
         saveData();
     }
 }
 
-
 // Appeler la fonction pour afficher la liste lors du chargement de la page
 displayUserList();
 
-    // Trier les utilisateurs par ordre croissant de nom (lastname)
-    userjson.sort(function(a, b) {
-        if (a.lastname < b.lastname) return -1;
-        if (a.lastname > b.lastname) return 1;
-        return 0;
-    });
+// Trier les utilisateurs par ordre croissant de nom (lastname)
+userjson.sort(function(a, b) {
+    if (a.lastname < b.lastname) return -1;
+    if (a.lastname > b.lastname) return 1;
+    return 0;
+});
 
-    // Générer les options du dropdown après tri des utilisateurs
-    let alluser = `<option value="" disabled selected>Sélectionner un utilisateur</option>`;
-    userjson.forEach(function(user) {
-        alluser += `<option value="${user.rowid}">${user.lastname} ${user.firstname}</option>`;
-    });
+// Générer les options du dropdown après tri des utilisateurs
+let alluser = `<option value="" disabled selected>Sélectionner un utilisateur</option>`;
+userjson.forEach(function(user) {
+    alluser += `<option value="${user.rowid}">${user.lastname} ${user.firstname}</option>`;
+});
 
-    // Générer les options de  uniqueJsData
-    let userOptions = `<option value="" disabled selected>Sélectionner un utilisateur</option>`;
-    uniqueJsData.forEach(function(user) {
-        userOptions += `<option value="${user.fk_socpeople}">${user.firstname} ${user.lastname}</option>`;
-    });
+// Générer les options de  uniqueJsData
+let userOptions = `<option value="" disabled selected>Sélectionner un utilisateur</option>`;
+uniqueJsData.forEach(function(user) {
+    userOptions += `<option value="${user.fk_socpeople}">${user.firstname} ${user.lastname}</option>`;
+});
 
 if (typeof cellData !== "undefined" && cellData.length > 0) {
     const addedCardTitles = new Set();
@@ -165,187 +155,175 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
     cellData.forEach(function(cell) {
         let column = cell.x;
 
-    if (cell.type === "card") {                                          
-  
-    if (!addedCardTitles.has(cell.title)) {
-        const card = createEmptyCard(column);
-        const titleInput = card.querySelector(".title-input");
-        titleInput.value = cell.title;
+        if (cell.type === "card") {                                          
+            if (!addedCardTitles.has(cell.title)) {
+                const card = createEmptyCard(column);
+                const titleInput = card.querySelector(".title-input");
+                titleInput.value = cell.title;
 
-        const nameDropdown = card.querySelector(".name-dropdown");
-        nameDropdown.innerHTML = userOptions; // Use filtered project users
+                const nameDropdown = card.querySelector(".name-dropdown");
+                nameDropdown.innerHTML = userOptions; // Use filtered project users
 
-        if (cell.userId) {  
-            const userId = cell.userId;  
-       
-
-            const user = userjson.find(u => u.rowid == userId);
-            if (user) {
-                nameDropdown.value = userId;
-                
-                // Afficher les habilitations et le contrat
-                const habilitationInfo = card.querySelector(".habilitation-info");
-                const contratInfo = card.querySelector(".contrat-info");
-                
-                if (habilitationInfo && contratInfo) {
-                    habilitationInfo.textContent = `Habilitations: ${cell.habilitations || user.habilitations || "Non spécifié"}`;
-                    contratInfo.textContent = `Contrat: ${cell.contrat || user.contrat || "Non spécifié"}`;
-                    
-                    // Sauvegarder dans le dataset
-                    card.dataset.habilitations = cell.habilitations || user.habilitations || "";
-                    card.dataset.contrat = cell.contrat || user.contrat || "";
-                }
-            } else {
-                console.warn("⚠️ User introuvable avec ID :", userId);
-            }
-        } else {
-        }
-
-        const columnElement = document.querySelector(`.card-column:nth-child(${column})`);
-        if (columnElement) {
-            columnElement.appendChild(card);
-        }
-
-        addedCardTitles.add(cell.title);
-    }
-}
-
-else if (cell.type === "list") {
-    if (!addedListTitles.has(cell.title)) {
-        const list = createUserList(column);
-        const titleInput = list.querySelector(".list-title-input");
-        titleInput.value = cell.title;
-
-        const ulElement = list.querySelector("ul");
-        ulElement.innerHTML = "";
-
-        cell.userIds.forEach(function (userId) {
-            const user = uniqueJsData.find(u => u.fk_socpeople === userId);
-
-            if (user) {
-                const li = document.createElement("li");
-                li.setAttribute("data-user-id", userId);
-                li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
-
-                // Utiliser le même affichage que dans createUserList
-                li.innerHTML = `
-                    <div style="flex: 1; text-align: center; white-space: normal;" title="${user.lastname} ${user.firstname}">
-                        ${user.lastname}<br>${user.firstname}
-                    </div>
-                    <div style="flex: 1; text-align: center; white-space: normal;" title="${user.fonction || "Non définie"}">
-                        ${user.fonction || "Non définie"}
-                    </div>
-                    <div style="flex: 1; text-align: center; white-space: normal;" title="${user.contrat || "Non défini"}">
-                        ${user.contrat || "Non défini"}
-                    </div>
-                    <div style="flex: 1; text-align: center; white-space: normal;" title="${user.habilitation || "Aucune habilitation"}">
-                        ${user.habilitation || "Aucune habilitation"}
-                    </div>
-                    <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
-                        ${user.phone || "Non défini"}
-                    </div>
-                `;
-
-                // Ajouter une fonction pour gérer le style en fonction du statut
-                function updateListItemsStyle() {
-                    const listStatus = parseInt(list.getAttribute("data-status"));
-                    const items = list.querySelectorAll("li > div");
-                    
-                    items.forEach((item, index) => {
-                        // Ne pas modifier le style du nom et du téléphone
-                        if (index !== 0 && index !== 4) {
-                            if (listStatus === 1 || listStatus === 2 || !isUserProjectManager) {
-                                item.style.textAlign = "center";
-                                item.style.whiteSpace = "normal";
-                            }
+                if (cell.userId) {  
+                    const userId = cell.userId;  
+                    const user = userjson.find(u => u.rowid == userId);
+                    if (user) {
+                        nameDropdown.value = userId;
+                        
+                        // Afficher les habilitations et le contrat
+                        const habilitationInfo = card.querySelector(".habilitation-info");
+                        const contratInfo = card.querySelector(".contrat-info");
+                        
+                        if (habilitationInfo && contratInfo) {
+                            habilitationInfo.textContent = `Habilitations: ${cell.habilitations || user.habilitations || "Non spécifié"}`;
+                            contratInfo.textContent = `Contrat: ${cell.contrat || user.contrat || "Non spécifié"}`;
+                            
+                            // Sauvegarder dans le dataset
+                            card.dataset.habilitations = cell.habilitations || user.habilitations || "";
+                            card.dataset.contrat = cell.contrat || user.contrat || "";
                         }
-                    });
+                    } else {
+                        console.warn("⚠️ User introuvable avec ID :", userId);
+                    }
                 }
 
-                // Observer les changements dattribut data-status sur la liste
-                const observer = new MutationObserver(updateListItemsStyle);
-                observer.observe(list, { attributes: true, attributeFilter: ["data-status"] });
+                const columnElement = document.querySelector(`.card-column:nth-child(${column})`);
+                if (columnElement) {
+                    columnElement.appendChild(card);
+                }
 
-                // Appliquer le style initial
-                updateListItemsStyle();
-
-                // Ajouter le bouton de suppression
-                const removeSpan = document.createElement("span");
-                removeSpan.textContent = "×";
-                removeSpan.style = "color:red; cursor:pointer;";
-                removeSpan.className = "remove-user";
-                li.appendChild(removeSpan);
-
-                ulElement.appendChild(li);
-
-                // Ajouter une ligne vide entre les utilisateurs
-                const emptyRow = document.createElement("li");
-                emptyRow.style = "height: 10px;"; // Hauteur de la ligne vide
-                ulElement.appendChild(emptyRow);
-            } else {
-                console.warn(`Utilisateur avec ID ${userId} introuvable dans uniqueJsData.`);
+                addedCardTitles.add(cell.title);
             }
-        });
+        } else if (cell.type === "list") {
+            if (!addedListTitles.has(cell.title)) {
+                const list = createUserList(column);
+                const titleInput = list.querySelector(".list-title-input");
+                titleInput.value = cell.title;
 
-        attachUserRemoveListeners(list);
-        const columnElement = document.querySelector(`.card-column:nth-child(${column})`);
-        if (columnElement) {
-            columnElement.appendChild(list);
-        }
+                const ulElement = list.querySelector("ul");
+                ulElement.innerHTML = "";
 
-        addedListTitles.add(cell.title);
-    }
-}
- else if (cell.type === "listeunique") {
-    // Vérifie si une liste unique avec ce titre existe déjà dans le DOM
-    const existingUniqueList = document.querySelector(`.user-list.unique-list[data-list-id="${cell.title}"]`);
+                cell.userIds.forEach(function (userId) {
+                    const user = uniqueJsData.find(u => u.fk_socpeople === userId);
 
-    if (isUniqueListCreated && !existingUniqueList) {
-      
-        const list = createUniqueUserList(); // recréer la structure
-        const titleInput = list.querySelector(".list-title-input");
-        titleInput.value = cell.title;
+                    if (user) {
+                        const li = document.createElement("li");
+                        li.setAttribute("data-user-id", userId);
+                        li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
 
-        const ulElement = list.querySelector("ul");
-        ulElement.innerHTML = ""; // Vider la liste
+                        // Utiliser le même affichage que dans createUserList
+                        li.innerHTML = `
+                            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.lastname} ${user.firstname}">
+                                ${user.lastname}<br>${user.firstname}
+                            </div>
+                            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.fonction || "Non définie"}">
+                                ${user.fonction || "Non définie"}
+                            </div>
+                            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.contrat || "Non défini"}">
+                                ${user.contrat || "Non défini"}
+                            </div>
+                            <div style="flex: 1; text-align: center; white-space: normal;" title="${user.habilitation || "Aucune habilitation"}">
+                                ${user.habilitation || "Aucune habilitation"}
+                            </div>
+                            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
+                                ${user.phone || "Non défini"}
+                            </div>
+                        `;
 
-        // Remplir avec les utilisateurs de cellData
-        cell.userIds.forEach(function(userId) {
-            const user = uniqueJsData.find(u => u.fk_socpeople === userId);
-            if (user) {
-                const li = document.createElement("li");
-                li.setAttribute("data-user-id", userId);
-                li.innerHTML = `
-                     <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
-                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
-                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
-                    <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-                    <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
-                `;
-                ulElement.appendChild(li);
-            } else {
-                console.warn(`Utilisateur avec ID ${userId} introuvable dans uniqueJsData.`);
+                        // Ajouter une fonction pour gérer le style en fonction du statut
+                        function updateListItemsStyle() {
+                            const listStatus = parseInt(list.getAttribute("data-status"));
+                            const items = list.querySelectorAll("li > div");
+                            
+                            items.forEach((item, index) => {
+                                // Ne pas modifier le style du nom et du téléphone
+                                if (index !== 0 && index !== 4) {
+                                    if (listStatus === 1 || listStatus === 2 || !isUserProjectManager) {
+                                        item.style.textAlign = "center";
+                                        item.style.whiteSpace = "normal";
+                                    }
+                                }
+                            });
+                        }
+
+                        // Observer les changements dattribut data-status sur la liste
+                        const observer = new MutationObserver(updateListItemsStyle);
+                        observer.observe(list, { attributes: true, attributeFilter: ["data-status"] });
+
+                        // Appliquer le style initial
+                        updateListItemsStyle();
+
+                        // Ajouter le bouton de suppression
+                        const removeSpan = document.createElement("span");
+                        removeSpan.textContent = "×";
+                        removeSpan.style = "color:red; cursor:pointer;";
+                        removeSpan.className = "remove-user";
+                        li.appendChild(removeSpan);
+
+                        ulElement.appendChild(li);
+
+                        // Ajouter une ligne vide entre les utilisateurs
+                        const emptyRow = document.createElement("li");
+                        emptyRow.style = "height: 10px;"; // Hauteur de la ligne vide
+                        ulElement.appendChild(emptyRow);
+                    } else {
+                        console.warn(`Utilisateur avec ID ${userId} introuvable dans uniqueJsData.`);
+                    }
+                });
+
+                attachUserRemoveListeners(list);
+                const columnElement = document.querySelector(`.card-column:nth-child(${column})`);
+                if (columnElement) {
+                    columnElement.appendChild(list);
+                }
+
+                addedListTitles.add(cell.title);
             }
-        });
+        } else if (cell.type === "listeunique") {
+            // Vérifie si une liste unique avec ce titre existe déjà dans le DOM
+            const existingUniqueList = document.querySelector(`.user-list.unique-list[data-list-id="${cell.title}"]`);
 
-        if (columnsContainer) {
-            columnsContainer.appendChild(list);
-        } else {
-            console.error("Le conteneur parent des colonnes a pas été trouvé.");
+            if (isUniqueListCreated && !existingUniqueList) {
+                const list = createUniqueUserList(); // recréer la structure
+                const titleInput = list.querySelector(".list-title-input");
+                titleInput.value = cell.title;
+
+                const ulElement = list.querySelector("ul");
+                ulElement.innerHTML = ""; // Vider la liste
+
+                // Remplir avec les utilisateurs de cellData
+                cell.userIds.forEach(function(userId) {
+                    const user = uniqueJsData.find(u => u.fk_socpeople === userId);
+                    if (user) {
+                        const li = document.createElement("li");
+                        li.setAttribute("data-user-id", userId);
+                        li.innerHTML = `
+                            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.firstname} ${user.lastname}</div>
+                            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
+                            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
+                            <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
+                            <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
+                        `;
+                        ulElement.appendChild(li);
+                    } else {
+                        console.warn(`Utilisateur avec ID ${userId} introuvable dans uniqueJsData.`);
+                    }
+                });
+
+                if (columnsContainer) {
+                    columnsContainer.appendChild(list);
+                } else {
+                    console.error("Le conteneur parent des colonnes a pas été trouvé.");
+                }
+            } 
         }
-        
-    } 
-}
     });
 }
-
-
 
 function createUniqueUserList() {
     const list = document.createElement("div");
     list.className = "user-list card unique-list";
 
-    
     const lineBreak = document.createElement("br");
     list.appendChild(lineBreak);
 
@@ -364,17 +342,23 @@ function createUniqueUserList() {
     listTitleInput.placeholder = ""; // On enlève le placeholder par défaut
     listTitleInput.required = true;
     listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
-   // Fonction pour gérer laffichage du placeholder et le style
+    if (status === 1 || status === 2) {
+        listTitleInput.disabled = true;
+        listTitleInput.style.backgroundColor = "#f5f5f5";
+        listTitleInput.style.cursor = "not-allowed";
+    }
+
+    // Fonction pour gérer laffichage du placeholder et le style
     function updatePlaceholder() {
         const card = list.closest(".card");
         const cardStatus = card ? parseInt(card.getAttribute("data-status")) : 0;
         
-        if (listTitleInput.value === "" && cardStatus === 0) {
+        if (listTitleInput.value === "" && cardStatus === 0 && status !== 1 && status !== 2) {
             listTitleInput.placeholder = "Titre de la liste";
             listTitleInput.style.textAlign = "center";
         } else {
             listTitleInput.placeholder = "";
-            if (cardStatus === 1 || cardStatus === 2 || !isUserProjectManager) {
+            if (cardStatus === 1 || cardStatus === 2 || !isUserProjectManager || status === 1 || status === 2) {
                 listTitleInput.style.textAlign = "center";
             }
         }
@@ -397,7 +381,7 @@ function createUniqueUserList() {
     // Créer une légende pour décrire les informations
     const legend = document.createElement("div");
     legend.className = "list-legend";
-    legend.style = "display: flex; justify-content: space-between; padding: 10px; font-weight: bold; color: #333; margin-bottom: 10px; text-align: center;"; // Centrer la légende
+    legend.style = "display: flex; justify-content: space-between; padding: 10px; font-weight: bold; color: #333; margin-bottom: 10px; text-align: center;";
     legend.innerHTML = `
         <div style="flex: 1; text-align: center;">Nom Prénom</div>
         <div style="flex: 1; text-align: center;">Fonction</div>
@@ -409,16 +393,13 @@ function createUniqueUserList() {
     const ulElement = document.createElement("ul");
     ulElement.style = "list-style: none; padding: 0; margin: 0;";
 
-
-
     // Remplir les utilisateurs de la liste depuis uniqueJsData
     uniqueJsData.forEach(user => {
-
         // Vérifier si lutilisateur nest pas Q3SE ou PCR
         if (user.libelle !== "ResponsableQ3SE" && user.libelle !== "PCRRéférent") {
             const li = document.createElement("li");
             li.setAttribute("data-user-id", user.fk_socpeople);
-            li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;"; // Centrer les éléments de utilisateur
+            li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
 
             // Créer une ligne avec les informations de utilisateur, réparties uniformément
             li.innerHTML = `
@@ -445,11 +426,9 @@ function createUniqueUserList() {
     return list;
 }
 
-
 function deleteUniqueList(uniqueListId, list) {
-      list.remove();
+    list.remove();
 }
-
 
 function updateCards() {
     var cardHeaders = {
@@ -558,46 +537,44 @@ function updateCards() {
                 var cardBody = card.querySelector(".card-body");
 
                 if (cardBody) {
-                if (contact && contact.type === "cardprincipale") {
-                    // Vérifier si la carte est vide (pas de firstname, lastname ou phone)
-                    if (!contact.firstname && !contact.lastname && !contact.phone) {
-                        let message = "";
-                        switch (role) {
-                            case "ResponsableAffaire":
-                                message = "Pas de Responsable Affaire";
-                                break;
-                            case "ResponsableQ3SE":
-                                message = "Pas de Responsable Q3SE";
-                                break;
-                            case "PCRReferent":
-                                message = "Pas de PCR Référent";
-                                break;
-                            default:
-                                message = "Aucune donnée disponible";
+                    if (contact && contact.type === "cardprincipale") {
+                        // Vérifier si la carte est vide (pas de firstname, lastname ou phone)
+                        if (!contact.firstname && !contact.lastname && !contact.phone) {
+                            let message = "";
+                            switch (role) {
+                                case "ResponsableAffaire":
+                                    message = "Pas de Responsable Affaire";
+                                    break;
+                                case "ResponsableQ3SE":
+                                    message = "Pas de Responsable Q3SE";
+                                    break;
+                                case "PCRReferent":
+                                    message = "Pas de PCR Référent";
+                                    break;
+                                default:
+                                    message = "Aucune donnée disponible";
+                            }
+                            cardBody.innerHTML = `
+                                <p><strong>${role}</strong></p>
+                                <p>${message}</p>
+                                <p class="phone"> </p>
+                                <p style="visibility: hidden;">Ligne vide</p> <!-- Ligne vide pour uniformiser la hauteur -->
+                            `;
+                        } else {
+                            // Afficher les informations si elles sont présentes
+                            cardBody.innerHTML = `
+                                <p><strong>${role}</strong></p>
+                                <p>${contact.firstname || ""} ${contact.lastname || ""}</p>
+                                <p class="phone">Téléphone : ${contact.phone || ""}</p>
+                            `;
                         }
-                        cardBody.innerHTML = `
-                            <p><strong>${role}</strong></p>
-                            <p>${message}</p>
-                            <p class="phone"> </p>
-                            <p style="visibility: hidden;">Ligne vide</p> <!-- Ligne vide pour uniformiser la hauteur -->
-                        `;
                     } else {
-                        // Afficher les informations si elles sont présentes
+                        // Si aucune donnée n\'est disponible, vider la carte
                         cardBody.innerHTML = `
                             <p><strong>${role}</strong></p>
-                            <p>${contact.firstname || ""} ${contact.lastname || ""}</p>
-                            <p class="phone">Téléphone : ${contact.phone || ""}</p>
-                            
+                            <p>Aucune donnée disponible</p>
                         `;
                     }
-                } else {
-                    // Si aucune donnée n\'est disponible, vider la carte
-                    cardBody.innerHTML = `
-                        <p><strong>${role}</strong></p>
-                        <p>Aucune donnée disponible</p>
-                    `;
-                }
-            
 
                     // Désactiver les champs pour empêcher la modification
                     card.querySelectorAll("input, select, button").forEach(function(field) {
@@ -609,18 +586,14 @@ function updateCards() {
     }
 }
 
-
-
- function attachDeleteListener(card) {
+function attachDeleteListener(card) {
     var deleteButton = card.querySelector(".delete-button");
     if (deleteButton) {
         deleteButton.addEventListener("click", function () {
-            
             deleteCard(card);
         });
     }
 }
-
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 /**
@@ -628,29 +601,27 @@ function updateCards() {
  * 
  */
 
-    // Fonction pour récupérer les fournisseurs et contacts via Ajax
-    function fetchSuppliersAndContacts() {
-        $.ajax({
-            url: "ajax/myobject.php",  
-            type: "GET",
-            data: { mode: "getSuppliersAndContacts" },
-            dataType: "json",
-            success: function(response) { 
-                if (response.status === "success") {
-                   
-                    createSupplierDropdown(response.data);  
-                } else {
-                    console.error("Erreur dans la réponse:", response.message);  
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Erreur Ajax :", error);  
+function fetchSuppliersAndContacts() {
+    $.ajax({
+        url: "ajax/myobject.php",  
+        type: "GET",
+        data: { mode: "getSuppliersAndContacts" },
+        dataType: "json",
+        success: function(response) { 
+            if (response.status === "success") {
+                createSupplierDropdown(response.data);  
+            } else {
+                console.error("Erreur dans la réponse:", response.message);  
             }
-        });
-    }
+        },
+        error: function(xhr, status, error) {
+            console.error("Erreur Ajax :", error);  
+        }
+    });
+}
 
-    // Appel de la fonction pour récupérer les données dès que la page est prête
-    fetchSuppliersAndContacts();
+// Appel de la fonction pour récupérer les données dès que la page est prête
+fetchSuppliersAndContacts();
 
 function createSupplierDropdown() {
     const existingCard = document.querySelector(".cardsoustraitant");
@@ -692,7 +663,7 @@ function createSupplierDropdown() {
         const status = parseInt(cardContainer.getAttribute("data-status") || "0");
         const inputs = tableContainer.querySelectorAll(".form-input");
         inputs.forEach(input => {
-            if (status === 1 || status === 2 || !isUserProjectManager) {
+            if (status === 1 || status === 2 || !isUserProjectManager || status === 1 || status === 2) {
                 input.style.textAlign = "center";
                 input.style.whiteSpace = "normal";
                 input.style.width = "100%";
@@ -825,6 +796,9 @@ function createSupplierDropdown() {
     // Ajouter un écouteur pour sauvegarder les modifications
     document.querySelector(".table-container").addEventListener("blur", function (e) {
         if (e.target && e.target.classList.contains("form-input")) {
+            if (status === 1 || status === 2) {
+                return;
+            }
             const inputField = e.target;
             const dataRow = inputField.closest(".data-row");
             const contactId = dataRow.getAttribute("data-contact-id");
@@ -843,8 +817,6 @@ function createSupplierDropdown() {
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 function deleteCard(card) {
     card.remove(); // Supprime la carte du DOM
@@ -869,9 +841,9 @@ function createEmptyCard(column) {
         <div class="card-body" style="text-align: center; color: #333;">
             <form class="card-form" style="display: flex; flex-direction: column; align-items: center;">
                 <input type="text" class="title-input" name="title" placeholder="" required
-                    style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
+                    style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;" ${status === 1 || status === 2 ? 'disabled' : ''}>
                 <select class="name-dropdown" name="name" required
-                    style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;">
+                    style="width: 80%; margin-bottom: 10px; padding: 5px; text-align: center; color: #333;" ${status === 1 || status === 2 ? 'disabled' : ''}>
                     ${userOptions}
                 </select>
                 <div class="user-details" style="margin-top: 10px; width: 100%; display: flex; flex-direction: column; align-items: center;">
@@ -880,7 +852,7 @@ function createEmptyCard(column) {
                 </div>
                 <input type="hidden" class="card-id" value="${uniqueId}"> 
             </form>
-            <button class="delete-button" style="margin-top: 10px;">Supprimer</button>
+            <button class="delete-button" style="margin-top: 10px; ${status === 1 || status === 2 ? 'display: none;' : ''}">Supprimer</button>
         </div>
     `;
 
@@ -889,10 +861,17 @@ function createEmptyCard(column) {
         const titleInput = card.querySelector(".title-input");
         const cardStatus = parseInt(card.getAttribute("data-status"));
         
-        if (titleInput.value === "" && cardStatus === 0) {
+        if (titleInput.value === "" && cardStatus === 0 && status !== 1 && status !== 2) {
             titleInput.placeholder = "Titre de la carte";
         } else {
             titleInput.placeholder = "";
+        }
+        
+        // Désactiver le champ si status est 1 ou 2
+        if (status === 1 || status === 2) {
+            titleInput.disabled = true;
+            titleInput.style.backgroundColor = "#f5f5f5";
+            titleInput.style.cursor = "not-allowed";
         }
     }
 
@@ -909,8 +888,10 @@ function createEmptyCard(column) {
     // Ajouter lécouteur dévénement pour le changement utilisateur
     const nameDropdown = card.querySelector(".name-dropdown");
     nameDropdown.addEventListener("change", function() {
+        if (status === 1 || status === 2) {
+            return;
+        }
         const selectedUserId = this.value;
-        // Chercher dans uniqueJsData au lieu de userjson pour les contacts du projet
         const selectedUser = uniqueJsData.find(user => user.fk_socpeople === selectedUserId);
         
         if (selectedUser) {
@@ -933,7 +914,6 @@ function createEmptyCard(column) {
     card.querySelector(".card-form").addEventListener("submit", function (event) {
         event.preventDefault();
         const selectedUserId = card.querySelector(".name-dropdown").value;
-        // Chercher dans uniqueJsData au lieu de userjson pour les contacts du projet
         const selectedUser = uniqueJsData.find(user => user.fk_socpeople === selectedUserId);
         const name = selectedUser ? `${selectedUser.firstname} ${selectedUser.lastname}` : "Non spécifié";
 
@@ -965,7 +945,6 @@ function createEmptyCard(column) {
     attachDeleteListener(card);
     return card;
 }
-
 
 function createUserList(column) {
     const columnElement = document.querySelector(`.card-column:nth-child(${column})`);
@@ -999,17 +978,22 @@ function createUserList(column) {
     listTitleInput.placeholder = ""; // On enlève le placeholder par défaut
     listTitleInput.required = true;
     listTitleInput.style = "width: 80%; padding: 5px; text-align: center; color: #333;";
+    if (status === 1 || status === 2) {
+        listTitleInput.disabled = true;
+        listTitleInput.style.backgroundColor = "#f5f5f5";
+        listTitleInput.style.cursor = "not-allowed";
+    }
 
     // Fonction pour gérer laffichage du placeholder
     function updatePlaceholder() {
         const listStatus = parseInt(list.getAttribute("data-status"));
         
-        if (listTitleInput.value === "" && listStatus === 0) {
+        if (listTitleInput.value === "" && listStatus === 0 && status !== 1 && status !== 2) {
             listTitleInput.placeholder = "Titre de la liste";
             listTitleInput.style.textAlign = "center";
         } else {
             listTitleInput.placeholder = "";
-            if (listStatus === 1 || listStatus === 2 || !isUserProjectManager) {
+            if (listStatus === 1 || listStatus === 2 || !isUserProjectManager || status === 1 || status === 2) {
                 listTitleInput.style.textAlign = "center";
             }
         }
@@ -1076,7 +1060,7 @@ function createUserList(column) {
                 items.forEach((item, index) => {
                     // Ne pas modifier le style du nom et du téléphone
                     if (index !== 0 && index !== 4) {
-                        if (listStatus === 1 || listStatus === 2 || !isUserProjectManager) {
+                        if (listStatus === 1 || listStatus === 2 || !isUserProjectManager || status === 1 || status === 2) {
                             item.style.textAlign = "center";
                             item.style.whiteSpace = "normal";
                         } else {
@@ -1095,7 +1079,6 @@ function createUserList(column) {
 
             // Appliquer le style initial
             updateListItemsStyle();
-
 
             ulElement.appendChild(li);
 
@@ -1125,8 +1108,11 @@ function createUserList(column) {
     const deleteButton = document.createElement("button");
     deleteButton.textContent = "Supprimer";
     deleteButton.className = "delete-list-button btn btn-danger";
-    deleteButton.style = "margin: 10px auto; display: block;"; // Centrer le bouton horizontalement
+    deleteButton.style = `margin: 10px auto; display: ${status === 1 || status === 2 ? 'none' : 'block'};`; // Centrer le bouton horizontalement
     deleteButton.addEventListener("click", () => {
+        if (status === 1 || status === 2) {
+            return;
+        }
         list.remove();
         saveData(); // Sauvegarder les modifications après suppression
     });
@@ -1136,21 +1122,21 @@ function createUserList(column) {
     return list;
 }
 
-
-
 // Fonction pour attacher les écouteurs de suppression aux utilisateurs
 function attachUserRemoveListeners(list) {
     const removeButtons = list.querySelectorAll(".remove-user");
 
     removeButtons.forEach(removeButton => {
         removeButton.addEventListener("click", function() {
+            if (status === 1 || status === 2) {
+                return;
+            }
             const li = this.parentElement;
             li.remove(); // Retirer utilisateur de la liste
             saveData();  // Sauvegarder les données après suppression
         });
     });
 }
-
 
 function updateUserIdsForCard(cell, newUserId) {
     if (cell.userId && cell.userId.length > 0) {
@@ -1160,23 +1146,21 @@ function updateUserIdsForCard(cell, newUserId) {
         // Si aucune donnée dans userId, on linitialise avec ID du nouvel utilisateur
         cell.userId = [newUserId];
     }
-   
 }
 
 function addItemToColumn(column, type) {
-  
+    if (status === 1 || status === 2) {
+        return;
+    }
     var columnElement = document.querySelector(`.card-column:nth-child(${column})`);
     
     if (columnElement) {
-       
         var newItem = null;
 
         if (type === "card") {
             newItem = createEmptyCard(column);
-          
         } else if (type === "list") {
             newItem = createUserList(column);
-         
         }
 
         if (newItem && newItem instanceof Node) {
@@ -1184,7 +1168,6 @@ function addItemToColumn(column, type) {
             attachDeleteListener(newItem);
             attachEventListeners();
             saveData();
-           
         } else {
             console.error(`Échec de création du ${type}`);
         }
@@ -1195,16 +1178,14 @@ function addItemToColumn(column, type) {
 
 // Remplacer complètement la gestion des clics dropdown par ceci :
 document.addEventListener("click", function(event) {
-
+    if (status === 1 || status === 2) {
+        return;
+    }
     // Vérifier si c'est un bouton dans .dropdown-content
     if (event.target.closest(".dropdown-content")) {
-   
-        
         var button = event.target;
         var column = button.getAttribute("data-column");
         var type = button.getAttribute("data-type");
-        
-     
         
         if (column && type) {
             event.preventDefault();
@@ -1218,7 +1199,12 @@ function attachEventListeners() {
     // Attacher des écouteurs sur les changements des champs de titre
     document.querySelectorAll(".title-input, .list-title-input").forEach(input => {
         if (!input.dataset.listenerAttached) {
-            input.addEventListener("blur", saveData);
+            input.addEventListener("blur", function() {
+                if (status === 1 || status === 2) {
+                    return;
+                }
+                saveData();
+            });
             input.dataset.listenerAttached = true;
         }
     });
@@ -1227,6 +1213,9 @@ function attachEventListeners() {
     document.querySelectorAll(".card .delete-button").forEach(button => {
         if (!button.dataset.listenerAttached) {
             button.addEventListener("click", function() {
+                if (status === 1 || status === 2) {
+                    return;
+                }
                 const card = button.closest(".card");
                 if (card && !card.classList.contains("user-list")) {
                     card.remove();
@@ -1241,6 +1230,9 @@ function attachEventListeners() {
     document.querySelectorAll(".delete-list-button").forEach(button => {
         if (!button.dataset.listenerAttached) {
             button.addEventListener("click", function() {
+                if (status === 1 || status === 2) {
+                    return;
+                }
                 const list = button.closest(".user-list");
                 if (list && !list.classList.contains("unique-list")) {
                     list.remove();
@@ -1255,6 +1247,9 @@ function attachEventListeners() {
     document.querySelectorAll(".user-list .remove-user").forEach(removeButton => {
         if (!removeButton.dataset.listenerAttached) {
             removeButton.addEventListener("click", function() {
+                if (status === 1 || status === 2) {
+                    return;
+                }
                 const li = this.closest("li");
                 if (li) {
                     li.remove();
@@ -1269,12 +1264,14 @@ function attachEventListeners() {
     document.querySelectorAll(".card .name-dropdown").forEach(dropdown => {
         if (!dropdown.dataset.listenerAttached) {
             dropdown.addEventListener("change", function() {
+                if (status === 1 || status === 2) {
+                    return;
+                }
                 const selectedUser = this.value;
                 const card = this.closest(".card");
 
                 if (card) {
                     card.dataset.userId = selectedUser;
-                   
                     saveData();
                 }
             });
@@ -1283,28 +1280,24 @@ function attachEventListeners() {
     });
 }
 
-    document.querySelectorAll(".unique-list .list-title-input").forEach(input => {
-        if (!input.dataset.listenerAttached) {
-            input.addEventListener("blur", saveData);
-            input.dataset.listenerAttached = true;
-        }
-    });
-
-    document.querySelectorAll(".unique-list .list-title-input").forEach(input => {
-        if (!input.dataset.listenerAttached) {
-            input.addEventListener("blur", function () {
-                saveData(); 
-            });
-            input.dataset.listenerAttached = true;
-        }
-    });
-
-
-// Appeler `attachEventListeners()` immédiatement après la création ou la modification des cartes.
-
+document.querySelectorAll(".unique-list .list-title-input").forEach(input => {
+    if (!input.dataset.listenerAttached) {
+        input.addEventListener("blur", function () {
+            if (status === 1 || status === 2) {
+                return;
+            }
+            saveData(); 
+        });
+        input.dataset.listenerAttached = true;
+    }
+});
 
 attachEventListeners();
+
 function saveData() { 
+    if (status === 1 || status === 2) {
+        return;
+    }
     let cardsData = [];
     
     // Parcours de toutes les cartes pour récupérer les informations
@@ -1341,9 +1334,7 @@ function saveData() {
         }
     });
 
-
     const contactsData = selectedContacts.map(contact => {
-        
         return {
             soc_people: contact.contact_id,
             firstname: contact.firstname,
@@ -1356,13 +1347,11 @@ function saveData() {
         };
     });
 
-
     // Ajouter ou mettre à jour les contacts sélectionnés dans cardsData
     if (contactsData.length > 0) {
         let existingSubcontractorList = cardsData.find(item => item.type === "listesoustraitant");
 
         if (!existingSubcontractorList) {
-            //console.log("Aucune liste de sous-traitants existante, création dune nouvelle liste.");
             existingSubcontractorList = {
                 type: "listesoustraitant",
                 soustraitants: []
@@ -1370,31 +1359,19 @@ function saveData() {
             cardsData.push(existingSubcontractorList);
         }
 
-        //console.log("Sous-traitants existants avant mise à jour :", existingSubcontractorList.soustraitants);
-
-        // Parcourir les sous-traitants récupérés de la base de données
         contactsData.forEach(contact => {
             const existingContact = existingSubcontractorList.soustraitants.find(
                 c => c.soc_people == contact.soc_people
             );
 
-            if (existingContact) {
-                
-                // Mettre à jour les informations du sous-traitant existant
-            // Object.assign(existingContact, contact);
-            } else {
-                
-                // Ajouter un nouveau sous-traitant
+            if (!existingContact) {
                 existingSubcontractorList.soustraitants.push(contact);
             }
         });
 
-        // Supprimer les doublons dans la liste des sous-traitants
         existingSubcontractorList.soustraitants = existingSubcontractorList.soustraitants.filter((contact, index, self) =>
             index === self.findIndex(c => c.soc_people === contact.soc_people)
         );
-
-        //console.log("Sous-traitants après suppression des doublons :", existingSubcontractorList.soustraitants);
     }
 
     // Parcours de toutes les listes pour récupérer les informations
@@ -1433,7 +1410,7 @@ function saveData() {
         let uniqueListId = uniqueList.getAttribute("data-list-id");
 
         if (titleInput) {
-            let title = titleInput.value || "Organigramme - Liste des utilisateurs"; // Titre par défaut si vide
+            let title = titleInput.value || "Liste des utilisateurs"; // Titre par défaut si vide
             let userIds = Array.from(uniqueList.querySelectorAll("li[data-user-id]")).map(function (li) {
                 return li.getAttribute("data-user-id");
             }).filter((id, index, self) => self.indexOf(id) === index); // Supprimer les doublons si nécessaire
@@ -1450,14 +1427,12 @@ function saveData() {
         }
     });
 
-// Ajouter les informations des rôles principaux (ResponsableAffaire, ResponsableQ3SE, PCRReferent)
     const roleMapping = {
         "160": "RA", // ResponsableAffaire
         "1031142": "Q3", // ResponsableQ3SE
         "1031143": "PCR" // PCRReferent
     };
 
-    // Ajouter les cartes principales depuis jsdata
     jsdata.forEach(function(contact) {
         if (roleMapping[contact.fk_c_type_contact]) {
             cardsData.push({
@@ -1469,7 +1444,6 @@ function saveData() {
         }
     });
 
-    // Ajouter des cartes principales vides si elles ne sont pas présentes
     Object.keys(roleMapping).forEach(function(key) {
         const role = roleMapping[key];
         const existingCard = cardsData.find(card => card.type === "cardprincipale" && card.role === role);
@@ -1484,14 +1458,11 @@ function saveData() {
         }
     });
 
-    
     let payload = {
         otid: otId,
         cardsData: cardsData.length > 0 ? cardsData : null, // Mettre null si vide
         selectedContacts: contactsData.length > 0 ? contactsData : null // Inclure les contacts sélectionnés
     };
-    
- 
 
     fetch("ajax/save_card.php", {
         method: "POST",
@@ -1500,20 +1471,15 @@ function saveData() {
         },
         body: JSON.stringify(payload),
     })
-    .then(response => response.text()) // Assurez-vous que la réponse est en JSON ou texte
+    .then(response => response.text())
     .then(data => {
-    
-    
         onSaveSuccess();
     })
     .catch(error => {
-        
     });
-    // Callback après succès
+
     function onSaveSuccess() {
-        
-        // Par exemple : Afficher un message, masquer un loader, ou actualiser
     }
 }
-    updateCards(); 
+updateCards(); 
 });
