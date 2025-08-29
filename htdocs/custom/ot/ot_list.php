@@ -269,7 +269,7 @@ $form = new Form($db);
 
 $now = dol_now();
 
-$title = $langs->trans("Ots");
+$title = $langs->trans("Organigramme de travail");
 //$help_url = "EN:Module_Ot|FR:Module_Ot_FR|ES:Módulo_Ot";
 $help_url = '';
 $morejs = array();

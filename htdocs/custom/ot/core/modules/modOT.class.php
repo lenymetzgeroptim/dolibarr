@@ -321,7 +321,7 @@ class modOT extends DolibarrModules
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=ot',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',                          // This is a Left menu entry
-			'titre'=>'Ot',
+			'titre'=>'Organigramme de travail',
 			//'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
 			'mainmenu'=>'ot',
 			'leftmenu'=>'ot',
@@ -337,7 +337,7 @@ class modOT extends DolibarrModules
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=ot,fk_leftmenu=ot',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',			                // This is a Left menu entry
-			'titre'=>'List des OT',
+			'titre'=>'List des Organigramme de travail',
 			'mainmenu'=>'ot',
 			'leftmenu'=>'ot_ot_list',
 			'url'=>'/ot/ot_list.php',
