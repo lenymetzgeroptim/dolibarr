@@ -456,6 +456,18 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
 		print '<input type="hidden" form="addline" id="fk_habilitation" name="fk_habilitation" value="' . $object->id.'">';
 	}
+
+	// Replace the button display logic with a formconfirm
+	$formconfirm = $form->formconfirm(
+		$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create_costat',
+		$langs->trans('CreateCostat'),
+		$langs->trans('PleaseCreateNewOTIfYouModifyProjectContacts'),
+		'confirm_create_costat',
+		'',
+		0,
+		1
+	);
+	
 }
 
 // End of page
