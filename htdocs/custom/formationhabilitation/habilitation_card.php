@@ -467,9 +467,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		0,
 		1
 	);
-
-	// Print the formconfirm
-	print $formconfirm;
+	
 }
 
 // End of page
