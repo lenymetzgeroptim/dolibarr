@@ -83,7 +83,7 @@ class modOT extends DolibarrModules
 		// If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
 		// If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
 		// To use a supported fa-xxx css style of font awesome, use this->picto='xxx'
-		$this->picto = 'fa-file-o';
+		$this->picto = 'fa-sitemap_fas_#6c6aa8';
 
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = array(
@@ -297,25 +297,26 @@ class modOT extends DolibarrModules
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 1);
-		$this->rights[$r][1] = 'Read Ot object of OT';
+		$this->rights[$r][1] = 'Lire les OT';
 		$this->rights[$r][4] = 'ot';
 		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Create/Update Ot object of OT';
+		$this->rights[$r][1] = 'Lire tous les OT';
+		$this->rights[$r][4] = 'ot';
+		$this->rights[$r][5] = 'readall';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Créer/Modifer les OT';
 		$this->rights[$r][4] = 'ot';
 		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Delete Ot object of OT';
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
+		$this->rights[$r][1] = 'Supprimer les OT';
 		$this->rights[$r][4] = 'ot';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
-		$this->rights[$r][1] = 'Affiché tout les ot ';
-		$this->rights[$r][4] = 'ot';
-		$this->rights[$r][5] = 'showallot';
-		$r++;
+		
 		
 		/* END MODULEBUILDER PERMISSIONS */
 
@@ -361,7 +362,8 @@ class modOT extends DolibarrModules
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=project',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',			                // This is a Left menu entry
-			'titre'=>'List des Organigramme de travail',
+			'titre'=>'Liste des OT',
+			'prefix' => img_picto('', $this->picto, 'class="paddingright pictofixedwidth valignmiddle"'),
 			'mainmenu'=>'project',
 			'leftmenu'=>'ot_ot_list',
 			'url'=>'/ot/ot_list.php',

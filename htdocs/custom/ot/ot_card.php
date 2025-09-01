@@ -289,7 +289,7 @@ $formproject = new FormProjets($db);
 $title = $langs->trans("Ot");
 $help_url = '';
 $array_js = array('/ot/js/ot.js.php');
-llxHeader("", $title, $help_url, '', '', '', $array_js);
+llxHeader("", $title, $help_url, '', '', '', $array_js, '', '', 'mod-ot page-card');
 
 print '<link rel="stylesheet" type="text/css" href="'.dol_buildpath('/custom/ot/css/ot.css', 1).'">';
 
@@ -711,9 +711,9 @@ print '
                         <div class="card-container">
                             <!-- Colonne 1 -->
                             <div class="card-column">
-                                <div class="card" data-role="ResponsableAffaire" id="card-1">
+                                <div class="card" data-role="Responsable Affaire" id="card-1">
                                     <div class="card-body">
-                                        <p><strong>ResponsableAffaire</strong></p>
+                                        <p><strong>Responsable Affaire</strong></p>
                                         <p class="name">Nom et Prénom</p>
                                         <p class="telephone">num téléphone</p>
                                         <p>Coordonnées : X = 1, Y = 1</p>
@@ -731,9 +731,9 @@ print '
 
                             <!-- Colonne 2 -->
                             <div class="card-column">
-                                <div class="card" data-role="ResponsableQ3SE" id="card-2">
+                                <div class="card" data-role="Responsable Q3SE" id="card-2">
                                     <div class="card-body">
-                                        <p><strong>Responsable-Q3SE</strong></p>
+                                        <p><strong>Responsable Q3SE</strong></p>
                                         <p class="name">Nom et Prénom</p>
                                          <p class="telephone">num téléphone</p>
                                         <p>Coordonnées : X = 2, Y = 1</p>
@@ -752,9 +752,9 @@ print '
 
                             <!-- Colonne 3 -->
                             <div class="card-column">
-                                <div class="card" data-role="PCRReferent" id="card-3">
+                                <div class="card" data-role="PCR Referent" id="card-3">
                                     <div class="card-body">
-                                        <p><strong>PCRReferent</strong></p>
+                                        <p><strong>PCR Referent</strong></p>
                                         <p class="name">Nom et Prénom</p>
                                         <p class="telephone">num téléphone</p>
                                         <p>Coordonnées : X = 3, Y = 1</p>
@@ -893,44 +893,44 @@ if ($user->hasRight('ot', 'ot', 'write')) {
 }
 
 //----  --------------------------------------------------------------------------------------------------------------------------------------------------------
-	if ($action != 'presend') {
-		print '<div class="fichecenter"><div class="fichehalfleft">';
-		print '<a name="builddoc"></a>'; // ancre
+	// if ($action != 'presend') {
+	// 	print '<div class="fichecenter"><div class="fichehalfleft">';
+	// 	print '<a name="builddoc"></a>'; // ancre
 
-		$includedocgeneration = 1;
+	// 	$includedocgeneration = 1;
 
-		// Documents
-	    if ($includedocgeneration) {
-			$objref = dol_sanitizeFileName($object->ref);
-			$relativepath = $objref.'/'.$objref.'.pdf';
-			$filedir = $conf->ot->dir_output.'/'.$object->element.'/'.$objref;
-			$urlsource = $_SERVER["PHP_SELF"]."?id=".$object->id;
-			$genallowed = $permissiontoread; // If you can read, you can build the PDF to read content
-			$delallowed = $permissiontoadd; // If you can create/edit, you can remove a file on card
-			print $formfile->showdocuments('ot:Ot', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
-		}
+	// 	// Documents
+	//     if ($includedocgeneration) {
+	// 		$objref = dol_sanitizeFileName($object->ref);
+	// 		$relativepath = $objref.'/'.$objref.'.pdf';
+	// 		$filedir = $conf->ot->dir_output.'/'.$object->element.'/'.$objref;
+	// 		$urlsource = $_SERVER["PHP_SELF"]."?id=".$object->id;
+	// 		$genallowed = $permissiontoread; // If you can read, you can build the PDF to read content
+	// 		$delallowed = $permissiontoadd; // If you can create/edit, you can remove a file on card
+	// 		print $formfile->showdocuments('ot:Ot', $object->element.'/'.$objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
+	// 	}
 
-		// Show links to link elements
-		//$tableauContactProj = $form->showLinkedObjectBlock($object->showCard($object->fk_project), $linktoelem, 'contactProj');
-		$linktoelem = $form->showLinkToObjectBlock($object, null, array('ot'));	
-		$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
+	// 	// Show links to link elements
+	// 	//$tableauContactProj = $form->showLinkedObjectBlock($object->showCard($object->fk_project), $linktoelem, 'contactProj');
+	// 	$linktoelem = $form->showLinkToObjectBlock($object, null, array('ot'));	
+	// 	$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 		
 
 
-		print '</div><div class="fichehalfright">';
+	// 	print '</div><div class="fichehalfright">';
 
-		$MAXEVENT = 10;
+	// 	$MAXEVENT = 10;
 
-		$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/ot/ot_agenda.php', 1).'?id='.$object->id);
+	// 	$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/ot/ot_agenda.php', 1).'?id='.$object->id);
 
-		// List of actions on element
+	// 	// List of actions on element
 
-		$formactions = new FormActions($db);
-		$somethingshown = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
-		//$tableauContactProj = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
+	// 	$formactions = new FormActions($db);
+	// 	$somethingshown = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
+	// 	//$tableauContactProj = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
 
-		print '</div></div>';
-	}
+	// 	print '</div></div>';
+	// }
 
 	
 	//Select mail models is same action as presend

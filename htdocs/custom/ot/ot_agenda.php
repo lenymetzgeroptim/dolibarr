@@ -190,7 +190,7 @@ if ($object->id > 0) {
 	//if (getDolGlobalString('MAIN_HTML_TITLE') && preg_match('/thirdpartynameonly/',getDolGlobalString('MAIN_HTML_TITLE')) && $object->name) $title=$object->name." - ".$title;
 	$help_url = 'EN:Module_Agenda_En|DE:Modul_Terminplanung';
 
-	llxHeader('', $title, $help_url);
+	llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-ot');
 
 	if (isModEnabled('notification')) {
 		$langs->load("mails");

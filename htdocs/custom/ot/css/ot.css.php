@@ -9,7 +9,8 @@ body {
     margin: 0;
     padding: 0;
 }
-.card {
+
+.mod-ot .card {
     border: 1px solid #ddd;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -21,7 +22,7 @@ body {
     display: block;
 }
 
-.card-header {
+.mod-ot .card-header {
     background-color: #2F508B;
     color: #fff;
     padding: 10px;
@@ -32,12 +33,12 @@ body {
     text-align: center;
 }
 
-.card-body {
+.mod-ot .card-body {
     padding: 15px;
     text-align: center;
 }
 
-.btn {
+.mod-ot .btn {
     display: inline-block;
     padding: 8px 12px;
     font-size: 14px;
@@ -47,45 +48,46 @@ body {
     background-color: #28508b;
     border-radius: 4px;
     margin-top: 10px;
+    margin-bottom: 10px;
     cursor: pointer;
     transition: background-color 0.3s;
     border: 1px solid transparent;
 }
 
-.btn-info {
+.mod-ot .btn-info {
     background-color: #3c9613;
 }
 
-.btn-secondary {
+.mod-ot .btn-secondary {
     background-color: #28508b;
 }
 
-.btn-danger {
+.mod-ot .btn-danger {
     background-color: #dc3545;
 }
 
-.btn:hover {
+.mod-ot .btn:hover {
     background-color: #218838;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.btn-info:hover {
+.mod-ot .btn-info:hover {
     background-color: #3c9613;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.btn-secondary:hover {
+.mod-ot .btn-secondary:hover {
     background-color: #28508b;
     transform: none;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.btn-danger:hover {
+.mod-ot .btn-danger:hover {
     background-color: #c82333;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.card-container {
+.mod-ot .card-container {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
@@ -93,7 +95,7 @@ body {
     width: 100%;
 }
 
-.card-column {
+.mod-ot .card-column {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -102,16 +104,16 @@ body {
     flex-grow: 1;
 }
 
-.card-column .card {
+.mod-ot .card-column .card {
     margin: 10px 0;
 }
 
-.dropdown {
+.mod-ot .dropdown {
     position: relative;
     display: inline-block;
 }
 
-.dropdown-content {
+.mod-ot .dropdown-content {
     display: none;
     position: absolute;
     background-color: #fff;
@@ -124,7 +126,7 @@ body {
     margin-top: 1px;
 }
 
-.dropdown-content button {
+.mod-ot .dropdown-content button {
     color: #333;
     padding: 12px 16px;
     text-decoration: none;
@@ -138,15 +140,15 @@ body {
     margin: 0;
 }
 
-.dropdown-content button:hover {
+.mod-ot .dropdown-content button:hover {
     background-color: #ddd;
 }
 
-.dropdown:hover .dropdown-content {
+.mod-ot .dropdown:hover .dropdown-content {
     display: block;
 }
 
-.delete-button {
+.mod-ot .delete-button {
     background-color: #dc3545;
     border: none;
     color: #fff;
@@ -158,13 +160,13 @@ body {
     display: block;
 }
 
-.form-label {
+.mod-ot .form-label {
     display: block;
     font-weight: bold;
     margin-top: 10px;
 }
 
-select {
+.mod-ot select {
     width: 100%;
     padding: 8px;
     margin-top: 5px;
@@ -172,7 +174,7 @@ select {
     border: 1px solid #ddd;
 }
 
-.contact-info {
+.mod-ot .contact-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -184,7 +186,7 @@ select {
     border-radius: 4px;
 }
 
-.contact-info input {
+.mod-ot .contact-info input {
     width: 100px;
     padding: 5px;
     font-size: 12px;
@@ -192,7 +194,7 @@ select {
     border: 1px solid #ccc;
 }
 
-.supplier-section {
+.mod-ot .supplier-section {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -200,7 +202,7 @@ select {
     padding: 20px;
 }
 
-.cardsoustraitant {
+.mod-ot .cardsoustraitant {
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 10px;
@@ -210,7 +212,7 @@ select {
     text-align: center;
 }
 
-.card-header-soustraitant {
+.mod-ot .card-header-soustraitant {
     transition: transform 0.2s ease-in-out;
     margin-bottom: 20px;
     width: 100%;
@@ -219,14 +221,14 @@ select {
     display: block;
 }
 
-.cardsoustraitant label {
+.mod-ot .cardsoustraitant label {
     display: block;
     font-weight: bold;
     margin: 10px 0 5px;
     text-align: left;
 }
 
-.cardsoustraitant select {
+.mod-ot .cardsoustraitant select {
     width: 100%;
     padding: 8px;
     font-size: 14px;
@@ -235,12 +237,12 @@ select {
     background: #f9f9f9;
 }
 
-.contact-container {
+.mod-ot .contact-container {
     display: none;
     margin-top: 15px;
 }
 
-.cardsoustraitant .card-body {
+.mod-ot .cardsoustraitant .card-body {
     display: table;
     width: 100%;
     background: #f8f9fa;
@@ -249,13 +251,13 @@ select {
     padding: 10px;
 }
 
-.cardsoustraitant .data-row {
+.mod-ot .cardsoustraitant .data-row {
     display: table-row;
     text-align: center;
     padding: 5px 0;
 }
 
-input:disabled, select:disabled, textarea:disabled {
+.mod-ot input:disabled, .mod-ot select:disabled, .mod-ot textarea:disabled {
     background-color: white !important;
     color: #333 !important;
     border: none;
@@ -263,21 +265,21 @@ input:disabled, select:disabled, textarea:disabled {
     box-shadow: none;
 }
 
-.list-title-input {
+.mod-ot .list-title-input {
     font-size: 16px;
     font-weight: bold;
     text-align: center;
     color: #333;
     margin-top: 8px;
 }
-.card .title-input {
+.mod-ot .card .title-input {
     font-size: 16px;
     font-weight: bold;
     text-align: center;
     color: #333;
 }
 
-.cardsoustraitant .legend-row {
+.mod-ot .cardsoustraitant .legend-row {
     display: flex;
     justify-content: space-between;
     text-align: center;
@@ -287,14 +289,14 @@ input:disabled, select:disabled, textarea:disabled {
     box-sizing: border-box;
 }
 
-.cardsoustraitant .form-input {
+.mod-ot .cardsoustraitant .form-input {
     font-size: 15px;
     padding: 5px;
     border-radius: 4px;
     box-sizing: border-box;
 }
 
-.cardsoustraitant .data-row > div {
+.mod-ot .cardsoustraitant .data-row > div {
     flex: 1;
     padding: 0 10px;
     text-align: center;

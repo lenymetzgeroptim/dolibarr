@@ -64,7 +64,7 @@ class Ot extends CommonObject
 	/**
 	 * @var string String with name of icon for ot. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'ot@ot' if picto is file 'img/object_ot.png'.
 	 */
-	public $picto = 'fa-file';
+	public $picto = 'fa-sitemap_fas_#6c6aa8';
 
 
 	const STATUS_DRAFT = 0;
@@ -121,7 +121,7 @@ class Ot extends CommonObject
 		"ref" => array("type"=>"varchar(128)", "label"=>"Ref", "enabled"=>"1", 'position'=>20, 'notnull'=>0, "visible"=>"5", "index"=>"1", "searchall"=>"1", "showoncombobox"=>"1", "validate"=>"1", "comment"=>"Reference of object"),
 		"indice" => array("type"=>"integer", "label"=>"Indice", "enabled"=>"1", 'position'=>43, 'notnull'=>0, "visible"=>"5", "default"=>"0", "validate"=>"1",),
 		"fk_project" => array("type"=>"integer:Project:projet/class/project.class.php:rowid(IN395,197,190,445)", "label"=>"Project", "picto"=>"project", "enabled"=>"isModEnabled('project')", 'position'=>52, 'notnull'=>0, "visible"=>"5", "index"=>"1", "css"=>"maxwidth500 widthcentpercentminusxx", "csslist"=>"tdoverflowmax150", "validate"=>"1",),
-		"date_applica_ot" => array("type"=>"date", "label"=>"date applicabilité OT", "enabled"=>"1", 'position'=>540, 'notnull'=>0, "visible"=>"1",),
+		"date_applica_ot" => array("type"=>"date", "label"=>"dateApplicaOt", "enabled"=>"1", 'position'=>540, 'notnull'=>0, "visible"=>"1",),
 		"date_creation" => array("type"=>"datetime", "label"=>"DateCreation", "enabled"=>"1", 'position'=>500, 'notnull'=>0, "visible"=>"5",),
 		"tms" => array("type"=>"timestamp", "label"=>"DateModification", "enabled"=>"1", 'position'=>550, 'notnull'=>0, "visible"=>"-2",),
 		"fk_user_creat" => array("type"=>"integer:User:user/class/user.class.php", "label"=>"UserAuthor", "picto"=>"user", "enabled"=>"1", 'position'=>560, 'notnull'=>0, "visible"=>"5", "foreignkey"=>"0", "csslist"=>"tdoverflowmax150",),

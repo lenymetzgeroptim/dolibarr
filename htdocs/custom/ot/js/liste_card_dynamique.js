@@ -226,8 +226,8 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
                             <div style="flex: 1; text-align: center; white-space: normal;" title="${user.habilitation || "Aucune habilitation"}">
                                 ${user.habilitation || "Aucune habilitation"}
                             </div>
-                            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
-                                ${user.phone || "Non défini"}
+                            <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || ""}">
+                                ${user.phone || ""}
                             </div>
                         `;
 
@@ -303,7 +303,7 @@ if (typeof cellData !== "undefined" && cellData.length > 0) {
                             <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
                             <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
                             <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-                            <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
+                            <div style="flex: 1; text-align: center;">${user.phone || ""}</div>
                         `;
                         ulElement.appendChild(li);
                     } else {
@@ -397,7 +397,7 @@ function createUniqueUserList() {
     // Remplir les utilisateurs de la liste depuis uniqueJsData
     uniqueJsData.forEach(user => {
         // Vérifier si lutilisateur nest pas Q3SE ou PCR
-        if (user.libelle !== "ResponsableQ3SE" && user.libelle !== "PCRRéférent") {
+        if (user.libelle !== "Responsable Q3SE" && user.libelle !== "PCRRéférent") {
             const li = document.createElement("li");
             li.setAttribute("data-user-id", user.fk_socpeople);
             li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
@@ -408,7 +408,7 @@ function createUniqueUserList() {
                 <div style="flex: 1; text-align: center; padding-right: 10px;">${user.fonction || "Non définie"}</div>
                 <div style="flex: 1; text-align: center; padding-right: 10px;">${user.contrat || "Non défini"}</div>
                 <div style="flex: 1; text-align: center; padding-right: 10px;">${user.habilitation || "Aucune habilitation"}</div>
-                <div style="flex: 1; text-align: center;">${user.phone || "Non défini"}</div>
+                <div style="flex: 1; text-align: center;">${user.phone || ""}</div>
             `;
 
             ulElement.appendChild(li);
@@ -433,9 +433,9 @@ function deleteUniqueList(uniqueListId, list) {
 
 function updateCards() {
     var cardHeaders = {
-        "ResponsableAffaire": null,
-        "ResponsableQ3SE": null,
-        "PCRReferent": null
+        "Responsable Affaire": null,
+        "Responsable Q3SE": null,
+        "PCR Referent": null
     };
 
     // Vérifier si les données sont dans `cellData`
@@ -443,13 +443,13 @@ function updateCards() {
         if (cell.type === "cardprincipale" && cell.title) {
             switch (cell.title) {
                 case "RA":
-                    cardHeaders["ResponsableAffaire"] = cell;
+                    cardHeaders["Responsable Affaire"] = cell;
                     break;
                 case "Q3":
-                    cardHeaders["ResponsableQ3SE"] = cell;
+                    cardHeaders["Responsable Q3SE"] = cell;
                     break;
                 case "PCR":
-                    cardHeaders["PCRReferent"] = cell;
+                    cardHeaders["PCR Referent"] = cell;
                     break;
             }
         }
@@ -457,8 +457,8 @@ function updateCards() {
 
     // Si les données ne sont pas dans `cellData`, les récupérer depuis `jsdata`
     jsdata.forEach(function(contact) {
-        if (!cardHeaders["ResponsableAffaire"] && contact.fk_c_type_contact === "160") {
-            cardHeaders["ResponsableAffaire"] = {
+        if (!cardHeaders["Responsable Affaire"] && contact.fk_c_type_contact === "160") {
+            cardHeaders["Responsable Affaire"] = {
                 type: "cardprincipale",
                 title: "RA",
                 firstname: contact.firstname,
@@ -468,8 +468,8 @@ function updateCards() {
             };
             saveData(); // Enregistrer dans la BDD
         }
-        if (!cardHeaders["ResponsableQ3SE"] && contact.fk_c_type_contact === "1031142") {
-            cardHeaders["ResponsableQ3SE"] = {
+        if (!cardHeaders["Responsable Q3SE"] && contact.fk_c_type_contact === "1031142") {
+            cardHeaders["Responsable Q3SE"] = {
                 type: "cardprincipale",
                 title: "Q3",
                 firstname: contact.firstname,
@@ -479,8 +479,8 @@ function updateCards() {
             };
             saveData(); // Enregistrer dans la BDD
         }
-        if (!cardHeaders["PCRReferent"] && contact.fk_c_type_contact === "1031143") {
-            cardHeaders["PCRReferent"] = {
+        if (!cardHeaders["PCR Referent"] && contact.fk_c_type_contact === "1031143") {
+            cardHeaders["PCR Referent"] = {
                 type: "cardprincipale",
                 title: "PCR",
                 firstname: contact.firstname,
@@ -493,8 +493,8 @@ function updateCards() {
     });
 
     // Ajouter des cartes vides si certains rôles sont absents dans `jsdata`
-    if (!cardHeaders["ResponsableAffaire"]) {
-        cardHeaders["ResponsableAffaire"] = {
+    if (!cardHeaders["Responsable Affaire"]) {
+        cardHeaders["Responsable Affaire"] = {
             type: "cardprincipale",
             title: "RA",
             firstname: null,
@@ -504,8 +504,8 @@ function updateCards() {
         };
         saveData(); // Enregistrer la carte vide dans la BDD
     }
-    if (!cardHeaders["ResponsableQ3SE"]) {
-        cardHeaders["ResponsableQ3SE"] = {
+    if (!cardHeaders["Responsable Q3SE"]) {
+        cardHeaders["Responsable Q3SE"] = {
             type: "cardprincipale",
             title: "Q3",
             firstname: null,
@@ -515,8 +515,8 @@ function updateCards() {
         };
         saveData(); // Enregistrer la carte vide dans la BDD
     }
-    if (!cardHeaders["PCRReferent"]) {
-        cardHeaders["PCRReferent"] = {
+    if (!cardHeaders["PCR Referent"]) {
+        cardHeaders["PCR Referent"] = {
             type: "cardprincipale",
             title: "PCR",
             firstname: null,
@@ -543,13 +543,13 @@ function updateCards() {
                         if (!contact.firstname && !contact.lastname && !contact.phone) {
                             let message = "";
                             switch (role) {
-                                case "ResponsableAffaire":
+                                case "Responsable Affaire":
                                     message = "Pas de Responsable Affaire";
                                     break;
-                                case "ResponsableQ3SE":
+                                case "Responsable Q3SE":
                                     message = "Pas de Responsable Q3SE";
                                     break;
-                                case "PCRReferent":
+                                case "PCR Referent":
                                     message = "Pas de PCR Référent";
                                     break;
                                 default:
@@ -1029,7 +1029,7 @@ function createUserList(column) {
     // Remplir les utilisateurs de la liste depuis uniqueJsData
     uniqueJsData.forEach(user => {
         // Vérifier si lutilisateur nest pas Q3SE ou PCR
-        if (user.libelle !== "ResponsableQ3SE" && user.libelle !== "PCRRéférent") {
+        if (user.libelle !== "Responsable Q3SE" && user.libelle !== "PCR Référent") {
             const li = document.createElement("li");
             li.setAttribute("data-user-id", user.fk_socpeople);
             li.style = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;";
@@ -1048,8 +1048,8 @@ function createUserList(column) {
                 <div style="flex: 1; text-align: center; white-space: normal;" title="${user.habilitation || "Aucune habilitation"}">
                     ${user.habilitation || "Aucune habilitation"}
                 </div>
-                <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || "Non défini"}">
-                    ${user.phone || "Non défini"}
+                <div style="flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${user.phone || ""}">
+                    ${user.phone || ""}
                 </div>
             `;
 
@@ -1429,9 +1429,9 @@ function saveData() {
     });
 
     const roleMapping = {
-        "160": "RA", // ResponsableAffaire
-        "1031142": "Q3", // ResponsableQ3SE
-        "1031143": "PCR" // PCRReferent
+        "160": "RA", // Responsable Affaire
+        "1031142": "Q3", // Responsable Q3SE
+        "1031143": "PCR" // PCR Referent
     };
 
     jsdata.forEach(function(contact) {

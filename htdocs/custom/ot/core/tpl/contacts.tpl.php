@@ -229,7 +229,7 @@ if ($permission) {
 			$tmpobject = $objectsrc;
 		}
 		$formcompany->selectTypeContact($tmpobject, '', 'type', 'internal', 'position', 0, 'minwidth125imp widthcentpercentminusx maxwidth150'); ?></div>
-		<div class="tagtd noborderbottom" style="width: 150px;">
+		<div class="tagtd" style="width: 150px;">
 			<?php
 				// Utilisation de Form::selectarray pour générer le dropdown des fonctions avec le style Dolibarr
 				$sql = "SELECT rowid, label FROM ".MAIN_DB_PREFIX."contact_fonction WHERE active = 1 ORDER BY label ASC";
@@ -243,7 +243,7 @@ if ($permission) {
 				print $form->selectarray('fonction_internal', $functionOptions, '', 1, 0, 0, '', 0, 0, 0, '', 'minwidth100imp widthcentpercentminusxx maxwidth200');
 			?>
 		</div>
-		<div class="tagtd center noborderbottom" style="width: 150px; text-align: center; padding-bottom: 15px;">
+		<div class="tagtd center" style="width: 150px; text-align: center; padding-bottom: 15px;">
 			<input type="submit" class="button small" value="<?php echo $langs->trans("Add"); ?>" />
 		</div>
 	</form>

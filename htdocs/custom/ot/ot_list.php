@@ -315,7 +315,7 @@ if ($object->ismultientitymanaged == 1) {
  // Filtrer uniquement les OTs validés
 
 // Inclure les conditions basées sur les contacts du projet et le rôle de chef de projet
-if (!$user->rights->ot->ot->showallot){
+if (!$user->rights->ot->ot->readall){
 	$sql .= " AND (
 		t.fk_project IN (
 			SELECT ec.element_id 
@@ -444,7 +444,7 @@ if ($num == 1 && getDolGlobalInt('MAIN_SEARCH_DIRECT_OPEN_IF_ONLY_ONE') && $sear
 // Output page
 // --------------------------------------------------------------------
 
-llxHeader('', $title, $help_url, '', 0, 0, $morejs, $morecss, '', 'bodyforlist');	// Can use also classforhorizontalscrolloftabs instead of bodyforlist for no horizontal scroll
+llxHeader('', $title, $help_url, '', 0, 0, $morejs, $morecss, '', 'mod-ot bodyforlist');	// Can use also classforhorizontalscrolloftabs instead of bodyforlist for no horizontal scroll
 
 // Example : Adding jquery code
 // print '<script type="text/javascript">
