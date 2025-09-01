@@ -179,7 +179,7 @@ class modOT extends DolibarrModules
 		$this->tabs = array(
 			'data'=>'project:+ot_list:Liste des OT:ot@ot:$user->rights->ot->ot->read:/ot/ot_project_list.php?projectid=__ID__'
 		);
-
+		
 		// Example:
 		// $this->tabs[] = array('data'=>'objecttype:+tabname1:Title1:mylangfile@ot:$user->rights->ot->read:/ot/mynewtab1.php?id=__ID__');  					// To add a new tab identified by code tabname1
 		// $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@ot:$user->rights->othermodule->read:/ot/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
@@ -214,7 +214,7 @@ class modOT extends DolibarrModules
 			// List of tables we want to see into dictonnary editor
 			'tabname'=>array( MAIN_DB_PREFIX."contact_fonction",),
 			// Label of tables
-			'tablib'=>array("fonction des constats"),
+			'tablib'=>array("fonction des contacts"),
 			// Request to select fields
 			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'contact_fonction as f'),
 			// Sort order
@@ -311,8 +311,6 @@ class modOT extends DolibarrModules
 		$this->rights[$r][4] = 'ot';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-
-
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
 		$this->rights[$r][1] = 'Affiché tout les ot ';
 		$this->rights[$r][4] = 'ot';
@@ -326,7 +324,7 @@ class modOT extends DolibarrModules
 		$r = 0;
 		// Add here entries to declare new menus
 		/* BEGIN MODULEBUILDER TOPMENU */
-		$this->menu[$r++] = array(
+		/*$this->menu[$r++] = array(
 			'fk_menu'=>'', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'top', // This is a Top menu entry
 			'titre'=>'ModuleOTName',
@@ -340,11 +338,11 @@ class modOT extends DolibarrModules
 			'perms'=>'1', // Use 'perms'=>'$user->hasRight("ot", "ot", "read")' if you want your menu with a permission rules
 			'target'=>'',
 			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
-		);
+		);*/
 		/* END MODULEBUILDER TOPMENU */
 		/* BEGIN MODULEBUILDER LEFTMENU MYOBJECT */
 
-		$this->menu[$r++]=array(
+		/*$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=ot',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',                          // This is a Left menu entry
 			'titre'=>'Organigramme de travail',
@@ -359,7 +357,7 @@ class modOT extends DolibarrModules
 			'target'=>'',
 			'user'=>2,	
 			$r++ ,		                // 0=Menu for internal users, 1=external users, 2=both
-		);
+		);*/
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=project',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',			                // This is a Left menu entry

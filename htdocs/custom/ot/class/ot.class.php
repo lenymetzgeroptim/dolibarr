@@ -1446,7 +1446,7 @@ class Ot extends CommonObject
 					ON fuh.fk_habilitation = fh.rowid
 				LEFT JOIN ".MAIN_DB_PREFIX."ot_ot_cellule_donne AS ocd 
 					ON ocd.fk_user = u.rowid
-				LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_positionetcoefficient_extrafields AS drh 
+				LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_Positionetcoefficient_extrafields AS drh 
 					ON drh.fk_object = u.rowid
 				LEFT JOIN ".MAIN_DB_PREFIX."c_contrattravail AS cct 
 					ON drh.contratdetravail = cct.rowid
@@ -1493,7 +1493,7 @@ class Ot extends CommonObject
 				ON sp.fk_socpeople = u.rowid 
 			JOIN ".MAIN_DB_PREFIX."c_type_contact AS ctc 
 				ON sp.fk_c_type_contact = ctc.rowid 
-			LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_positionetcoefficient_extrafields AS drh 
+			LEFT JOIN ".MAIN_DB_PREFIX."donneesrh_Positionetcoefficient_extrafields AS drh 
 				ON drh.fk_object = u.rowid  
 			LEFT JOIN ".MAIN_DB_PREFIX."c_contrattravail AS cct 
 				ON drh.contratdetravail = cct.rowid  
@@ -1750,7 +1750,7 @@ class Ot extends CommonObject
 		FROM " . MAIN_DB_PREFIX . "ot_ot_cellule_donne AS ocd
 		JOIN " . MAIN_DB_PREFIX . "user AS u 
 			ON ocd.fk_user = u.rowid
-		LEFT JOIN " . MAIN_DB_PREFIX . "donneesrh_positionetcoefficient_extrafields AS drh 
+		LEFT JOIN " . MAIN_DB_PREFIX ."donneesrh_Positionetcoefficient_extrafields AS drh 
 			ON drh.fk_object = u.rowid
 		LEFT JOIN " . MAIN_DB_PREFIX . "c_contrattravail AS cct 
 			ON drh.contratdetravail = cct.rowid

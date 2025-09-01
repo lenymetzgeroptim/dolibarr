@@ -598,7 +598,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
             if ($object->status == $object::STATUS_DRAFT) {
                 print dolGetButtonAction('', $langs->trans('générer PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
             }
-			print dolGetButtonAction('', $langs->trans('générer PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			
                 /*//passé au  Status Cancel
                 if ($user->rights->constat->constat->ResponsableQ3SE) {
                     if ($object->status == $object::STATUS_EN_COURS) {
