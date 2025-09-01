@@ -133,7 +133,7 @@ if (empty($action) && empty($id) && empty($ref)) {
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
 
 // There is several ways to check permission.
-$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'read');
+$permissiontoread = $user->hasRight('formationhabilitation', 'visitemedical', 'readall') || ($object->fk_user == $user->id && $user->hasRight('formationhabilitation', 'visitemedical', 'read'));
 $permissiontoadd = $user->hasRight('formationhabilitation', 'visitemedical', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 $permissiontodelete = $user->hasRight('formationhabilitation', 'visitemedical', 'delete');
 
@@ -430,6 +430,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// Object card
 	// ------------------------------------------------------------
 	$linkback = '<a href="'.dol_buildpath('/formationhabilitation/visitemedical_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	$linkback .= '<a href="'.dol_buildpath('/formationhabilitation/userformation.php', 1).'?id='.$object->fk_user.'&onglet=visitemedical&restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToUserList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
 	/*

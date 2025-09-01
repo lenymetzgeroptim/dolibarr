@@ -91,7 +91,7 @@ foreach ($object->fields as $key => $val) {
 	print '</td>';
 	print '</tr>';
 
-	if($key == 'fk_user'){
+	if($key == 'fk_user' && $conf->global->FDT_RESP_TASKPROJECT_APPROVER){
 		// 1er Approbateur
 		$value = array();
 		print '<tr class="field_fk_user_validation1"><td';

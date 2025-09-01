@@ -139,6 +139,7 @@ $search_type         = GETPOST('search_type', 'int');
 $object = new Holiday($db);
 $extrafields = new ExtraFields($db);
 $hookmanager->initHooks(array('holidaylist')); // Note that conf->hooks_modules contains array
+$user_static = new User($db); 
 
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
@@ -163,11 +164,14 @@ $arrayfields = array(
 if (empty($extrafieldsobjectkey) && is_object($object)) {
 	$extrafieldsobjectkey = $object->table_element;
 }
+
 $extrafields_save = $extrafields->attributes[$extrafieldsobjectkey]['label'];
-$extrafields->attributes[$extrafieldsobjectkey]['label'] = array('fk_validator2' => "Approbateur n°2");
-// Extra fields
-include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
-$extrafields->attributes[$extrafieldsobjectkey]['label'] = $extrafields_save;
+if(!$conf->global->HOLIDAY_FDT_APPROVER) {
+	$extrafields->attributes[$extrafieldsobjectkey]['label'] = array('fk_validator2' => "Approbateur n°2");
+	// Extra fields
+	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
+	$extrafields->attributes[$extrafieldsobjectkey]['label'] = $extrafields_save;
+}
 
 $arrayfields2= array(
 	'cp.fk_type'=>array('label'=>$langs->trans("Type"), 'checked'=>1, 'position'=>35),
@@ -196,6 +200,11 @@ if (empty($conf->holidaycustom->enabled)) {
 	print '</div>';
 	llxFooter();
 	exit();
+}
+
+// Ne pas afficher la colonne "Approbateur" si aucun type d'absence ne doit être approuvé
+if(empty($conf->global->HOLIDAY_VALIDATE_TYPE)) {
+	unset($arrayfields['cp.fk_validator']);
 }
 
 /*
@@ -267,7 +276,6 @@ if (empty($reshook)) {
 
 
 
-
 /*
  * View
  */
@@ -277,8 +285,9 @@ $formother = new FormOther($db);
 $formfile = new FormFile($db);
 
 $fuser = new User($db);
-$fuser->fetchAll();
-$tab_user = $fuser->users;
+// $fuser->fetchAll();
+// $tab_user = $fuser->users;
+$tab_user = array();
 
 $holidaystatic = new Holiday($db);
 
@@ -360,9 +369,11 @@ if (is_array($extrafields->attributes[$object->table_element]['label']) && count
 }
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_approbation as ha on (ha.fk_holiday = cp.rowid)";
 if($search_valideur > 0){
-	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_approbation as ha1 on (ha1.fk_holiday = cp.rowid";
-	$sql .= " AND ha1.fk_user = ".$search_valideur." AND ha1.validation_number = 1";
-	$sql .= ")";
+	if(!$conf->global->HOLIDAY_FDT_APPROVER) {
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_approbation as ha1 on (ha1.fk_holiday = cp.rowid";
+		$sql .= " AND ha1.fk_user = ".$search_valideur." AND ha1.validation_number = 1";
+		$sql .= ")";
+	}
 }
 if($search_valideur2 > 0){
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_approbation as ha2 on (ha2.fk_holiday = cp.rowid";
@@ -370,6 +381,7 @@ if($search_valideur2 > 0){
 	$sql .= ")";
 }
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as uu ON uu.rowid = cp.fk_user";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as uue ON uue.fk_object = uu.rowid";
 // $sql .= ", ".MAIN_DB_PREFIX."user as uu, ".MAIN_DB_PREFIX."user as ua";
 $sql .= " WHERE cp.entity IN (".getEntity('holiday').")";
 // $sql .= " AND cp.fk_user = uu.rowid AND IF(cp.fk_validator > 0, cp.fk_validator = ua.rowid, ha.fk_user = ua.rowid)"; // Hack pour la recherche sur le tableau
@@ -403,8 +415,13 @@ if (!empty($search_valideur) && $search_valideur != -1 && !empty($search_valideu
 	$search = 1;
 }
 elseif (!empty($search_valideur) && $search_valideur != -1) {
-	$sql .= " AND (cp.fk_validator = '".$db->escape($search_valideur)."'\n";
-	$sql .= " OR ha1.fk_user IS NOT NULL)";
+	if($conf->global->HOLIDAY_FDT_APPROVER) {
+		$sql .= " AND FIND_IN_SET($db->escape($search_valideur), uue.approbateurfdt) > 0";
+	}
+	else {
+		$sql .= " AND (cp.fk_validator = '".$db->escape($search_valideur)."'\n";
+		$sql .= " OR ha1.fk_user IS NOT NULL)";
+	}
 
 	$search = 1;
 }
@@ -438,15 +455,26 @@ $reshook = $hookmanager->executeHooks('printFieldListWhere', $parameters); // No
 $sql .= $hookmanager->resPrint;
 
 if (empty($user->rights->holidaycustom->readall)) {
-	$sql .= ' AND (cp.fk_user IN ('.$db->sanitize(join(',', $childids)).')';
-	$sql .= " OR ha.fk_user = ".$user->id.")";
+	if($conf->global->HOLIDAY_FDT_APPROVER) {
+		$sql .= ' AND (cp.fk_user IN ('.$db->sanitize(join(',', $childids)).')';
+		$sql .= " OR FIND_IN_SET($db->escape($user->id), uue.approbateurfdt) > 0)";
+	}
+	else {
+		$sql .= ' AND (cp.fk_user IN ('.$db->sanitize(join(',', $childids)).')';
+		$sql .= " OR ha.fk_user = ".$user->id.")";
+	}
 }
 if ($id > 0) {
 	$sql .= " AND cp.fk_user IN (".$db->sanitize($id).")";
 }
 
 $sql .= " GROUP BY cp.rowid";
-$sql .= $db->order($sortfield, $sortorder);
+if($sortfield == 'cp.fk_user') {
+	$sql .= $db->order('uu.lastname, uu.firstname', $sortorder);
+}
+else {
+	$sql .= $db->order($sortfield, $sortorder);
+}
 
 // Count total nb of records
 $nbtotalofrecords = '';
@@ -640,7 +668,7 @@ if ($resql) {
 
 		$newcardbutton = dolGetButtonTitle($langs->trans('MenuAddCP'), '', 'fa fa-plus-circle', DOL_URL_ROOT.'/custom/holidaycustom/card.php?action=create', '', $user->rights->holidaycustom->write);
 
-		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, $num, $nbtotalofrecords, 'title_hrm', 0, $newcardbutton, '', $limit, 0, 0, 1);
+		print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, $num, $nbtotalofrecords, $object->picto, 0, $newcardbutton, '', $limit, 0, 0, 1);
 	}
 
 	$topicmail = "Information";
@@ -763,7 +791,7 @@ if ($resql) {
 				//$labeltoshow .= ($val['delay'] > 0 ? ' ('.$langs->trans("NoticePeriod").': '.$val['delay'].' '.$langs->trans("days").')':'');
 				$arraytypeleaves[$val['rowid']] = $labeltoshow;
 			}
-			print $form->selectarray('search_type', $arraytypeleaves, $search_type, 1, 0, 0, '', 0, 0, 0, '', '', 1);
+			print $form->selectarray('search_type', $arraytypeleaves, $search_type, 1, 0, 0, '', 0, 0, 0, 'ASC', '', 1);
 		}
 		print '</td>';
 	}
@@ -936,10 +964,10 @@ if ($resql) {
 			$obj = $db->fetch_object($resql);
 
 			// Store properties in $object
-			$object->fetch($obj->rowid);
+			$object->fetch($obj->rowid, '', 0);
 
-			$object->listApprover1 = $object->listApprover('', 1);
-			$object->listApprover2 = $object->listApprover('', 2);
+			// $object->listApprover1 = $object->listApprover('', 1, 0);
+			// $object->listApprover2 = $object->listApprover('', 2, 0);
 
 			// Leave request
 			$holidaystatic->id = $obj->rowid;
@@ -985,7 +1013,7 @@ if ($resql) {
 				}
 			}
 			if (!empty($arrayfields['cp.fk_user']['checked'])) {
-				print '<td class="tdoverflowmax150">'.$userstatic->getNomUrlCustom(-1, 'leave').'</td>';
+				print '<td class="tdoverflowmax200">'.$userstatic->getNomUrlCustom(-1, 'leave', 0, 0, 35).'</td>';
 				if (!$i) {
 					$totalarray['nbfield']++;
 				}
@@ -993,13 +1021,44 @@ if ($resql) {
 			if (!empty($arrayfields['cp.fk_validator']['checked'])) {
 				print '<td class="tdoverflowmax150">';
 				//print $approbatorstatic->getNomUrl(-1);
+				
+				if($conf->global->HOLIDAY_FDT_APPROVER && (in_array($object->fk_type, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)) || in_array(-1, explode(",", $conf->global->HOLIDAY_VALIDATE_TYPE)))) {
+					if(!key_exists($userstatic->id, $tab_user)) {
+						$user_static = new User($db);
+						$user_static->fetch($userstatic->id);
+						$tab_user[$userstatic->id] = $user_static;
+					}
+					$user_static = $tab_user[$userstatic->id];
+					$list_validation1 = explode(",", $user_static->array_options['options_approbateurfdt']);
+					foreach($list_validation1 as $userid){
+						if($userid > 0) {
+							if(!key_exists($userid, $tab_user)) {
+								$user_static = new User($db);
+								$user_static->fetch($userid);
+								$tab_user[$userid] = $user_static;
+							}
 
-				$list_validation1 = $object->listApprover1;
-				foreach($list_validation1[0] as $userid){
-					$user_static = $tab_user[$userid];
-					print $user_static->getNomUrl(3, "").($list_validation1[1][$userid] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
-					print '<br>';
+							$user_static = $tab_user[$userid];
+							print $user_static->getNomUrl(3, "");
+							print '<br>';
+						}
+					}
 				}
+				else {
+					$list_validation1 = $object->listApprover1;
+					foreach($list_validation1[0] as $userid){
+						if(!key_exists($userid, $tab_user)) {
+							$user_static = new User($db);
+							$user_static->fetch($userid);
+							$tab_user[$userid] = $user_static;
+						}
+
+						$user_static = $tab_user[$userid];
+						print $user_static->getNomUrl(3, "").($list_validation1[1][$userid] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
+						print '<br>';
+					}
+				}
+				
 				print '</td>';
 				
 				if (!$i) {
@@ -1013,10 +1072,17 @@ if ($resql) {
 
 				$list_validation2 = $object->listApprover2;
 				foreach($list_validation2[0] as $userid){
+					if(!key_exists($userid, $tab_user)) {
+						$user_static = new User($db);
+						$user_static->fetch($userid);
+						$tab_user[$userid] = $user_static;
+					}
+					
 					$user_static = $tab_user[$userid];
 					print $user_static->getNomUrl(3, "").($list_validation2[1][$userid] == 1 ? ' <i class="fas fa-check" style="color: #00a300;"></i>' : ' <i class="fas fa-times" style="color: red"></i>');
 					print '<br>';
 				}
+
 				print '</td>';
 				
 				if (!$i) {

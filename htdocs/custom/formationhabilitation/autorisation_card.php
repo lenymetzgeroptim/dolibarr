@@ -145,7 +145,7 @@ $objectparentline = $object;
 $permissiontoread = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'read');
 $permissiontoadd = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 $permissiontodelete = $user->hasRight('formationhabilitation', 'habilitation_autorisation', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_CONSTRUCTION);
-$permissiontoreadline = $user->hasRight('formationhabilitation', 'userhabilitation_autorisation', 'read');
+$permissiontoreadline = $user->hasRight('formationhabilitation', 'userhabilitation_autorisation', 'readall');
 $permissiontoaddline = $user->hasRight('formationhabilitation', 'userhabilitation_autorisation', 'write');
 $permissiontodeleteline = $user->hasRight('formationhabilitation', 'userhabilitation_autorisation', 'delete');
 $permissiontoforceline = $user->hasRight('formationhabilitation', 'userhabilitation_autorisation', 'force');

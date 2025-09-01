@@ -1311,6 +1311,7 @@ class ElementPrerequis extends CommonObject
 		foreach ($prerequisConditions as $condition_group => $prerequistype) {
 			$conditionMetForFormation = false;
 			$conditionMetForVisiteMedicale = false;
+			$VisiteMedicaleConditionnelle = false;
 
 			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
 			$date_finvalidite_prerequis = '';
@@ -1326,16 +1327,22 @@ class ElementPrerequis extends CommonObject
 
 			// Vérifier si l'utilisateur possède au moins une des nature de visite dans cette condition (condition OR)
 			foreach ($prerequistype['nature_visite'] as $nature_visiteid) {
-				if ($nature_visiteid > 0 && in_array($nature_visiteid, $natures_visite_user)) {
+				if ($nature_visiteid > 0 && in_array($nature_visiteid, $natures_visite_user['Conditionnelle']['naturevisite'])) {
 					$conditionMetForVisiteMedicale = true; 
+					$VisiteMedicaleConditionnelle = true; 
+				}
+				elseif ($nature_visiteid > 0 && in_array($nature_visiteid, $natures_visite_user['Apte'])) {
+					$conditionMetForVisiteMedicale = true; 
+					$VisiteMedicaleConditionnelle = false; 
 					break;
 				}
+
 			}
 			
 
 			// Si une condition OR n'est pas remplie, générer un message d'erreur
-			if (!$conditionMetForFormation && !$conditionMetForVisiteMedicale) {
-				if($withMessage) {
+			if (!$conditionMetForFormation && (!$conditionMetForVisiteMedicale || $VisiteMedicaleConditionnelle)) {
+				if($withMessage && !$conditionMetForFormation && !$conditionMetForVisiteMedicale) {
 					if(sizeof($prerequistype['formation']) > 0 && sizeof($prerequistype['nature_visite']) > 0) {
 						setEventMessages($langs->trans('ErrorPrerequisFormationAptitude'), null, 'errors');
 					}
@@ -1346,7 +1353,7 @@ class ElementPrerequis extends CommonObject
 						setEventMessages($langs->trans('ErrorPrerequisAptitude'), null, 'errors');
 					}
 				}
-				
+
 				if($return_text) {
 					$prerequis_array = array();
 					if(!$conditionMetForFormation && sizeof($prerequistype['formation']) > 0) {
@@ -1357,20 +1364,25 @@ class ElementPrerequis extends CommonObject
 							}
 						}
 					}
-					if(!$conditionMetForVisiteMedicale && sizeof($prerequistype['nature_visite']) > 0) {
+					if((!$conditionMetForVisiteMedicale || $VisiteMedicaleConditionnelle) && sizeof($prerequistype['nature_visite']) > 0) {
 						foreach ($prerequistype['nature_visite'] as $nature_visiteid) {
 							if ($nature_visiteid > 0) {
-								$prerequis_array[] = $natureVM[$nature_visiteid];
+								if(in_array($nature_visiteid,  $natures_visite_user['Conditionnelle']['naturevisite'])) {
+									$prerequis_array[] = $natureVM[$nature_visiteid]." (conditionnelle pour le motif suivant : ".$natures_visite_user['Conditionnelle']['commentaire'][$natures_visite_user['Conditionnelle']['rowid'][$nature_visiteid]].")";
+								}
+								else {
+									$prerequis_array[] = $natureVM[$nature_visiteid];
+								}
 							}
 						}
 					}
-
+	
 					if(!empty($prerequis_array)) {
 						$text_for_return .= '<li>'.implode(' OU ', $prerequis_array).'</li>';
 					}
 				}
-
-				if(!$return_text) {
+				
+				if(!$return_text && !$conditionMetForFormation && !$conditionMetForVisiteMedicale) {
 					return -1;
 				}
 			}
@@ -1418,8 +1430,8 @@ class ElementPrerequis extends CommonObject
 
 		foreach ($prerequisConditions as $condition_group => $prerequistype) {
 			// Vérifier si l'utilisateur possède au moins une des formations requises dans cette condition (condition OR)
+			$date_finvalidite_prerequis = '';
 			foreach ($prerequistype['formation'] as $formationid) {
-				$date_finvalidite_prerequis = '';
 				if ($formationid > 0 && in_array($formationid, $formations_user['id'])) {
 					if($date_finvalidite_prerequis == '' || $date_finvalidite_prerequis < $formations_user['date_finvalidite'][$formationid]) {
 						$date_finvalidite_prerequis = $formations_user['date_finvalidite'][$formationid];
@@ -1427,7 +1439,7 @@ class ElementPrerequis extends CommonObject
 				}
 			}
 			
-			if(empty($date_finvalidite) || $date_finvalidite > $date_finvalidite_prerequis) {
+			if(!empty($date_finvalidite_prerequis) && (empty($date_finvalidite) || $date_finvalidite > $date_finvalidite_prerequis)) {
 				$date_finvalidite = $date_finvalidite_prerequis;
 			}
 		}

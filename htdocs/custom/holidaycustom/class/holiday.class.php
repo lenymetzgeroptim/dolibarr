@@ -37,7 +37,7 @@ require_once DOL_DOCUMENT_ROOT.'/includes/Psr/autoloader.php';
  *	Class of the module paid holiday. Developed by Teclib ( http://www.teclib.com/ )
  */
 class Holiday extends CommonObject
-{
+{	
 	/**
 	 * @var string ID to identify managed object
 	 */
@@ -70,7 +70,7 @@ class Holiday extends CommonObject
 	 * @var string String with name of icon for myobject. Must be the part after the 'object_' into object_myobject.png
 	 */
 	public $picto = 'holiday';
-
+	
 	/**
 	 * @deprecated
 	 * @see $id
@@ -100,6 +100,8 @@ class Holiday extends CommonObject
 	 * @var int 	ID of user that must approve. TODO: there is no date for validation (date_valid is used for approval), add one.
 	 */
 	public $fk_validator;
+	public $listApprover1 = array();
+	public $listApprover2 = array();
 
 	/**
 	 * @var int 	Date of approval. TODO: Add a field for approval date and use date_valid instead for validation.
@@ -184,7 +186,14 @@ class Holiday extends CommonObject
 	 */
 	public function __construct($db)
 	{
+		global $conf; 
+
 		$this->db = $db;
+
+		/**
+		 * @var string String with name of icon for myobject. Must be the part after the 'object_' into object_myobject.png
+		 */
+		$this->picto = ($conf->global->HOLIDAY_PICTO ? $conf->global->HOLIDAY_PICTO : 'holiday');
 	}
 
 
@@ -330,7 +339,12 @@ class Holiday extends CommonObject
 		$sql .= " '".$this->db->idate($this->date_debut)."',";
 		$sql .= " '".$this->db->idate($this->date_fin)."',";
 		$sql .= " ".((int) $this->halfday).",";
-		$sql .= " '1',";
+		if($this->statut > 0) {
+			$sql .= " '$this->statut',";
+		}
+		else {
+			$sql .= " '1',";
+		}
 		//$sql .= " ".((int) $user_validation_1->id).",";
 		$sql .= " '0',";
 		$sql .= " ".((int) $this->fk_type).",";
@@ -399,11 +413,12 @@ class Holiday extends CommonObject
 	 *
 	 *  @param	int		$id         Id object
 	 *  @param	string	$ref        Ref object
+	 *  @param	int		$fetch_user			If = 1 fetch User object
 	 *  @return int         		<0 if KO, 0 if not found, >0 if OK
 	 */
-	public function fetch($id, $ref = '')
+	public function fetch($id, $ref = '', $fetch_user = 1)
 	{
-		global $langs;
+		global $langs, $conf;
 
 		$sql = "SELECT";
 		$sql .= " cp.rowid,";
@@ -474,9 +489,9 @@ class Holiday extends CommonObject
 			}
 			$this->db->free($resql);
 
-			if ($result) {
-				$this->listApprover1 = $this->listApprover('', 1);
-				$this->listApprover2 = $this->listApprover('', 2);
+			if ($result && !$conf->global->HOLIDAY_FDT_APPROVER) {
+				$this->listApprover1 = $this->listApprover('', 1, $fetch_user);
+				$this->listApprover2 = $this->listApprover('', 2, $fetch_user);
 			}
 
 			return $result;
@@ -1389,9 +1404,9 @@ class Holiday extends CommonObject
 	 * 	@return boolean					False = New range overlap an existing holiday, True = no overlapping (is never on holiday during checked period).
 	 *  @see verifDateHolidayForTimestamp()
 	 */
-	public function verifDateHolidayCP($fk_user, $dateStart, $dateEnd, $halfday = 0)
+	public function verifDateHolidayCP($fk_user, $dateStart, $dateEnd, $halfday = 0, $filter = '')
 	{
-		$this->fetchByUser($fk_user, '', '');
+		$this->fetchByUser($fk_user, '', $filter);
 
 		foreach ($this->holiday as $infos_CP) {
 			if ($infos_CP['statut'] == 4) {
@@ -4002,6 +4017,99 @@ class Holiday extends CommonObject
 	}
 
 	/**
+	 *      Does the type of holiday can be halfday?
+	 *
+	 *      @return     int         <0 if KO, 0 if no, 1 if yes
+	 */
+	public function holidayTypeCanHalfday($type)
+	{
+		global $user;
+
+		if(empty($type)) {
+			return -1;
+		}
+
+		$sql = "SELECT h.halfday";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
+		if(is_numeric($type)) {
+			$sql .= " WHERE h.rowid = ".$type;
+		}
+		else {
+			$sql .= " WHERE h.code = '".$type."'";
+		}
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$obj = $this->db->fetch_object($resql);
+			$this->db->free($resql);
+			return $obj->halfday;
+		} else {
+			dol_print_error($this->db);
+			$this->error = $this->db->error();
+			return -1;
+		}
+	}
+
+	/**
+	 *      List of holiday in hour
+	 *
+	 *      @return     array         <0 if KO, array of type if no
+	 */
+	public function holidayTypesInHour()
+	{
+		global $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
+		$sql .= " WHERE h.in_hour = 1";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			dol_print_error($this->db);
+			$this->error = $this->db->error();
+			return -1;
+		}
+	}
+
+	
+	/**
+	 *      List of holiday that can be taken as half-days
+	 *
+	 *      @return     array         <0 if KO, array of type if no
+	 */
+	public function holidayTypesHalfday()
+	{
+		global $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_holiday_types as h";
+		$sql .= " WHERE h.halfday = 1";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[] = $obj->rowid;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
+			dol_print_error($this->db);
+			$this->error = $this->db->error();
+			return -1;
+		}
+	}
+
+	/**
 	 *     
 	 *
 	 *      @return     array()         Ids des types de congés qui ouvrent droit à RTT
@@ -4234,9 +4342,10 @@ class Holiday extends CommonObject
 	 *
 	 * 	@param	string	$excludefilter		Filter to exclude. Do not use here a string coming from user input.
 	 *  @param	int		$validation_number	Validation Number
+	 *  @param	int		$fetch_user			If = 1 fetch User object
 	 * 	@return	mixed						Array of users or -1 on error
 	 */
-	public function listApprover($excludefilter = '', $validation_number)
+	public function listApprover($excludefilter = '', $validation_number, $fetch_user = 1)
 	{
 		global $conf, $user;
 		$ret = array();
@@ -4286,11 +4395,14 @@ class Holiday extends CommonObject
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			while ($obj = $this->db->fetch_object($resql)) {
-				$newuser = new User($this->db);
-				$newuser->fetch($obj->rowid);
 				$ret[0][$obj->rowid] = $obj->rowid;
 				$ret[1][$obj->rowid] = $obj->validation;
-				$ret[2][$obj->rowid] = $newuser;
+
+				if($fetch_user) {
+					$newuser = new User($this->db);
+					$newuser->fetch($obj->rowid);
+					$ret[2][$obj->rowid] = clone $newuser;
+				}
 			}
 
 			$this->db->free($resql);
@@ -4379,7 +4491,7 @@ class Holiday extends CommonObject
 		}
 
 		if(!$only_solde) {
-			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', 'holiday', 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP_SOLDE > 0 ? ' amountpaymentcomplete' : ($nb_ACP_SOLDE < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP_SOLDE, 5).'</span>', $balancetoshow).'</div>';
+			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', $this->picto, 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP_SOLDE > 0 ? ' amountpaymentcomplete' : ($nb_ACP_SOLDE < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP_SOLDE, 5).'</span>', $balancetoshow).'</div>';
 			if($detail) {
 				$ret .= '<div class="valignmiddle div-balanceofleave center">';
 				$ret .= 'Dont <span class="balanceofleave valignmiddle amountpaymentcomplete">'.$nb_conges_brouillon.'</span> en brouillon, ';
@@ -4426,7 +4538,7 @@ class Holiday extends CommonObject
 			$ret .= '</table><br>';
 		}
 		else {
-			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', 'holiday', 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP > 0 ? ' amountpaymentcomplete' : ($nb_ACP < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP, 5).'</span>', $balancetoshow).'</div>';
+			$ret .= '<div class="valignmiddle div-balanceofleave center">'.str_replace('{s1}', img_picto('', $this->picto, 'class="paddingleft pictofixedwidth"').'<span class="balanceofleave valignmiddle'.($nb_ACP > 0 ? ' amountpaymentcomplete' : ($nb_ACP < 0 ? ' amountremaintopay' : ' amountpaymentneutral')).'">'.round($nb_ACP, 5).'</span>', $balancetoshow).'</div>';
 			$ret .= '<div class="valignmiddle div-balanceofleave center">';
 			$ret .= 'Dont <span class="balanceofleave valignmiddle amountpaymentcomplete">'.$nb_conges_brouillon.'</span> en brouillon, ';
 			$ret .= '<span class="balanceofleave valignmiddle amountpaymentcomplete">'.$nb_conges_attente_approbation.'</span> en attente d\'approbation, ';

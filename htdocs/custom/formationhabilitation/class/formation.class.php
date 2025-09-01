@@ -534,7 +534,7 @@ class Formation extends CommonObject
 			$actioncomm->userownerid = $user->id; // Owner of action
 			$actioncomm->fk_element  = $this->id;
 			$actioncomm->elementtype = $this->element.($this->module ? '@'.$this->module : '');
-			$actioncomm->extraparams  = 'cost';
+			$actioncomm->extraparams  = 'costpedagogique';
 			$ret = $actioncomm->create($user); // User creating action
 		}
 
@@ -1310,6 +1310,36 @@ class Formation extends CommonObject
 			return $res;
 		}
 		else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Return le nom de toutes les formations actives
+	 *
+	 * 	@return	array						
+	 */
+	public function getAllFormationLabel()
+	{
+		global $conf, $user;
+		$res = array();
+
+		$sql = "SELECT h.rowid, h.label";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_formation as h";
+		$sql .= " WHERE h.status = 1";
+		$sql .= " ORDER BY h.label";
+
+		dol_syslog(get_class($this)."::getAllFormationLabel", LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while($obj = $this->db->fetch_object($resql)) {
+				$res[$obj->rowid] = $obj->label;
+			}
+
+			$this->db->free($resql);
+			return $res;
+		} else {
 			$this->error = $this->db->lasterror();
 			return -1;
 		}

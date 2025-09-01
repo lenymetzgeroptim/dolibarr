@@ -98,6 +98,14 @@ elseif($onglet == 'volet'){
     $objectline = new UserVolet($db);
     $objectparentline = new Volet($db);
 }
+elseif($onglet == 'convocation'){
+    $objectline = new Convocation($db);
+    $objectparentline = new Convocation($db);
+}
+elseif($onglet == 'visitemedical'){
+    $objectline = new VisiteMedical($db);
+    $objectparentline = new VisiteMedical($db);
+}
 
 //Permissions
 $user_group = New UserGroup($db);
@@ -114,7 +122,8 @@ if($onglet == 'formation' || empty($onglet)) {
     $permissiontoreadline = $user->rights->formationhabilitation->userformation->readall || ($object->id == $user->id && $user->rights->formationhabilitation->userformation->read);
     $permissiontoaddline = $user->rights->formationhabilitation->userformation->write;
     $permissiontodeleteline = $user->rights->formationhabilitation->userformation->delete;
-    $permissiontoreadcost = $user->rights->formationhabilitation->formation->readcout;
+    $permissiontoreadcostpedagogique = $user->rights->formationhabilitation->formation->readcoutpedagogique;
+    $permissiontoreadallcost = $user->rights->formationhabilitation->formation->readcoutall;
     //$permissiontovalidateline = ($userInRespAntenneGroup && $userIsRespAntenne);
     $permissiontoforceline = $user->rights->formationhabilitation->userformation->force;
 }
@@ -137,6 +146,16 @@ elseif($onglet == 'volet'){
     $permissiontoaddline = $user->rights->formationhabilitation->uservolet->write;
     $permissiontodeleteline = $user->rights->formationhabilitation->uservolet->delete;
 }
+elseif($onglet == 'convocation'){
+    $permissiontoreadline = $user->rights->formationhabilitation->convocation->readall || ($object->id == $user->id && $user->rights->formationhabilitation->convocation->read);
+    $permissiontoaddline = 0;
+    $permissiontodeleteline = $user->rights->formationhabilitation->convocation->delete;
+}
+elseif($onglet == 'visitemedical'){
+    $permissiontoreadline = $user->rights->formationhabilitation->visitemedical->readall || ($object->id == $user->id && $user->rights->formationhabilitation->visitemedical->read);
+    $permissiontoaddline = 0;
+    $permissiontodeleteline = $user->rights->formationhabilitation->visitemedical->delete;
+}
 
 
 if (empty($conf->formationhabilitation->enabled)) accessforbidden();
@@ -151,7 +170,7 @@ if (!$sortorder) {
 }
 
 $search = array();
-$search['fk_user'] = $object->id;
+$search['fk_user'] = (int)$object->id;
 
 include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline_init.tpl.php';
 
@@ -202,7 +221,6 @@ if($onglet == 'autorisation'){
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_userautorisation.inc.php';
 }
 
-// Action pour générer un document
 if ($onglet == 'volet') {
     if(GETPOST('fk_user') > 0) {
         $user_static = new User($db);
@@ -210,20 +228,24 @@ if ($onglet == 'volet') {
     }
 
     include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_uservolet.inc.php';
+}
 
-    // // Delete file
-    // if ($action == 'confirm_deletefile' && $confirm == 'yes') {
-    //     $file = $conf->formationhabilitation->dir_output.'/'.$object->id."/".GETPOST('file'); // Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
+if ($onglet == 'convocation') {
+    if(GETPOST('fk_user') > 0) {
+        $user_static = new User($db);
+        $user_static->fetch(GETPOST('fk_user'));
+    }
 
-    //     $ret = dol_delete_file($file);
-    //     if ($ret) {
-    //         setEventMessages($langs->trans("FileWasRemoved", GETPOST('file')), null, 'mesgs');
-    //     } else {
-    //         setEventMessages($langs->trans("ErrorFailToDeleteFile", GETPOST('file')), null, 'errors');
-    //     }
-    //     header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&onglet=volet');
-    //     exit;
-    // }
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_convocation.inc.php';
+}
+
+if ($onglet == 'visitemedical') {
+    if(GETPOST('fk_user') > 0) {
+        $user_static = new User($db);
+        $user_static->fetch(GETPOST('fk_user'));
+    }
+
+    include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/actions_addupdatedelete_visitemedical.inc.php';
 }
 
 /*
@@ -276,6 +298,7 @@ if ($action == 'programmer_formation') {
                         array('label'=>$langs->trans('DateDebutFormation') ,'type'=>'datetime', 'name'=>'date_debut_formation_programmer', 'value'=>$objectline->date_debut_formation),
                         array('label'=>$langs->trans('DateFinFormation') ,'type'=>'datetime', 'name'=>'date_fin_formation_programmer', 'value'=>$objectline->date_fin_formation),
                         array('label'=>$langs->trans('LieuFormation') ,'type'=>'text', 'name'=>'lieu_formation_programmer', 'value'=>''),
+                        array('label'=>$langs->trans('CoutPedagogique') ,'type'=>'text', 'name'=>'cout_pedagogique_programmer', 'value'=>''),
                         array('label'=>$langs->trans('InterneExterne') ,'type'=>'select', 'name'=>'interne_externe_programmer', 'values'=>$objectline->fields['interne_externe']['arrayofkeyval'], 'select_show_empty'=>0, 'default'=>1),
                         array('label'=>$langs->trans('Organisme') ,'type'=>'link', 'code'=>'fk_societe', 'name'=>'fk_societe_programmer', 'options'=>$objectline->fields['fk_societe']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module),
                         array('label'=>$langs->trans('Formateur') ,'type'=>'link', 'code'=>'formateur', 'name'=>'formateur_programmer', 'options'=>$objectline->fields['formateur']['type'], 'showempty'=>1, 'element'=>$objectline->element, 'module'=>$objectline->module, 'hidden'=>1)
@@ -326,15 +349,17 @@ print $formconfirm;
 unset($arrayfields['t.formateur']);
 unset($objectline->fields['fk_user']);
 unset($arrayfields['t.fk_user']);
-if(!$permissiontoreadcost) {
-    unset($objectline->fields['cout_pedagogique']);
+if(!$permissiontoreadallcost) {
     unset($objectline->fields['cout_mobilisation']);
-    unset($objectline->fields['cout_annexe']);
     unset($objectline->fields['cout_total']);
-    unset($arrayfields['t.cout_pedagogique']);
     unset($arrayfields['t.cout_mobilisation']);
-    unset($arrayfields['t.cout_annexe']);
     unset($arrayfields['t.cout_total']);
+}
+if(!$permissiontoreadcostpedagogique && !$permissiontoreadallcost) {
+    unset($objectline->fields['cout_pedagogique']);
+    unset($objectline->fields['cout_annexe']);
+    unset($arrayfields['t.cout_pedagogique']);
+    unset($arrayfields['t.cout_annexe']);
 }
 
 dol_banner_tab($object, 'id', $linkback, $user->rights->user->user->lire || $user->admin);
@@ -448,6 +473,62 @@ elseif($onglet == 'volet') {
     }
     else {
         $contextpage = 'uservolet';
+        include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+        print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    }
+}
+elseif($onglet == 'convocation') {
+    print dol_get_fiche_head($head, 'convocation', $title, -1, 'user');
+
+    if (empty($permissiontoreadline)) {
+        $langs->loadLangs(array("main", "errors"));
+        print '<div class="error">';
+        if (empty($message)) {
+            print $langs->trans("ErrorForbidden");
+        } else {
+            print $langs->trans($message);
+        }
+        print '</div>';
+        if ($user->login) {
+            print $langs->trans("CurrentLogin").': <span class="error">'.$user->login.'</span><br>';
+            print $langs->trans("ErrorForbidden2", $langs->transnoentitiesnoconv("Home"), $langs->transnoentitiesnoconv("Users"));
+            print $langs->trans("ErrorForbidden4");
+        } else {
+            print $langs->trans("ErrorForbidden3");
+        }
+    }
+    else {
+        $disableedit = 1;
+        $contextpage = 'convocation';
+        $css_table = 'min-height: 450px;';
+        include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
+        print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
+    }
+}
+elseif($onglet == 'visitemedical') {
+    print dol_get_fiche_head($head, 'visitemedical', $title, -1, 'user');
+
+    if (empty($permissiontoreadline)) {
+        $langs->loadLangs(array("main", "errors"));
+        print '<div class="error">';
+        if (empty($message)) {
+            print $langs->trans("ErrorForbidden");
+        } else {
+            print $langs->trans($message);
+        }
+        print '</div>';
+        if ($user->login) {
+            print $langs->trans("CurrentLogin").': <span class="error">'.$user->login.'</span><br>';
+            print $langs->trans("ErrorForbidden2", $langs->transnoentitiesnoconv("Home"), $langs->transnoentitiesnoconv("Users"));
+            print $langs->trans("ErrorForbidden4");
+        } else {
+            print $langs->trans("ErrorForbidden3");
+        }
+    }
+    else {
+        $disableedit = 1;
+        $contextpage = 'visitemedical';
+        $css_table = 'min-height: 450px;';
         include DOL_DOCUMENT_ROOT.'/custom/formationhabilitation/core/tpl/objectline.tpl.php';
         print '<input type="hidden" form="addline" id="fk_user" name="fk_user" value="' . $object->id.'">';
     }

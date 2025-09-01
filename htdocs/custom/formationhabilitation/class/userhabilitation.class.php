@@ -840,7 +840,7 @@ class UserHabilitation extends CommonObject
 
 		if ($this->status != self::STATUS_HABILITABLE) {
 			$this->errors[] = $langs->trans('ImpossibleToValidateWithThisStatut', $this->ref);
-			return 0;
+			return -1;
 		}
 
 		$now = dol_now();
@@ -1901,9 +1901,11 @@ class UserHabilitation extends CommonObject
 					else {
 						$this->output .= "L'habilitation $obj->ref a été passé au statut 'Expirée'<br>";
 
-						$user_static = new User($this->db);
-						$user_static->fetch($obj->fk_user);
-						
+						$fk_user = new User($this->db);
+						$fk_user->fetch($obj->fk_user);
+						$habilitation = new Habilitation($this->db);
+						$habilitation->fetch($obj->fk_habilitation);
+
 						$user_group = new UserGroup($this->db);
 						$user_group->fetch(7);
 						$liste_user = $user_group->listUsersForGroup('u.statut=1');
@@ -1919,15 +1921,15 @@ class UserHabilitation extends CommonObject
 						}
 						rtrim($to, ', ');
 
-						if(!empty($user_static->email)) {
-							$to2 = $user_static->email;
+						if(!empty($fk_user->email)) {
+							$to2 = $fk_user->email;
 						}
 						
 						$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$obj->fk_user.'&onglet=habilitation">ici</a>';
-						$message = $langs->transnoentitiesnoconv("EMailTextHabilitationExpire",  $this->ref, $link);
-						$message2 = $langs->transnoentitiesnoconv("EMailTextHabilitationExpireForUser",  $this->ref, $link);
+						$message = $langs->transnoentitiesnoconv("EMailTextHabilitationExpire", $habilitation->label, $fk_user->firstname." ".$fk_user->lastname, $link);
+						$message2 = $langs->transnoentitiesnoconv("EMailTextHabilitationExpireForUser", $habilitation->label, $link);
 
 						$mail = new CMailFile(
 							$subject,

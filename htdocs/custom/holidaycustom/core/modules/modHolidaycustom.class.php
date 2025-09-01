@@ -83,7 +83,7 @@ class modHolidaycustom extends DolibarrModules
 		// If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
 		// If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
 		// To use a supported fa-xxx css style of font awesome, use this->picto='xxx'
-		$this->picto = 'holiday';
+		$this->picto = ($conf->global->HOLIDAY_PICTO ? $conf->global->HOLIDAY_PICTO : 'holiday');
 
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = array(
@@ -111,7 +111,7 @@ class modHolidaycustom extends DolibarrModules
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
-				//   '/holidaycustom/js/holidaycustom.js.php',
+				'/holidaycustom/js/holidaycustom.js.php',
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
@@ -222,26 +222,27 @@ class modHolidaycustom extends DolibarrModules
 		$this->dictionaries = array(
 			'langs'=>array('holiday','holidaycustom@holidaycustom'),
 			// List of tables we want to see into dictonnary editor
-			'tabname'=>array(MAIN_DB_PREFIX."c_holiday_types"),
+			'tabname'=>array(MAIN_DB_PREFIX."c_holiday_types", MAIN_DB_PREFIX."c_hrm_public_holiday"),
 			// Label of tables
-			'tablib'=>array("DictionaryHolidayTypes"),
+			'tablib'=>array("DictionaryHolidayTypes", "DictionaryPublicHolidays"),
 			// Request to select fields
-			'tabsql'=>array("SELECT h.rowid as rowid, h.code, h.code_silae, h.label, h.affect, h.delay, h.newbymonth, h.fk_country as country_id, h.in_hour, h.droit_rtt, c.code as country_code, c.label as 
+			'tabsql'=>array("SELECT h.rowid as rowid, h.code, h.code_silae, h.label, h.affect, h.delay, h.newbymonth, h.fk_country as country_id, h.in_hour, h.halfday, h.droit_rtt, c.code as country_code, c.label as 
 			country, h.active FROM ".MAIN_DB_PREFIX."c_holiday_types as h LEFT JOIN ".MAIN_DB_PREFIX."c_country as c ON h.fk_country=c.rowid WHERE 
 			(h.code <> 'CP_ANC_ACQUIS' AND h.code <> 'CP_ANC_PRIS' AND h.code <> 'CP_FRAC_ACQUIS' AND h.code <> 'CP_FRAC_PRIS' AND h.code <> 'CP_N_ACQUIS' 
-			AND h.code <> 'CP_N_PRIS' AND h.code <> 'CP_N-1_ACQUIS' AND h.code <> 'CP_N-1_PRIS' AND h.code <> 'RTT_ACQUIS' AND h.code <> 'RTT_PRIS')"),
+			AND h.code <> 'CP_N_PRIS' AND h.code <> 'CP_N-1_ACQUIS' AND h.code <> 'CP_N-1_PRIS' AND h.code <> 'RTT_ACQUIS' AND h.code <> 'RTT_PRIS')", 
+			"SELECT a.id    as rowid, a.entity, a.code, a.fk_country as country_id, c.code as country_code, c.label as country, a.dayrule, a.day, a.month, a.year, a.active FROM ".MAIN_DB_PREFIX."c_hrm_public_holiday as a LEFT JOIN ".MAIN_DB_PREFIX."c_country as c ON a.fk_country=c.rowid AND c.active=1"),
 			// Sort order
-			'tabsqlsort'=>array("country ASC, code ASC"),
+			'tabsqlsort'=>array("country ASC, code ASC", "country, year ASC, month ASC, day ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("code,code_silae,label,affect,delay,newbymonth,country_id,in_hour,droit_rtt,country"),
+			'tabfield'=>array("code,code_silae,label,affect,delay,newbymonth,country_id,in_hour,halfday,droit_rtt,country", "code,dayrule,year,month,day,country_id,country"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("code,code_silae,label,affect,delay,newbymonth,in_hour,droit_rtt,country"),
+			'tabfieldvalue'=>array("code,code_silae,label,affect,delay,newbymonth,in_hour,halfday,droit_rtt,country", "code,dayrule,day,month,year,country"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("code,code_silae,label,affect,delay,newbymonth,in_hour,droit_rtt,fk_country"),
+			'tabfieldinsert'=>array("code,code_silae,label,affect,delay,newbymonth,in_hour,halfday,droit_rtt,fk_country", "code,dayrule,day,month,year,fk_country"),
 			// Name of columns with primary key (try to always name it 'rowid')
-			'tabrowid'=>array(""),
+			'tabrowid'=>array("", "id"),
 			// Condition to show each dictionary
-			'tabcond'=>array($conf->holidaycustom->enabled)
+			'tabcond'=>array(isModEnabled('holidaycustom'), (isModEnabled('holidaycustom') && !isModEnabled('holiday') && !isModEnabled('hrm')))
 		);
 		/* Example:
 		$this->dictionaries=array(
@@ -358,12 +359,12 @@ class modHolidaycustom extends DolibarrModules
 		$this->rights[$r][5] = ''; // In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
 
-		$this->rights[$r][0] = 20007;
-		$this->rights[$r][1] = 'Approve leave requests';
-		$this->rights[$r][2] = 'w';
-		$this->rights[$r][3] = 0;
-		$this->rights[$r][4] = 'approve';
-		$r++;
+		// $this->rights[$r][0] = 20007;
+		// $this->rights[$r][1] = 'Approve leave requests';
+		// $this->rights[$r][2] = 'w';
+		// $this->rights[$r][3] = 0;
+		// $this->rights[$r][4] = 'approve';
+		// $r++;
 
 		$this->rights[$r][0] = 20004; // Permission id (must not be already used)
 		$this->rights[$r][1] = 'Read leave requests for everybody'; // Permission label
@@ -412,112 +413,220 @@ class modHolidaycustom extends DolibarrModules
 		$this->menu = array();
 		$r = 0;
 
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=hrm',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',                          // This is a Top menu entry
-			'titre'=>$langs->trans("CPTitreMenu"),
-			'prefix' => img_picto('', 'holiday', 'class="pictofixedwidth"'),
-			'mainmenu'=>'hrm',
-			'leftmenu'=>'holiday',
-			'url'=>'/holidaycustom/list.php',
-			'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>$r,
-			'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
-			'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
-			'target'=>'',
-			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
-		);
+		if(!$conf->global->HOLIDAY_MENU_IN_FDT) {
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=hrm',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=>$langs->trans("CPTitreMenu"),
+				'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth"'),
+				'mainmenu'=>'hrm',
+				'leftmenu'=>'holiday',
+				'url'=>'/holidaycustom/list.php',
+				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
 
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',                          // This is a Top menu entry
-			'titre'=> $langs->trans("New"),
-			'mainmenu'=>'hrm',
-			'leftmenu'=>'holiday_create',
-			'url'=>'/holidaycustom/card.php?action=create',
-			'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>$r,
-			'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
-			'perms'=> '$user->rights->holidaycustom->write',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
-			'target'=>'',
-			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
-		);
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=> $langs->trans("MenuNewCP"),
+				'mainmenu'=>'hrm',
+				'leftmenu'=>'holiday_create',
+				'url'=>'/holidaycustom/card.php?action=create',
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->write',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
 
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',                          // This is a Top menu entry
-			'titre'=> "Liste des congés",
-			'mainmenu'=>'hrm',
-			'leftmenu'=>'holiday_list',
-			'url'=>'/holidaycustom/list.php',
-			'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>$r,
-			'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
-			'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
-			'target'=>'',
-			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
-		);
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=> $langs->trans("MenuListCP"),
+				'mainmenu'=>'hrm',
+				'leftmenu'=>'holiday_list',
+				'url'=>'/holidaycustom/list.php',
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
 
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',                          // This is a Top menu entry
-			'titre'=>  $langs->trans("MenuConfCP"),
-			'mainmenu'=>'hrm',
-			'leftmenu'=>'holiday_define',
-			'url'=>'/holidaycustom/define_holiday.php?action=request',
-			'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>$r,
-			'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
-			'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
-			'target'=>'',
-			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
-		);
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=>  $langs->trans("MenuConfCP"),
+				'mainmenu'=>'hrm',
+				'leftmenu'=>'holiday_define',
+				'url'=>'/holidaycustom/define_holiday.php?action=request',
+				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->read && empty($conf->global->HOLIDAY_HIDE_BALANCE)',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
 
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',                          // This is a Top menu entry
-			'titre'=> $langs->trans("MenuReportMonth"),
-			'mainmenu'=>'hrm',
-			'leftmenu'=>'holiday_month_report',
-			'url'=>'/holidaycustom/month_report.php',
-			'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>$r,
-			'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
-			'perms'=> '$user->rights->holidaycustom->readall',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
-			'target'=>'',
-			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
-		);
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=> $langs->trans("MenuReportMonth"),
+				'mainmenu'=>'hrm',
+				'leftmenu'=>'holiday_month_report',
+				'url'=>'/holidaycustom/month_report.php',
+				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->readall',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
 
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',                          // This is a Top menu entry
-			'titre'=>  $langs->trans("MenuLogCP"),
-			'mainmenu'=>'hrm',
-			'leftmenu'=>'holiday_view_log',
-			'url'=>'/holidaycustom/view_log.php?action=request',
-			'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>$r,
-			'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
-			'perms'=> '$user->rights->holidaycustom->define_holiday',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
-			'target'=>'',
-			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
-		);
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=>  $langs->trans("MenuLogCP"),
+				'mainmenu'=>'hrm',
+				'leftmenu'=>'holiday_view_log',
+				'url'=>'/holidaycustom/view_log.php?action=request',
+				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->define_holiday',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
 
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',                          // This is a Top menu entry
-			'titre'=>  "Import des congés",
-			'mainmenu'=>'hrm',
-			'leftmenu'=>'holiday_import',
-			'url'=>'/holidaycustom/import.php',
-			'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>$r,
-			'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
-			'perms'=> '$user->rights->holidaycustom->import',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
-			'target'=>'',
-			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
-		);
-	
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=> $langs->trans("MenuImportCP"),
+				'mainmenu'=>'hrm',
+				'leftmenu'=>'holiday_import',
+				'url'=>'/holidaycustom/import.php',
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->import',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
+		}
+		else {
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=feuilledetemps',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=>$langs->trans("CPTitreMenu"),
+				'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth"'),
+				'mainmenu'=>'feuilledetemps',
+				'leftmenu'=>'holiday',
+				'url'=>'/holidaycustom/list.php',
+				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
+
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=> $langs->trans("MenuNewCP"),
+				'mainmenu'=>'feuilledetemps',
+				'leftmenu'=>'holiday_create',
+				'url'=>'/holidaycustom/card.php?action=create',
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->write',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
+
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=> $langs->trans("MenuListCP"),
+				'mainmenu'=>'feuilledetemps',
+				'leftmenu'=>'holiday_list',
+				'url'=>'/holidaycustom/list.php',
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->read',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
+
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=>  $langs->trans("MenuConfCP"),
+				'mainmenu'=>'feuilledetemps',
+				'leftmenu'=>'holiday_define',
+				'url'=>'/holidaycustom/define_holiday.php?action=request',
+				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->read && empty($conf->global->HOLIDAY_HIDE_BALANCE)',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
+
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=> $langs->trans("MenuReportMonth"),
+				'mainmenu'=>'feuilledetemps',
+				'leftmenu'=>'holiday_month_report',
+				'url'=>'/holidaycustom/month_report.php',
+				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->readall',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
+
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=>  $langs->trans("MenuLogCP"),
+				'mainmenu'=>'feuilledetemps',
+				'leftmenu'=>'holiday_view_log',
+				'url'=>'/holidaycustom/view_log.php?action=request',
+				'langs'=>'holiday',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->define_holiday',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
+
+			$this->menu[$r++]=array(
+				'fk_menu'=>'fk_mainmenu=feuilledetemps,fk_leftmenu=holiday',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+				'type'=>'left',                          // This is a Top menu entry
+				'titre'=>  $langs->trans("MenuImportCP"),
+				'mainmenu'=>'feuilledetemps',
+				'leftmenu'=>'holiday_import',
+				'url'=>'/holidaycustom/import.php',
+				'langs'=>'holidaycustom@holidaycustom',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+				'position'=>$r,
+				'enabled'=> '$conf->holidaycustom->enabled',  // Define condition to show or hide menu entry. Use '$conf->fod->enabled' if entry must be visible if module is enabled.
+				'perms'=> '$user->rights->holidaycustom->import',			                // Use 'perms'=>'$user->rights->fod->level1->level2' if you want your menu with a permission rules
+				'target'=>'',
+				'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+			);
+		}
 
 
 		// Exports

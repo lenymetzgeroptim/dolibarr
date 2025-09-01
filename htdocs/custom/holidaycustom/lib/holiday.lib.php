@@ -87,6 +87,11 @@ function holiday_admin_prepare_head()
 	$head[$h][2] = 'holiday';
 	$h++;
 
+	$head[$h][0] = DOL_URL_ROOT.'/custom/holidaycustom/admin/holidaycustom.php';
+	$head[$h][1] = $langs->trans("SetupCustom");
+	$head[$h][2] = 'holidaycustom';
+	$h++;
+
 	// Show more tabs from modules
 	// Entries must be declared in modules descriptor with line
 	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
@@ -140,4 +145,32 @@ function dolSqlBetweenDateFilter($datefield, $day_start, $month_start, $year_sta
 	}
 
 	return $sqldate;
+}
+
+/**
+ * 	Return tous les volets à partir du dictionnaire
+ *
+ * 	@return	array						
+ */
+function getLabelList($table, $fieldname)
+{
+	global $conf, $user, $db;
+	$res = array();
+
+	$sql = "SELECT t.rowid, t.$fieldname";
+	$sql .= " FROM ".MAIN_DB_PREFIX."$table as t";
+	$sql .= " ORDER BY t.$fieldname";
+
+	dol_syslog("formationhabilitation.lib.php::getLabelList", LOG_DEBUG);
+	$resql = $db->query($sql);
+	if ($resql) {
+		while($obj = $db->fetch_object($resql)) {
+			$res[$obj->rowid] = $obj->$fieldname;
+		}
+
+		$db->free($resql);
+		return $res;
+	} else {
+		return -1;
+	}
 }

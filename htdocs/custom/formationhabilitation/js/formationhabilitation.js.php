@@ -370,14 +370,14 @@ function hideConvocationInput(NatureConvoc) {
 		$('.field_lieu_formation').css('display', 'none');
 		$('.field_fk_contact').css('display', '');
 		$('.field_motifvisite').css('display', '');
-		$('.field_centremedecine').css('display', 'none');
+		$('.field_centremedecine').css('display', '');
 		$('.field_examenrealiser').css('display', 'none');
 
 		$('.field_type #type').val('').trigger('change');
 		$('.field_fk_societe #fk_societe').val('').trigger('change');
 		$('.field_fk_formation #fk_formation').val('').trigger('change');
 		$('.field_ieu_formation #ieu_formation').val('').trigger('change');
-		$('.field_centremedecine #centremedecine').val('').trigger('change');
+		//$('.field_centremedecine #centremedecine').val('').trigger('change');
 		$('.field_examenrealiser #examenrealiser').val('').trigger('change');
 	}
 	else if(NatureConvoc == 3) {

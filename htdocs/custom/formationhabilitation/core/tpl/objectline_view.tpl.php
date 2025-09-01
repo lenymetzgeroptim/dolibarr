@@ -38,7 +38,7 @@
  * $text, $description, $line
  */
 
-global $permissiontoreadcost, $permissiontoaddline, $permissiontoreadline, $permissiontodeleteline;
+global $permissiontoaddline, $permissiontoreadline, $permissiontodeleteline;
 global $arrayfields, $massactionbutton, $massaction, $arrayofselected, $object, $lineid, $param, $objectline, $objectparentline;
 global $disableedit, $disableremove, $enableunlink, $enablelink, $db;
 
@@ -59,7 +59,7 @@ $objectline->fields = dol_sort_array($objectline->fields, 'position');
 
 $domData = ' data-id="'.$line->id.'"';
 
-if(($action == 'edit_datefinvalidite' || $action == 'edit_coutpedagogique' || $action == 'edit_coutmobilisation') && $line->id == $lineid && $permissiontoaddline) {
+if(($action == 'edit_datefinvalidite' || $action == 'edit_datefinhabilitation' || $action == 'edit_datefinautorisation' || $action == 'edit_coutpedagogique' || $action == 'edit_coutmobilisation') && $line->id == $lineid && $permissiontoaddline) {
 	print '<tr class="tredited drag drop oddeven"'.$domData.'>';
 } 
 else {
@@ -95,15 +95,15 @@ foreach($objectline->fields as $key => $val){
 			}
 		}
 		elseif($key == 'ref'){
-			if($objectline->element == 'userformation') {
-				print $line->getNomUrl(0, '', 1);
+			if($objectline->element == 'userformation' || $objectline->element == 'convocation' || $objectline->element == 'visitemedical') {
+				print $line->getNomUrl(0, '', 1, '', 1);
 			}
 			else {
 				print $line->getNomUrl(0, 'nolink', 1);
 			}
 		}
-		elseif((($key == 'date_finvalidite_formation' && $action == 'edit_datefinvalidite') || ($key == 'cout_pedagogique' && $action == 'edit_coutpedagogique') 
-		|| ($key == 'cout_mobilisation' && $action == 'edit_coutmobilisation') || ($key == 'domaineapplication' && $action == 'edit_domaineapplication')) && $permissiontoaddline && $line->id == $lineid) {
+		elseif((($key == 'date_finvalidite_formation' && $action == 'edit_datefinvalidite') || ($key == 'date_fin_habilitation' && $action == 'edit_datefinhabilitation') || ($key == 'date_fin_autorisation' && $action == 'edit_datefinautorisation') || /*($key == 'cout_pedagogique' && $action == 'edit_coutpedagogique') 
+		||*/ ($key == 'cout_mobilisation' && $action == 'edit_coutmobilisation') || ($key == 'domaineapplication' && $action == 'edit_domaineapplication')) && $permissiontoaddline && $line->id == $lineid) {
 			print $line->showInputField($val, $key, $line->$key, 'form="addline"');
 			print '<input type="hidden" form="addline" name="lineid" value="'.$line->id.'">';
 		}
@@ -111,20 +111,26 @@ foreach($objectline->fields as $key => $val){
 			print $line->showOutputField($val, $key, $line->$key);
 		}
 
-		if($key == 'date_finvalidite_formation' && $permissiontoaddline && $action != 'edit_datefinvalidite') {
+		if($object->element == 'user' && $key == 'date_finvalidite_formation' && $permissiontoaddline && $action != 'edit_datefinvalidite') {
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_datefinvalidite&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
-		elseif($key == 'cout_pedagogique' && $permissiontoaddline && $action != 'edit_coutpedagogique') {
-			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_coutpedagogique&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
-		}
-		elseif($key == 'cout_mobilisation' && $permissiontoaddline && $action != 'edit_coutmobilisation') {
+		// elseif($object->element == 'user' && $key == 'cout_pedagogique' && $permissiontoaddline && $action != 'edit_coutpedagogique') {
+		// 	print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_coutpedagogique&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+		// }
+		elseif($object->element == 'user' && $key == 'cout_mobilisation' && $permissiontoaddline && $action != 'edit_coutmobilisation') {
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_coutmobilisation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
 		elseif($object->element == 'uservolet' && $key == 'domaineapplication' && $permissiontoaddline && $action != 'edit_domaineapplication' && $enableunlink) {
 			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_domaineapplication&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
 		}
+		elseif($object->element == 'user' && $key == 'date_fin_habilitation' && $permissiontoaddline && $action != 'edit_datefinhabilitation') {
+			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_datefinhabilitation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+		}
+		elseif($object->element == 'user' && $key == 'date_fin_autorisation' && $permissiontoaddline && $action != 'edit_datefinautorisation') {
+			print '<a class="editfielda paddingleft" href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=edit_datefinautorisation&token='.newToken().'&lineid='.$line->id.'#line_'.$line->id.'">'.img_edit($langs->trans("Edit")).'</a>';
+		}
 
-		if($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') {
+		if(($key == 'fk_formation' || $key == 'fk_habilitation' || $key == 'fk_autorisation') && ($this->element == 'userformation' || $this->element == 'userhabilitation' || $this->element == 'userautorisation' || $this->element == 'uservolet')) {
 			$date_finvalidite - null;
 			if($this->element == 'uservolet') {
 				$volet = new Volet($this->db);
@@ -190,6 +196,18 @@ elseif ($action == 'edit_coutmobilisation' && $line->id == $lineid) {
 elseif ($action == 'edit_domaineapplication' && $line->id == $lineid) {
 	print '<td class="center valignmiddle" colspan="3">';
 	print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save_domaineapplication" value="'.$langs->trans("Save").'">';
+	print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</td>';
+}
+elseif ($action == 'edit_datefinhabilitation' && $line->id == $lineid) {
+	print '<td class="center valignmiddle" colspan="3">';
+	print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save_datefinhabilitation" value="'.$langs->trans("Save").'">';
+	print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</td>';
+}
+elseif ($action == 'edit_datefinautorisation' && $line->id == $lineid) {
+	print '<td class="center valignmiddle" colspan="3">';
+	print '<input type="submit" form="addline" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save_datefinautorisation" value="'.$langs->trans("Save").'">';
 	print '<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="'.$langs->trans("Cancel").'">';
 	print '</td>';
 }

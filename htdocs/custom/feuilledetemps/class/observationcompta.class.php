@@ -119,7 +119,7 @@ class ObservationCompta extends CommonObject
 		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
 		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
 		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'picto'=>'user', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2, 'csslist'=>'tdoverflowmax150',),
-		'type' => array('type'=>'integer', 'label'=>'Type', 'enabled'=>'1', 'position'=>101, 'notnull'=>1, 'visible'=>1, 'arrayofkeyval'=>array('1'=>'Pour prise en compte', '2'=>'Pour controle', '3'=>'Pour info', '4'=>'En attente', '5'=>'Suivi contrat', '6'=>'Demande pieces', '7'=>'ADMIN', '8'=>'Soldé ADMIN'),),
+		'type' => array('type'=>'integer', 'label'=>'Type', 'enabled'=>'1', 'position'=>101, 'notnull'=>1, 'visible'=>1, 'arrayofkeyval'=>array('1'=>'Pour prise en compte', '2'=>'Pour controle', '3'=>'Pour info', '4'=>'En attente', '5'=>'Suivi contrat', '6'=>'Demande pieces', '7'=>'ADMIN', '8'=>'Soldé ADMIN', '9'=>'Modif après export'),),
 		'fk_user' => array('type'=>'integer:User:user/class/user.class.php:0', 'label'=>'User', 'enabled'=>'1', 'position'=>102, 'notnull'=>1, 'visible'=>1,),
 		'observation' => array('type'=>'text', 'label'=>'Observation', 'enabled'=>'1', 'position'=>103, 'notnull'=>1, 'visible'=>1,),
 		'date_start' => array('type'=>'date', 'label'=>'DateStart', 'enabled'=>'1', 'position'=>104, 'notnull'=>1, 'visible'=>1,),
