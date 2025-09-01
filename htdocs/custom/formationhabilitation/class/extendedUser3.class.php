@@ -24,6 +24,7 @@
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 require_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/fod/class/fod_user.class.php';
+require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
 /**
  *	Class to manage Dolibarr users
@@ -110,6 +111,16 @@ class ExtendedUser3 extends User {
         }
 
         if (empty($error)) {
+
+            if (!$notrigger) {
+                $result_trigger = $this->call_trigger('LINE_DELETE', $user);
+                if ($result_trigger < 0) {
+                    $this->error = 'ErrorTriggerFailed';
+                    $this->db->rollback();
+                    return -1;
+                }
+            }
+
             $this->db->commit();
             return 1;
         } else {

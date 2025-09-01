@@ -525,6 +525,7 @@ class Habilitation extends CommonObject
 			$this->error = 'ErrorDeleteLineNotAllowedByObjectStatus';
 			return -2;
 		}
+		
 
 		return $this->deleteLineCommon($user, $idline, $notrigger);
 	}

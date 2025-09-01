@@ -2063,9 +2063,11 @@ class UserVolet extends CommonObject
 			if (!$error && !$notrigger) {
 				// Call trigger
 				$result = $this->call_trigger('USERVOLET_VALIDATE', $user);
+				
 				if ($result < 0) {
 					$error++;
 				}
+				
 				// End call triggers
 			}
 		}
@@ -4241,7 +4243,7 @@ class UserVolet extends CommonObject
 						$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
 						$link = '<a href="'.$urlwithroot.'/custom/formationhabilitation/uservolet_card.php?id='.$obj->rowid.'">'.$obj->ref.'</a>';
 						$message = $langs->transnoentitiesnoconv("EMailTextUserVoletExpire", $link, $fk_user->firstname." ".$fk_user->lastname);
-						$link2 = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$user_static->id.'&onglet=formation">ici</a>';
+						$link2 = '<a href="'.$urlwithroot.'/custom/formationhabilitation/userformation.php?id='.$this->fk_user.'&onglet=formation">ici</a>';
 						$message2 = $langs->transnoentitiesnoconv("EMailTextUserVoletExpireRespAntenne", $link, $fk_user->firstname." ".$fk_user->lastname, $link2);
 						$message3 = $langs->transnoentitiesnoconv("EMailTextUserVoletExpireForUser", $link);
 
