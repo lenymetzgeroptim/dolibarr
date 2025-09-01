@@ -14,16 +14,22 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-CREATE TABLE llx_feuilledetemps_projet_task_time_other(
+CREATE TABLE llx_comm_element_graph(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
-	date_creation datetime NOT NULL, 
+	year datetime NOT NULL, 
+	total_commande text, 
+	fk_commande integer,
+	total_supplier_c text, 
+	fk_supplier_c integer,
+	total_propal_open text, 
+	fk_propal_open integer,
+	total_propal_signed text, 
+	fk_propal_signed integer,
+	total_expense text, 
+	fk_expense integer,
 	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
 	fk_user_creat integer NOT NULL, 
-	fk_user_modif integer, 
-	fk_projet_task_time integer NOT NULL, 
-	heure_nuit double, 
-	port_epi double, 
-	site varchar(128)
+	fk_user_modif integer
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

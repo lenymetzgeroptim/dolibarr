@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2017  Laurent Destailleur      <eldy@users.sourceforge.net>
  * Copyright (C) 2023  Frédéric France          <frederic.france@netlogic.fr>
- * Copyright (C) 2023 METZGER Leny <l.metzger@optim-industries.fr>
+ * Copyright (C) 2024 FADEL Soufiane <s.fadel@optim-industries.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,35 +18,36 @@
  */
 
 /**
- * \file        class/regul.class.php
- * \ingroup     feuilledetemps
- * \brief       This file is a CRUD class file for Regul (Create/Read/Update/Delete)
+ * \file        class/indicateur.class.php
+ * \ingroup     addoncomm
+ * \brief       This file is a CRUD class file for Indicateur (Create/Read/Update/Delete)
  */
 
 // Put here all includes required by your class file
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 
 /**
- * Class for Regul
+ * Class for Indicateur
  */
-class Regul extends CommonObject
+class Indicateur extends CommonObject
 {
 	/**
 	 * @var string ID of module.
 	 */
-	public $module = 'feuilledetemps';
+	public $module = 'addoncomm';
 
 	/**
 	 * @var string ID to identify managed object.
 	 */
-	public $element = 'regul';
+	public $element = 'indicateur';
 
 	/**
 	 * @var string Name of table without prefix where object is stored. This is also the key used for extrafields management.
 	 */
-	public $table_element = 'feuilledetemps_regul';
+	public $table_element = 'widgetindicateur_indicateur';
 
 	/**
 	 * @var int  Does this object support multicompany module ?
@@ -57,10 +58,10 @@ class Regul extends CommonObject
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 1;
+	public $isextrafieldmanaged = 0;
 
 	/**
-	 * @var string String with name of icon for regul. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'regul@feuilledetemps' if picto is file 'img/object_regul.png'.
+	 * @var string String with name of icon for indicateur. Must be a 'fa-xxx' fontawesome code (or 'fa-xxx_fa_color_size') or 'indicateur@addoncomm' if picto is file 'img/object_indicateur.png'.
 	 */
 	public $picto = 'fa-file';
 
@@ -115,88 +116,206 @@ class Regul extends CommonObject
 	 */
 	public $fields=array(
 		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
-		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
-		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
-		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'picto'=>'user', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid', 'csslist'=>'tdoverflowmax150',),
-		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'picto'=>'user', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2, 'csslist'=>'tdoverflowmax150',),
-		'date' => array('type'=>'date', 'label'=>'Date', 'enabled'=>'1', 'position'=>100, 'notnull'=>1, 'visible'=>1,),
-		'fk_user' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'User', 'enabled'=>'1', 'position'=>110, 'notnull'=>1, 'visible'=>1,),
-		'd1' => array('type'=>'integer', 'label'=>'D1', 'enabled'=>'1', 'position'=>200, 'notnull'=>0, 'visible'=>1,),
-		'd2' => array('type'=>'integer', 'label'=>'D2', 'enabled'=>'1', 'position'=>201, 'notnull'=>0, 'visible'=>1,),
-		'd3' => array('type'=>'integer', 'label'=>'D3', 'enabled'=>'1', 'position'=>202, 'notnull'=>0, 'visible'=>1,),
-		'd4' => array('type'=>'integer', 'label'=>'D4', 'enabled'=>'1', 'position'=>203, 'notnull'=>0, 'visible'=>1,),
-		'gd1' => array('type'=>'integer', 'label'=>'GD1', 'enabled'=>'1', 'position'=>210, 'notnull'=>0, 'visible'=>1,),
-		'gd2' => array('type'=>'integer', 'label'=>'GD2', 'enabled'=>'1', 'position'=>211, 'notnull'=>0, 'visible'=>1,),
-		'heure_route' => array('type'=>'double', 'label'=>'HeureRoute', 'enabled'=>'1', 'position'=>220, 'notnull'=>0, 'visible'=>1,),
-		'repas1' => array('type'=>'integer', 'label'=>'Repas1', 'enabled'=>'1', 'position'=>230, 'notnull'=>0, 'visible'=>1,),
-		'repas2' => array('type'=>'integer', 'label'=>'Repas2', 'enabled'=>'1', 'position'=>231, 'notnull'=>0, 'visible'=>1,),
-		'kilometres' => array('type'=>'double(6,2)', 'label'=>'IK', 'enabled'=>'1', 'position'=>240, 'notnull'=>0, 'visible'=>1,),
-		'indemnite_tt' => array('type'=>'integer', 'label'=>'IndemniteTT', 'enabled'=>'1', 'position'=>250, 'notnull'=>0, 'visible'=>1,),
-		'heure_nuit_50' => array('type'=>'double', 'label'=>'HeureNuit50', 'enabled'=>'1', 'position'=>300, 'notnull'=>0, 'visible'=>1,),
-		'heure_nuit_75' => array('type'=>'double', 'label'=>'HeureNuit75', 'enabled'=>'1', 'position'=>301, 'notnull'=>0, 'visible'=>1,),
-		'heure_nuit_100' => array('type'=>'double', 'label'=>'HeureNuit100', 'enabled'=>'1', 'position'=>302, 'notnull'=>0, 'visible'=>1,),
-		'heure_sup00' => array('type'=>'double', 'label'=>'HeureSup00', 'enabled'=>'1', 'position'=>310, 'notnull'=>0, 'visible'=>1,),
-		'heure_sup25' => array('type'=>'double', 'label'=>'HeureSup25', 'enabled'=>'1', 'position'=>311, 'notnull'=>0, 'visible'=>1,),
-		'heure_sup50' => array('type'=>'double', 'label'=>'HeureSup50', 'enabled'=>'1', 'position'=>312, 'notnull'=>0, 'visible'=>1,),
+		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>20, 'notnull'=>1, 'visible'=>4, 'noteditable'=>'1', 'default'=>'(PROV)', 'index'=>1, 'searchall'=>1, 'showoncombobox'=>'1', 'validate'=>'1', 'comment'=>"Reference of object"),
+		'label' => array('type'=>'varchar(255)', 'label'=>'Label', 'enabled'=>'1', 'position'=>30, 'notnull'=>0, 'visible'=>1, 'alwayseditable'=>'1', 'searchall'=>1, 'css'=>'minwidth300', 'cssview'=>'wordbreak', 'help'=>"Help text", 'showoncombobox'=>'2', 'validate'=>'1',),
+		'import_key' => array('type'=>'varchar(14)', 'label'=>'ImportId', 'enabled'=>'1', 'position'=>1000, 'notnull'=>-1, 'visible'=>-2,),
+		'status' => array('type'=>'integer', 'label'=>'Status', 'enabled'=>'1', 'position'=>2000, 'notnull'=>1, 'visible'=>1, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Brouillon', '1'=>'Valid&eacute;', '9'=>'Annul&eacute;'), 'validate'=>'1',),
 	);
 	public $rowid;
-	public $date_creation;
-	public $tms;
-	public $fk_user_creat;
-	public $fk_user_modif;
-	public $date;
-	public $fk_user;
-	public $d1;
-	public $d2;
-	public $d3;
-	public $d4;
-	public $gd1;
-	public $gd2;
-	public $heure_route;
-	public $repas1;
-	public $repas2;
-	public $kilometres;
-	public $indemnite_tt;
-	public $heure_nuit_50;
-	public $heure_nuit_75;
-	public $heure_nuit_100;
-	public $heure_sup00;
-	public $heure_sup25;
-	public $heure_sup50;
+	public $ref;
+	public $label;
+	public $import_key;
+	public $status;
 	// END MODULEBUILDER PROPERTIES
 
+	 /**
+  * @var array
+  */
+  public $listoffields = array(
+	'propal'=>array(
+	'name'=>"Proposals",
+	'title'=>"ListProposalsAssociatedProject",
+	'class'=>'Propal',
+	'table'=>'propal',
+	'datefieldname'=>'datep',
+	'lang'=>'propal',
+	),
+	'order'=>array(
+		'name'=>"CustomersOrders",
+		'title'=>"ListOrdersAssociatedProject",
+		'class'=>'Commande',
+		'table'=>'commande',
+		'datefieldname'=>'date_commande',
+		'lang'=>'orders',
+		'buttonnew'=>'CreateOrder',
+	),
+	'invoice'=>array(
+		'name'=>"CustomersInvoices",
+		'title'=>"ListInvoicesAssociatedProject",
+		'class'=>'Facture',
+		'table'=>'facture',
+		'datefieldname'=>'datef',
+		'lang'=>'bills',
+	),
+	'invoice_predefined'=>array(
+		'name'=>"PredefinedInvoices",
+		'title'=>"ListPredefinedInvoicesAssociatedProject",
+		'class'=>'FactureRec',
+		'table'=>'facture_rec',
+		'datefieldname'=>'datec',
+		'lang'=>'bills',
+	),
+	'proposal_supplier'=>array(
+		'name'=>"SupplierProposals",
+		'title'=>"ListSupplierProposalsAssociatedProject",
+		'class'=>'SupplierProposal',
+		'table'=>'supplier_proposal',
+		'datefieldname'=>'date_valid',
+		'lang'=>'supplier_proposal',
+	),
+	'order_supplier'=>array(
+		'name'=>"SuppliersOrders",
+		'title'=>"ListSupplierOrdersAssociatedProject",
+		'class'=>'CommandeFournisseur',
+		'table'=>'commande_fournisseur',
+		'datefieldname'=>'date_commande',
+		'lang'=>'suppliers',
+		'buttonnew'=>'AddSupplierOrder',
+	),
+	'invoice_supplier'=>array(
+		'name'=>"BillsSuppliers",
+		'title'=>"ListSupplierInvoicesAssociatedProject",
+		'class'=>'FactureFournisseur',
+		'table'=>'facture_fourn',
+		'datefieldname'=>'datef',
+		'lang'=>'suppliers',
+	),
+	'contract'=>array(
+		'name'=>"Contracts",
+		'title'=>"ListContractAssociatedProject",
+		'class'=>'Contrat',
+		'table'=>'contrat',
+		'datefieldname'=>'date_contrat',
+		'lang'=>'contracts',
+	),
+	'intervention'=>array(
+		'name'=>"Interventions",
+		'title'=>"ListFichinterAssociatedProject",
+		'class'=>'Fichinter',
+		'table'=>'fichinter',
+		'datefieldname'=>'date_valid',
+		'lang'=>'interventions',
+	),
+	'trip'=>array(
+		'name'=>"TripsAndExpenses",
+		'title'=>"ListExpenseReportsAssociatedProject",
+		'class'=>'Deplacement',
+		'table'=>'deplacement',
+		'datefieldname'=>'dated',
+		'lang'=>'trips',
+	),
+	'expensereport'=>array(
+		'name'=>"ExpenseReports",
+		'title'=>"ListExpenseReportsAssociatedProject",
+		'class'=>'ExpenseReportLine',
+		'table'=>'expensereport_det',
+		'datefieldname'=>'date',
+		'lang'=>'trips',
+	),
+	'donation'=>array(
+		'name'=>"Donation",
+		'title'=>"ListDonationsAssociatedProject",
+		'class'=>'Don',
+		'margin'=>'add',
+		'table'=>'don',
+		'datefieldname'=>'datedon',
+		'lang'=>'donations',
+		'buttonnew'=>'AddDonation',
+	),
+	'loan'=>array(
+		'name'=>"Loan",
+		'title'=>"ListLoanAssociatedProject",
+		'class'=>'Loan',
+		'margin'=>'add',
+		'table'=>'loan',
+		'datefieldname'=>'datestart',
+		'lang'=>'loan',
+	),
+	'chargesociales'=>array(
+		'name'=>"SocialContribution",
+		'title'=>"ListSocialContributionAssociatedProject",
+		'class'=>'ChargeSociales',
+		'margin'=>'minus',
+		'table'=>'chargesociales',
+		'datefieldname'=>'date_ech',
+		'lang'=>'compta',
+		'buttonnew'=>'AddSocialContribution',
+	),
+	'project_task'=>array(
+		'name'=>"TaskTimeSpent",
+		'title'=>"ListTaskTimeUserProject",
+		'class'=>'Task',
+		'margin'=>'minus',
+		'table'=>'projet_task',
+		'datefieldname'=>'element_date',
+		'buttonnew'=>'AddTimeSpent',
+	),
+	'stock_mouvement'=>array(
+		'name'=>"MouvementStockAssociated",
+		'title'=>"ListMouvementStockProject",
+		'class'=>'MouvementStock',
+		'table'=>'stock_mouvement',
+		'datefieldname'=>'datem',
+	),
+	'salaries'=>array(
+		'name'=>"Salaries",
+		'title'=>"ListSalariesAssociatedProject",
+		'class'=>'Salary',
+		'table'=>'salary',
+		'datefieldname'=>'datesp',
+		'lang'=>'salaries',
+	),
+	'variouspayment'=>array(
+		'name'=>"VariousPayments",
+		'title'=>"ListVariousPaymentsAssociatedProject",
+		'class'=>'PaymentVarious',
+		'table'=>'payment_various',
+		'datefieldname'=>'datev',
+		'lang'=>'banks',
+	),
+);
 
 	// If this object has a subtable with lines
 
 	// /**
 	//  * @var string    Name of subtable line
 	//  */
-	// public $table_element_line = 'feuilledetemps_regulline';
+	// public $table_element_line = 'widgetindicateur_indicateurline';
 
 	// /**
 	//  * @var string    Field with ID of parent key if this object has a parent
 	//  */
-	// public $fk_element = 'fk_regul';
+	// public $fk_element = 'fk_indicateur';
 
 	// /**
 	//  * @var string    Name of subtable class that manage subtable lines
 	//  */
-	// public $class_element_line = 'Regulline';
+	// public $class_element_line = 'Indicateurline';
 
 	// /**
 	//  * @var array	List of child tables. To test if we can delete object.
 	//  */
-	// protected $childtables = array('mychildtable' => array('name'=>'Regul', 'fk_element'=>'fk_regul'));
+	// protected $childtables = array('mychildtable' => array('name'=>'Indicateur', 'fk_element'=>'fk_indicateur'));
 
 	// /**
 	//  * @var array    List of child tables. To know object to delete on cascade.
 	//  *               If name matches '@ClassNAme:FilePathClass;ParentFkFieldName' it will
 	//  *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object
 	//  */
-	// protected $childtablesoncascade = array('feuilledetemps_reguldet');
+	// protected $childtablesoncascade = array('widgetindicateur_indicateurdet');
 
 	// /**
-	//  * @var RegulLine[]     Array of subtable lines
+	//  * @var IndicateurLine[]     Array of subtable lines
 	//  */
 	// public $lines = array();
 
@@ -221,7 +340,7 @@ class Regul extends CommonObject
 		}
 
 		// Example to show how to set values of fields definition dynamically
-		/*if ($user->hasRight('feuilledetemps', 'regul', 'read')) {
+		/*if ($user->hasRight('addoncomm', 'indicateur', 'read')) {
 			$this->fields['myfield']['visible'] = 1;
 			$this->fields['myfield']['noteditable'] = 0;
 		}*/
@@ -533,8 +652,8 @@ class Regul extends CommonObject
 			return 0;
 		}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && !empty($user->rights->feuilledetemps->regul->regul_advance->validate))))
+		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('addoncomm','write'))
+		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && !empty($user->rights->addoncomm->indicateur->indicateur_advance->validate))))
 		 {
 		 $this->error='NotEnoughPermissions';
 		 dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
@@ -590,14 +709,14 @@ class Regul extends CommonObject
 			// Rename directory if dir was a temporary ref
 			if (preg_match('/^[\(]?PROV/i', $this->ref)) {
 				// Now we rename also files into index
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'regul/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'regul/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
+				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'indicateur/".$this->db->escape($this->newref)."'";
+				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'indicateur/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
 				$resql = $this->db->query($sql);
 				if (!$resql) {
 					$error++; $this->error = $this->db->lasterror();
 				}
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filepath = 'regul/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filepath = 'regul/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
+				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filepath = 'indicateur/".$this->db->escape($this->newref)."'";
+				$sql .= " WHERE filepath = 'indicateur/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
 				$resql = $this->db->query($sql);
 				if (!$resql) {
 					$error++; $this->error = $this->db->lasterror();
@@ -606,15 +725,15 @@ class Regul extends CommonObject
 				// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
 				$oldref = dol_sanitizeFileName($this->ref);
 				$newref = dol_sanitizeFileName($num);
-				$dirsource = $conf->feuilledetemps->dir_output.'/regul/'.$oldref;
-				$dirdest = $conf->feuilledetemps->dir_output.'/regul/'.$newref;
+				$dirsource = $conf->addoncomm->dir_output.'/indicateur/'.$oldref;
+				$dirdest = $conf->addoncomm->dir_output.'/indicateur/'.$newref;
 				if (!$error && file_exists($dirsource)) {
 					dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
 
 					if (@rename($dirsource, $dirdest)) {
 						dol_syslog("Rename ok");
 						// Rename docs starting with $oldref with $newref
-						$listoffiles = dol_dir_list($conf->feuilledetemps->dir_output.'/regul/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
+						$listoffiles = dol_dir_list($conf->addoncomm->dir_output.'/indicateur/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
 						foreach ($listoffiles as $fileentry) {
 							$dirsource = $fileentry['name'];
 							$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
@@ -657,14 +776,14 @@ class Regul extends CommonObject
 			return 0;
 		}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','feuilledetemps_advance','validate'))))
+		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('addoncomm','write'))
+		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('addoncomm','widgetindicateur_advance','validate'))))
 		 {
 		 $this->error='Permission denied';
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'FEUILLEDETEMPS_MYOBJECT_UNVALIDATE');
+		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'WIDGETINDICATEUR_MYOBJECT_UNVALIDATE');
 	}
 
 	/**
@@ -681,14 +800,14 @@ class Regul extends CommonObject
 			return 0;
 		}
 
-		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','feuilledetemps_advance','validate'))))
+		/* if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('addoncomm','write'))
+		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('addoncomm','widgetindicateur_advance','validate'))))
 		 {
 		 $this->error='Permission denied';
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'FEUILLEDETEMPS_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'WIDGETINDICATEUR_MYOBJECT_CANCEL');
 	}
 
 	/**
@@ -705,14 +824,14 @@ class Regul extends CommonObject
 			return 0;
 		}
 
-		/*if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','write'))
-		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('feuilledetemps','feuilledetemps_advance','validate'))))
+		/*if (! ((!getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('addoncomm','write'))
+		 || (getDolGlobalInt('MAIN_USE_ADVANCED_PERMS') && $user->hasRight('addoncomm','widgetindicateur_advance','validate'))))
 		 {
 		 $this->error='Permission denied';
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'FEUILLEDETEMPS_MYOBJECT_REOPEN');
+		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'WIDGETINDICATEUR_MYOBJECT_REOPEN');
 	}
 
 	/**
@@ -729,9 +848,9 @@ class Regul extends CommonObject
 		$datas = [];
 
 		if (getDolGlobalInt('MAIN_OPTIMIZEFORTEXTBROWSER')) {
-			return ['optimize' => $langs->trans("ShowRegul")];
+			return ['optimize' => $langs->trans("ShowIndicateur")];
 		}
-		$datas['picto'] = img_picto('', $this->picto).' <u>'.$langs->trans("Regul").'</u>';
+		$datas['picto'] = img_picto('', $this->picto).' <u>'.$langs->trans("Indicateur").'</u>';
 		if (isset($this->status)) {
 			$datas['picto'] .= ' '.$this->getLibStatut(5);
 		}
@@ -774,7 +893,7 @@ class Regul extends CommonObject
 			$label = implode($this->getTooltipContentArray($params));
 		}
 
-		$url = dol_buildpath('/feuilledetemps/regul_card.php', 1).'?id='.$this->id;
+		$url = dol_buildpath('/addoncomm/indicateur_card.php', 1).'?id='.$this->id;
 
 		if ($option !== 'nolink') {
 			// Add param to save lastsearch_values or not
@@ -790,7 +909,7 @@ class Regul extends CommonObject
 		$linkclose = '';
 		if (empty($notooltip)) {
 			if (getDolGlobalInt('MAIN_OPTIMIZEFORTEXTBROWSER')) {
-				$label = $langs->trans("ShowRegul");
+				$label = $langs->trans("ShowIndicateur");
 				$linkclose .= ' alt="'.dol_escape_htmltag($label, 1).'"';
 			}
 			$linkclose .= ($label ? ' title="'.dol_escape_htmltag($label, 1).'"' :  ' title="tocomplete"');
@@ -940,7 +1059,7 @@ class Regul extends CommonObject
 		// phpcs:enable
 		if (empty($this->labelStatus) || empty($this->labelStatusShort)) {
 			global $langs;
-			//$langs->load("feuilledetemps@feuilledetemps");
+			//$langs->load("addoncomm@addoncomm");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
 			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Enabled');
 			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Disabled');
@@ -1021,8 +1140,8 @@ class Regul extends CommonObject
 	{
 		$this->lines = array();
 
-		$objectline = new RegulLine($this->db);
-		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_regul = '.((int) $this->id)));
+		$objectline = new IndicateurLine($this->db);
+		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_indicateur = '.((int) $this->id)));
 
 		if (is_numeric($result)) {
 			$this->setErrorsFromObject($objectline);
@@ -1041,22 +1160,22 @@ class Regul extends CommonObject
 	public function getNextNumRef()
 	{
 		global $langs, $conf;
-		$langs->load("feuilledetemps@feuilledetemps");
+		$langs->load("addoncomm@addoncomm");
 
-		if (!getDolGlobalString('FEUILLEDETEMPS_MYOBJECT_ADDON')) {
-			$conf->global->FEUILLEDETEMPS_MYOBJECT_ADDON = 'mod_regul_standard';
+		if (!getDolGlobalString('WIDGETINDICATEUR_MYOBJECT_ADDON')) {
+			$conf->global->WIDGETINDICATEUR_MYOBJECT_ADDON = 'mod_indicateur_standard';
 		}
 
-		if (getDolGlobalString('FEUILLEDETEMPS_MYOBJECT_ADDON')) {
+		if (getDolGlobalString('WIDGETINDICATEUR_MYOBJECT_ADDON')) {
 			$mybool = false;
 
-			$file = getDolGlobalString('FEUILLEDETEMPS_MYOBJECT_ADDON').".php";
-			$classname = getDolGlobalString('FEUILLEDETEMPS_MYOBJECT_ADDON');
+			$file = getDolGlobalString('WIDGETINDICATEUR_MYOBJECT_ADDON').".php";
+			$classname = getDolGlobalString('WIDGETINDICATEUR_MYOBJECT_ADDON');
 
 			// Include file with class
 			$dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
 			foreach ($dirmodels as $reldir) {
-				$dir = dol_buildpath($reldir."core/modules/feuilledetemps/");
+				$dir = dol_buildpath($reldir."core/modules/addoncomm/");
 
 				// Load file with numbering class (if found)
 				$mybool |= @include_once $dir.$file;
@@ -1106,10 +1225,10 @@ class Regul extends CommonObject
 		$result = 0;
 		$includedocgeneration = 0;
 
-		$langs->load("feuilledetemps@feuilledetemps");
+		$langs->load("addoncomm@addoncomm");
 
 		if (!dol_strlen($modele)) {
-			$modele = 'standard_regul';
+			$modele = 'standard_indicateur';
 
 			if (!empty($this->model_pdf)) {
 				$modele = $this->model_pdf;
@@ -1118,7 +1237,7 @@ class Regul extends CommonObject
 			}
 		}
 
-		$modelpath = "core/modules/feuilledetemps/doc/";
+		$modelpath = "core/modules/addoncomm/doc/";
 
 		if ($includedocgeneration && !empty($modele)) {
 			$result = $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
@@ -1158,100 +1277,836 @@ class Regul extends CommonObject
 	}
 
 	/**
-    *  Load properties of regul whithout ID.
-    *
-    *  @param	int		$date 	    Date of regul
-    *  @param	int		$fk_user 	Id of User
-    *  @return  int		            <0 if KO, >0 if OK, 0 si aucune regul n'a été trouvé
-    */
-    public function fetchWithoutId($date, $fk_user)
-    {
-        global $langs;
+	 * get values ​​from queries for graph data
+	 * 
+	 * @param string option either filtring or not
+	 * @param array agences to filter
+	 * @param array responsable in contact to fitler
+	 * @param array projets to filter
+	 * 
+	 * @return array of data (date and amount) for graph
+	 */
+	public function getValues($option,$arr_agences, $arr_resp,  $arr_proj)
+	{
+		$modeFiltring = !empty($arr_agences) || !empty($arr_resp) || !empty($arr_proj);
+		$modeNotFiltring = empty($arr_agences) && empty($arr_resp) && empty($arr_proj);
 
-        $sql = "SELECT";
-        $sql .= " d.rowid,";
-		$sql .= " d.date_creation,";
-		$sql .= " d.tms,";
-        $sql .= " d.fk_user_creat,";
-        $sql .= " d.fk_user_modif,";
-        $sql .= " d.date,";
-        $sql .= " d.fk_user,";
-        $sql .= " d.d1,";
-		$sql .= " d.d2,";
-        $sql .= " d.d3,";
-        $sql .= " d.d4,";
-        $sql .= " d.gd1,";
-        $sql .= " d.gd2,";
-		$sql .= " d.heure_route,";
-		$sql .= " d.repas1,";
-		$sql .= " d.repas2,";
-		$sql .= " d.kilometres,";
-		$sql .= " d.indemnite_tt,";
-		$sql .= " d.heure_nuit_50,";
-		$sql .= " d.heure_nuit_75,";
-		$sql .= " d.heure_nuit_100,";
-		$sql .= " d.heure_sup00,";
-		$sql .= " d.heure_sup25,";
-		$sql .= " d.heure_sup50";
-        $sql .= " FROM ".MAIN_DB_PREFIX."feuilledetemps_regul as d";
-        $sql .= " WHERE d.date = '".($this->db->idate($date))."'";
-        $sql .= " AND d.fk_user = ".((int) $fk_user);
 
-        dol_syslog(get_class($this)."::fetchWithoutId", LOG_DEBUG);
-        $resql = $this->db->query($sql);
-        if ($resql) {
-            if ($this->db->num_rows($resql)) {
-                $obj = $this->db->fetch_object($resql);
+		if($option == 'resp') {
+			$vals['salaries'] = $this->employeeCostByProject($option, $arr_agences, $arr_resp,  $arr_proj);
+		}elseif($option == 'all'){
+			if($modeNotFiltring) {
+				$vals['salaries'] = $this->getSalariesByMonth();
+				$vals['donation'] = $this->getDonation();
+				$vals['various'] = $this->getVariousPayment();
+				$vals['loan'] = $this->getPaymentLoan();
+			}elseif($modeFiltring){
+				// $vals['salaries'] = $this->employeeCostByProject($option, $arr_agences, $arr_resp,  $arr_proj);
+				$vals['salaries'] = $this->getSalariesByMonth();
+			}
+		}
+		
+		$vals['facture'] = $this->getFacture($option, $arr_agences, $arr_resp, $arr_proj);
+		$vals['facture_fourn'] = $this->getFactureFourn($option, $arr_agences, $arr_resp, $arr_proj);
+		$vals['note'] = $this->getExpenseReport($option, $arr_agences, $arr_resp, $arr_proj);
+		$vals['soc'] = $this->getSocialContribution($option, $arr_agences, $arr_resp, $arr_proj);
 
-                $this->id = $obj->rowid;
-				$this->date_creation = $this->db->jdate($obj->date_creation);
-                $this->tms = $this->db->jdate($obj->tms);
-                $this->fk_user_creat = $obj->fk_user_creat;
-                $this->fk_user_modif = $obj->fk_user_modif;
-                $this->date = $this->db->jdate($obj->date);
-                $this->fk_user = $obj->fk_user;
-                $this->d1 = $obj->d1;
-				$this->d2 = $obj->d2;
-                $this->d3 = $obj->d3;
-                $this->d4 = $obj->d4;
-                $this->gd1 = $obj->gd1;
-                $this->gd2 = $obj->gd2;
-                $this->heure_route = $obj->heure_route;
-				$this->repas1 = $obj->repas1;
-				$this->repas2 = $obj->repas2;
-				$this->kilometres = $obj->kilometres;
-				$this->indemnite_tt = $obj->indemnite_tt;
-				$this->heure_nuit_50 = $obj->heure_nuit_50;
-				$this->heure_nuit_75 = $obj->heure_nuit_75;
-				$this->heure_nuit_100 = $obj->heure_nuit_100;
-				$this->heure_sup00 = $obj->heure_sup00;
-				$this->heure_sup25 = $obj->heure_sup25;
-				$this->heure_sup50 = $obj->heure_sup50;
+		return $vals;
+	}
 
-                $this->db->free($resql);
-                return 1;
-            }
-            else {
-                $this->db->free($resql);
-                return 0;
-            }
-        } else {
-            $this->error = "Error ".$this->db->lasterror();
-            return -1;
-        }
-    }
+	/**
+	 * get salaries for each month
+	 * 
+	 * @return array of date payment and employees salaries amount by month
+	 */
+	public function getSalariesByMonth()
+	{
+		global $db, $user;
+		$childids = $user->getAllChildIds(1);
+
+		$sql = "SELECT u.rowid as uid,";
+		$sql .= " DATE_FORMAT(s.datesp,'%Y-%m') as datesp, s.dateep, ";
+		$sql .= " SUM(ps.amount) as alreadypayed";
+		$sql .= " FROM ".MAIN_DB_PREFIX."salary as s";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."payment_salary as ps ON (ps.fk_salary = s.rowid) ";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_paiement as pst ON (s.fk_typepayment = pst.id) ";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."bank_account ba ON (ba.rowid = s.fk_account), ";
+		//$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."payment_salary as ps ON ps.fk_salary = s.rowid, ";
+		$sql .= " ".MAIN_DB_PREFIX."user as u";
+
+		$sql .= " WHERE u.rowid = s.fk_user";
+		$sql .= " AND s.entity IN (".getEntity('payment_salaries').")";
+		if (empty($user->rights->salaries->readall)) {
+			$sql .= " AND s.fk_user IN (".$db->sanitize(join(',', $childids)).")";
+		}
+
+		$sql .= " GROUP BY DATE_FORMAT(s.datesp,'%Y-%m')";
+
+		dol_syslog(get_class($this)."::getSalariesByMonth", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+		
+				$salaries[] = array('date' => $obj->datesp, 'amount' => $obj->alreadypayed);
+				
+				$i++;
+			} 
+			return $salaries;
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+
+	}
+
+	/**
+	 * get salaries of employees by reference to the projects
+	 * 
+	 * @param string option to filter by option either resp or all py default
+	 */
+	public function employeeCostByProject($option,$arr_agences, $arr_resp,  $arr_proj)
+	{
+		
+		global $db, $user;
+
+		$sql = "SELECT sum((t.thm) * (t.element_duration / 3600)) as cost, DATE_FORMAT(t.element_date,'%Y-%m') as dm";
+		$sql .= ", SUM(hs.heure_sup_25_duration / 3600 * ".$this->db->ifsql("t.thm IS NULL", 0, "t.thm * 0.25").") as amount_hs25,";
+        $sql .= " SUM(hs.heure_sup_50_duration / 3600 * ".$this->db->ifsql("t.thm IS NULL", 0, "t.thm * 0.5").") as amount_hs50, u.rowid as userid";
+
+		$sql .= " FROM ".MAIN_DB_PREFIX."element_time as t";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_task as pt ON pt.rowid = t.fk_element";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = pt.fk_projet";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe ON p.rowid = pe.fk_object";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."feuilledetemps_projet_task_time_heure_sup as hs ON hs.fk_projet_task_time = t.rowid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec on ec.element_id = p.rowid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u on ec.fk_socpeople = u.rowid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc on ec.fk_c_type_contact = tc.rowid";
+		$sql .= " WHERE 1 = 1";
+
+			if(!empty($arr_agences) || !empty($arr_resp) || !empty($arr_proj)) {
+				
+				if(!empty($arr_resp) && $option ='all') {
+					$sql .= " AND tc.element = 'project'";
+					$sql .= " AND tc.source = 'internal'";
+					$sql .= " AND tc.code = 'PROJECTLEADER'";
+					$sql .= " AND ec.element_id = p.rowid";
+					// $sql .= " AND u.rowid  IN (".implode(', ', $arr_resp).")";
+					$sql .= " AND ec.fk_socpeople IN (".implode(', ', $arr_resp).")";
+				}
+
+				if(!empty($arr_proj) && $option ='all') {
+					$sql .= " AND p.rowid IN (".implode(', ', $arr_proj).")";
+				}
+				
+				if(!empty($arr_agences) && $option ='all') {
+					$sql .= " AND pe.agenceconcerne  IN (".implode(', ', $arr_agences).")";
+				}
+			}
+
+			if($option == 'resp') {
+				$i = 1;
+				$sql .= " AND";
+				if(!empty(array_filter($this->getAgencesBySoc()))) {
+					$agences = array_unique($this->getAgencesBySoc());
+					array_filter($agences);
+					foreach($agences as $manager => $agenceid) {
+						$sql .= " pe.agenceconcerne =".((int) $agenceid);
+						if($i < sizeof($agences)) {
+							$sql .= " AND";
+						}
+						$i++;
+					}
+				}
+			}
+			
+		
+
+		$sql .= " AND t.elementtype = 'task'";
+		$sql .= " GROUP BY dm, u.rowid";
+		$sql .= " ORDER BY dm";
+	
+		dol_syslog(get_class($this)."::employeeCostByProject", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+		
+				$hs25 =  $obj->amount_hs25 == null ? 0 : $obj->amount_hs25;
+				$hs50 = $obj->amount_hs50 == null ? 0 : $obj->amount_hs50;
+				$cost = $obj->cost + $hs25 + $hs50;
+				$salaries[] = array('date' => $obj->dm, 'amount' => $cost);
+	
+				$i++;
+			} 
+
+			return $salaries;
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	
+	}
+
+
+	/**
+	 * get social contributions
+	 * 
+	 * @return array of date and social contribution amount by month
+	 */
+	public function getSocialContribution($option, $arr_agences, $arr_resp, $arr_proj)
+	{
+		global $db, $user;
+
+		$sql = "SELECT c.libelle as nom, date_format(cs.date_ech,'%Y-%m') as dm, sum(cs.amount) as amount";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_chargesociales as c";
+		$sql .= ", ".MAIN_DB_PREFIX."chargesociales as cs";
+
+		if($option == 'resp' || !empty($arr_agences) || !empty($arr_resp) || !empty($arr_proj)) {
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p on cs.fk_projet = p.rowid";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe on pe.fk_object = p.rowid";
+
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec on ec.element_id = de.fk_projet";
+				$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc on ec.fk_c_type_contact = tc.rowid";
+				$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as t on ec.fk_socpeople = t.rowid";
+
+			$sql .= " WHERE 1 = 1";
+			$i = 1;
+
+			if(!empty($arr_resp) && $option ='all') {
+				$sql .= " AND tc.element = 'project'";
+				$sql .= " AND tc.source = 'internal'";
+				$sql .= " AND tc.code = 'PROJECTLEADER'";
+		
+				$sql .= " AND ec.fk_socpeople  IN (".implode(', ', $arr_resp).")";
+				}
+	
+			if(!empty($arr_agences) && $option == 'all') {
+				$sql .= " AND pe.agenceconcerne IN (".implode(', ', $arr_agences).")";
+			}
+
+			if(!empty($arr_proj) && $option == 'all') {
+				$sql .= " AND p.rowid IN (".implode(', ', $arr_proj).")";
+			}
+	
+			if($option == 'resp') {
+				$sql .= " AND";
+				if(!empty(array_filter($this->getAgencesBySoc()))) {
+					$agences = array_unique($this->getAgencesBySoc());
+					array_filter($agences);
+
+					foreach($agences as $manager => $agence) {
+						$sql .= " pe.agenceconcerne =".((int) $agence);
+						if($i < sizeof($agences)) {
+							$sql .= " AND";
+						}
+
+						$i++;
+					}
+				}
+			}
+		}else{
+			$sql .= " WHERE 1 = 1";
+		}
+
+		$sql .= " AND cs.fk_type = c.id";
+		$sql .= " GROUP BY c.libelle, dm";
+
+		dol_syslog(get_class($this)."::getSocialContribution", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+				$soccontribute[] = array('date' => $obj->dm, 'amount' => $obj->amount);
+				
+				$i++;
+			} 
+			return $soccontribute;
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	}
+
+	/**
+	 * get expense report
+	 * 
+	 * @return array date and exepnense report amount 
+	 */
+	public function getExpenseReport($option, $arr_agences, $arr_resp, $arr_proj)
+	{
+		global $db;
+
+		$sql = "SELECT date_format(r.date_debut,'%Y-%m') as dm, sum(r.total_ht) as amount_ht";
+		$sql .= " FROM ".MAIN_DB_PREFIX."expensereport as r";
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid = r.fk_user_author";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."expensereport_det as de ON r.rowid = de.fk_expensereport";
+	
+		if($option == 'resp' || !empty($arr_agences) || !empty($arr_resp) || !empty($arr_proj)) {
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p on de.fk_projet = p.rowid";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe on pe.fk_object = p.rowid";
+
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec on ec.element_id = pe.fk_object";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc on ec.fk_c_type_contact = tc.rowid";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as t on ec.fk_socpeople = t.rowid";
+
+			$sql .= " WHERE 1 = 1";
+			$i = 1;
+
+			if(!empty($arr_resp) && $option ='all') {
+				$sql .= " AND tc.element = 'project'";
+				$sql .= " AND tc.source = 'internal'";
+				$sql .= " AND tc.code = 'PROJECTLEADER'";
+		
+				$sql .= " AND ec.fk_socpeople  IN (".implode(', ', $arr_resp).")";
+				}
+	
+			if(!empty($arr_agences) && $option == 'all') {
+				$sql .= " AND pe.agenceconcerne IN (".implode(', ', $arr_agences).")";
+			}
+
+			if(!empty($arr_proj) && $option == 'all') {
+				$sql .= " AND p.rowid IN (".implode(', ', $arr_proj).")";
+			}
+	
+			if($option == 'resp') {
+				$sql .= " AND";
+				if(!empty(array_filter($this->getAgencesBySoc()))) {
+					$agences = array_unique($this->getAgencesBySoc());
+					array_filter($agences);
+
+					foreach($agences as $manager => $agence) {
+						$sql .= " pe.agenceconcerne =".((int) $agence);
+						if($i < sizeof($agences)) {
+							$sql .= " AND";
+						}
+
+						$i++;
+					}
+				}
+			}
+		}else{
+			$sql .= " WHERE 1 = 1";
+		}
+		
+		
+		$sql .= " AND r.entity IN (".getEntity('expensereport').")";
+		$sql .= " AND r.fk_statut = 6";
+		$sql .= " GROUP BY dm";
+
+		dol_syslog(get_class($this)."::getExpenseReport", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+		
+				$exepnesereport[] = array('date' => $obj->dm, 'amount' => $obj->amount_ht);
+				
+				$i++;
+			} 
+			return $exepnesereport;
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	}
+
+	/**
+	 * get donation and dunning payment 
+	 * 
+	 * @return array date, donanation and dunnig payment by month
+	 */
+	public function getDonation()
+	{
+		global $db;
+
+		$sql = "SELECT p.societe as nom, p.firstname, p.lastname, date_format(p.datedon,'%Y-%m') as dm, sum(p.amount) as amount";
+		$sql .= " FROM ".MAIN_DB_PREFIX."don as p";
+		$sql .= " WHERE p.entity IN (".getEntity('donation').")";
+		$sql .= " AND fk_statut in (1,2)";
+
+		$sql .= " GROUP BY p.societe, p.firstname, p.lastname, dm";
+
+		dol_syslog(get_class($this)."::getDonation", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+		
+				$donation[] = array('date' => $obj->dm, 'amount' => $obj->amount);
+				
+				$i++;
+			} 
+			return $donation;
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	}
+
+	/**
+	 * get various payment 
+	 * 
+	 * @return array date and various payment amount by month
+	 */
+	public function getVariousPayment()
+	{
+		global $db;
+
+		$sql = "SELECT date_format(p.datep, '%Y-%m') AS dm, SUM(p.amount) AS amount FROM ".MAIN_DB_PREFIX."payment_various as p";
+		$sql .= " WHERE p.entity IN (".getEntity('variouspayment').")";
+		$sql .= ' AND p.sens = 0';
+		$sql .= ' GROUP BY dm';
+
+		dol_syslog(get_class($this)."::getVariousPayment", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+		
+				$variouspay[] = array('date' => $obj->dm, 'amount' => $obj->amount);
+				
+				$i++;
+			} 
+			return $variouspay;
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	}
+
+	/**
+	 * get payment loan
+	 * 
+	 * @return array date and payment loan by month
+	 */
+	 public function getPaymentLoan()
+	 {
+		global $db;
+
+		$sql = "SELECT date_format(p.datep, '%Y-%m') AS dm, SUM(p.amount_capital + p.amount_insurance + p.amount_interest) AS amount";
+		$sql .= " FROM ".MAIN_DB_PREFIX."payment_loan AS p, ".MAIN_DB_PREFIX."loan as l";
+		$sql .= " WHERE l.entity IN (".getEntity('variouspayment').")";
+		$sql .= " AND p.fk_loan = l.rowid";
+		$sql .= ' GROUP BY dm';
+
+		dol_syslog(get_class($this)."::getPaymentLoan", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+		
+				$loan[] = array('date' => $obj->dm, 'amount' => $obj->amount);
+				
+				$i++;
+			} 
+			return $loan;
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	 }
+
+	 
+
+	 /**
+	 * Get facture from database. Get also lines.
+	 * 
+	 */
+	public function getFacture($option, $arr_agences, $arr_resp, $arr_proj)
+	{
+		global $conf, $db, $langs, $user;
+		$i = 1;
+
+		$sql = "SELECT f.rowid, date_format(f.datef, '%Y-%m') AS dm, SUM(f.total_ht) as amount_ht, p.rowid as projid, f.ref";
+		$sql .= " FROM ".MAIN_DB_PREFIX."facture as f";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."facture_extrafields as fe on f.rowid = fe.fk_object";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p on p.rowid = f.fk_projet";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe on p.rowid = pe.fk_object";
+		
+		if(empty($arr_resp) && !empty($arr_agences) && !empty($arr_proj) && $option ='all') {
+			$sql .= " WHERE 1 = 1";
+		}
+
+		if($option == 'resp' || !empty($arr_agences) || !empty($arr_resp) || !empty($arr_proj)) {
+			$i = 1;
+
+			if(!empty($arr_resp) && $option ='all') {
+				$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec on ec.element_id = f.fk_projet";
+				$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc on ec.fk_c_type_contact = tc.rowid";
+				$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as t on ec.fk_socpeople = t.rowid";
+
+				$sql .= " WHERE 1 = 1";
+				$sql .= " AND tc.element = 'project'";
+				$sql .= " AND tc.source = 'internal'";
+				$sql .= " AND tc.code = 'PROJECTLEADER'";
+		
+				$sql .= " AND t.rowid  IN (".implode(', ', $arr_resp).")";
+			 }
+	
+			if(!empty($arr_agences) && $option == 'all') {
+				$sql .= " AND pe.agenceconcerne IN (".implode(', ', $arr_agences).")";
+			}
+
+			if(!empty($arr_proj) && $option == 'all') {
+				$sql .= " AND p.rowid IN (".implode(', ', $arr_proj).")";
+			}
+	
+			if($option == 'resp') {
+				$sql .= " AND";
+				if(!empty(array_filter($this->getAgencesBySoc()))) {
+					$agences = array_unique($this->getAgencesBySoc());
+					array_filter($agences);
+
+					foreach($agences as $manager => $agence) {
+						$sql .= " pe.agenceconcerne =".((int) $agence);
+						if($i < sizeof($agences)) {
+							$sql .= " AND";
+						}
+
+						$i++;
+					}
+				}
+			}
+		}
+		else{
+			$sql .= " WHERE 1 = 1";
+		}
+	
+		$sql .= " AND fe.pv_reception = 1";
+		$sql.= " GROUP BY dm";
+		
+
+		dol_syslog(get_class($this)."::getFacture", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+			
+				$factures[] = array('date' => $obj->dm, 'amount' => $obj->amount_ht);
+				$i++;
+			} 
+			return array_filter($factures);
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	}
+
+	/**
+	 * Get facture fournisseur
+	 */
+	public function getFactureFourn($option, $arr_agences, $arr_resp, $arr_proj)
+	{
+		global $conf, $db, $langs, $user;
+
+		$sql = "SELECT date_format(faf.datef,'%Y-%m') as dm, SUM(faf.total_ht) as amount_ht";
+		$sql .= " FROM ".MAIN_DB_PREFIX."facture_fourn as faf";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."facture_fourn_extrafields as fafe on faf.rowid = fafe.fk_object";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p on p.rowid = faf.fk_projet";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe on p.rowid = pe.fk_object";
+
+		if(empty($arr_resp) && !empty($arr_agences) && !empty($arr_proj) && $option ='all') {
+			$sql .= " WHERE 1 = 1";
+		}
+
+		if($option == 'resp' || !empty($arr_agences) || !empty($arr_resp) || !empty($arr_proj)) {
+			$i = 1;
+
+			if(!empty($arr_resp) && $option ='all') {
+				$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec on ec.element_id = p.rowid";
+				$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc on ec.fk_c_type_contact = tc.rowid";
+				$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as t on ec.fk_socpeople = t.rowid";
+
+				$sql .= " WHERE 1 = 1";
+				$sql .= " AND tc.element = 'project'";
+				$sql .= " AND tc.source = 'internal'";
+				$sql .= " AND tc.code = 'PROJECTLEADER'";
+		
+				$sql .= " AND ec.fk_socpeople IN (".implode(', ', $arr_resp).")";
+			 }
+	
+			if(!empty($arr_agences) && $option == 'all') {
+				$sql .= " AND pe.agenceconcerne IN (".implode(', ', $arr_agences).")";
+			}
+
+			if(!empty($arr_proj) && $option == 'all') {
+				$sql .= " AND p.rowid IN (".implode(', ', $arr_proj).")";
+			}
+	
+			if($option == 'resp') {
+				$sql .= " AND";
+				if(!empty(array_filter($this->getAgencesBySoc()))) {
+					$agences = array_unique($this->getAgencesBySoc());
+					array_filter($agences);
+
+					foreach($agences as $manager => $agence) {
+						$sql .= " pe.agenceconcerne =".((int) $agence);
+						if($i < sizeof($agences)) {
+							$sql .= " AND";
+						}
+
+						$i++;
+					}
+				}
+			}
+		}
+		else{
+			$sql .= " WHERE 1 = 1";
+		}
+
+
+		$sql .= " AND faf.fk_statut IN (1,2)";
+		if (!empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) {
+			$sql .= " AND faf.type IN (0,1,2,5)";
+		} else {
+			$sql .= " AND faf.type IN (0,1,2,3,5)";
+		}
+		$sql .= " AND faf.entity IN (".getEntity('invoice').")";
+
+		$sql.= " GROUP BY dm";
+	
+
+		dol_syslog(get_class($this)."::getFactureFourn", LOG_DEBUG);
+		$resql = $db->query($sql);
+	
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+				
+				$facturesfourn[] = array('date' => $obj->dm, 'amount' => $obj->amount_ht);
+				
+			
+				$i++;
+			} 
+			// var_dump($facturesfourn);
+			return $facturesfourn;
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	}
+
+
+	 /**
+	 * Get agences by user.
+	 * 
+	 */
+	public function getAgencesBySoc()
+	{
+		global $conf, $db, $langs, $user;
+		$name = 'OPTIM Industries';
+
+		$sql = "SELECT DISTINCT u.rowid as userid, u.lastname, u.firstname, u.email, u.statut as status, u.entity, s.rowid as agenceid, s.nom as name, s.name_alias";
+		$sql .= " FROM ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+		$sql .= ", ".MAIN_DB_PREFIX."user as u";
+		$sql .= " , ".MAIN_DB_PREFIX."societe as s";
+		$sql .= " WHERE u.entity in (0, 1) AND u.rowid = sc.fk_user";
+		$sql .= " AND s.rowid = sc.fk_soc";
+		$sql .= " AND s.nom = '".$db->escape($name)."'";
+		 $sql .= " AND u.rowid =".((int) $user->id);
+		// $sql .= " AND u.rowid = 1";
+
+		$sql .= " ORDER BY u.lastname ASC, u.firstname ASC";
+	
+
+		dol_syslog(get_class($this)."::getAgencesBySoc", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+		
+				$agences[$obj->userid] = $obj->agenceid;
+				
+			
+				$i++;
+			} 
+
+			return array_unique($agences);
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	}
+
+	 /**
+	 * Get agences.
+	 * 
+	 */
+	public function getAgences()
+	{
+		global $conf, $db, $langs, $user;
+		$name = 'OPTIM Industries';
+
+		$sql = "SELECT DISTINCT u.rowid as userid, s.rowid as socid, u.lastname, u.firstname, u.email, u.statut as status, u.entity, s.rowid as agenceid, s.nom as name, s.name_alias";
+		$sql .= " FROM ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+		$sql .= ", ".MAIN_DB_PREFIX."user as u";
+		$sql .= " , ".MAIN_DB_PREFIX."societe as s";
+		$sql .= " WHERE u.entity in (0, 1) AND u.rowid = sc.fk_user";
+		$sql .= " AND s.rowid = sc.fk_soc";
+		$sql .= " AND s.nom = '".$db->escape($name)."'";
+		// $sql .= " AND u.rowid =".((int) $user->id);
+	
+
+		$sql .= " ORDER BY u.lastname ASC, u.firstname ASC";
+	
+
+		dol_syslog(get_class($this)."::getAgences", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+		
+				$agences[$obj->socid] = $obj->name_alias;
+				
+			
+				$i++;
+			} 
+
+			return array_unique($agences);
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	}
+
+	 /**
+	 * Get responsable de suivi.
+	 * 
+	 */
+	public function getResp()
+	{
+		global $db;
+		$error = 0;
+		$projects = array();
+		$sql = "SELECT ec.rowid, ec.statut as statuslink, ec.fk_socpeople as id, p.ref, ec.element_id, p.ref, DATE_FORMAT(p.dateo ,'%Y-%m-%d') as date_start, DATE_FORMAT(p.datee ,'%Y-%m-%d') as date_end,";
+		$sql .= " ec.fk_c_type_contact, t.statut as statuscontact,";
+		$sql .= " t.lastname, t.firstname, t.rowid as userid,";
+		$sql .= " tc.source, tc.element, tc.code, tc.libelle";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_type_contact as tc, ".MAIN_DB_PREFIX."element_contact as ec";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as t on ec.fk_socpeople = t.rowid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p on ec.element_id = p.rowid";
+		// $sql .= " WHERE ec.element_id = 422";
+		$sql .= " WHERE ec.fk_c_type_contact = tc.rowid";
+		$sql .= " AND tc.element = 'project'";
+		$sql .= " AND tc.source = 'internal'";
+		$sql .= " AND tc.active = 1";
+		$sql .= " AND tc.code = 'PROJECTLEADER'";
+		$sql .= " AND t.statut = '1'";
+		$sql .= " AND p.fk_statut = 1";
+		
+		// if(!empty($arr_user)) {
+		// 	$sql .= " AND t.rowid IN (".implode(', ', $arr_resp).")";
+		// }
+		
+		$sql .= " ORDER BY t.lastname ASC";
+	
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+				if ($obj) {
+					$projects[$obj->userid] = $obj->firstname.' '.$obj->lastname;
+				}
+				$i++;
+			}
+			$db->free($resql);
+	
+			return $projects;
+		} else {
+			dol_print_error($db);
+		}
+	}
+
+	/**
+	 * get list of projects
+	 */
+	public function select_multi_projects()
+	{
+		global $db, $user;
+
+		$sql = "SELECT p.rowid, p.ref, p.title as nom";
+		$sql .= " FROM ".MAIN_DB_PREFIX."projet as p";
+	
+		dol_syslog(get_class($this)."::employeeCostByProject", LOG_DEBUG);
+		$resql = $db->query($sql);
+		
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			
+			$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+				
+				$projects[$obj->rowid] = $obj->ref.', '.$obj->nom;
+	
+				$i++;
+			} 
+
+			return $projects;
+		} else {
+			$this->error = $db->error();
+			return -1;
+		}
+	}
 }
 
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobjectline.class.php';
 
 /**
- * Class RegulLine. You can also remove this and generate a CRUD class for lines objects.
+ * Class IndicateurLine. You can also remove this and generate a CRUD class for lines objects.
  */
-class RegulLine extends CommonObjectLine
+class IndicateurLine extends CommonObjectLine
 {
-	// To complete with content of an object RegulLine
-	// We should have a field rowid, fk_regul and position
+	// To complete with content of an object IndicateurLine
+	// We should have a field rowid, fk_indicateur and position
 
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes

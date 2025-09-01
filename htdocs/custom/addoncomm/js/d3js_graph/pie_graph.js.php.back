@@ -1,0 +1,206 @@
+
+// Fonction pour créer un graphique de type radial
+export function createChart(data, selectedYear) {
+   // Supprimer l'ancien graphique et la légende
+   d3.select("#chart").selectAll("*").remove();
+  d3.select("#legend-container").selectAll("*").remove();
+  d3.select('svg').selectAll("*").remove();
+
+  const numAgences = new Set(data.map(d => d.agence)).size;
+  const numDomaines = new Set(data.map(d => d.domaine)).size;
+  
+  // Dimensions dynamiques pour le graphique
+  const width = Math.max(600, numAgences * 40);
+  const heightGraph = Math.max(650, numAgences * 80);
+  const innerRadius = 50;
+  const outerRadius = Math.min(width, heightGraph) / 2 - 20;
+
+  // Regrouper les données par agence
+  const groupedData = d3.groups(data, d => d.agence);
+
+  // Récupérer tous les domaines uniques
+  const domaineKeys = Array.from(new Set(data.flatMap(d => d.domaine)));
+
+  // Préparation des données groupées sans domaines vides
+  const stackedData = groupedData.map(([agence, values]) => {
+      const entry = { agence };
+      domaineKeys.forEach(domaine => {
+          const montant1 = values.find(v => v.domaine === domaine)?.montant1 || 0.0;
+          entry[domaine] = montant1;
+          entry.color = values.find(v => v.domaine === domaine)?.color || '';
+      });
+      return entry;
+  });
+
+  const series = d3.stack()
+      .keys(domaineKeys)
+      (stackedData);
+
+  const x = d3.scaleBand()
+      .domain(stackedData.map(d => d.agence))
+      .range([0, 2 * Math.PI])
+      .align(0);
+
+  const y = d3.scaleRadial()
+      .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
+      .range([innerRadius, outerRadius]);
+
+  // const hasValidData = data && data.some(d => d.montant1 > 0);
+
+  // if (hasValidData) {
+    const svg = d3.select("#chart")
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", heightGraph + 20)
+        .attr("viewBox", "0 0 " + width + " " + (heightGraph + 50));
+
+        const fontSize = selectedYear.length > 5 ? "14px" : "20px"; // Si la longueur est > 5, font-size = 8px, sinon 20px
+        let displayText = selectedYear;
+          if (selectedYear.length > 5) {
+              // Split à l'endroit du tiret et retourner à la ligne
+              const parts = selectedYear.split(' - ');
+              displayText = ' Période : ' + parts[0] + " - "  + parts[1];  
+          }
+        // Ajout du libellé pour l'année sélectionnée
+        svg.append("text")
+        .attr("x", -15) 
+        .attr("y", 40) 
+        .attr("class", "selected-year-label")
+        .style("font-size", fontSize) 
+        .style("font-weight", "600") 
+        .style("font-family", "'Poppins', sans-serif") 
+        .style("fill", "#0056b3") 
+        // .style("text-shadow", "1px 1px 3px rgba(0, 0, 0, 0.3)") 
+        .html('📅' + displayText);
+
+
+
+    const chartGroup = svg.append("g")
+        .attr("transform", "translate(" + (width / 2) + "," + (heightGraph / 1.8) + ") scale(1.2, 1.2)");
+
+    const arcGroups = chartGroup.selectAll("g")
+        .data(series)
+        .join("g")
+        .attr("class", "arc-group");
+
+    arcGroups.selectAll("path")
+        .data(d => d.slice().sort((a, b) => {
+            const valueA = a[1] - a[0];
+            const valueB = b[1] - b[0];
+            return valueA === 0 ? 1 : valueB === 0 ? -1 : 0;
+        }))
+        .join("path")
+        .attr("fill", d => {
+            const agence = d.data.agence;
+            const montantCalcule = parseFloat((d[1] - d[0]).toFixed(2));
+            const domaine = Object.keys(d.data).find(key => {
+                const montantDomaine = parseFloat(d.data[key]);
+                return montantDomaine === montantCalcule && key !== 'agence' && key !== 'color';
+            });
+            const foundData = data.find(item => item.agence === agence && item.domaine === domaine);
+            return foundData ? foundData.color : "#ccc";  
+        })
+        .attr("d", d3.arc()
+        .innerRadius(d => y(d[0]))
+        .outerRadius(d => y(d[1]))
+        .startAngle(d => x(d.data.agence))
+        .endAngle(d => x(d.data.agence) + x.bandwidth())
+        .padAngle(0.01) // Ajout d'un espacement entre les agences
+    );
+
+    // Ajouter les labels d'agence
+    const uniqueAgences = new Set();
+    arcGroups.selectAll("text")
+        .data(d => d)
+        .join("text")
+        .attr("transform", d => {
+            const angle = (x(d.data.agence) + x.bandwidth() / 2) * (180 / Math.PI) - 90;
+            const radius = (y(d[0]) + y(d[1])) / 2 + 10;
+            return 'translate(' + (Math.cos(angle * (Math.PI / 180)) * radius) + ', ' + (Math.sin(angle * (Math.PI / 180)) * radius) + ')';
+        })
+        .attr("dy", "0.35em")
+        .text(d => {
+            const agence = d.data.agence;
+            if (!uniqueAgences.has(agence)) {
+                uniqueAgences.add(agence);
+                return agence;
+            }
+            return '';
+        })
+        .style("text-anchor", "middle")
+        .style("font-size", "12px")
+        .style("fill", "white");
+
+    // Ajout de l'infobulle avec les détails
+    arcGroups.selectAll("path")
+        .append("title")
+        .text(d => {
+            const montantCalcule = parseFloat((d[1] - d[0]).toFixed(2));
+            const agence = d.data.agence || 'Aucune Agence';
+            const domaine = Object.keys(d.data).find(key => d.data[key] === montantCalcule && key !== 'agence' && key !== 'color');
+            const montant1 = d.data[domaine] !== undefined ? d.data[domaine] : 0;
+            return agence + " - " + domaine + ": " + montant1 + "€";
+        });
+
+    // Légende dynamique structurée par agence
+    const legendContainer = d3.select("#legend-container");
+
+    // Regrouper les données par agence
+    const groupedLegendData = d3.groups(data, d => d.agence);
+
+    legendContainer.selectAll(".agency-legend")
+    .data(groupedLegendData)
+    .enter()
+    .append("div")
+    .attr("class", "agency-legend")
+    .style("margin", "10px 0")
+    .style("padding", "10px")
+    .style("width", "90%")
+    .style("background-color", "#f9f9f9")
+    .each(function([agence, items]) {
+        // Titre de l'agence
+        d3.select(this).append("div")
+            .attr("class", "agency-title")
+            .style("font-weight", "bold")
+            .style("font-size", "14px")
+            .style("margin-bottom", "5px")
+            .text(agence);
+
+        // Légende pour chaque domaine de l'agence
+        const domainContainer = d3.select(this).append("div")
+            .attr("class", "domain-legend")
+            .style("display", "flex")
+            .style("flex-wrap", "wrap")
+            .style("justify-content", "flex-start"); // Alignement des éléments à gauche
+
+        domainContainer.selectAll(".legend-item")
+            .data(items)
+            .enter()
+            .append("div")
+            .attr("class", "legend-item")
+            .style("display", "flex")
+            .style("align-items", "center") // Assurez-vous que les éléments sont alignés verticalement
+            .style("margin", "5px 10px")
+            .each(function(d) {
+                // Carré de couleur pour chaque domaine avec taille fixe
+                d3.select(this).append("div")
+                    .style("width", "15px")   
+                    .style("height", "15px")  
+                    .style("background-color", getDomainColor(d.agence, d.domaine, data))
+                    .style("margin-right", "8px")
+                    .style("flex-shrink", "0"); // Empéche le carré de se rétrécir
+
+                // Texte du domaine et montant
+                d3.select(this).append("div")
+                    .style("font-size", "12px")
+                    .style("flex-grow", "1")  // Permet au texte de s'étirer sans affecter le carré
+                    .style("font-family", "Arial, sans-serif")
+                    // .style("line-height", "12px")
+                    .style("text-align", "left")
+                    .text(d.domaine + ": " + formatMontant(d.montant1) + "€");
+            });
+    });
+    // return;
+  // }
+// renderChartOrEmpty(data, selectedYear);
+}

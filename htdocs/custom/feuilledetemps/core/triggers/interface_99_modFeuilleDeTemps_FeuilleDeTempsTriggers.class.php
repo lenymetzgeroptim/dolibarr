@@ -163,7 +163,7 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				if($res){
 					return 1;
 				}
-				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+				else{
 					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
 					return 0;
 				}
@@ -203,7 +203,7 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				if($res){
 					return 1;
 				}
-				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+				else{
 					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
 					return 0;
 				}
@@ -235,7 +235,7 @@ class InterfaceFeuilleDeTempsTriggers extends DolibarrTriggers
 				if($res){
 					return 1;
 				}
-				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+				else{
 					setEventMessages("Impossible d'envoyer le mail", null, 'errors');
 					return 0;
 				}
