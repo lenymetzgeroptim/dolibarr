@@ -81,6 +81,7 @@ function generateMembersProjAbs(ressources, filteredData) {
         console.log("Aucune donnée disponible");
     // document.getElementById("message-container").innerHTML = "Aucune donnée disponible";
     }else{
+        
         ressources.forEach(val => {
             const condition = (val.fk_projet !== null || typeof val.fk_projet === "undefined");
 
@@ -174,96 +175,116 @@ function generateMembersProjAbs(ressources, filteredData) {
     return members;
 }
 
-function generateGradientForAbsences(absences, startDate, endDate, idref) {
+function generateGradientForAbsences2(absences, startDate, endDate, idref) {
     if (!Array.isArray(absences) || absences.length === 0) {
-        let defaultColor = getDefaultColor(idref);
+        const defaultColor = getDefaultColor(idref);
         return {
-            // gradient: `linear-gradient(to right, ${defaultColor} 0% 100%)`,
-            // Pour rendre aussi compatible avec FireFox Navigateur 
             gradient: `linear-gradient(to right, ${defaultColor} 0%, ${defaultColor} 100%)`,
-            badges: `<span class="badge badge-secondary" style="background-color: #ccc; color: #333; text-align: left;" title="Aucune absence enregistrée">Aucune absence</span>`,
-            rsc: `<span class="badge badge-secondary" style="background-color: #ccc; color: #333; text-align: left;" title="Aucune absence enregistrée">Aucune absence</span>`
+            badges: `<span class="badge badge-secondary" style="background-color: #ccc; color: #333;">Aucune absence</span>`,
+            rsc: `<span class="badge badge-secondary" style="background-color: #ccc; color: #333;">Aucune absence</span>`
         };
     }
 
-    // Tri des absences par date croissante
+    // Fonction pour détecter une demi-journée en fonction des heures
+    function isHalfDayAbsence(abs) {
+        const start = new Date(abs.date_start);
+        const end = new Date(abs.date_end);
+        const sameDay = start.toDateString() === end.toDateString();
+        const startHour = start.getHours();
+        const endHour = end.getHours();
+        return sameDay && ((endHour <= 12 && startHour < endHour) || (startHour >= 12 && endHour > startHour));
+    }
+
+    function getMinWidthForAbsence(abs) {
+        return isHalfDayAbsence(abs) ? 0.03 : 0.05;
+    }
+
     absences.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
 
-    let colors = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDays = (end - start) / (1000 * 60 * 60 * 24);
+
+    let segments = [];
     let rsc = [];
-    let totalDays = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
-
-    // console.log("ID", idref, "Start:", startDate, "End:", endDate, "TotalDays:", totalDays);  
-
-    // if (totalDays <= 0) {
-    //     return { gradient: "white", badges: "" };
-    // }
-
-   
-
-
-    let lastEndPercent = 0;
+    let hasAbsences = false;
     let absenceHorsPeriode = false;
-    let hasAbsences = false; // Variable pour savoir s'il y a au moins une absence
 
-    
     absences.forEach(abs => {
-        let startDiff = (new Date(abs.date_start) - new Date(startDate)) / (1000 * 60 * 60 * 24);
-        let endDiff = (new Date(abs.date_end) - new Date(startDate)) / (1000 * 60 * 60 * 24);
+        let startAbs = new Date(abs.date_start);
+        let endAbs = new Date(abs.date_end);
 
-        let startPercent = (startDiff / totalDays) * 100;
-        let endPercent = (endDiff / totalDays) * 100;
-
-        startPercent = Math.max(0, Math.min(100, startPercent));
-        endPercent = Math.max(0, Math.min(100, endPercent));
-     
-
-        // Si l'absence est totalement hors période
-        if (endDiff < 0 || startDiff > totalDays) {
+        if (endAbs < start || startAbs > end) {
             absenceHorsPeriode = true;
             return;
         }
 
-        let color = getStatusColor(abs.status);
-        let badgeLabel = getStatusLabel(abs.status);
+        const clampedStart = startAbs < start ? start : startAbs;
+        const clampedEnd = endAbs > end ? end : endAbs;
 
-        // Un espace entre deux absences si nécessaire
-        // if (startPercent > lastEndPercent) {
-        //     colors.push(`${getDefaultColor(idref)} ${lastEndPercent.toFixed(2)}% ${startPercent.toFixed(2)}%`);
-        // }
+        const offsetStart = (clampedStart - start) / (1000 * 60 * 60 * 24);
+        const offsetEnd = (clampedEnd - start) / (1000 * 60 * 60 * 24);
 
-        if (startPercent >= lastEndPercent) {
-            colors.push(`${getDefaultColor(idref)} ${lastEndPercent.toFixed(2)}% ${startPercent.toFixed(2)}%`);
+        let startPercent = (offsetStart / totalDays) * 100;
+        let endPercent = (offsetEnd / totalDays) * 100;
+
+        startPercent = Math.max(0, Math.min(100, startPercent));
+        endPercent = Math.max(0, Math.min(100, endPercent));
+
+        const minWidth = getMinWidthForAbsence(abs);
+        if (endPercent - startPercent < minWidth) {
+            endPercent = startPercent + minWidth;
         }
 
-        // Ajout de la couleur de l'absence
-        // colors.push(`${color} ${startPercent.toFixed(2)}% ${endPercent.toFixed(2)}%`);
-        colors.push(`${color} ${startPercent.toFixed(2)}%, ${color} ${endPercent.toFixed(2)}%`);
-        lastEndPercent = endPercent;
+        const color = getStatusColor(abs.status);
+        const badgeLabel = getStatusLabel(abs.status);
 
-        // Au moins une absence
-        hasAbsences = true;
+        segments.push({
+            start: startPercent,
+            end: endPercent,
+            color
+        });
 
-        // Ajout du détail de l'absence dans "rsc"
+        const absDaysOrNb = abs.idref === 'FH'
+        ? `${countWorkingDays(abs.date_start, abs.date_end)} jour(s)`
+        : `${abs.nb_open_day_calculated} jour(s)`;
+
         rsc.push(`
-            <span class="badge badge-info" 
-                style="background-color: ${color}; text-align: left; border-radius: 12px;
-                    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); display: inline-flex;"
-                title="Absence : ${abs.conge_label}
-                    Période : ${abs.date_start} → ${abs.date_end}
-                    Durée : ${abs.nb_open_day_calculated} jours
-                    Statut : ${badgeLabel}">
-                <span style="font-weight: bold; margin-right: 5px;">${badgeLabel}</span> 
-                <span style="opacity: 0.8; font-size: 0.85em; background: rgba(0, 0, 0, 0.1); padding: 1px 3px; border-radius: 8px;">
-                    ${abs.conge_label}
-                </span>
-                <span style="margin-left: 8px; font-size: 0.9em;">(${abs.nb_open_day_calculated} jours)</span>
+        <span class="badge badge-info" 
+            style="background-color: ${color}; text-align: left; border-radius: 12px;
+                box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); display: inline-flex;"
+            title="Absence : ${abs.conge_label}
+                Période : ${abs.date_start} → ${abs.date_end}
+                Statut : ${badgeLabel}">
+            <span style="font-weight: bold; margin-right: 5px;">${badgeLabel}</span> 
+            <span style="opacity: 0.8; font-size: 0.85em; background: rgba(0, 0, 0, 0.1); padding: 1px 3px; border-radius: 8px;">
+                ${abs.conge_label}
             </span>
-        `);
+            <span style="margin-left: 8px; font-size: 0.9em;">(${abs.date_start} → ${abs.date_end})</span>
+            <span style="margin-left: 8px; font-size: 0.9em;">${absDaysOrNb}</span>
+        </span>
+    `);
 
+        hasAbsences = true;
     });
 
-    // Ajout badge spécifique si absences hors période
+    const defaultColor = getDefaultColor(idref);
+    let colors = [];
+    segments.sort((a, b) => a.start - b.start);
+    let cursor = 0;
+
+    segments.forEach(seg => {
+        if (seg.start > cursor) {
+            colors.push(`${defaultColor} ${cursor.toFixed(2)}% ${seg.start.toFixed(2)}%`);
+        }
+        colors.push(`${seg.color} ${seg.start.toFixed(2)}% ${seg.end.toFixed(2)}%`);
+        cursor = Math.max(cursor, seg.end);
+    });
+
+    if (cursor < 100) {
+        colors.push(`${defaultColor} ${cursor.toFixed(2)}% 100%`);
+    }
+
     let badges = "";
     if (hasAbsences) {
         badges += `
@@ -274,7 +295,7 @@ function generateGradientForAbsences(absences, startDate, endDate, idref) {
             </span>
         `;
     }
-    
+
     if (absenceHorsPeriode) {
         badges += `
             <span class="badge badge-warning" 
@@ -283,11 +304,6 @@ function generateGradientForAbsences(absences, startDate, endDate, idref) {
                 Absences hors période
             </span>
         `;
-    }
-
-    // Couleur par défaut si nécessaire
-    if (lastEndPercent < 100) {
-        colors.push(`${getDefaultColor(idref)} ${lastEndPercent.toFixed(2)}% 100%`);
     }
 
     return {
@@ -297,116 +313,142 @@ function generateGradientForAbsences(absences, startDate, endDate, idref) {
     };
 }
 
-function generateGradientForAbsences2(absences, startDate, endDate, idref) {
+function generateGradientForAbsences(absences, startDate, endDate, idref) {
     if (!Array.isArray(absences) || absences.length === 0) {
-        let defaultColor = getDefaultColor(idref);
+        const defaultColor = getDefaultColor(idref);
         return {
-            // gradient: `linear-gradient(to right, ${defaultColor} 0% 100%)`,
-            // Pour rendre aussi compatible avec FireFox Navigateur 
             gradient: `linear-gradient(to right, ${defaultColor} 0%, ${defaultColor} 100%)`,
-            badges: `<span class="badge badge-secondary" style="background-color: #ccc; color: #333; text-align: left;" title="Aucune absence enregistrée">Aucune absence</span>`,
-            rsc: `<span class="badge badge-secondary" style="background-color: #ccc; color: #333; text-align: left;" title="Aucune absence enregistrée">Aucune absence</span>`
+            badges: `<span class="badge badge-secondary" style="background-color: #ccc; color: #333;">Aucune absence</span>`,
+            rsc: `<span class="badge badge-secondary" style="background-color: #ccc; color: #333;">Aucune absence</span>`
         };
     }
 
-    // Tri des absences par date croissante
+    function isHalfDayAbsence(abs) {
+        const start = new Date(abs.date_start);
+        const end = new Date(abs.date_end);
+        const sameDay = start.toDateString() === end.toDateString();
+        const startHour = start.getHours();
+        const endHour = end.getHours();
+        return sameDay && ((endHour <= 12 && startHour < endHour) || (startHour >= 12 && endHour > startHour));
+    }
+
+    function getMinWidthForAbsence(abs) {
+        return isHalfDayAbsence(abs) ? 0.03 : 0.05;
+    }
+
     absences.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDays = (end - start) / (1000 * 60 * 60 * 24);
 
-    let colors = [];
+    let rawSegments = [];
     let rsc = [];
-    let totalDays = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
-
-    let lastEndPercent = 0;
-    let absenceHorsPeriode = false;
     let hasAbsences = false;
+    let absenceHorsPeriode = false;
 
     absences.forEach(abs => {
         let startAbs = new Date(abs.date_start);
         let endAbs = new Date(abs.date_end);
-
-        // Calcul de la différence en jours, en tenant compte des heures milliseconde en jours (1000 * 60 * 60 * 24)
-        let startDiff = (startAbs - new Date(startDate)) / (1000 * 60 * 60 * 24);
-        let endDiff = (endAbs - new Date(startDate)) / (1000 * 60 * 60 * 24);
-
-        // Calcul de les fractions de jour à partir des heures
-        // const startHours = startAbs.getHours();
-        // const endHours = endAbs.getHours();
-        // console.log('startAbs', startAbs);
-        // console.log('endAbs', endAbs);
-        // // Conversion de l'heure en fraction de jour (exemple: 12h = 0.5 jour)
-        // startDiff += startHours / 24;
-        // endDiff += endHours / 24;
-
-        let startPercent = (startDiff / totalDays) * 100;
-        let endPercent = (endDiff / totalDays) * 100;
-
-        startPercent = Math.max(0, Math.min(100, startPercent));
-        endPercent = Math.max(0, Math.min(100, endPercent));
-
-        // Si l'absence est totalement hors période
-        if (endDiff < 0 || startDiff > totalDays) {
+        if (endAbs < start || startAbs > end) {
             absenceHorsPeriode = true;
             return;
         }
 
-        let color = getStatusColor(abs.status);
-        let badgeLabel = getStatusLabel(abs.status);
+        const clampedStart = startAbs < start ? start : startAbs;
+        const clampedEnd = endAbs > end ? end : endAbs;
 
-        // Un espace entre deux absences si nécessaire
-        if (startPercent > lastEndPercent) {
-            colors.push(`${getDefaultColor(idref)} ${lastEndPercent.toFixed(2)}% ${startPercent.toFixed(2)}%`);
-        }
+        const offsetStart = (clampedStart - start) / (1000 * 60 * 60 * 24);
+        const offsetEnd = (clampedEnd - start) / (1000 * 60 * 60 * 24);
 
-        // Ajout de la couleur de l'absence
-        // colors.push(`${color} ${startPercent.toFixed(2)}% ${endPercent.toFixed(2)}%`);
-        // Pour rendre compatible avec Navigateur Firefox 
-        colors.push(`${color} ${startPercent.toFixed(2)}%, ${color} ${endPercent.toFixed(2)}%`);
-        lastEndPercent = endPercent;
+        let startPercent = (offsetStart / totalDays) * 100;
+        let endPercent = (offsetEnd / totalDays) * 100;
+        const minWidth = getMinWidthForAbsence(abs);
 
-        // Au moins une absence
-        hasAbsences = true;
+        startPercent = Math.max(0, Math.min(100, startPercent));
+        endPercent = Math.max(startPercent + minWidth, Math.min(100, endPercent));
 
-        // Ajout du détail de l'absence dans "rsc"
+        const color = getStatusColor(abs.status);
+        const badgeLabel = getStatusLabel(abs.status);
+
+        rawSegments.push({ start: startPercent, end: endPercent, color, status: abs.status });
+
+        const absDaysOrNb = abs.idref === 'FH'
+            ? `${countWorkingDays(abs.date_start, abs.date_end)} jour(s)`
+            : `${abs.nb_open_day_calculated} jour(s)`;
+
         rsc.push(`
-            <span class="badge badge-info" 
-                style="background-color: ${color}; text-align: left; border-radius: 12px;
-                    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); display: inline-flex;"
-                title="Absence : ${abs.conge_label}
-                    Période : ${abs.date_start} → ${abs.date_end}
-                    Durée : ${abs.nb_open_day_calculated} jours
-                    Statut : ${badgeLabel}">
-                <span style="font-weight: bold; margin-right: 5px;">${badgeLabel}</span> 
-                <span style="opacity: 0.8; font-size: 0.85em; background: rgba(0, 0, 0, 0.1); padding: 1px 3px; border-radius: 8px;">
-                    ${abs.conge_label}
-                </span>
-                <span style="margin-left: 8px; font-size: 0.9em;">(${abs.nb_open_day_calculated} jours)</span>
+        <span class="badge badge-info" 
+            style="background-color: ${color}; text-align: left; border-radius: 12px;
+                box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); display: inline-flex;"
+            title="Absence : ${abs.conge_label}
+                Période : ${abs.date_start} → ${abs.date_end}
+                Statut : ${badgeLabel}">
+            <span style="font-weight: bold; margin-right: 5px;">${badgeLabel}</span> 
+            <span style="opacity: 0.8; font-size: 0.85em; background: rgba(0, 0, 0, 0.1); padding: 1px 3px; border-radius: 8px;">
+                ${abs.conge_label}
             </span>
+            <span style="margin-left: 8px; font-size: 0.9em;">(${abs.date_start} → ${abs.date_end})</span>
+            <span style="margin-left: 8px; font-size: 0.9em;">${absDaysOrNb}</span>
+        </span>
         `);
+        hasAbsences = true;
     });
+
+    // Séparer les segments orange (null) et les autres
+    let orangeSegments = rawSegments.filter(s => s.status == null);
+    let topSegments = rawSegments.filter(s => s.status != null);
+
+    // Découper les segments orange chevauchés
+    topSegments.forEach(top => {
+        orangeSegments = orangeSegments.flatMap(base => {
+            if (top.end <= base.start || top.start >= base.end) return [base];
+
+            let result = [];
+            if (top.start > base.start) {
+                result.push({ start: base.start, end: top.start, color: "rgb(217, 123, 33)" });
+            }
+            if (top.end < base.end) {
+                result.push({ start: top.end, end: base.end, color: "rgb(217, 123, 33)" });
+            }
+            return result;
+        });
+    });
+
+    // Fusionner tous les segments
+    const defaultColor = getDefaultColor(idref);
+    let segments = [...topSegments.map(s => ({ start: s.start, end: s.end, color: s.color })), ...orangeSegments];
+    segments.sort((a, b) => a.start - b.start);
+
+    let colors = [];
+    let cursor = 0;
+
+    segments.forEach(seg => {
+        if (seg.start > cursor) {
+            colors.push(`${defaultColor} ${cursor.toFixed(2)}% ${seg.start.toFixed(2)}%`);
+        }
+        colors.push(`${seg.color} ${seg.start.toFixed(2)}% ${seg.end.toFixed(2)}%`);
+        cursor = Math.max(cursor, seg.end);
+    });
+
+    if (cursor < 100) {
+        colors.push(`${defaultColor} ${cursor.toFixed(2)}% 100%`);
+    }
 
     let badges = "";
     if (hasAbsences) {
-        badges += `
-            <span class="badge badge-info" 
-                style="background-color: RGB(0, 117, 168, 0.8); color: white; text-align: left;" 
-                title="Ce salarié a des absences dans la période du projet">
-                Présence d'absences
-            </span>
-        `;
+        badges += `<span class="badge badge-info" 
+            style="background-color: RGB(0, 117, 168, 0.8); color: white; text-align: left;" 
+            title="Ce salarié a des absences dans la période du projet">
+            Présence d'absences
+        </span>`;
     }
 
     if (absenceHorsPeriode) {
-        badges += `
-            <span class="badge badge-warning" 
-                style="background-color: #ff9800; color: white; text-align: left;" 
-                title="Certaines absences de ce salarié ne sont pas dans la période du projet">
-                Absences hors période
-            </span>
-        `;
-    }
-
-    if (lastEndPercent < 100) {
-        colors.push(`${getDefaultColor(idref)} ${lastEndPercent.toFixed(2)}% 100%`);
+        badges += `<span class="badge badge-warning" 
+            style="background-color: #a47148; color: white; text-align: left;" 
+            title="Certaines absences de ce salarié ne sont pas dans la période du projet">
+            Absences hors période
+        </span>`;
     }
 
     return {
@@ -422,17 +464,35 @@ function getDefaultColor(idref) {
 }
 
 function getStatusColor(status) {
-    return status == 3 ? "rgba(60, 120, 20, 0.85)" : // Validé (Vert)
+    return status == null ? "rgb(217, 123, 33)" : 
+           status == 3 ? "rgba(60, 120, 20, 0.85)" : // Validé (Vert)
            status == 6 ? "rgba(180, 30, 30, 0.9)" : // Appro. 2 (Rouge)
            status == 2 ? "rgba(255, 200, 0, 0.85)" : // Appro. 1 (Jaune)
            "black";
 }
 
+function countWorkingDays(startDateStr, endDateStr) {
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+    let count = 0;
+    
+    // Parcours jour par jour
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const day = d.getDay();
+        if (day !== 0 && day !== 6) { // 0 = dimanche, 6 = samedi
+            count++;
+        }
+    }
+
+    return count;
+}
+
 function getStatusLabel(status) {
     return status == 3 ? "Validé" :
            status == 6 ? "Appro. 2" :
-           status == 2 ? "Appro. 1" : "";
+           status == 2 ? "Appro. 1" : "En formation";
 }
+
 
 function formatDateTimeFR(date) {
     return new Date(date).toLocaleString("fr-FR", { 

@@ -1547,7 +1547,9 @@ class Charge extends User
 	}
 
 
-
+	/**
+	 * 
+	 */
 	public function getContactsAndOrders($arr_user, $date_start, $date_end, $option, $optionStr)
 	{
 		global $db;
@@ -1756,6 +1758,94 @@ class Charge extends User
 		// return $comms;
 		return array_values(array_unique($comms, SORT_REGULAR));
 	}
+
+		/**
+	 * Récupère les utilisateurs en formation en cours
+	 *
+	 * @return array Liste des objets utilisateurs en formation
+	 */
+	public function getUsersInCurrentTraining()
+	{
+		global $langs, $db;
+		$result = array();
+		$now = dol_now();
+		$sql = "SELECT t.rowid as element_id_abs, 
+		tf.ref as holidayref, 
+		t.fk_formation as fk_type,
+		u.rowid as id, 
+		GROUP_CONCAT(DISTINCT CASE 
+			WHEN (p.datee >= '".$db->idate($now)."' OR p.datee IS NULL) 
+				AND p.fk_statut < 2 
+			THEN p.ref 
+			ELSE NULL 
+		END ORDER BY p.ref SEPARATOR ', ') AS projets,
+
+		GROUP_CONCAT(DISTINCT CASE 
+			WHEN (p.datee >= '".$db->idate($now)."' OR p.datee IS NULL) 
+				AND p.fk_statut < 2 
+			THEN p.rowid 
+			ELSE NULL 
+		END ORDER BY p.rowid SEPARATOR ', ') AS fk_projets,
+
+		GROUP_CONCAT(DISTINCT CASE 
+			WHEN (p.datee >= '".$db->idate($now)."' OR p.datee IS NULL) 
+				AND p.fk_statut < 2 
+			THEN pe.domaine 
+			ELSE NULL 
+		END ORDER BY pe.domaine SEPARATOR ', ') AS domaines,
+
+		GROUP_CONCAT(DISTINCT c.rowid ORDER BY c.rowid SEPARATOR ', ') AS fk_orders,
+		GROUP_CONCAT(DISTINCT pr.rowid ORDER BY pr.rowid SEPARATOR ', ') AS fk_propals,
+		GROUP_CONCAT(DISTINCT pe.agenceconcerne ORDER BY pe.agenceconcerne SEPARATOR ', ') AS agences,
+		u.lastname as user_lastname, 
+		u.firstname as user_firstname, 
+		ue.antenne,
+		tf.label as conge_label,
+		p.rowid as fk_projet, 
+		p.ref as projet_ref,
+		t.fk_user, 
+		'FH' as idref,
+		CONCAT(DATE_FORMAT(t.date_debut_formation, '%Y-%m-%d'), ' 00:00') AS date_start,
+		CONCAT(DATE_FORMAT(t.date_fin_formation, '%Y-%m-%d'), ' 23:59') AS date_end,
+		t.fk_formation";
+		$sql .= " FROM ".MAIN_DB_PREFIX."formationhabilitation_userformation as t";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid = t.fk_user";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."formationhabilitation_formation as tf on t.fk_formation = tf.rowid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ue ON ue.fk_object = u.rowid";		
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec ON ec.fk_socpeople = u.rowid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc ON ec.fk_c_type_contact = tc.rowid"; 
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON ec.element_id = p.rowid"; 
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe ON pe.fk_object = p.rowid"; 
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON c.fk_projet = ec.element_id";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."propal as pr ON pr.fk_projet = ec.element_id";
+		$sql .= " WHERE u.statut = 1"; 
+		$sql .= " AND ec.fk_c_type_contact = tc.rowid";
+		$sql .= " AND tc.element = 'project'";
+		$sql .= " AND tc.source = 'internal'";
+		$sql .= " AND tc.active = 1";
+		$sql .= " AND tc.code = 'PROJECTCONTRIBUTOR'";
+		$sql .= " AND p.fk_statut = 1";
+		// $sql .= " AND t.date_fin_formation IS NOT NULL AND t.date_fin_formation >= '".dol_print_date($now, '%Y-%m-%d')."'";
+		$sql .= " AND t.date_fin_formation BETWEEN '".dol_print_date($now, '%Y-%m-%d')."' AND '2035-12-31'";
+		$sql .= " GROUP BY t.rowid";
+		$sql .= " ORDER BY u.rowid DESC";
+		
+
+		dol_syslog(get_class($this)."::getUsersInCurrentTraining", LOG_DEBUG);
+		 $resql = $db->query($sql);
+
+		if ($resql) {
+			while ($obj = $db->fetch_object($resql)) {
+				$result[] = $obj;
+			}
+			$db->free($resql);
+		} else {
+			dol_syslog(__METHOD__." SQL error: ".$db->lasterror(), LOG_ERR);
+		}
+
+		return $result;
+	}
+
 
 
 	/**
@@ -2149,7 +2239,7 @@ class Charge extends User
 		$sql .= " AND p.fk_statut = 1";
 		// $sql .= " AND pe.projetstructurel <> 1";
 		if($option == 'ProjetStructure') {
-			// $sql .= " AND 1 = 1";
+			$sql .= " AND 1 = 1";
 		}else{
 			$sql .= " AND pe.projetstructurel IS NULL";
 		}
@@ -2179,7 +2269,7 @@ class Charge extends User
 				if ($obj) {
 					// if($obj->fk_projet !== $obj->element_id) {
 						// $projects[$obj->id.'_'.$obj->element_id] = $obj;
-						$projects[$obj->id] = $obj;
+						$projects[] = $obj;
 					// }
 					
 				}
@@ -2918,146 +3008,7 @@ class Charge extends User
 		}
 	}
 
-	/**
-	 * get list of absent employees
-	 * 
-	 * @param 
-	 * 
-	 * 
-	 * @return 
-	 */
-	// public function getAbsentUsers()
-	// {
-	// 	global $db;
-	// 	$now = dol_now();
-	// 	$sql = "SELECT cp.rowid as element_id_abs, cp.ref as holidayref, 'HL' as idref, p.ref, p.rowid as fk_projet, cp.fk_user as id, cp.fk_type,";
-	// 	$sql .= " CASE WHEN cp.halfday = 0 THEN CONCAT(DATE_FORMAT(cp.date_debut, '%Y-%m-%d'), ' 00:00') ELSE CONCAT(DATE_FORMAT(cp.date_debut, '%Y-%m-%d'), ' 12:00') END as date_start,";
-	// 	$sql .= " CASE WHEN cp.halfday = 0 THEN CONCAT(DATE_FORMAT(cp.date_fin, '%Y-%m-%d'), ' 23:59') ELSE CONCAT(DATE_FORMAT(cp.date_fin, '%Y-%m-%d'), ' 12:00') END as date_end,";
-	// 	$sql .= " cp.halfday, cp.statut as status, ec.fk_socpeople as parent_id,";
-	// 	$sql .= " DATE_FORMAT(cp.date_valid, '%Y-%m-%d'), DATE_FORMAT(cp.date_refuse, '%Y-%m-%d'),";
-	// 	$sql .= " uu.lastname as user_lastname, uu.firstname as user_firstname, ef.remplacement as options_remplacement, ef.statutfdt as options_statutfdt";
-	// 	$sql .= " FROM ".MAIN_DB_PREFIX."c_type_contact as tc, ".MAIN_DB_PREFIX."holiday as cp";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as ef on (cp.rowid = ef.fk_object)";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as uu ON uu.rowid = cp.fk_user";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec on ec.fk_socpeople = uu.rowid";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p on ec.element_id = p.rowid";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."commande  as c on c.fk_projet = p.rowid";
-
-	// 	$sql .= " WHERE ec.fk_c_type_contact = tc.rowid";
-	// 	$sql .= " AND cp.entity IN (1)";
-	// 	$sql .= " AND tc.element = 'project'";
-	// 	$sql .= " AND tc.source = 'internal'";
-	// 	$sql .= " AND tc.active = 1";
-	// 	$sql .= " AND tc.code = 'PROJECTCONTRIBUTOR'";
-	// 	$sql .= " AND uu.statut = '1'";
-	// 	$sql .= " AND p.fk_statut = 1";
-	// 	$sql .= " AND cp.date_debut >= '".$this->db->idate($now)."'";
-
-	// 	// $sql .= " GROUP BY cp.rowid";
-	// 	// $sql .= " HAVING cp.statut = 2 OR cp.statut = 3 OR cp.statut = 6";
-	// 	$sql .= " ORDER BY cp.date_debut DESC";
 	
-	// 	$resql = $db->query($sql);
-
-	// 	if ($resql) {
-	// 		$num = $db->num_rows($resql);
-	// 		$i = 0;
-	// 		while ($i < $num) {
-	// 			$obj = $db->fetch_object($resql);
-	// 			if ($obj) {
-	// 				if($obj->status == 2 || $obj->status == 3 || $obj->status == 6) {
-	// 					$listabs[$obj->element_id_abs] = $obj;
-						
-	// 					// $absence_data[$obj->id] = [
-	// 					// 	"element_id" => $obj->element_id,
-	// 					// 	"holidayref" => $obj->holidayref,
-	// 					// 	"idref" => $obj->idref,
-	// 					// 	"ref" => $obj->ref,
-	// 					// 	"fk_projet" => $obj->fk_projet,
-	// 					// 	"date_start" => $obj->date_start,
-	// 					// 	"date_end" => $obj->date_end,
-	// 					// 	"status" => $obj->status,
-	// 					// 	"date_valid" => $obj->date_valid,
-	// 					// 	"date_refuse" => $obj->date_refuse,
-	// 					// 	"user_firstname" => $obj->user_firstname,
-	// 					// 	"user_lastname" => $obj->user_lastname,
-	// 					// 	// "etp" => $obj->etp,
-	// 					// 	"id" => $obj->id,
-	// 					// 	// "name_html" => $obj->name_html,
-	// 					// 	// "name_login" => $obj->name_login,
-	// 					// 	"name_html" => [
-	// 					// 		"date_start" => $obj->date_start,
-	// 					// 		"date_end" => $obj->date_end,
-	// 					// 		"status" => $obj->status,
-	// 					// 		"holidayref" => $obj->holidayref,
-	// 					// 	]
-	// 					// ];
-	// 				}
-					
-	// 			}
-	// 			$i++;
-	// 		}
-	// 		$db->free($resql);
-	
-	// 		return $listabs;
-	// 	} else {
-	// 		dol_print_error($db);
-	// 	}
-	// }
-
-	// public function getAbsentUsers()
-	// {
-	// 	global $db;
-	// 	$now = dol_now();
-	// 	$listabs = []; // 🔹 Initialisation
-
-	// 	$sql = "SELECT cp.rowid as element_id_abs, cp.ref as holidayref, 'HL' as idref, p.ref, p.rowid as fk_projet, cp.fk_user as id, cp.fk_type,";
-	// 	$sql .= " CASE WHEN cp.halfday = 0 THEN CONCAT(DATE_FORMAT(cp.date_debut, '%Y-%m-%d'), ' 00:00') ELSE CONCAT(DATE_FORMAT(cp.date_debut, '%Y-%m-%d'), ' 12:00') END as date_start,";
-	// 	$sql .= " CASE WHEN cp.halfday = 0 THEN CONCAT(DATE_FORMAT(cp.date_fin, '%Y-%m-%d'), ' 23:59') ELSE CONCAT(DATE_FORMAT(cp.date_fin, '%Y-%m-%d'), ' 12:00') END as date_end,";
-	// 	$sql .= " cp.halfday, cp.statut as status, ec.fk_socpeople as parent_id,";
-	// 	$sql .= " DATE_FORMAT(cp.date_valid, '%Y-%m-%d') as date_valid, DATE_FORMAT(cp.date_refuse, '%Y-%m-%d') as date_refuse,";
-	// 	$sql .= " uu.lastname as user_lastname, uu.firstname as user_firstname, ef.remplacement as options_remplacement, ef.statutfdt as options_statutfdt, uu.rowid as id";
-		
-	// 	// $sql = "SELECT cp.rowid as element_id_abs, cp.ref as holidayref, 'HL' as idref, cp.fk_user as id, cp.fk_type,";
-	// 	// // p.ref, p.rowid as fk_projet,";
-	// 	// $sql .= " CASE WHEN cp.halfday = 0 THEN CONCAT(DATE_FORMAT(cp.date_debut, '%Y-%m-%d'), ' 00:00') ELSE CONCAT(DATE_FORMAT(cp.date_debut, '%Y-%m-%d'), ' 12:00') END as date_start,";
-	// 	// $sql .= " CASE WHEN cp.halfday = 0 THEN CONCAT(DATE_FORMAT(cp.date_fin, '%Y-%m-%d'), ' 23:59') ELSE CONCAT(DATE_FORMAT(cp.date_fin, '%Y-%m-%d'), ' 12:00') END as date_end,";
-	// 	// $sql .= " cp.halfday, cp.statut as status,";
-	// 	// // ec.fk_socpeople as parent_id,";
-	// 	// $sql .= " DATE_FORMAT(cp.date_valid, '%Y-%m-%d') as date_valid, DATE_FORMAT(cp.date_refuse, '%Y-%m-%d') as date_refuse,";
-	// 	// $sql .= " uu.lastname as user_lastname, uu.firstname as user_firstname, ef.remplacement as options_remplacement, ef.statutfdt as options_statutfdt";
-		
-	// 	$sql .= " FROM ".MAIN_DB_PREFIX."holiday as cp";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as ef ON cp.rowid = ef.fk_object";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as uu ON uu.rowid = cp.fk_user";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec ON ec.fk_socpeople = uu.rowid";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON ec.element_id = p.rowid";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON c.fk_projet = p.rowid";
-	// 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc ON ec.fk_c_type_contact = tc.rowid";
-		
-	// 	$sql .= " WHERE cp.entity IN (1)";
-	// 	$sql .= " AND tc.element = 'project' AND tc.source = 'internal' AND tc.active = 1 AND tc.code = 'PROJECTCONTRIBUTOR'";
-	// 	$sql .= " AND uu.statut = 1 AND p.fk_statut = 1";
-	// 	$sql .= " AND cp.date_debut >= '".$this->db->idate($now)."'";
-
-	// 	$sql .= " GROUP BY element_id_abs";
-	// 	$sql .= " ORDER BY cp.date_debut DESC";
-
-	// 	$resql = $db->query($sql);
-
-	// 	if ($resql) {
-	// 		while ($obj = $db->fetch_object($resql)) {
-	// 			if ($obj->status == 2 || $obj->status == 3 || $obj->status == 6) {
-	// 				$listabs[] = $obj;
-	// 			}
-	// 		}
-	// 		$db->free($resql);
-	// 		return $listabs;
-	// 	} else {
-	// 		dol_print_error($db);
-	// 	}
-	// }
-
 	public function getAbsentUsers()
 	{
 		global $db;
@@ -3141,84 +3092,6 @@ class Charge extends User
 				AND DATE(cp.date_fin) >= '".$db->escape($today)."'
 				GROUP BY cp.rowid
 				ORDER BY uu.rowid DESC";
-		// $sql = "
-		// 	SELECT 
-		// 		cp.rowid as element_id_abs,
-		// 		cp.ref as holidayref,
-		// 		'HL' as idref,
-		// 		CASE WHEN tc.code = 'PROJECTCONTRIBUTOR' THEN
-		// 		uu.rowid ELSE NULL END AS id,
-		// 		cp.fk_type,
-		// 		hu.nb_holiday as nb_open_day,
-
-		// 		GROUP_CONCAT(DISTINCT CASE 
-		// 			WHEN (p.datee >= '".$this->db->idate($now)."' OR p.datee IS NULL) 
-		// 				AND p.fk_statut < 2 
-		// 			THEN p.ref ELSE NULL END ORDER BY p.ref SEPARATOR ', ')
-		// 		AS projets,
-
-			
-		// 			GROUP_CONCAT(DISTINCT CASE 
-		// 				WHEN (p.datee >= '".$this->db->idate($now)."' OR p.datee IS NULL) 
-		// 					AND p.fk_statut < 2 
-		// 				THEN p.rowid ELSE NULL END ORDER BY p.rowid SEPARATOR ', ')
-		// 		AS fk_projets,
-
-				
-		// 		GROUP_CONCAT(DISTINCT c.rowid ORDER BY c.rowid SEPARATOR ', ')
-		// 		 AS fk_orders,
-
-		// 		CASE WHEN tc.code = 'PdC' THEN 
-		// 			GROUP_CONCAT(DISTINCT pr.rowid ORDER BY pr.rowid SEPARATOR ', ')
-		// 		ELSE NULL END AS fk_propals,
-
-		// 		GROUP_CONCAT(DISTINCT pe.agenceconcerne ORDER BY pe.agenceconcerne SEPARATOR ', ') AS agences,
-
-		// 		CASE WHEN cp.halfday = 0 THEN CONCAT(DATE_FORMAT(cp.date_debut, '%Y-%m-%d'), ' 00:00')
-		// 			ELSE CONCAT(DATE_FORMAT(cp.date_debut, '%Y-%m-%d'), ' 12:30') END as date_start,
-
-		// 		CASE WHEN cp.halfday = 0 THEN CONCAT(DATE_FORMAT(cp.date_fin, '%Y-%m-%d'), ' 23:59')
-		// 			ELSE CONCAT(DATE_FORMAT(cp.date_fin, '%Y-%m-%d'), ' 18:00') END as date_end,
-
-		// 		cp.halfday,
-		// 		cp.statut as status,
-		// 		DATE_FORMAT(cp.date_valid, '%Y-%m-%d') as date_valid,
-		// 		DATE_FORMAT(cp.date_refuse, '%Y-%m-%d') as date_refuse,
-
-		// 		uu.lastname as user_lastname,
-		// 		uu.firstname as user_firstname,
-		// 		ef.remplacement as options_remplacement,
-		// 		ht.label as conge_label,
-		// 		ef.statutfdt as options_statutfdt,
-
-		// 		p.rowid as fk_projet,
-		// 		p.ref as projet_ref
-
-		// 	FROM ".MAIN_DB_PREFIX."holiday as cp 
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."holiday_extrafields as ef ON cp.rowid = ef.fk_object 
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."c_holiday_types as ht ON cp.fk_type = ht.rowid
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."user as uu ON uu.rowid = cp.fk_user 
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."holiday_users as hu ON hu.fk_user = cp.fk_user AND hu.fk_type = cp.fk_type
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ec ON ec.fk_socpeople = uu.rowid 
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc ON ec.fk_c_type_contact = tc.rowid 
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON (tc.code = 'PdC' AND ec.element_id = c.rowid) 
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON 
-		// 		(tc.code = 'PROJECTCONTRIBUTOR' AND ec.element_id = p.rowid) OR 
-		// 		(tc.code = 'PdC' AND c.fk_projet = p.rowid)
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pe ON pe.fk_object = p.rowid 
-		// 	LEFT JOIN ".MAIN_DB_PREFIX."propal as pr ON pr.fk_projet = p.rowid 
-
-		// 	WHERE uu.statut = 1 
-		// 	AND cp.entity IN (1)
-		// 	AND tc.source = 'internal'
-		// 	AND tc.active = 1
-		// 	AND tc.code IN ('PROJECTCONTRIBUTOR', 'PdC')
-		// 	AND p.fk_statut = 1
-		// 	AND cp.date_fin >= '".$this->db->idate($now)."'
-
-		// 	GROUP BY cp.rowid
-		// 	ORDER BY id DESC
-		// 	";
 		
 			$resql = $db->query($sql);
 

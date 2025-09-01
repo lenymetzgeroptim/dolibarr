@@ -150,7 +150,6 @@ function setupFilterListeners(resources, filterData, updateGanttCallback, type) 
         // les dates d'absence en interaction avec les ressources filtrées
         const filterContainer = document.getElementById("dateFilterContainer");
         if (type == 'abs' || type == 'projabs') {
-           
             if (type == 'abs') {
                 if (startAbsDate !== "" && endAbsDate !== "") {
                     if (filtered.some(resource => resource.id && resource.id.trim() !== "")) {
@@ -188,13 +187,13 @@ function setupFilterListeners(resources, filterData, updateGanttCallback, type) 
             return [];
         }
 
-        return filtered;
-    }
+
+            return filtered;
+        }
 
     function updateFilteredResources() {
         let filteredResources = applyAllFilters(resources);
-        // let filteredResources = applyAllFilters(Array.isArray(resources) ? resources : Object.values(resources));
-        
+       
         // Gestion de la disponibilité via les icônes
         const iconElementFree = document.getElementById("availabilityIcon");
         const iconElementPartial = document.getElementById("availabilityIconPartial");
@@ -211,6 +210,7 @@ function setupFilterListeners(resources, filterData, updateGanttCallback, type) 
     .on("change", function () {
         updateFilteredResources();
     });
+
 
     
     // Gestion du reset des filtres (excepté les dates d'absence)

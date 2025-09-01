@@ -61,7 +61,10 @@ $date_end = dol_mktime(-1, -1, -1, $date_endmonth, $date_endday, $date_endyear);
 $occupied =  GETPOST('case');
 
 $object = new User($db);
-
+// $rsc = new Charge($db);
+// $listTrainingType = $rsc->getUsersInCurrentTraining();
+// var_dump($listTrainingType);
+// var_dump($genericDataAbs);
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once
 if (!empty($conf->global->PROJECT_ALLOW_COMMENT_ON_PROJECT) && method_exists($object, 'fetchComments') && empty($object->comments)) {
 	$object->fetchComments();
@@ -89,6 +92,7 @@ if (!empty($conf->use_javascript_ajax)) {
 		'/projet/jsgantt_language.js.php?lang='.$langs->defaultlang,
         '/custom/workload/js/data/dataStore.js',
         '/custom/workload/js/utils/domUtil.js',
+		'/custom/workload/js/utils/dataUtils.js',
         '/custom/workload/js/workload.config.js',
         '/custom/workload/js/data/dataFetcher.js',
         '/custom/workload/js/workload.main.js',
@@ -96,8 +100,7 @@ if (!empty($conf->use_javascript_ajax)) {
         '/custom/workload/js/utils/tabNavigation.js',
         '/custom/workload/js/utils/eventBus.js',
         '/custom/workload/js/init/setup.js',
-        '/custom/workload/js/filters/filterListeners.js',
-        
+        '/custom/workload/js/filters/filterListeners.js',   
 		// '/custom/workload/js/ganttFilterUtils.js',
 		// '/custom/workload/js/fetch_gantt_data.js'
 	);

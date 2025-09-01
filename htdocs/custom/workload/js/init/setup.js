@@ -1,3 +1,24 @@
+// function updateLabelState(ganttId) {
+//     const selectedLabels = Array.from(document.querySelectorAll('.gformlabel.gselected'));
+//         selectedLabels.forEach(selectedLabel => {
+//         const labelId = selectedLabel.dataset.id || selectedLabel.id || '';
+//         if (labelId && labelId.includes(ganttId)) {
+//             console.log('ganttId', ganttId, 'selectedLabel', selectedLabel);
+//             $("#userFilter, #jobFilter, #skillFilter, #projectFilter, #orderFilter, #propalFilter, #groupFilter, #agenceFilter, #domFilter, #respProjFilter, #resAntFilter, #absFilter")
+//                 .on("select2:select select2:unselect", function () {
+//                     // Supprimer gselected du label en cours (celui qui rentre dans la condition)
+//                 const newSelected = document.querySelector(`.gformlabel[data-id="${labelId}"], .gformlabel#${labelId}`);
+//                     if (newSelected) {
+//                         newSelected.classList.remove('gselected');
+//                         newSelected.classList.add('gselected');
+                    
+                    
+//                         console.log('Réappliqué à', newSelected);
+//                     }
+//                 });
+//         }
+//     });
+// }
  function addFixedHeader() {
     let ganttMapping = {
         "gant1": "GanttChartDIV",
@@ -20,6 +41,8 @@
         console.warn("Aucun Gantt correspondant trouvé pour l'onglet :", activeTabId);
         return;
     }
+    
+//    updateLabelState(ganttId);
 
     let ganttContainer = document.getElementById(ganttId);
     let ganttTable = document.getElementById(ganttId + "chartTable");
@@ -279,25 +302,6 @@
 
     });
 
-    
-
-    function attachEventListeners() {
-        // Sauvegarde de l'élément 'jour', 'mois' '...sélectionné
-        // const currentSelectedText = document.querySelector(".gformlabel.gselected")?.textContent.trim();
-        document.querySelectorAll(".gformlabel").forEach(element => {
-            element.addEventListener("click", function () {
-                // si l'élément est déjà sélectionné
-                if (this.classList.contains("gselected")) {
-                    return; 
-                };
-
-                // Ajout de la classe 'gselected' à l'élément cliqué
-                this.classList.add("gselected");
-
-                EventBus.dispatch('gantt:update');
-            });
-        });
-    }
 
     // Observation de l'ajout de nouveaux éléments dans le DOM
     const observer = new MutationObserver((mutationsList, observer) => {
@@ -314,9 +318,9 @@
         attachEventListeners();
     }
 
-    // $("#userFilter, #jobFilter, #skillFilter, #projectFilter, #orderFilter, #propalFilter, #groupFilter, #agenceFilter, #domFilter, #respProjFilter, #resAntFilter, #absFilter").on("select2:select select2:unselect", function () {
-    //     attachEventListeners();
-    // });
+    $("#userFilter, #jobFilter, #skillFilter, #projectFilter, #orderFilter, #propalFilter, #groupFilter, #agenceFilter, #domFilter, #respProjFilter, #resAntFilter, #absFilter").on("select2:select select2:unselect", function () {
+        attachEventListeners();
+    });
 
 }
 
@@ -351,6 +355,25 @@ function getJoursFeries(year) {
     ];
 
     return joursFeries.map(date => date.toISOString().split('T')[0]);
+}
+
+
+function attachEventListeners() {
+    // Sauvegarde de l'élément 'jour', 'mois' '...sélectionné
+    // const currentSelectedText = document.querySelector(".gformlabel.gselected")?.textContent.trim();
+    document.querySelectorAll(".gformlabel").forEach(element => {
+        element.addEventListener("click", function () {
+            // si l'élément est déjà sélectionné
+            if (this.classList.contains("gselected")) {
+                return; 
+            };
+
+            // Ajout de la classe 'gselected' à l'élément cliqué
+            this.classList.add("gselected");
+
+            EventBus.dispatch('gantt:update');
+        });
+    });
 }
 
 
