@@ -532,6 +532,41 @@ class modDonneesRH extends DolibarrModules
 		);
 		$this->import_run_sql_after_array[$r] = array();
 		$r++; 
+
+		$this->import_code[$r] = $this->rights_class.'_'.$r;
+		$this->import_label[$r] = 'Données RH Etat civil des utilisateurs';
+		$this->import_icon[$r] = 'user';
+		$this->import_entities_array[$r] = array(); // We define here only fields that use another icon that the one defined into import_icon
+		$this->import_tables_array[$r] = array('u'=>MAIN_DB_PREFIX.'donneesrh_Etatcivil_extrafields'); // List of tables to insert into (insert done in same order)
+		$this->import_fields_array[$r] = array(
+			'u.fk_object'=>"Matricule", 'u.adressepostale'=>"Adresse postale", 'u.codepostal'=>"Code postal",
+			'u.ville'=>"Ville", 'u.pays'=>"Pays", 'u.telephonepersonnel'=>"Téléphone personnel",
+			'u.adressemailpersonnelle'=>"Email personnel", 'u.secondprenom'=>"Second prénom", 'u.nomdejeunefille'=>"Nom de jeune fille", 
+			'u.datedenaissance'=>"Date de naissance", 'u.age'=>"Age", 'u.lieunaissance'=>"Lieu de naissance", 
+			'u.departementnaissance'=>"Département de naissance", 'u.nationalite'=>"Nationalité", 
+			'u.nss'=>"N° de sécurité sociale", 'u.cnicds'=>"CNI/CDS",
+			'u.ncnicds'=>"N° CNI/CDS", 'u.emisele'=>"Emise le", 'u.emispar'=>"Par",
+			'u.cniexpirele'=>"Expire le", 'u.npasseport'=>"N° Passeport", 'u.passeportemisle'=>"Emis le",
+			'u.passeportemispar'=>"Par", 'u.passeportexpirele'=>"Expire le", 'u.1erpersonneprevenir'=>"Nom-Prénom de la personne à prévenir",
+			'u.telephone1erpersonne'=>"Téléphone", 'u.2emepersonneprevenir'=>"Nom-Prénom de la personne à prévenir", 
+			'u.telephone2emepersonne'=>"Téléphone",
+		);
+		// $this->import_fieldshidden_array[$r] = array('u.tms'=>'334'); // aliastable.field => ('user->id' or 'lastrowid-'.tableparent)
+		// $this->import_examplevalues_array[$r] = array(
+		// );
+		$this->import_updatekeys_array[$r] = array('u.fk_object'=>'Matricule');
+		$this->import_regex_array[$r] = array(
+			//'u.datedapplicationsysteme'=>'^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$',
+		);
+		// $this->import_convertvalue_array[$r] = array(
+		// 	'u.fk_object' => array('rule' => 'fetchidfromcodeunits', 'file' => '/custom/feuilledetemps/class/extendedUser.class.php', 'class' => 'ExtendedUser3', 'method' => 'fetchIdWithMatricule', 'element' => 'user'),
+		// 	'u.echeancereconnaissancerqth' => array('rule' => 'compute', 'file' => '/custom/donneesrh/class/userfield.class.php', 'class' => 'UserField', 'method' => 'formatDateExcel'),
+		// 	'u.datedattribution' => array('rule' => 'compute', 'file' => '/custom/donneesrh/class/userfield.class.php', 'class' => 'UserField', 'method' => 'formatDateExcel'),
+		// 	'u.datedattributionduplicata' => array('rule' => 'compute', 'file' => '/custom/donneesrh/class/userfield.class.php', 'class' => 'UserField', 'method' => 'formatDateExcel'),
+		// 	'u.datedebutcategorisation' => array('rule' => 'compute', 'file' => '/custom/donneesrh/class/userfield.class.php', 'class' => 'UserField', 'method' => 'formatDateExcel'),
+		// );
+		$this->import_run_sql_after_array[$r] = array();
+		$r++; 
 		/* END MODULEBUILDER IMPORT ONGLETDONNEESRH */
 	}
 
