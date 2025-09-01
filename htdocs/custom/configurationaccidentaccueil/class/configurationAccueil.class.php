@@ -117,9 +117,8 @@ class configurationAccueil extends CommonObject
 			$error++;
 		}
 
-		$date = time();
-		$jour = strftime('%e', $date);
-		if($jour == '1' && $conf->global->REINITIALISATION_REMONTEES_SSE){
+		$jour = (int)dol_print_date(dol_now(), '%d');
+		if($jour == 1 /*&& $conf->global->REINITIALISATION_REMONTEES_SSE*/){
 			$sql = "UPDATE ".MAIN_DB_PREFIX."const";
 			$sql .= " SET value = ''";
 			$sql .= ' WHERE name="REMONTEES_SSE_VDRNORD"'; 
@@ -175,18 +174,18 @@ class configurationAccueil extends CommonObject
 				$error++;
 			}
 		}
-		elseif (!$conf->global->REINITIALISATION_REMONTEES_SSE){
-			$sql = "UPDATE ".MAIN_DB_PREFIX."const";
-			$sql .= " SET value = 1";
-			$sql .= ' WHERE name="REINITIALISATION_REMONTEES_SSE"'; 
+		// elseif (!$conf->global->REINITIALISATION_REMONTEES_SSE){
+		// 	$sql = "UPDATE ".MAIN_DB_PREFIX."const";
+		// 	$sql .= " SET value = 1";
+		// 	$sql .= ' WHERE name="REINITIALISATION_REMONTEES_SSE"'; 
 
-			$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
-				$this->error = $this->db->lasterror();
-				$error++;
-			}
-		}
+		// 	$resql = $this->db->query($sql);
+		// 	if (!$resql) {
+		// 		dol_print_error($this->db);
+		// 		$this->error = $this->db->lasterror();
+		// 		$error++;
+		// 	}
+		// }
 
 		if (!$error) {
 			$this->db->commit();
