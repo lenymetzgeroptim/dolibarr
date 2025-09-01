@@ -1,0 +1,65 @@
+-- Copyright (C) 2023 Faure Louis
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see https://www.gnu.org/licenses/.
+
+
+CREATE TABLE llx_constat_constat(
+	-- BEGIN MODULEBUILDER FIELDS
+	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
+	ref varchar(128) DEFAULT '(PROV)' NOT NULL, 
+	status integer NOT NULL, 
+	label varchar(255) NOT NULL, 
+	fk_user_creat integer NOT NULL, 
+	fk_user integer NOT NULL, 
+	fk_project chkbxlst NOT NULL, 
+	site integer NOT NULL, 
+	emetteur_date date NOT NULL, 
+	sujet integer NOT NULL, 
+	description_constat text NOT NULL, 
+	description_impact text, 
+	commentaire_emetteur text, 
+	num_commande chkbxlst, 
+	type_constat integer, 
+	rubrique chkbxlst, 
+	processus chkbxlst, 
+	actionsimmediates integer, 
+	actionsimmediates_date date, 
+	actionsimmediates_par varchar(64), 
+	actionsimmediates_commentaire text, 
+	infoclient integer, 
+	infoclient_date date, 
+	infoclient_par varchar(64), 
+	infoclient_commentaire text, 
+	impact chkbxlst, 
+	cout_total int, 
+	commentaire_resp_aff text, 
+	analyse_cause_racine text, 
+	recurent integer, 
+	accordclient integer, 
+	accordclient_date date, 
+	accordclient_par varchar(64), 
+	accordclient_commentaire text, 
+	controleclient integer, 
+	controleclient_date date, 
+	controleclient_par varchar(64), 
+	controleclient_commentaire text, 
+	commentaire_resp_q3se text, 
+	commentaire_serv_q3se text, 
+	last_main_doc varchar(255), 
+	cloture_date date, 
+	cloture_par date, 
+	date_creation datetime NOT NULL, 
+	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+	-- END MODULEBUILDER FIELDS
+) ENGINE=innodb;

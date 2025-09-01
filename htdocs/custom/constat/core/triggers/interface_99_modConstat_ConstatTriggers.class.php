@@ -109,8 +109,307 @@ class InterfaceConstatTriggers extends DolibarrTriggers
 			return call_user_func($callback, $action, $object, $user, $langs, $conf);
 		}
 
+		$res = 1;
+
 		// Or you can execute some code here
 		switch ($action) {
+			// Envoi d'un mail au(x) responsable(s) d'affaires lors de la validation par l'émetteur
+			case 'CONSTAT_VALIDATE':
+				$subject = '[OPTIM Industries] Notification automatique constat';
+				$from = 'erp@optim-industries.fr';
+				
+				$projet = new Project($this->db);
+				$user_static = new User($this->db);
+				$projet->fetch($object->fk_project);
+				$user_static->fetch($object->fk_user);
+				$liste_chef_projet = $projet->liste_contact(-1, 'internal', 0, 'PROJECTLEADER');
+		
+				$to = ''; 
+				foreach($liste_chef_projet as $id_user => $val){
+					if($val['statuscontact'] == 1 && !empty($val['email'])){
+						$to .= $val['email'];
+						$to .= ", ";
+					}
+				}
+				$to = rtrim($to, ", ");
+
+				global $dolibarr_main_url_root;
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+				$message = $langs->transnoentitiesnoconv("EMailTextConstatValidate", $link, $user_static->lastname." ".$user_static->firstname);
+				$mail = new CMailFile($subject, $to, $from, $message, array(), array(), array(), '', '', 0, 1, '', '', 'constat'.'_'.$object->id);
+
+				if(!empty($to)) {
+					$res = $mail->sendfile();
+				}
+
+				if($res){
+					return 1;
+				}
+				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+					setEventMessages("Impossible d'envoyer le mail", null, 'warnings');
+					return 0;
+				}
+
+			// Envoi d'un mail au service Q3SE lors de la validation par le responsable d'affaire
+			case 'CONSTAT_EN_COURS':
+				$subject = '[OPTIM Industries] Notification automatique constat';
+				$from = 'erp@optim-industries.fr';
+				
+				$user_static = new User($this->db);
+				$user_static->fetch($object->fk_user);
+		
+				$to = ''; 
+				$user_group = New UserGroup($this->db);
+				$user_group->fetch('', 'Q3SE');
+				$liste_utilisateur = $user_group->listUsersForGroup();
+				foreach($liste_utilisateur as $qualite){
+					if(!empty($qualite->email)){
+						$to .= $qualite->email;
+						$to .= ", ";
+							
+					}
+				}
+				$to = rtrim($to, ", ");
+
+				global $dolibarr_main_url_root;
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+				$message = $langs->transnoentitiesnoconv("EMailTextConstatEnCours", $link, $user_static->lastname." ".$user_static->firstname);
+				$mail = new CMailFile($subject, $to, $from, $message, array(), array(), array(), '', '', 0, 1, '', '', 'constat'.'_'.$object->id);
+
+				if(!empty($to)) {
+					$res = $mail->sendfile();
+				}
+
+				if($res){
+					return 1;
+				}
+				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+					setEventMessages("Impossible d'envoyer le mail", null, 'warnings');
+					return 0;
+				}
+
+			// Envoi d'un mail au(x) responsable(s) d'affaires, au service Q3SE et à l'émétteur lors de la clôture par le Q3SE
+			case 'CONSTAT_CLOSE':
+				$subject = '[OPTIM Industries] Notification automatique constat';
+				$from = 'erp@optim-industries.fr';
+				
+				$projet = new Project($this->db);
+				$user_static = new User($this->db);
+				$projet->fetch($object->fk_project);
+				$user_static->fetch($object->fk_user);
+				$liste_chef_projet = $projet->liste_contact(-1, 'internal', 0, 'PROJECTLEADER');
+		
+				$to = ''; 
+				foreach($liste_chef_projet as $id_user => $val){
+					if($val['statuscontact'] == 1 && !empty($val['email'])){
+						$to .= $val['email'];
+						$to .= ", ";
+					}
+				}
+
+				$user_group = New UserGroup($this->db);
+				$user_group->fetch('', 'Q3SE');
+				$liste_utilisateur = $user_group->listUsersForGroup();
+				foreach($liste_utilisateur as $qualite){
+					if(!empty($qualite->email)){
+						$to .= $qualite->email;
+						$to .= ", ";
+					}
+				}
+
+				if(!empty($user_static->email)){
+					$to .= $user_static->email;
+				}	
+				$to = rtrim($to, ", ");
+
+				global $dolibarr_main_url_root;
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+				$message = $langs->transnoentitiesnoconv("EMailTextConstatClose", $link, $user_static->lastname." ".$user_static->firstname);
+				$mail = new CMailFile($subject, $to, $from, $message, array(), array(), array(), '', '', 0, 1, '', '', 'constat'.'_'.$object->id);
+
+				if(!empty($to)) {
+					$res = $mail->sendfile();
+				}
+
+				if($res){
+					return 1;
+				}
+				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+					setEventMessages("Impossible d'envoyer le mail", null, 'warnings');
+					return 0;
+				}
+				
+			// Envoi d'un mail au(x) responsable(s) d'affaires, au service Q3SE et à l'émétteur lors de l'annulation d'un constat
+			case 'CONSTAT_CANCEL':
+				$subject = '[OPTIM Industries] Notification automatique constat';
+				$from = 'erp@optim-industries.fr';
+				
+				$projet = new Project($this->db);
+				$user_static = new User($this->db);
+				$projet->fetch($object->fk_project);
+				$user_static->fetch($object->fk_user);
+				$liste_chef_projet = $projet->liste_contact(-1, 'internal', 0, 'PROJECTLEADER');
+		
+				$to = ''; 
+				foreach($liste_chef_projet as $id_user => $val){
+					if($val['statuscontact'] == 1 && !empty($val['email'])){
+						$to .= $val['email'];
+						$to .= ", ";
+					}
+				}
+
+				$user_group = New UserGroup($this->db);
+				$user_group->fetch('', 'Q3SE');
+				$liste_utilisateur = $user_group->listUsersForGroup();
+				foreach($liste_utilisateur as $qualite){
+					if(!empty($qualite->email)){
+						$to .= $qualite->email;
+						$to .= ", ";
+							
+					}
+				}
+
+				if(!empty($user_static->email)){
+					$to .= $user_static->email;
+				}	
+				$to = rtrim($to, ", ");
+
+				global $dolibarr_main_url_root;
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+				$message = $langs->transnoentitiesnoconv("EMailTextConstatCancel", $link, $user_static->lastname." ".$user_static->firstname, $user->lastname." ".$user->firstname);
+				$mail = new CMailFile($subject, $to, $from, $message, array(), array(), array(), '', '', 0, 1, '', '', 'constat'.'_'.$object->id);
+
+				if(!empty($to)) {
+					$res = $mail->sendfile();
+				}
+
+				if($res){
+					return 1;
+				}
+				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+					setEventMessages("Impossible d'envoyer le mail", null, 'warnings');
+					return 0;
+				}
+			
+			case 'CONSTAT_DECLINE':
+				$subject = '[OPTIM Industries] Notification automatique constat';
+				$from = 'erp@optim-industries.fr';
+				
+				$projet = new Project($this->db);
+				$user_static = new User($this->db);
+				$projet->fetch($object->fk_project);
+				$user_static->fetch($object->fk_user);
+				$liste_chef_projet = $projet->liste_contact(-1, 'internal', 0, 'PROJECTLEADER');
+		
+				$to = ''; 
+				if ($object->status == $object::STATUS_VALIDATED) {
+					if(!empty($user_static->email)){
+						$to .= $user_static->email;
+					}
+				}
+				elseif ($object->status == $object::STATUS_EN_COURS) {
+					foreach($liste_chef_projet as $id_user => $val){
+						if($val['statuscontact'] == 1 && !empty($val['email'])){
+							$to .= $val['email'];
+							$to .= ", ";
+						}
+					}
+				}
+				$to = rtrim($to, ", ");
+
+				global $dolibarr_main_url_root;
+				$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+				if ($object->status == $object::STATUS_VALIDATED) {
+					$message = $langs->transnoentitiesnoconv("EMailTextConstatDeclineRespAff", $link, $user->lastname." ".$user->firstname, GETPOST('decline_reason', 'alphanohtml'));
+				}
+				elseif ($object->status == $object::STATUS_EN_COURS) {
+					$message = $langs->transnoentitiesnoconv("EMailTextConstatDeclineQ3SE", $link, $user->lastname." ".$user->firstname, GETPOST('decline_reason', 'alphanohtml'));
+				}
+
+				$mail = new CMailFile($subject, $to, $from, $message, array(), array(), array(), '', '', 0, 1, '', '', 'constat'.'_'.$object->id);
+
+				if(!empty($to)) {
+					$res = $mail->sendfile();
+				}
+
+				if($res){
+					return 1;
+				}
+				elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+					setEventMessages("Impossible d'envoyer le mail", null, 'warnings');
+					return 0;
+				}
+
+			// Envoi d'un mail au(x) responsable(s) d'affaires, au service Q3SE, au responsable Q3SE et au créateur lorsue toutes les actions sont soldées
+			// case 'ACTION_SOLDEE':
+			// 	$subject = '[OPTIM Industries] Notification automatique constat';
+			// 	$from = 'erp@optim-industries.fr';
+
+			// 	$object->fetchObjectLinked(null, '', null, '', 'OR', 1, 'sourcetype', 'constat');
+			// 	var_dump($object->linkedObjects);
+
+				// $constat = new Constat($this->db);
+				// $constat->fetch($object)
+				
+				// $projet = new Project($this->db);
+				// $user_static = new User($this->db);
+				// $projet->fetch($object->fk_project);
+				// $user_static->fetch($object->fk_user);
+				// $liste_chef_projet = $projet->liste_contact(-1, 'internal', 0, 'PROJECTLEADER');
+		
+				// $to = ''; 
+				// foreach($liste_chef_projet as $id_user => $val){
+				// 	if($val['statuscontact'] == 1 && !empty($val['email'])){
+				// 		$to .= $val['email'];
+				// 		$to .= ", ";
+				// 	}
+				// }
+
+				// $user_group = New UserGroup($this->db);
+				// $user_group->fetch('', 'Q3SE');
+				// $liste_utilisateur = $user_group->listUsersForGroup();
+				// foreach($liste_utilisateur as $qualite){
+				// 	if(!empty($qualite->email)){
+				// 		$to .= $qualite->email;
+				// 		$to .= ", ";
+							
+				// 	}
+				// }
+
+				// if(!empty($user_static->email)){
+				// 	$to .= $user_static->email;
+				// }	
+				// $to = rtrim($to, ", ");
+
+				// global $dolibarr_main_url_root;
+				// $urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
+				// $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+				// $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
+				// $message = $langs->transnoentitiesnoconv("EMailTextConstatCancel", $link, $user_static->lastname." ".$user_static->firstname, $user->lastname." ".$user->firstname);
+				// $mail = new CMailFile($subject, $to, $from, $message, array(), array(), array(), '', '', 0, 1, '', '', 'constat'.'_'.$object->id);
+
+				// if(!empty($to)) {
+				// 	$res = $mail->sendfile();
+				// }
+
+				// if($res){
+				// 	return 1;
+				// }
+				// elseif(!getDolGlobalString('MAIN_DISABLE_ALL_MAILS')){
+				// 	setEventMessages("Impossible d'envoyer le mail", null, 'warnings');
+				// 	return 0;
+				// }
+		
 		
 			default:
 				dol_syslog("Trigger '".$this->name."' for action '".$action."' launched by ".__FILE__.". id=".$object->id);

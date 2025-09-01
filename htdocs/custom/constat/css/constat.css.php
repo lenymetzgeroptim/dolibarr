@@ -116,3 +116,89 @@ tr.ResponsableAffaire td {
 	color: #2ca581;
 }
 
+.constat details {
+    border: 1px solid #ccc;
+}
+
+.constat :is(.fichehalfleft, .fichehalfright) details {
+	border: none;
+	margin-bottom: 12px;
+}
+
+.constat details table {
+	width: 100%;
+}
+
+.constat details table tr td:first-child {
+    padding-left: 8px;
+}
+
+.constat details table tr td:last-child {
+    padding-right: 8px;
+}
+
+<!-- .constat :is(.fichehalfleft, .fichehalfright) details table {
+    margin: 0px;
+	width: 100%;
+} -->
+
+.constat details summary {
+    cursor: pointer;
+    background: #f0f0f0;
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+	font-weight: bold;
+}
+
+.instruction {
+    background-color: #f0f8ff;
+    border-left: 4px solid #007BFF;
+    color: #333;
+    padding: 6px 16px 6px 36px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 4px;
+    margin-top: 6px;
+    position: relative;
+}
+
+.instruction::before {
+  content: "ℹ️";
+  position: absolute;
+  left: 12px; /* position à gauche à l'intérieur du padding */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+}
+
+.constat tr.trbreaktop {
+    border-top: 2px solid var(--butactionbg);
+}
+
+.constat tr.trbreakbottom {
+    border-bottom: 2px solid var(--butactionbg);
+}
+
+.constat tr.trbreaktopbottom {
+    border-top: 2px solid var(--butactionbg);
+	border-bottom: 2px solid var(--butactionbg);
+}
+
+.constat table:not(.tableforfieldview) tr.field_actionsimmediates,
+.constat table:not(.tableforfieldview) tr.field_actionsimmediates_date,
+.constat table:not(.tableforfieldview) tr.field_actionsimmediates_par,
+.constat table:not(.tableforfieldview) tr.field_actionsimmediates_commentaire,
+.constat table:not(.tableforfieldview) tr.field_infoclient,
+.constat table:not(.tableforfieldview) tr.field_infoclient_date,
+.constat table:not(.tableforfieldview) tr.field_infoclient_par,
+.constat table:not(.tableforfieldview) tr.field_infoclient_commentaire,
+.constat table:not(.tableforfieldview) tr.field_accordclient,
+.constat table:not(.tableforfieldview) tr.field_accordclient_date,
+.constat table:not(.tableforfieldview) tr.field_accordclient_par,
+.constat table:not(.tableforfieldview) tr.field_accordclient_commentaire,
+.constat table:not(.tableforfieldview) tr.field_controleclient,
+.constat table:not(.tableforfieldview) tr.field_controleclient_date,
+.constat table:not(.tableforfieldview) tr.field_controleclient_par,
+.constat table:not(.tableforfieldview) tr.field_controleclient_commentaire {
+	background: #9f9f9f40 !important;
+}

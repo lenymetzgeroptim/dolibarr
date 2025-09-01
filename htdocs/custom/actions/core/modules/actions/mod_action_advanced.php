@@ -98,7 +98,7 @@ class mod_action_advanced extends ModeleNumRefAction
 	{
 		global $conf, $db, $langs, $mysoc;
 
-		$object = new Action($db);
+		$object = new ActionQ3SE($db);
 		$object->initAsSpecimen();
 
 		/*$old_code_client = $mysoc->code_client;
@@ -139,7 +139,7 @@ class mod_action_advanced extends ModeleNumRefAction
 
 		$date = $object->date;
 
-		$numFinal = get_next_value($db, $mask, 'actions_action', 'ref', '', null, $date);
+		$numFinal = get_next_value($db, $mask, 'actions_actionq3se', 'ref', '', null, $date);
 
 		return  $numFinal;
 	}

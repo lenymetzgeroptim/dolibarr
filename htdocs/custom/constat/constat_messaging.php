@@ -119,10 +119,10 @@ if ($id > 0 || !empty($ref)) {
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('constat', 'constat', 'read');
-	$permissiontoadd = $user->hasRight('constat', 'constat', 'write');
+	$permissiontoread = $user->hasRight('constat', 'constat', 'readall') || ($user->hasRight('constat', 'constat', 'read') && (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) || $is_responsable_affaire || $user->hasRight('constat', 'constat', 'complete_q3se')));
+	$permissiontoadd = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write');
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;

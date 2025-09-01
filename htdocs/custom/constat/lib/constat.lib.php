@@ -87,10 +87,10 @@ function constatAdminPrepareHead()
 {
     global $conf, $db, $langs, $user;
 
-    $sql = "SELECT COUNT(co.rowid) as nb_constats, YEAR(co.dateEmeteur) as year, co.status, co.rowid";
+    $sql = "SELECT COUNT(co.rowid) as nb_constats, YEAR(co.emetteur_date) as year, co.status, co.rowid";
     $sql .= " FROM ".MAIN_DB_PREFIX."constat_constat as co";
-    $sql .= " GROUP BY YEAR(co.dateEmeteur), co.status";
-    $sql .= " ORDER BY YEAR(co.dateEmeteur), co.status";
+    $sql .= " GROUP BY YEAR(co.emetteur_date), co.status";
+    $sql .= " ORDER BY YEAR(co.emetteur_date), co.status";
     $resql = $db->query($sql);
 
     if ($resql) {
@@ -247,11 +247,11 @@ function getStatusByYearChart()
     $status_labels = array('0'=>'Brouillon', '1'=>'Validé', '3'=>'Vérifié', '4'=>'En cours', '5'=>'Soldée', '7'=>'Clôturé', '9'=>'Annulé');
 
     // Modification de la requête SQL pour inclure un total des constats par année
-    $sql = "SELECT COUNT(co.rowid) as nb_constats, YEAR(co.dateEmeteur) as year, co.status";
+    $sql = "SELECT COUNT(co.rowid) as nb_constats, YEAR(co.emetteur_date) as year, co.status";
     $sql .= " FROM ".MAIN_DB_PREFIX."constat_constat as co";
-    $sql .= " WHERE co.dateEmeteur BETWEEN '".$db->escape($date_start)."' AND '".$db->escape($date_end)."'";
-    $sql .= " GROUP BY YEAR(co.dateEmeteur), co.status";
-    $sql .= " ORDER BY YEAR(co.dateEmeteur), co.status";
+    $sql .= " WHERE co.emetteur_date BETWEEN '".$db->escape($date_start)."' AND '".$db->escape($date_end)."'";
+    $sql .= " GROUP BY YEAR(co.emetteur_date), co.status";
+    $sql .= " ORDER BY YEAR(co.emetteur_date), co.status";
 
     $resql = $db->query($sql);
 
@@ -325,6 +325,8 @@ function msgAgendaUpdateForConstat($object, $onlydiff, $excluded_key = array(), 
 		$object->fields = dol_sort_array($object->fields, 'position');
 
 		foreach ($object->fields as $key => $val) {
+			$val['visible'] = dol_eval($val['visible'], 1);
+			
 			if(!empty($included_key) && !in_array($key, $included_key)) {
 				continue;
 			}
@@ -333,7 +335,7 @@ function msgAgendaUpdateForConstat($object, $onlydiff, $excluded_key = array(), 
 				continue;
 			}
 
-			if($val['visible'] <= 0) {
+			if(abs($val['visible']) <= 0) {
 				continue;
 			}
 

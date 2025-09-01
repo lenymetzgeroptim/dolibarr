@@ -83,7 +83,7 @@ class modConstat extends DolibarrModules
 		// If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
 		// If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
 		// To use a supported fa-xxx css style of font awesome, use this->picto='xxx'
-		$this->picto = 'fa-file-invoice_fas_green';
+		$this->picto = 'fa-clipboard-check_fas_#bd6e00';
 
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = array(
@@ -96,7 +96,7 @@ class modConstat extends DolibarrModules
 			// Set this to 1 if module has its own menus handler directory (core/menus)
 			'menus' => 0,
 			// Set this to 1 if module overwrite template dir (core/tpl)
-			'tpl' => 0,
+			'tpl' => 1,
 			// Set this to 1 if module has its own barcode directory (core/modules/barcode)
 			'barcode' => 0,
 			// Set this to 1 if module has its own models directory (core/modules/xxx)
@@ -111,13 +111,14 @@ class modConstat extends DolibarrModules
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
-				//   '/constat/js/constat.js.php',
+				'/constat/js/constat.js.php',
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
 				'data' => array(
 					'restrictedArea',					
 					'index',
+					'constatcard',
 				),
 			 //   'entity' => '0',
 		 	),
@@ -161,17 +162,15 @@ class modConstat extends DolibarrModules
 		//                             2 => array('CONSTAT_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
 		// );
 		$this->const = array(
-			1 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_SENDMAIL', 'chaine', '1', '', 0), 
+			//1 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_SENDMAIL', 'chaine', '1', '', 0), 
 			2 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CREATE', 'chaine', '1', '', 0), 
 			3 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_MODIFY', 'chaine', '1', '', 0), 
-			4 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_DELETE', 'chaine', '1', '', 0), 
+			//4 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_DELETE', 'chaine', '1', '', 0), 
 			5 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_VALIDATE', 'chaine', '1', '', 0),
-			6 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_PRISE', 'chaine', '1', '', 0), 
 			7 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_EN_COURS', 'chaine', '1', '', 0),
-			8 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_SOLDEE', 'chaine', '1', '', 0), 
-			9 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CLOTURE', 'chaine', '1', '', 0), 
-			10 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CANCELED', 'chaine', '1', '', 0),
-			11 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CLASSE', 'chaine', '1', '', 0),
+			8 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_DECLINE', 'chaine', '1', '', 0),
+			9 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CLOSE', 'chaine', '1', '', 0), 
+			10 => array('MAIN_AGENDA_ACTIONAUTO_CONSTAT_CANCEL', 'chaine', '1', '', 0),
 		);
 
 		// Some keys to add into the overwriting translation tables
@@ -214,28 +213,27 @@ class modConstat extends DolibarrModules
 		// 'user'             to add a tab in user view
 
 		// Dictionaries
-		$this->dictionaries = array();
-		//  Example:
 		$this->dictionaries=array(
 			'langs'=>'constat@constat',
 			// List of tables we want to see into dictonnary editor
-			'tabname'=>array( MAIN_DB_PREFIX."constat_sujet",MAIN_DB_PREFIX."constat_type",),
+			'tabname'=>array( MAIN_DB_PREFIX."c_constat_sujet",MAIN_DB_PREFIX."c_constat_type",MAIN_DB_PREFIX."c_constat_impact",MAIN_DB_PREFIX."c_constat_processus",MAIN_DB_PREFIX."c_constat_rubrique",),
 			// Label of tables
-			'tablib'=>array("Constat-sujet","Constat-type"),
+			'tablib'=>array("Constat - Sujet","Constat - Type","Constat - Impact","Constat - Processus","Constat - Rubrique"),
 			// Request to select fields
-			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'constat_sujet as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'constat_type as f'),
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_sujet as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_type as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_impact as f',
+							'SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_processus as f','SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'c_constat_rubrique as f'),
 			// Sort order
-			'tabsqlsort'=>array("label ASC","label ASC"),
+			'tabsqlsort'=>array("label ASC","label ASC","label ASC","label ASC","label ASC"),
 			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("label","label"),
+			'tabfield'=>array("label","label","label","label","label"),
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("label","label"),
+			'tabfieldvalue'=>array("label","label","label","label","label"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("label","label"),
+			'tabfieldinsert'=>array("label","label","label","label","label"),
 			// Name of columns with primary key (try to always name it 'rowid')
-			'tabrowid'=>array("rowid","rowid"),
+			'tabrowid'=>array("rowid","rowid","rowid","rowid","rowid"),
 			// Condition to show each dictionary
-			'tabcond'=>array($conf->constat->enabled,$conf->constat->enabled),
+			'tabcond'=>array($conf->constat->enabled,$conf->constat->enabled,$conf->constat->enabled,$conf->constat->enabled,$conf->constat->enabled),
 		);
 		
 
@@ -253,33 +251,33 @@ class modConstat extends DolibarrModules
 		// Cronjobs (List of cron jobs entries to add when module is enabled)
 		// unit_frequency must be 60 for minute, 3600 for hour, 86400 for day, 604800 for week
 		$this->cronjobs = array(
+			//   0 => array(
+			//       'label' => 'Notif status action',
+			//       'jobtype' => 'method',
+			//       'class' => '/constat/class/constat.class.php',
+			//       'objectname' => 'Constat',
+			//       'method' => 'getActionsByConstat',
+			//       'parameters' => '',
+			//       'comment' => 'Notification si toutes les actions sont soldée',
+			//     'frequency' => 1,
+			//       'unitfrequency' => 86400,
+			//      'status' => 1,
+			//       'test' => '$conf->constat->enabled',
+			//      'priority' => 50,
+			//   ),
 			  0 => array(
-			      'label' => 'Notif status action',
-			      'jobtype' => 'method',
-			      'class' => '/constat/class/constat.class.php',
-			      'objectname' => 'Constat',
-			      'method' => 'getActionsByConstat',
-			      'parameters' => '',
-			      'comment' => 'Notification si toutes les actions sont soldée',
-			    'frequency' => 1,
-			      'unitfrequency' => 86400,
-			     'status' => 1,
-			      'test' => '$conf->constat->enabled',
-			     'priority' => 50,
-			  ),
-			  1 => array(
 				'label' => 'Notif brouillon ',
 				'jobtype' => 'method',
 				'class' => '/constat/class/constat.class.php',
 				'objectname' => 'Constat',
-				'method' => 'drafttolong',
-				'parameters' => '',
-				'comment' => 'Notification si toutes les actions sont soldée',
-			  'frequency' => 1,
+				'method' => 'draftToLong',
+				'parameters' => 'jour',
+				'comment' => 'Notification pour les constats en brouillon depuis trop longtemps',
+			 	'frequency' => 1,
 				'unitfrequency' => 86400,
-			   'status' => 1,
+			    'status' => 1,
 				'test' => '$conf->constat->enabled',
-			   'priority' => 50,
+			    'priority' => 50,
 			),
 		);
 
@@ -294,45 +292,60 @@ class modConstat extends DolibarrModules
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 1);
-		$this->rights[$r][1] = 'Read objects of Constat';
+		$this->rights[$r][1] = 'Lire ses propres constat';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'read';
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
-		$this->rights[$r][1] = 'Create/Update objects of Constat';
+		$this->rights[$r][1] = 'Lire l\'ensemble des constats';
+		$this->rights[$r][4] = 'constat';
+		$this->rights[$r][5] = 'readall';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Créer un constat pour soi-même et compléter la partie émetteur';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'write';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
-		$this->rights[$r][1] = 'Show Emetteur objects of Constat';
-		$this->rights[$r][4] = 'constat';
-		$this->rights[$r][5] = 'Emetteur';
-		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
-		$this->rights[$r][1] = 'Delete objects of Constat';
+		$this->rights[$r][1] = 'Créer un constat pour tous les utilisateurs et compléter la partie émetteur';
+		$this->rights[$r][4] = 'constat';
+		$this->rights[$r][5] = 'writeall';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
+		$this->rights[$r][1] = 'Compléter la partie Q3SE';
+		$this->rights[$r][4] = 'constat';
+		$this->rights[$r][5] = 'complete_q3se';
+		$r++;
+		// $this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 1 + 1);
+		// $this->rights[$r][1] = 'Show Emetteur objects of Constat';
+		// $this->rights[$r][4] = 'constat';
+		// $this->rights[$r][5] = 'Emetteur';
+		// $r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
+		$this->rights[$r][1] = 'Supprimer les constats';
 		$this->rights[$r][4] = 'constat';
 		$this->rights[$r][5] = 'delete';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
-		$this->rights[$r][1] = 'Show Responsable Q3SE objects of Constat';
-		$this->rights[$r][4] = 'constat';
-		$this->rights[$r][5] = 'ResponsableQ3SE';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 5 + 1);
-		$this->rights[$r][1] = 'Show responsable affaire objects of Constat';
-		$this->rights[$r][4] = 'constat';
-		$this->rights[$r][5] = 'ResponsableAffaire';
-		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 6 + 1);
-		$this->rights[$r][1] = 'show serviceQ3SE objects of Constat';
+		$this->rights[$r][1] = 'Annuler les constats';
 		$this->rights[$r][4] = 'constat';
-		$this->rights[$r][5] = 'ServiceQ3SE';
+		$this->rights[$r][5] = 'cancel';
 		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 7 + 1);
-		$this->rights[$r][1] = 'show stat of Constat';
-		$this->rights[$r][4] = 'constat';
-		$this->rights[$r][5] = 'Statistique';
-		$r++;
+		// $this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 2 + 1);
+		// $this->rights[$r][1] = 'Show Responsable Q3SE objects of Constat';
+		// $this->rights[$r][4] = 'constat';
+		// $this->rights[$r][5] = 'ResponsableQ3SE';
+		// $r++;
+		// $this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 3 + 1);
+		// $this->rights[$r][1] = 'Show responsable affaire objects of Constat';
+		// $this->rights[$r][4] = 'constat';
+		// $this->rights[$r][5] = 'ResponsableAffaire';
+		// $r++;
+		// $this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 4 + 1);
+		// $this->rights[$r][1] = 'show serviceQ3SE objects of Constat';
+		// $this->rights[$r][4] = 'constat';
+		// $this->rights[$r][5] = 'ServiceQ3SE';
+		// $r++;
 		
 		/* END MODULEBUILDER PERMISSIONS */
 
@@ -416,7 +429,7 @@ class modConstat extends DolibarrModules
             'langs'=>'q3serp@q3serp',
             'position'=>1106,
             'enabled'=>'$conf->constat->enabled',
-            'perms'=>'$user->rights->constat->constat->Emetteur',
+            'perms'=>'1',
             'target'=>'',
             'user'=>2,
         );
@@ -430,7 +443,7 @@ class modConstat extends DolibarrModules
             'langs'=>'q3serp@q3serp',
             'position'=>1107,
             'enabled'=>'$conf->constat->enabled',
-			'perms'=>'$user->rights->constat->constat->Emetteur',
+			'perms'=>'$user->hasRight(\'constat\', \'constat\', \'read\')',
             'target'=>'',
             'user'=>2,
         );
@@ -445,7 +458,7 @@ class modConstat extends DolibarrModules
             'langs'=>'q3serp@q3serp',
             'position'=>1108,
             'enabled'=>'$conf->constat->enabled',
-            'perms'=>'$user->rights->constat->constat->Emetteur',
+            'perms'=>'$user->hasRight(\'constat\', \'constat\', \'write\')||$user->hasRight(\'constat\', \'constat\', \'writeall\')',
             'target'=>'',
             'user'=>2
         );
@@ -486,13 +499,12 @@ class modConstat extends DolibarrModules
 		// Imports profiles provided by this module
 		$r = 1;
 		/* BEGIN MODULEBUILDER IMPORT CONSTAT */
-		/*
 		$langs->load("constat@constat");
 		$this->import_code[$r]=$this->rights_class.'_'.$r;
 		$this->import_label[$r]='ConstatLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
 		$this->import_icon[$r]='constat@constat';
 		$this->import_tables_array[$r] = array('t' => MAIN_DB_PREFIX.'constat_constat', 'extra' => MAIN_DB_PREFIX.'constat_constat_extrafields');
-		$this->import_tables_creator_array[$r] = array('t' => 'fk_user_author'); // Fields to store import user id
+		//$this->import_tables_creator_array[$r] = array('t' => 'fk_user_author'); // Fields to store import user id
 		$import_sample = array();
 		$keyforclass = 'Constat'; $keyforclassfile='/constat/class/constat.class.php'; $keyforelement='constat@constat';
 		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
@@ -504,18 +516,9 @@ class modConstat extends DolibarrModules
 		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
 		$this->import_updatekeys_array[$r] = array('t.ref' => 'Ref');
 		$this->import_convertvalue_array[$r] = array(
-			't.ref' => array(
-				'rule'=>'getrefifauto',
-				'class'=>(empty($conf->global->CONSTAT_CONSTAT_ADDON) ? 'mod_constat_standard' : $conf->global->CONSTAT_CONSTAT_ADDON),
-				'path'=>"/core/modules/commande/".(empty($conf->global->CONSTAT_CONSTAT_ADDON) ? 'mod_constat_standard' : $conf->global->CONSTAT_CONSTAT_ADDON).'.php'
-				'classobject'=>'Constat',
-				'pathobject'=>'/constat/class/constat.class.php',
-			),
-			't.fk_soc' => array('rule' => 'fetchidfromref', 'file' => '/societe/class/societe.class.php', 'class' => 'Societe', 'method' => 'fetch', 'element' => 'ThirdParty'),
 			't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
-			't.fk_mode_reglement' => array('rule' => 'fetchidfromcodeorlabel', 'file' => '/compta/paiement/class/cpaiement.class.php', 'class' => 'Cpaiement', 'method' => 'fetch', 'element' => 'cpayment'),
 		);
-		$r++; */
+		$r++; 
 		/* END MODULEBUILDER IMPORT CONSTAT */
 	}
 

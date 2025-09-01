@@ -79,13 +79,13 @@ include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be includ
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->constat->constat->read;
-	$permission = $user->rights->constat->constat->write;
+	$permissiontoread = $user->hasRight('constat', 'constat', 'readall') || ($user->hasRight('constat', 'constat', 'read') && (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) || $is_responsable_affaire || $user->hasRight('constat', 'constat', 'complete_q3se')));
+	$permissiontoadd = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write');
 } else {
 	$permissiontoread = 1;
-	$permission = 1;
+	$permissiontoadd = 1;
 }
 
 // Security check (enable the most restrictive one)
@@ -103,7 +103,7 @@ if (!$permissiontoread) accessforbidden();
  * Add a new contact
  */
 
-if ($action == 'addcontact' && $permission) {
+if ($action == 'addcontact' && $permissiontoadd) {
 	$contactid = (GETPOST('userid') ? GETPOST('userid', 'int') : GETPOST('contactid', 'int'));
 	$typeid = (GETPOST('typecontact') ? GETPOST('typecontact') : GETPOST('type'));
 	$result = $object->add_contact($contactid, $typeid, GETPOST("source", 'aZ09'));
@@ -120,10 +120,10 @@ if ($action == 'addcontact' && $permission) {
 		}
 	}
 	
-} elseif ($action == 'swapstatut' && $permission) {
+} elseif ($action == 'swapstatut' && $permissiontoadd) {
 	// Toggle the status of a contact
 	$result = $object->swapContactStatus(GETPOST('ligne', 'int'));
-} elseif ($action == 'deletecontact' && $permission) {
+} elseif ($action == 'deletecontact' && $permissiontoadd) {
 	// Deletes a contact
 	$result = $object->delete_contact($lineid);
 

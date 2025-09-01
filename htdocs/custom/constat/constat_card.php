@@ -76,6 +76,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/constat/class/html.form.class.php';
+require_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
+require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+
 
 dol_include_once('/constat/class/constat.class.php');
 dol_include_once('/constat/lib/constat_constat.lib.php');
@@ -127,24 +130,74 @@ if (empty($action) && empty($id) && empty($ref)) {
 
 
 // Load object
-
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
+
+// Gestion du responsable d'affaire
+$is_responsable_affaire = 0; 
+if($object->id) {
+	$projet = new Project($db);
+
+	foreach(explode(",", $object->fk_project) as $project_id) {
+		$projet->fetch($project_id);
+		$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
+		if (in_array($user->id, $liste_chef_projet)) {
+			$is_responsable_affaire = 1; 
+			break;
+		}
+	}
+}
+
+// Est-ce que des champs obligatoire sont non renseignés ? 
+$fields_null = '';
+foreach($object->fields as $key => $val) {
+	if(!$object->$key && $val['notnull_validate']) {
+		if($key == 'cout_total' && $object->$key === 0) continue;
+		$fields_null .= $langs->trans($val['label']).", ";
+	}
+}
+$fields_null = rtrim($fields_null, ', ');
+
+$label_button_action_validate = ($fields_null ? $langs->trans('ConstatFieldsNullMendatory', $fields_null) : '');
+if ($object->status == $object::STATUS_EN_COURS) {
+	$label_button_action_validate .= $label_button_action_validate && !empty($object->getActionsUnsold()) ? '<br>' : '';
+	$label_button_action_validate .= !empty($object->getActionsUnsold()) ? $langs->trans('ConstatActionNoSolde') : '';
+}
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks+
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('constat', 'constat', 'read');
-	$permissiontoadd = $user->hasRight('constat', 'constat', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = $user->hasRight('constat', 'constat', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
-	$permissionnote = $user->hasRight('constat', 'constat', 'write'); // Used by the include of actions_setnotes.inc.php
+	$permissiontoread = $user->hasRight('constat', 'constat', 'readall') || ($user->hasRight('constat', 'constat', 'read') && (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) || $is_responsable_affaire || $user->hasRight('constat', 'constat', 'complete_q3se')));
+	$permissiontoadd = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write');
+	$permissiontodelete = $user->hasRight('constat', 'constat', 'delete') || (($user->id == $object->fk_user_creat || $user->id == $object->fk_user) && isset($object->status) && $object->status == $object::STATUS_DRAFT);
+	$permissionnote = $user->hasRight('constat', 'constat', 'writeall') || $user->hasRight('constat', 'constat', 'write');
+	$permissiontocancel = $user->hasRight('constat', 'constat', 'cancel');
 	//$permissiondellink = $user->hasRight('constat', 'constat', 'write'); // Used by the include of actions_dellink.inc.php
+
+	if($object->status == $object::STATUS_DRAFT) {
+		$permissiontoupdate = $user->admin || $user->id == $object->fk_user_creat || $user->id == $object->fk_user;
+		$permissiontovalidate = $user->admin || $user->id == $object->fk_user_creat || $user->id == $object->fk_user;
+	}
+	elseif($object->status == $object::STATUS_VALIDATED) {
+		$permissiontoupdate = $user->admin || $is_responsable_affaire;
+		$permissiontovalidate = $user->admin || $is_responsable_affaire;
+	}
+	elseif($object->status == $object::STATUS_EN_COURS) {
+		$permissiontoupdate = $user->hasRight('constat', 'constat', 'complete_q3se');
+		$permissiontovalidate = $user->hasRight('constat', 'constat', 'complete_q3se');
+	}
+	else {
+		$permissiontoupdate = 0;
+		$permissiontovalidate = 0;
+	}
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 	$permissiontodelete = 1;
 	$permissionnote = 1;
 	//$permissiondellink = 1;
+	$permissiontoupdate = 1;
+	$permissiontovalidate = 1;
 }
 
 $upload_dir = $conf->constat->multidir_output[isset($object->entity) ? $object->entity : 1].'/constat';
@@ -161,8 +214,8 @@ if (!$permissiontoread) {
 	accessforbidden();
 }
 
-
-
+// Permet d'avoir les noms complet dans les multiselect
+$conf->global->MAIN_DISABLE_TRUNC = 1;
 
 
 /*
@@ -192,19 +245,13 @@ if (empty($reshook)) {
 
 	$triggermodname = 'CONSTAT_CONSTAT_MODIFY'; // Name of trigger action code to execute when we modify record
 
-	include_once DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php';
-	include_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
-
-
-
 	if($action == 'update') {
 		$object->oldcopy = clone $object;
 	}
 
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
-	//include DOL_DOCUMENT_ROOT.'/custom/constat/actions_addupdatedelete.inc.constat.php';
-	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
+	include DOL_DOCUMENT_ROOT.'/custom/constat/core/actions_addupdatedelete.inc.php';
+	// include DOL_DOCUMENT_ROOT.'/core//actions_addupdatedelete.inc.php';
 
 	// Actions when linking object each other
 	//include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
@@ -225,644 +272,35 @@ if (empty($reshook)) {
 		$object->setProject(GETPOST('projectid', 'int'));
 	}
 
-	// Actions to send emails
-	$triggersendname = 'CONSTAT_CONSTAT_SENTBYMAIL';
-	$autocopy = 'MAIN_MAIL_AUTOCOPY_CONSTAT_TO';
-	$trackid = 'constat'.$object->id;
-	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
-}
+	// if( $action == 'setSolde'  && $confirm == 'yes' ){
+	// 	$object->updateSolde();
 
-/*
- * View
- *
- * Put here all code to build page
- */
-
-$form = new Form($db);
-$actionForm = new actionsForm($db);
-$actionForm = new actionsForm($db);
-$formfile = new FormFile($db);
-$formproject = new FormProjets($db);
-
-$title = $langs->trans("Constat");
-$help_url = '';
-llxHeader('', $title, $help_url);
-
-$resp = $object->getAgencesBySoc();
-
-// Part to create
-if ($action == 'create') {
-	if (empty($permissiontoadd)) {
-		accessforbidden('NotEnoughPermissions', 0, 1);
-	}
-
-	print load_fiche_titre($langs->trans("NewObject", $langs->transnoentitiesnoconv("Constat")), '', 'object_'.$object->picto);
-
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.newToken().'">';
-	print '<input type="hidden" name="action" value="add">';
-	if ($backtopage) {
-		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-	}
-	if ($backtopageforcancel) {
-		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
-	}
-
-	print dol_get_fiche_head(array(), '');
-
-	// Set some default values
-	//if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
-
-	print '<table class="border centpercent tableforfieldcreate">'."\n";
-
-	// Common attributes
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_add.tpl.php';
-
-	// Other attributes
-	//include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/extrafields_add.tpl.php';
-
-	print '</table>'."\n";
-
-	print dol_get_fiche_end();
-
-	print $form->buttonsSaveCancel("Create");
-	
-}
-
-// Part to edit record
-if (($id || $ref) && $action == 'edit') {
-	print load_fiche_titre($langs->trans("Constat"), '', 'object_'.$object->picto);
-
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.newToken().'">';
-	print '<input type="hidden" name="action" value="update">';
-	print '<input type="hidden" name="id" value="'.$object->id.'">';
-	if ($backtopage) {
-		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-	}
-	if ($backtopageforcancel) {
-		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
-	}
-
-	print dol_get_fiche_head();
-
-	print '<table class="border centpercent tableforfieldedit">'."\n";
-
-	// Étape 1 : Sauvegarder l'état initial des champs
-	$original_fields = $object->fields;
-
-	// Étape 2 : Masquer les champs pour le premier appel
-	$fields_to_hide_first = [
-		'impactcomm',
-		'coutTotal',
-		'dateCloture',
-		'actionimmediate',
-		'actionimmediatecom',
-		'analyseCauseRacine',
-		'recurent',
-		'infoClient',
-		'commInfoClient',
-		'accordClient',
-		'commAccordClient',
-		'controleClient',
-		'commControleClient',
-		'description',
-		'commRespAff',
-		'commRespQ3',
-		'commServQ3'
-	];
-
-
-
-	foreach ($fields_to_hide_first as $field) {
-		if (isset($object->fields[$field])) {
-			$object->fields[$field]['enabled'] = '0';  // Pour ne pas le gérer
-			$object->fields[$field]['visible'] = 0;   // Pour ne pas l'afficher
-		}
-	}
-
-
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_edit.tpl.php';
-
-	if ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE) {
-	
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/extrafields_edit.tpl.php';
-	}
-	
-	
-	$object->fields = $original_fields;
-
-	
-	$fields_to_hide_second = [
-		'dateEmeteur',
-		'ref',
-		'label',
-		'date_eche',
-		'typeConstat',
-		'fk_project',
-		'num_commande',
-		'site',
-		'sujet',
-		'descriptionConstat'
-	];
-
-	foreach ($fields_to_hide_second as $field) {
-		if (isset($object->fields[$field])) {
-			$object->fields[$field]['enabled'] = '0';  
-			$object->fields[$field]['visible'] = 0;   
-		}
-	}
-
-	
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_edit.tpl.php';
-
-
-	print '</table>';
-
-	print dol_get_fiche_end();
-
-	print $form->buttonsSaveCancel();
-
-	print '</form>';
-
-}
-
-// Part to show record
-if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
-	$head = constatPrepareHead($object);
-
-	print dol_get_fiche_head($head, 'card', $langs->trans("Constat"), -1, $object->picto);
-
-	$formconfirm = '';
-
-	// Confirmation to delete
-	if ($action == 'delete') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('DeleteConstat'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 1);
-	}
-	// Confirmation to delete line
-	if ($action == 'deleteline') {
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
-	}
-
-	// Clone confirmation
-	if ($action == 'clone') {
-		// Create an array for form
-		$formquestion = array();
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
-	}
-
-
-	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
-	if ($action == 'xxx') {
-		$text = $langs->trans('ConfirmActionConstat', $object->ref);
-
-	
-		$formquestion = array();
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('XXX'), $text, 'confirm_xxx', $formquestion, 0, 1, 220);
-	}
-
-
-	if ($action == 'setPrise' && $confirm == 'yes'){
-	
-		$subject = '[OPTIM Industries] Notification automatique constat vérifié ';
-	
-		$from = 'erp@optim-industries.fr';
-		
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$to .= $email . ", ";
-				}
-			}
-		}
-	
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Resp. Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-			}
-		}
-	
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql = "SELECT lastname, firstname FROM llx_user WHERE rowid = ".$object->fk_user_creat;
-		$resql = $db->query($sql);
-		$creator_name = "";
-		if ($resql) {
-			if ($db->num_rows($resql) > 0) {
-				$creator = $db->fetch_object($resql);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-		}
-	
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-		$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-	
-		$to = rtrim($to, ", ");
-		$message = $langs->transnoentitiesnoconv(" Bonjour, le constat ".$link." créé par ". $creator_name. " a été vérifié. Veuillez compléter votre partie et passer au statut suivant. Cordialement, votre système de notification.");
-
-	
-		$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			 setEventMessages($langs->trans("EmailSend"), null, 'warning');
-			// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-			// exit;
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-			</script>';
-		} 		
-	
-	}
-
-
-
-	if ($action == 'confirmsetCloture' && $confirm == 'yes'){
-
-		$day   = GETPOST('dateClotureday');
-		$month = GETPOST('dateCloturemonth');
-		$year  = GETPOST('dateClotureyear');
-
-
-		if ($day && $month && $year) {
+	// 		$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_SOLDEEInDolibarr", $object->ref);
 			
-			$dateCloture = dol_mktime(0, 0, 0, $month, $day, $year);
-
-
-		$dateSQL = date("Y-m-d", $dateCloture);  // Convertit le timestamp en "YYYY-MM-DD"
-		$sql = "UPDATE " . MAIN_DB_PREFIX . "constat_constat 
-				SET dateCloture = '" . $dateSQL . "' 
-				WHERE rowid = " . (int)$object->id;
-		$resql = $db->query($sql);
-		
-	
-			if ($resql) {
-				setEventMessages("Le constat a été clôturé avec succès", null, 'mesgs');
-				header("Location: " . $_SERVER["PHP_SELF"] . "?id=" . $object->id);
-				
-			} else {
-				setEventMessages("Erreur lors de la mise à jour de la date : " . $db->lasterror(), null, 'errors');
-			}
-		} else {
-			setEventMessages("Les données de date sont manquantes.", null, 'errors');
-		}
-		
-		
-		$object->updateCloture();
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_CLOTUREInDolibarr", $object->ref);
-		$result = $object->call_trigger('CONSTAT_CLOTURE', $user);
-		if ($result < 0) {
-			$error++;
-		}
+	// 		// Call trigger
+	// 		$result = $object->call_trigger('CONSTAT_SOLDEE', $user);
+	// 		if ($result < 0) {
+	// 			$error++;
+	// 		}
+	// 		// End call triggers
 		
 
-		$subject = '[OPTIM Industries] Notification automatique constat clôturé';
-	
-		$from = 'erp@optim-industries.fr';
-		
-		$projet = new Project($db);
-		$projet->fetch($object->fk_project);
-		$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
-	
-		// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
-		$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
-		$result = $db->query($sql);
-	
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$tochef .= $email . ", ";
-				}
-			}
-		}
-	
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				$to .= ", ";
-			}
-		}
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Resp. Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				$torespQ3 .= ", ";
-			}
-		}
-		$emeteur = New User($db);
-		$emeteur->fetch($object->fk_user_creat);
-		
-		if(!empty($emeteur->email)){
-			$toemeteur = $emeteur->email;
-		}
-	
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-		if ($resql_creator) {
-			if ($db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-		}
-	
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-		$link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-	
-		$to .= $tochef;
-		$to .= $toemeteur;
-		$to .= $torespQ3;
-		$to = rtrim($to, ", ");
-		
-		$msg = $langs->transnoentitiesnoconv("Bonjour, le constat ". $link. " créé par ". $creator_name." a été clôturé. Cordialement, Votre système de notification." );
-	
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-			</script>';
-		} 
-		
-	}
+	// }
 
-	if ($action == 'setSolde' && $confirm == 'yes'){
-
-
-		$subject = '[OPTIM Industries] Notification automatique  constat soldé';
-
-		$from = 'erp@optim-industries.fr';
-		
-		$projet = new Project($db);
-		$projet->fetch($object->fk_project);
-		$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
-
-		// Sélectionne les emails des utilisateurs dont les IDs sont dans $liste_chef_projet
-		$sql = "SELECT email FROM " . MAIN_DB_PREFIX . "user WHERE rowid IN (" . implode(",", $liste_chef_projet) . ")";
-		$result = $db->query($sql);
-
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$tochef .= $email . ", ";
-				}
-			}
-		}
-
-			$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				$to .= ", ";
-					
-			}
-		}
-
-		$emeteur = New User($db);
-		$emeteur->fetch($object->fk_user_creat);
-		
-		if(!empty($emeteur->email)){
-		$toemeteur = $emeteur->email;
-			}	
-
-			// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-		if ($resql_creator) {
-			if ($db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-		}
-
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-        $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-        $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-
-		$to .= $tochef;
-		$to .= $toemeteur;
-		$to = rtrim($to, ", ");
-		$msg =  $langs->transnoentitiesnoconv("Le constat  ".$link." créé par " .$creator_name. " est à classé par le service Q3SE votre system d'information");
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');	
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-			</script>';
-		}	
-	}
-	
-
-	if ($action == 'setSolde' && $confirm == 'yes'){
-	
-		$subject = '[OPTIM Industries] Notification automatique constat soldé ';
-
-		$from = 'erp@optim-industries.fr';
-		
-		// Si la requête a réussi
-		if ($result) {
-			$to = ''; // Initialisation de la chaîne d'emails
-			while ($obj = $db->fetch_object($result)) {
-				$email = $obj->email;
-				// Ajoute l'email à la liste
-				if (!empty($email)) {
-					$to .= $email . ", ";
-				}
-			}
-		}
-
-		$user_group = New UserGroup($db);
-		$user_group->fetch('', 'Resp. Q3SE');
-		$liste_utilisateur = $user_group->listUsersForGroup();
-		foreach($liste_utilisateur as $qualite){
-			if(!empty($qualite->email)){
-				$to .= $qualite->email;
-				
-	
-			}
-		}
-
-			// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-			$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-			$resql_creator = $db->query($sql_creator);
-			$creator_name = "";
-			if ($resql_creator) {
-				if ($db->num_rows($resql_creator) > 0) {
-					$creator = $db->fetch_object($resql_creator);
-					$creator_name = $creator->firstname . ' ' . $creator->lastname;
-				}
-			}
-
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-        $urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
-        $link = '<a href="'.$urlwithroot.'/custom/constat/constat_card.php?id='.$object->id.'">'.$object->ref.'</a>';
-
-		
-		$to = rtrim($to, ", ");
-		$message = $langs->transnoentitiesnoconv("Bonjour, le constat ".$link." créé par ".$creator_name." a été soldé. Le constat est donc terminé. Veuillez le passer au statut clôturé pour qu'il ne puisse être modifié. Cordialement, Votre système de notification.");
-		//$msg = 'test notif ( a ne pas prendre en compte si reçu )';
-		$cmail = new CMailFile($subject, $to, $from, $message, '', '', '', $cc, '', 0, 1, '', '', 'track'.'_'.$object->id);
-		
-		// Send mail
-		$res = $cmail->sendfile();
-		if($res) {
-			 setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			// header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-			// exit;
-			print '<script>
-			window.location.replace("'.$_SERVER["PHP_SELF"]."?id=".$object->id.'");
-			</script>';
-		} 		
-	
-	}
-
-	//condition si le respAFF n'est pas le chef de projet
-	$projet = new Project($db);
-	$projet->fetch($object->fk_project);
-	$liste_chef_projet = $projet->liste_contact(-1, 'internal', 1, 'PROJECTLEADER');
-	
-	
-	$pasresponsableaffaire = 0; 
-	
-
-	if (!in_array($user->id, $liste_chef_projet)) {
-		$pasresponsableaffaire = 1; 
-	}
-
-	if( $action == 'setPrise'  && $confirm == 'yes' ){
-		$object->updatePrise();
-
-			$object->actionmsg = $langs->transnoentitiesnoconv("CONSTAT_PRISEInDolibarrr", $object->ref);
-			// Call trigger
-			$result = $object->call_trigger('CONSTAT_PRISE', $user);
-			if ($result < 0) {
-				$error++;
-			}
-			// End call triggers
-		
-
-	}
-	
-	if( $action == 'setEnCours'  && $confirm == 'yes' ){
-		$object->updateEnCours();
-
-
-			$object->actionmsg = $langs->transnoentitiesnoconv("CONSTAT_EN_COURSInDolibarr", $object->ref);
+	// if( $action == 'setCloture'  && $confirm == 'yes' ){
+	// 	$object->updateCloture();
 			
-			// Call trigger
-			$result = $object->call_trigger('CONSTAT_EN_COURS', $user);
-			if ($result < 0) {
-				$error++;
-			}
-			// End call triggers
+	// 	$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_CLOTUREInDolibarr", $object->ref);
+	// 	// Call trigger
+	// 	$result = $object->call_trigger('CONSTAT_CLOTURE', $user);
 		
-	}
-
-	if( $action == 'setSolde'  && $confirm == 'yes' ){
-		$object->updateSolde();
-
-			$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_SOLDEEInDolibarr", $object->ref);
-			
-			// Call trigger
-			$result = $object->call_trigger('CONSTAT_SOLDEE', $user);
-			if ($result < 0) {
-				$error++;
-			}
-			// End call triggers
-		
-
-	}
-
-	if ($action == 'setCloture' ) {
-		
-		$formquestion = array(
-			array(
-				'type' => 'date',
-				'name' => 'dateCloture',
-				'label' => $langs->trans("Date de clôture"),
-				'value' => dol_now()
-			)
-		);
-	
-		
-		print $form->formconfirm(
-			$_SERVER["PHP_SELF"]."?id=".$object->id,
-			$langs->trans("Clôturer le constat"),
-			$langs->trans("Veuillez saisir une date de clôture avant de valider."),
-			'confirmsetCloture',
-			$formquestion,
-			'', 
-			2
-		);
-
-	}
-
-	if( $action == 'setClasse'  && $confirm == 'yes' ){
-		$object->updateClasse();
-		
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("CONSTAT_CLASSEInDolibarr", $object->ref);
-		// Call trigger
-		$result = $object->call_trigger('CONSTAT_CLASSE', $user);
-		
-		if ($result < 0) {
-			$error++;
-		}
+	// 	if ($result < 0) {
+	// 		$error++;
+	// 	}
+	// 	// End call triggers
 			
 
-	}
-
-	if( $action == 'setDelete'  && $confirm == 'yes' ){
-		$result = $object->deleteConstat(); 
-	
-		if ($result > 0) {
-			header("Location: ".$_SERVER["PHP_SELF"]."?msg=deleted"); 
-			exit;
-		} else {
-			setEventMessages("Erreur lors de la suppression", null, 'errors');
-		}
-	}
-	
-
+	// }
 
 	if($action == 'confirm_genererDocConstat' && $confirm == 'yes') {
         if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
@@ -890,8 +328,247 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
         }
     }
 
-	
+	// Actions to send emails
+	$triggersendname = 'CONSTAT_CONSTAT_SENTBYMAIL';
+	$autocopy = 'MAIN_MAIL_AUTOCOPY_CONSTAT_TO';
+	$trackid = 'constat'.$object->id;
+	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
+}
 
+/*
+ * View
+ *
+ * Put here all code to build page
+ */
+
+$form = new Form($db);
+$actionForm = new actionsForm($db);
+$actionForm = new actionsForm($db);
+$formfile = new FormFile($db);
+$formproject = new FormProjets($db);
+
+$title = $langs->trans("Constat");
+$help_url = '';
+$morecssonbody = 'constat';
+if($action != 'create' && $action != 'edit') $morecssonbody .= ' view';
+llxHeader('', $title, $help_url, '', 0, 0, '', '', '', $morecssonbody);
+
+// $resp = $object->getAgencesBySoc();
+
+// Part to create
+if ($action == 'create') {
+	if (empty($permissiontoadd)) {
+		accessforbidden('NotEnoughPermissions', 0, 1);
+	}
+
+	print load_fiche_titre($langs->trans("NewObject", $langs->transnoentitiesnoconv("Constat")), '', 'object_'.$object->picto);
+
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="add">';
+	if ($backtopage) {
+		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+	}
+	if ($backtopageforcancel) {
+		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
+	}
+
+	print dol_get_fiche_head(array(), '');
+
+	// Set some default values
+	//if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
+
+	print '<table class="border centpercent tableforfieldcreate">'."\n";
+
+	// Common attributes
+	include DOL_DOCUMENT_ROOT.'/custom/constat/core/tpl/commonfields_add.tpl.php';
+
+	// Other attributes
+	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
+
+	print '</table>'."\n";
+
+	print dol_get_fiche_end();
+
+	print $form->buttonsSaveCancel("Create");
+	
+}
+
+// Part to edit record
+if (($id || $ref) && $action == 'edit') {
+	print load_fiche_titre($langs->trans("Constat"), '', 'object_'.$object->picto);
+
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="update">';
+	print '<input type="hidden" name="id" value="'.$object->id.'">';
+	if ($backtopage) {
+		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+	}
+	if ($backtopageforcancel) {
+		print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
+	}
+
+	print dol_get_fiche_head();
+
+	// Étape 1 : Sauvegarder l'état initial des champs
+	// $original_fields = $object->fields;
+
+	// // Étape 2 : Masquer les champs pour le premier appel
+	// $fields_to_hide_first = [
+	// 	'description_impact',
+	// 	'cout_total',
+	// 	'cloture_date',
+	// 	'actionsimmediates',
+	// 	'actionsimmediates_commentaire',
+	// 	'analyse_cause_racine',
+	// 	'recurent',
+	// 	'infoclient',
+	// 	'infoclient_commentaireinfoclient_commentaire',
+	// 	'accordclient',
+	// 	'accordclient_commentaire',
+	// 	'controleclient',
+	// 	'controleclient_commentaire',
+	// 	'commentaire_emetteur',
+	// 	'commentaire_resp_aff',
+	// 	'commentaire_resp_q3se',
+	// 	'commentaire_serv_q3se'
+	// ];
+
+	// foreach ($fields_to_hide_first as $field) {
+	// 	if (isset($object->fields[$field])) {
+	// 		$object->fields[$field]['enabled'] = '0';  // Pour ne pas le gérer
+	// 		$object->fields[$field]['visible'] = 0;   // Pour ne pas l'afficher
+	// 	}
+	// }
+
+	foreach ($object->fields as $key => $val) {
+		$object->fields[$key]['visible'] = dol_eval($val['visible'], 1);
+	}
+
+	if($object->status == $object::STATUS_DRAFT) {
+		$detail_open = $object->fields['label']['label_separation'];
+	}
+	elseif($object->status == $object::STATUS_VALIDATED) {
+		$detail_open = $object->fields['num_commande']['label_separation'];
+	}
+	elseif($object->status == $object::STATUS_EN_COURS) {
+		$detail_open = $object->fields['analyse_cause_racine']['label_separation'];
+	}
+
+	print '<table class="border centpercent tableforfieldedit">'."\n";
+
+	include DOL_DOCUMENT_ROOT.'/custom/constat/core/tpl/commonfields_edit.tpl.php';
+
+	print '<table class="border centpercent tableforfieldedit">'."\n";
+
+	// if ( ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1) || $user->rights->constat->constat->ServiceQ3SE || $user->rights->constat->constat->ResponsableQ3SE) {
+	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_edit.tpl.php';
+	// }
+	
+	
+	// $object->fields = $original_fields;
+
+	
+	// $fields_to_hide_second = [
+	// 	'ref',
+	// 	'label',
+	// 	'date_eche',
+	// 	'type_constat',
+	// 	'fk_project',
+	// 	'num_commande',
+	// 	'site',
+	// 	'sujet',
+	// 	'description_constat'
+	// ];
+
+	// foreach ($fields_to_hide_second as $field) {
+	// 	if (isset($object->fields[$field])) {
+	// 		$object->fields[$field]['enabled'] = '0';  
+	// 		$object->fields[$field]['visible'] = 0;   
+	// 	}
+	// }
+	
+	// include DOL_DOCUMENT_ROOT.'/custom/constat/core/tpl/commonfields_edit.tpl.php';
+
+
+	print '</table>';
+
+	print dol_get_fiche_end();
+
+	print $form->buttonsSaveCancel();
+
+	print '</form>';
+}
+
+// Part to show record
+if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
+	$head = constatPrepareHead($object);
+
+	print dol_get_fiche_head($head, 'card', $langs->trans("Constat"), -1, $object->picto);
+
+	$formconfirm = '';
+
+	// Confirmation to delete
+	if ($action == 'delete') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('DeleteConstat'), $langs->trans('ConfirmDeleteObject'), 'confirm_delete', '', 0, 1);
+	}
+	// Confirmation to delete line
+	if ($action == 'deleteline') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_deleteline', '', 0, 1);
+	}
+
+	// Clone confirmation
+	if ($action == 'clone') {
+		// Create an array for form
+		$formquestion = array();
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
+	}
+
+	// Validate confirmation
+	if ($action == 'validate') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Validate'), $langs->trans('ConfirmValidateConstat', $object->ref), 'confirm_validate', '', 'yes', 1);
+	}
+
+	// Setencours confirmation
+	if ($action == 'setencours') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Validate'), $langs->trans('ConfirmValidateConstat', $object->ref), 'confirm_setencours', '', 'yes', 1);
+	}
+
+	// Close confirmation
+	if ($action == 'close') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Close'), $langs->trans('ConfirmCloseConstat', $object->ref), 'confirm_close', '', 'yes', 1);
+	}
+
+	// Decline confirmation
+	if ($action == 'decline') {
+		$formquestion = array(
+			array('label'=>$langs->trans('DeclineReason') ,'type'=>'text', 'name'=>'decline_reason', 'value'=>''),
+		);
+		if($object->status == $object::STATUS_VALIDATED) {
+			$question = $langs->trans('ConfirmDeclineConstatRespAff', $object->ref);
+		}
+		elseif ($object->status == $object::STATUS_EN_COURS) {
+			$question = $langs->trans('ConfirmDeclineConstatQ3SE', $object->ref);
+		}
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Decline'), $question, 'confirm_decline', $formquestion, 'yes', 1);
+	}
+
+	// Cancel confirmation
+	if ($action == 'cancel') {
+		$formquestion = array();
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Cancel'), $langs->trans('ConfirmCancelConstat', $object->ref), 'confirm_cancel', $formquestion, 'yes', 1);
+	}
+
+
+	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
+	if ($action == 'xxx') {
+		$text = $langs->trans('ConfirmActionConstat', $object->ref);
+
+	
+		$formquestion = array();
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('XXX'), $text, 'confirm_xxx', $formquestion, 0, 1, 220);
+	}
 
 	// Call Hook formConfirm
 	$parameters = array('formConfirm' => $formconfirm, 'lineid' => $lineid);
@@ -911,57 +588,58 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// ------------------------------------------------------------
 	$linkback = '<a href="'.dol_buildpath('/constat/constat_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 	
-	$morehtmlref = '<div class="refidno">';
-	/*
-		// Ref customer
-		$morehtmlref .= $form->editfieldkey("RefCustomer", 'ref_client', $object->ref_client, $object, $usercancreate, 'string', '', 0, 1);
-		$morehtmlref .= $form->editfieldval("RefCustomer", 'ref_client', $object->ref_client, $object, $usercancreate, 'string'.(isset($conf->global->THIRDPARTY_REF_INPUT_SIZE) ? ':'.$conf->global->THIRDPARTY_REF_INPUT_SIZE : ''), '', null, null, '', 1);
-		// Thirdparty
-		$morehtmlref .= '<br>'.$object->thirdparty->getNomUrl(1, 'customer');
-		if (empty($conf->global->MAIN_DISABLE_OTHER_LINK) && $object->thirdparty->id > 0) {
-			$morehtmlref .= ' (<a href="'.DOL_URL_ROOT.'/commande/list.php?socid='.$object->thirdparty->id.'&search_societe='.urlencode($object->thirdparty->name).'">'.$langs->trans("OtherOrders").'</a>)';
-		}
-		// Project
-		if (isModEnabled('project')) {
-			$langs->load("projects");
-			$morehtmlref .= '<br>';
-			if ($permissiontoadd) {
-				$morehtmlref .= img_picto($langs->trans("Project"), 'project', 'class="pictofixedwidth"');
-				if ($action != 'classify') {
-					$morehtmlref .= '<a class="editfielda" href="'.$_SERVER['PHP_SELF'].'?action=classify&token='.newToken().'&id='.$object->id.'">'.img_edit($langs->transnoentitiesnoconv('SetProject')).'</a> ';
-				}
-				$morehtmlref .= $form->form_project($_SERVER['PHP_SELF'].'?id='.$object->id, $object->socid, $object->fk_project, ($action == 'classify' ? 'projectid' : 'none'), 0, 0, 0, 1, '', 'maxwidth300');
-			} else {
-				if (!empty($object->fk_project)) {
-					$proj = new Project($db);
-					$proj->fetch($object->fk_project);
-					$morehtmlref .= $proj->getNomUrl(1);
-					if ($proj->title) {
-						$morehtmlref .= '<span class="opacitymedium"> - '.dol_escape_htmltag($proj->title).'</span>';
-					}
-				}
-			}
-		}
-	*/
-	$morehtmlref .= '</div>';
-
+	if($object->labelStatusExplication[$object->status]) {
+		$morehtmlref = '<div class="instruction">';
+		$morehtmlref .= $object->labelStatusExplication[$object->status];
+		$morehtmlref .= '</div>';
+	}
 
 	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 
 
 	print '<div class="fichecenter">';
 	print '<div class="fichehalfleft">';
-	print '<div class="underbanner clearboth"></div>';
-	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Common attributes
-	$keyforbreak='actionimmediate';	// We change column just before this field
+	if($object->status == $object::STATUS_DRAFT) {
+		$keyforbreak = '';
+	}
+	elseif($object->status == $object::STATUS_VALIDATED) {
+		$keyforbreak = 'num_commande';
+	}
+	else {
+		$keyforbreak = 'analyse_cause_racine';
+	}
 
+	if(!$object->commentaire_emetteur) unset($object->fields['commentaire_emetteur']);
+	if(!$object->commentaire_resp_aff) unset($object->fields['commentaire_resp_aff']);
+	if(!$object->commentaire_resp_q3se) unset($object->fields['commentaire_resp_q3se']);
+	if(!$object->commentaire_serv_q3se) unset($object->fields['commentaire_serv_q3se']);
+	if($object->actionsimmediates != 1) unset($object->fields['actionsimmediates_date']);
+	if($object->actionsimmediates != 1) unset($object->fields['actionsimmediates_par']);
+	//if($object->actionsimmediates != true) unset($object->fields['actionsimmediates_commentaire']);
+	if($object->infoclient != 1) unset($object->fields['infoclient_date']);
+	if($object->infoclient != 1) unset($object->fields['infoclient_par']);
+	//if($object->infoclient != true) unset($object->fields['infoclient_commentaire']);
+	if($object->accordclient != 1) unset($object->fields['accordclient_date']);
+	if($object->accordclient != 1) unset($object->fields['accordclient_par']);
+	//if($object->accordclient != true) unset($object->fields['accordclient_commentaire']);
+	if($object->controleclient != 1) unset($object->fields['controleclient_date']);
+	if($object->controleclient != 1) unset($object->fields['controleclient_par']);
+	//if($object->controleclient != true) unset($object->fields['controleclient_commentaire']);
 
-	include DOL_DOCUMENT_ROOT.'/custom/constat/tpl/commonfields_view.tpl.php';
+	foreach ($object->fields as $key => $val) {
+		$object->fields[$key]['visible'] = dol_eval($val['visible'], 1);
+	}
+
+	print '<table class="border centpercent tableforfield">'."\n";
+
+	include DOL_DOCUMENT_ROOT.'/custom/constat/core/tpl/commonfields_view.tpl.php';
+
+	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Other attributes. Fields from hook formObjectOptions and Extrafields.
-	
+	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_view.tpl.php';
 
 	print '</table>';
 	print '</div>';
@@ -969,13 +647,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	print '<div class="clearboth"></div>';
 	
-
 	print dol_get_fiche_end();
 
 	/*
 	 * Lines
 	 */
-	
 	if (!empty($object->table_element_line)) {
 		// Show object lines
 		$result = $object->getLinesArray();
@@ -1020,54 +696,50 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print '</div>';
 
 		print "</form>\n";
-		
+
 	}
 
 
-	print"<script> // Fonction pour afficher une popup temporaire
-	function showPopupMessage(message, type = 'info', duration = 10000) {
-		let popupContainer = document.getElementById('popup-container');
-		if (!popupContainer) {
-			popupContainer = document.createElement('div');
-			popupContainer.id = 'popup-container';
-			popupContainer.style.position = 'fixed';
-			popupContainer.style.top = '50px';
-			popupContainer.style.left = '50%';
-			popupContainer.style.transform = 'translateX(-50%)';
-			popupContainer.style.zIndex = '1000';
-			popupContainer.style.display = 'flex';
-			popupContainer.style.flexDirection = 'column';
-			popupContainer.style.alignItems = 'center';
-			document.body.appendChild(popupContainer);
-		}
+	// print"<script> // Fonction pour afficher une popup temporaire
+	// function showPopupMessage(message, type = 'info', duration = 10000) {
+	// 	let popupContainer = document.getElementById('popup-container');
+	// 	if (!popupContainer) {
+	// 		popupContainer = document.createElement('div');
+	// 		popupContainer.id = 'popup-container';
+	// 		popupContainer.style.position = 'fixed';
+	// 		popupContainer.style.top = '50px';
+	// 		popupContainer.style.left = '50%';
+	// 		popupContainer.style.transform = 'translateX(-50%)';
+	// 		popupContainer.style.zIndex = '1000';
+	// 		popupContainer.style.display = 'flex';
+	// 		popupContainer.style.flexDirection = 'column';
+	// 		popupContainer.style.alignItems = 'center';
+	// 		document.body.appendChild(popupContainer);
+	// 	}
 
-		let popup = document.createElement('div');
-		popup.className = 'popup-message';
-		popup.innerHTML = message;
-		popup.style.background = '#4CAF50';
-		popup.style.color = '#fff';
-		popup.style.fontWeight = 'bold';
-		popup.style.padding = '10px 20px';
-		popup.style.margin = '5px';
-		popup.style.borderRadius = '5px';
-		popup.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
-		popup.style.opacity = '1';
-		popup.style.transition = 'opacity 0.5s ease-in-out';
+	// 	let popup = document.createElement('div');
+	// 	popup.className = 'popup-message';
+	// 	popup.textContent = message;
+	// 	popup.style.background = '#4CAF50';
+	// 	popup.style.color = '#fff';
+	// 	popup.style.fontWeight = 'bold';
+	// 	popup.style.padding = '10px 20px';
+	// 	popup.style.margin = '5px';
+	// 	popup.style.borderRadius = '5px';
+	// 	popup.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
+	// 	popup.style.opacity = '1';
+	// 	popup.style.transition = 'opacity 0.5s ease-in-out';
 
-		popupContainer.appendChild(popup);
+	// 	popupContainer.appendChild(popup);
 
-		setTimeout(() => {
-			popup.style.opacity = '0';
-			setTimeout(() => popup.remove(), 500);
-		}, duration);
-	}
-	</script>";
-
-	
-	$estResponsableAffaireOuQ3SEouEme = $user->rights->constat->constat->ResponsableAffaire || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->Emetteur;
+	// 	setTimeout(() => {
+	// 		popup.style.opacity = '0';
+	// 		setTimeout(() => popup.remove(), 500);
+	// 	}, duration);
+	// }
+	// </script>";
 
 	// Buttons for actions
-	
 	if ($action != 'presend' && $action != 'editline') {
 		print '<div class="tabsAction">'."\n";
 		$parameters = array();
@@ -1077,240 +749,146 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 
 		if (empty($reshook)) {
-			// Send
-			/*if (empty($user->socid)) {
-				print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
-			}*/
+			// Modifier
+			if ($object->status != $object::STATUS_CLOSE && $object->status != $object::STATUS_CANCELED) {
+				print dolGetButtonAction('', $langs->trans('Modifier / Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoupdate);
+			}
 
-			// Back to draft
-			if (
-				$object->status == $object::STATUS_EN_COURS || 
-				$object->status == $object::STATUS_VALIDATED || 
-				$object->status == $object::STATUS_DRAFT ||  
-				$object->status == $object::STATUS_PRISE ||  
-				$object->status == $object::STATUS_SOLDEE
-			) {
-				// Vérification des droits utilisateur et du statut
-				{
-					print dolGetButtonAction(
-						'', 
-						$langs->trans('Modifier / Compléter'), 
-						'default', 
-						$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), 
-						'', 
-						$permissiontoadd
-					);
-				}
+			// Valider / Refuser
+			if ($object->status == $object::STATUS_DRAFT && $permissiontovalidate) {
+				// print "<script>showPopupMessage('L\'émetteur doit remplir les champs en gras pour valider le constat. ', 'error');</script>";
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=validate&token='.newToken(), '', empty($label_button_action_validate));
+			}
+			elseif($object->status == $object::STATUS_VALIDATED && $permissiontovalidate) {
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setencours&token='.newToken(), '', empty($label_button_action_validate));
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Decline'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=decline&token='.newToken(), '');
+			}
+			elseif ($object->status == $object::STATUS_EN_COURS && $permissiontovalidate) {
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Close'), 'default', $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=close&token=' . newToken(), '', empty($label_button_action_validate));
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Decline'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=decline&token='.newToken(), '');
 			}
 			
-				
-			//}
-			//SATUTS CREE ( Validé )
-			if ($user->rights->constat->constat->Emetteur || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-				if ($object->status == $object::STATUS_DRAFT) {
-				print "<script>showPopupMessage('L\'émetteur doit<br>remplir les champs en gras pour valider le constat. ', 'error');</script>";
-					if ($object->label != null && $object->site != null && $object->sujet != null) {
-						if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-							print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
-						} 
-					}
-				}
-			}
 			
-					
 			// Check if "client info" is unchecked (si_info_client == false)
-			if ($object->infoClient == 0) {
-				// Passé au Status En Cours
-				if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-					if ($object->status == $object::STATUS_VALIDATED) {
-						// Check if the necessary fields are filled
-						if ($object->typeConstat != null && 
-							!empty($object->array_options['options_impact']) && 
-							!empty($object->array_options['options_rubrique']) && 
-							!empty($object->array_options['options_processusconcern'])) {
-							print dolGetButtonAction('', $langs->trans('passer au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
-						}
-					}
-				}
-			} else {
-				// Passé au Status Vérifié
-				if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-					if ($object->status == $object::STATUS_VALIDATED) {
-						print dolGetButtonAction('', $langs->trans('passer au status vérifié'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setPrise&confirm=yes&token='.newToken(), '', $permissiontoadd);
-					}
-				}
-				if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-					if ($object->status == $object::STATUS_PRISE) {
+			// if ($object->infoclient == 0) {
+			// 	// Passé au Status En Cours
+			// 	if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+			// 		if ($object->status == $object::STATUS_VALIDATED) {
+			// 			// Check if the necessary fields are filled
+			// 			if ($object->type_constat != null && 
+			// 				!empty($object->array_options['options_impact']) && 
+			// 				!empty($object->array_options['options_rubrique']) && 
+			// 				!empty($object->array_options['options_processusconcern'])) {
+			// 				print dolGetButtonAction('', $langs->trans('passer au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// 			}
+			// 		}
+			// 	}
+			// } else {
+			// 	// Passé au Status Vérifié
+			// 	if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+			// 		if ($object->status == $object::STATUS_VALIDATED) {
+			// 			print dolGetButtonAction('', $langs->trans('passer au status vérifié'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setPrise&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// 		}
+			// 	}
+			// 	// if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+			// 	// 	if ($object->status == $object::STATUS_PRISE) {
 						
-						if ($object->typeConstat != null && 
-							!empty($object->array_options['options_impact']) && 
-							!empty($object->array_options['options_rubrique']) && 
-							!empty($object->array_options['options_processusconcern'])) {
-							print dolGetButtonAction('', $langs->trans('passer au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
-						}
-					}
-				}
-			}
+			// 	// 		if ($object->type_constat != null && 
+			// 	// 			!empty($object->array_options['options_impact']) && 
+			// 	// 			!empty($object->array_options['options_rubrique']) && 
+			// 	// 			!empty($object->array_options['options_processusconcern'])) {
+			// 	// 			print dolGetButtonAction('', $langs->trans('passer au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// 	// 		}
+			// 	// 	}
+			// 	// }
+			// }
+
+			// if ( $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+			// 	if ($object->status == $object::STATUS_SOLDEE) {
+			// 		print dolGetButtonAction('', $langs->trans('retourne au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// 	}	
+			// }
+
+			// if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+			// 	if ($object->status == $object::STATUS_VALIDATED) {
+			// 		print "<script>showPopupMessage('Pour faire évoluer le statut, le Responsable d’Affaire doit soit cocher \'Information Client Requise\' pour passer au statut Vérifié, soit remplir tous les champs en gras pour passer directement au statut En cours. ', 'error');</script>";
+			// 	}	
+			// }
+
+			// if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+			// 	if ($object->status == $object::STATUS_PRISE ) {
+			// 		print "<script>showPopupMessage('Le constat est vérifié, informé le client (si nécessaire) puis complété les champs en gras pour passé au statut \'En Cours\', 'error');</script>";
+			// 	}
+			// }	
+
+			// Passer au Status Soldé
+			// if ($is_exist === false) {
+			// 	// print "<script>showPopupMessage('Le constat ne peut être soldé tant qu'il y a des actions en cours  ', 'error');</script>";
+			// }	
 			
-			if ( $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-				if ($object->status == $object::STATUS_SOLDEE) {
-					print dolGetButtonAction('', $langs->trans('retourne au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				}	
-			}
+			// if ($is_exist === true) {
+			// 	if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+			// 		if ($object->status == $object::STATUS_EN_COURS) {
+			// 			if ($object->analyse_cause_racine != null) {
+			// 				print dolGetButtonAction(
+			// 					'',
+			// 					$langs->trans('passer au status soldé'),
+			// 					'default',
+			// 					$_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=setSolde&confirm=yes&token=' . newToken(),
+			// 					'',
+			// 					$permissiontoadd
+			// 				);
+			// 			}
+			// 		}
+			// 	}
+			// }
+			//passé au  Status Clôturé
+			// if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
+			// 	if ($object->status != $object::STATUS_CLOSE) {
+			// 		print dolGetButtonAction('', $langs->trans('classer le constat'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloture&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// 		// $object->updateCloture();
+					
+			// 	}
+			// }
 
-			if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-				if ($object->status == $object::STATUS_VALIDATED) {
-					print "<script>showPopupMessage('Pour faire évoluer le statut, le Responsable d\'Affaire doit soit cocher \'Information Client Requise\' pour passer au statut Vérifié, soit remplir tous les champs en gras pour passer directement au statut En cours. ', 'error');</script>";
-				}	
-			}
+			// if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
+			// 	error_log("Statut actuel : " . $object->status);
+			// 	error_log("Valeur de STATUS_CLASSE : " . $object::STATUS_CLASSE);
 			
-			if ($user->rights->constat->constat->ResponsableAffaire && $pasresponsableaffaire != 1 || $user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-				if ($object->status == $object::STATUS_PRISE ) {
-					print "<script>showPopupMessage('Le constat est vérifié, informé le client (si nécessaire) puis complété les champs en gras pour passé au statut \'En Cours\', 'error');</script>";
-				}
-			}	
-
-		// Passer au Status Soldé
-			global $db;
-
-			$sql = "SELECT e.fk_target, e.fk_source, a.status";
-			$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
-			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_action as a ON e.fk_target = a.rowid";
-			$sql .= " WHERE e.fk_source = $object->id AND e.sourcetype = 'constat' ";
-
-			$result = $db->query($sql);
-
-			$selectedelement = [];
-			$is_exist = true; 
-
-			if ($result) {
-				$nume = $db->num_rows($result);
-				$i = 0;
-
-				while ($i < $nume) {
-					$obj = $db->fetch_object($result);
-					$selectedelement[$obj->fk_source][$obj->fk_target] = $obj;
-					$i++;
-				}
-			
-				if (!empty($selectedelement)) {
-					foreach ($selectedelement as $elements) {
-						foreach ($elements as $val) {
-							if (!in_array($val->status, ['3', '8', '9'])) {
-								$is_exist = false; 
-								break 2; 
-							}
-						}
-					}
-				}
-			} else {
-				dol_print_error($db);
-			}
-			if ($is_exist === false) {
-				print "<script>showPopupMessage('Le constat ne peut être soldé tant qu'il y a des actions en cours  ', 'error');</script>";
-			}	
-			
-			if ($is_exist === true) {
-				if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-					if ($object->status == $object::STATUS_EN_COURS) {
-						if ($object->analyseCauseRacine != null) {
-							print dolGetButtonAction(
-								'',
-								$langs->trans('passer au status soldé'),
-								'default',
-								$_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=setSolde&confirm=yes&token=' . newToken(),
-								'',
-								$permissiontoadd
-							);
-						}
-					}
-				}
-			}
-
-
-			
-			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-				if ($object->status == $object::STATUS_SOLDEE) {
-					print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloture" class="butAction">';
-					print $langs->trans('Clôturer le constat').'</a>';
-				}
-			}
-
-
-
-
-
-			
-			
-			$sql = "SELECT 1 
-				FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug 
-				WHERE ug.fk_user = " . $user->id . " 
-				AND ug.fk_usergroup = 46";
-
-		$res = $db->query($sql);
-
-		if ($res && $db->num_rows($res) > 0) { 
-			$url = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=setDelete&confirm=yes&token=' . newToken();
-			print '<a href="#" onclick="confirmsupprimer(\'' . $url . '\')" class="butAction">' . $langs->trans('Supprimer le constat') . '</a>';
-		}
-		?>
-
-		<script type="text/javascript">
-		function confirmsupprimer(url) {
-			if (confirm("Êtes-vous sûr de vouloir supprimer ce constat ? Cette action est irréversible.")) {
-				window.location.href = url;
-			}
-		}
-		</script>
-		<?php
-
-
-			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ServiceQ3SE) {
-				error_log("Statut actuel : " . $object->status);
-				error_log("Valeur de STATUS_CLASSE : " . $object::STATUS_CLASSE);
-			
-				// Afficher le bouton seulement si le constat N'EST PAS encore classé
-				if ($object->status != $object::STATUS_CLASSE) { 
-					$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken();
-					print '<a href="#" onclick="confirmClasser(\'' . $url . '\')" class="butAction">' . $langs->trans('Classer le constat') . '</a>';
-				}
+			// 	// Afficher le bouton seulement si le constat N'EST PAS encore classé
+			// 	if ($object->status != $object::STATUS_CLASSE) { 
+			// 		$url = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken();
+			// 		print '<a href="#" onclick="confirmClasser(\'' . $url . '\')" class="butAction">' . $langs->trans('Classer le constat') . '</a>';
+			// 	}
 	
-			}
-			?>
+			// }
 			
-			<script type="text/javascript">
-			function confirmClasser(url) {
-				if (confirm("Êtes-vous sûr de vouloir classer ce constat ? Cette action est irréversible.")) {
-					window.location.href = url;
-				}
-			}
-			</script>
-			<?php
-			
-			if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
-				if ($object->status == $object::STATUS_EN_COURS) {
-					print "<script>showPopupMessage('Le constat est en cours, veuillez passer au statut Soldé lorsque toutes les actions seront soldées ainsi que les champs en gras complété. ', 'error');</script>";
-				}
-			}
+			// if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
+			// 	if ($object->status == $object::STATUS_EN_COURS) {
+			// 		print "<script>showPopupMessage('Le constat est en cours, veuillez passer au statut Soldé lorsque toutes les actions seront soldées ainsi que les champs en gras complété. ', 'error');</script>";
+			// 	}
+			// }
 
-
-			//généré pdf constat
-			if ($user->rights->constat->constat->ResponsableQ3SE || $user->rights->constat->constat->ResponsableAffaire  || $user->rights->constat->constat->ServiceQ3SE) {
-				print dolGetButtonAction('', $langs->trans('générer PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoadd);
+					
+			// Créer action
+			if ($object->status == $object::STATUS_EN_COURS && $permissiontoupdate){
+				print '<a class="butAction" href="'.DOL_URL_ROOT.'/custom/actions/action_card.php?action=create&origin='.$object->element.'&originid='.$object->id.'&socid='.$object->socid.'">'.$langs->trans("Créer action").'</a>';
 			}
 		
-			
-			// Create a sale order
-			if ($user->rights->constat->constat->ResponsableQ3SE  || $user->rights->constat->constat->ServiceQ3SE) {
-					if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_DRAFT ||  $object->status == $object::STATUS_PRISE ){
-						print '<a class="butAction" href="#" onclick="window.open(\''.DOL_URL_ROOT.'/custom/actions/action_card.php?action=create&origin='.$object->element.'&originid='.$object->id.'&socid='.$object->socid.'\', \'_blank\'); return false;">'.$langs->trans("Créer action").'</a>';
-
-				 }
+			// Générer pdf constat
+			if ($object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_EN_COURS) {
+				print dolGetButtonAction('', $langs->trans('générer PDF'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_genererDocConstat&confirm=yes&token='.newToken(), '', $permissiontoupdate);
 			}
+
+			if($permissiontocancel) {
+				print dolGetButtonAction('', $langs->trans('Cancel'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=cancel&token='.newToken(), '');
+			}
+			
+			// Delete (need delete permission, or if draft, just need create/modify permission)
+			print dolGetButtonAction($langs->trans('Delete'), '', 'delete', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=delete&token='.newToken(), '', $permissiontodelete);
 		}
 		print '</div>'."\n";
 	}
-
 
 	$projet = new Project($db);
 	$projet->fetch($object->fk_project);
@@ -1367,26 +945,50 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		//$arrconstats = $object->getActionsByConstat();
 			
-		foreach ($selectedelement as $element) {
-			$targetId = $element->fk_target;
+		// foreach ($selectedelement as $element) {
+		// 	$targetId = $element->fk_target;
 		
 			
-			$sql = "SELECT ac.status "; 
-			$sql .= "FROM ".MAIN_DB_PREFIX."actions_action as ac ";
-			$sql .= "WHERE ac.rowid = $targetId ";
+		// 	$sql = "SELECT ac.status "; 
+		// 	$sql .= "FROM ".MAIN_DB_PREFIX."actions_actionq3se as ac ";
+		// 	$sql .= "WHERE ac.rowid = $targetId ";
 
-			$resultStatus = $db->query($sql);
+		// 	$resultStatus = $db->query($sql);
 
-			if ($resultStatus) {
-				$statusObj = $db->fetch_object($resultStatus);
-				if($statusObj !== 3) {
-					$test = false;
+		// 	if ($resultStatus) {
+		// 		$statusObj = $db->fetch_object($resultStatus);
+		// 		if($statusObj !== 3) {
+		// 			$test = false;
+		// 		}
+				
+				
+		// 	}
+		// }
+
+		
+		/*$sql .= "JOIN ".MAIN_DB_PREFIX."element_element as e ON ac.rowid = e.fk_target AND e.targettype = 'actions_actionq3se' ";
+			$sql .= "JOIN ".MAIN_DB_PREFIX."constat_constat as co ON e.fk_source = co.rowid AND e.sourcetype = 'constat' ";
+			$sql .= "WHERE ac.status = 3 AND e.fk_source = $id ";
+			$sql .= "ORDER BY e.targettype";
+			// Execute the query
+			
+			var_dump($result);
+			// Check if all actions have status = 3
+			$allStatusThree = false;
+			$result = $db->query($sql);
+
+			if ($result) {
+					$num = $db->num_rows($result);
+					$i = 0;
+			while ($i < $num) {
+				$obj = $db->fetch_object($result);
+				if ($obj->status == 3) {
+					$allStatusThree = true;
+					// break;
+					// var_dump($allStatusThree);
 				}
-				
-				
 			}
-		}
-
+		}*/
 
 		$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/constat/constat_agenda.php', 1).'?id='.$object->id);
 
@@ -1412,6 +1014,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 
 	include DOL_DOCUMENT_ROOT.'/core/tpl/card_presend.tpl.php';
+	
 	
 }
 

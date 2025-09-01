@@ -655,16 +655,16 @@ class Remonteessse extends CommonObject
 
 		if($this->status == self::STATUS_CLOTURE){
 			if($this->fields['antenne']['arrayofkeyval'][$this->antenne] == 'VDR-Nord'){
-				$key = 'REMONTEES_SSE_VDRNORD';
-				$val_const = str_replace('- '.$this->libelle.'<br/>', "", $conf->global->REMONTEES_SSE_VDRNORD);
+				$key = 'REMONTEESSSE_VDRNORD';
+				$val_const = str_replace('- '.$this->libelle.'<br/>', "", $conf->global->REMONTEESSSE_VDRNORD);
 			}
 			elseif($this->fields['antenne']['arrayofkeyval'][$this->antenne] == 'Grand-Ouest'){
-				$key = 'REMONTEES_SSE_GRANDOUEST';
-				$val_const = str_replace('- '.$this->libelle.'<br/>', "", $conf->global->REMONTEES_SSE_GRANDOUEST);
+				$key = 'REMONTEESSSE_GRANDOUEST';
+				$val_const = str_replace('- '.$this->libelle.'<br/>', "", $conf->global->REMONTEESSSE_GRANDOUEST);
 			}
 			elseif($this->fields['antenne']['arrayofkeyval'][$this->antenne] == 'Sud-Est'){
-				$key = 'REMONTEES_SSE_SUDEST';
-				$val_const = str_replace('- '.$this->libelle.'<br/>', "", $conf->global->REMONTEES_SSE_SUDEST);
+				$key = 'REMONTEESSSE_SUDEST';
+				$val_const = str_replace('- '.$this->libelle.'<br/>', "", $conf->global->REMONTEESSSE_SUDEST);
 			}
 			$result = dolibarr_set_const($this->db, $key, $val_const, 'chaine', 0, '', $conf->entity);
 			if ($result < 0) {

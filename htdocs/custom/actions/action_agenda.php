@@ -51,7 +51,7 @@ if (!$res) {
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
-dol_include_once('/actions/class/action.class.php');
+dol_include_once('/actions/class/actionq3se.class.php');
 dol_include_once('/actions/lib/actions_action.lib.php');
 
 // Load translation files required by the page
@@ -94,7 +94,7 @@ if (!$sortorder) {
 }
 
 // Initialize technical objects
-$object = new Action($db);
+$object = new ActionQ3SE($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->actions->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($object->element.'agenda', 'globalcard')); // Note that conf->hooks_modules contains array
@@ -109,10 +109,10 @@ if ($id > 0 || !empty($ref)) {
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('actions', 'actions', 'read');
-	$permissiontoadd = $user->hasRight('actions', 'actions', 'write');
+	$permissiontoread = $user->hasRight('actions', 'action', 'readall') || ($user->hasRight('actions', 'action', 'read') && ($user->id == $object->fk_user_creat || $user->id == $object->intervenant));
+	$permissiontoadd = $user->hasRight('actions', 'action', 'write');
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;

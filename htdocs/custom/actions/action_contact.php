@@ -19,7 +19,7 @@
 /**
  *  \file       action_contact.php
  *  \ingroup    actions
- *  \brief      Tab for contacts linked to Action
+ *  \brief      Tab for contacts linked to ActionQ3SE
  */
 
 // Load Dolibarr environment
@@ -55,7 +55,7 @@ if (!$res) {
 
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
-dol_include_once('/actions/class/action.class.php');
+dol_include_once('/actions/class/actionq3se.class.php');
 dol_include_once('/actions/lib/actions_action.lib.php');
 
 // Load translation files required by the page
@@ -68,7 +68,7 @@ $socid  = GETPOST('socid', 'int');
 $action = GETPOST('action', 'aZ09');
 
 // Initialize technical objects
-$object = new Action($db);
+$object = new ActionQ3SE($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->actions->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array('actioncontact', 'globalcard')); // Note that conf->hooks_modules contains array
@@ -80,10 +80,10 @@ include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be includ
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->actions->action->read;
-	$permission = $user->rights->actions->action->write;
+	$permissiontoread = $user->hasRight('actions', 'action', 'readall') || ($user->hasRight('actions', 'action', 'read') && ($user->id == $object->fk_user_creat || $user->id == $object->intervenant));
+	$permission = $user->hasRight('actions', 'action', 'write');
 } else {
 	$permissiontoread = 1;
 	$permission = 1;

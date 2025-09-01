@@ -1,0 +1,152 @@
+# Copyright (C) 2023 Faure Louis
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleConstatName'
+ModuleConstatName = Constat
+# Module description 'ModuleConstatDesc'
+ModuleConstatDesc = Constat description
+ActionsOnConstat = Actions sur le constat
+Actionq3se = Action
+
+#
+# Admin page
+#
+ConstatSetup = Constat setup
+Settings = Settings
+ConstatSetupPage = Constat setup page
+CONSTAT_MYPARAM1 = My param 1
+CONSTAT_MYPARAM1Tooltip = My param 1 tooltip
+CONSTAT_MYPARAM2=My param 2
+CONSTAT_MYPARAM2Tooltip=My param 2 tooltip
+
+
+#
+# About page
+#
+About = About
+ConstatAbout = About Constat
+ConstatAboutPage = Constat about page
+
+#
+# Sample page
+#
+ConstatArea = Constat
+MyPageName = My page name
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
+
+
+#email 
+
+ConstatPasserVerifier = Bonjour, le constat %s a été vérifié. Veuillez compléter votre partie et passer au statut suivant. Cordialement, votre système de notification.
+ConstatCréé = Bonjour, le constat %s vient d'être créé. Veuillez compléter votre partie et passer au statut suivant. Cordialement, votre système de notification.
+ConstatPasserCloturer = Bonjour, le constat %s a été clôturé. Cordialement, Votre système de notification.
+ConstatPasserValider = Bonjour, le constat %s a été validé. Veuillez compléter votre partie. Cordialement, votre système de notification.
+ConstatPasserSolder = Bonjour, le constat %s a été soldé. Le constat est donc terminé. Cordialement, votre système de notification.
+ConstatPasserSolderRespQ3SE = Bonjour, le constat %s a été soldé. Le constat est donc terminé. Veuillez le passer au statut clôturé pour qu'il ne puisse être modifié. Cordialement, Votre système de notification.
+ConstatActionSoldé = Bonjour, toutes les actions du constat %s sont soldées. Cordialement, votre système de notification.
+ConstatAlerteDraft = Bonjour, le constat %s est toujours à l'état de brouillon. Veuillez le passer à l'état validé. Cordialement, votre système de notification.
+
+
+#
+# Agenda
+#
+CONSTAT_CREATEInDolibarr = Le constat %s est créé
+CONSTAT_MODIFYInDolibarr = Le constat %s est modifié
+CONSTAT_DELETEInDolibarr = Le constat  %s est supprimé
+CONSTAT_VALIDATEInDolibarr = Le constat %s est validé par l'emetteur
+CONSTAT_EN_COURSInDolibarr = Le constat %s est validé par le responsable d'affaire
+CONSTAT_CLOTUREInDolibarr = Le constat %s est cloturé
+CONSTAT_CANCELInDolibarr = Le constat %s est annulé
+CONSTAT_DECLINERespAffInDolibarr = Le constat %s est refusé par le responsable d'affaire
+CONSTAT_DECLINEQ3SEInDolibarr = Le constat %s est refusé par le service Q3SE
+
+#
+# Statuts
+#
+ConstatDraftExplication = L'émetteur doit remplir les champs obligatoires et valider le constat.
+ConstatValidatedExplication = Afin de faire évoluer le statut, il faut informer le client (si nécessaire) et le responsable d’affaire doit remplir l'ensemble des champs obligatoires.
+ConstatEncoursExplication = Le constat est en cours, le service Q3SE pourra le clôturer lorsque toutes les actions seront soldées et que les champs obligatoires seront complétés.
+ConstatActionsUnsold = Le constat ne peut pas être clôturé tant qu'il y a des actions en cours
+ConstatFieldsNullMendatory = Les champs suivants doivent être renseignés : %s
+
+
+#
+# Attributs
+#
+Site = Site d'intervention
+DateEmetteur = Date d'émission
+DescritpionConstat = Description détaillée du constat
+DescritpionImpact = Impact de la non-conformité
+CommentaireEmetteur = Commentaire émetteur
+NumCommande = Numéro de commande
+TypeConstat = Type de constat
+ActionsImmediates = Actions immédiates
+ActionsImmediatesDate = Actions immédiates le
+ActionsImmediatesPar = Actions immédiates par
+ActionsImmediatesComm = Actions immédiates description
+InfoClient = Information client
+InfoClientDate = Information client le
+InfoClientPar = Information client par
+InfoClientComm = Information client description
+CommRespAff = Commentaire responsable d'affaires
+AnalyseCausesRacines = Analyse des causes racines
+AccordClient = Accord du client
+AccordClientDate = Accord du client le
+AccordClientPar = Accord du client par
+AccordClientComm = Accord du client description
+ControleClient = Contrôle client
+ControleClientDate = Contrôle client le
+ControleClientPar = Contrôle client par
+ControleClientComm = Contrôle client description
+CommentaireRespQ3SE = Commentaire responsable Q3SE
+CommentaireServQ3SE = Commentaire service Q3SE
+CoutTotal = Coût Total
+ClotureDate = Clôture le
+CloturePar = Clôture par
+DateEcheance = Date échéance
+
+
+
+#
+# Email
+#
+EMailTextConstatValidate = Bonjour,<br><br>Le constat %s émis par %s a été validé. Veuillez compléter votre partie.<br><br>Cordialement
+EMailTextConstatClose = Bonjour,<br><br>Le constat %s émis par %s a été clôturé par le service Q3SE.<br><br>Cordialement
+EMailTextConstatEnCours = Bonjour,<br><br>Le constat %s émis par %s a été validé par le responsable d'affaire. Veuillez compléter la partie Q3SE.<br><br>Cordialement
+EMailTextConstatCancel = Bonjour,<br><br>Le constat %s émis par %s a été annulé par %s.<br><br>Cordialement
+EMailTextConstatDraftToLong = Bonjour,<br><br>Le constat %s créé par %s est toujours à l'état de brouillon, malgré sa création il y a plus de %s jours.<br><br>Cordialement
+EMailTextConstatDeclineRespAff = Bonjour,<br><br>Le constat %s a été refusé par le responsable d'affaire (%s) pour le motif suivant : %s.<br><br>Cordialement
+EMailTextConstatDeclineQ3SE = Bonjour,<br><br>Le constat %s a été refusé par le service Q3SE (%s) pour le motif suivant : %s.<br><br>Cordialement
+
+
+#
+# Button and FormConfirm
+#
+Decline = Refuser
+ConfirmValidateConstat = Voulez vous valider le constat ?
+ConfirmCloseConstat = Voulez vous clôturer le constat ?
+ConfirmCancelConstat = Voulez vous annuler le constat ?
+ConfirmDeclineConstatRespAff = Voulez vous refuser le constat et le renvoyer à l'emetteur ?
+ConfirmDeclineConstatQ3SE = Voulez vous refuser le constat et le renvoyer au responsable d'affaire ?
+DeclineReason = Motif du refus

@@ -1,0 +1,43 @@
+-- Copyright (C) 2023 FADEL Soufiane <s.fadel@optim-industries.fr>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see https://www.gnu.org/licenses/.
+
+
+CREATE TABLE llx_actions_actionq3se(
+	-- BEGIN MODULEBUILDER FIELDS
+	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
+	ref varchar(128) DEFAULT '(PROV)' NOT NULL, 
+	status integer NOT NULL, 
+	intervenant integer NOT NULL, 
+	fk_user_creat integer NOT NULL, 
+	priority integer NOT NULL, 
+	origins integer NOT NULL, 
+	label varchar(255) NOT NULL, 
+	CP integer, 
+	date_creation date NOT NULL, 
+	action_txt text NOT NULL, 
+	date_eche date NOT NULL, 
+	avancement integer NOT NULL, 
+	date_sol date, 
+	diffusion integer NOT NULL, 
+	com text, 
+	eff_act integer NOT NULL, 
+	eff_act_description text, 
+	date_asse date, 
+	last_main_doc varchar(255), 
+	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+	fk_user_modif integer, 
+	type chkbxlst
+	-- END MODULEBUILDER FIELDS
+) ENGINE=innodb;

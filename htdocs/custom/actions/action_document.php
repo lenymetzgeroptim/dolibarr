@@ -76,7 +76,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/images.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
-dol_include_once('/actions/class/action.class.php');
+dol_include_once('/actions/class/actionq3se.class.php');
 dol_include_once('/actions/lib/actions_action.lib.php');
 
 // Load translation files required by the page
@@ -108,7 +108,7 @@ if (!$sortfield) {
 //if (! $sortfield) $sortfield="position_name";
 
 // Initialize technical objects
-$object = new Action($db);
+$object = new ActionQ3SE($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->actions->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array('actiondocument', 'globalcard')); // Note that conf->hooks_modules contains array
@@ -124,10 +124,10 @@ if ($id > 0 || !empty($ref)) {
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->rights->actions->action->read;
-	$permissiontoadd = $user->rights->actions->action->write; // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
+	$permissiontoread = $user->hasRight('actions', 'action', 'readall') || ($user->hasRight('actions', 'action', 'read') && ($user->id == $object->fk_user_creat || $user->id == $object->intervenant));
+	$permissiontoadd = $user->hasRight('actions', 'action', 'write');
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1;

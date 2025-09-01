@@ -24,7 +24,7 @@
 /**
  * Prepare array of tabs for Action
  *
- * @param	Action	$object		Action
+ * @param	ActionQ3SE	$object		Action
  * @return 	array					Array of tabs
  */
 function actionPrepareHead($object)

@@ -77,8 +77,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/actions/class/html.form.class.php';
-dol_include_once('/actions/class/action.class.php');
+dol_include_once('/actions/class/actionq3se.class.php');
 dol_include_once('/actions/lib/actions_action.lib.php');
 
 // Load translation files required by the page
@@ -106,7 +105,7 @@ if (!empty($backtopagejsfields)) {
 }
 
 // Initialize technical objects
-$object = new Action($db);
+$object = new ActionQ3SE($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->actions->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array('actioncard', 'globalcard')); // Note that conf->hooks_modules contains array
@@ -132,21 +131,62 @@ if (empty($action) && empty($id) && empty($ref)) {
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
 
+// Est-ce que des champs obligatoire sont non renseignés ? 
+$fields_null = '';
+foreach($object->fields as $key => $val) {
+	if(!$object->$key && $val['notnull_validate']) {
+ 		$fields_null .= $langs->trans($val['label']).", ";
+	}
+}
+$fields_null = rtrim($fields_null, ', ');
+
+$label_button_action_validate = ($fields_null ? $langs->trans('ActionFieldsNullMendatory', $fields_null) : '');
+if ($object->status == $object::STATUS_VALIDATED) {
+	$label_button_action_validate .= $label_button_action_validate && $object->avancement != 4 ? '<br>' : '';
+	$label_button_action_validate .= $object->avancement != 4 ? $langs->trans('ActionNoEnd') : '';
+}
+
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('actions', 'action', 'read');
+	$permissiontoread = $user->hasRight('actions', 'action', 'readall') || ($user->hasRight('actions', 'action', 'read') && ($user->id == $object->fk_user_creat || $user->id == $object->intervenant));
 	$permissiontoadd = $user->hasRight('actions', 'action', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 	$permissiontodelete = $user->hasRight('actions', 'action', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
 	$permissionnote = $user->hasRight('actions', 'action', 'write'); // Used by the include of actions_setnotes.inc.php
 	$permissiondellink = $user->hasRight('actions', 'action', 'write'); // Used by the include of actions_dellink.inc.php
+	$permissiontocancel = $user->hasRight('actions', 'action', 'cancel');
+	$permissiontorelance = $user->hasRight('actions', 'action', 'close');
+
+	if($object->status == $object::STATUS_DRAFT) {
+		$permissiontoupdate = $user->admin || $user->id == $object->fk_user_creat;
+		$permissiontovalidate = $user->admin || $user->id == $object->fk_user_creat;
+	}
+	elseif($object->status == $object::STATUS_VALIDATED) {
+		$permissiontoupdate = $user->admin || $user->id == $object->intervenant;
+		$permissiontovalidate = $user->admin || $user->id == $object->intervenant;
+	}
+	elseif($object->status == $object::STATUS_ATT_SOLDEE) {
+		$permissiontoupdate = $user->hasRight('actions', 'action', 'close');
+		$permissiontovalidate = $user->hasRight('actions', 'action', 'close');
+	}
+	elseif($object->status == $object::STATUS_SOLDEE) {
+		$permissiontoupdate = $user->hasRight('actions', 'action', 'close');
+		$permissiontovalidate = $user->hasRight('actions', 'action', 'close');
+	}
+	else {
+		$permissiontoupdate = 0;
+		$permissiontovalidate = 0;
+	}
 } else {
 	$permissiontoread = 1;
 	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
 	$permissiontodelete = 1;
 	$permissionnote = 1;
-	$permissiondellink = 1;
+	//$permissiondellink = 1;
+	$permissiontoupdate = 1;
+	$permissiontovalidate = 1;
+	$permissiontorelance = 1;
 }
 
 $upload_dir = $conf->actions->multidir_output[isset($object->entity) ? $object->entity : 1].'/action';
@@ -159,7 +199,7 @@ $upload_dir = $conf->actions->multidir_output[isset($object->entity) ? $object->
 if (!isModEnabled("actions")) {
 	accessforbidden();
 }
-if (!$permissiontoread) {
+if (!$permissiontoread && $object->id > 0) {
 	accessforbidden();
 }
 
@@ -184,10 +224,6 @@ if (empty($reshook)) {
 				$backtopage = $backurlforlist;
 			} else {
 				$backtopage = dol_buildpath('/actions/action_card.php', 1).'?id='.((!empty($id) && $id > 0) ? $id : '__ID__').'&origin='.$origin.'&origin_id='.$originid.'';
-				if($id != '' && !empty($origin) && !empty($originid)) {
-					$object->deleteObjectLinked($origin, $originid);
-					$object->add_object_linked($origin, $originid);
-				}
 			}
 		}
 	}
@@ -196,10 +232,132 @@ if (empty($reshook)) {
 	if($action == 'update') {
 		$object->oldcopy = clone $object;
 	}
-	
-	//ajout de l'intervenant dans le groupe "action pilote" 
-	//if ($user->id )
 
+	if ($action == 'confirm_validate' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
+		$result = $object->validate($user);
+
+		if ($result < 0) {
+			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
+		$action = '';
+		
+		if(!$error) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+			exit;
+		}
+	}
+
+	if ($action == 'confirm_att_solde' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
+		$result = $object->att_solde($user);
+
+		if ($result < 0) {
+			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
+		$action = '';
+		
+		if(!$error) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+			exit;
+		}
+	}
+
+	if ($action == 'confirm_solde' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
+		$result = $object->solde($user);
+
+		if ($result < 0) {
+			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
+		$action = '';
+		
+		if(!$error) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+			exit;
+		}
+	}
+
+	if ($action == 'confirm_close' && $confirm == 'yes' && $permissiontovalidate && empty($label_button_action_validate)) {
+		$result = $object->close($user);
+
+		if ($result < 0) {
+			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
+		$action = '';
+		
+		if(!$error) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+			exit;
+		}
+	}
+
+	if ($action == 'confirm_cancel' && $confirm == 'yes' && $permissiontocancel) {
+		$result = $object->cancel($user);
+
+		if ($result < 0) {
+			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
+		$action = '';
+		
+		if(!$error) {
+			header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+			exit;
+		}
+	}
+	
+	// mail pour relance action en cours
+	// if ($action == 'setRelance') {
+	// 	$currentDateTime = date('Y-m-d H:i:s');
+	// 	$dueDateTime = $object->date_eche;
+	
+	// 	if ($currentDateTime > $dueDateTime) {
+	// 		$subject = '[OPTIM Industries] Notification automatique - Relance Action en cours';
+	// 		$from = 'erp@optim-industries.fr';
+	// 		$emails = [];
+	
+	// 		// Récupération de l'email du pilote
+	// 		$pilote = new User($db);
+	// 		$pilote->fetch($object->intervenant);
+	// 		if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
+	// 			$emails[] = $pilote->email;
+	// 		}
+	
+	// 		// Suppression des doublons
+	// 		$emails = array_unique($emails);
+	// 		$to = implode(", ", $emails);
+	
+	// 		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
+	// 		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
+	// 		$resql_creator = $db->query($sql_creator);
+	// 		$creator_name = "";
+	
+	// 		if ($resql_creator && $db->num_rows($resql_creator) > 0) {
+	// 			$creator = $db->fetch_object($resql_creator);
+	// 			$creator_name = $creator->firstname . ' ' . $creator->lastname;
+	// 		}
+	
+	// 		global $dolibarr_main_url_root;
+	// 		$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
+	// 		$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
+	// 		$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
+	
+	// 		$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous rappelons que l'action " . $link . " créée par " . $creator_name . " n'est pas encore terminée. Cordialement, Votre système de notification");
+	
+	// 		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
+	
+	// 		// Envoi du mail
+	// 		$res = $cmail->sendfile();
+	// 		if ($res) {
+	// 			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
+	// 			print '<script>window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");</script>';
+	// 		} else {
+	// 			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
+	// 		}
+	// 	}
+	// }
 	
 	$triggermodname = 'ACTIONS_MYOBJECT_MODIFY'; // Name of trigger action code to execute when we modify record
 
@@ -232,16 +390,11 @@ if (empty($reshook)) {
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
 
-if ($action == 'confirm_delete' && !empty($permissiontodelete)) {
-	$result = $object->deleteObjectLinked($origin, $originid);
-}
-
 /*
  * View
  */
-//var_dump($object->alert);
+
 $form = new Form($db);
-$actionForm = new actionsForm($db);
 $formfile = new FormFile($db);
 $formproject = new FormProjets($db);
 
@@ -273,23 +426,22 @@ if ($action == 'create') {
 
     // Si un ID est passé dans l'URL, on considère qu'il s'agit d'une action existante
     // qu'il faut clôturer.
-    if (!empty($_GET['id']))
-    {
-        // Met à jour le statut de l'action dont l'ID est passé dans l'URL.
-        $res = $object->updateCloture();
-        if ($res > 0) {
-            dol_syslog("Action ID " . $object->id . " clôturée avec succès.");
-        } else {
-            setEventMessages("Erreur lors de la clôture de l'action.", null, 'errors');
-        }
-    }
+    // if (!empty($_GET['id']))
+    // {
+    //     // Met à jour le statut de l'action dont l'ID est passé dans l'URL.
+    //     $res = $object->updateCloture();
+    //     if ($res > 0) {
+    //         dol_syslog("Action ID " . $object->id . " clôturée avec succès.");
+    //     } else {
+    //         setEventMessages("Erreur lors de la clôture de l'action.", null, 'errors');
+    //     }
+    // }
 
     
-    if (!empty($_GET['origin']) && $_GET['origin'] == 'constat')
-    {
-         $object->origins = 4;
-         $_POST['origins'] = 4;
-    }
+    // if (!empty($origin) && $origin == 'constat') {
+    //     $object->origins = 4;
+    //     // $_POST['origins'] = 4;
+    // }
 
     if (empty($permissiontoadd)) {
         accessforbidden('NotEnoughPermissions', 0, 1);
@@ -321,40 +473,56 @@ if ($action == 'create') {
     // if (! GETPOSTISSET('fieldname')) $_POST['fieldname'] = 'myvalue';
 
     print '<table class="border centpercent tableforfieldcreate">'."\n";
-    // Reference
-    print '<tr><td class="titlefieldcreate fieldrequired">'.$langs->trans('Ref').'</td><td>'.$langs->trans("Draft").'</td></tr>';
 
-    // Common attributes
-    include DOL_DOCUMENT_ROOT.'/custom/actions/tpl/commonfields_add.tpl.php';
-
-    // Other attributes
-    include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
-
-    if ($element == 'constat') {
-        $element = 'custom/constat';
-        $subelement = 'constat';
-    }
-    dol_include_once('/custom/constat/class/constat.class.php');
-    $srcobject = new Constat($db);
-    $srcobject->fetch($originid);
-    if (!empty($origin) && !empty($originid) && is_object($srcobject)) {
-
+	if (!empty($origin) && !empty($originid)) {
         print "\n<!-- ".$classname." info -->";
         print "\n";
 
-        print '<input type="hidden" name="origin"         value="'.$srcobject->element.'">';
-        print '<input type="hidden" name="originid"       value="'.$srcobject->id.'">';
+		$element = $subelement = $origin;
+		if ($element == 'constat') {
+			$element = 'custom/constat';
+			$subelement = 'constat';
+			$txt = $langs->trans('Constat');
+			$origins = 4;
+			unset($object->fields['reference_label']);
+		}
 
-        switch ($classname) {
-            case 'Constat':
-                $newclassname = 'Constat';
-                break;
-            default:
-                $newclassname = $classname;
-        }
+        // switch ($classname) {
+        //     case 'Constat':
+        //         $newclassname = 'Constat';
+        //         break;
+        //     default:
+        //         $newclassname = $classname;
+        // }
 
-        print '<tr><td>'.$langs->trans('Constat').'</td><td>'.$srcobject->getNomUrl(1).'</td></tr>';
+		require_once DOL_DOCUMENT_ROOT.'/'.$element.'/class/'.$subelement.'.class.php';
+		$classname = ucfirst($subelement);
+		$objectsrc = new $classname($db);
+		$objectsrc->fetch($originid);
+		$objectsrc->fetch_thirdparty();
+
+		if(is_object($objectsrc)) {			
+			print '<tr class="field_origins">';
+			print '<td class="titlefieldcreate fieldrequired">';
+				print $langs->trans($object->fields['origins']['label']);
+			print '</td>';
+			print '<td class="valuefieldcreate">';
+				print $object->showOutputField($object->fields['origins'], 'origins', $origins, '', '', '', 0);
+			print '</td>';
+			unset($object->fields['origins']);
+
+        	print '<tr><td>'.$txt.'</td><td>'.$objectsrc->getNomUrl(1).'</td></tr>';
+		}
     }
+
+    // Reference
+    // print '<tr><td class="titlefieldcreate fieldrequired">'.$langs->trans('Ref').'</td><td>'.$langs->trans("Draft").'</td></tr>';
+
+    // Common attributes
+    include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
+
+    // Other attributes
+    include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
 
     print '</table>'."\n";
 
@@ -393,38 +561,46 @@ if (($id || $ref) && $action == 'edit') {
 
 	print '<table class="border centpercent tableforfieldedit">'."\n";
 
+	foreach ($object->fields as $key => $val) {
+		$object->fields[$key]['visible'] = dol_eval($val['visible'], 1);
+	}
+
 	// Common attributes
-	include DOL_DOCUMENT_ROOT.'/custom/actions/tpl/commonfields_edit.tpl.php';
+	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
 
 	// Other attributes
-	include DOL_DOCUMENT_ROOT.'/custom/actions/tpl/extrafields_edit.tpl.php';
+	include DOL_DOCUMENT_ROOT.'/custom/actions/core/tpl/extrafields_edit.tpl.php';
 	
 	
-	if ($element == 'constat') {
-		$element = 'custom/constat';
-		$subelement = 'constat';
-	}
-	dol_include_once('/custom/constat/class/constat.class.php');
-	$srcobject = new Constat($db);
-	$srcobject->fetch($originid);
-	if (!empty($origin) && !empty($originid) && is_object($srcobject)) {
+	if (!empty($origin) && !empty($originid)) {
+        print "\n<!-- ".$classname." info -->";
+        print "\n";
 
-		print "\n<!-- ".$classname." info -->";
-		print "\n";
-		
-		print '<input type="hidden" name="origin"         value="'.$srcobject->element.'">';
-		print '<input type="hidden" name="originid"       value="'.$srcobject->id.'">';
-
-		switch ($classname) {
-			case 'Constat':
-				$newclassname = 'Constat';
-				break;
-			default:
-				$newclassname = $classname;
+		$element = $subelement = $origin;
+		if ($element == 'constat') {
+			$element = 'custom/constat';
+			$subelement = 'constat';
+			$txt = $langs->trans('Constat');
 		}
 
-		print '<tr><td>'.$langs->trans('Constat').'</td><td>'.$srcobject->getNomUrl(1).'</td></tr>';
-	}
+        // switch ($classname) {
+        //     case 'Constat':
+        //         $newclassname = 'Constat';
+        //         break;
+        //     default:
+        //         $newclassname = $classname;
+        // }
+
+		require_once DOL_DOCUMENT_ROOT.'/'.$element.'/class/'.$subelement.'.class.php';
+		$classname = ucfirst($subelement);
+		$objectsrc = new $classname($db);
+		$objectsrc->fetch($originid);
+		$objectsrc->fetch_thirdparty();
+
+		if(is_object($objectsrc)) {
+        	print '<tr><td>'.$txt.'</td><td>'.$objectsrc->getNomUrl(1).'</td></tr>';
+		}
+    }
 	
 	print '</table>';
 
@@ -460,377 +636,35 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formquestion = array();
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ToClone'), $langs->trans('ConfirmCloneAsk', $object->ref), 'confirm_clone', $formquestion, 'yes', 1);
 	}
-
-	// Encours confirmation
-	if( $action == 'setEnCours'){
-
-		$object->updateEnCours();
-
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_EN_COURSInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_EN_COURS', $user);
-		if ($result < 0) {
-			$error++;
-		}
-
-		
+	
+	// Validate confirmation
+	if ($action == 'validate') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Validate'), $langs->trans('ConfirmValidateActionQ3SE', $object->ref), 'confirm_validate', '', 'yes', 1);
 	}
 
-	// Clone confirmation
-	if( $action == 'setSolde'  && $confirm == 'yes' ){
-
-		$object->updateSolde();
-
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_SOLDEEInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_SOLDEE', $user);
-		if ($result < 0) {
-			$error++;
-		}
-
-		
-	}
-
-	
-	if( $action == 'setAttSolde'  && $confirm == 'yes' ){
-
-		$object->updateAttSolde();
-
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_ATT_SOLDEEInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_ATT_SOLDEE', $user);
-		if ($result < 0) {
-			$error++;
-		}
-
-	}
-
-	
-
-	if( $action == 'setClasse'  && $confirm == 'yes' ){
-
-		$object->updateClasse();
-
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_CLASSEInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_CLASSE', $user);
-		if ($result < 0) {
-			$error++;
-		}
-
-		
-	}
-
-	if( $action == 'setCloturee'  && $confirm == 'yes' ){
-
-		$object->updateCloture();
-
-		$object->actionmsg2 = $langs->transnoentitiesnoconv("ACTIONS_CLOTUREInDolibarr", $object->ref);
-
-		// Call trigger
-		$result = $object->call_trigger('ACTIONS_CLOTURE', $user);
-		if ($result < 0) {
-			$error++;
-		}
-
-		
-	}
-
-	//envoie notification de fin d'une action au service Q3SE et au pilote
-	
-	if ($action == 'setSolde' && $confirm == 'yes') {
-		$subject = '[OPTIM Industries] Notification automatique action soldé ';
-		$from = 'erp@optim-industries.fr';
-	
-		$pilote = new User($db);
-		$pilote->fetch();
-	
-		$emails = [];
-	
-		// Vérification de l'email du pilote
-		if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-			$emails[] = $pilote->email;
-		}
-	
-		// Fonction pour ajouter des emails valides à la liste
-		function addValidEmails($user_group, $group_name, &$emails)
-		{
-			$user_group->fetch('', $group_name);
-			$liste_utilisateur = $user_group->listUsersForGroup();
-			foreach ($liste_utilisateur as $qualite) {
-				if (!empty($qualite->email) && filter_var($qualite->email, FILTER_VALIDATE_EMAIL)) {
-					$emails[] = $qualite->email;
-				}
-			}
-		}
-	
-		// Récupération des emails des groupes "Q3SE" et "Resp. Q3SE"
-		$user_group = new UserGroup($db);
-		addValidEmails($user_group, 'Q3SE', $emails);
-		addValidEmails($user_group, 'Resp. Q3SE', $emails);
-	
-		// Suppression des doublons
-		$emails = array_unique($emails);
-		$to = implode(", ", $emails);
-	
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-	
-		if ($resql_creator) {
-			if ($db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-		}
-	
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-		$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-	
-		$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous informons que l'action " . $link . " créé par " . $creator_name . " a été marquée comme soldée. Cordialement, Votre système de notification");
-	
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-	
-		// Send mail
-		$res = $cmail->sendfile();
-		if ($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			print '<script>
-				window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");
-			</script>';
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-		}
+	// Attente Solde confirmation
+	if ($action == 'att_solde') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Validate'), $langs->trans('ConfirmValidatePiloteActionQ3SE', $object->ref), 'confirm_att_solde', '', 'yes', 1);
 	}
 
 
-	//envoie notification au pilote si action est de retour au status en cours
-			
-	if ($action == 'setEnCours' && $confirm == 'oui') {
-		$subject = '[OPTIM Industries] Notification automatique action en cours';
-		$from = 'erp@optim-industries.fr';
-
-		$pilote = new User($db);
-		$pilote->fetch($object->intervenant);
-
-		$emails = [];
-
-		// Vérification de l'email du pilote
-		if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-			$emails[] = $pilote->email;
-		}
-
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-
-		if ($resql_creator && $db->num_rows($resql_creator) > 0) {
-			$creator = $db->fetch_object($resql_creator);
-			$creator_name = $creator->firstname . ' ' . $creator->lastname;
-		}
-
-		// Suppression des doublons
-		$emails = array_unique($emails);
-		$to = implode(", ", $emails);
-
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-		$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-
-		$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous informons que l'action " . $link . " créée par " . $creator_name . " est désormais en cours. Cordialement, Votre système de notification");
-
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-
-		// Envoi du mail
-		$res = $cmail->sendfile();
-		if ($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			print '<script>
-				window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");
-			</script>';
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-		}
-	}
-	
-	//notification de l'action en attente de validation de solde
-	if ($action == 'setAttSolde') {
-		$subject = '[OPTIM Industries] Notification automatique - Une action en attente de validation de solde';
-		$from = 'erp@optim-industries.fr';
-	
-		$emails = [];
-	
-		// Fonction pour ajouter des emails valides à la liste
-		function addValidEmails($user_group, $group_name, &$emails)
-		{
-			$user_group->fetch('', $group_name);
-			$liste_utilisateur = $user_group->listUsersForGroup();
-			foreach ($liste_utilisateur as $qualite) {
-				if (!empty($qualite->email) && filter_var($qualite->email, FILTER_VALIDATE_EMAIL)) {
-					$emails[] = $qualite->email;
-				}
-			}
-		}
-	
-		// Récupération des emails des groupes "Q3SE" et "Resp. Q3SE"
-		$user_group = new UserGroup($db);
-		addValidEmails($user_group, 'Q3SE', $emails);
-		addValidEmails($user_group, 'Resp. Q3SE', $emails);
-	
-		// Suppression des doublons
-		$emails = array_unique($emails);
-		$to = implode(", ", $emails);
-	
-		// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-		$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-		$resql_creator = $db->query($sql_creator);
-		$creator_name = "";
-	
-		if ($resql_creator && $db->num_rows($resql_creator) > 0) {
-			$creator = $db->fetch_object($resql_creator);
-			$creator_name = $creator->firstname . ' ' . $creator->lastname;
-		}
-	
-		global $dolibarr_main_url_root;
-		$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-		$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-		$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-	
-		$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous informons que l'action " . $link . " créée par " . $creator_name . " est en attente de validation pour être marquée comme soldée. Veuillez indiquer si cette action est terminée ou non. Cordialement, Votre système de notification");
-	
-		$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-	
-		// Envoi du mail
-		$res = $cmail->sendfile();
-		if ($res) {
-			setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			print '<script>
-				window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");
-			</script>';
-		} else {
-			setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-		}
+	// Solde confirmation
+	if ($action == 'solde') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Solde'), $langs->trans('ConfirmSoldeActionQ3SE', $object->ref), 'confirm_solde', '', 'yes', 1);
 	}
 
-	
-	
-	//notification de l'action en attente de validation de solde
-	if ($action == 'setEnCours') {
-		$currentDateTime = date('Y-m-d H:i:s');
-		$dueDateTime = $object->date_eche;
-	
-		if ($currentDateTime > $dueDateTime) {
-			$subject = '[OPTIM Industries] Notification automatique - Relance Action en cours';
-			$from = 'erp@optim-industries.fr';
-			$emails = [];
-	
-			// Récupération de l'email du pilote
-			$pilote = new User($db);
-			$pilote->fetch($object->intervenant);
-			if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-				$emails[] = $pilote->email;
-			}
-	
-			// Suppression des doublons
-			$emails = array_unique($emails);
-			$to = implode(", ", $emails);
-	
-			// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-			$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-			$resql_creator = $db->query($sql_creator);
-			$creator_name = "";
-	
-			if ($resql_creator && $db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-	
-			global $dolibarr_main_url_root;
-			$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-			$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-			$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-	
-			$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous rappelons que l'action " . $link . " créée par " . $creator_name . " est toujours en cours et a dépassé la date d'échéance. Cordialement, Votre système de notification");
-	
-			$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-	
-			// Envoi du mail
-			$res = $cmail->sendfile();
-			if ($res) {
-				setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-			} else {
-				setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			}
-		}
+	// Close confirmation
+	if ($action == 'close') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Close'), $langs->trans('ConfirmCloseActionQ3SE', $object->ref), 'confirm_close', '', 'yes', 1);
 	}
-	
 
-
-	// mail pour relance action en cours
-	if ($action == 'setRelance') {
-		$currentDateTime = date('Y-m-d H:i:s');
-		$dueDateTime = $object->date_eche;
-	
-		if ($currentDateTime > $dueDateTime) {
-			$subject = '[OPTIM Industries] Notification automatique - Relance Action en cours';
-			$from = 'erp@optim-industries.fr';
-			$emails = [];
-	
-			// Récupération de l'email du pilote
-			$pilote = new User($db);
-			$pilote->fetch($object->intervenant);
-			if (!empty($pilote->email) && filter_var($pilote->email, FILTER_VALIDATE_EMAIL)) {
-				$emails[] = $pilote->email;
-			}
-	
-			// Suppression des doublons
-			$emails = array_unique($emails);
-			$to = implode(", ", $emails);
-	
-			// Récupérer le nom et prénom de l'utilisateur qui a créé le constat
-			$sql_creator = "SELECT lastname, firstname FROM " . MAIN_DB_PREFIX . "user WHERE rowid = " . $object->fk_user_creat;
-			$resql_creator = $db->query($sql_creator);
-			$creator_name = "";
-	
-			if ($resql_creator && $db->num_rows($resql_creator) > 0) {
-				$creator = $db->fetch_object($resql_creator);
-				$creator_name = $creator->firstname . ' ' . $creator->lastname;
-			}
-	
-			global $dolibarr_main_url_root;
-			$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
-			$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
-			$link = '<a href="' . $urlwithroot . '/custom/actions/action_card.php?id=' . $object->id . '">' . $object->ref . '</a>';
-	
-			$msg = $langs->transnoentitiesnoconv("Bonjour, Nous vous rappelons que l'action " . $link . " créée par " . $creator_name . " n'est pas encore terminée. Cordialement, Votre système de notification");
-	
-			$cmail = new CMailFile($subject, $to, $from, $msg, '', '', '', $cc, '', 0, 1, '', '', 'track' . '_' . $object->id);
-	
-			// Envoi du mail
-			$res = $cmail->sendfile();
-			if ($res) {
-				setEventMessages($langs->trans("EmailSend"), null, 'mesgs');
-				print '<script>window.location.replace("' . $_SERVER["PHP_SELF"] . "?id=" . $object->id . '");</script>';
-			} else {
-				setEventMessages($langs->trans("NoEmailSentToMember"), null, 'mesgs');
-			}
-		}
+	// Cancel confirmation
+	if ($action == 'cancel') {
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('Cancel'), $langs->trans('ConfirmCancelActionQ3SE', $object->ref), 'confirm_cancel', '', 'yes', 1);
 	}
-	
 
 
 	
-	$action ='';
-
 	// Confirmation of action xxxx (You can use it for xxx = 'close', xxx = 'reopen', ...)
 	if ($action == 'xxx') {
 		$text = $langs->trans('ConfirmActionAction', $object->ref);
@@ -917,7 +751,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '<table class="border centpercent tableforfield">'."\n";
 
 	// Common attributes
-	$keyforbreak='date_eche';	// We change column just before this field
+	$keyforbreak='avancement';	// We change column just before this field
+	
+	foreach ($object->fields as $key => $val) {
+		$object->fields[$key]['visible'] = dol_eval($val['visible'], 1);
+	}
 	
 	//unset($object->fields['date_eche']);				// Hide field already shown in banner
 	//unset($object->fields['fk_soc']);					// Hide field already shown in banner
@@ -937,9 +775,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	/*
 	 * Lines
 	 */
-
-
-
 
 	if (!empty($object->table_element_line)) {
 		// Show object lines
@@ -987,44 +822,44 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print "</form>\n";
 	}
 
-	print"<script> // Fonction pour afficher une popup temporaire
-	function showPopupMessage(message, type = 'info', duration = 10000) {
-		let popupContainer = document.getElementById('popup-container');
-		if (!popupContainer) {
-			popupContainer = document.createElement('div');
-			popupContainer.id = 'popup-container';
-			popupContainer.style.position = 'fixed';
-			popupContainer.style.top = '50px';
-			popupContainer.style.left = '50%';
-			popupContainer.style.transform = 'translateX(-50%)';
-			popupContainer.style.zIndex = '1000';
-			popupContainer.style.display = 'flex';
-			popupContainer.style.flexDirection = 'column';
-			popupContainer.style.alignItems = 'center';
-			document.body.appendChild(popupContainer);
-		}
+	// print"<script> // Fonction pour afficher une popup temporaire
+	// function showPopupMessage(message, type = 'info', duration = 10000) {
+	// 	let popupContainer = document.getElementById('popup-container');
+	// 	if (!popupContainer) {
+	// 		popupContainer = document.createElement('div');
+	// 		popupContainer.id = 'popup-container';
+	// 		popupContainer.style.position = 'fixed';
+	// 		popupContainer.style.top = '50px';
+	// 		popupContainer.style.left = '50%';
+	// 		popupContainer.style.transform = 'translateX(-50%)';
+	// 		popupContainer.style.zIndex = '1000';
+	// 		popupContainer.style.display = 'flex';
+	// 		popupContainer.style.flexDirection = 'column';
+	// 		popupContainer.style.alignItems = 'center';
+	// 		document.body.appendChild(popupContainer);
+	// 	}
 
-		let popup = document.createElement('div');
-		popup.className = 'popup-message';
-		popup.textContent = message;
-		popup.style.background = '#4CAF50';
-		popup.style.color = '#fff';
-		popup.style.fontWeight = 'bold';
-		popup.style.padding = '10px 20px';
-		popup.style.margin = '5px';
-		popup.style.borderRadius = '5px';
-		popup.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
-		popup.style.opacity = '1';
-		popup.style.transition = 'opacity 0.5s ease-in-out';
+	// 	let popup = document.createElement('div');
+	// 	popup.className = 'popup-message';
+	// 	popup.textContent = message;
+	// 	popup.style.background = '#4CAF50';
+	// 	popup.style.color = '#fff';
+	// 	popup.style.fontWeight = 'bold';
+	// 	popup.style.padding = '10px 20px';
+	// 	popup.style.margin = '5px';
+	// 	popup.style.borderRadius = '5px';
+	// 	popup.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
+	// 	popup.style.opacity = '1';
+	// 	popup.style.transition = 'opacity 0.5s ease-in-out';
 
-		popupContainer.appendChild(popup);
+	// 	popupContainer.appendChild(popup);
 
-		setTimeout(() => {
-			popup.style.opacity = '0';
-			setTimeout(() => popup.remove(), 500);
-		}, duration);
-	}
-	</script>";
+	// 	setTimeout(() => {
+	// 		popup.style.opacity = '0';
+	// 		setTimeout(() => popup.remove(), 500);
+	// 	}, duration);
+	// }
+	// </script>";
 	
 	// Buttons for actions
 
@@ -1038,129 +873,58 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		//var_dump($object->table_element);
 		if (empty($reshook)) {
 			// Send
-			if (empty($user->socid)) {
-				print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
-			}
+			// if (empty($user->socid)) {
+			// 	print dolGetButtonAction('', $langs->trans('SendMail'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=presend&token='.newToken().'&mode=init#formmailbeforetitle');
+			// }
 
 			// Back to draft
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_VALIDATED) {
-					print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				}
+			// if($user->rights->actions->action->ServiceQ3SE){
+			// 	if ($object->status == $object::STATUS_VALIDATED) {
+			// 		print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// 	}
+			// }
+
+			// Modifier
+			if ($object->status == $object::STATUS_DRAFT || $object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_ATT_SOLDEE || $object->status == $object::STATUS_SOLDEE) {
+				print dolGetButtonAction('', $langs->trans('Modifier / Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoupdate);
 			}
+
+			// Validate
+			if ($object->status == $object::STATUS_DRAFT && $permissiontovalidate) {
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=validate&token='.newToken(), '', empty($label_button_action_validate));
+			}
+			elseif ($object->status == $object::STATUS_VALIDATED && $permissiontovalidate) {
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=att_solde&token='.newToken(), '', empty($label_button_action_validate));
+			}
+			elseif ($object->status == $object::STATUS_ATT_SOLDEE && $permissiontovalidate) {
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Solde'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=solde&token='.newToken(), '', empty($label_button_action_validate));
+			}
+			elseif($object->status == $object::STATUS_SOLDEE && $permissiontovalidate){ // Clôturer
+				print dolGetButtonAction($label_button_action_validate, $langs->trans('Close'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=close&token='.newToken(), '', empty($label_button_action_validate));
+			}		
 			
+			// Relancer
+			// if ($object->status == $object::STATUS_VALIDATED) {
+			// 	print dolGetButtonAction('', $langs->trans('Relancer le pilote'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setRelance&token='.newToken(), '', $permissiontorelance);		
+			// }
 			
-			/*if (($object->status != $object::STATUS_SOLDEE && !in_array('intervenant', $user->rights->actions->action)) ||($object->status == $object::STATUS_SOLDEE && in_array('intervenant', $user->rights->actions->action)) ) {
-				print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
-			}*/
-
-			if (!($object->status == $object::STATUS_SOLDEE && in_array('intervenant', $user->rights->actions->action)) && $object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
-				print dolGetButtonAction('', $langs->trans('Modifier/Compléter'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
-			}
-				//print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&origin='.$origin.'&originid='.$originid.'&token='.newToken(), '', $permissiontoadd);
-		//var_dump($object->module);
-			if($user->rights->actions->action->ServiceQ3SE){
-				// Validate
-				if ($object->status == $object::STATUS_DRAFT) {
-					if (empty($object->table_element_line) || (is_array($object->lines) && count($object->lines) > 0)) {
-						print dolGetButtonAction('', $langs->trans('Validate'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
-					} else {
-						$langs->load("errors");
-						print dolGetButtonAction($langs->trans("ErrorAddAtLeastOneLineFirst"), $langs->trans("Validate"), 'default', '#', '', 0);
-					}
-				}
-			}
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_ATT_SOLDEE) {
-					
-					print dolGetButtonAction('', $langs->trans('passer au status soldé'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setSolde&confirm=yes&token='.newToken(), '', $permissiontoadd);
-	
-				}
-			}
+			// if($user->rights->actions->action->ServiceQ3SE){
+			// 	if ($object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_DRAFT ){
+			// 		print dolGetButtonAction('', $langs->trans('lier a un constat'), 'default', '/erp/custom/actions/action_constat_list.php?idaction='.$object->id.'&action=setCloture&confirm=yes&token='.newToken(), '', $permissiontoadd);
+			// 	}	
+			// }
 			
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_ATT_SOLDEE) {
-					print dolGetButtonAction('', $langs->trans('Retourner au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=oui&token='.newToken(), '', $permissiontoadd);		
-				}
-			}
-
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_EN_COURS) {
-					print dolGetButtonAction('', $langs->trans('Relancer le pilote'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setRelance&confirm=yes&token='.newToken(), '', $permissiontoadd);		
-				}
-			}
-
-			if($user->rights->actions->action->intervenant || $user->rights->actions->action->ServiceQ3SE){
-				//passé au status attente solde
-				if ($object->status == $object::STATUS_EN_COURS) {
-					if($object->avancement == '5'){
-					print dolGetButtonAction('', $langs->trans('passer au status validation soldé'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setAttSolde&confirm=yes&token='.newToken(), '', $permissiontoadd);	
-					}	
-				}
-			}
-
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_DRAFT ){
-					print dolGetButtonAction('', $langs->trans('lier a un constat'), 'default', '/erp/custom/actions/action_constat_list.php?idaction='.$object->id.'&action=setCloture&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				}	
-			}
+			// Nouvelle action 
+			// if ($object->status == $object::STATUS_SOLDEE && $object->eff_act == 9){
+			// 	print dolGetButtonAction('', $langs->trans('NewActionQ3SE'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create&token='.newToken(), '', $permissiontoadd);
+			// }
 			
-			if($user->rights->actions->action->ServiceQ3SE){
-				if ($object->status == $object::STATUS_SOLDEE ){
-					if($object->eff_act == 9){
-						print dolGetButtonAction('', $langs->trans('Créé une nouvelle action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=create&confirm=yes&token='.newToken(), '', $permissiontoadd);
-								
-					}
-				}	
+			if($permissiontocancel && ($object->status == $object::STATUS_DRAFT || $object->status == $object::STATUS_VALIDATED || $object->status == $object::STATUS_ATT_SOLDEE)) {
+				print dolGetButtonAction('', $langs->trans('Cancel'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=cancel&token='.newToken(), '');
 			}
 
-			if($user->rights->actions->action->ServiceQ3SE){
-			//passé au status en cours
-				if ($object->status == $object::STATUS_VALIDATED) {
-					print dolGetButtonAction('', $langs->trans('passer au status en cours'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setEnCours&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				}
-					
-				//passé au status classé(annulé)
-				if ($object->status == $object::STATUS_EN_COURS || $object->status == $object::STATUS_VALIDATED) {
-					print dolGetButtonAction('', $langs->trans('Annuler cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken(), '', $permissiontoadd);	
-					print "<script>showPopupMessage('Le pilote peut passer son action au status \'attente  soldée\' que si son avancement est à 100% ', 'error');</script>";	
-				}
-
-				if ($object->status != $object::STATUS_CANCELED && $object->status != $object::STATUS_CLOTURE) {
-					if($object->eff_act !=null){
-						print dolGetButtonAction('', $langs->trans('Classer cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setClasse&confirm=yes&token='.newToken(), '', $permissiontoadd);		
-					}
-				}
-
-				if($object->status == $object::STATUS_SOLDEE){
-					print dolGetButtonAction('', $langs->trans('Cloture cette action'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setCloturee&confirm=yes&token='.newToken(), '', $permissiontoadd);
-				}
-
-				if($object->status == $object::STATUS_SOLDEE){
-					print "<script>showPopupMessage('veuilliez évaluer l\'action', 'error');</script>";
-				}
-			}
-
-			/*
-			if ($permissiontoadd) {
-				if ($object->status == $object::STATUS_ENABLED) {
-					print dolGetButtonAction('', $langs->trans('Disable'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=disable&token='.newToken(), '', $permissiontoadd);
-				} else {
-					print dolGetButtonAction('', $langs->trans('Enable'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=enable&token='.newToken(), '', $permissiontoadd);
-				}
-			}
-			if ($permissiontoadd) {
-				if ($object->status == $object::STATUS_VALIDATED) {
-					print dolGetButtonAction('', $langs->trans('Cancel'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=close&token='.newToken(), '', $permissiontoadd);
-				} else {
-					print dolGetButtonAction('', $langs->trans('Re-Open'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=reopen&token='.newToken(), '', $permissiontoadd);
-				}
-			}
-			*/
-
-			// Delete
-
-			
+			// Delete (need delete permission, or if draft, just need create/modify permission)
+			print dolGetButtonAction($langs->trans('Delete'), '', 'delete', $_SERVER['PHP_SELF'].'?id='.$object->id.'&action=delete&token='.newToken(), '', $permissiontodelete);
 		}
 		print '</div>'."\n";
 	}
@@ -1194,14 +958,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		//Show links to link elements
 		
 		$linktoelem = $form->showLinkToObjectBlock($object, null, array('action'));
-		$somethingshown = $actionForm->showLinkedObjectBlock($object, $linktoelem);
+		$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 	
 		// // Show links to link elements
 		// $linktoelem = $form->showLinkToObjectBlock($object, null, array('action'));
 
 		//  $compatibleImportElementsList = false;
-		// // // if ($usercancreate && $object->statut == Action::STATUS_DRAFT) {
-		// 	$compatibleImportElementsList = array('constat', 'actions_action'); // import from linked elements
+		// // // if ($usercancreate && $object->statut == ActionQ3SE::STATUS_DRAFT) {
+		// 	$compatibleImportElementsList = array('constat', 'actions_actionq3se'); // import from linked elements
 		// // // }
 		//  $somethingshown = $actionForm->showLinkedObjectBlock($object, $linktoelem, $compatibleImportElementsList);
 		

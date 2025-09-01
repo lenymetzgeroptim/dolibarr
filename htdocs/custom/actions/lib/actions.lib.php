@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-require_once DOL_DOCUMENT_ROOT.'/custom/actions/class/action.class.php';
+require_once DOL_DOCUMENT_ROOT.'/custom/actions/class/actionq3se.class.php';
 /**
  * \file    actions/lib/actions.lib.php
  * \ingroup actions
@@ -127,8 +127,8 @@ function getStatusByYearChartForAction()
                     WHEN pex.agenceconcerne = 160 THEN 'Nord Vallée Du Rhône'
                     ELSE 'Pas d\'agence'
                 END as agence";
-    $sql .= " FROM ".MAIN_DB_PREFIX."actions_action as ac";
-    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON ee.fk_target = ac.rowid AND ee.targettype = 'actions_action' AND ee.sourcetype = 'constat'";
+    $sql .= " FROM ".MAIN_DB_PREFIX."actions_actionq3se as ac";
+    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON ee.fk_target = ac.rowid AND ee.targettype = 'actions_actionq3se' AND ee.sourcetype = 'constat'";
     $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."constat_constat as cc ON cc.rowid = ee.fk_source";
     $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pex ON pex.fk_object = cc.fk_project";
     $sql .= " WHERE ac.date_creation BETWEEN '".$db->escape($date_start)."' AND '".$db->escape($date_end)."'";
@@ -232,7 +232,7 @@ function getActionsInProgressChart()
         WHEN ac.date_eche < CURDATE() THEN 'En retard' 
         ELSE 'A venir' 
     END as category";
-    $sql .= " FROM ".MAIN_DB_PREFIX."actions_action as ac";
+    $sql .= " FROM ".MAIN_DB_PREFIX."actions_actionq3se as ac";
     $sql .= " WHERE ac.status = 2"; // Statut "En cours"
     $sql .= " GROUP BY category";
     $resql = $db->query($sql);
@@ -299,7 +299,7 @@ function getActionsInProgressChart()
         global $conf, $db, $langs, $user;
 
         $sql = "SELECT COUNT(ac.rowid) as nb_actions, ac.status, ac.priority";
-        $sql .= " FROM ".MAIN_DB_PREFIX."actions_action as ac";
+        $sql .= " FROM ".MAIN_DB_PREFIX."actions_actionq3se as ac";
         $sql .= " GROUP BY ac.priority, ac.status";
         $sql .= " ORDER BY ac.priority, ac.status";
         $resql = $db->query($sql);
@@ -417,8 +417,8 @@ function getActionsInProgressChart()
                     WHEN pex.agenceconcerne = 160 THEN 'Nord Vallée Du Rhône'
                     ELSE 'Pas d\'agence'
                 END as agence";
-    $sql .= " FROM ".MAIN_DB_PREFIX."actions_action as ac";
-    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON ee.fk_target = ac.rowid AND ee.targettype = 'actions_action' AND ee.sourcetype = 'constat'";
+    $sql .= " FROM ".MAIN_DB_PREFIX."actions_actionq3se as ac";
+    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON ee.fk_target = ac.rowid AND ee.targettype = 'actions_actionq3se' AND ee.sourcetype = 'constat'";
     $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."constat_constat as cc ON cc.rowid = ee.fk_source";
     $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pex ON pex.fk_object = cc.fk_project";
     $sql .= " WHERE ac.date_creation BETWEEN '".$db->escape($date_start)."' AND '".$db->escape($date_end)."'";
@@ -521,7 +521,7 @@ function getActionsInProgressChart()
         WHEN ac.date_eche < CURDATE() THEN 'En retard' 
         ELSE 'A venir' 
     END as category";
-$sql .= " FROM ".MAIN_DB_PREFIX."actions_action as ac";
+$sql .= " FROM ".MAIN_DB_PREFIX."actions_actionq3se as ac";
 $sql .= " WHERE ac.status = 2"; // Statut "En cours"
 $sql .= " GROUP BY category";
 $resql = $db->query($sql);
@@ -597,8 +597,8 @@ function getActionsByStatusAndPriorityChart()
                     WHEN pex.agenceconcerne = 160 THEN 'Nord Vallée Du Rhône'
                     ELSE 'Pas d\'agence'
                 END as agence";
-    $sql .= " FROM ".MAIN_DB_PREFIX."actions_action as ac";
-    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON ee.fk_target = ac.rowid AND ee.targettype = 'actions_action' AND ee.sourcetype = 'constat'";
+    $sql .= " FROM ".MAIN_DB_PREFIX."actions_actionq3se as ac";
+    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON ee.fk_target = ac.rowid AND ee.targettype = 'actions_actionq3se' AND ee.sourcetype = 'constat'";
     $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."constat_constat as cc ON cc.rowid = ee.fk_source";
     $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pex ON pex.fk_object = cc.fk_project";
     $sql .= " GROUP BY ac.priority, ac.status, agence";
@@ -694,6 +694,8 @@ function msgAgendaUpdateForAction($object, $onlydiff, $excluded_key = array(), $
 		$object->fields = dol_sort_array($object->fields, 'position');
 
 		foreach ($object->fields as $key => $val) {
+			$val['visible'] = dol_eval($val['visible'], 1);
+			
 			if(!empty($included_key) && !in_array($key, $included_key)) {
 				continue;
 			}
@@ -702,7 +704,7 @@ function msgAgendaUpdateForAction($object, $onlydiff, $excluded_key = array(), $
 				continue;
 			}
 
-			if($val['visible'] <= 0) {
+			if(abs($val['visible']) <= 0) {
 				continue;
 			}
 

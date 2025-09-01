@@ -292,16 +292,16 @@ if (empty($reshook)) {
 	}
 	if ($action == 'confirm_cloture' && $confirm == 'yes' && $permissiontocloture) {
 		if($object->fields['antenne']['arrayofkeyval'][$object->antenne] == 'VDR-Nord'){
-			$key = 'REMONTEES_SSE_VDRNORD';
-			$val_const = $conf->global->REMONTEES_SSE_VDRNORD.'- '.$object->libelle.'<br/>';
+			$key = 'REMONTEESSSE_VDRNORD';
+			$val_const = $conf->global->REMONTEESSSE_VDRNORD.'- '.$object->libelle.'<br/>';
 		}
 		elseif($object->fields['antenne']['arrayofkeyval'][$object->antenne] == 'Grand-Ouest'){
-			$key = 'REMONTEES_SSE_GRANDOUEST';
-			$val_const = $conf->global->REMONTEES_SSE_GRANDOUEST.'- '.$object->libelle.'<br/>';
+			$key = 'REMONTEESSSE_GRANDOUEST';
+			$val_const = $conf->global->REMONTEESSSE_GRANDOUEST.'- '.$object->libelle.'<br/>';
 		}
 		elseif($object->fields['antenne']['arrayofkeyval'][$object->antenne] == 'Sud-Est'){
-			$key = 'REMONTEES_SSE_SUDEST';
-			$val_const = $conf->global->REMONTEES_SSE_SUDEST.'- '.$object->libelle.'<br/>';
+			$key = 'REMONTEESSSE_SUDEST';
+			$val_const = $conf->global->REMONTEESSSE_SUDEST.'- '.$object->libelle.'<br/>';
 		}
 		$result = dolibarr_set_const($db, $key, $val_const, 'chaine', 0, '', $conf->entity);
 		if ($result < 0) {

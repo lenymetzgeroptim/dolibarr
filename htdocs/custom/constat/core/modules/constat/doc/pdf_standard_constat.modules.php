@@ -353,7 +353,7 @@ class pdf_standard_constat extends ModelePDFConstat
 				}
 				$pagenb++;
 				
-				//$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
+				$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
 				$pdf->SetFont('', '', $default_font_size - 1);
 				$pdf->MultiCell(0, 3, ''); // Set interline to 3
 				$pdf->SetTextColor(0, 0, 0);
@@ -367,28 +367,6 @@ class pdf_standard_constat extends ModelePDFConstat
 				}
 
 				$nexY = $tab_top - 1;
-
-				$hist = explode('<br>', $object->historique);
-                $cpt = 1;
-                foreach($hist as $ligne){
-                    if ($cpt%57 == 0){
-                        $cpt = 0;
-                        $this->_pagefoot($pdf, $object, $outputlangs);
-                        if (method_exists($pdf, 'AliasNbPages')) {
-                            $pdf->AliasNbPages();
-                        }
-                        $pdf->AddPage();
-                        if (!empty($tplidx)) {
-                            $pdf->useTemplate($tplidx);
-                        }
-                        $pagenb++;
-                        $top_shift = $this->_pagehead($pdf, $object, 0, $outputlangs, $outputlangsbis);
-                        $pdf->SetFont('', '', $default_font_size - 1);
-                        $pdf->SetTextColor(0, 0, 0);
-                    }
-                    $cpt++;
-                    $pdf->writeHTML($ligne);
-                }
 
 				// Display notes
 				$notetoshow = empty($object->note_public) ? '' : $object->note_public;
@@ -767,697 +745,730 @@ class pdf_standard_constat extends ModelePDFConstat
 				// Connexion à la base de données
 				
 
-								// Récupération des données de l'objet
-				$fk_user_creat = intval($object->fk_user_creat);
-				$fk_project = intval($object->fk_project);
-				$site_id = intval($object->site);
-				$actionimmediate = intval($object->actionimmediate);
-				$infoclient = intval($object->infoClient);
+				// Récupération des données de l'objet
+				$actionsimmediates = intval($object->actionsimmediates);
+				$infoclient = intval($object->infoclient);
 				$recurent = intval($object->recurent);
-				$commande_id = intval($object->num_commande);
 				$recurent_display = $recurent == 1 ? "Oui" : "Non";
 
-				
-				// Déclaration des variables pour stocker les résultats
-				$nom_utilisateur = '';
-				$ref_projet = '';
-				$nom_site = '';
 
-				// // Requête pour récupérer le nom et prénom de l'utilisateur créateur
-				// $sql = "SELECT u.rowid AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname ";
-				// $sql .= "FROM " . MAIN_DB_PREFIX . "user AS u ";
-				// $sql .= "WHERE u.rowid = " . $fk_user_creat;
+				// Formater la date dans le format "Y-m-d"
+				$formattedDateEmetteur = dol_print_date($object->emetteur_date, '%Y-%m-%d');
+				$formattedDateActionImmediate = dol_print_date($object->actionsimmediates_date, '%Y-%m-%d');
+				$formattedDateInfoClient = dol_print_date($object->infoclient_date, '%Y-%m-%d');
+				$formattedDateAccordClient = dol_print_date($object->accordclient_date, '%Y-%m-%d');
+				$formattedDateControleClient = dol_print_date($object->controleclient_date, '%Y-%m-%d');
+				$formattedDateCloture = dol_print_date($object->cloture_date, '%Y-%m-%d');
+
+
+				// Correspondances des valeurs
+				$sujetLabels = $object->getAllSujet();
+				$typeLabels = $object->getAllType();
+				$statusLabels = $object->field['status']['arrayofkeyval'];
+				$impact_map = $object->getAllImpact();
+				$processus_map = $object->getAllProcessus();
+				$rubrique_map = $object->getAllRubrique();
+
+				// Conversion des IDs en noms lisibles
+				$sujet_nom = isset($sujetLabels[$object->sujet]) ? $sujetLabels[$object->sujet] : 'Inconnu';
+				$type_constat_nom = isset($typeLabels[$object->type_constat]) ? $typeLabels[$object->type_constat] : 'Inconnu';
+				$status_nom = isset($statusLabels[$object->status]) ? $statusLabels[$object->status] : 'Inconnu';
+
+				$impact_ids = isset($object->impact) ? explode(',', $object->impact) : [];
+				$rubrique_ids = isset($object->rubrique) ? explode(',', $object->rubrique) : [];
+				$processus_ids = isset($object->processus) ? explode(',', $object->processus) : [];
+				$impacts = array_map(function($id) use ($impact_map) {
+					return isset($impact_map[$id]) ? $impact_map[$id] : $id;
+				}, $impact_ids);
+
+				$rubriques = array_map(function($id) use ($rubrique_map) {
+					return isset($rubrique_map[$id]) ? $rubrique_map[$id] : $id;
+				}, $rubrique_ids);
+
+				$processus = array_map(function($id) use ($processus_map) {
+					return isset($processus_map[$id]) ? $processus_map[$id] : $id;
+				}, $processus_ids);
+				// Générer la chaîne des noms en les séparant par une virgule
+				$impact_display = implode(', ', $impacts);
+				$rubrique_display = implode(', ', $rubriques);
+				$processus_display = implode(', ', $processus);
+				$impact_display_safe = htmlspecialchars($impact_display, ENT_QUOTES, 'UTF-8');
+
+
+
+				// Requête pour récupérer la référence du projet
+				$sql = "SELECT p.rowid, p.ref, p.title";
+				$sql .= " FROM " . MAIN_DB_PREFIX . "projet AS p";
+				$sql .= " WHERE p.rowid IN (".$object->fk_project.")";
+
+				// Exécuter la requête projet
+				$resql = $db->query($sql);
+
+				// Vérifiez si la requête a échoué
+				if ($resql === false) {
+					echo 'SQL Error: ' . $db->lasterror();
+					exit;
+				}
+
+				// Vérifiez si des lignes sont retournées
+				while($projet = $resql->fetch_object()) {
+					$ref_projet = htmlspecialchars($projet->ref);
+					$intitule_projet = htmlspecialchars($projet->title);
+					$projet_combined .= htmlspecialchars($ref_projet).' - '.htmlspecialchars($intitule_projet).' / ';
+				}
+				$projet_combined = rtrim($projet_combined, ' / ');
+
+
+
+				$sql = "SELECT com.rowid, com.ref";
+				$sql .= " FROM " . MAIN_DB_PREFIX . "commande AS com";
+				$sql .= " WHERE com.rowid IN (".$object->num_commande.")";
+
+				// Exécuter la requête site
+				$resql = $db->query($sql);
+
+				// Vérifiez si la requête a échoué
+				if ($resql === false) {
+					echo 'SQL Error: ' . $db->lasterror();
+					exit;
+				}
+
+				// Vérifiez si des lignes sont retournées
+				while($commande = $resql->fetch_object()) {
+					$ref_commande .= htmlspecialchars($commande->ref)." / ";
+				}
+				$ref_commande = rtrim($ref_commande, ' / ');
+
+
+
+				// Requête pour récupérer le nom du site
+				$sql = "SELECT s.rowid, s.nom";
+				$sql .= " FROM " . MAIN_DB_PREFIX . "societe AS s";
+				$sql .= " WHERE s.rowid = ".$object->site;
+
+				// Exécuter la requête site
+				$resql = $db->query($sql);
+
+				// Vérifiez si la requête a échoué
+				if ($resql === false) {
+					echo 'SQL Error: ' . $db->lasterror();
+					exit;
+				}
+
+				// Vérifiez si des lignes sont retournées
+				if ($resql->num_rows > 0) {
+					$site = $resql->fetch_object();
+					if ($site) {
+						$nom_site = htmlspecialchars($site->nom);
+					} 
+				}
 
-				// // Exécuter la requête utilisateur
-				// $resql = $db->query($sql);
-				// if ($resql && $db->num_rows($resql) > 0) {
-				// 	$user = $db->fetch_object($resql);
-				// 	$nom_utilisateur = $user->firstname . ' ' . $user->lastname;
-				// }
-
-// Récupération des données de l'objet
-$fk_user_creat = intval($object->fk_user_creat);
-$fk_project = intval($object->fk_project);
-$site_id = intval($object->site);
-
-// Déclaration des variables pour stocker les résultats
-$nom_utilisateur = '';
-$ref_projet = '';
-$intitule_projet = '';
-$nom_site = '';
-$ref_commande = '';
-
-// Correspondances des valeurs
-$sujetLabels = [
-    1 => 'Produit/Service',
-    4 => 'Document',
-    3 => 'Situation'
-];
-
-$typeLabels = [
-    2 => 'Écart',
-    1 => 'Non-conformité',
-    3 => 'Réclamation client'
-];
-
-$statusLabels = [
-    0 => 'Brouillon',
-    1 => 'Validé',
-    3 => 'Vérifié',
-    4 => 'En cours',
-    5 => 'Soldée',
-    7 => 'Clôturé',
-    9 => 'Annulé'
-];
-
-// Conversion des IDs en noms lisibles
-$sujet_nom = isset($sujetLabels[$object->sujet]) ? $sujetLabels[$object->sujet] : 'Inconnu';
-$type_constat_nom = isset($typeLabels[$object->typeConstat]) ? $typeLabels[$object->typeConstat] : 'Inconnu';
-$status_nom = isset($statusLabels[$object->status]) ? $statusLabels[$object->status] : 'Inconnu';
-
-// Requête pour récupérer la référence du projet
-$sql = "SELECT p.rowid, p.ref, p.title";
-$sql .= " FROM " . MAIN_DB_PREFIX . "projet AS p";
-$sql .= " WHERE p.rowid = " . $fk_project;
-
-// Exécuter la requête projet
-$resql = $db->query($sql);
-
-// Vérifiez si la requête a échoué
-if ($resql === false) {
-    echo 'SQL Error: ' . $db->lasterror();
-    exit;
-}
-
-
-
-// Vérifiez si des lignes sont retournées
-if ($resql->num_rows > 0) {
-    $projet = $resql->fetch_object();
-    if ($projet) {
-        $ref_projet = htmlspecialchars($projet->ref);
-		$intitule_projet = htmlspecialchars($projet->title);
-    } 
-}
-
-$sql = "SELECT com.rowid, com.ref";
-$sql .= " FROM " . MAIN_DB_PREFIX . "commande AS com";
-$sql .= " WHERE com.rowid = " . $commande_id;
-
-// Exécuter la requête site
-$resql = $db->query($sql);
-
-// Vérifiez si la requête a échoué
-if ($resql === false) {
-    echo 'SQL Error: ' . $db->lasterror();
-    exit;
-}
-
-// Vérifiez si des lignes sont retournées
-if ($resql->num_rows > 0) {
-    $commande = $resql->fetch_object();
-    if ($commande) {
-        $ref_commande = htmlspecialchars($commande->ref);
-    } 
-}
-
-
-// Requête pour récupérer le nom du site
-$sql = "SELECT s.rowid, s.nom";
-$sql .= " FROM " . MAIN_DB_PREFIX . "societe AS s";
-$sql .= " WHERE s.rowid = " . $site_id;
-
-// Exécuter la requête site
-$resql = $db->query($sql);
-
-// Vérifiez si la requête a échoué
-if ($resql === false) {
-    echo 'SQL Error: ' . $db->lasterror();
-    exit;
-}
-
-// Vérifiez si des lignes sont retournées
-if ($resql->num_rows > 0) {
-    $site = $resql->fetch_object();
-    if ($site) {
-        $nom_site = htmlspecialchars($site->nom);
-    } 
-}
-
-$impact_map = [
-    1 => 'Impact de la non conformité',
-    2 => 'Impact Finnancier',
-    3 => 'Impact Contractuel',
-    4 => 'Impact sur l\'analyse',
-    5 => 'Impact sur le temps',
-    6 => 'Impact sur la non-facturation'
-];
-
-// Map des processus
-$processus_map = [
-    2 => 'Pilotage et Amélioration',
-    3 => 'Gestion et mise à disposition des compétences',
-    4 => 'Gestion de la prestation client',
-    5 => 'Recrutement',
-    6 => 'Vente'
-];
-
-// Map des rubriques
-$rubrique_map = [
-    1 => 'Qualité',
-    2 => 'Sécurité',
-    3 => 'Environnement',
-    4 => 'Sûreté',
-    5 => 'Radioprotection'
-];
-
-$projet_combined = htmlspecialchars($intitule_projet) . " / " . htmlspecialchars($ref_projet);
-
-// Accéder aux valeurs des extrafields et les convertir
-$impact_ids = isset($object->array_options['options_impact']) ? explode(',', $object->array_options['options_impact']) : [];
-$rubrique_ids = isset($object->array_options['options_rubrique']) ? explode(',', $object->array_options['options_rubrique']) : [];
-$processus_ids = isset($object->array_options['options_processusconcern']) ? explode(',', $object->array_options['options_processusconcern']) : [];
-
-// Convertir les IDs en noms
-$impacts = array_map(function($id) use ($impact_map) {
-    return isset($impact_map[$id]) ? $impact_map[$id] : $id;
-}, $impact_ids);
-
-$rubriques = array_map(function($id) use ($rubrique_map) {
-    return isset($rubrique_map[$id]) ? $rubrique_map[$id] : $id;
-}, $rubrique_ids);
-
-$processus = array_map(function($id) use ($processus_map) {
-    return isset($processus_map[$id]) ? $processus_map[$id] : $id;
-}, $processus_ids);
-
-// Générer la chaîne des noms en les séparant par une virgule
-$impact_display = implode(', ', $impacts);
-$rubrique_display = implode(', ', $rubriques);
-$processus_display = implode(', ', $processus);
-$impact_display_safe = htmlspecialchars($impact_display, ENT_QUOTES, 'UTF-8');
-
-new user ($db);
-$user->fetch($object->fk_user_creat);
-$firstnameconstat = htmlspecialchars($user->firstname); // Assure-toi que ces propriétés existent
-$lastnameconstat = htmlspecialchars($user->lastname);
-
-// Décoder les entités HTML dans la description
-$impactcomm = html_entity_decode($object->impactcomm, ENT_QUOTES, 'UTF-8');
-
-// Remplacer les balises <div> par des nouvelles lignes
-$impactcomm = str_replace(['<div>', '</div>'], "\n", $impactcomm);
-
-// Traiter les balises <ul> et <li> pour la description
-$impactcomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
-    // Convertir chaque élément de la liste
-    return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $impactcomm);
-
-// Supprimer toutes les autres balises HTML et retirer les espaces
-$impactcomm = strip_tags($impactcomm);
-$impactcomm = preg_replace("/\n\s*\n+/", "\n", $impactcomm); // Retirer les lignes vides
-$impactcomm_safe = nl2br(htmlspecialchars(trim($impactcomm), ENT_QUOTES, 'UTF-8'));
-
-
-// Décoder les entités HTML dans la description
-$descriptionConstat = html_entity_decode($object->descriptionConstat, ENT_QUOTES, 'UTF-8');
-
-// Remplacer les balises <div> par des nouvelles lignes
-$descriptionConstat = str_replace(['<div>', '</div>'], "\n", $descriptionConstat);
-
-// Traiter les balises <ul> et <li> pour la description
-$descriptionConstat = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
-    // Convertir chaque élément de la liste
-    return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $descriptionConstat);
-
-// Supprimer toutes les autres balises HTML et retirer les espaces
-$descriptionConstat = strip_tags($descriptionConstat);
-$descriptionConstat = preg_replace("/\n\s*\n+/", "\n", $descriptionConstat); // Retirer les lignes vides
-$descriptionConstat_safe = nl2br(htmlspecialchars(trim($descriptionConstat), ENT_QUOTES, 'UTF-8'));
-
-
-
-// Traitement de l'action immédiate
-$actionimmediatecomm = html_entity_decode($object->actionimmediatecom, ENT_QUOTES, 'UTF-8');
-
-// Remplacer les balises <div> par des nouvelles lignes
-$actionimmediatecomm = str_replace(['<div>', '</div>'], "\n", $actionimmediatecomm);
-
-// Traiter les balises <ul> et <li> pour l'action immédiate
-$actionimmediatecomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
-    // Convertir chaque élément de la liste
-    return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $actionimmediatecomm);
-
-// Supprimer toutes les autres balises HTML et retirer les espaces
-$actionimmediatecomm = strip_tags($actionimmediatecomm);
-$actionimmediatecomm = preg_replace("/\n\s*\n+/", "\n", $actionimmediatecomm); // Retirer les lignes vides
-$actionimmediatecomm_safe = nl2br(htmlspecialchars(trim($actionimmediatecomm), ENT_QUOTES, 'UTF-8'));
-$actionimmediate_display = $actionimmediate == 1 ? "Oui" : "Non";
-
-
-// Traitement des informations client
-$infoclientcomm = html_entity_decode($object->commInfoClient, ENT_QUOTES, 'UTF-8');
-
-// Remplacer les balises <div> par des nouvelles lignes
-$infoclientcomm = str_replace(['<div>', '</div>'], "\n", $infoclientcomm);
-
-// Traiter les balises <ul> et <li> pour les informations client
-$infoclientcomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
-    // Convertir chaque élément de la liste
-    return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $infoclientcomm);
-
-// Supprimer toutes les autres balises HTML et retirer les espaces
-$infoclientcomm = strip_tags($infoclientcomm);
-$infoclientcomm = preg_replace("/\n\s*\n+/", "\n", $infoclientcomm); // Retirer les lignes vides
-$infoclientcomm_safe = nl2br(htmlspecialchars(trim($infoclientcomm), ENT_QUOTES, 'UTF-8'));
-$infoclient_display = $infoclient == 1 ? "Oui" : "Non";
-
-// Décoder les entités HTML dans la description
-$analyseracine = html_entity_decode($object->analyseCauseRacine, ENT_QUOTES, 'UTF-8');
-
-// Remplacer les balises <div> par des nouvelles lignes
-$analyseracine = str_replace(['<div>', '</div>'], "\n", $analyseracine);
-
-// Traiter les balises <ul> et <li> pour la description
-$analyseracine = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
-    // Convertir chaque élément de la liste
-    return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $analyseracine);
-
-// Supprimer toutes les autres balises HTML et retirer les espaces
-$analyseracine = strip_tags($analyseracine);
-$analyseracine = preg_replace("/\n\s*\n+/", "\n", $analyseracine); // Retirer les lignes vides
-$analyseracine_safe = nl2br(htmlspecialchars(trim($analyseracine), ENT_QUOTES, 'UTF-8'));
-
-
-$accordclient = intval($object->accordClient);
-	
-// Traitement des informations client
-$accordClientcomm = html_entity_decode($object->commAccordClient, ENT_QUOTES, 'UTF-8');
-
-// Remplacer les balises <div> par des nouvelles lignes
-$accordClientcomm = str_replace(['<div>', '</div>'], "\n", $accordClientcomm);
-
-// Traiter les balises <ul> et <li> pour les informations client
-$accordClientcomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
-	// Convertir chaque élément de la liste
-	return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $accordClientcomm);
-
-// Supprimer toutes les autres balises HTML et retirer les espaces
-$accordClientcomm = strip_tags($accordClientcomm);
-$accordClientcomm = preg_replace("/\n\s*\n+/", "\n", $accordClientcomm); // Retirer les lignes vides
-$accordClientcomm_safe = nl2br(htmlspecialchars(trim($accordClientcomm), ENT_QUOTES, 'UTF-8'));
-$accordClient_display = intval($accordclient) === 1 ? "Oui" : "Non";
-
-
-$controleClient = intval($object->controleClient);
-	
-// Traitement des informations client
-$controleClientcomm = html_entity_decode($object->commControleClient, ENT_QUOTES, 'UTF-8');
-
-// Remplacer les balises <div> par des nouvelles lignes
-$controleClientcomm = str_replace(['<div>', '</div>'], "\n", $controleClientcomm);
-
-// Traiter les balises <ul> et <li> pour les informations client
-$controleClientcomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
-	// Convertir chaque élément de la liste
-	return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
-}, $controleClientcomm);
-
-// Supprimer toutes les autres balises HTML et retirer les espaces
-$controleClientcomm = strip_tags($controleClientcomm);
-$controleClientcomm = preg_replace("/\n\s*\n+/", "\n", $controleClientcomm); // Retirer les lignes vides
-$controleClientcomm_safe = nl2br(htmlspecialchars(trim($controleClientcomm), ENT_QUOTES, 'UTF-8'));
-$controleClient_display = intval($controleClient) === 1 ? "Oui" : "Non";
-
-
-
-
-$sql = "SELECT e.fk_target, e.fk_source, a.status";
-$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
-$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_action as a ON e.fk_target = a.rowid";
-$sql .= " WHERE e.fk_source = $object->id AND e.sourcetype = 'constat' ";
-
-$result = $db->query($sql);
-
-$is_all_sold = true;  // Assumption: all actions are sold
-
-if ($result) {
-    $nume = $db->num_rows($result);
-    $i = 0;
-    while ($i < $nume) {
-        $obj = $db->fetch_object($result);
-        $selectedelement[$obj->fk_source][$obj->fk_target] = $obj; 
-        $status[] = $obj->status; 
-        
-        // Check if any status is not equal to '3'
-        if ($obj->status !== '3') {
-            $is_all_sold = false;
-        }
-        
-        $i++;
-    }
-} else {
-    dol_print_error($db);
-}
-
-$timestamp = $object->dateEmeteur;
-
-// Convertir le timestamp en format date lisible
-$formattedDate = date("d/m/Y", $timestamp);
-
-
-// Génération du tableau HTML
-$html = '
-<table border="0" cellpadding="5" cellspacing="0" width="100%"><table border="0" cellpadding="5" cellspacing="0" width="100%">
- 	<tr>
-        <td><strong>Émeteur</strong></td>
-        <td>' . $firstnameconstat . ' ' . $lastnameconstat . '</td>
-        <td><strong>Date de création</strong></td>
-        <td>' . nl2br(htmlspecialchars($formattedDate)) . '</td>
-    </tr>
-    <tr>
-        <td><strong>Référence</strong></td>
-        <td>' . nl2br(htmlspecialchars($object->ref)) . '</td>
-        <td><strong>Site</strong></td>
-        <td>' . nl2br(htmlspecialchars($nom_site)) . '</td>
-    </tr>
-</table>
-<table border="0" cellpadding="5" cellspacing="0" width="100%"><table border="0" cellpadding="5" cellspacing="0" width="100%">
- 	<tr>
-		<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Commande</strong></td>
-        <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . nl2br(htmlspecialchars($ref_commande)) . '</td>
-        <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Affaire</strong></td>
-        <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . nl2br($projet_combined ) . '</td>
-    </tr>
-</table>
-';
-
-
-$html .= '
-<table border="0" cellpadding="5" cellspacing="0" width="100%"><table border="0" cellpadding="5" cellspacing="0" width="100%">
- <tr>
-        <td><strong>Sujet</strong></td>
-        <td style="color: rgb(40, 80, 139);">' . nl2br(htmlspecialchars($sujet_nom)) .  '</td>
- </tr>
- </table>';
-
-
-
- $html .= '
- <table border="0" cellpadding="5" cellspacing="0" width="100%">
-  <tr>
-		 <td><strong>Description détaillée du constat (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi) : </strong></td>
-  </tr>
-  <tr>
-		 <td>' . $descriptionConstat_safe . '</td>
-  </tr>
- </table>';
-
-
- $html .= '
- <table border="0" cellpadding="5" cellspacing="0" width="100%">
-	 <tr>
-		 <td><strong>Impact</strong></td>
-		 <td style="color: rgb(40, 80, 139);">' . $impact_display_safe . '</td>
-	 </tr>
-	 <tr>
-		 <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Description impact</strong></td>
-		 <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $impactcomm_safe . '</td>
-	 </tr>
-	 <tr>
-		 <td><strong>Type de constat</strong></td>
-		 <td style ="color: rgb(40, 80, 139);">' . $type_constat_nom . '</td>
-	 </tr>
-	 <tr>
-		 <td><strong>Rubrique</strong></td>
-		 <td style ="color: rgb(40, 80, 139);">' . $rubrique_display . '</td>
-	 </tr>
-	 <tr>
-		 <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Processus</strong></td>
-		 <td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139); color: rgb(40, 80, 139);">' . $processus_display . '</td>
-	 </tr>
-
-
-
-	 <tr>
-		 <td><strong>Action(s) immédiate(s)</strong></td>
-		 <td style="color: rgb(40, 80, 139);">' . $actionimmediate_display . '</td>
-	 </tr>
-	 </table>';
-	 
-
-	// Vérification de l'affichage d'actionimmediatecomm
-	if ($actionimmediate == 1 && !empty($actionimmediatecomm_safe)) {
-		$html .= '
-		<table border="0" cellpadding="5" cellspacing="0" width="100%">
-			<tr>
-					<td><strong>Détails de l\'action immédiate : </strong></td>
-			</tr>
-			<tr>
-					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $actionimmediatecomm_safe . '</td>
-			</tr>
- 		</table>';
-	}
-
-	
-
-	$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-				<tr>
-					<td><strong> Information du client</strong></td>
-					<td style="color: rgb(40, 80, 139);">' . $infoclient_display . '</td>
-				</tr>
-				</table>';
-	if ($infoclient == 1 && !empty($infoclientcomm_safe)) {
-		$html .= '
-		<table border="0" cellpadding="5" cellspacing="0" width="100%">
-			<tr>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>			
-			</tr>
-		</table>
-		<br></br>';
-		
-	}
-
-	$html .= '</table>';
-
-	$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-				
-					<tr>
-						<td><strong>Validation du service Q3SE :</strong></td>
-						<td style="color: rgb(40, 80, 139);"></td>
-					</tr>
-				<br></br>
-	 		   </table>';
-	
-
-	$html .= '
-	<table border="0" cellpadding="5" cellspacing="0" width="100%">
-	<tr>
-			<td><strong>Analyse cause racine (Le choix de la méthode est laissé à l\'appréciation du Service Q3SE) : </strong></td>
-	</tr>
-	<tr>
-			<td>' . $analyseracine_safe . '</td>
-	</tr>
-	</table>
-
-	<table border="0" cellpadding="5" cellspacing="0" width="100%">
-		<tr>
-			<td  style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Constat récurent</strong></td>
-			<td style=" border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139); color: rgb(40, 80, 139);">' . $recurent_display . '</td>
-		</tr>
-	 </table>';
-	
-
-	// Ajouter le titre
-	$html .= '<h3>Action corrective et préventive ( C/P) :</h3>';
-
-
-
-	$sql = "SELECT ee.fk_target";
-	$sql .= " FROM " . MAIN_DB_PREFIX . "element_element AS ee";
-	$sql .= " WHERE ee.sourcetype = 'constat'";
-	$sql .= " AND ee.fk_source = " . intval($object->id);
-	$sql .= " AND ee.targettype = 'actions_action'";
-
-	// Exécution de la requête
-	$resql = $db->query($sql);
-
-	if ($resql === false) {
-		echo 'SQL Error: ' . $db->lasterror();
-		exit;
-	}
-
-	// Récupération des IDs des actions
-	$action_ids = [];
-	while ($row = $db->fetch_object($resql)) {
-		$action_ids[] = $row->fk_target;
-	}
-
-	// Si aucune action n'est liée, on affiche un message
-	if (empty($action_ids)) {
-		$html .= '<p>Aucune action préventive ou corréctive n\'est liée à ce constat.</p>';
-	} else {
-		// Étape 2 : Requête pour récupérer les détails des actions
-		$action_ids_str = implode(',', $action_ids);
-		$sql_actions = "SELECT * FROM " . MAIN_DB_PREFIX . "actions_action AS a";
-		$sql_actions .= " WHERE a.rowid IN ($action_ids_str)";
-
-		$resql_actions = $db->query($sql_actions);
-
-		if ($resql_actions === false) {
-			echo 'SQL Error: ' . $db->lasterror();
-			exit;
-		}
-
-
-			// Générer le tableau des actions
-		$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-		<thead>
-			<tr>
-				<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;"><strong>Numéro</strong></th>
-				<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;"><strong>Référence</strong></th>
-				<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;"><strong>Intervenant</strong></th>
-				<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;"><strong>Délai</strong></th>
-				<th style="border-bottom: 0.2pt solid #000; text-align: center;"><strong>C/P</strong></th>
-			</tr>
-		</thead>
-		<tbody>';
-
-		while ($action = $db->fetch_object($resql_actions)) {
-			// Extraction des informations de l'action
-			new user($db);
-			$user->fetch($action->intervenant);
-			$firstname = htmlspecialchars($user->firstname);
-			$lastname = htmlspecialchars($user->lastname);
-			$action_rowid = htmlspecialchars($action->rowid);
-			$action_ref = htmlspecialchars($action->ref);
-			$action_date_eche = htmlspecialchars($action->date_eche);
-			$action_CP = htmlspecialchars($action->CP);
-
-			$action_CP_map = [
-				1 => 'C',
-				2 => 'P',
-				3 => 'C/P'
-			];
-
-			$action_CP_show= isset($action_CP_map[$action->CP]) ? $action_CP_map[$action->CP] : 'Inconnu';
-
-			// Affichage des informations dans une ligne du tableau
-			$html .= '<tr>
-				<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;">' . $action_rowid . '</td>
-				<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;">' . $action_ref . '</td>
-				<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;">' . $firstname . ' ' . $lastname . '</td>
-				<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;">' . $action_date_eche . '</td>
-				<td style="border-bottom: 0.2pt solid #000; text-align: center;">' . $action_CP_show . '</td>
-			</tr>';
-		}
-
-	$html .= '</tbody></table>
-			<br></br>
-			<br></br>';
-
-	}
-
-	
-	$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-				<tr>
-					<td><strong> Accord du client sur le traitement</strong></td>
-					<td style="color: rgb(40, 80, 139);">' . $accordClient_display . '</td>
-				</tr>
-				</table>';
-	if (intval($accordclient) === 1 && !empty($accordClientcomm_safe)) {
-		// Ligne pour les détails de l'accord client
-		
-		$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-					<tr>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>		
-					</tr>
-				</table>';
-	} 
-
-	$html .= '</table>';
-
-	// Section pour les actions soldées
-	$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-		<tr>
-			<td><strong>Action soldées</strong></td>';
 			
-	// Check if all actions are sold (status = 3)
-	if ($is_all_sold) {
-		$html .= '<td style="color: rgb(40, 80, 139);">Oui</td>';
-	} else {
-		$html .= '<td style="color: rgb(40, 80, 139);">Non</td>';
-	}
 
-	$html .= '</tr></table>';
+			$user_static = new User($db);
+			$user_static->fetch($object->fk_user_creat);
+			$firstnameEmetteur = htmlspecialchars($user_static->firstname);
+			$lastnameEmetteur = htmlspecialchars($user_static->lastname);
 
-	$html .='<table border="0" cellpadding="5" cellspacing="0" width="100%">
-		<tr>
-			<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"> <strong>Efficacité à court terme des actions :</strong></td>
-			<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139) ; color: rgb(40, 80, 139);">	
-				<label>
-					<input type="checkbox" name="efficacite" value="oui"> Oui
-				</label>
-				<label>
-					<input type="checkbox" name="efficacite" value="non"> Non
-				</label>
-			</td>
-		</tr>
-	</table>';
+			// Décoder les entités HTML dans la description
+			$description_impact = html_entity_decode($object->description_impact, ENT_QUOTES, 'UTF-8');
 
-	// Section pour le contrôle client
-	$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-		<tr>
-			<td><strong> Contrôle client </strong></td>
-			<td style="color: rgb(40, 80, 139);">' . $controleClient_display . '</td>
-		</tr>';
+			// Remplacer les balises <div> par des nouvelles lignes
+			$description_impact = str_replace(['<div>', '</div>'], "\n", $description_impact);
 
-	if (intval($controleClient) === 1 && !empty($controleClientcomm_safe)) {
-		// Ligne pour les détails du contrôle client
-		$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
+			// Traiter les balises <ul> et <li> pour la description
+			$description_impact = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+				// Convertir chaque élément de la liste
+				return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
+			}, $description_impact);
+
+			// Supprimer toutes les autres balises HTML et retirer les espaces
+			$description_impact = strip_tags($description_impact);
+			$description_impact = preg_replace("/\n\s*\n+/", "\n", $description_impact); // Retirer les lignes vides
+			$description_impact_safe = nl2br(htmlspecialchars(trim($description_impact), ENT_QUOTES, 'UTF-8'));
+
+
+			// Décoder les entités HTML dans la description
+			$description_constat = html_entity_decode($object->description_constat, ENT_QUOTES, 'UTF-8');
+
+			// Remplacer les balises <div> par des nouvelles lignes
+			$description_constat = str_replace(['<div>', '</div>'], "\n", $description_constat);
+
+			// Traiter les balises <ul> et <li> pour la description
+			$description_constat = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+				// Convertir chaque élément de la liste
+				return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
+			}, $description_constat);
+
+			// Supprimer toutes les autres balises HTML et retirer les espaces
+			$description_constat = strip_tags($description_constat);
+			$description_constat = preg_replace("/\n\s*\n+/", "\n", $description_constat); // Retirer les lignes vides
+			$description_constat_safe = nl2br(htmlspecialchars(trim($description_constat), ENT_QUOTES, 'UTF-8'));
+
+
+
+			// Traitement de l'action immédiate
+			$actionsimmediates_commentaire = html_entity_decode($object->actionsimmediates_commentaire, ENT_QUOTES, 'UTF-8');
+
+			// Remplacer les balises <div> par des nouvelles lignes
+			$actionsimmediates_commentaire = str_replace(['<div>', '</div>'], "\n", $actionsimmediates_commentaire);
+
+			// Traiter les balises <ul> et <li> pour l'action immédiate
+			$actionsimmediates_commentaire = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+				// Convertir chaque élément de la liste
+				return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
+			}, $actionsimmediates_commentaire);
+
+			// Supprimer toutes les autres balises HTML et retirer les espaces
+			$actionsimmediates_commentaire = strip_tags($actionsimmediates_commentaire);
+			$actionsimmediates_commentaire = preg_replace("/\n\s*\n+/", "\n", $actionsimmediates_commentaire); // Retirer les lignes vides
+			$actionsimmediates_commentaire_safe = nl2br(htmlspecialchars(trim($actionsimmediates_commentaire), ENT_QUOTES, 'UTF-8'));
+			$actionsimmediates_display = $actionsimmediates == 1 ? "Oui" : "Non";
+
+
+			// Traitement des informations client
+			$infoclientcomm = html_entity_decode($object->infoclient_commentaire, ENT_QUOTES, 'UTF-8');
+
+			// Remplacer les balises <div> par des nouvelles lignes
+			$infoclientcomm = str_replace(['<div>', '</div>'], "\n", $infoclientcomm);
+
+			// Traiter les balises <ul> et <li> pour les informations client
+			$infoclientcomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+				// Convertir chaque élément de la liste
+				return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
+			}, $infoclientcomm);
+
+			// Supprimer toutes les autres balises HTML et retirer les espaces
+			$infoclientcomm = strip_tags($infoclientcomm);
+			$infoclientcomm = preg_replace("/\n\s*\n+/", "\n", $infoclientcomm); // Retirer les lignes vides
+			$infoclientcomm_safe = nl2br(htmlspecialchars(trim($infoclientcomm), ENT_QUOTES, 'UTF-8'));
+			$infoclient_display = $infoclient == 1 ? "Oui" : "Non";
+
+			// Décoder les entités HTML dans la description
+			$analyseracine = html_entity_decode($object->analyse_cause_racine, ENT_QUOTES, 'UTF-8');
+
+			// Remplacer les balises <div> par des nouvelles lignes
+			$analyseracine = str_replace(['<div>', '</div>'], "\n", $analyseracine);
+
+			// Traiter les balises <ul> et <li> pour la description
+			$analyseracine = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+				// Convertir chaque élément de la liste
+				return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
+			}, $analyseracine);
+
+			// Supprimer toutes les autres balises HTML et retirer les espaces
+			$analyseracine = strip_tags($analyseracine);
+			$analyseracine = preg_replace("/\n\s*\n+/", "\n", $analyseracine); // Retirer les lignes vides
+			$analyseracine_safe = nl2br(htmlspecialchars(trim($analyseracine), ENT_QUOTES, 'UTF-8'));
+
+
+			$accordclient = intval($object->accordclient);
+				
+			// Traitement des informations client
+			$accordClientcomm = html_entity_decode($object->accordclient_commentaire, ENT_QUOTES, 'UTF-8');
+
+			// Remplacer les balises <div> par des nouvelles lignes
+			$accordClientcomm = str_replace(['<div>', '</div>'], "\n", $accordClientcomm);
+
+			// Traiter les balises <ul> et <li> pour les informations client
+			$accordClientcomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+				// Convertir chaque élément de la liste
+				return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
+			}, $accordClientcomm);
+
+			// Supprimer toutes les autres balises HTML et retirer les espaces
+			$accordClientcomm = strip_tags($accordClientcomm);
+			$accordClientcomm = preg_replace("/\n\s*\n+/", "\n", $accordClientcomm); // Retirer les lignes vides
+			$accordClientcomm_safe = nl2br(htmlspecialchars(trim($accordClientcomm), ENT_QUOTES, 'UTF-8'));
+			$accordClient_display = intval($accordclient) === 1 ? "Oui" : "Non";
+
+
+			$controleclient = intval($object->controleclient);
+				
+			// Traitement des informations client
+			$controleClientcomm = html_entity_decode($object->controleclient_commentaire, ENT_QUOTES, 'UTF-8');
+
+			// Remplacer les balises <div> par des nouvelles lignes
+			$controleClientcomm = str_replace(['<div>', '</div>'], "\n", $controleClientcomm);
+
+			// Traiter les balises <ul> et <li> pour les informations client
+			$controleClientcomm = preg_replace_callback('/<ul>(.*?)<\/ul>/is', function($matches) {
+				// Convertir chaque élément de la liste
+				return "\n" . preg_replace('/<li>(.*?)<\/li>/is', '• $1', $matches[1]) . "\n"; // Ajouter des puces
+			}, $controleClientcomm);
+
+			// Supprimer toutes les autres balises HTML et retirer les espaces
+			$controleClientcomm = strip_tags($controleClientcomm);
+			$controleClientcomm = preg_replace("/\n\s*\n+/", "\n", $controleClientcomm); // Retirer les lignes vides
+			$controleClientcomm_safe = nl2br(htmlspecialchars(trim($controleClientcomm), ENT_QUOTES, 'UTF-8'));
+			$controleClient_display = intval($controleclient) === 1 ? "Oui" : "Non";
+			
+
+			$sql = "SELECT e.fk_target, e.fk_source, a.status";
+			$sql .= " FROM ".MAIN_DB_PREFIX."element_element as e";
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."actions_actionq3se as a ON e.fk_target = a.rowid";
+			$sql .= " WHERE e.fk_source = $object->id AND e.sourcetype = 'constat' ";
+
+			$result = $db->query($sql);
+
+			$is_all_sold = true;  // Assumption: all actions are sold
+
+			if ($result) {
+				$nume = $db->num_rows($result);
+				$i = 0;
+				while ($i < $nume) {
+					$obj = $db->fetch_object($result);
+					$selectedelement[$obj->fk_source][$obj->fk_target] = $obj; 
+					$status[] = $obj->status; 
+					
+					// Check if any status is not equal to '3'
+					if ($obj->status !== '3') {
+						$is_all_sold = false;
+					}
+					
+					$i++;
+				}
+			} else {
+				dol_print_error($db);
+			}
+
+
+			// Génération du tableau HTML
+			$html = '
+			<table border="0" cellpadding="5" cellspacing="0" width="100%"><table border="0" cellpadding="5" cellspacing="0" width="100%">
+				<tr><td colspan="4"><strong> IDENTIFICATION DE L\'EMETTEUR </strong></td></tr>
+				<tr>
+					<td><strong>Émeteur</strong></td>
+					<td>' . $firstnameEmetteur . ' ' . $lastnameEmetteur . '</td>
+					<td><strong>Site</strong></td>
+					<td>' . nl2br(htmlspecialchars($nom_site)) . '</td>
+				</tr>
+				<tr>
+					<td><strong>Date de création</strong></td>
+					<td>' . nl2br(htmlspecialchars($formattedDateEmetteur)) . '</td>
+					<td rowspan="2" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Affaire</strong></td>
+					<td rowspan="2" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . nl2br($projet_combined ) . '</td>
+				</tr>
+				<tr>
+					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Commande</strong></td>
+					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . nl2br(htmlspecialchars($ref_commande)) . '</td>
+					
+				</tr>
+			</table>';
+
+
+			$html .= '
+			<table border="0" cellpadding="5" cellspacing="0" width="100%"><table border="0" cellpadding="5" cellspacing="0" width="100%">
+			<tr><td colspan="2"><strong> OBJET DU CONSTAT </strong></td></tr>
+			<tr>
+					<td><strong>Sujet</strong></td>
+					<td style="color: rgb(40, 80, 139);">' . nl2br(htmlspecialchars($sujet_nom)) .  '</td>
+			</tr>
+			</table>';
+
+
+
+			$html .= '
+			<table border="0" cellpadding="5" cellspacing="0" width="100%">
+			<tr>
+					<td><strong>Description détaillée du constat (Quoi, Qui, Où, Quand, Comment, Combien, Pourquoi) : </strong></td>
+			</tr>
+			<tr>
+					<td>' . $description_constat_safe . '</td>
+			</tr>
+			</table>';
+
+
+			$html .= '
+			<table border="0" cellpadding="5" cellspacing="0" width="100%">
+				<tr>
+					<td><strong>Impact</strong></td>
+					<td style="color: rgb(40, 80, 139);">' . $impact_display_safe . '</td>
+				</tr>
+				<tr>
+					<td colspan="2"><strong>Description impact</strong></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $description_impact_safe . '</td>
+				</tr>
+				<tr>
+					<td><strong>Type de constat</strong></td>
+					<td style ="color: rgb(40, 80, 139);">' . $type_constat_nom . '</td>
+				</tr>
+				<tr>
+					<td><strong>Rubrique</strong></td>
+					<td style ="color: rgb(40, 80, 139);">' . $rubrique_display . '</td>
+				</tr>
+				<tr>
+					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Processus</strong></td>
+					<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139); color: rgb(40, 80, 139);">' . $processus_display . '</td>
+				</tr>
+			</table>';
+				
+
+				// Vérification de l'affichage d'actionsimmediates_commentaire
+				if ($actionsimmediates == 1) {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td colspan="2"><strong> ACTION(S) IMMEDIATE(S)</strong></td>
+							<td colspan="2" style="color: rgb(40, 80, 139);">' . $actionsimmediates_display . '</td>
+						</tr>
+						<tr>
+							<td><strong>Mise en place le : </strong></td>
+							<td>'.$formattedDateActionImmediate.'</td>
+							<td><strong>Par : </strong></td>
+							<td>'.$object->actionsimmediates_par.'</td>
+						</tr>
+						<tr>
+							<td colspan="4"><strong>Détails de l\'action immédiate : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $actionsimmediates_commentaire_safe . '</td>
+						</tr>
+					</table>';
+				}
+				else {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td colspan="2"><strong> ACTION(S) IMMEDIATE(S)</strong></td>
+							<td colspan="2" style="color: rgb(40, 80, 139);">' . $actionsimmediates_display . '</td>					
+						</tr>
+						<tr>
+							<td colspan="4"><strong>Détails de l\'action immédiate : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $actionsimmediates_commentaire_safe . '</td>
+						</tr>
+					</table>';
+				}
+
+				
+
+
+				if ($infoclient == 1) {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td><strong> INFORMATION CLIENT REQUISE </strong></td>
+							<td style="color: rgb(40, 80, 139);">' . $infoclient_display . '</td>
+						</tr>
+					</table>
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td><strong>Le : </strong></td>
+							<td>'.$formattedDateInfoClient.'</td>
+							<td><strong>Par : </strong></td>
+							<td>'.$object->infoclient_par.'</td>
+							<td><strong>Visa : </strong></td>	
+							<td></td>	
+						</tr>
+						<tr>
+							<td colspan="6"><strong>Commentaire : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $infoclientcomm_safe . '</td>
+						</tr>
+					</table>';
+				}
+				else {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td><strong> INFORMATION CLIENT REQUISE </strong></td>
+							<td style="color: rgb(40, 80, 139);">' . $infoclient_display . '</td>
+						</tr>
+					</table>
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td colspan="6"><strong>Commentaire : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $infoclientcomm_safe . '</td>
+						</tr>
+					</table>';
+				}
+
+				// $html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							
+				// 				<tr>
+				// 					<td><strong>Validation du service Q3SE :</strong></td>
+				// 					<td style="color: rgb(40, 80, 139);"></td>
+				// 				</tr>
+				// 			<br></br>
+				// 		</table>';
+				
+
+				$html .= '
+				<table border="0" cellpadding="5" cellspacing="0" width="100%">
 					<tr>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>		
+							<td><strong> ANALYSE DE CAUSE RACINE (Le choix de la méthode est laissé à l\'appréciation du Service Q3SE) </strong></td>
+					</tr>
+					<tr>
+							<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $analyseracine_safe . '</td>
 					</tr>
 				</table>
-		<br></br>';
-	}
 
-	$html .= '</table>';
+				<table border="0" cellpadding="5" cellspacing="0" width="100%">
+					<tr>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong> CONSTAT RECURRENT </strong></td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139); color: rgb(40, 80, 139);">' . $recurent_display . '</td>
+					</tr>
+				</table>';
+				
 
-	$html .= '<table border="0" cellpadding="5" cellspacing="0" width="100%">
-    <tr>
-        <td><strong>Clôture de la fiche de constat :</strong></td>
-    </tr>
-	</table>
-	<br></br>
-	<table border="0" cellpadding="5" cellspacing="0" width="100%">
-	<tr>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
-				<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>		
-		
-	</tr>
-	</table>';
+				$pdf->setY($pdf->getY() - 10);
+				$pdf->writeHTML($html, true, false, true, false, '');
+				if ($pdf->getPage() == 1) { 
+					$pdf->addPage();
+				}
+
+
+				$sql = "SELECT ee.fk_target";
+				$sql .= " FROM " . MAIN_DB_PREFIX . "element_element AS ee";
+				$sql .= " WHERE ee.sourcetype = 'constat'";
+				$sql .= " AND ee.fk_source = " . intval($object->id);
+				$sql .= " AND ee.targettype = 'actions_actionq3se'";
+
+				// Exécution de la requête
+				$resql = $db->query($sql);
+
+				if ($resql === false) {
+					echo 'SQL Error: ' . $db->lasterror();
+					exit;
+				}
+
+				// Récupération des IDs des actions
+				$action_ids = [];
+				while ($row = $db->fetch_object($resql)) {
+					$action_ids[] = $row->fk_target;
+				}
+
+				// Si aucune action n'est liée, on affiche un message
+				if (empty($action_ids)) {
+					$html = '
+							<table border="0" cellpadding="5" cellspacing="0" width="100%">
+								<tr><td><strong> ACTIONS CORRECTIVES ET PREVENTIVES (C/P) </strong></td></tr>
+								<tr><td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">Aucune action préventive ou corréctive n\'est liée à ce constat.</td></tr>
+							</table>';
+				} else {
+					// Étape 2 : Requête pour récupérer les détails des actions
+					$action_ids_str = implode(',', $action_ids);
+					$sql_actions = "SELECT * FROM " . MAIN_DB_PREFIX . "actions_actionq3se AS a";
+					$sql_actions .= " WHERE a.rowid IN ($action_ids_str)";
+
+					$resql_actions = $db->query($sql_actions);
+
+					if ($resql_actions === false) {
+						echo 'SQL Error: ' . $db->lasterror();
+						exit;
+					}
+
+
+						// Générer le tableau des actions
+					$html = '<table border="0" cellpadding="5" cellspacing="0" width="100%">
+								<tr><td colspan="5"><strong> ACTIONS CORRECTIVES ET PREVENTIVES (C/P) </strong></td></tr>
+								<thead>
+									<tr>
+										<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;"><strong>Numéro</strong></th>
+										<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;"><strong>Référence</strong></th>
+										<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;"><strong>Intervenant</strong></th>
+										<th style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;"><strong>Délai</strong></th>
+										<th style="border-bottom: 0.2pt solid #000; text-align: center;"><strong>C/P</strong></th>
+									</tr>
+								</thead>
+								<tbody>';
+
+					while ($action = $db->fetch_object($resql_actions)) {
+						// Extraction des informations de l'action
+						if($action->intervenant > 0) {
+							$user_static->fetch($action->intervenant);
+							$firstname = htmlspecialchars($user_static->firstname);
+							$lastname = htmlspecialchars($user_static->lastname);
+						}
+						else {
+							$firstname = '';
+							$lastname = '';
+						}
+
+						$action_rowid = htmlspecialchars($action->rowid);
+						$action_ref = htmlspecialchars($action->ref);
+						$action_date_eche = htmlspecialchars($action->date_eche);
+						$action_CP = htmlspecialchars($action->CP);
+
+						$action_CP_map = [
+							1 => 'P',
+							2 => 'C',
+							3 => 'C/P'
+						];
+
+						$action_CP_show= isset($action_CP_map[$action->CP]) ? $action_CP_map[$action->CP] : '';
+
+						// Affichage des informations dans une ligne du tableau
+						$html .= '
+						<tr>
+							<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;">' . $action_rowid . '</td>
+							<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: left;">' . $action_ref . '</td>
+							<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;">' . $firstname . ' ' . $lastname . '</td>
+							<td style="border-bottom: 0.2pt solid #000; border-right: 0.2pt solid #000; text-align: center;">' . $action_date_eche . '</td>
+							<td style="border-bottom: 0.2pt solid #000; text-align: center;">' . $action_CP_show . '</td>
+						</tr>';
+					}
+
+				$html .= '
+					</tbody></table>';
+
+				}
+
+				
+				if (intval($accordclient) === 1) {
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							<tr>
+								<td><strong> ACCORD CLIENT REQUIS SUR TRAITEMENT </strong></td>
+								<td style="color: rgb(40, 80, 139);">' . $accordClient_display . '</td>
+							</tr>
+						</table>';
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							<tr>
+								<td><strong>Le : </strong></td>
+								<td>'.$formattedDateAccordClient.'</td>
+								<td><strong>Par : </strong></td>
+								<td>'.$object->accordclient_par.'</td>
+								<td><strong>Visa : </strong></td>	
+								<td></td>	
+							</tr>
+							<tr>
+								<td colspan="6"><strong>Commentaire : </strong></td>
+							</tr>
+							<tr>
+								<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $accordClientcomm_safe . '</td>
+							</tr>
+						</table>';
+				} 
+				else {
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							<tr>
+								<td><strong> ACCORD CLIENT REQUIS SUR TRAITEMENT </strong></td>
+								<td style="color: rgb(40, 80, 139);">' . $accordClient_display . '</td>
+							</tr>
+						</table>';
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							<tr>
+								<td colspan="6"><strong>Commentaire : </strong></td>
+							</tr>
+							<tr>
+								<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $accordClientcomm_safe . '</td>
+							</tr>
+						</table>';
+				}
+
+
+				// Section pour les actions soldées
+				$html .= '
+				<table border="0" cellpadding="5" cellspacing="0" width="100%">
+					<tr><td colspan="2"><strong> SUIVI DES ACTIONS </strong></td></tr>
+					<tr>
+						<td><strong>Action soldées</strong></td>';
+						
+				// Check if all actions are sold (status = 3)
+				if ($is_all_sold) {
+					$html .= '<td style="color: rgb(40, 80, 139);">Oui</td>';
+				} else {
+					$html .= '<td style="color: rgb(40, 80, 139);">Non</td>';
+				}
+
+				$html .= '</tr></table>';
+
+				$html .='
+				<table border="0" cellpadding="5" cellspacing="0" width="100%">
+					<tr>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Efficacité à court terme des actions :</strong></td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139) ; color: rgb(40, 80, 139);">	
+							<label>
+								<input type="checkbox" name="efficacite" value="oui"> Oui
+							</label>
+							<label>
+								<input type="checkbox" name="efficacite" value="non"> Non
+							</label>
+						</td>
+					</tr>
+				</table>';
+
+
+				if (intval($controleclient) === 1) {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td><strong> CONTRÔLE CLIENT </strong></td>
+							<td style="color: rgb(40, 80, 139);">' . $controleClient_display . '</td>
+						</tr>
+					</table>';
+					$html .= '
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+							<tr>
+								<td><strong>Le : </strong></td>
+								<td>'.$formattedDateControleClient.'</td>
+								<td><strong>Par : </strong></td>
+								<td>'.$object->controleclient_par.'</td>
+								<td><strong>Visa : </strong></td>	
+								<td></td>	
+							</tr>
+							<tr>
+								<td colspan="6"><strong>Commentaire : </strong></td>
+							</tr>
+							<tr>
+								<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $controleClientcomm_safe . '</td>
+							</tr>
+						</table>';
+				}
+				else {
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td><strong> CONTRÔLE CLIENT </strong></td>
+							<td style="color: rgb(40, 80, 139);">' . $controleClient_display . '</td>
+						</tr>
+					</table>';
+					$html .= '
+					<table border="0" cellpadding="5" cellspacing="0" width="100%">
+						<tr>
+							<td colspan="6"><strong>Commentaire : </strong></td>
+						</tr>
+						<tr>
+							<td colspan="6" style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">' . $controleClientcomm_safe . '</td>
+						</tr>
+					</table>';
+				}
+
+
+				
+				$html .= '
+				<table border="0" cellpadding="5" cellspacing="0" width="100%">
+					<tr>
+						<td><strong> CLÔTURE DE LA FICHE DE CONSTAT </strong></td>
+					</tr>
+				</table>
+				<br></br>
+				<table border="0" cellpadding="5" cellspacing="0" width="100%">
+					<tr>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Le : </strong></td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">'.$formattedDateCloture.'</td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Par : </strong></td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);">'.$object->controleclient_par.'</td>
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"><strong>Visa : </strong></td>		
+						<td style="border-bottom: 0.5pt solid #000; border-bottom-color: rgb(40, 80, 139);"></td>
+					</tr>
+				</table>';
 	
 
-
-
-	if ($pdf->getY() > 260 || $pdf->getPage() == 1) { // Si la dernière page a encore du contenu
-		$html .= '</tbody></table>';
-		$pdf->writeHTML($html, true, false, true, false, '');
-	}
+				$pdf->writeHTML($html, true, false, true, false, '');
+				$this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
+			
 
 				// Pagefoot
 				$this->_pagefoot($pdf, $object, $outputlangs);
@@ -1498,14 +1509,14 @@ $html .= '
 
 
 
-	private function renderHtmlFieldsWithHeader($pdf, $descriptionConstat, $actionImmediateComm, $object, $outputlangs, $outputlangsbis, $max_lines = 39, $default_font_size = 12) {
+	private function renderHtmlFieldsWithHeader($pdf, $description_constat, $actionsimmediates_commentaire, $object, $outputlangs, $outputlangsbis, $max_lines = 39, $default_font_size = 12) {
 		// Initialisation des compteurs
 		$cpt = 0;
 		$pagenb = 1;
 	
 		// Convertir les contenus HTML en lignes
-		$linesDescription = explode('<br>', nl2br($descriptionConstat));
-		$linesAction = explode('<br>', nl2br($actionImmediateComm));
+		$linesDescription = explode('<br>', nl2br($description_constat));
+		$linesAction = explode('<br>', nl2br($actionsimmediates_commentaire));
 	
 		// Vérification des contenus avant la fusion
 		//var_dump("Description Const. :", $linesDescription);
@@ -1624,163 +1635,160 @@ $html .= '
 	 *  @param  Translate	$outputlangsbis	Object lang for output bis
 	 *  @return	float|int
 	 */
-	// protected function _pagehead(&$pdf, $object, $showaddress, $outputlangs, $outputlangsbis = null)
-	// {
-	// 	global $conf, $langs;
+	protected function _pagehead(&$pdf, $object, $showaddress, $outputlangs, $outputlangsbis = null)
+	{
+		global $conf, $langs;
 
-	// 	// Load traductions files required by page
-	// 	$outputlangs->loadLangs(array("main", "bills", "propal", "companies", "constat@constat"));
+		// Load traductions files required by page
+		$outputlangs->loadLangs(array("main", "bills", "propal", "companies", "constat@constat"));
 
-	// 	$default_font_size = pdf_getPDFFontSize($outputlangs);
+		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
-	// 	pdf_pagehead($pdf, $outputlangs, $this->page_hauteur);
+		pdf_pagehead($pdf, $outputlangs, $this->page_hauteur);
 
-	// 	// Show Draft Watermark
-	// 	if ($object->statut == $object::STATUS_DRAFT && (!empty($conf->global->FACTURE_DRAFT_WATERMARK))) {
-	// 		  pdf_watermark($pdf, $outputlangs, $this->page_hauteur, $this->page_largeur, 'mm', $conf->global->FACTURE_DRAFT_WATERMARK);
-	// 	}
+		// Show Draft Watermark
+		if ($object->statut == $object::STATUS_DRAFT && (!empty($conf->global->FACTURE_DRAFT_WATERMARK))) {
+			  pdf_watermark($pdf, $outputlangs, $this->page_hauteur, $this->page_largeur, 'mm', $conf->global->FACTURE_DRAFT_WATERMARK);
+		}
 
-	// 	$pdf->SetTextColor(0, 0, 60);
-	// 	$pdf->SetFont('', 'B', $default_font_size + 3);
+		$pdf->SetTextColor(0, 0, 60);
+		$pdf->SetFont('', 'B', $default_font_size + 3);
 
-	// 	$w = 50;
+		$w = 50;
 
-	// 	$posy = $this->marge_haute;
-	// 	$posx = $this->page_largeur - $this->marge_droite - $w;
+		$posy = $this->marge_haute;
+		$posx = $this->page_largeur - $this->marge_droite - $w;
 
-	// 	$pdf->SetXY($this->marge_gauche, $posy);
+		$pdf->SetXY($this->marge_gauche, $posy);
 
-	// 	// Logo
-
-	
-
-	// 	if (empty($conf->global->PDF_DISABLE_MYCOMPANY_LOGO)) {
-	// 		if ($this->emetteur->logo) {
-	// 			$logodir = $conf->mycompany->dir_output;
-	// 			//var_dump($logodir);
-	// 			if (!empty($conf->mycompany->multidir_output[$object->entity])) {
-	// 				$logodir = $conf->mycompany->multidir_output[$object->entity];
-	// 			}
-	// 			if (empty($conf->global->MAIN_PDF_USE_LARGE_LOGO)) {
-	// 				$logo = $logodir.'/logos/thumbs/'.$this->emetteur->logo_small;
-	// 			} else {
-	// 				$logo = $logodir.'/logos/'.$this->emetteur->logo;
+		// Logo
+		if (empty($conf->global->PDF_DISABLE_MYCOMPANY_LOGO)) {
+			if ($this->emetteur->logo) {
+				$logodir = $conf->mycompany->dir_output;
+				//var_dump($logodir);
+				if (!empty($conf->mycompany->multidir_output[$object->entity])) {
+					$logodir = $conf->mycompany->multidir_output[$object->entity];
+				}
+				if (empty($conf->global->MAIN_PDF_USE_LARGE_LOGO)) {
+					$logo = $logodir.'/logos/thumbs/'.$this->emetteur->logo_small;
+				} else {
+					$logo = $logodir.'/logos/'.$this->emetteur->logo;
 					
 
-	// 			}
-	// 			if (is_readable($logo)) {
-	// 				$height = pdf_getHeightForLogo($logo);
-	// 				$pdf->Image($logo, $this->marge_gauche, $posy, 0, $height); // width=0 (auto)
-	// 			} else {
+				}
+				if (is_readable($logo)) {
+					$height = pdf_getHeightForLogo($logo);
+					$pdf->Image($logo, $this->marge_gauche, $posy, 0, $height); // width=0 (auto)
+				} else {
 					
-	// 				$pdf->SetTextColor(200, 0, 0);
-	// 				$pdf->SetFont('', 'B', $default_font_size - 2);
-	// 				$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorLogoFileNotFound", $logo), 0, 'L');
-	// 				$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorGoToGlobalSetup"), 0, 'L');
-	// 			}
-	// 		} else {
-	// 			$text = $this->emetteur->name;
-	// 			$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
-	// 		}
-	// 	}
+					$pdf->SetTextColor(200, 0, 0);
+					$pdf->SetFont('', 'B', $default_font_size - 2);
+					$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorLogoFileNotFound", $logo), 0, 'L');
+					$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorGoToGlobalSetup"), 0, 'L');
+				}
+			} else {
+				$text = $this->emetteur->name;
+				$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
+			}
+		}
 	
 
 
-	// 	$pdf->SetFont('', 'B', $default_font_size - 2);
-	// 	$pdf->SetTextColor(0, 0, 60);
+		$pdf->SetFont('', 'B', $default_font_size - 2);
+		$pdf->SetTextColor(0, 0, 60);
 
 		
 
-	// 	$pdf->SetXY($posx, $posy);
-	// 	$textref = $outputlangs->transnoentities("Ref")." : ".$outputlangs->convToOutputCharset($object->ref);
-	// 	/*if ($object->status == $object::STATUS_DRAFT) {
-	// 		$pdf->SetTextColor(128, 0, 0);
-	// 		$textref .= ' - '.$outputlangs->transnoentities("NotValidated");
-	// 	}*/
-	// 	$pdf->MultiCell($w, 4, $textref, '', 'L');
+		$pdf->SetXY($posx, $posy);
+		$textref = $outputlangs->transnoentities("Ref")." : ".$outputlangs->convToOutputCharset($object->ref);
+		/*if ($object->status == $object::STATUS_DRAFT) {
+			$pdf->SetTextColor(128, 0, 0);
+			$textref .= ' - '.$outputlangs->transnoentities("NotValidated");
+		}*/
+		$pdf->MultiCell($w, 4, $textref, '', 'L');
 
-	// 	$posy += 4;
-	// 	if (!empty($object->fk_project)) {
-	// 		$projet = New Project($this->db);
-	// 		$projet->fetch($object->fk_project);
-	// 		$pdf->SetXY($posx, $posy);
-	// 		$pdf->MultiCell($w, 3, $outputlangs->transnoentities("Affaires")." : ".(empty($projet->ref) ? '' : $projet->ref), '', 'L');
-	// 	}
+		$posy += 4;
+		if (!empty($object->fk_project)) {
+			$projet = New Project($this->db);
+			$projet->fetch($object->fk_project);
+			$pdf->SetXY($posx, $posy);
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("Affaires")." : ".(empty($projet->ref) ? '' : $projet->ref), '', 'L');
+		}
 
-	// 	$posy += 10;  // Ajuste la hauteur pour le titre
-	// 	$pdf->SetFont('', 'B', $default_font_size + 3);
-	// 	$pdf->SetTextColor(0, 40, 95);
+		$posy += 10;  // Ajuste la hauteur pour le titre
+		$pdf->SetFont('', 'B', $default_font_size + 3);
+		$pdf->SetTextColor(0, 40, 95);
 
-	// 	$title = $outputlangs->transnoentities("Fiche de constat");
-	// 	$pdf->SetXY(($this->page_largeur / 2) - ($pdf->GetStringWidth($title) / 2) - 5, $posy);
+		$title = $outputlangs->transnoentities("Fiche de constat");
+		$pdf->SetXY(($this->page_largeur / 2) - ($pdf->GetStringWidth($title) / 2) - 5, $posy);
 
-	// 	if (!empty($conf->global->PDF_USE_ALSO_LANGUAGE_CODE) && is_object($outputlangsbis)) {
-	// 		$title .= ' - ' . $outputlangsbis->transnoentities("Fiche de constat");
-	// 	}
+		if (!empty($conf->global->PDF_USE_ALSO_LANGUAGE_CODE) && is_object($outputlangsbis)) {
+			$title .= ' - ' . $outputlangsbis->transnoentities("Fiche de constat");
+		}
 
-	// 	$pdf->MultiCell($pdf->GetStringWidth($title) + 10, 8, $title, '', 'C');
+		$pdf->MultiCell($pdf->GetStringWidth($title) + 10, 8, $title, '', 'C');
 
-	// 	// Déplacer la ligne d'une ligne plus bas
-	// 	$posy += 8;  // Augmentez cette valeur si nécessaire pour déplacer la ligne plus bas
+		// Déplacer la ligne d'une ligne plus bas
+		$posy += 8;  // Augmentez cette valeur si nécessaire pour déplacer la ligne plus bas
 
-	// 	// Ajouter la ligne horizontale
-	// 	$pdf->SetXY($this->marge_gauche, $posy);  // Positionner la ligne
-	// 	$pdf->WriteHTML('<hr color="#00285e">');
+		// Ajouter la ligne horizontale
+		$pdf->SetXY($this->marge_gauche, $posy);  // Positionner la ligne
+		$pdf->WriteHTML('<hr>');
 		
-	// 	/*if (!empty($conf->global->PDF_SHOW_PROJECT)) {
-	// 		$object->fetch_projet();
-	// 		if (!empty($object->project->ref)) {
-	// 			$outputlangs->load("projects");
-	// 			$posy += 3;
-	// 			$pdf->SetXY($posx, $posy);
-	// 			$pdf->SetTextColor(0, 0, 60);
-	// 			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("RefProject")." : ".(empty($object->project->ref) ? '' : $object->project->ref), '', 'R');
-	// 		}
-	// 	}*/
+		/*if (!empty($conf->global->PDF_SHOW_PROJECT)) {
+			$object->fetch_projet();
+			if (!empty($object->project->ref)) {
+				$outputlangs->load("projects");
+				$posy += 3;
+				$pdf->SetXY($posx, $posy);
+				$pdf->SetTextColor(0, 0, 60);
+				$pdf->MultiCell($w, 3, $outputlangs->transnoentities("RefProject")." : ".(empty($object->project->ref) ? '' : $object->project->ref), '', 'R');
+			}
+		}*/
 
-	// 	/*$posy += 4;
-	// 	$pdf->SetXY($posx, $posy);
-	// 	$pdf->SetTextColor(0, 0, 60);
+		/*$posy += 4;
+		$pdf->SetXY($posx, $posy);
+		$pdf->SetTextColor(0, 0, 60);
 
-	// 	$title = $outputlangs->transnoentities("Date");
-	// 	if (!empty($conf->global->PDF_USE_ALSO_LANGUAGE_CODE) && is_object($outputlangsbis)) {
-	// 		$title .= ' - '.$outputlangsbis->transnoentities("Date");
-	// 	}
-	// 	$pdf->MultiCell($w, 3, $title." : ".dol_print_date($object->date, "day", false, $outputlangs), '', 'R');*/
+		$title = $outputlangs->transnoentities("Date");
+		if (!empty($conf->global->PDF_USE_ALSO_LANGUAGE_CODE) && is_object($outputlangsbis)) {
+			$title .= ' - '.$outputlangsbis->transnoentities("Date");
+		}
+		$pdf->MultiCell($w, 3, $title." : ".dol_print_date($object->date, "day", false, $outputlangs), '', 'R');*/
 
-	// 	/*if ($object->thirdparty->code_client) {
-	// 		$posy += 3;
-	// 		$pdf->SetXY($posx, $posy);
-	// 		$pdf->SetTextColor(0, 0, 60);
-	// 		$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CustomerCode")." : ".$outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
-	// 	}*/
+		/*if ($object->thirdparty->code_client) {
+			$posy += 3;
+			$pdf->SetXY($posx, $posy);
+			$pdf->SetTextColor(0, 0, 60);
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CustomerCode")." : ".$outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
+		}*/
 
-	// 	// Get contact
-	// 	/*if (!empty($conf->global->DOC_SHOW_FIRST_SALES_REP)) {
-	// 		$arrayidcontact = $object->getIdContact('internal', 'SALESREPFOLL');
-	// 		if (count($arrayidcontact) > 0) {
-	// 			$usertmp = new User($this->db);
-	// 			$usertmp->fetch($arrayidcontact[0]);
-	// 			$posy += 4;
-	// 			$pdf->SetXY($posx, $posy);
-	// 			$pdf->SetTextColor(0, 0, 60);
-	// 			$pdf->MultiCell($w, 3, $langs->transnoentities("SalesRepresentative")." : ".$usertmp->getFullName($langs), '', 'R');
-	// 		}
-	// 	}*/
+		// Get contact
+		/*if (!empty($conf->global->DOC_SHOW_FIRST_SALES_REP)) {
+			$arrayidcontact = $object->getIdContact('internal', 'SALESREPFOLL');
+			if (count($arrayidcontact) > 0) {
+				$usertmp = new User($this->db);
+				$usertmp->fetch($arrayidcontact[0]);
+				$posy += 4;
+				$pdf->SetXY($posx, $posy);
+				$pdf->SetTextColor(0, 0, 60);
+				$pdf->MultiCell($w, 3, $langs->transnoentities("SalesRepresentative")." : ".$usertmp->getFullName($langs), '', 'R');
+			}
+		}*/
 
-	// 	/*$posy += 1;
-	// 	$top_shift = 0;
-	// 	// Show list of linked objects
-	// 	$current_y = $pdf->getY();
-	// 	$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, $w, 3, 'R', $default_font_size);
-	// 	if ($current_y < $pdf->getY()) {
-	// 		$top_shift = $pdf->getY() - $current_y;
-	// 	}*/
+		/*$posy += 1;
+		$top_shift = 0;
+		// Show list of linked objects
+		$current_y = $pdf->getY();
+		$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, $w, 3, 'R', $default_font_size);
+		if ($current_y < $pdf->getY()) {
+			$top_shift = $pdf->getY() - $current_y;
+		}*/
 
 		
-	// 	$pdf->SetTextColor(0, 0, 0);
-	// 	return $top_shift;
-	// }
+		$pdf->SetTextColor(0, 0, 0);
+		return $top_shift;
+	}
 
 	
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.PublicUnderscore

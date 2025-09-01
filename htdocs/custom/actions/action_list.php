@@ -80,7 +80,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 // load module libraries
-require_once __DIR__.'/class/action.class.php';
+require_once __DIR__.'/class/actionq3se.class.php';
 
 // for other modules
 //dol_include_once('/othermodule/class/otherobject.class.php');
@@ -116,7 +116,7 @@ $pageprev = $page - 1;
 $pagenext = $page + 1;
 
 // Initialize technical objects
-$object = new Action($db);
+$object = new ActionQ3SE($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->actions->dir_output.'/temp/massgeneration/'.$user->id;
 $hookmanager->initHooks(array($contextpage)); 	// Note that conf->hooks_modules contains array of activated contexes
@@ -191,7 +191,7 @@ $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // There is several ways to check permission.
 // Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = 0;
+$enablepermissioncheck = 1;
 if ($enablepermissioncheck) {
 	$permissiontoread = $user->hasRight('actions', 'action', 'read');
 	$permissiontoadd = $user->hasRight('actions', 'action', 'write');
@@ -254,8 +254,8 @@ if (empty($reshook)) {
 	}
 
 	// Mass actions
-	$objectclass = 'Action';
-	$objectlabel = 'Action';
+	$objectclass = 'ActionQ3SE';
+	$objectlabel = 'ActionQ3SE';
 	$uploaddir = $conf->actions->dir_output;
 	include DOL_DOCUMENT_ROOT.'/core/actions_massactions.inc.php';
 
@@ -305,7 +305,7 @@ if (isset($extrafields->attributes[$object->table_element]['label']) && is_array
     $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . $object->table_element . "_extrafields as ef on (t.rowid = ef.fk_object)";
 }
 
-$sql .= " WHERE (";
+$sql .= " WHERE";
 
 // Assurez-vous de la gestion multi-entity si nécessaire
 if ($object->ismultientitymanaged == 1) {
@@ -346,57 +346,61 @@ foreach ($search as $key => $val) {
     }
 }
 
-// Ajouter un AND avant le bloc EXISTS
-$sql .= " AND (";
+if(!$user->hasRight('actions', 'action', 'readall')) {
+	$sql .= " AND (t.fk_user_creat = $user->id OR t.intervenant = $user->id)";
+}
 
-// Ajouter les conditions EXISTS pour vérifier les permissions et accès
-$sql .= " EXISTS (
-        SELECT 1
-        FROM " . MAIN_DB_PREFIX . "user AS u
-        JOIN " . MAIN_DB_PREFIX . "usergroup_user AS g ON u.rowid = g.fk_user
-        JOIN " . MAIN_DB_PREFIX . "usergroup_rights AS r ON g.fk_usergroup = r.fk_usergroup
-        WHERE (r.fk_id IN (50003404))
-        AND u.statut = 1
-        AND u.rowid = " . (int)$user->id . "
-    ) OR EXISTS (
-        SELECT 1
-        FROM " . MAIN_DB_PREFIX . "user_rights AS ur
-        WHERE ur.fk_user = " . (int)$user->id . "
-        AND ur.fk_id IN (50003404)
-    ) OR (t.ref IS NOT NULL AND t.intervenant = " . (int)$user->id . " AND t.status IN (1, 2, 3, 4, 9))
-) OR EXISTS (
-    SELECT 1 
-    FROM " . MAIN_DB_PREFIX . "element_element AS ee 
-    JOIN " . MAIN_DB_PREFIX . "constat_constat AS c ON (
-        (ee.fk_source = t.rowid AND ee.sourcetype = 'action' AND ee.targettype = 'constat_constat' AND ee.fk_target = c.rowid)
-        OR 
-        (ee.fk_target = t.rowid AND ee.targettype = 'actions_action' AND ee.sourcetype = 'constat_constat' AND ee.fk_source = c.rowid)
-    )
-    WHERE c.fk_project IS NOT NULL
-    AND c.fk_project IN (
-        SELECT pe.fk_object 
-        FROM " . MAIN_DB_PREFIX . "projet_extrafields AS pe 
-        WHERE pe.agenceconcerne IN (
-            SELECT sc.fk_soc 
-            FROM " . MAIN_DB_PREFIX . "societe_commerciaux AS sc 
-            WHERE sc.fk_soc = pe.agenceconcerne 
-            AND EXISTS (
-                SELECT 1 
-                FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug 
-                WHERE ug.fk_user = " . (int)$user->id . " 
-                AND ug.fk_usergroup = 9
-            )
-        )
-    )
-) AND EXISTS (
-    SELECT 1 
-    FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug 
-    WHERE ug.fk_user = " . (int)$user->id . " 
-    AND ug.fk_usergroup = 9
-)";
+// // Ajouter un AND avant le bloc EXISTS
+// $sql .= " AND (";
 
-// Fermer la parenthèse ouverte
-$sql .= ")";
+// // Ajouter les conditions EXISTS pour vérifier les permissions et accès
+// $sql .= " EXISTS (
+//         SELECT 1
+//         FROM " . MAIN_DB_PREFIX . "user AS u
+//         JOIN " . MAIN_DB_PREFIX . "usergroup_user AS g ON u.rowid = g.fk_user
+//         JOIN " . MAIN_DB_PREFIX . "usergroup_rights AS r ON g.fk_usergroup = r.fk_usergroup
+//         WHERE (r.fk_id IN (50003404))
+//         AND u.statut = 1
+//         AND u.rowid = " . (int)$user->id . "
+//     ) OR EXISTS (
+//         SELECT 1
+//         FROM " . MAIN_DB_PREFIX . "user_rights AS ur
+//         WHERE ur.fk_user = " . (int)$user->id . "
+//         AND ur.fk_id IN (50003404)
+//     ) OR (t.ref IS NOT NULL AND t.intervenant = " . (int)$user->id . " AND t.status IN (1, 2, 3, 4, 9))
+// ) OR EXISTS (
+//     SELECT 1 
+//     FROM " . MAIN_DB_PREFIX . "element_element AS ee 
+//     JOIN " . MAIN_DB_PREFIX . "constat_constat AS c ON (
+//         (ee.fk_source = t.rowid AND ee.sourcetype = 'action' AND ee.targettype = 'constat_constat' AND ee.fk_target = c.rowid)
+//         OR 
+//         (ee.fk_target = t.rowid AND ee.targettype = 'actions_action' AND ee.sourcetype = 'constat_constat' AND ee.fk_source = c.rowid)
+//     )
+//     WHERE c.fk_project IS NOT NULL
+//     AND c.fk_project IN (
+//         SELECT pe.fk_object 
+//         FROM " . MAIN_DB_PREFIX . "projet_extrafields AS pe 
+//         WHERE pe.agenceconcerne IN (
+//             SELECT sc.fk_soc 
+//             FROM " . MAIN_DB_PREFIX . "societe_commerciaux AS sc 
+//             WHERE sc.fk_soc = pe.agenceconcerne 
+//             AND EXISTS (
+//                 SELECT 1 
+//                 FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug 
+//                 WHERE ug.fk_user = " . (int)$user->id . " 
+//                 AND ug.fk_usergroup = 9
+//             )
+//         )
+//     )
+// ) AND EXISTS (
+//     SELECT 1 
+//     FROM " . MAIN_DB_PREFIX . "usergroup_user AS ug 
+//     WHERE ug.fk_user = " . (int)$user->id . " 
+//     AND ug.fk_usergroup = 9
+// )";
+
+// // Fermer la parenthèse ouverte
+// $sql .= ")";
 
 
 
@@ -570,7 +574,7 @@ print_barre_liste('Action', $page, $_SERVER["PHP_SELF"], $param, $sortfield, $so
 // Add code for pre mass action (confirmation or email presend form)
 $topicmail = "SendActionRef";
 $modelmail = "action";
-$objecttmp = new Action($db);
+$objecttmp = new ActionQ3SE($db);
 $trackid = 'xxxx'.$object->id;
 include DOL_DOCUMENT_ROOT.'/core/tpl/massactions_pre.tpl.php';
 
@@ -638,7 +642,7 @@ foreach ($object->fields as $key => $val) {
 	if (!empty($arrayfields['t.'.$key]['checked'])) {
 		print '<td class="liste_titre'.($cssforfield ? ' '.$cssforfield : '').($key == 'status' ? ' parentonrightofpage' : '').'">';
 		if (!empty($val['arrayofkeyval']) && is_array($val['arrayofkeyval'])) {
-			print $form->selectarray('search_'.$key, $val['arrayofkeyval'], (isset($search[$key]) ? $search[$key] : ''), $val['notnull'], 0, 0, '', 1, 0, 0, '', 'maxwidth100'.($key == 'status' ? ' search_status width100 onrightofpage' : ''), 1);
+			print $form->selectarray('search_'.$key, $val['arrayofkeyval'], (isset($search[$key]) ? $search[$key] : ''), 1, 0, 0, '', 1, 0, 0, '', 'maxwidth100'.($key == 'status' ? ' search_status width100 onrightofpage' : ''), 1);
 		} elseif ((strpos($val['type'], 'integer:') === 0) || (strpos($val['type'], 'sellist:') === 0)) {
 			print $object->showInputField($val, $key, (isset($search[$key]) ? $search[$key] : ''), '', '', 'search_', $cssforfield.' maxwidth250', 1);
 		} elseif (preg_match('/^(date|timestamp|datetime)/', $val['type'])) {
@@ -828,13 +832,10 @@ while ($i < $imaxinloop) {
 						$totalarray['nbfield']++;
 					}
 				}
-				
-				
-
-				
-
 		
 				foreach ($object->fields as $key => $val) {
+					$val['visible'] = (int) dol_eval($val['visible'], 1);
+
 					$cssforfield = (empty($val['csslist']) ? (empty($val['css']) ? '' : $val['css']) : $val['csslist']);
 					if (in_array($val['type'], array('date', 'datetime', 'timestamp'))) {
 						$cssforfield .= ($cssforfield ? ' ' : '').'center';

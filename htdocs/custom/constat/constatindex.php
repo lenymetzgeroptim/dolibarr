@@ -116,7 +116,8 @@ if ($tmp) {
 */
 
 
-if ($user->rights->constat->constat->Statistique){
+
+if($user->hasRight('constat', 'constat', 'readall')) {
 	$tmp = getStatusByYearChart();
 	if ($tmp) {
 		print $tmp;
