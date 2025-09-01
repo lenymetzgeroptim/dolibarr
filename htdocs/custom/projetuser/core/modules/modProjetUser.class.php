@@ -117,6 +117,7 @@ class modProjetUser extends DolibarrModules
 			'hooks' => array(
 				   'data' => array(
 				       'formfile',
+					   'projectdocument'
 				   ),
 				   'entity' => '0',
 			),
