@@ -1,0 +1,65 @@
+# Copyright (C) 2023 FADEL Soufiane <s.fadel@optim-industries.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleSSEName'
+ModuleSSEName = Causerie
+# Module description 'ModuleSSEDesc'
+ModuleSSEDesc = Pour faciliter la planification, le suivi et l'évaluation des réunions d'équipe (causeries) et des objectifs stratégiques
+
+#
+# Admin page
+#
+SSESetup = Configuration des Causeries
+Settings = Settings
+SSESetupPage = SSE setup page
+SSE_MYPARAM1 = My param 1
+SSE_MYPARAM1Tooltip = My param 1 tooltip
+SSE_MYPARAM2=My param 2
+SSE_MYPARAM2Tooltip=My param 2 tooltip
+
+
+#
+# About page
+#
+About = About
+SSEAbout = About SSE
+SSEAboutPage = SSE about page
+
+#
+# Sample page
+#
+MyPageName = My page name
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
+
+#
+# Agenda
+#
+CAUSERIE_CREATEInDolibarr = La causerie %s est créé
+CAUSERIE_MODIFYInDolibarr = La causerie %s est modifiée
+CAUSERIE_DELETEInDolibarr = La causerie  %s, est supprimé
+CAUSERIE_VAVIDATEInDolibarr = La causerie %s, est validé
+CAUSERIE_SCHEDULE_TALKInDolibarr = La causerie %s, est programée
+CAUSERIE_REALIZEDInDolibarr = La causerie %s, est réalisée
+CAUSERIE_CLOSEDInDolibarr = La causerie %s est réalisée et clôturée
+CAUSERIE_CANCELEDInDolibarr = La causerie %s est annulé
