@@ -115,11 +115,11 @@ class modSSE extends DolibarrModules
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
-				//   'data' => array(
-				//       'hookcontext1',
-				//       'hookcontext2',
-				//   ),
-				//   'entity' => '0',
+				  'data' => array(
+				      'hookcontext1',
+				      'hookcontext2',
+				  ),
+				  'entity' => '0',
 			),
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -211,29 +211,28 @@ class modSSE extends DolibarrModules
 
 		// Dictionaries
 		$this->dictionaries = array();
-		/* Example:
+		// Example:
 		$this->dictionaries=array(
 			'langs'=>'sse@sse',
 			// List of tables we want to see into dictonnary editor
-			'tabname'=>array(MAIN_DB_PREFIX."table1", MAIN_DB_PREFIX."table2", MAIN_DB_PREFIX."table3"),
+			'tabname'=>array(MAIN_DB_PREFIX."sse_type_abs"),
 			// Label of tables
-			'tablib'=>array("Table1", "Table2", "Table3"),
+			'tablib' => array("Types d'absences des causeries"),
 			// Request to select fields
-			'tabsql'=>array('SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table1 as f', 'SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table2 as f', 'SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table3 as f'),
+			'tabsql'=>array('SELECT f.rowid as rowid, f.label, f.active FROM '.MAIN_DB_PREFIX.'sse_type_abs as f'),
 			// Sort order
-			'tabsqlsort'=>array("label ASC", "label ASC", "label ASC"),
-			// List of fields (result of select to show dictionary)
-			'tabfield'=>array("code,label", "code,label", "code,label"),
+			'tabsqlsort'=>array("label ASC"),
+			'tabfield'=>array("label"),  
 			// List of fields (list of fields to edit a record)
-			'tabfieldvalue'=>array("code,label", "code,label", "code,label"),
+			'tabfieldvalue'=>array("label"),
 			// List of fields (list of fields for insert)
-			'tabfieldinsert'=>array("code,label", "code,label", "code,label"),
+			'tabfieldinsert'=>array("label"),
 			// Name of columns with primary key (try to always name it 'rowid')
-			'tabrowid'=>array("rowid", "rowid", "rowid"),
+			'tabrowid'=>array("rowid"),
 			// Condition to show each dictionary
-			'tabcond'=>array($conf->sse->enabled, $conf->sse->enabled, $conf->sse->enabled)
+			'tabcond'=>array($conf->sse->enabled)
 		);
-		*/
+		
 
 		// Boxes/Widgets
 		// Add here list of php file(s) stored in sse/core/boxes that contains a class to show a widget.
@@ -326,6 +325,11 @@ class modSSE extends DolibarrModules
 		$this->rights[$r][1] = "Lire ses causeries : celles qu'il a créées, celles où il est désigné comme animateur ou celles où il participe."; // Permission label
 		$this->rights[$r][4] = 'causerie';
 		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->sse->causerie->write_emargement)
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
+		$this->rights[$r][1] = "Lire les causeries des salariés de son antenne.";
+		$this->rights[$r][4] = 'causerie';
+		$this->rights[$r][5] = 'read_antenne'; // In php code, permission will be checked by test if ($user->rights->sse->causerie->write_emargement)
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
 		$this->rights[$r][1] = 'Supprimer ou modifier les causeries avant réalisation.'; // Permission label
@@ -449,6 +453,19 @@ class modSSE extends DolibarrModules
 			'position'=>1+$r,
 			'enabled'=>'$conf->sse->enabled',  
 			'perms'=>'$user->rights->sse->causerie->read',			                
+			'target'=>'',
+			'user'=>2,				                
+		);
+		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=causerie,fk_leftmenu=sse_causerie_new',	    
+			'titre'=>'Votre antenne',
+			'mainmenu'=>'causerie',
+			'leftmenu'=>'sse_causerie_list',
+			'url'=>'/sse/causerie_antenne_list.php',
+			'langs'=>'sse@sse',	        
+			'position'=>1+$r,
+			'enabled'=>'$conf->sse->enabled',  
+			'perms'=>'$user->rights->sse->causerie->read_antenne',			                
 			'target'=>'',
 			'user'=>2,				                
 		);

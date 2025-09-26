@@ -1,10 +1,10 @@
 <style>
-	 .progress-container {
+	.progress-container {
 		display: inline-flex;
         gap: 2px;
         font-size: 12px;
         font-weight: bold;
-        color: #222; /* Couleur sobre */
+        color: #222; 
     }
 
     progress {
@@ -39,7 +39,6 @@
 			width: 100% !important; 
 		}
 	}	
-
 
     /* Chrome & Safari */
     progress::-webkit-progress-bar {
@@ -181,12 +180,9 @@ $hookmanager->initHooks(array('causerielist')); // Note that conf->hooks_modules
 
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
-//$extrafields->fetch_name_optionals_label($object->table_element_line);
+$extrafields->fetch_name_optionals_label($object->table_element_line);
 
 $search_array_options = $extrafields->getOptionalsFromPost($object->table_element, '', 'search_');
-
-// Pour inserer la premiere fois // A supprimer
-// $object->updateAntenne();
 
 // Default sort order (if not yet defined by previous GETPOST)
 if (!$sortfield) {
@@ -196,35 +192,6 @@ if (!$sortfield) {
 if (!$sortorder) {
 	$sortorder = "ASC";
 }
-
-// lsit of causerie
-
-// $ref = array();
-// $date_debut = array();
-// $date_fin = array();
-// $theme = array();
-// $subtheme = array();
-// $animateur = array();
-// $organisateur = array();
-
-// foreach ($object->fields as $key => $val) {
-// 	if($key == 'ref') { 
-// 		$ref = array($key => $val);
-// 	}elseif($key == 'date_debut') {
-// 		$date_debut = array($key => $val);
-// 	}elseif($key == 'date_fin') {
-// 		$date_fin = array($key => $val);
-// 	}elseif($key == 'theme') {
-// 		$theme = array($key => $val);
-// 	}elseif($key == 'subtheme') {
-// 		$subtheme = array($key => $val);
-// 	}elseif($key == 'animateur') {
-// 		$animateur = array($key => $val);
-// 	}elseif($key == 'organisateur') {
-// 		$organisateur = array($key => $val);
-// 	}
-// }
-// $object_data = array_merge($ref, $date_debut, $date_fin, $theme, $subtheme, $animateur, $organisateur);
 
 // Initialize array of search criterias
 $search_all = GETPOST('search_all', 'alphanohtml');
@@ -359,7 +326,7 @@ $morecss = array();
 // --------------------------------------------------------------------
 $sql = 'SELECT ';
 $sql .= $object->getFieldList('t');
-
+$sql .= ", sc.fk_user";
 // Add fields from extrafields
 if (!empty($extrafields->attributes[$object->table_element]['label'])) {
 	foreach ($extrafields->attributes[$object->table_element]['label'] as $key => $val) {
@@ -376,6 +343,9 @@ if (isset($extrafields->attributes[$object->table_element]['label']) && is_array
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX.$object->table_element."_extrafields as ef on (t.rowid = ef.fk_object)";
 }
 
+// $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on (s.rowid = ef.antenne)";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux AS sc ON FIND_IN_SET(sc.fk_soc, ef.antenne)";
+
 // Add table from hooks
 $parameters = array();
 $reshook = $hookmanager->executeHooks('printFieldListFrom', $parameters, $object); // Note that $action and $object may have been modified by hook
@@ -386,6 +356,8 @@ if ($object->ismultientitymanaged == 1) {
 	$sql .= " WHERE 1 = 1";
 }
 
+$sql .= " AND sc.fk_user =".$user->id;
+// $sql .= " AND sc.fk_user = 428";
 foreach ($search as $key => $val) {
 	if (array_key_exists($key, $object->fields)) {
 		if ($key == 'status' && $search[$key] == -1) {
@@ -503,6 +475,15 @@ if ($num == 1 && !empty($conf->global->MAIN_SEARCH_DIRECT_OPEN_IF_ONLY_ONE) && $
 // --------------------------------------------------------------------
 
 llxHeader('', $title, $help_url, '', 0, 0, $morejs, $morecss, '', '');
+
+print '
+	<div class="info-message" style="margin-top: 20px; padding: 15px; border-left: 4px solid #007bff; background-color: #e9f7fe; border-radius: 5px;">
+			<p style="font-size: 14px; line-height: 1.6; color: #333;">
+				Visualisez les causeries de vos salariés. Certaines incluent des participants d’autres antennes. 
+				Cliquez sur une causerie pour voir la liste des participants, vos salariés sont signalés par un badge.
+			</p>
+		</div>
+';
 
 // Example : Adding jquery code
 // print '<script type="text/javascript">
@@ -727,95 +708,97 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 		break; // Should not happen
 	}
 
-	// Store properties in $object
-	$object->setVarsFromFetchObj($obj);
-	
-	// Show here line of result
-	print '<tr class="oddeven">';
-	foreach ($object->fields as $key => $val) {
+	// if($obj->options_animateur == $user->id || $obj->fk_user_creat == $user->id) {
+		// Store properties in $object
+		$object->setVarsFromFetchObj($obj);
 		
-		$cssforfield = (empty($val['csslist']) ? (empty($val['css']) ? '' : $val['css']) : $val['csslist']);
-		if (in_array($val['type'], array('date', 'datetime', 'timestamp'))) {
-			$cssforfield .= ($cssforfield ? ' ' : '').'center';
-		} elseif ($key == 'status') {
-			$cssforfield .= ($cssforfield ? ' ' : '').'center';
-		}
+		// Show here line of result
+		print '<tr class="oddeven">';
+		foreach ($object->fields as $key => $val) {
+			
+			$cssforfield = (empty($val['csslist']) ? (empty($val['css']) ? '' : $val['css']) : $val['csslist']);
+			if (in_array($val['type'], array('date', 'datetime', 'timestamp'))) {
+				$cssforfield .= ($cssforfield ? ' ' : '').'center';
+			} elseif ($key == 'status') {
+				$cssforfield .= ($cssforfield ? ' ' : '').'center';
+			}
 
-		if (in_array($val['type'], array('timestamp'))) {
-			$cssforfield .= ($cssforfield ? ' ' : '').'nowrap';
-		} elseif ($key == 'ref') {
-			$cssforfield .= ($cssforfield ? ' ' : '').'nowrap';
-		}
+			if (in_array($val['type'], array('timestamp'))) {
+				$cssforfield .= ($cssforfield ? ' ' : '').'nowrap';
+			} elseif ($key == 'ref') {
+				$cssforfield .= ($cssforfield ? ' ' : '').'nowrap';
+			}
 
-		if (in_array($val['type'], array('double(24,8)', 'double(6,3)', 'integer', 'real', 'price')) && !in_array($key, array('rowid', 'status')) && empty($val['arrayofkeyval'])) {
-			$cssforfield .= ($cssforfield ? ' ' : '').'right';
-		}
-		//if (in_array($key, array('fk_soc', 'fk_user', 'fk_warehouse'))) $cssforfield = 'tdoverflowmax100';
+			if (in_array($val['type'], array('double(24,8)', 'double(6,3)', 'integer', 'real', 'price')) && !in_array($key, array('rowid', 'status')) && empty($val['arrayofkeyval'])) {
+				$cssforfield .= ($cssforfield ? ' ' : '').'right';
+			}
+			//if (in_array($key, array('fk_soc', 'fk_user', 'fk_warehouse'))) $cssforfield = 'tdoverflowmax100';
 
-		if (!empty($arrayfields['t.'.$key]['checked'])) {
-			print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
-			if ($key == 'status') {
-				print $object->getLibStatut(5);
-			} elseif ($key == 'rowid') {
-				print $object->showOutputField($val, $key, $object->id, '');
-			}elseif($key == 'percentparticip') { 
-				if ($obj->percentparticip > 0) {
-					print '<div class="progress-container" style="width:50%;">';
-					print '<span>'.$obj->percentparticip.'%</span>';
-					print '<progress value="'.$obj->percentparticip.'" max="100"></progress>';
-					print '</div>';
+			if (!empty($arrayfields['t.'.$key]['checked'])) {
+				print '<td'.($cssforfield ? ' class="'.$cssforfield.'"' : '').'>';
+				if ($key == 'status') {
+					print $object->getLibStatut(5);
+				} elseif ($key == 'rowid') {
+					print $object->showOutputField($val, $key, $object->id, '');
+				}elseif($key == 'percentparticip') { 
+					if ($obj->percentparticip > 0) {
+						print '<div class="progress-container" style="width:50%;">';
+						print '<span>'.$obj->percentparticip.'%</span>';
+						print '<progress value="'.$obj->percentparticip.'" max="100"></progress>';
+						print '</div>';
+					} else {
+						print '<div class="progress-container" style="width:50%;">';
+						print '<span>0%</span>';
+						print '<progress value="0" max="100"></progress>';
+						print '</div>';
+					}
 				} else {
-					print '<div class="progress-container" style="width:50%;">';
-					print '<span>0%</span>';
-					print '<progress value="0" max="100"></progress>';
-					print '</div>';
+					print $object->showOutputField($val, $key, $object->$key, '');
 				}
-			} else {
-				print $object->showOutputField($val, $key, $object->$key, '');
-			}
-		
-			print '</td>';
-			if (!$i) {
-				$totalarray['nbfield']++;
-			}
-			if (!empty($val['isameasure']) && $val['isameasure'] == 1) {
+			
+				print '</td>';
 				if (!$i) {
-					$totalarray['pos'][$totalarray['nbfield']] = 't.'.$key;
+					$totalarray['nbfield']++;
 				}
-				if (!isset($totalarray['val'])) {
-					$totalarray['val'] = array();
+				if (!empty($val['isameasure']) && $val['isameasure'] == 1) {
+					if (!$i) {
+						$totalarray['pos'][$totalarray['nbfield']] = 't.'.$key;
+					}
+					if (!isset($totalarray['val'])) {
+						$totalarray['val'] = array();
+					}
+					if (!isset($totalarray['val']['t.'.$key])) {
+						$totalarray['val']['t.'.$key] = 0;
+					}
+					$totalarray['val']['t.'.$key] += $object->$key;
 				}
-				if (!isset($totalarray['val']['t.'.$key])) {
-					$totalarray['val']['t.'.$key] = 0;
-				}
-				$totalarray['val']['t.'.$key] += $object->$key;
 			}
 		}
-	}
 
-	// Extra fields
-	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_print_fields.tpl.php';
-	// Fields from hook
-	$parameters = array('arrayfields'=>$arrayfields, 'object'=>$object, 'obj'=>$obj, 'i'=>$i, 'totalarray'=>&$totalarray);
-	$reshook = $hookmanager->executeHooks('printFieldListValue', $parameters, $object); // Note that $action and $object may have been modified by hook
-	print $hookmanager->resPrint;
-	// Action column
-	print '<td class="nowrap center">';
-	if ($massactionbutton || $massaction) { // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
-		$selected = 0;
-		if (in_array($object->id, $arrayofselected)) {
-			$selected = 1;
+		// Extra fields
+		include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_print_fields.tpl.php';
+		// Fields from hook
+		$parameters = array('arrayfields'=>$arrayfields, 'object'=>$object, 'obj'=>$obj, 'i'=>$i, 'totalarray'=>&$totalarray);
+		$reshook = $hookmanager->executeHooks('printFieldListValue', $parameters, $object); // Note that $action and $object may have been modified by hook
+		print $hookmanager->resPrint;
+		// Action column
+		print '<td class="nowrap center">';
+		if ($massactionbutton || $massaction) { // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
+			$selected = 0;
+			if (in_array($object->id, $arrayofselected)) {
+				$selected = 1;
+			}
+			print '<input id="cb'.$object->id.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$object->id.'"'.($selected ? ' checked="checked"' : '').'>';
 		}
-		print '<input id="cb'.$object->id.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$object->id.'"'.($selected ? ' checked="checked"' : '').'>';
-	}
-	print '</td>';
-	if (!$i) {
-		$totalarray['nbfield']++;
-	}
+		print '</td>';
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
 
-	print '</tr>'."\n";
+		print '</tr>'."\n";
+		
+		$i++;
 	
-	$i++;
 }
 
 // Show total line

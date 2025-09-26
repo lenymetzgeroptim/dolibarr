@@ -26,6 +26,7 @@ CREATE TABLE llx_sse_goalelement(
 	fk_user integer, 
 	fk_goal integer, 
 	nb_accomplished integer NOT NULL, 
+	antenne integer,
 	entity integer DEFAULT 1
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

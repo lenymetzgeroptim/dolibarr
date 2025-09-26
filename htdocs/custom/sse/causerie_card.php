@@ -876,6 +876,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			$emargement_confirmed = $emargement->getLibStatut(5);
 		}else if($emargement->status == $emargement::STATUS_ABSENT) {
 			$user_signature_absent[] = $emargement->fk_user;
+			$user_type_abs[$emargement->fk_user] = $emargement->type_abs;
 			$emargement_absent = $emargement->getLibStatut(5);
 		}
 	}
@@ -1004,6 +1005,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print '<td class="liste_titre">' . $langs->trans("Email") . '</td>';
 		print '<td class="liste_titre">' . $langs->trans("Suivi") . '</td>';
 		print '<td class="liste_titre">' . $langs->trans("Approve") . '</td>';
+		if (!empty(array_filter($user_type_abs))) {
+			print '<td class="liste_titre">' . $langs->trans("Type d'absence") . '</td>';
+		}
 	
 		if (!$writeperms) {
 			print '<td class="liste_titre">' . $langs->trans("Emargement") . '</td>';
@@ -1035,14 +1039,31 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	foreach ($allParticipants as $participant) {
 		print '<tr class="oddeven">';
 		print '<td class="tdoverflowmax150">';
-		print $participant->getNomUrl(-1, '', 0, 0, 24, 0, 'login');
+		// if(in_array($participant->id, $object->getResByAntenne(428))) {
+		if(in_array($participant->id, $object->getResByAntenne($user->idate))) {
+			print '<span style="
+				font-size: 0.85em;
+				color: #155724;
+				font-weight: bold;
+				background-color: #d4edda;
+				border: 1px solid #c3e6cb;
+				padding: 2px 6px;
+				text-align: center;
+				border-radius: 4px;
+				display: inline-block;
+			">'. $participant->getNomUrl(-1, '', 0, 0, 24, 0, 'login') .'</span>';
+		}else {
+			print $participant->getNomUrl(-1, '', 0, 0, 24, 0, 'login');
+		}
+		
 	
 		if ($participant->id == $object->array_options['options_animateur']) {
 			print img_picto($langs->trans("Animateur"), 'star');
 			print '<span style="font-size: 0.85em; color: #28a745; font-weight: bold; background-color: #e8f5e9; border: 1px solid #c3e6cb; text-align: center; border-radius: 4px;">Animateur</span>';
 		}
-
+		
 		print '</td>';
+		
 		print '<td>' . $participant->lastname . '</td>';
 		print '<td>' . $participant->firstname . '</td>';
 		print '<td>' . $participant->email . '</td>';
@@ -1055,6 +1076,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print '</td>';
 			}
 		}
+
+		
 		
 		if ($object->status == $object::STATUS_DRAFT && !in_array($participant->id, $user_signature_confirmed) && $participant->id !== $object->array_options['options_animateur']) {
 			
@@ -1105,7 +1128,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print '<span class="fas fa-check-circle text-success" title="Présence confirmée"></span> Présence confirmée';
 				print ' &nbsp; ';
 				print '<a href="' . htmlspecialchars($_SERVER['PHP_SELF']) . '?id=' . urlencode($object->id) . '&action=confirmabsence&user=' . urlencode($participant->id) . '&token='.newToken().'#attending" class="btn btn-warning btn-sm" title="Déclarer une absence">';
-				print '<span class="fas fa-times-circle"></span> Déclarer une absence';
+				print '<span class="fas fa-times-circle"></span> Passer absent';
 				print '</a>';
 				print '</td>';
 			}
@@ -1116,11 +1139,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print '<span class="fas fa-times-circle text-danger" title="Absence confirmée"></span> Absence confirmée';
 				print ' &nbsp; ';
 				print '<a href="' . htmlspecialchars($_SERVER['PHP_SELF']) . '?id=' . urlencode($object->id) . '&action=confirmpresence&user=' . urlencode($participant->id) . '&token='.newToken().'#attending" class="btn btn-success btn-sm" title="Déclarer une présence">';
-				print '<span class="fas fa-check-circle"></span> Déclarer une présence';
+				print '<span class="fas fa-check-circle"></span> Passer présent';
 				print '</a>';
 				print '</td>';
+				
+				print '<td id="td-select-typeabs-'.$participant->id.'" data-selected-id="'.$user_type_abs[$participant->id].'" ></td>';
 			}
 		}
+
 		print '<td class="center">' . $participant->getLibStatut(3) . '</td>';
 		
 		if ($object->status != $object::STATUS_INANIMATION) {
@@ -1133,7 +1159,89 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 		print "</td></tr>\n";
 	}
+	?>
+		<script>
+						
+			document.addEventListener("DOMContentLoaded", function() {
+			// Sélectionne tous les td
+			document.querySelectorAll("td[id^='td-select-typeabs-']").forEach(td => {
+				let objectId = td.id.replace('td-select-typeabs-', '');
 
+				// le select
+				let select = document.createElement("select");
+				select.dataset.objectId = objectId; 
+
+				// badge pour afficher la valeur sélectionnée
+				let badge = document.createElement("span");
+				badge.className = "tag";                
+				badge.style.marginLeft = "8px";
+				badge.style.padding = "2px 6px";
+				badge.style.fontSize = "0.85em";
+				badge.style.fontWeight = "bold";
+				// badge.style.borderRadius = "4px";
+				badge.style.display = "inline-block";
+				badge.style.minWidth = "25px";
+				badge.style.textAlign = "center";
+
+				// Fond discret et texte lisible
+				badge.style.backgroundColor = "#e7f1fa"; 
+				badge.style.color = "#0366a6";          
+				badge.textContent = "-"; // valeur par défaut
+
+
+				// Ajoute select et badge dans le td
+				td.appendChild(select);
+				td.appendChild(badge);
+
+				// les types d'absences
+				fetch("/custom/sse/ajax/get_type_abs_data.php")
+					.then(response => response.json())
+					.then(data => {
+						data.forEach(item => {
+							let opt = document.createElement("option");
+							opt.value = item.id;
+							opt.textContent = item.label;
+							select.appendChild(opt);
+						});
+
+						// Préselection si valeur existante
+						if(td.dataset.selectedId) {
+							select.value = td.dataset.selectedId;
+							let opt = select.options[select.selectedIndex];
+							if(opt) badge.textContent = opt.text;
+						}
+					});
+
+				// Sauvegarde sur changement
+				select.addEventListener("change", function() {
+					let selectedId = this.value;
+					badge.textContent = this.options[this.selectedIndex].text;
+
+					let id = <?php echo isset($object->id) ? (int)$object->id : 0; ?>;
+					let iduser = this.dataset.objectId;
+
+					fetch("/custom/sse/ajax/save_type_abs_data.php", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({idabs: selectedId, id: id, iduser:iduser})
+					})
+					.then(r => r.json())
+					.then(res => {
+						if(res.success) {
+							console.log("Sauvegardé pour causerie "+id+", selected "+selectedId);
+						} else {
+							console.error("Erreur sauvegarde ligne "+id+":", res.error);
+						}
+					});
+				});
+			});
+		});
+
+		</script>
+
+
+
+	<?php
 	// Affichage des participants extern triés
 	foreach($object->extern_members as $participant) {
 		if (!empty($participant)) {

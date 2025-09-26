@@ -128,6 +128,7 @@ class GoalElement extends CommonObject
 		'nb_accomplished' => array('type'=>'integer', 'label'=>'Causeries réalisées', 'enabled'=>'1', 'position'=>75, 'notnull'=>1, 'visible'=>1, 'default'=>'0',),
 		'entity' => array('type'=>'integer', 'label'=>'entity', 'enabled'=>'1', 'position'=>80, 'notnull'=>0, 'visible'=>0,),
 		'p_year' => array('type'=>'integer', 'label'=>'Période', 'enabled'=>'1', 'position'=>85, 'notnull'=>0, 'visible'=>1,),
+		'antenne' => array('type' => 'integer:Societe:societe/class/societe.class.php','label' => 'Antenne','enabled' => '1','position' => 170,'notnull' => 0,'visible' => 1,'index' => 1,'foreignkey' => 'societe.rowid','cssview' => 'wordbreak','comment' => 'Sélection d’une antenne',),
 	);
 	public $rowid;
 	public $date_creation;
@@ -1513,6 +1514,55 @@ class GoalElement extends CommonObject
 			return -1;
 		}
 	}
+
+	/**
+	 * Mise à jour le champ antenne dans sse_goalelement pour les lignes liées à un utilisateur
+	 *
+	 * @return int Nombre de lignes mises à jour
+	 */
+	public function updateAntenne()
+	{
+		global $db;
+
+		// fk_user uniques dans sse_goalelement
+		$sql = "SELECT DISTINCT fk_user FROM ".MAIN_DB_PREFIX."sse_goalelement";
+		$resql = $db->query($sql);
+		if (!$resql) {
+			dol_syslog("Erreur updateAntenne SELECT fk_user: ".$db->lasterror(), LOG_ERR);
+			return -1;
+		}
+
+		$totalUpdated = 0;
+
+		while ($obj = $db->fetch_object($resql)) {
+			$fk_user = (int)$obj->fk_user;
+			if ($fk_user <= 0) continue;
+
+			// l'extrafield antenne
+			$u = new User($db);
+			if ($u->fetch($fk_user) <= 0) continue;
+
+			// $u->fetch_optionals();
+			$antenne = isset($u->array_options['options_antenne']) ? (int)$u->array_options['options_antenne'] : 0;
+
+			// Update
+			$sqlUpdate = "UPDATE ".MAIN_DB_PREFIX."sse_goalelement
+						SET antenne = ".$antenne."
+						WHERE fk_user = ".$fk_user;
+
+			$resUpdate = $db->query($sqlUpdate);
+			if ($resUpdate) {
+				$totalUpdated += $db->affected_rows($db);
+			} else {
+				dol_syslog("Erreur updateAntenne UPDATE fk_user = $fk_user: ".$db->lasterror(), LOG_ERR);
+			}
+		}
+
+		return $totalUpdated;
+	}
+
+
+
 
 
 }

@@ -122,6 +122,7 @@ class CauserieAttendance extends CommonObject
 		'date_signature' => array('type'=>'datetime', 'label'=>'DateSignature', 'enabled'=>'1', 'position'=>60, 'notnull'=>-1, 'visible'=>0,),
 		'fk_user' => array('type'=>'integer', 'label'=>'Participant', 'enabled'=>'1', 'position'=>35, 'notnull'=>-1, 'visible'=>0,),
 		'entity' => array('type'=>'integer', 'label'=>'Entity', 'enabled'=>'1', 'position'=>65, 'notnull'=>-1, 'visible'=>0,),
+		'type_abs' => array('type' => 'integer','label' => 'Type abs','enabled' => '1','position' => 170,'notnull' => 0,'visible' => -1,'index' => 1,'foreignkey' => 'societe.rowid','cssview' => 'wordbreak',),
 	);
 
 	public $id;
@@ -144,6 +145,7 @@ class CauserieAttendance extends CommonObject
 	public $date_fin;
 	public $causerie_status;
 	public $causerie_ref;
+	public $type_abs;
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -357,7 +359,7 @@ class CauserieAttendance extends CommonObject
 		// Get user
 		$sql = "SELECT ce.rowid, ce.status, ce.fk_causerie, ce.fk_user, c.description, c.date_debut, c.date_fin, c.status as causerie_status, c.ref as causerie_ref, c.local as causerie_local, t.label as causerie_theme,";
 		$sql .= " ce.presence, ce.reason, ce.visas, ce.entity,";
-		$sql .= " ce.date_creation as datec, ce.date_signature,";
+		$sql .= " ce.date_creation as datec, ce.date_signature,ce.type_abs,";
 		$sql .= " ce.tms as datem";
 		$sql .= " FROM ".MAIN_DB_PREFIX."sse_causerie as c";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."sse_causerie_extrafields as te on te.fk_object = c.rowid";
@@ -393,6 +395,7 @@ class CauserieAttendance extends CommonObject
 				$this->causerie_ref = $obj->causerie_ref;
 				$this->causerie_local = $obj->causerie_local;
 				$this->causerie_theme = $obj->causerie_theme;
+				$this->type_abs = $obj->type_abs;
 
 				// fetch optionals attributes and labels
 				$this->fetch_optionals();

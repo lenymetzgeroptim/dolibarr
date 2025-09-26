@@ -133,6 +133,7 @@ class Causerie extends CommonObject
 		'nbpresent' => array('type'=>'integer', 'label'=>'Inscrits', 'enabled'=>'1', 'position'=>120, 'notnull'=>0, 'visible'=>5,),
 		'nbinvited' => array('type'=>'integer', 'label'=>'Invités', 'enabled'=>'1', 'position'=>140, 'notnull'=>0, 'visible'=>5,),
 		'percentparticip' => array('type'=>'integer', 'label'=>'% Participation', 'enabled'=>'1', 'position'=>160, 'notnull'=>0, 'visible'=>2,),
+		// 'antenne' => array('type' => 'varchar(255)','label' => 'Antenne','enabled' => '1','position' => 170,'notnull' => 0,'visible' => 5,'index' => 1,'foreignkey' => 'societe.rowid','cssview' => 'wordbreak','comment' => 'Sélection d’une antenne',),
 	);
 	public $id;
 	public $ref;
@@ -157,6 +158,7 @@ class Causerie extends CommonObject
 	public $nbinvited;
 	public $animateur;
 	public $percentparticip;
+	// public $antenne;
 	// END MODULEBUILDER PROPERTIES
 
 	public $globalgroup; // Global group
@@ -436,6 +438,7 @@ class Causerie extends CommonObject
 				// Liste des partipants 
 				$this->extern_members = $this->listSSEExternsForGroup();
 				$this->members = $this->listSSEUsersForGroup();
+				$this->updateAntenne();
 
 				$this->oldcopy = clone $this;
 			}
@@ -2079,6 +2082,90 @@ class Causerie extends CommonObject
 			return -1;
 		}
 	}
+
+	
+	/**
+	 * Mise à jour le champ antenne dans sse_goalelement pour les lignes liées à un utilisateur
+	 *
+	 * @return int Nombre de lignes mises à jour
+	 */
+	public function updateAntenne()
+	{
+		global $db;
+
+		// Regrouper toutes les antennes des participants par causerie -
+		//  Antenne créer l'ors de la création de l'objectif annuel (selon la demande)
+		$sql = "SELECT ca.fk_causerie, GROUP_CONCAT(DISTINCT se.antenne ORDER BY se.antenne SEPARATOR ',') AS antennes
+				FROM ".MAIN_DB_PREFIX."sse_causerieattendance ca
+				INNER JOIN ".MAIN_DB_PREFIX."sse_goalelement se ON ca.fk_user = se.fk_user
+				WHERE ca.fk_causerie = ".$this->id."
+				GROUP BY ca.fk_causerie";
+
+		$resql = $db->query($sql);
+		if (!$resql) {
+			dol_syslog("Erreur SELECT antennes par causerie: ".$db->lasterror(), LOG_ERR);
+			return -1;
+		}
+
+		$totalUpdated = 0;
+
+		while ($obj = $db->fetch_object($resql)) {
+			$fk_causerie = (int) $obj->fk_causerie;
+			$strAntennes = $db->escape($obj->antennes);
+			// var_dump($strAntennes);
+			$sqlUpdate = "UPDATE ".MAIN_DB_PREFIX."sse_causerie_extrafields
+						SET antenne = '".$strAntennes."'
+						WHERE fk_object = ".$this->id;
+						//   WHERE fk_object = ".$fk_causerie;
+
+			$resUpdate = $db->query($sqlUpdate);
+			if ($resUpdate) {
+				$totalUpdated += $db->affected_rows($db);
+			} else {
+				dol_syslog("Erreur updateAntenne UPDATE fk_causerie=$fk_causerie: ".$db->lasterror(), LOG_ERR);
+			}
+		}
+
+		return $totalUpdated;
+	}
+
+	/**
+ * Récupère tous les participants (ef.fk_user) pour un responsable donné
+ * 
+ * @param DoliDB $db       Objet base de données Dolibarr
+ * @param int    $resid    fk_user du responsable
+ * @return array           Tableau des fk_user participants
+ */
+function getResByAntenne($resid) {
+	global $db;
+    $resid = (int)$resid;
+    $efUsers = array();
+
+    if($resid <= 0) return $efUsers; 
+
+    $sql = "SELECT ef.fk_user AS participant
+            FROM ".MAIN_DB_PREFIX."societe_commerciaux AS sc
+            LEFT JOIN ".MAIN_DB_PREFIX."sse_goalelement AS ef ON sc.fk_soc = ef.antenne
+            WHERE sc.fk_user = ".$resid;
+
+    $resql = $db->query($sql);
+    if(!$resql) {
+        dol_syslog("Erreur getEfUsersByResponsible: ".$db->lasterror(), LOG_ERR);
+        return $efUsers;
+    }
+
+    while($obj = $db->fetch_object($resql)) {
+        $participant = (int)$obj->participant;
+        if($participant > 0 && !in_array($participant, $efUsers)) {
+            $efUsers[] = $participant;
+        }
+    }
+
+    return $efUsers;
+}
+
+
+
 
 
 }

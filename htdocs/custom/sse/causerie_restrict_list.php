@@ -1,19 +1,44 @@
 <style>
-	 .progress-container {
+	.progress-container {
 		display: inline-flex;
-        gap: 8px;
-        font-size: 14px;
+        gap: 2px;
+        font-size: 12px;
         font-weight: bold;
-        color: #222; /* Couleur sobre */
+        color: #222; 
     }
 
     progress {
-        width: 120px;
+        width: 90px;
         height: 10px;
         border-radius: 5px;
         -webkit-appearance: none;
         appearance: none;
     }
+
+	@media screen and (min-width: 1200px) {
+		.progress-container {
+			gap: 8px;
+			font-size: 14px;
+    	}
+	}
+
+	@media screen and (min-width: 1200px) {
+		progress {
+			width: 120px;
+		}
+	}
+
+	@media screen and (max-width: 1600px) {
+		td[data-key="sse_causerie.antenne"] {
+			min-width: 100px;   
+			max-width: 300px;   
+			white-space: normal; 
+		}
+
+		td[data-key="sse_causerie.antenne"] .select2-container-multi-dolibarr {
+			width: 100% !important; 
+		}
+	}	
 
     /* Chrome & Safari */
     progress::-webkit-progress-bar {
@@ -558,7 +583,7 @@ print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 print '<input type="hidden" name="page" value="'.$page.'">';
 print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
 
-$newcardbutton = dolGetButtonTitle($langs->trans('New'), '', 'fa fa-plus-circle', dol_buildpath('/sse/causerie_card.php', 1).'?action=create&backtopage='.urlencode($_SERVER['PHP_SELF']), '', $permissiontoadd);
+// $newcardbutton = dolGetButtonTitle($langs->trans('New'), '', 'fa fa-plus-circle', dol_buildpath('/sse/causerie_card.php', 1).'?action=create&backtopage='.urlencode($_SERVER['PHP_SELF']), '', $permissiontoadd);
 
 print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, $num, $nbtotalofrecords, 'object_'.$object->picto, 0, $newcardbutton, '', $limit, 0, 0, 1);
 
@@ -743,12 +768,12 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 					print $object->showOutputField($val, $key, $object->id, '');
 				}elseif($key == 'percentparticip') { 
 					if ($obj->percentparticip > 0) {
-						print '<div class="progress-container">';
+						print '<div class="progress-container" style="width:50%;">';
 						print '<span>'.$obj->percentparticip.'%</span>';
 						print '<progress value="'.$obj->percentparticip.'" max="100"></progress>';
 						print '</div>';
 					} else {
-						print '<div class="progress-container">';
+						print '<div class="progress-container" style="width:50%;">';
 						print '<span>0%</span>';
 						print '<progress value="0" max="100"></progress>';
 						print '</div>';

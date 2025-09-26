@@ -639,7 +639,7 @@ class Goal extends CommonObject
 
 		$this->db->begin();
 
-		$sql = "INSERT INTO ".MAIN_DB_PREFIX."sse_goalelement (entity, fk_user, fk_goal, date_debut, date_fin, p_year, nbcauserie, ref, status)";
+		$sql = "INSERT INTO ".MAIN_DB_PREFIX."sse_goalelement (entity, fk_user, fk_goal, date_debut, date_fin, p_year, nbcauserie, ref, antenne, status)";
 	
 			$sql .= " VALUES(";
 
@@ -657,6 +657,7 @@ class Goal extends CommonObject
 					$sql .= "'".((int) $this->p_year)."'".',';
 					$sql .= "'".((int) $this->nb_causerie)."'".',';
 					$sql .= "'".('SUIVI_'.$user->login.'_'.$this->p_year)."'".',';
+					$sql .= "'".((int) $user->array_options['options_antenne'])."'".',';
 					$sql .= "'".((int) $status)."'".'';
 					
 					$i++;
