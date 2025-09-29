@@ -342,7 +342,7 @@ $sql .= " FROM ".MAIN_DB_PREFIX.$object->table_element." as t";
 if (isset($extrafields->attributes[$object->table_element]['label']) && is_array($extrafields->attributes[$object->table_element]['label']) && count($extrafields->attributes[$object->table_element]['label'])) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX.$object->table_element."_extrafields as ef on (t.rowid = ef.fk_object)";
 }
-
+ 
 // $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on (s.rowid = ef.antenne)";
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux AS sc ON FIND_IN_SET(sc.fk_soc, ef.antenne)";
 

@@ -126,10 +126,10 @@ $hookmanager->initHooks(array('goalelementlist')); // Note that conf->hooks_modu
 $object->updateNbCauserieByUserAndYear();
 // Fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
+
 //$extrafields->fetch_name_optionals_label($object->table_element_line);
-// Update Antenne 
+// Update Antenne (seulement une seul fois - a supprimer aprés le déploiement)
 $object->updateAntenne();
-// var_dump($object->updateAntenne());
 
 $search_array_options = $extrafields->getOptionalsFromPost($object->table_element, '', 'search_');
 
@@ -178,6 +178,7 @@ foreach ($object->fields as $key => $val) {
 		);
 	}
 }
+
 // Extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 
@@ -300,6 +301,7 @@ $sql .= " FROM ".MAIN_DB_PREFIX.$object->table_element." as t";
 if (isset($extrafields->attributes[$object->table_element]['label']) && is_array($extrafields->attributes[$object->table_element]['label']) && count($extrafields->attributes[$object->table_element]['label'])) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX.$object->table_element."_extrafields as ef on (t.rowid = ef.fk_object)";
 }
+
 // Add table from hooks
 $parameters = array();
 $reshook = $hookmanager->executeHooks('printFieldListFrom', $parameters, $object); // Note that $action and $object may have been modified by hook
@@ -309,6 +311,8 @@ if ($object->ismultientitymanaged == 1) {
 } else {
 	$sql .= " WHERE 1 = 1";
 }
+
+
 foreach ($search as $key => $val) {
 	if (array_key_exists($key, $object->fields)) {
 		if ($key == 'status' && $search[$key] == -1) {
@@ -809,6 +813,72 @@ while ($i < $imaxinloop) {
 				$totalarray['nbfield']++;
 			}
 		}
+		// foreach ($object->fields as $key => $val) {
+		// 	$cssforfield = (empty($val['csslist']) ? (empty($val['css']) ? '' : $val['css']) : $val['csslist']);
+		// 	if (in_array($val['type'], array('date', 'datetime', 'timestamp'))) {
+		// 		$cssforfield .= ($cssforfield ? ' ' : '').'center';
+		// 	} elseif ($key == 'status') {
+		// 		$cssforfield .= ($cssforfield ? ' ' : '').'center';
+		// 	}
+
+		// 	if (in_array($val['type'], array('timestamp'))) {
+		// 		$cssforfield .= ($cssforfield ? ' ' : '').'nowrap';
+		// 	} elseif ($key == 'ref') {
+		// 		$cssforfield .= ($cssforfield ? ' ' : '').'nowrap';
+		// 	}
+
+		// 	if (in_array($val['type'], array('double(24,8)', 'double(6,3)', 'integer', 'real', 'price')) && !in_array($key, array('rowid', 'status')) && empty($val['arrayofkeyval'])) {
+		// 		$cssforfield .= ($cssforfield ? ' ' : '').'right';
+		// 	}
+		// 	//if (in_array($key, array('fk_soc', 'fk_user', 'fk_warehouse'))) $cssforfield = 'tdoverflowmax100';
+			
+		// 	if (!empty($arrayfields['t.'.$key]['checked'])) {
+		// 		print '<td'.($cssforfield ? ' class="'.$cssforfield.(preg_match('/tdoverflow/', $cssforfield) ? ' classfortooltip' : '').'"' : '');
+		// 		if (preg_match('/tdoverflow/', $cssforfield)) {
+		// 			print ' title="'.dol_escape_htmltag($object->$key).'"';
+		// 		}
+		// 		print '>';
+		// 		if ($key == 'status') {
+		// 			print $object->getLibStatut(5);
+		// 		} elseif ($key == 'rowid') {
+		// 			print $object->showOutputField($val, $key, $object->id, '');
+		// 		} elseif ($key == 'nb_accomplished') {
+		// 			// print '<td class="center" style="text-align: center;">';
+		// 			if ($obj->nb_accomplished == 0) {
+		// 				print '<span style="display: inline-block; padding: 5px 10px; font-size: 0.85em; font-weight: bold; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">Aucune</span>';
+		// 			} elseif ($obj->nb_accomplished < $obj->nbcauserie) {
+		// 				print '<span style="display: inline-block; padding: 5px 10px; font-size: 0.85em; font-weight: bold; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px;">Non atteint : '.$obj->nb_accomplished.'</span>';
+		// 			} else {
+		// 				print '<span style="display: inline-block; padding: 5px 10px; font-size: 0.85em; font-weight: bold; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">Atteint : '.$obj->nb_accomplished.'</span>';
+		// 			}
+		// 			// print '</td>';
+		// 		} elseif ($key == 'nb_absence') {
+		// 			if ($obj->nb_absence > 0) {
+		// 				print '<span style="display: inline-block; padding: 5px 10px; font-size: 0.85em; font-weight: bold; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">' .$obj->nb_absence.'</span>';
+		// 			}
+		// 		} else {
+		// 			print $object->showOutputField($val, $key, $object->$key, '');
+		// 		}
+		// 		print '</td>';
+		// 		if (!$i) {
+		// 			$totalarray['nbfield']++;
+		// 		}
+		// 		if (!empty($val['isameasure']) && $val['isameasure'] == 1) {
+		// 			if (!$i) {
+		// 				$totalarray['pos'][$totalarray['nbfield']] = 't.'.$key;
+		// 			}
+		// 			if (!isset($totalarray['val'])) {
+		// 				$totalarray['val'] = array();
+		// 			}
+		// 			if (!isset($totalarray['val']['t.'.$key])) {
+		// 				$totalarray['val']['t.'.$key] = 0;
+		// 			}
+		// 			$totalarray['val']['t.'.$key] += $object->$key;
+		// 		}
+		// 	}
+		// }
+		
+		
 		foreach ($object->fields as $key => $val) {
 			$cssforfield = (empty($val['csslist']) ? (empty($val['css']) ? '' : $val['css']) : $val['csslist']);
 			if (in_array($val['type'], array('date', 'datetime', 'timestamp'))) {
@@ -826,7 +896,6 @@ while ($i < $imaxinloop) {
 			if (in_array($val['type'], array('double(24,8)', 'double(6,3)', 'integer', 'real', 'price')) && !in_array($key, array('rowid', 'status')) && empty($val['arrayofkeyval'])) {
 				$cssforfield .= ($cssforfield ? ' ' : '').'right';
 			}
-			//if (in_array($key, array('fk_soc', 'fk_user', 'fk_warehouse'))) $cssforfield = 'tdoverflowmax100';
 
 			if (!empty($arrayfields['t.'.$key]['checked'])) {
 				print '<td'.($cssforfield ? ' class="'.$cssforfield.(preg_match('/tdoverflow/', $cssforfield) ? ' classfortooltip' : '').'"' : '');
@@ -834,41 +903,87 @@ while ($i < $imaxinloop) {
 					print ' title="'.dol_escape_htmltag($object->$key).'"';
 				}
 				print '>';
-				if ($key == 'status') {
-					print $object->getLibStatut(5);
-				} elseif ($key == 'rowid') {
-					print $object->showOutputField($val, $key, $object->id, '');
-				} elseif ($key == 'nb_accomplished') {
-					// print '<td class="center" style="text-align: center;">';
+			
+				if ($key == 'nb_accomplished') {
+					print '<div style="
+						    display: flex;
+							flex-direction: row;
+							align-items: center;
+							justify-content: flex-start;
+							gap: 3px;
+							flex-wrap: wrap;
+							margin-left :30%;
+						">';
+					// Badge nb_accomplished
 					if ($obj->nb_accomplished == 0) {
-						print '<span style="display: inline-block; padding: 5px 10px; font-size: 0.85em; font-weight: bold; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">Aucune</span>';
+						$color = '#721c24'; $bg = '#f8d7da'; $border = '#f5c6cb'; $text = ' ⚠ 0 ';  $title = 'Aucune causerie effectuée';
 					} elseif ($obj->nb_accomplished < $obj->nbcauserie) {
-						print '<span style="display: inline-block; padding: 5px 10px; font-size: 0.85em; font-weight: bold; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px;">Non atteint : '.$obj->nb_accomplished.'</span>';
+						$color = '#856404'; $bg = '#fff3cd'; $border = '#ffeeba'; $text = ' ⚠ ' . $obj->nb_accomplished; $title = 'Nombre de causeries non atteint';
 					} else {
-						print '<span style="display: inline-block; padding: 5px 10px; font-size: 0.85em; font-weight: bold; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">Atteint : '.$obj->nb_accomplished.'</span>';
+						$color = '#155724'; $bg = '#d4edda'; $border = '#c3e6cb'; $text = ' ✔ ' . $obj->nb_accomplished;  $title = 'Nombre de causeries atteint';
 					}
-					// print '</td>';
+				
+
+					print '<span title="'.$title.'" style="
+						display: inline-block;
+						padding: 3px 7px;
+						font-size: 0.75em;
+						font-weight: bold;
+						color: '.$color.';
+						background-color: '.$bg.';
+						border: 1px solid '.$border.';
+						border-radius: 10px;
+					">'.$text.'</span>';
+
+					// Badge nb_animateur	 (si > 0)
+					if ($obj->nb_animateur > 0) {
+						print '<span title="Nombre d\'animateurs (comptés dans le nombre de participations)" style="
+							display: inline-block;
+							font-size: 0.65em;
+							font-weight: bold;
+							color: #fff;
+							background-color: #007bff; 
+							border: 1px solid #0069d9;
+							text-align: center;
+							padding-right: .5em;
+							padding-left: .5em;
+							border-radius: 0.25rem;
+						">'.$obj->nb_animateur.'</span>';
+					}
+					// Badge nb_absence (si > 0)
+					if ($obj->nb_absence > 0) {
+						print '<span title="Nombre d\'absences (non compté dans le nombre de participations)" style="
+							display: inline-block;
+							font-size: 0.65em;
+							font-weight: bold;
+							color: #721c24;
+							background-color: #f8d7da;
+							border: 1px solid #f5c6cb;
+							text-align: center;
+							padding-right: .5em;
+							padding-left: .5em;
+							border-radius: 0.25rem;
+						">'.$obj->nb_absence.'</span>';
+					}
+
+					print '</div>';
 				} else {
-					print $object->showOutputField($val, $key, $object->$key, '');
+					// Champs standards
+					if ($key == 'status') {
+						print $object->getLibStatut(5);
+					} elseif ($key == 'rowid') {
+						print $object->showOutputField($val, $key, $object->id, '');
+					} else {
+						print $object->showOutputField($val, $key, $object->$key, '');
+					}
 				}
+
 				print '</td>';
-				if (!$i) {
-					$totalarray['nbfield']++;
-				}
-				if (!empty($val['isameasure']) && $val['isameasure'] == 1) {
-					if (!$i) {
-						$totalarray['pos'][$totalarray['nbfield']] = 't.'.$key;
-					}
-					if (!isset($totalarray['val'])) {
-						$totalarray['val'] = array();
-					}
-					if (!isset($totalarray['val']['t.'.$key])) {
-						$totalarray['val']['t.'.$key] = 0;
-					}
-					$totalarray['val']['t.'.$key] += $object->$key;
-				}
 			}
 		}
+
+
+
 		// Extra fields
 		include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_print_fields.tpl.php';
 		// Fields from hook

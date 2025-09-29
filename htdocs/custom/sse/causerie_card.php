@@ -1005,7 +1005,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print '<td class="liste_titre">' . $langs->trans("Email") . '</td>';
 		print '<td class="liste_titre">' . $langs->trans("Suivi") . '</td>';
 		print '<td class="liste_titre">' . $langs->trans("Approve") . '</td>';
-		if (!empty(array_filter($user_type_abs))) {
+	
+		if (!empty($user_type_abs)) {
 			print '<td class="liste_titre">' . $langs->trans("Type d'absence") . '</td>';
 		}
 	
@@ -1040,7 +1041,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print '<tr class="oddeven">';
 		print '<td class="tdoverflowmax150">';
 		// if(in_array($participant->id, $object->getResByAntenne(428))) {
-		if(in_array($participant->id, $object->getResByAntenne($user->idate))) {
+		if(in_array($participant->id, $object->getResByAntenne($user->id))) {
 			print '<span style="
 				font-size: 0.85em;
 				color: #155724;
@@ -1144,8 +1145,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print '</td>';
 				
 				print '<td id="td-select-typeabs-'.$participant->id.'" data-selected-id="'.$user_type_abs[$participant->id].'" ></td>';
-			}
+			} 
 		}
+		if (!in_array($participant->id, $user_signature_absent) && $writeperms) {
+			print "<td></td>";
+		}
+		
+		
 
 		print '<td class="center">' . $participant->getLibStatut(3) . '</td>';
 		

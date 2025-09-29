@@ -125,10 +125,12 @@ class GoalElement extends CommonObject
 		'nbcauserie' => array('type'=>'integer', 'label'=>'Causeries prévues', 'enabled'=>'1', 'position'=>63, 'notnull'=>-1,  'alwayseditable'=>'1', 'visible'=>1,),
 		'fk_user' => array('type'=>'integer:User:user/class/user.classe.php', 'label'=>'Participant', 'enabled'=>'1', 'position'=>5, 'notnull'=>-1, 'visible'=>1,),
 		'fk_goal' => array('type'=>'integer:Goal:custom/sse/class/goal.class.php', 'label'=>'Goal', 'enabled'=>'1', 'position'=>70, 'notnull'=>-1, 'visible'=>0,),
-		'nb_accomplished' => array('type'=>'integer', 'label'=>'Causeries réalisées', 'enabled'=>'1', 'position'=>75, 'notnull'=>1, 'visible'=>1, 'default'=>'0',),
-		'entity' => array('type'=>'integer', 'label'=>'entity', 'enabled'=>'1', 'position'=>80, 'notnull'=>0, 'visible'=>0,),
-		'p_year' => array('type'=>'integer', 'label'=>'Période', 'enabled'=>'1', 'position'=>85, 'notnull'=>0, 'visible'=>1,),
-		'antenne' => array('type' => 'integer:Societe:societe/class/societe.class.php','label' => 'Antenne','enabled' => '1','position' => 170,'notnull' => 0,'visible' => 1,'index' => 1,'foreignkey' => 'societe.rowid','cssview' => 'wordbreak','comment' => 'Sélection d’une antenne',),
+		'nb_accomplished' => array('type'=>'integer', 'label'=>'Nb caus. ré.', 'enabled'=>'1', 'position'=>75, 'notnull'=>1, 'visible'=>1, 'default'=>'0',),
+		'nb_absence' => array('type'=>'integer', 'label'=>'Nb abs.', 'enabled'=>'1', 'position'=>80, 'notnull'=>1, 'visible'=>0, 'default'=>'0',),
+		'nb_animateur' => array('type'=>'integer', 'label'=>'Nb Animateur.', 'enabled'=>'1', 'position'=>85, 'notnull'=>1, 'visible'=>0, 'default'=>'0',),
+		'entity' => array('type'=>'integer', 'label'=>'entity', 'enabled'=>'1', 'position'=>90, 'notnull'=>0, 'visible'=>0,),
+		'p_year' => array('type'=>'integer', 'label'=>'Période', 'enabled'=>'1', 'position'=>95, 'notnull'=>0, 'visible'=>1,),
+		'antenne' => array('type'=>'integer:Societe:societe/class/societe.class.php:nom:((nom:LIKE:%OPTIM Industries%))','label' => 'Antenne','enabled' => '1','position' => 170,'notnull' => 0,'visible' => 1,'index' => 1,'foreignkey' => 'societe.rowid','cssview' => 'wordbreak','comment' => 'Sélection d’une antenne',),
 	);
 	public $rowid;
 	public $date_creation;
@@ -1473,12 +1475,10 @@ class GoalElement extends CommonObject
 	// Cette fonction met à jour le nombre de causeries par utilisateur et par année. (A faire pour plus optimiser le code et la mise a jour du nombre de causerie sur la liste du suivi des objectifs)
 	public function updateNbCauserieByUserAndYear()
 	{
-		global $langs;
-
 		$this->db->begin();
 
-		// Réinitialiser les compteurs à 0
-		$sqlReset = "UPDATE ".MAIN_DB_PREFIX."sse_goalelement SET nb_accomplished = 0";
+		// Réinitialiser les compteurs
+		$sqlReset = "UPDATE ".MAIN_DB_PREFIX."sse_goalelement SET nb_accomplished = 0, nb_absence = 0, nb_animateur = 0";
 		$resqlReset = $this->db->query($sqlReset);
 		if (!$resqlReset) {
 			$this->error = $this->db->lasterror();
@@ -1486,25 +1486,33 @@ class GoalElement extends CommonObject
 			return -1;
 		}
 
-		// Recalculer et mettre à jour pour ceux qui ont présence = 1
+		// Recalculer et mettre à jour
 		$sqlUpdate = "
 			UPDATE ".MAIN_DB_PREFIX."sse_goalelement AS ge
 			JOIN (
 				SELECT 
 					ca.fk_user,
 					YEAR(c.date_debut) AS causerieyear,
-					COUNT(c.rowid) AS nb_accomplished
+					SUM(CASE WHEN ca.presence = 1 THEN 1 ELSE 0 END) AS nb_accomplished,
+					SUM(CASE WHEN ca.presence = 0 THEN 1 ELSE 0 END) AS nb_absence,
+					SUM(CASE WHEN ce.animateur = ca.fk_user AND ca.presence = 1 THEN 1 ELSE 0 END) AS nb_animateur
 				FROM ".MAIN_DB_PREFIX."sse_causerie AS c
-				INNER JOIN ".MAIN_DB_PREFIX."sse_causerieattendance AS ca ON ca.fk_causerie = c.rowid
-				WHERE c.status > 3 AND ca.presence = 1
+				LEFT JOIN ".MAIN_DB_PREFIX."sse_causerie_extrafields AS ce 
+					ON ce.fk_object = c.rowid
+				LEFT	 JOIN ".MAIN_DB_PREFIX."sse_causerieattendance AS ca 
+					ON ca.fk_causerie = c.rowid
+				WHERE c.status > 3
 				GROUP BY ca.fk_user, YEAR(c.date_debut)
 			) AS sub
-			ON ge.p_year = sub.causerieyear AND ge.fk_user = sub.fk_user
-			SET ge.nb_accomplished = sub.nb_accomplished
+			ON ge.p_year = sub.causerieyear 
+			AND ge.fk_user = sub.fk_user
+			SET 
+				ge.nb_accomplished = sub.nb_accomplished,
+				ge.nb_absence = sub.nb_absence,
+				ge.nb_animateur = sub.nb_animateur
 		";
 
 		$resqlUpdate = $this->db->query($sqlUpdate);
-
 		if ($resqlUpdate) {
 			$this->db->commit();
 			return 1;
@@ -1514,6 +1522,7 @@ class GoalElement extends CommonObject
 			return -1;
 		}
 	}
+
 
 	/**
 	 * Mise à jour le champ antenne dans sse_goalelement pour les lignes liées à un utilisateur

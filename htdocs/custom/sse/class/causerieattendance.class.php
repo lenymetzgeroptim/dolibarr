@@ -203,6 +203,7 @@ class CauserieAttendance extends CommonObject
 			$this->fields['entity']['enabled'] = 0;
 		}
 
+
 		// Example to show how to set values of fields definition dynamically
 		/*if ($user->rights->sse->causerieattendance->read) {
 			$this->fields['myfield']['visible'] = 1;
@@ -362,9 +363,10 @@ class CauserieAttendance extends CommonObject
 		$sql .= " ce.date_creation as datec, ce.date_signature,ce.type_abs,";
 		$sql .= " ce.tms as datem";
 		$sql .= " FROM ".MAIN_DB_PREFIX."sse_causerie as c";
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."sse_causerie_extrafields as te on te.fk_object = c.rowid";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."sse_causerie_extrafields as te on te.fk_object = c.rowid WHERE ce.type_abs LIKE '%OPTIM Industries%'";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."sse_causerieattendance as ce ON c.rowid = ce.fk_causerie";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."sse_theme as t ON t.rowid = te.thme";
+	
 		
 		if ($id) {
 			$sql .= " WHERE ce.rowid = ".((int) $id);
